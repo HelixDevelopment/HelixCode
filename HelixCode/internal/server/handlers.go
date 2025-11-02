@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"dev.helix.code/internal/auth"
 	"dev.helix.code/internal/project"
 	"dev.helix.code/internal/workflow"
+	"github.com/gin-gonic/gin"
 )
 
 // Project Handlers
@@ -17,6 +18,174 @@ func (s *Server) listProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":   "success",
 		"projects": []interface{}{},
+	})
+}
+
+// Auth Handlers
+
+func (s *Server) register(c *gin.Context) {
+	var req struct {
+		Username    string `json:"username" binding:"required"`
+		Email       string `json:"email" binding:"required"`
+		Password    string `json:"password" binding:"required"`
+		DisplayName string `json:"display_name"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Invalid request",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	user, err := s.auth.Register(c.Request.Context(), req.Username, req.Email, req.Password, req.DisplayName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Registration failed",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"status": "success",
+		"user":   user,
+	})
+}
+
+func (s *Server) login(c *gin.Context) {
+	var req struct {
+		Username string `json:"username" binding:"required"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Invalid request",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	session, user, err := s.auth.Login(c.Request.Context(), req.Username, req.Password, "rest_api", c.ClientIP(), c.GetHeader("User-Agent"))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "error",
+			"message": "Login failed",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// Generate JWT token
+	token, err := s.auth.GenerateJWT(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to generate token",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"user":    user,
+		"token":   token,
+		"session": session,
+	})
+}
+
+func (s *Server) logout(c *gin.Context) {
+	// Get token from Authorization header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" || len(authHeader) <= 7 || authHeader[:7] != "Bearer " {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "Invalid authorization header",
+		})
+		return
+	}
+
+	token := authHeader[7:]
+
+	// For JWT, we can't invalidate it server-side, but we can log the logout
+	// In a production system, you might want to maintain a blacklist
+	if err := s.auth.Logout(c.Request.Context(), token); err != nil {
+		// Log error but don't fail the request
+		c.Error(err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Logged out successfully",
+	})
+}
+
+func (s *Server) refreshToken(c *gin.Context) {
+	// Get current user from context (set by auth middleware)
+	userValue, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "error",
+			"message": "User not authenticated",
+		})
+		return
+	}
+
+	user, ok := userValue.(*auth.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Invalid user context",
+		})
+		return
+	}
+
+	// Generate new JWT token
+	token, err := s.auth.GenerateJWT(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Failed to generate token",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"token":  token,
+	})
+}
+
+func (s *Server) getCurrentUser(c *gin.Context) {
+	// Get current user from context (set by auth middleware)
+	userValue, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "error",
+			"message": "User not authenticated",
+		})
+		return
+	}
+
+	user, ok := userValue.(*auth.User)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Invalid user context",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"user":   user,
 	})
 }
 
@@ -126,18 +295,18 @@ func (s *Server) listTasks(c *gin.Context) {
 	// Return empty list for now
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
-		"tasks": []interface{}{},
+		"tasks":  []interface{}{},
 	})
 }
 
 func (s *Server) createTask(c *gin.Context) {
 	var req struct {
-		Name        string                 `json:"name" binding:"required"`
-		Description string                 `json:"description"`
-		Type        string                 `json:"type" binding:"required"`
-		Priority    string                 `json:"priority"`
-		Parameters  map[string]interface{} `json:"parameters"`
-		Dependencies []string              `json:"dependencies"`
+		Name         string                 `json:"name" binding:"required"`
+		Description  string                 `json:"description"`
+		Type         string                 `json:"type" binding:"required"`
+		Priority     string                 `json:"priority"`
+		Parameters   map[string]interface{} `json:"parameters"`
+		Dependencies []string               `json:"dependencies"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -239,11 +408,11 @@ func (s *Server) getWorker(c *gin.Context) {
 
 	// Return placeholder worker
 	worker := gin.H{
-		"id":       id,
-		"hostname": "localhost",
-		"status":   "active",
+		"id":           id,
+		"hostname":     "localhost",
+		"status":       "active",
 		"capabilities": []string{"build", "test"},
-		"created_at": time.Now(),
+		"created_at":   time.Now(),
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -260,20 +429,20 @@ func (s *Server) getSystemStats(c *gin.Context) {
 	// tasks, _ := taskManager.ListTasks(c.Request.Context())
 	// workerManager := worker.NewManager(nil)
 	// workers, _ := workerManager.ListWorkers(c.Request.Context())
-	
+
 	// Placeholder data for now
 	tasks := []interface{}{}
 	workers := []interface{}{}
 
 	// Calculate statistics
 	var (
-		totalTasks = len(tasks)
-		pendingTasks = 0
-		runningTasks = 0
+		totalTasks     = len(tasks)
+		pendingTasks   = 0
+		runningTasks   = 0
 		completedTasks = 0
-		failedTasks = 0
-		totalWorkers = len(workers)
-		activeWorkers = 0
+		failedTasks    = 0
+		totalWorkers   = len(workers)
+		activeWorkers  = 0
 	)
 
 	// TODO: Implement proper task and worker status counting
@@ -289,13 +458,13 @@ func (s *Server) getSystemStats(c *gin.Context) {
 	// 		failedTasks++
 	// 	}
 	// }
-	// 
+	//
 	// for _, w := range workers {
 	// 	if w.Status == "active" {
 	// 		activeWorkers++
 	// 	}
 	// }
-	
+
 	// Placeholder values for now
 	pendingTasks = 0
 	runningTasks = 0
@@ -305,11 +474,11 @@ func (s *Server) getSystemStats(c *gin.Context) {
 
 	stats := gin.H{
 		"tasks": gin.H{
-			"total":    totalTasks,
-			"pending":  pendingTasks,
-			"running":  runningTasks,
+			"total":     totalTasks,
+			"pending":   pendingTasks,
+			"running":   runningTasks,
 			"completed": completedTasks,
-			"failed":   failedTasks,
+			"failed":    failedTasks,
 		},
 		"workers": gin.H{
 			"total":  totalWorkers,
@@ -352,7 +521,7 @@ func (s *Server) executePlanningWorkflow(c *gin.Context) {
 
 	projectManager := project.NewManager()
 	workflowExecutor := workflow.NewExecutor(projectManager)
-	
+
 	wf, err := workflowExecutor.ExecutePlanningWorkflow(c.Request.Context(), projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -374,7 +543,7 @@ func (s *Server) executeBuildingWorkflow(c *gin.Context) {
 
 	projectManager := project.NewManager()
 	workflowExecutor := workflow.NewExecutor(projectManager)
-	
+
 	wf, err := workflowExecutor.ExecuteBuildingWorkflow(c.Request.Context(), projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -396,7 +565,7 @@ func (s *Server) executeTestingWorkflow(c *gin.Context) {
 
 	projectManager := project.NewManager()
 	workflowExecutor := workflow.NewExecutor(projectManager)
-	
+
 	wf, err := workflowExecutor.ExecuteTestingWorkflow(c.Request.Context(), projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -418,7 +587,7 @@ func (s *Server) executeRefactoringWorkflow(c *gin.Context) {
 
 	projectManager := project.NewManager()
 	workflowExecutor := workflow.NewExecutor(projectManager)
-	
+
 	wf, err := workflowExecutor.ExecuteRefactoringWorkflow(c.Request.Context(), projectID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

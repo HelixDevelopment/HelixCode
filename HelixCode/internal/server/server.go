@@ -7,19 +7,27 @@ import (
 	"net/http"
 	"time"
 
+	"dev.helix.code/internal/auth"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/llm"
+	"dev.helix.code/internal/mcp"
+	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/redis"
 	"github.com/gin-gonic/gin"
 )
 
 // Server represents the HTTP server
 type Server struct {
-	config *config.Config
-	db     *database.Database
-	redis  *redis.Client
-	server *http.Server
-	router *gin.Engine
+	config       *config.Config
+	db           *database.Database
+	redis        *redis.Client
+	auth         *auth.AuthService
+	llm          *llm.Provider
+	mcp          *mcp.MCPServer
+	notification *notification.NotificationEngine
+	server       *http.Server
+	router       *gin.Engine
 }
 
 // New creates a new HTTP server
@@ -39,11 +47,33 @@ func New(cfg *config.Config, db *database.Database, rds *redis.Client) *Server {
 	router.Use(CORSMiddleware())
 	router.Use(SecurityMiddleware())
 
+	// Initialize auth service
+	authConfig := auth.AuthConfig{
+		JWTSecret:     cfg.Auth.JWTSecret,
+		TokenExpiry:   time.Duration(cfg.Auth.TokenExpiry) * time.Second,
+		SessionExpiry: time.Duration(cfg.Auth.SessionExpiry) * time.Second,
+		BcryptCost:    cfg.Auth.BcryptCost,
+	}
+	authDB := auth.NewAuthDB(db.Pool)
+	authService := auth.NewAuthService(authConfig, authDB)
+
+	// Initialize MCP server
+	mcpServer := mcp.NewMCPServer()
+
+	// Initialize notification engine
+	notificationEngine := notification.NewNotificationEngine()
+
+	// Initialize LLM provider (basic setup - would be configured based on config)
+	// For now, we'll skip LLM initialization as it requires more complex setup
+
 	server := &Server{
-		config: cfg,
-		db:     db,
-		redis:  rds,
-		router: router,
+		config:       cfg,
+		db:           db,
+		redis:        rds,
+		auth:         authService,
+		mcp:          mcpServer,
+		notification: notificationEngine,
+		router:       router,
 	}
 
 	// Setup routes
@@ -83,17 +113,17 @@ func (s *Server) setupRoutes() {
 		// Authentication routes
 		auth := api.Group("/auth")
 		{
-			auth.POST("/register", s.notImplemented)
-			auth.POST("/login", s.notImplemented)
-			auth.POST("/logout", s.notImplemented)
-			auth.POST("/refresh", s.notImplemented)
+			auth.POST("/register", s.register)
+			auth.POST("/login", s.login)
+			auth.POST("/logout", s.logout)
+			auth.POST("/refresh", s.refreshToken)
 		}
 
 		// User routes
 		users := api.Group("/users")
 		users.Use(s.authMiddleware())
 		{
-			users.GET("/me", s.notImplemented)
+			users.GET("/me", s.getCurrentUser)
 			users.PUT("/me", s.notImplemented)
 			users.DELETE("/me", s.notImplemented)
 		}
@@ -168,7 +198,7 @@ func (s *Server) setupRoutes() {
 	}
 
 	// WebSocket routes
-	s.router.GET("/ws", s.notImplemented)
+	s.router.GET("/ws", s.handleWebSocket)
 
 	// Static file serving for web interface
 	s.router.Static("/static", "./web/frontend/static")
@@ -222,10 +252,51 @@ func (s *Server) notImplemented(c *gin.Context) {
 
 func (s *Server) authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: Implement authentication middleware
-		// For now, just continue
+		// Get token from Authorization header
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  "error",
+				"message": "Authorization header required",
+			})
+			c.Abort()
+			return
+		}
+
+		// Check for Bearer token
+		const bearerPrefix = "Bearer "
+		if len(authHeader) <= len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  "error",
+				"message": "Invalid authorization header format",
+			})
+			c.Abort()
+			return
+		}
+
+		token := authHeader[len(bearerPrefix):]
+
+		// Verify JWT token
+		user, err := s.auth.VerifyJWT(token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"status":  "error",
+				"message": "Invalid or expired token",
+				"error":   err.Error(),
+			})
+			c.Abort()
+			return
+		}
+
+		// Set user in context
+		c.Set("user", user)
 		c.Next()
 	}
+}
+
+// handleWebSocket handles WebSocket connections for MCP
+func (s *Server) handleWebSocket(c *gin.Context) {
+	s.mcp.HandleWebSocket(c.Writer, c.Request)
 }
 
 // CORSMiddleware provides CORS headers

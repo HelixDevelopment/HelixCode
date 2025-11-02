@@ -117,6 +117,10 @@ func (db *Database) GetDB() (*sql.DB, error) {
 
 // HealthCheck performs a health check on the database
 func (db *Database) HealthCheck() error {
+	if db.Pool == nil {
+		return fmt.Errorf("database pool is not initialized")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

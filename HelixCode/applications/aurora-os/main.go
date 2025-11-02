@@ -16,6 +16,7 @@ import (
 	"dev.helix.code/internal/database"
 	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/notification"
+	"dev.helix.code/internal/redis"
 	"dev.helix.code/internal/server"
 	"dev.helix.code/internal/task"
 	"dev.helix.code/internal/worker"
@@ -112,8 +113,14 @@ func (app *AuroraApp) Initialize() error {
 	app.workerManager = &worker.WorkerManager{} // Placeholder
 	app.notificationEngine = notification.NewNotificationEngine()
 
+	// Initialize Redis
+	rds, err := redis.NewClient(&cfg.Redis)
+	if err != nil {
+		return fmt.Errorf("failed to initialize Redis: %v", err)
+	}
+
 	// Initialize server for API calls
-	app.server = server.New(cfg, db)
+	app.server = server.New(cfg, db, rds)
 
 	// Initialize theme manager
 	app.themeManager = NewThemeManager()

@@ -11,6 +11,7 @@ import (
 	"dev.helix.code/internal/database"
 	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/notification"
+	"dev.helix.code/internal/redis"
 	"dev.helix.code/internal/server"
 	"dev.helix.code/internal/task"
 	"dev.helix.code/internal/worker"
@@ -271,8 +272,14 @@ func (mc *MobileCore) initializeInternal() error {
 	mc.workerManager = &worker.WorkerManager{} // Placeholder
 	mc.notificationEngine = notification.NewNotificationEngine()
 
+	// Initialize Redis
+	rds, err := redis.NewClient(&cfg.Redis)
+	if err != nil {
+		return fmt.Errorf("failed to initialize Redis: %v", err)
+	}
+
 	// Initialize server for API calls
-	mc.server = server.New(cfg, db)
+	mc.server = server.New(cfg, db, rds)
 
 	log.Println("Mobile core initialized successfully")
 	return nil
