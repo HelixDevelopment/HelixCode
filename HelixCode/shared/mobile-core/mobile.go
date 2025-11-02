@@ -267,16 +267,16 @@ func (mc *MobileCore) initializeInternal() error {
 	}
 	mc.db = db
 
-	// Initialize components
-	mc.taskManager = task.NewTaskManager(db)
-	mc.workerManager = &worker.WorkerManager{} // Placeholder
-	mc.notificationEngine = notification.NewNotificationEngine()
-
 	// Initialize Redis
 	rds, err := redis.NewClient(&cfg.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to initialize Redis: %v", err)
 	}
+
+	// Initialize components
+	mc.taskManager = task.NewTaskManager(db, rds)
+	mc.workerManager = &worker.WorkerManager{} // Placeholder
+	mc.notificationEngine = notification.NewNotificationEngine()
 
 	// Initialize server for API calls
 	mc.server = server.New(cfg, db, rds)

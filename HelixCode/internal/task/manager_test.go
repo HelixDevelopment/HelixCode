@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/redis"
+	"github.com/google/uuid"
 )
 
 // MockDatabase creates a mock database for testing
@@ -15,8 +16,14 @@ func MockDatabase() *database.Database {
 	return nil
 }
 
+// MockRedis creates a mock Redis client for testing
+func MockRedis() *redis.Client {
+	// Create a disabled Redis client for testing
+	return &redis.Client{}
+}
+
 func TestTaskManager_CreateTask(t *testing.T) {
-	tm := NewTaskManager(MockDatabase())
+	tm := NewTaskManager(MockDatabase(), MockRedis())
 
 	task, err := tm.CreateTask(
 		TaskTypePlanning,
@@ -50,7 +57,7 @@ func TestTaskManager_CreateTask(t *testing.T) {
 }
 
 func TestTaskManager_CompleteTask(t *testing.T) {
-	tm := NewTaskManager(MockDatabase())
+	tm := NewTaskManager(MockDatabase(), MockRedis())
 
 	task, err := tm.CreateTask(
 		TaskTypeBuilding,
@@ -67,7 +74,7 @@ func TestTaskManager_CompleteTask(t *testing.T) {
 	}
 
 	result := map[string]interface{}{
-		"output": "Build completed successfully",
+		"output":   "Build completed successfully",
 		"duration": "2m30s",
 	}
 
@@ -81,7 +88,7 @@ func TestTaskManager_CompleteTask(t *testing.T) {
 }
 
 func TestTaskManager_FailTask(t *testing.T) {
-	tm := NewTaskManager(MockDatabase())
+	tm := NewTaskManager(MockDatabase(), MockRedis())
 
 	task, err := tm.CreateTask(
 		TaskTypeTesting,
@@ -215,7 +222,7 @@ func TestTaskQueue_Stats(t *testing.T) {
 }
 
 func TestTaskManager_GetTaskProgress(t *testing.T) {
-	tm := NewTaskManager(MockDatabase())
+	tm := NewTaskManager(MockDatabase(), MockRedis())
 
 	task, err := tm.CreateTask(
 		TaskTypeRefactoring,

@@ -1,0 +1,40 @@
+FROM golang:1.24-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata docker-cli
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY HelixCode/go.mod HelixCode/go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY HelixCode/ .
+
+# Copy test runner script
+COPY scripts/run-docker-tests.sh /app/test-runner
+RUN chmod +x /app/test-runner
+
+FROM alpine:latest
+
+# Install runtime dependencies
+RUN apk add --no-cache docker-cli docker-compose postgresql-client redis bash openssh-client
+
+# Create app directory
+WORKDIR /app
+
+# Copy built binary and scripts
+COPY --from=builder /app/test-runner .
+COPY scripts/run-docker-tests.sh .
+COPY scripts/run-all-tests.sh .
+COPY scripts/run-tests.sh .
+
+# Make scripts executable
+RUN chmod +x *.sh
+
+# Set entrypoint
+ENTRYPOINT ["/app/run-docker-tests.sh"]

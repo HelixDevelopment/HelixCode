@@ -1,0 +1,48 @@
+FROM golang:1.24-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY HelixCode/go.mod HelixCode/go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY HelixCode/ .
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-X main.version=1.0.0-test -X main.buildTime=$(date +%Y-%m-%d_%H:%M:%S) -X main.gitCommit=test" -o server ./cmd/server
+
+FROM alpine:latest
+
+# Install runtime dependencies
+RUN apk add --no-cache openssh-server openssh-client postgresql-client redis
+
+# Create SSH directory
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+
+# Configure SSH
+RUN echo 'root:helixcode' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Create app directory
+WORKDIR /app
+
+# Copy built binary
+COPY --from=builder /app/server .
+
+# Copy entrypoint script
+COPY docker/entrypoint-worker.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose SSH port
+EXPOSE 22
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]

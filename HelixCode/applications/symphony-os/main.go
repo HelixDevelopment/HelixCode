@@ -124,16 +124,16 @@ func (app *SymphonyApp) Initialize() error {
 	}
 	app.db = db
 
-	// Initialize components
-	app.taskManager = task.NewTaskManager(db)
-	app.workerManager = &worker.WorkerManager{} // Placeholder
-	app.notificationEngine = notification.NewNotificationEngine()
-
 	// Initialize Redis
 	rds, err := redis.NewClient(&cfg.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to initialize Redis: %v", err)
 	}
+
+	// Initialize components
+	app.taskManager = task.NewTaskManager(db, rds)
+	app.workerManager = &worker.WorkerManager{} // Placeholder
+	app.notificationEngine = notification.NewNotificationEngine()
 
 	// Initialize server for API calls
 	app.server = server.New(cfg, db, rds)

@@ -67,17 +67,17 @@ func (tui *TerminalUI) Initialize() error {
 	}
 	tui.db = db
 
-	// Initialize components
-	tui.taskManager = task.NewTaskManager(db)
-	// For now, create a simple worker manager - will be improved later
-	tui.workerManager = &worker.WorkerManager{} // Placeholder
-	tui.notificationEngine = notification.NewNotificationEngine()
-
 	// Initialize Redis
 	rds, err := redis.NewClient(&cfg.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to initialize Redis: %v", err)
 	}
+
+	// Initialize components
+	tui.taskManager = task.NewTaskManager(db, rds)
+	// For now, create a simple worker manager - will be improved later
+	tui.workerManager = &worker.WorkerManager{} // Placeholder
+	tui.notificationEngine = notification.NewNotificationEngine()
 
 	// Initialize server for API calls
 	tui.server = server.New(cfg, db, rds)
