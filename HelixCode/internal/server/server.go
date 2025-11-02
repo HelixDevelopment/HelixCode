@@ -7,21 +7,23 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/redis"
+	"github.com/gin-gonic/gin"
 )
 
 // Server represents the HTTP server
 type Server struct {
 	config *config.Config
 	db     *database.Database
+	redis  *redis.Client
 	server *http.Server
 	router *gin.Engine
 }
 
 // New creates a new HTTP server
-func New(cfg *config.Config, db *database.Database) *Server {
+func New(cfg *config.Config, db *database.Database, rds *redis.Client) *Server {
 	// Set Gin mode
 	if cfg.Logging.Level == "debug" {
 		gin.SetMode(gin.DebugMode)
@@ -40,6 +42,7 @@ func New(cfg *config.Config, db *database.Database) *Server {
 	server := &Server{
 		config: cfg,
 		db:     db,
+		redis:  rds,
 		router: router,
 	}
 
@@ -136,7 +139,7 @@ func (s *Server) setupRoutes() {
 			projects.PUT("/:id", s.updateProject)
 			projects.DELETE("/:id", s.deleteProject)
 			projects.GET("/:id/sessions", s.notImplemented)
-			
+
 			// Workflow routes
 			projects.POST("/:projectId/workflows/planning", s.executePlanningWorkflow)
 			projects.POST("/:projectId/workflows/building", s.executeBuildingWorkflow)
@@ -184,6 +187,21 @@ func (s *Server) healthCheck(c *gin.Context) {
 			"error":   err.Error(),
 		})
 		return
+	}
+
+	// Check Redis connection if enabled
+	if s.redis.IsEnabled() {
+		if _, err := s.redis.Get(c.Request.Context(), "health_check"); err != nil && err.Error() != "redis: nil" {
+			// Try to ping Redis
+			if s.redis.GetClient().Ping(c.Request.Context()).Err() != nil {
+				c.JSON(http.StatusServiceUnavailable, gin.H{
+					"status":  "error",
+					"message": "Redis connection failed",
+					"error":   err.Error(),
+				})
+				return
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{

@@ -1,62 +1,53 @@
-# Helix CLI Configuration
+# HelixCode Server Configuration
 
-# Global settings
-global:
-  theme: "default"
-  auto_confirm: false
-  max_workers: 4
-  log_level: "info"
-  data_dir: "~/.config/Helix"
-  cache_dir: "~/.cache/Helix"
+server:
+  address: "0.0.0.0"
+  port: 8080
+  read_timeout: 30
+  write_timeout: 30
+  idle_timeout: 60
+  shutdown_timeout: 30
 
-# LLM Provider configurations
-llm:
-  # Llama.cpp configuration
-  llamacpp:
-    enabled: true
-    model_path: "~/models/llama-2-7b-chat.gguf"
-    context_size: 4096
-    gpu_enabled: true
-    gpu_layers: 35
-    server_host: "localhost"
-    server_port: 8080
-    server_timeout: 30
-
-  # Ollama configuration
-  ollama:
-    enabled: true
-    base_url: "http://localhost:11434"
-    default_model: "llama2"
-    timeout: 30
-    keep_alive: 300
-    stream_enabled: true
-
-  # OpenAI configuration
-  openai:
-    enabled: false
-    api_key: ""
-    base_url: "https://api.openai.com/v1"
-    default_model: "gpt-4"
-    timeout: 30
-
-# User interface settings
-ui:
-  terminal_width: 80
-  show_ascii_art: true
-  color_scheme: "default"
-  syntax_highlighting: true
-
-# Security settings
-security:
-  enable_encryption: true
-  require_authentication: false
-  session_timeout: 3600
-
-# Database settings
 database:
   host: "localhost"
   port: 5432
-  user: "helix"
-  password: ""
-  dbname: "helix"
-  ssl_mode: "disable"
+  user: "helixcode"
+  password: "" # Set via HELIX_DATABASE_PASSWORD environment variable
+  dbname: "helixcode"
+  sslmode: "disable"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: "" # Set via HELIX_REDIS_PASSWORD environment variable
+  db: 0
+  enabled: false
+
+auth:
+  jwt_secret: "test-jwt-secret-for-development-only-change-in-production" # Set via HELIX_AUTH_JWT_SECRET environment variable
+  token_expiry: 86400
+  session_expiry: 604800
+  bcrypt_cost: 12
+
+workers:
+  health_check_interval: 30
+  health_ttl: 120
+  max_concurrent_tasks: 10
+
+tasks:
+  max_retries: 3
+  checkpoint_interval: 300
+  cleanup_interval: 3600
+
+llm:
+  default_provider: "local"
+  providers:
+    local: "http://localhost:11434"
+    openai: "" # Set API key via environment variable
+  max_tokens: 4096
+  temperature: 0.7
+
+logging:
+  level: "info"
+  format: "text"
+  output: "stdout"

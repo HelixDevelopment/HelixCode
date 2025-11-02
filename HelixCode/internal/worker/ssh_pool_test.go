@@ -118,9 +118,9 @@ func TestSSHWorkerPool_GetWorkerStats(t *testing.T) {
 		Status:       WorkerStatusActive,
 		HealthStatus: WorkerHealthHealthy,
 		Resources: Resources{
-			CPUCount:     8,
-			TotalMemory:  16777216, // 16GB
-			GPUCount:     1,
+			CPUCount:    8,
+			TotalMemory: 16777216, // 16GB
+			GPUCount:    1,
 		},
 	}
 
@@ -130,18 +130,18 @@ func TestSSHWorkerPool_GetWorkerStats(t *testing.T) {
 		Status:       WorkerStatusOffline,
 		HealthStatus: WorkerHealthUnhealthy,
 		Resources: Resources{
-			CPUCount:     4,
-			TotalMemory:  8388608, // 8GB
-			GPUCount:     0,
+			CPUCount:    4,
+			TotalMemory: 8388608, // 8GB
+			GPUCount:    0,
 		},
 	}
 
 	stats := pool.GetWorkerStats(ctx)
 
 	assert.Equal(t, 2, stats.TotalWorkers)
-	assert.Equal(t, 1, stats.ActiveWorkers) // Only worker1 is active
-	assert.Equal(t, 1, stats.HealthyWorkers) // Only worker1 is healthy
-	assert.Equal(t, 12, stats.TotalCPU)      // 8 + 4
+	assert.Equal(t, 1, stats.ActiveWorkers)             // Only worker1 is active
+	assert.Equal(t, 1, stats.HealthyWorkers)            // Only worker1 is healthy
+	assert.Equal(t, 12, stats.TotalCPU)                 // 8 + 4
 	assert.Equal(t, int64(25165824), stats.TotalMemory) // 16GB + 8GB
 	assert.Equal(t, 1, stats.TotalGPU)
 }
@@ -270,6 +270,11 @@ func TestSSHWorkerPool_DetectWorkerCapabilities(t *testing.T) {
 	err := pool.detectWorkerCapabilities(ctx, worker)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to detect capabilities")
+
+	// Test with nil worker (should not panic)
+	err = pool.detectWorkerCapabilities(ctx, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "worker is nil")
 }
 
 // TestSSHWorkerPool_ConcurrentAccess tests concurrent access safety
@@ -366,9 +371,9 @@ func TestSSHWorkerPool_ResourceManagement(t *testing.T) {
 		memory int64
 		gpu    int
 	}{
-		{cpu: 4, memory: 8589934592, gpu: 0},    // 8GB
-		{cpu: 8, memory: 17179869184, gpu: 1},   // 16GB
-		{cpu: 16, memory: 34359738368, gpu: 2},  // 32GB
+		{cpu: 4, memory: 8589934592, gpu: 0},   // 8GB
+		{cpu: 8, memory: 17179869184, gpu: 1},  // 16GB
+		{cpu: 16, memory: 34359738368, gpu: 2}, // 32GB
 	}
 
 	for i, w := range workers {
@@ -379,9 +384,9 @@ func TestSSHWorkerPool_ResourceManagement(t *testing.T) {
 			Status:       WorkerStatusActive,
 			HealthStatus: WorkerHealthHealthy,
 			Resources: Resources{
-				CPUCount:     w.cpu,
-				TotalMemory:  w.memory,
-				GPUCount:     w.gpu,
+				CPUCount:    w.cpu,
+				TotalMemory: w.memory,
+				GPUCount:    w.gpu,
 			},
 		}
 	}

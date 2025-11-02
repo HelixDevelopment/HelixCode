@@ -59,6 +59,10 @@ func (p *SSHWorkerPool) AddWorker(ctx context.Context, worker *SSHWorker) error 
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
+	if worker == nil {
+		return fmt.Errorf("worker is nil")
+	}
+
 	// Validate SSH configuration
 	if err := p.validateSSHConfig(worker.SSHConfig); err != nil {
 		return fmt.Errorf("invalid SSH config: %v", err)
@@ -211,6 +215,9 @@ type SSHWorkerStats struct {
 // Helper methods
 
 func (p *SSHWorkerPool) validateSSHConfig(config *SSHWorkerConfig) error {
+	if config == nil {
+		return fmt.Errorf("SSH config is required")
+	}
 	if config.Host == "" {
 		return fmt.Errorf("host is required")
 	}
@@ -285,6 +292,10 @@ func (p *SSHWorkerPool) createSSHClient(config *SSHWorkerConfig) (*ssh.Client, e
 }
 
 func (p *SSHWorkerPool) ensureSSHConnection(worker *SSHWorker) error {
+	if worker == nil {
+		return fmt.Errorf("worker is nil")
+	}
+
 	if worker.client != nil {
 		// Test if connection is still alive
 		_, _, err := worker.client.SendRequest("keepalive@golang.org", true, nil)
@@ -333,8 +344,38 @@ helix --version
 }
 
 func (p *SSHWorkerPool) detectWorkerCapabilities(ctx context.Context, worker *SSHWorker) error {
+	if worker == nil {
+		return fmt.Errorf("worker is nil")
+	}
+
+	// Establish SSH connection for capability detection
+	client, err := p.createSSHClient(worker.SSHConfig)
+	if err != nil {
+		return fmt.Errorf("failed to detect capabilities: %v", err)
+	}
+	defer client.Close()
+
+	// Helper function to execute command on the client
+	executeCommand := func(command string) (string, error) {
+		session, err := client.NewSession()
+		if err != nil {
+			return "", err
+		}
+		defer session.Close()
+
+		var stdout, stderr bytes.Buffer
+		session.Stdout = &stdout
+		session.Stderr = &stderr
+
+		if err := session.Run(command); err != nil {
+			return "", fmt.Errorf("command failed: %v, stderr: %s", err, stderr.String())
+		}
+
+		return stdout.String(), nil
+	}
+
 	// Detect CPU information
-	cpuInfo, err := p.ExecuteCommand(ctx, worker.ID, "nproc")
+	cpuInfo, err := executeCommand("nproc")
 	if err == nil && cpuInfo != "" {
 		var cpuCount int
 		fmt.Sscanf(cpuInfo, "%d", &cpuCount)
@@ -342,7 +383,7 @@ func (p *SSHWorkerPool) detectWorkerCapabilities(ctx context.Context, worker *SS
 	}
 
 	// Detect memory information
-	memInfo, err := p.ExecuteCommand(ctx, worker.ID, "free -b | awk 'NR==2{print $2}'")
+	memInfo, err := executeCommand("free -b | awk 'NR==2{print $2}'")
 	if err == nil && memInfo != "" {
 		var totalMemory int64
 		fmt.Sscanf(memInfo, "%d", &totalMemory)
@@ -350,7 +391,7 @@ func (p *SSHWorkerPool) detectWorkerCapabilities(ctx context.Context, worker *SS
 	}
 
 	// Detect GPU information
-	gpuInfo, err := p.ExecuteCommand(ctx, worker.ID, "lspci | grep -i nvidia | wc -l")
+	gpuInfo, err := executeCommand("lspci | grep -i nvidia | wc -l")
 	if err == nil && gpuInfo != "" {
 		var gpuCount int
 		fmt.Sscanf(gpuInfo, "%d", &gpuCount)
@@ -361,17 +402,17 @@ func (p *SSHWorkerPool) detectWorkerCapabilities(ctx context.Context, worker *SS
 	capabilities := []string{"ssh-execution", "remote-computation"}
 
 	// Check for LLM capabilities
-	if _, err := p.ExecuteCommand(ctx, worker.ID, "which python3"); err == nil {
+	if _, err := executeCommand("which python3"); err == nil {
 		capabilities = append(capabilities, "python-execution")
 	}
 
 	// Check for Docker
-	if _, err := p.ExecuteCommand(ctx, worker.ID, "which docker"); err == nil {
+	if _, err := executeCommand("which docker"); err == nil {
 		capabilities = append(capabilities, "docker-execution")
 	}
 
 	// Check for CUDA
-	if _, err := p.ExecuteCommand(ctx, worker.ID, "which nvcc"); err == nil {
+	if _, err := executeCommand("which nvcc"); err == nil {
 		capabilities = append(capabilities, "cuda-computation")
 	}
 

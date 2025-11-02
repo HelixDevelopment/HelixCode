@@ -6,19 +6,20 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/spf13/viper"
 	"dev.helix.code/internal/database"
+	"github.com/spf13/viper"
 )
 
 // Config represents the application configuration
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
+	Server   ServerConfig    `mapstructure:"server"`
 	Database database.Config `mapstructure:"database"`
-	Auth     AuthConfig     `mapstructure:"auth"`
-	Workers  WorkersConfig  `mapstructure:"workers"`
-	Tasks    TasksConfig    `mapstructure:"tasks"`
-	LLM      LLMConfig      `mapstructure:"llm"`
-	Logging  LoggingConfig  `mapstructure:"logging"`
+	Redis    RedisConfig     `mapstructure:"redis"`
+	Auth     AuthConfig      `mapstructure:"auth"`
+	Workers  WorkersConfig   `mapstructure:"workers"`
+	Tasks    TasksConfig     `mapstructure:"tasks"`
+	LLM      LLMConfig       `mapstructure:"llm"`
+	Logging  LoggingConfig   `mapstructure:"logging"`
 }
 
 // ServerConfig represents server configuration
@@ -31,12 +32,21 @@ type ServerConfig struct {
 	ShutdownTimeout int    `mapstructure:"shutdown_timeout"`
 }
 
+// RedisConfig represents Redis configuration
+type RedisConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+	Enabled  bool   `mapstructure:"enabled"`
+}
+
 // AuthConfig represents authentication configuration
 type AuthConfig struct {
-	JWTSecret          string `mapstructure:"jwt_secret"`
-	TokenExpiry        int    `mapstructure:"token_expiry"`
-	SessionExpiry      int    `mapstructure:"session_expiry"`
-	BcryptCost         int    `mapstructure:"bcrypt_cost"`
+	JWTSecret     string `mapstructure:"jwt_secret"`
+	TokenExpiry   int    `mapstructure:"token_expiry"`
+	SessionExpiry int    `mapstructure:"session_expiry"`
+	BcryptCost    int    `mapstructure:"bcrypt_cost"`
 }
 
 // WorkersConfig represents worker configuration
@@ -133,9 +143,16 @@ func setDefaults() {
 	viper.SetDefault("database.dbname", "helixcode")
 	viper.SetDefault("database.sslmode", "disable")
 
+	// Redis defaults
+	viper.SetDefault("redis.host", "localhost")
+	viper.SetDefault("redis.port", 6379)
+	viper.SetDefault("redis.password", "")
+	viper.SetDefault("redis.db", 0)
+	viper.SetDefault("redis.enabled", true)
+
 	// Auth defaults
 	viper.SetDefault("auth.jwt_secret", "default-secret-change-in-production")
-	viper.SetDefault("auth.token_expiry", 86400) // 24 hours
+	viper.SetDefault("auth.token_expiry", 86400)    // 24 hours
 	viper.SetDefault("auth.session_expiry", 604800) // 7 days
 	viper.SetDefault("auth.bcrypt_cost", 12)
 
@@ -203,6 +220,16 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("database name is required")
 	}
 
+	// Redis validation
+	if cfg.Redis.Enabled {
+		if cfg.Redis.Host == "" {
+			return fmt.Errorf("redis host is required when redis is enabled")
+		}
+		if cfg.Redis.Port < 1 || cfg.Redis.Port > 65535 {
+			return fmt.Errorf("redis port must be between 1 and 65535")
+		}
+	}
+
 	// Auth validation
 	if cfg.Auth.JWTSecret == "" || cfg.Auth.JWTSecret == "default-secret-change-in-production" {
 		return fmt.Errorf("JWT secret must be set and not use default value")
@@ -258,6 +285,13 @@ database:
   password: "" # Set via HELIX_DATABASE_PASSWORD environment variable
   dbname: "helixcode"
   sslmode: "disable"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: "" # Set via HELIX_REDIS_PASSWORD environment variable
+  db: 0
+  enabled: true
 
 auth:
   jwt_secret: "" # Set via HELIX_AUTH_JWT_SECRET environment variable

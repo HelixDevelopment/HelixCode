@@ -12,6 +12,7 @@ import (
 
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/redis"
 	"dev.helix.code/internal/server"
 )
 
@@ -45,8 +46,15 @@ func main() {
 		log.Fatalf("❌ Failed to initialize database schema: %v", err)
 	}
 
+	// Initialize Redis
+	rds, err := redis.NewClient(&cfg.Redis)
+	if err != nil {
+		log.Fatalf("❌ Failed to initialize Redis: %v", err)
+	}
+	defer rds.Close()
+
 	// Create HTTP server
-	srv := server.New(cfg, db)
+	srv := server.New(cfg, db, rds)
 
 	// Start server in a goroutine
 	go func() {

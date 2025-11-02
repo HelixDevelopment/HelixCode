@@ -1,99 +1,207 @@
 version: '3.8'
 
 services:
-  # Test database
-  test-db:
+  # Main HelixCode server for testing
+  helixcode-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "2222:22"  # SSH port for worker connections
+    environment:
+      - HELIX_ENV=test
+      - HELIX_DATABASE_URL=postgres://helix:helixpass@postgres:5432/helixcode_test?sslmode=disable
+      - HELIX_REDIS_URL=redis://redis:6379
+      - HELIX_SSH_HOST_KEY=/etc/ssh/ssh_host_rsa_key
+    volumes:
+      - ./test/ssh-keys:/root/.ssh:ro
+      - ./test/config:/etc/helixcode:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - helixcode-test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL database for testing
+  postgres:
     image: postgres:15
     environment:
-      POSTGRES_DB: helix_test
-      POSTGRES_USER: helix_test
-      POSTGRES_PASSWORD: test_password
+      - POSTGRES_DB=helixcode_test
+      - POSTGRES_USER=helix
+      - POSTGRES_PASSWORD=helixpass
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
-      - test_db_data:/var/lib/postgresql/data
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./test/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - helixcode-test
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U helix_test -d helix_test"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U helix"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Test worker nodes
-  test-worker-1:
+  # Redis cache for testing
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - helixcode-test
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Worker node 1 - CPU focused
+  worker-1:
     build:
       context: .
-      dockerfile: Dockerfile.test-worker
-    hostname: test-worker-1
+      dockerfile: Dockerfile.worker
+    hostname: worker-1
     environment:
-      WORKER_NAME: "test-worker-1"
-      HELIX_CONFIG: "/app/config/test-config.yaml"
+      - WORKER_ID=worker-1
+      - WORKER_CAPABILITIES=code-generation,testing,python-execution
+      - WORKER_MAX_TASKS=5
+      - HELIX_SERVER=helixcode-server:2222
     volumes:
-      - ./test/workers/ssh-keys:/root/.ssh:ro
-      - ./test/config:/app/config:ro
-    ports:
-      - "2222:22"
+      - ./test/ssh-keys:/root/.ssh:ro
     depends_on:
-      test-db:
+      helixcode-server:
         condition: service_healthy
+    networks:
+      - helixcode-test
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
 
-  test-worker-2:
+  # Worker node 2 - GPU focused (simulated)
+  worker-2:
     build:
       context: .
-      dockerfile: Dockerfile.test-worker
-    hostname: test-worker-2
+      dockerfile: Dockerfile.worker
+    hostname: worker-2
     environment:
-      WORKER_NAME: "test-worker-2"
-      HELIX_CONFIG: "/app/config/test-config.yaml"
+      - WORKER_ID=worker-2
+      - WORKER_CAPABILITIES=llm-inference,model-training,cuda-computation
+      - WORKER_MAX_TASKS=3
+      - HELIX_SERVER=helixcode-server:2222
+      - SIMULATE_GPU=true
     volumes:
-      - ./test/workers/ssh-keys:/root/.ssh:ro
-      - ./test/config:/app/config:ro
-    ports:
-      - "2223:22"
+      - ./test/ssh-keys:/root/.ssh:ro
     depends_on:
-      test-db:
+      helixcode-server:
         condition: service_healthy
+    networks:
+      - helixcode-test
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
 
-  test-worker-3:
+  # Worker node 3 - High memory
+  worker-3:
     build:
       context: .
-      dockerfile: Dockerfile.test-worker
-    hostname: test-worker-3
+      dockerfile: Dockerfile.worker
+    hostname: worker-3
     environment:
-      WORKER_NAME: "test-worker-3"
-      HELIX_CONFIG: "/app/config/test-config.yaml"
+      - WORKER_ID=worker-3
+      - WORKER_CAPABILITIES=data-processing,analysis,docker-execution
+      - WORKER_MAX_TASKS=2
+      - HELIX_SERVER=helixcode-server:2222
     volumes:
-      - ./test/workers/ssh-keys:/root/.ssh:ro
-      - ./test/config:/app/config:ro
-    ports:
-      - "2224:22"
+      - ./test/ssh-keys:/root/.ssh:ro
     depends_on:
-      test-db:
+      helixcode-server:
         condition: service_healthy
+    networks:
+      - helixcode-test
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 8G
+        reservations:
+          cpus: '0.5'
+          memory: 4G
 
-  # Test runner
+  # Test runner for unit and integration tests
   test-runner:
     build:
       context: .
-      dockerfile: Dockerfile.test-runner
+      dockerfile: Dockerfile.test
     environment:
-      DATABASE_URL: "postgres://helix_test:test_password@test-db:5432/helix_test?sslmode=disable"
-      TEST_WORKER_1_HOST: "test-worker-1"
-      TEST_WORKER_2_HOST: "test-worker-2"
-      TEST_WORKER_3_HOST: "test-worker-3"
+      - HELIX_SERVER=helixcode-server:8080
+      - POSTGRES_URL=postgres://helix:helixpass@postgres:5432/helixcode_test?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - WORKER_1_HOST=worker-1
+      - WORKER_2_HOST=worker-2
+      - WORKER_3_HOST=worker-3
     volumes:
-      - ./test/workers/ssh-keys:/root/.ssh:ro
-      - ./test/config:/app/config:ro
-      - ./test/results:/app/test-results
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
     depends_on:
-      test-db:
-        condition: service_healthy
-      test-worker-1:
-        condition: service_started
-      test-worker-2:
-        condition: service_started
-      test-worker-3:
-        condition: service_started
+      - helixcode-server
+      - postgres
+      - redis
+      - worker-1
+      - worker-2
+      - worker-3
+    networks:
+      - helixcode-test
+    command: ["go", "test", "-v", "./internal/worker/..."]
+
+  # E2E test runner
+  e2e-test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      - HELIX_SERVER=helixcode-server:8080
+      - POSTGRES_URL=postgres://helix:helixpass@postgres:5432/helixcode_test?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - WORKER_1_HOST=worker-1
+      - WORKER_2_HOST=worker-2
+      - WORKER_3_HOST=worker-3
+    volumes:
+      - .:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace
+    depends_on:
+      - helixcode-server
+      - postgres
+      - redis
+      - worker-1
+      - worker-2
+      - worker-3
+    networks:
+      - helixcode-test
     command: ["go", "test", "-v", "./test/e2e/...", "-tags=e2e"]
 
 volumes:
-  test_db_data:
+  postgres_test_data:
+
+networks:
+  helixcode-test:
+    driver: bridge
