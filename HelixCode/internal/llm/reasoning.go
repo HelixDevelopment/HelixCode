@@ -12,25 +12,25 @@ import (
 
 // ReasoningRequest represents a request for reasoning-based generation
 type ReasoningRequest struct {
-	ID           uuid.UUID
-	Prompt       string
-	Tools        []ReasoningTool
+	ID            uuid.UUID
+	Prompt        string
+	Tools         []ReasoningTool
 	ReasoningType ReasoningType
-	MaxSteps     int
-	Temperature  float64
-	Context      map[string]interface{}
-	Constraints  []string
+	MaxSteps      int
+	Temperature   float64
+	Context       map[string]interface{}
+	Constraints   []string
 }
 
 // ReasoningResponse represents the response from reasoning-based generation
 type ReasoningResponse struct {
-	ID           uuid.UUID
-	FinalAnswer  string
+	ID             uuid.UUID
+	FinalAnswer    string
 	ReasoningSteps []ReasoningStep
-	ToolsUsed    []string
-	Duration     time.Duration
-	Confidence   float64
-	Error        string
+	ToolsUsed      []string
+	Duration       time.Duration
+	Confidence     float64
+	Error          string
 }
 
 // ReasoningStep represents a single step in the reasoning process
@@ -53,10 +53,10 @@ type ReasoningToolCall struct {
 type ReasoningType string
 
 const (
-	ReasoningTypeChainOfThought   ReasoningType = "chain_of_thought"
-	ReasoningTypeTreeOfThoughts   ReasoningType = "tree_of_thoughts"
-	ReasoningTypeSelfReflection   ReasoningType = "self_reflection"
-	ReasoningTypeProgressive      ReasoningType = "progressive"
+	ReasoningTypeChainOfThought ReasoningType = "chain_of_thought"
+	ReasoningTypeTreeOfThoughts ReasoningType = "tree_of_thoughts"
+	ReasoningTypeSelfReflection ReasoningType = "self_reflection"
+	ReasoningTypeProgressive    ReasoningType = "progressive"
 )
 
 // ReasoningTool represents a tool that can be used during reasoning
@@ -90,6 +90,12 @@ func NewReasoningEngine(provider Provider) *ReasoningEngine {
 
 // RegisterTool registers a tool with the reasoning engine
 func (e *ReasoningEngine) RegisterTool(tool ReasoningTool) error {
+	if tool.Name == "" {
+		return fmt.Errorf("tool name cannot be empty")
+	}
+	if tool.Handler == nil {
+		return fmt.Errorf("tool handler cannot be nil")
+	}
 	if _, exists := e.tools[tool.Name]; exists {
 		return fmt.Errorf("tool %s already registered", tool.Name)
 	}
@@ -102,9 +108,9 @@ func (e *ReasoningEngine) RegisterTool(tool ReasoningTool) error {
 func (e *ReasoningEngine) GenerateWithReasoning(ctx context.Context, req ReasoningRequest) (*ReasoningResponse, error) {
 	startTime := time.Now()
 	response := &ReasoningResponse{
-		ID:           uuid.New(),
+		ID:             uuid.New(),
 		ReasoningSteps: []ReasoningStep{},
-		ToolsUsed:    []string{},
+		ToolsUsed:      []string{},
 	}
 
 	// Validate request
@@ -256,7 +262,7 @@ func (e *ReasoningEngine) shouldUseTool(thought string) (*ReasoningToolCall, boo
 	for toolName := range e.tools {
 		if strings.Contains(strings.ToLower(thought), strings.ToLower(toolName)) {
 			return &ReasoningToolCall{
-				ToolName: toolName,
+				ToolName:  toolName,
 				Arguments: make(map[string]interface{}),
 			}, true
 		}
@@ -286,24 +292,24 @@ func (e *ReasoningEngine) determineAction(thought string, usedTool bool) string 
 func (e *ReasoningEngine) calculateConfidence(thought string) float64 {
 	// Simple confidence calculation based on thought characteristics
 	confidence := 0.5
-	
+
 	// Higher confidence for longer, more detailed thoughts
 	if len(thought) > 100 {
 		confidence += 0.2
 	}
-	
+
 	// Higher confidence for thoughts that reference specific facts
-	if strings.Contains(strings.ToLower(thought), "because") || 
-	   strings.Contains(strings.ToLower(thought), "therefore") ||
-	   strings.Contains(strings.ToLower(thought), "thus") {
+	if strings.Contains(strings.ToLower(thought), "because") ||
+		strings.Contains(strings.ToLower(thought), "therefore") ||
+		strings.Contains(strings.ToLower(thought), "thus") {
 		confidence += 0.2
 	}
-	
+
 	// Cap at 1.0
 	if confidence > 1.0 {
 		confidence = 1.0
 	}
-	
+
 	return confidence
 }
 

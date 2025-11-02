@@ -100,7 +100,10 @@ func TestReasoningEngine_RegisterTool(t *testing.T) {
 	err := engine.RegisterTool(tool)
 	assert.NoError(t, err)
 	assert.Contains(t, engine.tools, "test_tool")
-	assert.Equal(t, tool, engine.tools["test_tool"])
+	assert.Equal(t, tool.Name, engine.tools["test_tool"].Name)
+	assert.Equal(t, tool.Description, engine.tools["test_tool"].Description)
+	assert.Equal(t, tool.Parameters, engine.tools["test_tool"].Parameters)
+	assert.NotNil(t, engine.tools["test_tool"].Handler)
 
 	// Test duplicate registration
 	err = engine.RegisterTool(tool)
@@ -119,9 +122,9 @@ func TestReasoningEngine_ValidateRequest(t *testing.T) {
 
 	// Test valid request
 	validRequest := ReasoningRequest{
-		Prompt:       "Test prompt",
-		MaxSteps:     5,
-		Temperature:  0.5,
+		Prompt:        "Test prompt",
+		MaxSteps:      5,
+		Temperature:   0.5,
 		ReasoningType: ReasoningTypeChainOfThought,
 	}
 
@@ -132,41 +135,41 @@ func TestReasoningEngine_ValidateRequest(t *testing.T) {
 	testCases := []struct {
 		name    string
 		request ReasoningRequest
-		error  string
+		error   string
 	}{
 		{
 			name: "empty prompt",
 			request: ReasoningRequest{
-				Prompt:       "",
-				MaxSteps:     5,
-				Temperature:  0.5,
+				Prompt:      "",
+				MaxSteps:    5,
+				Temperature: 0.5,
 			},
 			error: "prompt cannot be empty",
 		},
 		{
 			name: "zero max steps",
 			request: ReasoningRequest{
-				Prompt:       "Test",
-				MaxSteps:     0,
-				Temperature:  0.5,
+				Prompt:      "Test",
+				MaxSteps:    0,
+				Temperature: 0.5,
 			},
 			error: "max steps must be positive",
 		},
 		{
 			name: "negative temperature",
 			request: ReasoningRequest{
-				Prompt:       "Test",
-				MaxSteps:     5,
-				Temperature:  -1.0,
+				Prompt:      "Test",
+				MaxSteps:    5,
+				Temperature: -1.0,
 			},
 			error: "temperature must be between 0 and 2",
 		},
 		{
 			name: "temperature too high",
 			request: ReasoningRequest{
-				Prompt:       "Test",
-				MaxSteps:     5,
-				Temperature:  3.0,
+				Prompt:      "Test",
+				MaxSteps:    5,
+				Temperature: 3.0,
 			},
 			error: "temperature must be between 0 and 2",
 		},
@@ -193,11 +196,11 @@ func TestReasoningEngine_GenerateWithReasoning(t *testing.T) {
 	}, nil)
 
 	request := ReasoningRequest{
-		ID:           uuid.New(),
-		Prompt:       "What is the answer to life, the universe, and everything?",
+		ID:            uuid.New(),
+		Prompt:        "What is the answer to life, the universe, and everything?",
 		ReasoningType: ReasoningTypeChainOfThought,
-		MaxSteps:     3,
-		Temperature:  0.7,
+		MaxSteps:      3,
+		Temperature:   0.7,
 	}
 
 	response, err := engine.GenerateWithReasoning(ctx, request)
