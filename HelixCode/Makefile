@@ -111,6 +111,9 @@ help:
 	@echo "  make mobile-ios    - Build iOS framework"
 	@echo "  make mobile-android- Build Android AAR"
 	@echo "  make mobile        - Build all mobile bindings"
+	@echo "  make aurora-os     - Build Aurora OS client"
+	@echo "  make symphony-os   - Build Symphony OS client"
+	@echo "  make aurora-symphony - Build Aurora and Symphony OS clients"
 	@echo "  make help          - Show this help"
 
 # Mobile build targets
@@ -130,6 +133,20 @@ mobile-android: mobile-init
 
 mobile: mobile-ios mobile-android
 	@echo "📱 All mobile bindings built"
+
+# Aurora OS and Symphony OS build targets
+aurora-os:
+	@echo "🌟 Building Aurora OS client..."
+	$(GO_BUILD) -ldflags="-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)" -o bin/aurora-os ./applications/aurora-os
+	@echo "✅ Aurora OS client built: bin/aurora-os"
+
+symphony-os:
+	@echo "🎼 Building Symphony OS client..."
+	$(GO_BUILD) -ldflags="-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)" -o bin/symphony-os ./applications/symphony-os
+	@echo "✅ Symphony OS client built: bin/symphony-os"
+
+aurora-symphony: aurora-os symphony-os
+	@echo "🌟🎼 Aurora OS and Symphony OS clients built"
 
 # Development tools setup
 dev-setup: setup-deps logo-deps
