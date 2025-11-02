@@ -97,17 +97,39 @@ help:
 	@echo "HelixCode Build System"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make build      - Build the application"
-	@echo "  make test       - Run tests"
-	@echo "  make clean      - Clean build artifacts"
-	@echo "  make logo-assets - Generate logo assets and themes"
-	@echo "  make setup-deps - Setup dependencies"
-	@echo "  make fmt        - Format code"
-	@echo "  make lint       - Lint code"
-	@echo "  make dev        - Run development server"
-	@echo "  make prod       - Build for production"
-	@echo "  make assets     - Generate all assets"
-	@echo "  make help       - Show this help"
+	@echo "  make build         - Build the application"
+	@echo "  make test          - Run tests"
+	@echo "  make clean         - Clean build artifacts"
+	@echo "  make logo-assets   - Generate logo assets and themes"
+	@echo "  make setup-deps    - Setup dependencies"
+	@echo "  make fmt           - Format code"
+	@echo "  make lint          - Lint code"
+	@echo "  make dev           - Run development server"
+	@echo "  make prod          - Build for production"
+	@echo "  make assets        - Generate all assets"
+	@echo "  make mobile-init   - Initialize gomobile"
+	@echo "  make mobile-ios    - Build iOS framework"
+	@echo "  make mobile-android- Build Android AAR"
+	@echo "  make mobile        - Build all mobile bindings"
+	@echo "  make help          - Show this help"
+
+# Mobile build targets
+mobile-init:
+	@echo "📱 Initializing gomobile..."
+	$(GO) run golang.org/x/mobile/cmd/gomobile init
+
+mobile-ios: mobile-init
+	@echo "🍎 Building iOS framework..."
+	gomobile bind -target=ios -o HelixCore.xcframework ./shared/mobile-core
+	@echo "✅ iOS framework built: HelixCore.xcframework"
+
+mobile-android: mobile-init
+	@echo "🤖 Building Android AAR..."
+	gomobile bind -target=android -o mobile.aar ./shared/mobile-core
+	@echo "✅ Android AAR built: mobile.aar"
+
+mobile: mobile-ios mobile-android
+	@echo "📱 All mobile bindings built"
 
 # Development tools setup
 dev-setup: setup-deps logo-deps
@@ -117,3 +139,5 @@ dev-setup: setup-deps logo-deps
 	@echo "  1. Run 'make logo-assets' to generate logo assets"
 	@echo "  2. Run 'make build' to build the application"
 	@echo "  3. Run 'make dev' to start development server"
+	@echo "  4. Run 'make mobile-ios' to build iOS framework"
+	@echo "  5. Run 'make mobile-android' to build Android AAR"
