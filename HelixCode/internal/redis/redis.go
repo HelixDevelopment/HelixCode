@@ -51,7 +51,7 @@ func (c *Client) Close() error {
 
 // IsEnabled returns whether Redis is enabled
 func (c *Client) IsEnabled() bool {
-	return c.config.Enabled
+	return c.config != nil && c.config.Enabled
 }
 
 // GetClient returns the underlying Redis client

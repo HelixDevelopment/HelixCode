@@ -5,17 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"dev.helix.code/internal/auth"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
-	"dev.helix.code/internal/llm"
-	"dev.helix.code/internal/mcp"
-	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/redis"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // Mock dependencies for testing
@@ -23,8 +18,8 @@ func createMockDependencies(t *testing.T) (*config.Config, *database.Database, *
 	// Create a test config
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
-			Port: 8080,
+			Address: "localhost",
+			Port:    8080,
 		},
 		Logging: config.LoggingConfig{
 			Level: "debug",
@@ -96,10 +91,10 @@ func TestCORSMiddleware(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, 204, w.Code)
 	assert.Equal(t, "*", w.Header().Get("Access-Control-Allow-Origin"))
-	assert.Equal(t, "GET, POST, PUT, DELETE, OPTIONS", w.Header().Get("Access-Control-Allow-Methods"))
-	assert.Equal(t, "Content-Type, Authorization", w.Header().Get("Access-Control-Allow-Headers"))
+	assert.Equal(t, "POST, OPTIONS, GET, PUT, DELETE", w.Header().Get("Access-Control-Allow-Methods"))
+	assert.Equal(t, "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With", w.Header().Get("Access-Control-Allow-Headers"))
 }
 
 func TestSecurityMiddleware(t *testing.T) {
@@ -168,8 +163,8 @@ func TestServerWithNilDependencies(t *testing.T) {
 	// Test server creation with nil dependencies (should not panic)
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Host: "localhost",
-			Port: 8080,
+			Address: "localhost",
+			Port:    8080,
 		},
 		Logging: config.LoggingConfig{
 			Level: "debug",
@@ -198,8 +193,8 @@ func TestServerPortConfiguration(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := &config.Config{
 				Server: config.ServerConfig{
-					Host: "localhost",
-					Port: tc.port,
+					Address: "localhost",
+					Port:    tc.port,
 				},
 			}
 

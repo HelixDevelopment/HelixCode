@@ -48,14 +48,17 @@ func New(cfg *config.Config, db *database.Database, rds *redis.Client) *Server {
 	router.Use(SecurityMiddleware())
 
 	// Initialize auth service
-	authConfig := auth.AuthConfig{
-		JWTSecret:     cfg.Auth.JWTSecret,
-		TokenExpiry:   time.Duration(cfg.Auth.TokenExpiry) * time.Second,
-		SessionExpiry: time.Duration(cfg.Auth.SessionExpiry) * time.Second,
-		BcryptCost:    cfg.Auth.BcryptCost,
+	var authService *auth.AuthService
+	if db != nil {
+		authConfig := auth.AuthConfig{
+			JWTSecret:     cfg.Auth.JWTSecret,
+			TokenExpiry:   time.Duration(cfg.Auth.TokenExpiry) * time.Second,
+			SessionExpiry: time.Duration(cfg.Auth.SessionExpiry) * time.Second,
+			BcryptCost:    cfg.Auth.BcryptCost,
+		}
+		authDB := auth.NewAuthDB(db.Pool)
+		authService = auth.NewAuthService(authConfig, authDB)
 	}
-	authDB := auth.NewAuthDB(db.Pool)
-	authService := auth.NewAuthService(authConfig, authDB)
 
 	// Initialize MCP server
 	mcpServer := mcp.NewMCPServer()
@@ -210,13 +213,15 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) healthCheck(c *gin.Context) {
 	// Check database connection
-	if err := s.db.HealthCheck(); err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status":  "error",
-			"message": "Database connection failed",
-			"error":   err.Error(),
-		})
-		return
+	if s.db != nil {
+		if err := s.db.HealthCheck(); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"status":  "error",
+				"message": "Database connection failed",
+				"error":   err.Error(),
+			})
+			return
+		}
 	}
 
 	// Check Redis connection if enabled
