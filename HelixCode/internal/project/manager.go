@@ -121,9 +121,10 @@ func (m *Manager) SetActiveProject(ctx context.Context, id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	project, err := m.GetProject(ctx, id)
-	if err != nil {
-		return err
+	// Look up project directly to avoid deadlock
+	project, exists := m.projects[id]
+	if !exists {
+		return fmt.Errorf("project not found: %s", id)
 	}
 
 	// Deactivate previous active project
@@ -164,9 +165,10 @@ func (m *Manager) UpdateProjectMetadata(ctx context.Context, id string, metadata
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	project, err := m.GetProject(ctx, id)
-	if err != nil {
-		return err
+	// Look up project directly to avoid deadlock
+	project, exists := m.projects[id]
+	if !exists {
+		return fmt.Errorf("project not found: %s", id)
 	}
 
 	project.Metadata = metadata

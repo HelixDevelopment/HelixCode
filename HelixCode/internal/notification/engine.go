@@ -513,3 +513,214 @@ func (c *DiscordChannel) GetConfig() map[string]interface{} {
 		"webhook": c.webhook,
 	}
 }
+
+// TelegramChannel implements notification channel for Telegram
+type TelegramChannel struct {
+	name    string
+	enabled bool
+	botToken string
+	chatID   string
+}
+
+func NewTelegramChannel(botToken, chatID string) *TelegramChannel {
+	return &TelegramChannel{
+		name:     "telegram",
+		enabled:  botToken != "" && chatID != "",
+		botToken: botToken,
+		chatID:   chatID,
+	}
+}
+
+func (c *TelegramChannel) Send(ctx context.Context, notification *Notification) error {
+	if !c.enabled {
+		return fmt.Errorf("telegram channel disabled")
+	}
+
+	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", c.botToken)
+
+	payload := map[string]interface{}{
+		"chat_id": c.chatID,
+		"text":    fmt.Sprintf("*%s*\n\n%s", notification.Title, notification.Message),
+		"parse_mode": "Markdown",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal telegram payload: %v", err)
+	}
+
+	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to send to telegram: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("telegram returned status %d", resp.StatusCode)
+	}
+
+	log.Printf("✅ Notification sent via Telegram: %s", notification.Title)
+	return nil
+}
+
+func (c *TelegramChannel) GetName() string {
+	return c.name
+}
+
+func (c *TelegramChannel) IsEnabled() bool {
+	return c.enabled
+}
+
+func (c *TelegramChannel) GetConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"bot_token": c.botToken,
+		"chat_id":   c.chatID,
+	}
+}
+
+// YandexMessengerChannel implements notification channel for Yandex Messenger
+type YandexMessengerChannel struct {
+	name    string
+	enabled bool
+	token   string
+	chatID  string
+}
+
+func NewYandexMessengerChannel(token, chatID string) *YandexMessengerChannel {
+	return &YandexMessengerChannel{
+		name:    "yandex_messenger",
+		enabled: token != "" && chatID != "",
+		token:   token,
+		chatID:  chatID,
+	}
+}
+
+func (c *YandexMessengerChannel) Send(ctx context.Context, notification *Notification) error {
+	if !c.enabled {
+		return fmt.Errorf("yandex messenger channel disabled")
+	}
+
+	url := "https://botapi.messenger.yandex.net/bot/v1/messages/send"
+
+	payload := map[string]interface{}{
+		"chat_id": c.chatID,
+		"text":    fmt.Sprintf("**%s**\n\n%s", notification.Title, notification.Message),
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal yandex payload: %v", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", c.token))
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send to yandex messenger: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("yandex messenger returned status %d", resp.StatusCode)
+	}
+
+	log.Printf("✅ Notification sent via Yandex Messenger: %s", notification.Title)
+	return nil
+}
+
+func (c *YandexMessengerChannel) GetName() string {
+	return c.name
+}
+
+func (c *YandexMessengerChannel) IsEnabled() bool {
+	return c.enabled
+}
+
+func (c *YandexMessengerChannel) GetConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"token":   c.token,
+		"chat_id": c.chatID,
+	}
+}
+
+// MaxChannel implements notification channel for Max (enterprise communication platform)
+type MaxChannel struct {
+	name     string
+	enabled  bool
+	apiKey   string
+	endpoint string
+	roomID   string
+}
+
+func NewMaxChannel(apiKey, endpoint, roomID string) *MaxChannel {
+	return &MaxChannel{
+		name:     "max",
+		enabled:  apiKey != "" && endpoint != "" && roomID != "",
+		apiKey:   apiKey,
+		endpoint: endpoint,
+		roomID:   roomID,
+	}
+}
+
+func (c *MaxChannel) Send(ctx context.Context, notification *Notification) error {
+	if !c.enabled {
+		return fmt.Errorf("max channel disabled")
+	}
+
+	url := fmt.Sprintf("%s/api/v1/rooms/%s/messages", c.endpoint, c.roomID)
+
+	payload := map[string]interface{}{
+		"text": fmt.Sprintf("**%s**\n\n%s", notification.Title, notification.Message),
+		"type": "text",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal max payload: %v", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %v", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send to max: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("max returned status %d", resp.StatusCode)
+	}
+
+	log.Printf("✅ Notification sent via Max: %s", notification.Title)
+	return nil
+}
+
+func (c *MaxChannel) GetName() string {
+	return c.name
+}
+
+func (c *MaxChannel) IsEnabled() bool {
+	return c.enabled
+}
+
+func (c *MaxChannel) GetConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"api_key":  c.apiKey,
+		"endpoint": c.endpoint,
+		"room_id":  c.roomID,
+	}
+}
