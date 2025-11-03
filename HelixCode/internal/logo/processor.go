@@ -15,10 +15,10 @@ import (
 
 // ColorScheme represents the extracted color palette from the logo
 type ColorScheme struct {
-	Primary   string `json:"primary"`
-	Secondary string `json:"secondary"`
-	Accent    string `json:"accent"`
-	Text      string `json:"text"`
+	Primary    string `json:"primary"`
+	Secondary  string `json:"secondary"`
+	Accent     string `json:"accent"`
+	Text       string `json:"text"`
 	Background string `json:"background"`
 }
 
@@ -161,7 +161,7 @@ func (lp *LogoProcessor) GenerateIcons() error {
 
 	for _, size := range sizes {
 		resized := resize.Resize(uint(size.width), uint(size.height), img, resize.Lanczos3)
-		
+
 		outputPath := filepath.Join(lp.OutputDir, "icons", size.name)
 		outputFile, err := os.Create(outputPath)
 		if err != nil {
@@ -200,7 +200,7 @@ func (lp *LogoProcessor) SaveColorScheme() error {
 	if err != nil {
 		return err
 	}
-	
+
 	return writer.Flush()
 }
 
@@ -222,7 +222,7 @@ func (lp *LogoProcessor) GenerateThemeFiles() error {
 .helix-secondary { color: %s; }
 .helix-accent { color: %s; }
 .helix-bg { background-color: %s; }`,
-		lp.Colors.Primary, lp.Colors.Secondary, lp.Colors.Accent, lp.Colors.Text, 
+		lp.Colors.Primary, lp.Colors.Secondary, lp.Colors.Accent, lp.Colors.Text,
 		lp.Colors.Background, lp.Colors.Primary, lp.Colors.Primary,
 		lp.Colors.Primary, lp.Colors.Secondary, lp.Colors.Accent, lp.Colors.Background)
 
@@ -245,6 +245,12 @@ const (
 )`, lp.Colors.Primary, lp.Colors.Secondary, lp.Colors.Accent, lp.Colors.Text, lp.Colors.Background)
 
 	goPath := filepath.Join(lp.OutputDir, "..", "..", "internal", "theme", "theme.go")
+	// Create directory if it doesn't exist
+	goDir := filepath.Dir(goPath)
+	err = os.MkdirAll(goDir, 0755)
+	if err != nil {
+		return err
+	}
 	err = os.WriteFile(goPath, []byte(goTheme), 0644)
 	if err != nil {
 		return err
