@@ -1,3 +1,5 @@
+![HelixCode - Distributed AI Development Platform](../Assets/Wide_Black.png)
+
 # HelixCode
 
 A distributed, AI-powered software development platform with multi-platform support.
