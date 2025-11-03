@@ -31,7 +31,7 @@ func NewLocalProvider(config ProviderConfigEntry) (*LocalProvider, error) {
 	}
 
 	provider := &LocalProvider{
-		config: config,
+		config:   config,
 		endpoint: endpoint,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
@@ -96,7 +96,7 @@ func (lp *LocalProvider) Generate(ctx context.Context, request *LLMRequest) (*LL
 
 	// Convert response
 	llmResponse := lp.convertFromOllamaResponse(response, request.ID, time.Since(startTime))
-	
+
 	return llmResponse, nil
 }
 
@@ -194,10 +194,10 @@ func (lp *LocalProvider) initializeModels() error {
 
 	var tagsResponse struct {
 		Models []struct {
-			Name        string `json:"name"`
-			ModifiedAt  string `json:"modified_at"`
-			Size        int64  `json:"size"`
-			Digest      string `json:"digest"`
+			Name       string `json:"name"`
+			ModifiedAt string `json:"modified_at"`
+			Size       int64  `json:"size"`
+			Digest     string `json:"digest"`
 		} `json:"models"`
 	}
 
@@ -208,14 +208,14 @@ func (lp *LocalProvider) initializeModels() error {
 	// Convert to ModelInfo
 	for _, model := range tagsResponse.Models {
 		modelInfo := ModelInfo{
-			Name:         model.Name,
-			Provider:     ProviderTypeLocal,
-			ContextSize:  4096, // Default for most models
-			MaxTokens:    2048,
-			Capabilities: lp.GetCapabilities(),
-			SupportsTools: false, // Ollama doesn't support tools yet
+			Name:           model.Name,
+			Provider:       ProviderTypeLocal,
+			ContextSize:    4096, // Default for most models
+			MaxTokens:      2048,
+			Capabilities:   lp.GetCapabilities(),
+			SupportsTools:  false, // Ollama doesn't support tools yet
 			SupportsVision: strings.Contains(strings.ToLower(model.Name), "vision"),
-			Description:  fmt.Sprintf("Local model: %s", model.Name),
+			Description:    fmt.Sprintf("Local model: %s", model.Name),
 		}
 		lp.models = append(lp.models, modelInfo)
 	}
@@ -367,16 +367,16 @@ type OllamaRequest struct {
 }
 
 type OllamaResponse struct {
-	Model          string `json:"model"`
-	CreatedAt      string `json:"created_at"`
-	Response       string `json:"response"`
-	Done           bool   `json:"done"`
-	Context        []int  `json:"context"`
-	TotalDuration  int64  `json:"total_duration"`
-	LoadDuration   int64  `json:"load_duration"`
-	PromptEvalCount int   `json:"prompt_eval_count"`
-	EvalCount      int    `json:"eval_count"`
-	EvalDuration   int64  `json:"eval_duration"`
+	Model           string `json:"model"`
+	CreatedAt       string `json:"created_at"`
+	Response        string `json:"response"`
+	Done            bool   `json:"done"`
+	Context         []int  `json:"context"`
+	TotalDuration   int64  `json:"total_duration"`
+	LoadDuration    int64  `json:"load_duration"`
+	PromptEvalCount int    `json:"prompt_eval_count"`
+	EvalCount       int    `json:"eval_count"`
+	EvalDuration    int64  `json:"eval_duration"`
 }
 
 type OllamaStreamResponse struct {

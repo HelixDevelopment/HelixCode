@@ -14,10 +14,10 @@ import (
 
 // OllamaProvider implements the LLM provider interface for Ollama
 type OllamaProvider struct {
-	config     OllamaConfig
-	apiClient  *http.Client
-	models     []OllamaModel
-	isRunning  bool
+	config    OllamaConfig
+	apiClient *http.Client
+	models    []OllamaModel
+	isRunning bool
 }
 
 // OllamaConfig holds configuration for Ollama
@@ -31,29 +31,29 @@ type OllamaConfig struct {
 
 // OllamaModel represents an Ollama model
 type OllamaModel struct {
-	Name         string            `json:"name"`
-	ModifiedAt   time.Time         `json:"modified_at"`
-	Size         int64             `json:"size"`
-	Digest       string            `json:"digest"`
-	Details      OllamaModelDetails `json:"details"`
+	Name       string             `json:"name"`
+	ModifiedAt time.Time          `json:"modified_at"`
+	Size       int64              `json:"size"`
+	Digest     string             `json:"digest"`
+	Details    OllamaModelDetails `json:"details"`
 }
 
 // OllamaModelDetails contains model-specific details
 type OllamaModelDetails struct {
-	Format      string `json:"format"`
-	Family      string `json:"family"`
-	Families    []string `json:"families"`
-	ParameterSize string `json:"parameter_size"`
-	QuantizationLevel string `json:"quantization_level"`
+	Format            string   `json:"format"`
+	Family            string   `json:"family"`
+	Families          []string `json:"families"`
+	ParameterSize     string   `json:"parameter_size"`
+	QuantizationLevel string   `json:"quantization_level"`
 }
 
 // OllamaAPIRequest represents a request to the Ollama API
 type OllamaAPIRequest struct {
-	Model      string                 `json:"model"`
-	Prompt     string                 `json:"prompt"`
-	Messages   []Message              `json:"messages"`
-	Stream     bool                   `json:"stream"`
-	Options    map[string]interface{} `json:"options"`
+	Model    string                 `json:"model"`
+	Prompt   string                 `json:"prompt"`
+	Messages []Message              `json:"messages"`
+	Stream   bool                   `json:"stream"`
+	Options  map[string]interface{} `json:"options"`
 }
 
 // OllamaAPIResponse represents a response from the Ollama API
@@ -103,20 +103,20 @@ func (p *OllamaProvider) GetName() string {
 // GetModels returns available models
 func (p *OllamaProvider) GetModels() []ModelInfo {
 	var modelInfos []ModelInfo
-	
+
 	for _, model := range p.models {
 		modelInfos = append(modelInfos, ModelInfo{
-			Name:         model.Name,
-			Provider:     ProviderTypeLocal,
-			ContextSize:  4096, // Default context size
-			Capabilities: []ModelCapability{CapabilityTextGeneration, CapabilityCodeGeneration, CapabilityCodeAnalysis},
-			MaxTokens:    4096,
-			SupportsTools: false,
+			Name:           model.Name,
+			Provider:       ProviderTypeLocal,
+			ContextSize:    4096, // Default context size
+			Capabilities:   []ModelCapability{CapabilityTextGeneration, CapabilityCodeGeneration, CapabilityCodeAnalysis},
+			MaxTokens:      4096,
+			SupportsTools:  false,
 			SupportsVision: false,
-			Description:  fmt.Sprintf("Ollama model: %s", model.Name),
+			Description:    fmt.Sprintf("Ollama model: %s", model.Name),
 		})
 	}
-	
+
 	return modelInfos
 }
 
@@ -208,7 +208,7 @@ func (p *OllamaProvider) IsAvailable(ctx context.Context) bool {
 		return false
 	}
 	defer resp.Body.Close()
-	
+
 	return resp.StatusCode == http.StatusOK
 }
 
@@ -216,8 +216,8 @@ func (p *OllamaProvider) IsAvailable(ctx context.Context) bool {
 func (p *OllamaProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 	if !p.isRunning {
 		return &ProviderHealth{
-			Status:    "unhealthy",
-			LastCheck: time.Now(),
+			Status:     "unhealthy",
+			LastCheck:  time.Now(),
 			ErrorCount: 1,
 		}, nil
 	}
@@ -229,9 +229,9 @@ func (p *OllamaProvider) GetHealth(ctx context.Context) (*ProviderHealth, error)
 
 	if err != nil || resp.StatusCode != http.StatusOK {
 		return &ProviderHealth{
-			Status:    "degraded",
-			Latency:   latency,
-			LastCheck: time.Now(),
+			Status:     "degraded",
+			Latency:    latency,
+			LastCheck:  time.Now(),
 			ErrorCount: 1,
 			ModelCount: len(p.models),
 		}, nil
@@ -282,16 +282,16 @@ func (p *OllamaProvider) getModelName(requestedModel string) string {
 	if requestedModel != "" {
 		return requestedModel
 	}
-	
+
 	if p.config.DefaultModel != "" {
 		return p.config.DefaultModel
 	}
-	
+
 	// Return first available model
 	if len(p.models) > 0 {
 		return p.models[0].Name
 	}
-	
+
 	return "llama2" // Fallback default
 }
 
@@ -300,13 +300,13 @@ func (p *OllamaProvider) getAPIURL(path string) string {
 	if baseURL == "" {
 		baseURL = "http://localhost:11434"
 	}
-	
+
 	return strings.TrimSuffix(baseURL, "/") + path
 }
 
 func (p *OllamaProvider) makeAPIRequest(ctx context.Context, request OllamaAPIRequest) (*OllamaAPIResponse, error) {
 	url := p.getAPIURL("/api/chat")
-	
+
 	requestBody, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -316,7 +316,7 @@ func (p *OllamaProvider) makeAPIRequest(ctx context.Context, request OllamaAPIRe
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := p.apiClient.Do(req)
@@ -340,9 +340,9 @@ func (p *OllamaProvider) makeAPIRequest(ctx context.Context, request OllamaAPIRe
 func (p *OllamaProvider) makeStreamingRequest(ctx context.Context, request OllamaAPIRequest, ch chan<- LLMResponse) error {
 	// Simplified streaming implementation
 	// In a real implementation, this would handle Server-Sent Events (SSE)
-	
+
 	url := p.getAPIURL("/api/chat")
-	
+
 	requestBody, err := json.Marshal(request)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request: %w", err)
@@ -352,7 +352,7 @@ func (p *OllamaProvider) makeStreamingRequest(ctx context.Context, request Ollam
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := p.apiClient.Do(req)

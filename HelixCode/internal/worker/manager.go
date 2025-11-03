@@ -35,46 +35,46 @@ const (
 
 // Worker represents a distributed worker node
 type Worker struct {
-	ID                    uuid.UUID              `json:"id"`
-	Hostname              string                 `json:"hostname"`
-	DisplayName           string                 `json:"display_name"`
-	SSHConfig             map[string]interface{} `json:"ssh_config"`
-	Capabilities          []string               `json:"capabilities"`
-	Resources             Resources              `json:"resources"`
-	Status                WorkerStatus           `json:"status"`
-	HealthStatus          WorkerHealth           `json:"health_status"`
-	LastHeartbeat         time.Time              `json:"last_heartbeat"`
-	CPUUsagePercent       float64                `json:"cpu_usage_percent"`
-	MemoryUsagePercent    float64                `json:"memory_usage_percent"`
-	DiskUsagePercent      float64                `json:"disk_usage_percent"`
-	CurrentTasksCount     int                    `json:"current_tasks_count"`
-	MaxConcurrentTasks    int                    `json:"max_concurrent_tasks"`
-	CreatedAt             time.Time              `json:"created_at"`
-	UpdatedAt             time.Time              `json:"updated_at"`
+	ID                 uuid.UUID              `json:"id"`
+	Hostname           string                 `json:"hostname"`
+	DisplayName        string                 `json:"display_name"`
+	SSHConfig          map[string]interface{} `json:"ssh_config"`
+	Capabilities       []string               `json:"capabilities"`
+	Resources          Resources              `json:"resources"`
+	Status             WorkerStatus           `json:"status"`
+	HealthStatus       WorkerHealth           `json:"health_status"`
+	LastHeartbeat      time.Time              `json:"last_heartbeat"`
+	CPUUsagePercent    float64                `json:"cpu_usage_percent"`
+	MemoryUsagePercent float64                `json:"memory_usage_percent"`
+	DiskUsagePercent   float64                `json:"disk_usage_percent"`
+	CurrentTasksCount  int                    `json:"current_tasks_count"`
+	MaxConcurrentTasks int                    `json:"max_concurrent_tasks"`
+	CreatedAt          time.Time              `json:"created_at"`
+	UpdatedAt          time.Time              `json:"updated_at"`
 }
 
 // Resources represents worker hardware resources
 type Resources struct {
-	CPUCount    int     `json:"cpu_count"`
-	TotalMemory int64   `json:"total_memory"` // in bytes
-	TotalDisk   int64   `json:"total_disk"`   // in bytes
-	GPUCount    int     `json:"gpu_count"`
-	GPUModel    string  `json:"gpu_model"`
-	GPUMemory   int64   `json:"gpu_memory"`  // in bytes
+	CPUCount    int    `json:"cpu_count"`
+	TotalMemory int64  `json:"total_memory"` // in bytes
+	TotalDisk   int64  `json:"total_disk"`   // in bytes
+	GPUCount    int    `json:"gpu_count"`
+	GPUModel    string `json:"gpu_model"`
+	GPUMemory   int64  `json:"gpu_memory"` // in bytes
 }
 
 // WorkerMetrics represents metrics collected from a worker
 type WorkerMetrics struct {
-	ID                   uuid.UUID `json:"id"`
-	WorkerID             uuid.UUID `json:"worker_id"`
-	CPUUsagePercent      float64   `json:"cpu_usage_percent"`
-	MemoryUsagePercent   float64   `json:"memory_usage_percent"`
-	DiskUsagePercent     float64   `json:"disk_usage_percent"`
-	NetworkRxBytes       int64     `json:"network_rx_bytes"`
-	NetworkTxBytes       int64     `json:"network_tx_bytes"`
-	CurrentTasksCount    int       `json:"current_tasks_count"`
-	TemperatureCelsius   float64   `json:"temperature_celsius"`
-	RecordedAt           time.Time `json:"recorded_at"`
+	ID                 uuid.UUID `json:"id"`
+	WorkerID           uuid.UUID `json:"worker_id"`
+	CPUUsagePercent    float64   `json:"cpu_usage_percent"`
+	MemoryUsagePercent float64   `json:"memory_usage_percent"`
+	DiskUsagePercent   float64   `json:"disk_usage_percent"`
+	NetworkRxBytes     int64     `json:"network_rx_bytes"`
+	NetworkTxBytes     int64     `json:"network_tx_bytes"`
+	CurrentTasksCount  int       `json:"current_tasks_count"`
+	TemperatureCelsius float64   `json:"temperature_celsius"`
+	RecordedAt         time.Time `json:"recorded_at"`
 }
 
 // WorkerRepository defines the interface for worker data storage
@@ -279,7 +279,7 @@ func (wm *WorkerManager) HealthCheck(ctx context.Context) error {
 			if err := wm.repo.UpdateWorker(ctx, worker); err != nil {
 				log.Printf("Warning: Failed to update unhealthy worker %s: %v", worker.Hostname, err)
 			} else {
-				log.Printf("⚠️  Worker marked as unhealthy: %s (last heartbeat: %v)", 
+				log.Printf("⚠️  Worker marked as unhealthy: %s (last heartbeat: %v)",
 					worker.Hostname, worker.LastHeartbeat)
 			}
 
@@ -302,12 +302,12 @@ func (wm *WorkerManager) GetWorkerStats(ctx context.Context) (*WorkerStats, erro
 	}
 
 	stats := &WorkerStats{
-		TotalWorkers:     len(workers),
-		ActiveWorkers:    0,
-		HealthyWorkers:   0,
-		TotalTasks:       0,
-		AvailableTasks:   0,
-		AverageCPUUsage:  0,
+		TotalWorkers:       len(workers),
+		ActiveWorkers:      0,
+		HealthyWorkers:     0,
+		TotalTasks:         0,
+		AvailableTasks:     0,
+		AverageCPUUsage:    0,
 		AverageMemoryUsage: 0,
 	}
 
@@ -339,12 +339,12 @@ func (wm *WorkerManager) GetWorkerStats(ctx context.Context) (*WorkerStats, erro
 
 // WorkerStats represents statistics about workers
 type WorkerStats struct {
-	TotalWorkers      int     `json:"total_workers"`
-	ActiveWorkers     int     `json:"active_workers"`
-	HealthyWorkers    int     `json:"healthy_workers"`
-	TotalTasks        int     `json:"total_tasks"`
-	AvailableTasks    int     `json:"available_tasks"`
-	AverageCPUUsage   float64 `json:"average_cpu_usage"`
+	TotalWorkers       int     `json:"total_workers"`
+	ActiveWorkers      int     `json:"active_workers"`
+	HealthyWorkers     int     `json:"healthy_workers"`
+	TotalTasks         int     `json:"total_tasks"`
+	AvailableTasks     int     `json:"available_tasks"`
+	AverageCPUUsage    float64 `json:"average_cpu_usage"`
 	AverageMemoryUsage float64 `json:"average_memory_usage"`
 }
 

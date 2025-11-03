@@ -18,10 +18,10 @@ import (
 
 // NotificationEngine manages multi-channel notifications
 type NotificationEngine struct {
-	channels map[string]NotificationChannel
-	rules    []NotificationRule
+	channels  map[string]NotificationChannel
+	rules     []NotificationRule
 	templates map[string]*template.Template
-	mutex    sync.RWMutex
+	mutex     sync.RWMutex
 }
 
 // NotificationChannel represents a notification channel
@@ -48,11 +48,11 @@ type Notification struct {
 type NotificationType string
 
 const (
-	NotificationTypeInfo     NotificationType = "info"
-	NotificationTypeWarning  NotificationType = "warning"
-	NotificationTypeError    NotificationType = "error"
-	NotificationTypeSuccess  NotificationType = "success"
-	NotificationTypeAlert    NotificationType = "alert"
+	NotificationTypeInfo    NotificationType = "info"
+	NotificationTypeWarning NotificationType = "warning"
+	NotificationTypeError   NotificationType = "error"
+	NotificationTypeSuccess NotificationType = "success"
+	NotificationTypeAlert   NotificationType = "alert"
 )
 
 // NotificationPriority defines the priority level
@@ -230,7 +230,7 @@ func (e *NotificationEngine) matchesCondition(notification *Notification, condit
 	if strings.Contains(condition, "contains:") {
 		keyword := strings.TrimPrefix(condition, "contains:")
 		if strings.Contains(strings.ToLower(notification.Title), strings.ToLower(keyword)) ||
-		   strings.Contains(strings.ToLower(notification.Message), strings.ToLower(keyword)) {
+			strings.Contains(strings.ToLower(notification.Message), strings.ToLower(keyword)) {
 			return true
 		}
 	}
@@ -293,10 +293,10 @@ func (e *NotificationEngine) GetChannelStats() map[string]interface{} {
 	}
 
 	stats["summary"] = map[string]interface{}{
-		"total_channels":    len(e.channels),
-		"enabled_channels":  enabledCount,
-		"total_rules":       len(e.rules),
-		"active_rules":      e.countActiveRules(),
+		"total_channels":   len(e.channels),
+		"enabled_channels": enabledCount,
+		"total_rules":      len(e.rules),
+		"active_rules":     e.countActiveRules(),
 	}
 
 	return stats
@@ -337,9 +337,9 @@ func (c *SlackChannel) Send(ctx context.Context, notification *Notification) err
 	}
 
 	payload := map[string]interface{}{
-		"channel": c.channel,
-		"username": c.username,
-		"text":     fmt.Sprintf("*%s*\n%s", notification.Title, notification.Message),
+		"channel":    c.channel,
+		"username":   c.username,
+		"text":       fmt.Sprintf("*%s*\n%s", notification.Title, notification.Message),
 		"icon_emoji": c.getIconForType(notification.Type),
 	}
 
@@ -422,7 +422,7 @@ func (c *EmailChannel) Send(ctx context.Context, notification *Notification) err
 
 	// Simple email sending implementation
 	// In production, use a proper email library
-	
+
 	to := "" // Would come from notification metadata
 	if to == "" {
 		return fmt.Errorf("no recipient specified")

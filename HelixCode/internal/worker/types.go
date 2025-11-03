@@ -10,12 +10,12 @@ import (
 
 // WorkerConfig represents the configuration for distributed worker management
 type WorkerConfig struct {
-	Enabled              bool                       `json:"enabled"`
-	Pool                 map[string]WorkerConfigEntry `json:"pool"`
-	AutoInstall          bool                       `json:"auto_install"`
-	HealthCheckInterval  int                        `json:"health_check_interval"`
-	MaxConcurrentTasks   int                        `json:"max_concurrent_tasks"`
-	TaskTimeout          int                        `json:"task_timeout"`
+	Enabled             bool                         `json:"enabled"`
+	Pool                map[string]WorkerConfigEntry `json:"pool"`
+	AutoInstall         bool                         `json:"auto_install"`
+	HealthCheckInterval int                          `json:"health_check_interval"`
+	MaxConcurrentTasks  int                          `json:"max_concurrent_tasks"`
+	TaskTimeout         int                          `json:"task_timeout"`
 }
 
 // WorkerConfigEntry represents a single worker configuration entry
@@ -69,10 +69,10 @@ const (
 
 // DistributedWorkerManager manages distributed workers
 type DistributedWorkerManager struct {
-	config   WorkerConfig
-	workers  map[uuid.UUID]*Worker
-	tasks    map[uuid.UUID]*DistributedTask
-	sshPool  *SSHWorkerPool
+	config  WorkerConfig
+	workers map[uuid.UUID]*Worker
+	tasks   map[uuid.UUID]*DistributedTask
+	sshPool *SSHWorkerPool
 }
 
 // NewDistributedWorkerManager creates a new distributed worker manager
@@ -93,10 +93,10 @@ func (dwm *DistributedWorkerManager) Initialize(ctx context.Context) error {
 			Hostname:    entry.Host,
 			DisplayName: entry.DisplayName,
 			SSHConfig: &SSHWorkerConfig{
-				Host:       entry.Host,
-				Port:       entry.Port,
-				Username:   entry.Username,
-				KeyPath:    entry.KeyPath,
+				Host:     entry.Host,
+				Port:     entry.Port,
+				Username: entry.Username,
+				KeyPath:  entry.KeyPath,
 			},
 			Capabilities: entry.Capabilities,
 		}
@@ -124,11 +124,11 @@ func (dwm *DistributedWorkerManager) GetAvailableWorkers() []*Worker {
 func (dwm *DistributedWorkerManager) GetWorkerStats() map[string]interface{} {
 	stats := make(map[string]interface{})
 	stats["total_workers"] = len(dwm.workers)
-	
+
 	activeCount := 0
 	healthyCount := 0
 	totalTasks := 0
-	
+
 	for _, worker := range dwm.workers {
 		if worker.Status == WorkerStatusActive {
 			activeCount++
@@ -138,11 +138,11 @@ func (dwm *DistributedWorkerManager) GetWorkerStats() map[string]interface{} {
 		}
 		totalTasks += worker.CurrentTasksCount
 	}
-	
+
 	stats["active_workers"] = activeCount
 	stats["healthy_workers"] = healthyCount
 	stats["total_tasks"] = totalTasks
-	
+
 	return stats
 }
 
@@ -151,19 +151,19 @@ func (dwm *DistributedWorkerManager) SubmitTask(task *DistributedTask) error {
 	task.ID = uuid.New()
 	task.Status = TaskStatusPending
 	task.CreatedAt = time.Now()
-	
+
 	dwm.tasks[task.ID] = task
-	
+
 	// Find suitable worker
 	availableWorkers := dwm.GetAvailableWorkers()
 	if len(availableWorkers) == 0 {
 		return fmt.Errorf("no available workers")
 	}
-	
+
 	// Simple round-robin assignment for now
 	worker := availableWorkers[0]
 	task.WorkerID = worker.ID
-	
+
 	// Execute task (in real implementation, this would be async)
 	return dwm.executeTask(task)
 }
@@ -173,18 +173,18 @@ func (dwm *DistributedWorkerManager) executeTask(task *DistributedTask) error {
 	now := time.Now()
 	task.StartedAt = &now
 	task.Status = TaskStatusRunning
-	
+
 	// Simulate task execution
 	// In real implementation, this would execute via SSH
 	time.Sleep(100 * time.Millisecond)
-	
+
 	completedAt := time.Now()
 	task.CompletedAt = &completedAt
 	task.Status = TaskStatusCompleted
 	task.Result = map[string]interface{}{
-		"output": "Task completed successfully",
+		"output":   "Task completed successfully",
 		"duration": completedAt.Sub(now).String(),
 	}
-	
+
 	return nil
 }

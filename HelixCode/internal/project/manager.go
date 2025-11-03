@@ -35,8 +35,8 @@ type Metadata struct {
 
 // Manager handles project lifecycle and operations
 type Manager struct {
-	mu           sync.RWMutex
-	projects     map[string]*Project
+	mu            sync.RWMutex
+	projects      map[string]*Project
 	activeProject *Project
 }
 
@@ -68,10 +68,10 @@ func (m *Manager) CreateProject(ctx context.Context, name, description, path, pr
 		Type:        projectType,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
-		Metadata:    Metadata{
+		Metadata: Metadata{
 			Environment: make(map[string]string),
 		},
-		Active:      false,
+		Active: false,
 	}
 
 	// Detect project type and set appropriate metadata
@@ -237,4 +237,3 @@ func (m *Manager) detectProjectType(project *Project) error {
 func generateProjectID(name string) string {
 	return fmt.Sprintf("proj_%s_%d", name, time.Now().UnixNano())
 }
-

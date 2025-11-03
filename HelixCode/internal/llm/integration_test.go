@@ -4,8 +4,11 @@ package llm
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // TestLlamaCPPProviderIntegration tests the Llama.cpp provider with integration
@@ -53,7 +56,7 @@ func TestLlamaCPPProviderIntegration(t *testing.T) {
 		t.Error("Health status should not be empty")
 	}
 
-	t.Logf("✅ Llama.cpp provider integration test passed: %d models, health: %s", 
+	t.Logf("✅ Llama.cpp provider integration test passed: %d models, health: %s",
 		len(models), health.Status)
 
 	// Cleanup
@@ -103,7 +106,7 @@ func TestOllamaProviderIntegration(t *testing.T) {
 		t.Error("Health status should not be empty")
 	}
 
-	t.Logf("✅ Ollama provider integration test passed: %d models, health: %s", 
+	t.Logf("✅ Ollama provider integration test passed: %d models, health: %s",
 		len(models), health.Status)
 
 	// Cleanup
@@ -139,7 +142,7 @@ func TestModelManagerIntegration(t *testing.T) {
 			CapabilityCodeGeneration,
 			CapabilityCodeAnalysis,
 		},
-		MaxTokens:        1024,
+		MaxTokens:         1024,
 		QualityPreference: "balanced",
 	}
 
@@ -169,6 +172,82 @@ func TestModelManagerIntegration(t *testing.T) {
 	if llamaProvider != nil {
 		llamaProvider.Close()
 	}
+}
+
+// TestQwenProviderIntegration tests the Qwen provider with integration
+func TestQwenProviderIntegration(t *testing.T) {
+	// Skip if no API key is provided
+	apiKey := getEnvOrSkip(t, "QWEN_API_KEY", "Qwen API key not provided, skipping integration test")
+
+	config := ProviderConfigEntry{
+		Type:     ProviderTypeQwen,
+		Endpoint: getEnvOrDefault("QWEN_ENDPOINT", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+		APIKey:   apiKey,
+	}
+
+	provider, err := NewQwenProvider(config)
+	if err != nil {
+		t.Skipf("Skipping Qwen integration test: %v", err)
+	}
+
+	// Test provider availability
+	ctx := context.Background()
+	available := provider.IsAvailable(ctx)
+	if !available {
+		t.Skip("Qwen provider not available for integration test")
+	}
+
+	// Test model listing
+	models := provider.GetModels()
+	if len(models) == 0 {
+		t.Error("Qwen provider should return available models")
+	}
+
+	// Test capabilities
+	capabilities := provider.GetCapabilities()
+	if len(capabilities) == 0 {
+		t.Error("Qwen provider should have capabilities")
+	}
+
+	// Test health check
+	health, err := provider.GetHealth(ctx)
+	if err != nil {
+		t.Errorf("Health check failed: %v", err)
+	}
+	if health.Status == "" {
+		t.Error("Health status should not be empty")
+	}
+
+	// Test basic generation (if API is working)
+	if health.Status == "healthy" {
+		request := &LLMRequest{
+			ID:           generateTestID(),
+			ProviderType: ProviderTypeQwen,
+			Model:        "qwen-turbo", // Use a lightweight model for testing
+			Messages: []Message{
+				{Role: "user", Content: "Hello, can you respond with just 'Hello World'?"},
+			},
+			MaxTokens:   50,
+			Temperature: 0.1,
+			CreatedAt:   time.Now(),
+		}
+
+		response, err := provider.Generate(ctx, request)
+		if err != nil {
+			t.Logf("Generation test failed (may be normal): %v", err)
+		} else if response != nil {
+			t.Logf("Generated response: %s", response.Content)
+			if response.Usage.TotalTokens == 0 {
+				t.Error("Response should include token usage")
+			}
+		}
+	}
+
+	t.Logf("✅ Qwen provider integration test passed: %d models, health: %s",
+		len(models), health.Status)
+
+	// Cleanup
+	provider.Close()
 }
 
 // TestProviderHealthIntegration tests provider health monitoring with integration
@@ -280,4 +359,28 @@ func (m *MockProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 
 func (m *MockProvider) Close() error {
 	return nil
+}
+
+// Helper functions for integration tests
+
+// getEnvOrSkip gets an environment variable or skips the test
+func getEnvOrSkip(t *testing.T, key, skipMsg string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		t.Skip(skipMsg)
+	}
+	return value
+}
+
+// getEnvOrDefault gets an environment variable or returns a default value
+func getEnvOrDefault(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+// generateTestID generates a unique test ID
+func generateTestID() uuid.UUID {
+	return uuid.New()
 }

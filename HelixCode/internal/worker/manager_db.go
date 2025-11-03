@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"dev.helix.code/internal/database"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"dev.helix.code/internal/database"
 )
 
 // DatabaseManager handles worker lifecycle and operations with database persistence
@@ -40,22 +40,22 @@ func (m *DatabaseManager) GetWorker(ctx context.Context, id string) (*Worker, er
 	`
 
 	var (
-		dbID                uuid.UUID
-		hostname            string
-		displayName         string
-		sshConfig           map[string]interface{}
-		capabilities        []string
-		resources           map[string]interface{}
-		status              string
-		healthStatus        string
-		lastHeartbeat       *time.Time
-		cpuUsagePercent     *float64
-		memoryUsagePercent  *float64
-		diskUsagePercent    *float64
-		currentTasksCount   int
-		maxConcurrentTasks  int
-		createdAt           time.Time
-		updatedAt           time.Time
+		dbID               uuid.UUID
+		hostname           string
+		displayName        string
+		sshConfig          map[string]interface{}
+		capabilities       []string
+		resources          map[string]interface{}
+		status             string
+		healthStatus       string
+		lastHeartbeat      *time.Time
+		cpuUsagePercent    *float64
+		memoryUsagePercent *float64
+		diskUsagePercent   *float64
+		currentTasksCount  int
+		maxConcurrentTasks int
+		createdAt          time.Time
+		updatedAt          time.Time
 	)
 
 	err = m.db.Pool.QueryRow(ctx, query, workerID).Scan(
@@ -94,22 +94,22 @@ func (m *DatabaseManager) GetWorker(ctx context.Context, id string) (*Worker, er
 	}
 
 	worker := &Worker{
-		ID:                  dbID,
-		Hostname:            hostname,
-		DisplayName:         displayName,
-		SSHConfig:           sshConfig,
-		Capabilities:        capabilities,
-		Resources:           parseResources(resources),
-		Status:              WorkerStatus(status),
-		HealthStatus:        WorkerHealth(healthStatus),
-		LastHeartbeat:       lastHeartbeatTime,
-		CPUUsagePercent:     cpuUsage,
-		MemoryUsagePercent:  memoryUsage,
-		DiskUsagePercent:    diskUsage,
-		CurrentTasksCount:   currentTasksCount,
-		MaxConcurrentTasks:  maxConcurrentTasks,
-		CreatedAt:           createdAt,
-		UpdatedAt:           updatedAt,
+		ID:                 dbID,
+		Hostname:           hostname,
+		DisplayName:        displayName,
+		SSHConfig:          sshConfig,
+		Capabilities:       capabilities,
+		Resources:          parseResources(resources),
+		Status:             WorkerStatus(status),
+		HealthStatus:       WorkerHealth(healthStatus),
+		LastHeartbeat:      lastHeartbeatTime,
+		CPUUsagePercent:    cpuUsage,
+		MemoryUsagePercent: memoryUsage,
+		DiskUsagePercent:   diskUsage,
+		CurrentTasksCount:  currentTasksCount,
+		MaxConcurrentTasks: maxConcurrentTasks,
+		CreatedAt:          createdAt,
+		UpdatedAt:          updatedAt,
 	}
 
 	return worker, nil
@@ -136,22 +136,22 @@ func (m *DatabaseManager) ListWorkers(ctx context.Context) ([]*Worker, error) {
 	var workers []*Worker
 	for rows.Next() {
 		var (
-			dbID                uuid.UUID
-			hostname            string
-			displayName         string
-			sshConfig           map[string]interface{}
-			capabilities        []string
-			resources           map[string]interface{}
-			status              string
-			healthStatus        string
-			lastHeartbeat       *time.Time
-			cpuUsagePercent     *float64
-			memoryUsagePercent  *float64
-			diskUsagePercent    *float64
-			currentTasksCount   int
-			maxConcurrentTasks  int
-			createdAt           time.Time
-			updatedAt           time.Time
+			dbID               uuid.UUID
+			hostname           string
+			displayName        string
+			sshConfig          map[string]interface{}
+			capabilities       []string
+			resources          map[string]interface{}
+			status             string
+			healthStatus       string
+			lastHeartbeat      *time.Time
+			cpuUsagePercent    *float64
+			memoryUsagePercent *float64
+			diskUsagePercent   *float64
+			currentTasksCount  int
+			maxConcurrentTasks int
+			createdAt          time.Time
+			updatedAt          time.Time
 		)
 
 		if err := rows.Scan(
@@ -185,22 +185,22 @@ func (m *DatabaseManager) ListWorkers(ctx context.Context) ([]*Worker, error) {
 		}
 
 		worker := &Worker{
-			ID:                  dbID,
-			Hostname:            hostname,
-			DisplayName:         displayName,
-			SSHConfig:           sshConfig,
-			Capabilities:        capabilities,
-			Resources:           parseResources(resources),
-			Status:              WorkerStatus(status),
-			HealthStatus:        WorkerHealth(healthStatus),
-			LastHeartbeat:       lastHeartbeatTime,
-			CPUUsagePercent:     cpuUsage,
-			MemoryUsagePercent:  memoryUsage,
-			DiskUsagePercent:    diskUsage,
-			CurrentTasksCount:   currentTasksCount,
-			MaxConcurrentTasks:  maxConcurrentTasks,
-			CreatedAt:           createdAt,
-			UpdatedAt:           updatedAt,
+			ID:                 dbID,
+			Hostname:           hostname,
+			DisplayName:        displayName,
+			SSHConfig:          sshConfig,
+			Capabilities:       capabilities,
+			Resources:          parseResources(resources),
+			Status:             WorkerStatus(status),
+			HealthStatus:       WorkerHealth(healthStatus),
+			LastHeartbeat:      lastHeartbeatTime,
+			CPUUsagePercent:    cpuUsage,
+			MemoryUsagePercent: memoryUsage,
+			DiskUsagePercent:   diskUsage,
+			CurrentTasksCount:  currentTasksCount,
+			MaxConcurrentTasks: maxConcurrentTasks,
+			CreatedAt:          createdAt,
+			UpdatedAt:          updatedAt,
 		}
 
 		workers = append(workers, worker)
@@ -216,18 +216,18 @@ func (m *DatabaseManager) ListWorkers(ctx context.Context) ([]*Worker, error) {
 // RegisterWorker registers a new worker in the system
 func (m *DatabaseManager) RegisterWorker(ctx context.Context, hostname, displayName string, sshConfig map[string]interface{}, capabilities []string, resources map[string]interface{}) (*Worker, error) {
 	worker := &Worker{
-		ID:                  uuid.New(),
-		Hostname:            hostname,
-		DisplayName:         displayName,
-		SSHConfig:           sshConfig,
-		Capabilities:        capabilities,
-		Resources:           parseResources(resources),
-		Status:              "active",
-		HealthStatus:        "healthy",
-		CurrentTasksCount:   0,
-		MaxConcurrentTasks:  10,
-		CreatedAt:           time.Now(),
-		UpdatedAt:           time.Now(),
+		ID:                 uuid.New(),
+		Hostname:           hostname,
+		DisplayName:        displayName,
+		SSHConfig:          sshConfig,
+		Capabilities:       capabilities,
+		Resources:          parseResources(resources),
+		Status:             "active",
+		HealthStatus:       "healthy",
+		CurrentTasksCount:  0,
+		MaxConcurrentTasks: 10,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	query := `

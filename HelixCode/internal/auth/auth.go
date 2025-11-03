@@ -27,16 +27,16 @@ var (
 
 // User represents an authenticated user
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	DisplayName  string    `json:"display_name"`
-	IsActive     bool      `json:"is_active"`
-	IsVerified   bool      `json:"is_verified"`
-	MFAEnabled   bool      `json:"mfa_enabled"`
-	LastLogin    time.Time `json:"last_login"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID          uuid.UUID `json:"id"`
+	Username    string    `json:"username"`
+	Email       string    `json:"email"`
+	DisplayName string    `json:"display_name"`
+	IsActive    bool      `json:"is_active"`
+	IsVerified  bool      `json:"is_verified"`
+	MFAEnabled  bool      `json:"mfa_enabled"`
+	LastLogin   time.Time `json:"last_login"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // Session represents a user session
@@ -53,14 +53,14 @@ type Session struct {
 
 // AuthConfig holds authentication configuration
 type AuthConfig struct {
-	JWTSecret          string
-	TokenExpiry        time.Duration
-	SessionExpiry      time.Duration
-	BcryptCost         int
-	Argon2Time         uint32
-	Argon2Memory       uint32
-	Argon2Threads      uint8
-	Argon2KeyLength    uint32
+	JWTSecret       string
+	TokenExpiry     time.Duration
+	SessionExpiry   time.Duration
+	BcryptCost      int
+	Argon2Time      uint32
+	Argon2Memory    uint32
+	Argon2Threads   uint8
+	Argon2KeyLength uint32
 }
 
 // DefaultConfig returns a default authentication configuration
@@ -241,7 +241,7 @@ func (s *AuthService) LogoutAll(ctx context.Context, userID uuid.UUID) error {
 // GenerateJWT generates a JWT token for a user
 func (s *AuthService) GenerateJWT(user *User) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": user.ID.String(),
+		"user_id":  user.ID.String(),
 		"username": user.Username,
 		"email":    user.Email,
 		"exp":      time.Now().Add(s.config.TokenExpiry).Unix(),

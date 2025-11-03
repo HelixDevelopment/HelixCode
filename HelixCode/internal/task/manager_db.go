@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"dev.helix.code/internal/database"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"dev.helix.code/internal/database"
 )
 
 // DatabaseManager handles task lifecycle and operations with database persistence
@@ -46,16 +46,16 @@ func (m *DatabaseManager) CreateTask(ctx context.Context, name, description, tas
 	}
 
 	task := &Task{
-		ID:          uuid.New(),
-		Type:        TaskType(taskType),
-		Data:        parameters,
-		Status:      TaskStatusPending,
-		Priority:    taskPriority,
-		Criticality: CriticalityNormal,
+		ID:           uuid.New(),
+		Type:         TaskType(taskType),
+		Data:         parameters,
+		Status:       TaskStatusPending,
+		Priority:     taskPriority,
+		Criticality:  CriticalityNormal,
 		Dependencies: dependencyUUIDs,
-		MaxRetries:  3,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		MaxRetries:   3,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	// Insert into database
@@ -155,22 +155,22 @@ func (m *DatabaseManager) GetTask(ctx context.Context, id string) (*Task, error)
 	}
 
 	task := &Task{
-		ID:               dbID,
-		Type:             TaskType(taskType),
-		Data:             taskData,
-		Status:           TaskStatus(status),
-		Priority:         taskPriority,
-		Criticality:      TaskCriticality(criticality),
-		Dependencies:     dependencies,
-		RetryCount:       retryCount,
-		MaxRetries:       maxRetries,
-		ErrorMessage:     getStringFromPtr(errorMessage),
-		ResultData:       resultData,
-		CheckpointData:   checkpointData,
-		StartedAt:        startedAt,
-		CompletedAt:      completedAt,
-		CreatedAt:        createdAt,
-		UpdatedAt:        updatedAt,
+		ID:             dbID,
+		Type:           TaskType(taskType),
+		Data:           taskData,
+		Status:         TaskStatus(status),
+		Priority:       taskPriority,
+		Criticality:    TaskCriticality(criticality),
+		Dependencies:   dependencies,
+		RetryCount:     retryCount,
+		MaxRetries:     maxRetries,
+		ErrorMessage:   getStringFromPtr(errorMessage),
+		ResultData:     resultData,
+		CheckpointData: checkpointData,
+		StartedAt:      startedAt,
+		CompletedAt:    completedAt,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
 	}
 
 	return task, nil
@@ -251,22 +251,22 @@ func (m *DatabaseManager) ListTasks(ctx context.Context) ([]*Task, error) {
 		}
 
 		task := &Task{
-			ID:               dbID,
-			Type:             TaskType(taskType),
-			Data:             taskData,
-			Status:           TaskStatus(status),
-			Priority:         taskPriority,
-			Criticality:      TaskCriticality(criticality),
-			Dependencies:     dependencies,
-			RetryCount:       retryCount,
-			MaxRetries:       maxRetries,
-			ErrorMessage:     errorMsg,
-			ResultData:       resultData,
-			CheckpointData:   checkpointData,
-			StartedAt:        startedAt,
-			CompletedAt:      completedAt,
-			CreatedAt:        createdAt,
-			UpdatedAt:        updatedAt,
+			ID:             dbID,
+			Type:           TaskType(taskType),
+			Data:           taskData,
+			Status:         TaskStatus(status),
+			Priority:       taskPriority,
+			Criticality:    TaskCriticality(criticality),
+			Dependencies:   dependencies,
+			RetryCount:     retryCount,
+			MaxRetries:     maxRetries,
+			ErrorMessage:   errorMsg,
+			ResultData:     resultData,
+			CheckpointData: checkpointData,
+			StartedAt:      startedAt,
+			CompletedAt:    completedAt,
+			CreatedAt:      createdAt,
+			UpdatedAt:      updatedAt,
 		}
 
 		tasks = append(tasks, task)
@@ -374,6 +374,7 @@ func (m *DatabaseManager) DeleteTask(ctx context.Context, id string) error {
 
 	return nil
 }
+
 // Helper function to convert pointer to string
 func getStringFromPtr(ptr *string) string {
 	if ptr == nil {

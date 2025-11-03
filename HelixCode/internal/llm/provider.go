@@ -15,11 +15,15 @@ import (
 type ProviderType string
 
 const (
-	ProviderTypeLocal   ProviderType = "local"
-	ProviderTypeOpenAI  ProviderType = "openai"
-	ProviderTypeAnthropic ProviderType = "anthropic"
-	ProviderTypeGemini   ProviderType = "gemini"
-	ProviderTypeCustom   ProviderType = "custom"
+	ProviderTypeLocal      ProviderType = "local"
+	ProviderTypeOpenAI     ProviderType = "openai"
+	ProviderTypeAnthropic  ProviderType = "anthropic"
+	ProviderTypeGemini     ProviderType = "gemini"
+	ProviderTypeQwen       ProviderType = "qwen"
+	ProviderTypeXAI        ProviderType = "xai"
+	ProviderTypeOpenRouter ProviderType = "openrouter"
+	ProviderTypeCopilot    ProviderType = "copilot"
+	ProviderTypeCustom     ProviderType = "custom"
 )
 
 // ModelCapability represents what a model can do
@@ -61,8 +65,8 @@ type Message struct {
 
 // Tool represents a function/tool that the LLM can call
 type Tool struct {
-	Type     string                 `json:"type"`
-	Function FunctionDefinition     `json:"function"`
+	Type     string             `json:"type"`
+	Function FunctionDefinition `json:"function"`
 }
 
 // FunctionDefinition defines a callable function
@@ -74,22 +78,22 @@ type FunctionDefinition struct {
 
 // LLMResponse represents a response from an LLM provider
 type LLMResponse struct {
-	ID                uuid.UUID     `json:"id"`
-	RequestID         uuid.UUID     `json:"request_id"`
-	Content           string        `json:"content"`
-	ToolCalls         []ToolCall    `json:"tool_calls"`
-	FinishReason      string        `json:"finish_reason"`
-	Usage             Usage         `json:"usage"`
-	ProviderMetadata  interface{}   `json:"provider_metadata"`
-	ProcessingTime    time.Duration `json:"processing_time"`
-	CreatedAt         time.Time     `json:"created_at"`
+	ID               uuid.UUID     `json:"id"`
+	RequestID        uuid.UUID     `json:"request_id"`
+	Content          string        `json:"content"`
+	ToolCalls        []ToolCall    `json:"tool_calls"`
+	FinishReason     string        `json:"finish_reason"`
+	Usage            Usage         `json:"usage"`
+	ProviderMetadata interface{}   `json:"provider_metadata"`
+	ProcessingTime   time.Duration `json:"processing_time"`
+	CreatedAt        time.Time     `json:"created_at"`
 }
 
 // ToolCall represents a tool call from the LLM
 type ToolCall struct {
-	ID       string                 `json:"id"`
-	Type     string                 `json:"type"`
-	Function ToolCallFunction       `json:"function"`
+	ID       string           `json:"id"`
+	Type     string           `json:"type"`
+	Function ToolCallFunction `json:"function"`
 }
 
 // ToolCallFunction represents the function call in a tool call
@@ -112,11 +116,11 @@ type Provider interface {
 	GetName() string
 	GetModels() []ModelInfo
 	GetCapabilities() []ModelCapability
-	
+
 	// Core functionality
 	Generate(ctx context.Context, request *LLMRequest) (*LLMResponse, error)
 	GenerateStream(ctx context.Context, request *LLMRequest, ch chan<- LLMResponse) error
-	
+
 	// Provider management
 	IsAvailable(ctx context.Context) bool
 	GetHealth(ctx context.Context) (*ProviderHealth, error)
@@ -125,23 +129,23 @@ type Provider interface {
 
 // ModelInfo represents information about an available model
 type ModelInfo struct {
-	Name         string            `json:"name"`
-	Provider     ProviderType      `json:"provider"`
-	ContextSize  int               `json:"context_size"`
-	Capabilities []ModelCapability `json:"capabilities"`
-	MaxTokens    int               `json:"max_tokens"`
-	SupportsTools bool             `json:"supports_tools"`
-	SupportsVision bool            `json:"supports_vision"`
-	Description  string            `json:"description"`
+	Name           string            `json:"name"`
+	Provider       ProviderType      `json:"provider"`
+	ContextSize    int               `json:"context_size"`
+	Capabilities   []ModelCapability `json:"capabilities"`
+	MaxTokens      int               `json:"max_tokens"`
+	SupportsTools  bool              `json:"supports_tools"`
+	SupportsVision bool              `json:"supports_vision"`
+	Description    string            `json:"description"`
 }
 
 // ProviderHealth represents the health status of a provider
 type ProviderHealth struct {
-	Status      string    `json:"status"`
-	Latency     time.Duration `json:"latency"`
-	LastCheck   time.Time `json:"last_check"`
-	ErrorCount  int       `json:"error_count"`
-	ModelCount  int       `json:"model_count"`
+	Status     string        `json:"status"`
+	Latency    time.Duration `json:"latency"`
+	LastCheck  time.Time     `json:"last_check"`
+	ErrorCount int           `json:"error_count"`
+	ModelCount int           `json:"model_count"`
 }
 
 // ProviderManager manages multiple LLM providers
@@ -152,20 +156,20 @@ type ProviderManager struct {
 
 // ProviderConfig holds configuration for the provider manager
 type ProviderConfig struct {
-	DefaultProvider ProviderType            `json:"default_provider"`
+	DefaultProvider ProviderType                   `json:"default_provider"`
 	Providers       map[string]ProviderConfigEntry `json:"providers"`
-	Timeout         time.Duration           `json:"timeout"`
-	MaxRetries      int                     `json:"max_retries"`
+	Timeout         time.Duration                  `json:"timeout"`
+	MaxRetries      int                            `json:"max_retries"`
 }
 
 // ProviderConfigEntry holds configuration for a specific provider
 type ProviderConfigEntry struct {
-	Type       ProviderType            `json:"type"`
-	Endpoint   string                  `json:"endpoint"`
-	APIKey     string                  `json:"api_key"`
-	Models     []string                `json:"models"`
-	Enabled    bool                    `json:"enabled"`
-	Parameters map[string]interface{}  `json:"parameters"`
+	Type       ProviderType           `json:"type"`
+	Endpoint   string                 `json:"endpoint"`
+	APIKey     string                 `json:"api_key"`
+	Models     []string               `json:"models"`
+	Enabled    bool                   `json:"enabled"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 // NewProviderManager creates a new provider manager
@@ -179,11 +183,11 @@ func NewProviderManager(config ProviderConfig) *ProviderManager {
 // RegisterProvider registers a new LLM provider
 func (pm *ProviderManager) RegisterProvider(provider Provider) error {
 	providerType := provider.GetType()
-	
+
 	if _, exists := pm.providers[providerType]; exists {
 		return fmt.Errorf("provider %s already registered", providerType)
 	}
-	
+
 	pm.providers[providerType] = provider
 	log.Printf("✅ LLM Provider registered: %s (%s)", provider.GetName(), providerType)
 	return nil
@@ -195,11 +199,11 @@ func (pm *ProviderManager) GetProvider(providerType ProviderType) (Provider, err
 	if !exists {
 		return nil, fmt.Errorf("provider %s not found", providerType)
 	}
-	
+
 	if !provider.IsAvailable(context.Background()) {
 		return nil, fmt.Errorf("provider %s is not available", providerType)
 	}
-	
+
 	return provider, nil
 }
 
@@ -212,93 +216,93 @@ func (pm *ProviderManager) GetDefaultProvider() (Provider, error) {
 func (pm *ProviderManager) Generate(ctx context.Context, request *LLMRequest) (*LLMResponse, error) {
 	var provider Provider
 	var err error
-	
+
 	// Use specified provider or default
 	if request.ProviderType != "" {
 		provider, err = pm.GetProvider(request.ProviderType)
 	} else {
 		provider, err = pm.GetDefaultProvider()
 	}
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to get provider: %v", err)
 	}
-	
+
 	// Set request ID if not set
 	if request.ID == uuid.Nil {
 		request.ID = uuid.New()
 	}
 	request.CreatedAt = time.Now()
-	
+
 	// Generate response
 	response, err := provider.Generate(ctx, request)
 	if err != nil {
 		return nil, fmt.Errorf("generation failed: %v", err)
 	}
-	
+
 	return response, nil
 }
 
 // GetAvailableProviders returns all available providers
 func (pm *ProviderManager) GetAvailableProviders() []Provider {
 	var available []Provider
-	
+
 	for _, provider := range pm.providers {
 		if provider.IsAvailable(context.Background()) {
 			available = append(available, provider)
 		}
 	}
-	
+
 	return available
 }
 
 // GetProviderHealth returns health status for all providers
 func (pm *ProviderManager) GetProviderHealth(ctx context.Context) map[ProviderType]*ProviderHealth {
 	health := make(map[ProviderType]*ProviderHealth)
-	
+
 	for providerType, provider := range pm.providers {
 		if healthStatus, err := provider.GetHealth(ctx); err == nil {
 			health[providerType] = healthStatus
 		} else {
 			health[providerType] = &ProviderHealth{
-				Status:    "unhealthy",
-				LastCheck: time.Now(),
+				Status:     "unhealthy",
+				LastCheck:  time.Now(),
 				ErrorCount: 1,
 			}
 		}
 	}
-	
+
 	return health
 }
 
 // FindProviderForCapabilities finds providers that support specific capabilities
 func (pm *ProviderManager) FindProviderForCapabilities(capabilities []ModelCapability) []Provider {
 	var matching []Provider
-	
+
 	for _, provider := range pm.GetAvailableProviders() {
 		providerCaps := provider.GetCapabilities()
 		if hasAllCapabilities(providerCaps, capabilities) {
 			matching = append(matching, provider)
 		}
 	}
-	
+
 	return matching
 }
 
 // Close closes all providers
 func (pm *ProviderManager) Close() error {
 	var errors []string
-	
+
 	for _, provider := range pm.providers {
 		if err := provider.Close(); err != nil {
 			errors = append(errors, fmt.Sprintf("%s: %v", provider.GetType(), err))
 		}
 	}
-	
+
 	if len(errors) > 0 {
 		return fmt.Errorf("errors closing providers: %s", strings.Join(errors, "; "))
 	}
-	
+
 	return nil
 }
 
@@ -309,13 +313,13 @@ func hasAllCapabilities(available []ModelCapability, required []ModelCapability)
 	for _, cap := range available {
 		availableMap[cap] = true
 	}
-	
+
 	for _, req := range required {
 		if !availableMap[req] {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -338,6 +342,14 @@ func (pf *ProviderFactory) CreateProvider(config ProviderConfigEntry) (Provider,
 		return NewLocalProvider(config)
 	case ProviderTypeOpenAI:
 		return NewOpenAIProvider(config)
+	case ProviderTypeQwen:
+		return NewQwenProvider(config)
+	case ProviderTypeXAI:
+		return NewXAIProvider(config)
+	case ProviderTypeOpenRouter:
+		return NewOpenRouterProvider(config)
+	case ProviderTypeCopilot:
+		return NewCopilotProvider(config)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", config.Type)
 	}

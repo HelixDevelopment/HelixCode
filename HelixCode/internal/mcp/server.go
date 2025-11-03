@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 // MCPServer implements the Model Context Protocol server
@@ -24,12 +24,12 @@ type MCPServer struct {
 
 // MCPSession represents an MCP session
 type MCPSession struct {
-	ID        uuid.UUID
-	Conn      *websocket.Conn
-	CreatedAt time.Time
+	ID           uuid.UUID
+	Conn         *websocket.Conn
+	CreatedAt    time.Time
 	LastActivity time.Time
-	UserID    uuid.UUID
-	Context   map[string]interface{}
+	UserID       uuid.UUID
+	Context      map[string]interface{}
 }
 
 // Tool represents an MCP tool
@@ -47,18 +47,18 @@ type ToolHandler func(ctx context.Context, session *MCPSession, args map[string]
 
 // MCPMessage represents an MCP protocol message
 type MCPMessage struct {
-	ID      string          `json:"id"`
-	Type    string          `json:"type"`
-	Method  string          `json:"method"`
-	Params  json.RawMessage `json:"params"`
-	Result  interface{}     `json:"result,omitempty"`
-	Error   *MCPError       `json:"error,omitempty"`
+	ID     string          `json:"id"`
+	Type   string          `json:"type"`
+	Method string          `json:"method"`
+	Params json.RawMessage `json:"params"`
+	Result interface{}     `json:"result,omitempty"`
+	Error  *MCPError       `json:"error,omitempty"`
 }
 
 // MCPError represents an MCP protocol error
 type MCPError struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
@@ -230,7 +230,7 @@ func (s *MCPServer) handleListTools(session *MCPSession, message *MCPMessage) {
 // handleCallTool handles the tools/call method
 func (s *MCPServer) handleCallTool(ctx context.Context, session *MCPSession, message *MCPMessage) {
 	var params struct {
-		Name string                 `json:"name"`
+		Name      string                 `json:"name"`
 		Arguments map[string]interface{} `json:"arguments"`
 	}
 

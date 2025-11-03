@@ -22,12 +22,12 @@ type ModelManager struct {
 
 // ModelSelectionCriteria defines criteria for model selection
 type ModelSelectionCriteria struct {
-	TaskType         string
+	TaskType             string
 	RequiredCapabilities []ModelCapability
-	MaxTokens        int
-	Budget           float64 // Cost budget in USD
-	LatencyRequirement time.Duration
-	QualityPreference string // "fast", "balanced", "quality"
+	MaxTokens            int
+	Budget               float64 // Cost budget in USD
+	LatencyRequirement   time.Duration
+	QualityPreference    string // "fast", "balanced", "quality"
 }
 
 // ModelScore represents a scored model for selection
@@ -94,7 +94,7 @@ func (m *ModelManager) SelectOptimalModel(criteria ModelSelectionCriteria) (*Mod
 	})
 
 	bestModel := scoredModels[0]
-	log.Printf("🎯 Selected model: %s (score: %.2f, reason: %s)", 
+	log.Printf("🎯 Selected model: %s (score: %.2f, reason: %s)",
 		bestModel.Model.Name, bestModel.Score, bestModel.Reason)
 
 	return bestModel.Model, nil
@@ -152,8 +152,8 @@ func (m *ModelManager) HealthCheck(ctx context.Context) map[ProviderType]*Provid
 			health[providerType] = healthStatus
 		} else {
 			health[providerType] = &ProviderHealth{
-				Status:    "unhealthy",
-				LastCheck: time.Now(),
+				Status:     "unhealthy",
+				LastCheck:  time.Now(),
 				ErrorCount: 1,
 			}
 		}
@@ -227,7 +227,7 @@ func (m *ModelManager) calculateModelScore(model *ModelInfo, criteria ModelSelec
 	}
 
 	score = baseScore
-	reason := fmt.Sprintf("capabilities:%.2f, task:%.2f, hardware:%.2f, quality:%.2f", 
+	reason := fmt.Sprintf("capabilities:%.2f, task:%.2f, hardware:%.2f, quality:%.2f",
 		capabilityScore, taskScore, hardwareScore, qualityScore)
 
 	return ModelScore{
@@ -370,7 +370,7 @@ func (m *ModelManager) calculateConfidence(model *ModelInfo, criteria ModelSelec
 
 func (m *ModelManager) estimateModelSize(modelName string) string {
 	name := strings.ToLower(modelName)
-	
+
 	if strings.Contains(name, "70b") || strings.Contains(name, "70b") {
 		return "70B"
 	}
@@ -386,7 +386,7 @@ func (m *ModelManager) estimateModelSize(modelName string) string {
 	if strings.Contains(name, "3b") || strings.Contains(name, "3b") {
 		return "3B"
 	}
-	
+
 	return ""
 }
 

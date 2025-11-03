@@ -22,7 +22,7 @@ func (m *MockConn) ReadJSON(v interface{}) error {
 	// Pop the first message
 	msg := m.readMessages[0]
 	m.readMessages = m.readMessages[1:]
-	
+
 	// Convert message to JSON bytes and unmarshal
 	jsonBytes, err := json.Marshal(msg)
 	if err != nil {

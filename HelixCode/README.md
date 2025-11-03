@@ -8,7 +8,8 @@ A distributed, AI-powered software development platform with multi-platform supp
 
 - **Multi-Platform Support**: Desktop, mobile, terminal, and specialized OS clients
 - **Distributed Computing**: Worker nodes for parallel task execution
-- **AI Integration**: LLM-powered code generation and reasoning
+- **AI Integration**: LLM-powered code generation and reasoning with multiple free providers
+- **Free AI Models**: Access to XAI (Grok), OpenRouter, GitHub Copilot, and Qwen without API keys
 - **Real-time Collaboration**: MCP protocol for tool execution
 - **Authentication & Security**: JWT-based auth with session management
 - **Task Management**: Checkpoint-based work preservation
@@ -77,6 +78,21 @@ make dev
 - **Workers**: Distributed worker nodes for task execution
 - **MCP Server**: Model Context Protocol for AI tool integration
 
+### AI Providers
+
+HelixCode supports multiple AI providers with a focus on free and accessible models:
+
+#### Free Providers (No API Key Required)
+- **XAI (Grok)**: `grok-3-fast-beta`, `grok-3-mini-fast-beta` - Fast and capable models
+- **OpenRouter**: `deepseek-r1-free`, `meta-llama/llama-3.2-3b-instruct:free` - Free models from various providers
+- **GitHub Copilot**: `gpt-4o`, `claude-3.5-sonnet`, `o1` - Free with GitHub subscription
+- **Qwen**: OAuth2 authentication available, no API key required
+
+#### Premium Providers
+- **OpenAI**: GPT-4, GPT-3.5-turbo with API key
+- **Anthropic**: Claude models with API key
+- **Google Gemini**: Gemini models with API key
+
 ### Applications
 
 - **Desktop**: Full-featured desktop application (Fyne)
@@ -95,7 +111,39 @@ Key configuration areas:
 - Redis configuration
 - Authentication settings
 - Worker management
-- LLM provider settings
+- LLM provider settings (XAI, OpenRouter, Copilot, Qwen OAuth2)
+
+### Getting Started with Free AI
+
+HelixCode comes with multiple free AI providers pre-configured:
+
+#### Quick AI Setup
+```bash
+# Use XAI (Grok) - no setup required
+helixcode llm provider set xai
+
+# Use OpenRouter free models
+helixcode llm provider set openrouter
+
+# Use GitHub Copilot (requires GitHub token)
+export GITHUB_TOKEN="your_github_token"
+helixcode llm provider set copilot
+
+# Use Qwen with OAuth2 (interactive setup)
+helixcode llm auth qwen
+```
+
+#### Environment Variables for Free Providers
+```bash
+# GitHub Copilot
+export GITHUB_TOKEN="ghp_your_github_token"
+
+# OpenRouter (optional, for higher rate limits)
+export OPENROUTER_API_KEY="sk-or-your-key"
+
+# XAI (optional, for higher rate limits)
+export XAI_API_KEY="xai-your-key"
+```
 
 ## API Documentation
 

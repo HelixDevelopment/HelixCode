@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"dev.helix.code/internal/database"
+	"github.com/google/uuid"
 )
 
 // NewDependencyManager creates a new dependency manager
@@ -102,7 +102,7 @@ func (dm *DependencyManager) DetectCircularDependencies(taskID uuid.UUID, depend
 
 	// Build dependency graph
 	graph := make(map[uuid.UUID][]uuid.UUID)
-	
+
 	// Add current task dependencies
 	graph[taskID] = dependencies
 

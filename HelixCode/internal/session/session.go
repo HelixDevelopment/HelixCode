@@ -20,9 +20,9 @@ type Session struct {
 type Mode string
 
 const (
-	ModePlanning   Mode = "planning"
-	ModeBuilding   Mode = "building"
-	ModeTesting    Mode = "testing"
+	ModePlanning    Mode = "planning"
+	ModeBuilding    Mode = "building"
+	ModeTesting     Mode = "testing"
 	ModeRefactoring Mode = "refactoring"
 )
 

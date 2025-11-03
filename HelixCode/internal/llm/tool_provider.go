@@ -35,12 +35,12 @@ type ToolGenerationResponse struct {
 
 // ToolStreamChunk represents a streaming chunk for tool-based generation
 type ToolStreamChunk struct {
-	ID        uuid.UUID              `json:"id"`
-	Content   string                 `json:"content"`
-	ToolCalls []ToolCall             `json:"tool_calls"`
-	Reasoning string                 `json:"reasoning"`
-	Done      bool                   `json:"done"`
-	Error     string                 `json:"error,omitempty"`
+	ID        uuid.UUID  `json:"id"`
+	Content   string     `json:"content"`
+	ToolCalls []ToolCall `json:"tool_calls"`
+	Reasoning string     `json:"reasoning"`
+	Done      bool       `json:"done"`
+	Error     string     `json:"error,omitempty"`
 }
 
 // EnhancedLLMProvider extends the base Provider with tool calling capabilities
@@ -62,8 +62,8 @@ type ToolCallingProvider struct {
 // NewToolCallingProvider creates a new tool calling provider
 func NewToolCallingProvider(baseProvider Provider) *ToolCallingProvider {
 	return &ToolCallingProvider{
-		baseProvider:   baseProvider,
-		tools:          make(map[string]Tool),
+		baseProvider:    baseProvider,
+		tools:           make(map[string]Tool),
 		reasoningEngine: NewReasoningEngine(baseProvider),
 	}
 }
@@ -102,7 +102,7 @@ func (p *ToolCallingProvider) GenerateWithTools(ctx context.Context, req ToolGen
 		// Generate final response with tool results
 		finalPrompt := p.buildFinalPrompt(req.Prompt, resp.Content, results)
 		genReq.Messages = []Message{{Role: "user", Content: finalPrompt}}
-		
+
 		finalResp, err := p.baseProvider.Generate(ctx, genReq)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate final response: %v", err)
@@ -117,7 +117,7 @@ func (p *ToolCallingProvider) GenerateWithTools(ctx context.Context, req ToolGen
 		Reasoning: reasoning,
 		Metadata: map[string]interface{}{
 			"duration_ms": time.Since(startTime).Milliseconds(),
-			"tools_used":   len(toolCalls),
+			"tools_used":  len(toolCalls),
 		},
 	}, nil
 }
@@ -159,7 +159,7 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 		for resp := range streamCh {
 			// Check for errors (in a real implementation, you'd have error handling)
 			// For now, we'll assume no errors in streaming
-			
+
 			fullResponse += resp.Content
 
 			// Send streaming chunk
@@ -184,7 +184,7 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 
 			// Generate final response with tool results
 			finalPrompt := p.buildFinalPrompt(req.Prompt, fullResponse, results)
-			
+
 			// Stream final response
 			finalStreamReq := &LLMRequest{
 				Model:       "default",
@@ -208,7 +208,7 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 			for resp := range finalStreamCh {
 				// Check for errors (in a real implementation, you'd have error handling)
 				// For now, we'll assume no errors in streaming
-				
+
 				ch <- ToolStreamChunk{
 					ID:        uuid.New(),
 					Content:   resp.Content,
@@ -247,7 +247,7 @@ func (p *ToolCallingProvider) RegisterTool(tool Tool) error {
 		return fmt.Errorf("tool %s already registered", tool.Function.Name)
 	}
 	p.tools[tool.Function.Name] = tool
-	
+
 	// Also register with reasoning engine
 	if p.reasoningEngine != nil {
 		// Convert Tool to ReasoningTool
@@ -262,7 +262,7 @@ func (p *ToolCallingProvider) RegisterTool(tool Tool) error {
 		}
 		p.reasoningEngine.RegisterTool(reasoningTool)
 	}
-	
+
 	log.Printf("Tool registered: %s", tool.Function.Name)
 	return nil
 }
@@ -305,15 +305,13 @@ func (p *ToolCallingProvider) Close() error {
 	return p.baseProvider.Close()
 }
 
-
-
 // Helper methods
 
 func (p *ToolCallingProvider) buildToolEnhancedPrompt(prompt string, tools []Tool) string {
 	toolDescriptions := ""
 	for _, tool := range tools {
 		paramsJSON, _ := json.Marshal(tool.Function.Parameters)
-		toolDescriptions += fmt.Sprintf("- %s: %s (parameters: %s)\n", 
+		toolDescriptions += fmt.Sprintf("- %s: %s (parameters: %s)\n",
 			tool.Function.Name, tool.Function.Description, string(paramsJSON))
 	}
 
@@ -343,7 +341,7 @@ func (p *ToolCallingProvider) extractToolCallsAndReasoning(text string) ([]ToolC
 			jsonStart := strings.Index(line, "{")
 			jsonEnd := strings.LastIndex(line, "}")
 			if jsonStart != -1 && jsonEnd != -1 {
-				jsonStr := line[jsonStart:jsonEnd+1]
+				jsonStr := line[jsonStart : jsonEnd+1]
 				var toolCall ToolCall
 				if err := json.Unmarshal([]byte(jsonStr), &toolCall); err == nil {
 					toolCalls = append(toolCalls, toolCall)
@@ -360,7 +358,7 @@ func (p *ToolCallingProvider) extractToolCallsAndReasoning(text string) ([]ToolC
 
 func (p *ToolCallingProvider) executeToolCalls(ctx context.Context, toolCalls []ToolCall) (map[string]interface{}, error) {
 	results := make(map[string]interface{})
-	
+
 	for _, toolCall := range toolCalls {
 		_, exists := p.tools[toolCall.Function.Name]
 		if !exists {
@@ -400,6 +398,6 @@ Initial response: %s
 Tool execution results:
 %s
 
-Based on the tool results, provide your final answer:`, 
+Based on the tool results, provide your final answer:`,
 		originalPrompt, initialResponse, resultsStr)
 }
