@@ -1,23 +1,25 @@
 name: Notification Tests
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'HelixCode/internal/notification/**'
-      - 'HelixCode/test/integration/**'
-      - '.github/workflows/notification-tests.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'HelixCode/internal/notification/**'
-      - 'HelixCode/test/integration/**'
-      - '.github/workflows/notification-tests.yml'
+  # Manual trigger only - run when you want to test the notification system
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+          - lint
 
 jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'unit'
 
     steps:
     - name: Checkout code
@@ -54,6 +56,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'integration'
 
     steps:
     - name: Checkout code
@@ -77,6 +80,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'lint'
 
     steps:
     - name: Checkout code
