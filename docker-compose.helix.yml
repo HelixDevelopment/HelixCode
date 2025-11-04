@@ -14,15 +14,21 @@ services:
     environment:
       - HELIX_ENV=production
       - HELIX_DATABASE_URL=postgres://helix:helixpass@postgres:5432/helixcode_prod?sslmode=disable
+      - HELIX_DATABASE_HOST=postgres
+      - HELIX_DATABASE_PORT=5432
+      - HELIX_DATABASE_USER=helix
+      - HELIX_DATABASE_NAME=helixcode_prod
+      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD}
       - HELIX_REDIS_URL=redis://redis:6379
+      - HELIX_REDIS_HOST=redis
+      - HELIX_REDIS_PORT=6379
+      - HELIX_REDIS_PASSWORD=${HELIX_REDIS_PASSWORD}
       - HELIX_API_PORT=8080
       - HELIX_SSH_PORT=2222
       - HELIX_WEB_PORT=3000
       - HELIX_NETWORK_MODE=${HELIX_NETWORK_MODE:-standalone}
       - HELIX_AUTO_PORT=${HELIX_AUTO_PORT:-false}
       - HELIX_AUTH_JWT_SECRET=${HELIX_AUTH_JWT_SECRET}
-      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD}
-      - HELIX_REDIS_PASSWORD=${HELIX_REDIS_PASSWORD}
     volumes:
       - ./HelixCode/config:/app/config:ro
       - ./HelixCode/assets:/app/assets:ro
@@ -30,6 +36,11 @@ services:
       - ./projects:/projects
       - ./shared:/shared
       - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - helixcode-network
     restart: unless-stopped

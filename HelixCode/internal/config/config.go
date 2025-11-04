@@ -101,6 +101,17 @@ func Load() (*Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("HELIX")
 
+	// Explicitly bind environment variables for critical settings
+	viper.BindEnv("auth.jwt_secret", "HELIX_AUTH_JWT_SECRET")
+	viper.BindEnv("database.password", "HELIX_DATABASE_PASSWORD")
+	viper.BindEnv("database.host", "HELIX_DATABASE_HOST")
+	viper.BindEnv("database.port", "HELIX_DATABASE_PORT")
+	viper.BindEnv("database.user", "HELIX_DATABASE_USER")
+	viper.BindEnv("database.dbname", "HELIX_DATABASE_NAME")
+	viper.BindEnv("redis.password", "HELIX_REDIS_PASSWORD")
+	viper.BindEnv("redis.host", "HELIX_REDIS_HOST")
+	viper.BindEnv("redis.port", "HELIX_REDIS_PORT")
+
 	// Read config file
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
