@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"net/smtp"
@@ -420,12 +421,10 @@ func (c *EmailChannel) Send(ctx context.Context, notification *Notification) err
 		return fmt.Errorf("email channel disabled")
 	}
 
-	// Simple email sending implementation
-	// In production, use a proper email library
-	
-	to := "" // Would come from notification metadata
-	if to == "" {
-		return fmt.Errorf("no recipient specified")
+	// Extract recipients from notification metadata
+	recipients, err := c.extractRecipients(notification)
+	if err != nil {
+		return err
 	}
 
 	msg := fmt.Sprintf("From: %s\r\n"+
@@ -433,12 +432,73 @@ func (c *EmailChannel) Send(ctx context.Context, notification *Notification) err
 		"Subject: %s\r\n"+
 		"\r\n"+
 		"%s\r\n",
-		c.from, to, notification.Title, notification.Message)
+		c.from, strings.Join(recipients, ", "), notification.Title, notification.Message)
 
 	auth := smtp.PlainAuth("", c.username, c.password, c.smtpServer)
 	addr := fmt.Sprintf("%s:%d", c.smtpServer, c.port)
 
-	return smtp.SendMail(addr, auth, c.from, []string{to}, []byte(msg))
+	return smtp.SendMail(addr, auth, c.from, recipients, []byte(msg))
+}
+
+// extractRecipients extracts recipient email addresses from notification metadata
+func (c *EmailChannel) extractRecipients(notification *Notification) ([]string, error) {
+	if notification.Metadata == nil {
+		return nil, fmt.Errorf("no metadata provided for email notification")
+	}
+
+	// Try to get recipients from metadata
+	recipientsRaw, exists := notification.Metadata["recipients"]
+	if !exists {
+		// Try singular "recipient" as fallback
+		recipientRaw, exists := notification.Metadata["recipient"]
+		if !exists {
+			return nil, fmt.Errorf("no recipient(s) specified in notification metadata")
+		}
+
+		// Handle single recipient as string
+		if recipient, ok := recipientRaw.(string); ok {
+			if recipient == "" {
+				return nil, fmt.Errorf("recipient email address is empty")
+			}
+			return []string{recipient}, nil
+		}
+		return nil, fmt.Errorf("invalid recipient format in metadata")
+	}
+
+	// Handle recipients as []string
+	if recipients, ok := recipientsRaw.([]string); ok {
+		if len(recipients) == 0 {
+			return nil, fmt.Errorf("recipients list is empty")
+		}
+		// Validate all emails are non-empty
+		for _, recipient := range recipients {
+			if recipient == "" {
+				return nil, fmt.Errorf("one or more recipient email addresses are empty")
+			}
+		}
+		return recipients, nil
+	}
+
+	// Handle recipients as []interface{} (common in JSON unmarshaling)
+	if recipientsInterface, ok := recipientsRaw.([]interface{}); ok {
+		recipients := make([]string, 0, len(recipientsInterface))
+		for _, r := range recipientsInterface {
+			if recipient, ok := r.(string); ok {
+				if recipient == "" {
+					return nil, fmt.Errorf("one or more recipient email addresses are empty")
+				}
+				recipients = append(recipients, recipient)
+			} else {
+				return nil, fmt.Errorf("invalid recipient format in recipients array")
+			}
+		}
+		if len(recipients) == 0 {
+			return nil, fmt.Errorf("recipients list is empty")
+		}
+		return recipients, nil
+	}
+
+	return nil, fmt.Errorf("invalid recipients format in metadata (expected string or []string)")
 }
 
 func (c *EmailChannel) GetName() string {
@@ -456,6 +516,90 @@ func (c *EmailChannel) GetConfig() map[string]interface{} {
 		"username":    c.username,
 		"from":        c.from,
 	}
+}
+
+// TelegramChannel implements notification channel for Telegram
+type TelegramChannel struct {
+	name     string
+	enabled  bool
+	botToken string
+	chatID   string
+}
+
+func NewTelegramChannel(botToken, chatID string) *TelegramChannel {
+	return &TelegramChannel{
+		name:     "telegram",
+		enabled:  botToken != "" && chatID != "",
+		botToken: botToken,
+		chatID:   chatID,
+	}
+}
+
+func (c *TelegramChannel) Send(ctx context.Context, notification *Notification) error {
+	if !c.enabled {
+		return fmt.Errorf("telegram channel disabled")
+	}
+
+	// Format message using HTML
+	message := fmt.Sprintf("<b>%s</b>\n\n%s", notification.Title, notification.Message)
+
+	// Add metadata if present
+	if len(notification.Metadata) > 0 {
+		message += "\n\n<i>Details:</i>"
+		for key, value := range notification.Metadata {
+			message += fmt.Sprintf("\n• %s: %v", key, value)
+		}
+	}
+
+	// Prepare API request
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", c.botToken)
+
+	payload := map[string]interface{}{
+		"chat_id":    c.chatID,
+		"text":       message,
+		"parse_mode": "HTML",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal telegram payload: %v", err)
+	}
+
+	resp, err := http.Post(apiURL, "application/json", bytes.NewReader(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to send to telegram: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("telegram returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+func (c *TelegramChannel) GetName() string {
+	return c.name
+}
+
+func (c *TelegramChannel) IsEnabled() bool {
+	return c.enabled
+}
+
+func (c *TelegramChannel) GetConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"bot_token": c.maskToken(c.botToken),
+		"chat_id":   c.chatID,
+	}
+}
+
+// maskToken masks the bot token for security (show only last 4 chars)
+func (c *TelegramChannel) maskToken(token string) string {
+	if len(token) <= 4 {
+		return "****"
+	}
+	return "****" + token[len(token)-4:]
 }
 
 // DiscordChannel implements notification channel for Discord

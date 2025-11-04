@@ -51,3 +51,59 @@ logging:
   level: "info"
   format: "text"
   output: "stdout"
+
+notifications:
+  enabled: true
+
+  # Notification rules - map events to channels
+  rules:
+    - name: "Critical Task Failures"
+      condition: "type==error"
+      channels: ["slack", "email", "telegram"]
+      priority: urgent
+      enabled: true
+
+    - name: "Worker Health Alerts"
+      condition: "type==alert"
+      channels: ["slack", "telegram"]
+      priority: high
+      enabled: true
+
+    - name: "Workflow Completions"
+      condition: "type==success"
+      channels: ["slack"]
+      priority: medium
+      enabled: true
+
+  # Channel configurations
+  channels:
+    slack:
+      enabled: false  # Set to true and configure webhook to enable
+      webhook_url: ""  # Set via HELIX_SLACK_WEBHOOK_URL environment variable
+      channel: "#helix-notifications"
+      username: "HelixCode Bot"
+      timeout: 10
+
+    telegram:
+      enabled: false  # Set to true and configure bot to enable
+      bot_token: ""  # Set via HELIX_TELEGRAM_BOT_TOKEN environment variable
+      chat_id: ""  # Set via HELIX_TELEGRAM_CHAT_ID environment variable
+      timeout: 10
+
+    email:
+      enabled: false  # Set to true and configure SMTP to enable
+      smtp:
+        server: ""  # Set via HELIX_EMAIL_SMTP_SERVER
+        port: 587  # Set via HELIX_EMAIL_SMTP_PORT
+        username: ""  # Set via HELIX_EMAIL_USERNAME
+        password: ""  # Set via HELIX_EMAIL_PASSWORD
+        from: ""  # Set via HELIX_EMAIL_FROM
+        tls: true
+      recipients:
+        default: []  # Set via HELIX_EMAIL_RECIPIENTS (comma-separated)
+      timeout: 30
+
+    discord:
+      enabled: false  # Set to true and configure webhook to enable
+      webhook_url: ""  # Set via HELIX_DISCORD_WEBHOOK_URL environment variable
+      timeout: 10
