@@ -80,18 +80,51 @@ make dev
 
 ### AI Providers
 
-HelixCode supports multiple AI providers with a focus on free and accessible models:
+HelixCode supports multiple AI providers with a focus on free and accessible models, plus enterprise-grade premium providers with advanced features:
 
 #### Free Providers (No API Key Required)
-- **XAI (Grok)**: `grok-3-fast-beta`, `grok-3-mini-fast-beta` - Fast and capable models
+- **XAI (Grok)**: `grok-3-fast-beta`, `grok-3-mini-fast-beta`, `grok-3-beta` - Fast and capable models
 - **OpenRouter**: `deepseek-r1-free`, `meta-llama/llama-3.2-3b-instruct:free` - Free models from various providers
-- **GitHub Copilot**: `gpt-4o`, `claude-3.5-sonnet`, `o1` - Free with GitHub subscription
-- **Qwen**: OAuth2 authentication available, no API key required
+- **GitHub Copilot**: `gpt-4o`, `claude-3.5-sonnet`, `claude-3.7-sonnet`, `o1`, `gemini-2.0-flash` - Free with GitHub subscription
+- **Qwen**: OAuth2 authentication available, 2,000 requests/day free tier
 
-#### Premium Providers
-- **OpenAI**: GPT-4, GPT-3.5-turbo with API key
-- **Anthropic**: Claude models with API key
-- **Google Gemini**: Gemini models with API key
+#### Premium Providers (Advanced Features)
+
+##### **Anthropic Claude** ⭐ NEW
+The most powerful coding assistant with industry-leading reasoning capabilities:
+- **Models**: Claude 4 Sonnet/Opus, Claude 3.7 Sonnet, Claude 3.5 Sonnet/Haiku, Claude 3 Opus/Sonnet/Haiku
+- **Context Windows**: 200K tokens (all models)
+- **Max Output**: Up to 50K tokens (Claude 4/3.7)
+- **Advanced Features**:
+  - 🧠 **Extended Thinking**: Automatic reasoning mode for complex problems
+  - 💾 **Prompt Caching**: Up to 90% cost reduction on repeated contexts
+  - 🛠️ **Tool Caching**: Cache tool definitions for multi-turn conversations
+  - 👁️ **Vision Support**: Analyze images and diagrams
+  - ⚡ **Streaming**: Real-time token-by-token responses
+
+##### **Google Gemini** ⭐ NEW
+Google's most capable AI models with massive context windows:
+- **Models**: Gemini 2.5 Pro/Flash, Gemini 2.0 Flash, Gemini 1.5 Pro/Flash
+- **Context Windows**: Up to 2M tokens (Gemini 2.5 Pro, 1.5 Pro)
+- **Max Output**: 8K tokens
+- **Advanced Features**:
+  - 📚 **Massive Context**: Handle entire codebases (2M tokens = ~1.5M words)
+  - 🎨 **Multimodal**: Text, images, and code understanding
+  - 🚀 **Flash Models**: Ultra-fast responses with 1M token context
+  - 🔧 **Function Calling**: Native tool integration
+  - 🛡️ **Safety Controls**: Configurable content filtering
+
+##### **OpenAI**
+Industry-standard models with broad ecosystem support:
+- **Models**: GPT-4.1, GPT-4.5 Preview, GPT-4o, O1/O3 (reasoning), O4 Mini
+- **Context Windows**: Up to 1M+ tokens (GPT-4.1)
+- **Max Output**: Variable by model
+- **Features**: Function calling, vision support, reasoning models
+
+##### **Local Models**
+- **Ollama**: Run any GGUF model locally
+- **Llama.cpp**: Direct llama.cpp integration
+- **Privacy**: 100% offline, no data leaves your machine
 
 ### Applications
 
@@ -133,7 +166,9 @@ helixcode llm provider set copilot
 helixcode llm auth qwen
 ```
 
-#### Environment Variables for Free Providers
+#### Environment Variables for All Providers
+
+**Free Providers:**
 ```bash
 # GitHub Copilot
 export GITHUB_TOKEN="ghp_your_github_token"
@@ -143,6 +178,52 @@ export OPENROUTER_API_KEY="sk-or-your-key"
 
 # XAI (optional, for higher rate limits)
 export XAI_API_KEY="xai-your-key"
+```
+
+**Premium Providers:**
+```bash
+# Anthropic Claude
+export ANTHROPIC_API_KEY="sk-ant-your-key"
+
+# Google Gemini
+export GEMINI_API_KEY="your-gemini-key"
+# or
+export GOOGLE_API_KEY="your-google-key"
+
+# OpenAI
+export OPENAI_API_KEY="sk-your-openai-key"
+```
+
+#### Quick Setup for New Providers
+
+**Anthropic Claude** (with Extended Thinking & Prompt Caching):
+```bash
+# Set API key
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+
+# Use Claude 4 Sonnet (most powerful)
+helixcode llm provider set anthropic --model claude-4-sonnet
+
+# Or use Claude 3.5 Sonnet (best for coding)
+helixcode llm provider set anthropic --model claude-3-5-sonnet-latest
+
+# Generate code with extended thinking
+helixcode generate "Think carefully: design a distributed cache system"
+```
+
+**Google Gemini** (with 2M token context):
+```bash
+# Set API key
+export GEMINI_API_KEY="your-gemini-key"
+
+# Use Gemini 2.5 Pro (2M context)
+helixcode llm provider set gemini --model gemini-2.5-pro
+
+# Or use Gemini 2.5 Flash (fast with 1M context)
+helixcode llm provider set gemini --model gemini-2.5-flash
+
+# Process entire codebase
+helixcode analyze --full-context --model gemini-2.5-pro
 ```
 
 ## API Documentation

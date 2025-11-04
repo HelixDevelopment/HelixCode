@@ -342,6 +342,10 @@ func (pf *ProviderFactory) CreateProvider(config ProviderConfigEntry) (Provider,
 		return NewLocalProvider(config)
 	case ProviderTypeOpenAI:
 		return NewOpenAIProvider(config)
+	case ProviderTypeAnthropic:
+		return NewAnthropicProvider(config)
+	case ProviderTypeGemini:
+		return NewGeminiProvider(config)
 	case ProviderTypeQwen:
 		return NewQwenProvider(config)
 	case ProviderTypeXAI:
