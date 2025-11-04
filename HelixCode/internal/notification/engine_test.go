@@ -108,7 +108,8 @@ func TestTelegramChannel(t *testing.T) {
 	assert.True(t, channel.IsEnabled())
 
 	config := channel.GetConfig()
-	assert.Equal(t, "test-token", config["bot_token"])
+	// Token should be masked for security (only last 4 chars shown)
+	assert.Equal(t, "****oken", config["bot_token"])
 	assert.Equal(t, "test-chat-id", config["chat_id"])
 }
 

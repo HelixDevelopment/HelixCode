@@ -12,7 +12,6 @@ import (
 	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/worker"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // TestDistributedWorkflow tests a complete distributed workflow
@@ -240,9 +239,8 @@ func TestErrorHandlingIntegration(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Test worker error scenarios
-	// Attempt to remove non-existent worker
-	nonExistentWorkerID := "non-existent-id"
-	// This would normally fail, but we're testing the error handling
+	// Attempt to remove non-existent worker would normally fail,
+	// but we're testing the error handling
 
 	// Verify components handle errors gracefully
 	stats := workerPool.GetWorkerStats(ctx)
