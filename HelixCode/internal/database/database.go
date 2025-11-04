@@ -321,4 +321,145 @@ CREATE INDEX sessions_project_id_idx ON sessions (project_id);
 CREATE INDEX sessions_status_idx ON sessions (status);
 CREATE INDEX sessions_session_type_idx ON sessions (session_type);
 CREATE INDEX sessions_current_task_id_idx ON sessions (current_task_id);
+
+-- =============================================
+-- 5. LLM PROVIDERS & MODELS
+-- =============================================
+
+CREATE TABLE llm_providers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) UNIQUE NOT NULL,
+    provider_type VARCHAR(50) NOT NULL
+        CHECK (provider_type IN ('local', 'openai', 'anthropic', 'gemini', 'qwen', 'xai', 'openrouter', 'copilot', 'custom')),
+    api_key TEXT,
+    api_endpoint TEXT,
+    config JSONB NOT NULL DEFAULT '{}',
+    status VARCHAR(50) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'failed')),
+    health_status VARCHAR(50) NOT NULL DEFAULT 'unknown'
+        CHECK (health_status IN ('healthy', 'degraded', 'unhealthy', 'unknown')),
+    last_health_check TIMESTAMPTZ,
+    error_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX llm_providers_name_idx ON llm_providers (name);
+CREATE INDEX llm_providers_type_idx ON llm_providers (provider_type);
+CREATE INDEX llm_providers_status_idx ON llm_providers (status);
+
+CREATE TABLE llm_models (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    provider_id UUID NOT NULL REFERENCES llm_providers(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    model_id VARCHAR(255) NOT NULL,
+    capabilities TEXT[] NOT NULL DEFAULT '{}',
+    context_length INTEGER NOT NULL DEFAULT 4096,
+    max_tokens INTEGER NOT NULL DEFAULT 2048,
+    supports_tools BOOLEAN NOT NULL DEFAULT false,
+    supports_vision BOOLEAN NOT NULL DEFAULT false,
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'deprecated')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX llm_models_provider_id_idx ON llm_models (provider_id);
+CREATE INDEX llm_models_name_idx ON llm_models (name);
+CREATE INDEX llm_models_model_id_idx ON llm_models (model_id);
+CREATE INDEX llm_models_status_idx ON llm_models (status);
+CREATE INDEX llm_models_capabilities_idx ON llm_models USING GIN (capabilities);
+
+-- =============================================
+-- 6. MCP INTEGRATION
+-- =============================================
+
+CREATE TABLE mcp_servers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) UNIQUE NOT NULL,
+    transport_type VARCHAR(50) NOT NULL
+        CHECK (transport_type IN ('stdio', 'sse', 'http', 'websocket')),
+    command TEXT,
+    args TEXT[],
+    url TEXT,
+    env_vars JSONB NOT NULL DEFAULT '{}',
+    status VARCHAR(50) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'failed')),
+    last_health_check TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX mcp_servers_name_idx ON mcp_servers (name);
+CREATE INDEX mcp_servers_transport_idx ON mcp_servers (transport_type);
+CREATE INDEX mcp_servers_status_idx ON mcp_servers (status);
+
+CREATE TABLE tools (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    mcp_server_id UUID REFERENCES mcp_servers(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    parameters JSONB NOT NULL DEFAULT '{}',
+    permissions TEXT[] NOT NULL DEFAULT '{}',
+    is_enabled BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX tools_mcp_server_id_idx ON tools (mcp_server_id);
+CREATE INDEX tools_name_idx ON tools (name);
+CREATE INDEX tools_is_enabled_idx ON tools (is_enabled);
+
+-- =============================================
+-- 7. NOTIFICATIONS
+-- =============================================
+
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    notification_type VARCHAR(50) NOT NULL
+        CHECK (notification_type IN ('info', 'warning', 'error', 'success', 'alert')),
+    priority VARCHAR(50) NOT NULL DEFAULT 'medium'
+        CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+    channels TEXT[] NOT NULL DEFAULT '{}',
+    status VARCHAR(50) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'sent', 'failed', 'cancelled')),
+    metadata JSONB NOT NULL DEFAULT '{}',
+    sent_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX notifications_user_id_idx ON notifications (user_id);
+CREATE INDEX notifications_type_idx ON notifications (notification_type);
+CREATE INDEX notifications_priority_idx ON notifications (priority);
+CREATE INDEX notifications_status_idx ON notifications (status);
+CREATE INDEX notifications_created_at_idx ON notifications (created_at);
+
+-- =============================================
+-- 8. AUDIT LOGS
+-- =============================================
+
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(255) NOT NULL,
+    resource_type VARCHAR(100) NOT NULL,
+    resource_id UUID,
+    details JSONB NOT NULL DEFAULT '{}',
+    ip_address INET,
+    user_agent TEXT,
+    status VARCHAR(50) NOT NULL
+        CHECK (status IN ('success', 'failure', 'error')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX audit_logs_user_id_idx ON audit_logs (user_id);
+CREATE INDEX audit_logs_action_idx ON audit_logs (action);
+CREATE INDEX audit_logs_resource_type_idx ON audit_logs (resource_type);
+CREATE INDEX audit_logs_resource_id_idx ON audit_logs (resource_id);
+CREATE INDEX audit_logs_created_at_idx ON audit_logs (created_at);
+CREATE INDEX audit_logs_status_idx ON audit_logs (status);
 `

@@ -190,6 +190,93 @@ INSERT INTO workers (hostname, display_name, capabilities, status) VALUES
 ('worker-3', 'Memory Worker 1', ARRAY['data-processing', 'analysis', 'docker-execution'], 'offline')
 ON CONFLICT (hostname) DO NOTHING;
 
+-- Create MCP servers table
+CREATE TABLE IF NOT EXISTS mcp_servers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) UNIQUE NOT NULL,
+    transport_type VARCHAR(50) NOT NULL CHECK (transport_type IN ('stdio', 'sse', 'http', 'websocket')),
+    command TEXT,
+    args TEXT[],
+    url TEXT,
+    env_vars JSONB NOT NULL DEFAULT '{}',
+    status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'failed')),
+    last_health_check TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_mcp_servers_name ON mcp_servers(name);
+CREATE INDEX IF NOT EXISTS idx_mcp_servers_status ON mcp_servers(status);
+
+-- Create tools table
+CREATE TABLE IF NOT EXISTS tools (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    mcp_server_id UUID REFERENCES mcp_servers(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    parameters JSONB NOT NULL DEFAULT '{}',
+    permissions TEXT[] NOT NULL DEFAULT '{}',
+    is_enabled BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tools_mcp_server_id ON tools(mcp_server_id);
+CREATE INDEX IF NOT EXISTS idx_tools_name ON tools(name);
+
+-- Create task checkpoints table
+CREATE TABLE IF NOT EXISTS task_checkpoints (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+    checkpoint_name VARCHAR(255) NOT NULL,
+    checkpoint_data JSONB NOT NULL,
+    worker_id UUID REFERENCES workers(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_checkpoints_task_id ON task_checkpoints(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_checkpoints_worker_id ON task_checkpoints(worker_id);
+
+-- Create worker connectivity events table
+CREATE TABLE IF NOT EXISTS worker_connectivity_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    worker_id UUID REFERENCES workers(id) ON DELETE CASCADE,
+    event_type VARCHAR(50) NOT NULL CHECK (event_type IN ('connected', 'disconnected', 'reconnected', 'heartbeat_missed')),
+    event_data JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_worker_connectivity_events_worker_id ON worker_connectivity_events(worker_id);
+CREATE INDEX IF NOT EXISTS idx_worker_connectivity_events_event_type ON worker_connectivity_events(event_type);
+
+-- Create audit logs table
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(255) NOT NULL,
+    resource_type VARCHAR(100) NOT NULL,
+    resource_id UUID,
+    details JSONB NOT NULL DEFAULT '{}',
+    ip_address INET,
+    user_agent TEXT,
+    status VARCHAR(50) NOT NULL CHECK (status IN ('success', 'failure', 'error')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource_type ON audit_logs(resource_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+
+-- Update notifications table to match spec
+ALTER TABLE notifications
+    DROP COLUMN IF EXISTS type,
+    ADD COLUMN IF NOT EXISTS notification_type VARCHAR(50) NOT NULL DEFAULT 'info' CHECK (notification_type IN ('info', 'warning', 'error', 'success', 'alert'));
+
+ALTER TABLE notifications
+    DROP COLUMN IF EXISTS channel,
+    ADD COLUMN IF NOT EXISTS channels TEXT[] DEFAULT '{}';
+
 -- Grant permissions to the configured user
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO helixcode;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO helixcode;

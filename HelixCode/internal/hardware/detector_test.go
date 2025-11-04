@@ -71,7 +71,7 @@ func TestHardwareDetectionErrorHandling(t *testing.T) {
 	// Test compilation flags consistency
 	flags1 := detector.GetCompilationFlags()
 	flags2 := detector.GetCompilationFlags()
-	
+
 	// Should return consistent results
 	if len(flags1) != len(flags2) {
 		t.Error("Compilation flags should be consistent")
@@ -115,7 +115,7 @@ func TestModelSizeCalculation(t *testing.T) {
 
 	// Get current optimal size
 	currentOptimal := detector.GetOptimalModelSize()
-	
+
 	// Test that the calculation is deterministic
 	for i := 0; i < 3; i++ {
 		optimal := detector.GetOptimalModelSize()
@@ -133,7 +133,7 @@ func TestModelSizeCalculation(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if !valid {
 		t.Errorf("Optimal model size %s is not a valid size", currentOptimal)
 	}

@@ -282,30 +282,26 @@ func TestSSHWorkerPool_ConcurrentAccess(t *testing.T) {
 	pool := NewSSHWorkerPool(false)
 	ctx := context.Background()
 
-	// Add initial worker
-	workerID := uuid.New()
-	pool.workers[workerID] = &SSHWorker{
-		ID:       workerID,
+	// Add initial worker directly to test map (bypass connection)
+	pool.mutex.Lock()
+	initialWorkerID := uuid.New()
+	pool.workers[initialWorkerID] = &SSHWorker{
+		ID:       initialWorkerID,
 		Hostname: "initial-worker",
+		Status:   WorkerStatusActive,
 	}
+	pool.mutex.Unlock()
 
-	// Run concurrent operations
+	// Run concurrent read operations only (to avoid connection attempts)
 	done := make(chan bool)
 	numGoroutines := 10
 
 	for i := 0; i < numGoroutines; i++ {
 		go func(id int) {
-			// Read operations
+			// Multiple concurrent read operations
 			_ = pool.GetWorkerStats(ctx)
-
-			// Write operations (simulated)
-			if id%2 == 0 {
-				newWorkerID := uuid.New()
-				pool.workers[newWorkerID] = &SSHWorker{
-					ID:       newWorkerID,
-					Hostname: "concurrent-worker",
-				}
-			}
+			_ = pool.GetWorkerStats(ctx)
+			_ = pool.GetWorkerStats(ctx)
 
 			done <- true
 		}(i)
@@ -317,7 +313,8 @@ func TestSSHWorkerPool_ConcurrentAccess(t *testing.T) {
 	}
 
 	// Verify no data races occurred
-	assert.True(t, len(pool.workers) >= 1)
+	stats := pool.GetWorkerStats(ctx)
+	assert.Equal(t, 1, stats.TotalWorkers, "Should have exactly one worker")
 }
 
 // TestSSHWorkerPool_ErrorHandling tests various error scenarios

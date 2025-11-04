@@ -232,10 +232,10 @@ func (tm *TaskManager) GetTaskProgress(taskID uuid.UUID) (*TaskProgress, error) 
 func (tm *TaskManager) analyzeTaskForSplitting(task *Task) (*TaskAnalysis, error) {
 	// Analyze task data to determine optimal splitting strategy
 	analysis := &TaskAnalysis{
-		TaskID:      task.ID,
-		TaskType:    task.Type,
-		Complexity:  tm.estimateComplexity(task),
-		DataSize:    tm.estimateDataSize(task),
+		TaskID:       task.ID,
+		TaskType:     task.Type,
+		Complexity:   tm.estimateComplexity(task),
+		DataSize:     tm.estimateDataSize(task),
 		Dependencies: len(task.Dependencies),
 	}
 

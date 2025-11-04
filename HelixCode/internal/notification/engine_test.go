@@ -99,3 +99,68 @@ func (m *mockChannel) IsEnabled() bool {
 func (m *mockChannel) GetConfig() map[string]interface{} {
 	return map[string]interface{}{"mock": true}
 }
+
+func TestTelegramChannel(t *testing.T) {
+	channel := NewTelegramChannel("test-token", "test-chat-id")
+
+	assert.NotNil(t, channel)
+	assert.Equal(t, "telegram", channel.GetName())
+	assert.True(t, channel.IsEnabled())
+
+	config := channel.GetConfig()
+	assert.Equal(t, "test-token", config["bot_token"])
+	assert.Equal(t, "test-chat-id", config["chat_id"])
+}
+
+func TestYandexMessengerChannel(t *testing.T) {
+	channel := NewYandexMessengerChannel("test-token", "test-chat-id")
+
+	assert.NotNil(t, channel)
+	assert.Equal(t, "yandex_messenger", channel.GetName())
+	assert.True(t, channel.IsEnabled())
+
+	config := channel.GetConfig()
+	assert.Equal(t, "test-token", config["token"])
+	assert.Equal(t, "test-chat-id", config["chat_id"])
+}
+
+func TestMaxChannel(t *testing.T) {
+	channel := NewMaxChannel("test-api-key", "https://max.example.com", "test-room")
+
+	assert.NotNil(t, channel)
+	assert.Equal(t, "max", channel.GetName())
+	assert.True(t, channel.IsEnabled())
+
+	config := channel.GetConfig()
+	assert.Equal(t, "test-api-key", config["api_key"])
+	assert.Equal(t, "https://max.example.com", config["endpoint"])
+	assert.Equal(t, "test-room", config["room_id"])
+}
+
+func TestAllNotificationChannels(t *testing.T) {
+	engine := NewNotificationEngine()
+
+	// Register all channels
+	slack := NewSlackChannel("https://hooks.slack.com/test", "#test", "testbot")
+	email := NewEmailChannel("smtp.test.com", 587, "user", "pass", "from@test.com")
+	discord := NewDiscordChannel("https://discord.com/webhook/test")
+	telegram := NewTelegramChannel("test-bot-token", "test-chat-id")
+	yandex := NewYandexMessengerChannel("test-token", "test-chat-id")
+	max := NewMaxChannel("test-api-key", "https://max.test.com", "test-room")
+
+	assert.NoError(t, engine.RegisterChannel(slack))
+	assert.NoError(t, engine.RegisterChannel(email))
+	assert.NoError(t, engine.RegisterChannel(discord))
+	assert.NoError(t, engine.RegisterChannel(telegram))
+	assert.NoError(t, engine.RegisterChannel(yandex))
+	assert.NoError(t, engine.RegisterChannel(max))
+
+	// Verify all channels are registered
+	assert.Equal(t, 6, len(engine.channels))
+	assert.NotNil(t, engine.channels["slack"])
+	assert.NotNil(t, engine.channels["email"])
+	assert.NotNil(t, engine.channels["discord"])
+	assert.NotNil(t, engine.channels["telegram"])
+	assert.NotNil(t, engine.channels["yandex_messenger"])
+	assert.NotNil(t, engine.channels["max"])
+}

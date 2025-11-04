@@ -51,14 +51,14 @@ func (p *LlamaCPPProvider) GetName() string {
 func (p *LlamaCPPProvider) GetModels() []ModelInfo {
 	return []ModelInfo{
 		{
-			Name:         p.config.ModelPath,
-			Provider:     ProviderTypeLocal,
-			ContextSize:  p.config.ContextSize,
-			Capabilities: []ModelCapability{CapabilityTextGeneration, CapabilityCodeGeneration, CapabilityCodeAnalysis},
-			MaxTokens:    p.config.ContextSize,
-			SupportsTools: false,
+			Name:           p.config.ModelPath,
+			Provider:       ProviderTypeLocal,
+			ContextSize:    p.config.ContextSize,
+			Capabilities:   []ModelCapability{CapabilityTextGeneration, CapabilityCodeGeneration, CapabilityCodeAnalysis},
+			MaxTokens:      p.config.ContextSize,
+			SupportsTools:  false,
 			SupportsVision: false,
-			Description:  "Local Llama.cpp model",
+			Description:    "Local Llama.cpp model",
 		},
 	}
 }
@@ -133,8 +133,8 @@ func (p *LlamaCPPProvider) IsAvailable(ctx context.Context) bool {
 func (p *LlamaCPPProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 	if !p.isRunning {
 		return &ProviderHealth{
-			Status:    "unhealthy",
-			LastCheck: time.Now(),
+			Status:     "unhealthy",
+			LastCheck:  time.Now(),
 			ErrorCount: 1,
 		}, nil
 	}

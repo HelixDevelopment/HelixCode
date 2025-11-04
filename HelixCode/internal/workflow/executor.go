@@ -124,7 +124,7 @@ func (e *Executor) executeWorkflow(ctx context.Context, workflow *Workflow, proj
 
 	for i := range workflow.Steps {
 		step := &workflow.Steps[i]
-		
+
 		// Check if all dependencies are completed
 		if !e.areDependenciesCompleted(workflow, step) {
 			step.Status = StepStatusSkipped
@@ -146,7 +146,7 @@ func (e *Executor) executeWorkflow(ctx context.Context, workflow *Workflow, proj
 
 		step.Status = StepStatusCompleted
 		workflow.UpdatedAt = time.Now()
-		
+
 		// Add result to step (simplified for now)
 		if result != "" {
 			step.Status = StepStatusCompleted
@@ -194,7 +194,7 @@ func (e *Executor) executeCommandStep(ctx context.Context, step *Step, proj *pro
 	// Execute command in project directory
 	cmd := exec.CommandContext(ctx, "bash", "-c", step.Description)
 	cmd.Dir = proj.Path
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("command execution failed: %v\nOutput: %s", err, string(output))
@@ -207,7 +207,7 @@ func (e *Executor) executeCommandStep(ctx context.Context, step *Step, proj *pro
 func (e *Executor) executeTestStep(ctx context.Context, step *Step, proj *project.Project) (string, error) {
 	// Execute test command based on project type
 	var cmd *exec.Cmd
-	
+
 	switch proj.Type {
 	case "go":
 		cmd = exec.CommandContext(ctx, "go", "test", "./...")
@@ -234,7 +234,7 @@ func (e *Executor) executeTestStep(ctx context.Context, step *Step, proj *projec
 func (e *Executor) executeLintStep(ctx context.Context, step *Step, proj *project.Project) (string, error) {
 	// Execute lint command based on project type
 	var cmd *exec.Cmd
-	
+
 	switch proj.Type {
 	case "go":
 		cmd = exec.CommandContext(ctx, "gofmt", "-l", ".")
@@ -261,7 +261,7 @@ func (e *Executor) executeLintStep(ctx context.Context, step *Step, proj *projec
 func (e *Executor) executeBuildStep(ctx context.Context, step *Step, proj *project.Project) (string, error) {
 	// Execute build command based on project type
 	var cmd *exec.Cmd
-	
+
 	switch proj.Type {
 	case "go":
 		cmd = exec.CommandContext(ctx, "go", "build")
@@ -313,13 +313,13 @@ func (e *Executor) createPlanningSteps(proj *project.Project) []Step {
 			Status:      StepStatusPending,
 		},
 		{
-			ID:          "generate_architecture",
-			Name:        "Generate Architecture",
-			Description: "Generate system architecture and design",
-			Type:        StepTypeGeneration,
-			Action:      StepActionGenerateCode,
+			ID:           "generate_architecture",
+			Name:         "Generate Architecture",
+			Description:  "Generate system architecture and design",
+			Type:         StepTypeGeneration,
+			Action:       StepActionGenerateCode,
 			Dependencies: []string{"analyze_requirements"},
-			Status:      StepStatusPending,
+			Status:       StepStatusPending,
 		},
 	}
 }
@@ -336,13 +336,13 @@ func (e *Executor) createBuildingSteps(proj *project.Project) []Step {
 			Status:      StepStatusPending,
 		},
 		{
-			ID:          "compile_code",
-			Name:        "Compile Code",
-			Description: proj.Metadata.BuildCommand,
-			Type:        StepTypeExecution,
-			Action:      StepActionBuildProject,
+			ID:           "compile_code",
+			Name:         "Compile Code",
+			Description:  proj.Metadata.BuildCommand,
+			Type:         StepTypeExecution,
+			Action:       StepActionBuildProject,
 			Dependencies: []string{"setup_environment"},
-			Status:      StepStatusPending,
+			Status:       StepStatusPending,
 		},
 	}
 }
@@ -359,13 +359,13 @@ func (e *Executor) createTestingSteps(proj *project.Project) []Step {
 			Status:      StepStatusPending,
 		},
 		{
-			ID:          "integration_tests",
-			Name:        "Integration Tests",
-			Description: "Run integration tests",
-			Type:        StepTypeExecution,
-			Action:      StepActionRunTests,
+			ID:           "integration_tests",
+			Name:         "Integration Tests",
+			Description:  "Run integration tests",
+			Type:         StepTypeExecution,
+			Action:       StepActionRunTests,
 			Dependencies: []string{"unit_tests"},
-			Status:      StepStatusPending,
+			Status:       StepStatusPending,
 		},
 	}
 }
@@ -382,13 +382,13 @@ func (e *Executor) createRefactoringSteps(proj *project.Project) []Step {
 			Status:      StepStatusPending,
 		},
 		{
-			ID:          "refactor_code",
-			Name:        "Refactor Code",
-			Description: "Perform code refactoring",
-			Type:        StepTypeGeneration,
-			Action:      StepActionGenerateCode,
+			ID:           "refactor_code",
+			Name:         "Refactor Code",
+			Description:  "Perform code refactoring",
+			Type:         StepTypeGeneration,
+			Action:       StepActionGenerateCode,
 			Dependencies: []string{"analyze_codebase"},
-			Status:      StepStatusPending,
+			Status:       StepStatusPending,
 		},
 	}
 }

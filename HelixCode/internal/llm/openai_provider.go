@@ -36,9 +36,9 @@ func NewOpenAIProvider(config ProviderConfigEntry) (*OpenAIProvider, error) {
 	}
 
 	provider := &OpenAIProvider{
-		config: config,
+		config:   config,
 		endpoint: endpoint,
-		apiKey: apiKey,
+		apiKey:   apiKey,
 		httpClient: &http.Client{
 			Timeout: 60 * time.Second,
 		},
@@ -101,7 +101,7 @@ func (op *OpenAIProvider) Generate(ctx context.Context, request *LLMRequest) (*L
 
 	// Convert response
 	llmResponse := op.convertFromOpenAIResponse(response, request.ID, time.Since(startTime))
-	
+
 	return llmResponse, nil
 }
 
@@ -184,44 +184,44 @@ func (op *OpenAIProvider) initializeModels() {
 	// Predefined OpenAI models with their capabilities
 	op.models = []ModelInfo{
 		{
-			Name:         "gpt-4o",
-			Provider:     ProviderTypeOpenAI,
-			ContextSize:  128000,
-			Capabilities: op.GetCapabilities(),
-			MaxTokens:    4096,
-			SupportsTools: true,
+			Name:           "gpt-4o",
+			Provider:       ProviderTypeOpenAI,
+			ContextSize:    128000,
+			Capabilities:   op.GetCapabilities(),
+			MaxTokens:      4096,
+			SupportsTools:  true,
 			SupportsVision: true,
-			Description:  "OpenAI's most advanced multimodal model",
+			Description:    "OpenAI's most advanced multimodal model",
 		},
 		{
-			Name:         "gpt-4-turbo",
-			Provider:     ProviderTypeOpenAI,
-			ContextSize:  128000,
-			Capabilities: op.GetCapabilities(),
-			MaxTokens:    4096,
-			SupportsTools: true,
+			Name:           "gpt-4-turbo",
+			Provider:       ProviderTypeOpenAI,
+			ContextSize:    128000,
+			Capabilities:   op.GetCapabilities(),
+			MaxTokens:      4096,
+			SupportsTools:  true,
 			SupportsVision: true,
-			Description:  "OpenAI's advanced multimodal model",
+			Description:    "OpenAI's advanced multimodal model",
 		},
 		{
-			Name:         "gpt-4",
-			Provider:     ProviderTypeOpenAI,
-			ContextSize:  8192,
-			Capabilities: op.GetCapabilities(),
-			MaxTokens:    4096,
-			SupportsTools: true,
+			Name:           "gpt-4",
+			Provider:       ProviderTypeOpenAI,
+			ContextSize:    8192,
+			Capabilities:   op.GetCapabilities(),
+			MaxTokens:      4096,
+			SupportsTools:  true,
 			SupportsVision: false,
-			Description:  "OpenAI's powerful text model",
+			Description:    "OpenAI's powerful text model",
 		},
 		{
-			Name:         "gpt-3.5-turbo",
-			Provider:     ProviderTypeOpenAI,
-			ContextSize:  16385,
-			Capabilities: op.GetCapabilities(),
-			MaxTokens:    4096,
-			SupportsTools: true,
+			Name:           "gpt-3.5-turbo",
+			Provider:       ProviderTypeOpenAI,
+			ContextSize:    16385,
+			Capabilities:   op.GetCapabilities(),
+			MaxTokens:      4096,
+			SupportsTools:  true,
 			SupportsVision: false,
-			Description:  "OpenAI's fast and efficient model",
+			Description:    "OpenAI's fast and efficient model",
 		},
 	}
 
@@ -401,8 +401,8 @@ type OpenAIResponse struct {
 	Created int64  `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index        int `json:"index"`
-		Message      struct {
+		Index   int `json:"index"`
+		Message struct {
 			Role    string `json:"role"`
 			Content string `json:"content"`
 		} `json:"message"`
@@ -421,8 +421,8 @@ type OpenAIStreamResponse struct {
 	Created int64  `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index        int `json:"index"`
-		Delta        struct {
+		Index int `json:"index"`
+		Delta struct {
 			Role    string `json:"role,omitempty"`
 			Content string `json:"content,omitempty"`
 		} `json:"delta"`

@@ -18,15 +18,15 @@ import (
 
 // CLI represents the command-line interface
 type CLI struct {
-	workerPool *worker.SSHWorkerPool
-	llmProvider llm.Provider
+	workerPool         *worker.SSHWorkerPool
+	llmProvider        llm.Provider
 	notificationEngine *notification.NotificationEngine
 }
 
 // NewCLI creates a new CLI instance
 func NewCLI() *CLI {
 	return &CLI{
-		workerPool: worker.NewSSHWorkerPool(true),
+		workerPool:         worker.NewSSHWorkerPool(true),
 		notificationEngine: notification.NewNotificationEngine(),
 	}
 }
@@ -35,20 +35,20 @@ func NewCLI() *CLI {
 func (c *CLI) Run() error {
 	// Parse command-line flags
 	var (
-		command     = flag.String("command", "", "Command to execute")
-		workerHost  = flag.String("worker", "", "Worker host to add")
-		workerUser  = flag.String("user", "", "Worker SSH username")
-		workerKey   = flag.String("key", "", "Worker SSH key path")
-		model       = flag.String("model", "llama-3-8b", "LLM model to use")
-		prompt      = flag.String("prompt", "", "Prompt for LLM generation")
-		maxTokens   = flag.Int("max-tokens", 1000, "Maximum tokens to generate")
-		temperature = flag.Float64("temperature", 0.7, "Generation temperature")
-		stream      = flag.Bool("stream", false, "Stream the response")
-		listWorkers = flag.Bool("list-workers", false, "List all workers")
-		listModels  = flag.Bool("list-models", false, "List available models")
-		healthCheck = flag.Bool("health", false, "Perform health check")
-		notify      = flag.String("notify", "", "Send notification with message")
-		notifyType  = flag.String("notify-type", "info", "Notification type")
+		command        = flag.String("command", "", "Command to execute")
+		workerHost     = flag.String("worker", "", "Worker host to add")
+		workerUser     = flag.String("user", "", "Worker SSH username")
+		workerKey      = flag.String("key", "", "Worker SSH key path")
+		model          = flag.String("model", "llama-3-8b", "LLM model to use")
+		prompt         = flag.String("prompt", "", "Prompt for LLM generation")
+		maxTokens      = flag.Int("max-tokens", 1000, "Maximum tokens to generate")
+		temperature    = flag.Float64("temperature", 0.7, "Generation temperature")
+		stream         = flag.Bool("stream", false, "Stream the response")
+		listWorkers    = flag.Bool("list-workers", false, "List all workers")
+		listModels     = flag.Bool("list-models", false, "List available models")
+		healthCheck    = flag.Bool("health", false, "Perform health check")
+		notify         = flag.String("notify", "", "Send notification with message")
+		notifyType     = flag.String("notify-type", "info", "Notification type")
 		notifyPriority = flag.String("notify-priority", "medium", "Notification priority")
 	)
 	flag.Parse()
@@ -79,7 +79,7 @@ func (c *CLI) Run() error {
 // handleListWorkers lists all workers
 func (c *CLI) handleListWorkers(ctx context.Context) error {
 	stats := c.workerPool.GetWorkerStats(ctx)
-	
+
 	fmt.Println("\n=== Worker Statistics ===")
 	fmt.Printf("Total Workers: %d\n", stats.TotalWorkers)
 	fmt.Printf("Active Workers: %d\n", stats.ActiveWorkers)
@@ -87,7 +87,7 @@ func (c *CLI) handleListWorkers(ctx context.Context) error {
 	fmt.Printf("Total CPU: %d\n", stats.TotalCPU)
 	fmt.Printf("Total Memory: %.2f GB\n", float64(stats.TotalMemory)/(1024*1024*1024))
 	fmt.Printf("Total GPU: %d\n", stats.TotalGPU)
-	
+
 	return nil
 }
 
@@ -95,7 +95,7 @@ func (c *CLI) handleListWorkers(ctx context.Context) error {
 func (c *CLI) handleListModels(ctx context.Context) error {
 	// For now, return static list
 	// In production, this would query the model manager
-	
+
 	models := []struct {
 		ID          string
 		Name        string
@@ -107,7 +107,7 @@ func (c *CLI) handleListModels(ctx context.Context) error {
 		{"mistral-7b", "Mistral 7B", "ollama", 4096, "available"},
 		{"phi-3-mini", "Phi-3 Mini", "openai", 128000, "available"},
 	}
-	
+
 	fmt.Println("\n=== Available Models ===")
 	for _, model := range models {
 		fmt.Printf("ID: %s\n", model.ID)
@@ -116,14 +116,14 @@ func (c *CLI) handleListModels(ctx context.Context) error {
 		fmt.Printf("  Context Size: %d\n", model.ContextSize)
 		fmt.Printf("  Status: %s\n\n", model.Status)
 	}
-	
+
 	return nil
 }
 
 // handleHealthCheck performs system health check
 func (c *CLI) handleHealthCheck(ctx context.Context) error {
 	fmt.Println("\n=== System Health Check ===")
-	
+
 	// Check worker pool
 	stats := c.workerPool.GetWorkerStats(ctx)
 	if stats.HealthyWorkers > 0 {
@@ -131,7 +131,7 @@ func (c *CLI) handleHealthCheck(ctx context.Context) error {
 	} else {
 		fmt.Printf("⚠️ Worker Pool: No healthy workers\n")
 	}
-	
+
 	// Check notification engine
 	channelStats := c.notificationEngine.GetChannelStats()
 	enabledChannels := 0
@@ -142,13 +142,13 @@ func (c *CLI) handleHealthCheck(ctx context.Context) error {
 			}
 		}
 	}
-	
+
 	if enabledChannels > 0 {
 		fmt.Printf("✅ Notification System: %d enabled channels\n", enabledChannels)
 	} else {
 		fmt.Printf("⚠️ Notification System: No enabled channels\n")
 	}
-	
+
 	fmt.Println("✅ System is operational")
 	return nil
 }
@@ -158,24 +158,24 @@ func (c *CLI) handleAddWorker(ctx context.Context, host, username, keyPath strin
 	if username == "" {
 		return fmt.Errorf("username is required")
 	}
-	
+
 	sshConfig := &worker.SSHWorkerConfig{
 		Host:     host,
 		Port:     22,
 		Username: username,
 		KeyPath:  keyPath,
 	}
-	
+
 	worker := &worker.SSHWorker{
 		Hostname:    host,
 		DisplayName: fmt.Sprintf("worker-%s", host),
 		SSHConfig:   sshConfig,
 	}
-	
+
 	if err := c.workerPool.AddWorker(ctx, worker); err != nil {
 		return fmt.Errorf("failed to add worker: %v", err)
 	}
-	
+
 	fmt.Printf("✅ Worker added successfully: %s\n", host)
 	return nil
 }
@@ -184,10 +184,10 @@ func (c *CLI) handleAddWorker(ctx context.Context, host, username, keyPath strin
 func (c *CLI) handleGenerate(ctx context.Context, prompt, model string, maxTokens int, temperature float64, stream bool) error {
 	fmt.Printf("\n=== Generating with %s ===\n", model)
 	fmt.Printf("Prompt: %s\n\n", prompt)
-	
+
 	// For now, simulate generation
 	// In production, this would use the actual LLM provider
-	
+
 	if stream {
 		// Simulate streaming response
 		words := strings.Split(prompt+" This is a simulated streaming response from the model.", " ")
@@ -201,7 +201,7 @@ func (c *CLI) handleGenerate(ctx context.Context, prompt, model string, maxToken
 		response := fmt.Sprintf("Generated response for: %s\n\nThis is a simulated response from the %s model. The prompt was processed successfully and the model generated appropriate output based on the input provided.", prompt, model)
 		fmt.Println(response)
 	}
-	
+
 	fmt.Printf("\n✅ Generation completed\n")
 	return nil
 }
@@ -210,7 +210,7 @@ func (c *CLI) handleGenerate(ctx context.Context, prompt, model string, maxToken
 func (c *CLI) handleNotification(ctx context.Context, message, notifyType, priority string) error {
 	notificationType := notification.NotificationType(notifyType)
 	notificationPriority := notification.NotificationPriority(priority)
-	
+
 	notif := &notification.Notification{
 		Title:    "CLI Notification",
 		Message:  message,
@@ -218,11 +218,11 @@ func (c *CLI) handleNotification(ctx context.Context, message, notifyType, prior
 		Priority: notificationPriority,
 		Channels: []string{"cli"}, // Default to CLI output
 	}
-	
+
 	if err := c.notificationEngine.SendDirect(ctx, notif, []string{"cli"}); err != nil {
 		return fmt.Errorf("failed to send notification: %v", err)
 	}
-	
+
 	fmt.Printf("✅ Notification sent: %s\n", message)
 	return nil
 }
@@ -231,14 +231,14 @@ func (c *CLI) handleNotification(ctx context.Context, message, notifyType, prior
 func (c *CLI) handleCommand(ctx context.Context, command string) error {
 	fmt.Printf("\n=== Executing Command ===\n")
 	fmt.Printf("Command: %s\n\n", command)
-	
+
 	// For now, simulate command execution
 	// In production, this would execute on a worker
-	
+
 	fmt.Printf("Executing: %s\n", command)
 	time.Sleep(1 * time.Second)
 	fmt.Printf("Command completed successfully\n")
-	
+
 	return nil
 }
 
@@ -246,11 +246,11 @@ func (c *CLI) handleCommand(ctx context.Context, command string) error {
 func (c *CLI) handleInteractive(ctx context.Context) error {
 	fmt.Println("=== Helix CLI Interactive Mode ===")
 	fmt.Println("Type 'help' for available commands, 'exit' to quit")
-	
+
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	for {
 		select {
 		case <-sigChan:
@@ -259,9 +259,9 @@ func (c *CLI) handleInteractive(ctx context.Context) error {
 		default:
 			// Continue with interactive loop
 		}
-		
+
 		fmt.Print("\nhelix> ")
-		
+
 		var input string
 		_, err := fmt.Scanln(&input)
 		if err != nil {
@@ -270,22 +270,22 @@ func (c *CLI) handleInteractive(ctx context.Context) error {
 			}
 			return err
 		}
-		
+
 		input = strings.TrimSpace(input)
 		if input == "" {
 			continue
 		}
-		
+
 		if input == "exit" || input == "quit" {
 			fmt.Println("Goodbye!")
 			return nil
 		}
-		
+
 		if input == "help" {
 			c.showHelp()
 			continue
 		}
-		
+
 		// Handle interactive commands
 		switch input {
 		case "workers":
@@ -326,7 +326,7 @@ func (c *CLI) showHelp() {
 
 func main() {
 	cli := NewCLI()
-	
+
 	if err := cli.Run(); err != nil {
 		log.Fatalf("Error: %v", err)
 	}

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"dev.helix.code/internal/database"
+	"github.com/google/uuid"
 )
 
 // NewCheckpointManager creates a new checkpoint manager
@@ -157,9 +157,9 @@ func (cm *CheckpointManager) DeleteAllCheckpoints(taskID uuid.UUID) error {
 
 // Checkpoint represents a task checkpoint
 type Checkpoint struct {
-	ID              uuid.UUID       `json:"id"`
-	CheckpointName  string          `json:"checkpoint_name"`
-	CheckpointData  map[string]interface{} `json:"checkpoint_data"`
-	WorkerID        uuid.UUID       `json:"worker_id"`
-	CreatedAt       time.Time       `json:"created_at"`
+	ID             uuid.UUID              `json:"id"`
+	CheckpointName string                 `json:"checkpoint_name"`
+	CheckpointData map[string]interface{} `json:"checkpoint_data"`
+	WorkerID       uuid.UUID              `json:"worker_id"`
+	CreatedAt      time.Time              `json:"created_at"`
 }

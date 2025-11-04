@@ -62,9 +62,29 @@ workers:
 export HELIX_DATABASE_PASSWORD="your_password"
 export HELIX_AUTH_JWT_SECRET="your_jwt_secret"
 export HELIX_SERVER_PORT="8080"
+
+# Free AI Provider Tokens (optional)
+export GITHUB_TOKEN="your_github_token"        # For GitHub Copilot
+export OPENROUTER_API_KEY="your_openrouter_key" # For OpenRouter
+export XAI_API_KEY="your_xai_key"              # For XAI
 ```
 
 ## 🎯 Core Concepts
+
+### AI Providers
+
+HelixCode supports multiple AI providers with a focus on free and accessible models:
+
+#### Free Providers (No API Key Required)
+- **XAI (Grok)**: `grok-3-fast-beta`, `grok-3-mini-fast-beta` - Fast and capable models for coding
+- **OpenRouter**: `deepseek-r1-free`, `meta-llama/llama-3.2-3b-instruct:free` - Free models from various providers
+- **GitHub Copilot**: `gpt-4o`, `claude-3.5-sonnet`, `o1` - Free with GitHub subscription
+- **Qwen**: OAuth2 authentication available, no API key required for basic usage
+
+#### Premium Providers
+- **OpenAI**: GPT-4, GPT-3.5-turbo with API key
+- **Anthropic**: Claude models with API key
+- **Google Gemini**: Gemini models with API key
 
 ### Distributed Workers
 
@@ -131,6 +151,36 @@ helixcode workers add aws \
   --instance-id "i-1234567890abcdef0" \
   --region "us-east-1" \
   --capabilities "testing,performance"
+```
+
+### AI Provider Setup
+
+#### Using Free Providers
+```bash
+# Switch to XAI (Grok) - no authentication required
+helixcode config set llm.provider xai
+
+# Switch to OpenRouter free models
+helixcode config set llm.provider openrouter
+
+# Use GitHub Copilot (requires GitHub token)
+export GITHUB_TOKEN="ghp_your_token"
+helixcode config set llm.provider copilot
+
+# Authenticate with Qwen OAuth2
+helixcode auth qwen
+```
+
+#### Checking Provider Status
+```bash
+# List available providers
+helixcode llm providers list
+
+# Check current provider health
+helixcode llm provider health
+
+# Test current provider
+helixcode llm test "Hello, can you help me write a Go function?"
 ```
 
 ### Managing Workers

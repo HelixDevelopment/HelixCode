@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"dev.helix.code/internal/database"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"dev.helix.code/internal/database"
 )
 
 // DatabaseManager handles project lifecycle and operations with database persistence
@@ -259,7 +259,7 @@ func (m *DatabaseManager) DeleteProject(ctx context.Context, id string) error {
 func (m *DatabaseManager) detectProjectType(path, projectType string, metadata *Metadata) {
 	// This would implement actual project type detection
 	// For now, use the provided type and set default commands
-	
+
 	switch projectType {
 	case "go":
 		metadata.BuildCommand = "go build"

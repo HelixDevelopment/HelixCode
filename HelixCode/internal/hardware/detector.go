@@ -28,11 +28,11 @@ type CPUInfo struct {
 
 // GPUInfo contains GPU-specific information
 type GPUInfo struct {
-	Vendor       string `json:"vendor"`
-	Model        string `json:"model"`
-	VRAM         string `json:"vram"`
-	SupportsCUDA bool   `json:"supports_cuda"`
-	SupportsMetal bool  `json:"supports_metal"`
+	Vendor        string `json:"vendor"`
+	Model         string `json:"model"`
+	VRAM          string `json:"vram"`
+	SupportsCUDA  bool   `json:"supports_cuda"`
+	SupportsMetal bool   `json:"supports_metal"`
 }
 
 // MemoryInfo contains memory information
@@ -91,7 +91,7 @@ func (d *Detector) Detect() (*HardwareInfo, error) {
 func (d *Detector) GetOptimalModelSize() string {
 	// Calculate based on available VRAM and RAM
 	var vramGB, ramGB int
-	
+
 	// Parse VRAM
 	if strings.Contains(d.info.GPU.VRAM, "GB") {
 		vramGB, _ = strconv.Atoi(strings.TrimSuffix(d.info.GPU.VRAM, "GB"))
@@ -99,7 +99,7 @@ func (d *Detector) GetOptimalModelSize() string {
 		vramMB, _ := strconv.Atoi(strings.TrimSuffix(d.info.GPU.VRAM, "MB"))
 		vramGB = vramMB / 1024
 	}
-	
+
 	// Parse RAM
 	if strings.Contains(d.info.Memory.TotalRAM, "GB") {
 		ramGB, _ = strconv.Atoi(strings.TrimSuffix(d.info.Memory.TotalRAM, "GB"))
@@ -107,7 +107,7 @@ func (d *Detector) GetOptimalModelSize() string {
 
 	// Determine optimal model size based on available memory
 	totalMemory := vramGB + (ramGB / 2) // Use half of RAM for model loading
-	
+
 	switch {
 	case totalMemory >= 32:
 		return "70B" // 70B parameter models
@@ -116,16 +116,16 @@ func (d *Detector) GetOptimalModelSize() string {
 	case totalMemory >= 8:
 		return "13B" // 13B parameter models
 	case totalMemory >= 4:
-		return "7B"  // 7B parameter models
+		return "7B" // 7B parameter models
 	default:
-		return "3B"  // 3B parameter models
+		return "3B" // 3B parameter models
 	}
 }
 
 // CanRunModel checks if the hardware can run a specific model size
 func (d *Detector) CanRunModel(modelSize string) bool {
 	optimalSize := d.GetOptimalModelSize()
-	
+
 	// Model size comparison (larger numbers are better)
 	sizeOrder := map[string]int{
 		"3B":  1,
@@ -134,10 +134,10 @@ func (d *Detector) CanRunModel(modelSize string) bool {
 		"34B": 4,
 		"70B": 5,
 	}
-	
+
 	requestedOrder := sizeOrder[modelSize]
 	optimalOrder := sizeOrder[optimalSize]
-	
+
 	return requestedOrder <= optimalOrder
 }
 
@@ -267,7 +267,7 @@ func (d *Detector) detectGPUMacOS() error {
 
 	d.info.GPU.Vendor = "Apple"
 	d.info.GPU.SupportsMetal = true
-	
+
 	return nil
 }
 
