@@ -26,18 +26,70 @@ HelixCode is a distributed AI development platform designed for enterprise-grade
 #### Provider Architecture
 ```go
 type LLMProvider interface {
-    Generate(ctx context.Context, req GenerationRequest) (*GenerationResponse, error)
-    GenerateWithTools(ctx context.Context, req ToolGenerationRequest) (*ToolGenerationResponse, error)
-    GenerateWithReasoning(ctx context.Context, req ReasoningRequest) (*ReasoningResponse, error)
-    StreamWithTools(ctx context.Context, req ToolGenerationRequest) (<-chan ToolStreamChunk, error)
+    Generate(ctx context.Context, req *LLMRequest) (*LLMResponse, error)
+    GenerateStream(ctx context.Context, req *LLMRequest, ch chan<- LLMResponse) error
+    GetModels() []Model
+    GetCapabilities() []ModelCapability
+    GetHealth(ctx context.Context) (*ProviderHealth, error)
+    IsAvailable(ctx context.Context) bool
+    Close() error
 }
 ```
+
+#### Supported Providers
+- **Local Models**:
+  - Llama.cpp: Direct local inference
+  - Ollama: Streamlined local model management
+
+- **Cloud Providers**:
+  - **Anthropic Claude**: Extended thinking, prompt caching, tool caching, 200K context
+  - **Google Gemini**: 2M token context, function calling, safety settings
+  - **OpenAI**: GPT-4, GPT-3.5-turbo with function calling
+  - **xAI**: Grok models with reasoning capabilities
+  - **Qwen**: Chinese language models with OAuth2
+
+- **Aggregators**:
+  - **OpenRouter**: Multi-provider access with unified API
+  - **GitHub Copilot**: GitHub integration for multiple models
+
+#### Advanced Features
+- **Extended Thinking**: Automatic reasoning mode for complex tasks (Anthropic)
+  - Keyword-based detection
+  - 80% token budget allocation
+  - Transparent thinking process
+
+- **Prompt Caching**: Multi-layer caching for cost optimization (Anthropic)
+  - System message caching (5-minute TTL)
+  - Conversation history caching
+  - Tool definition caching
+  - Up to 90% cost reduction
+
+- **Massive Context**: 2M token context windows (Gemini)
+  - Full codebase analysis
+  - Long-form documentation processing
+  - Complex multi-file reasoning
+
+- **Function Calling**: Structured tool integration
+  - AUTO mode: Automatic tool selection
+  - ANY mode: Force tool usage
+  - NONE mode: Disable tools
+
+- **Vision Capabilities**: Image understanding (Anthropic, Gemini)
+  - Code screenshot analysis
+  - Diagram interpretation
+  - UI/UX review
+
+- **Streaming**: Real-time response generation
+  - Server-Sent Events (SSE)
+  - Chunk-based updates
+  - Progress indicators
 
 #### Reasoning Engine
 - **Chain-of-Thought**: Step-by-step reasoning with intermediate results
 - **Tree-of-Thoughts**: Multiple reasoning paths with selection
 - **Self-Reflection**: Error correction and improvement cycles
 - **Progressive Reasoning**: Incremental reasoning with tool integration
+- **Extended Thinking**: Deep reasoning with transparent thought process
 
 ### 3. MCP (Model Context Protocol) Integration
 
@@ -206,7 +258,10 @@ services:
 ## Integration Patterns
 
 ### External Service Integration
-- **LLM Providers**: OpenAI, Anthropic, Local models
+- **LLM Providers**:
+  - Local: Llama.cpp, Ollama
+  - Cloud: Anthropic Claude, Google Gemini, OpenAI, xAI, Qwen
+  - Aggregators: OpenRouter, GitHub Copilot
 - **Version Control**: Git integration
 - **CI/CD Systems**: Jenkins, GitHub Actions
 - **Monitoring Tools**: Prometheus, Grafana
@@ -233,6 +288,30 @@ services:
 
 ---
 
-**Architecture Version**: 1.0.0  
-**Last Updated**: 2025-11-01  
-**Compatibility**: Go 1.21+, PostgreSQL 15+, Redis 7+
+**Architecture Version**: 1.1.0
+**Last Updated**: 2025-11-05
+**Compatibility**: Go 1.24+, PostgreSQL 15+, Redis 7+
+
+## 🆕 Recent Architecture Changes (v1.1.0)
+
+### New LLM Provider Integrations
+- **Anthropic Claude Provider**: Full API implementation with advanced features
+  - Extended thinking with automatic detection
+  - Multi-layer prompt caching (system/messages/tools)
+  - Tool caching for repeated operations
+  - Vision support for image analysis
+  - Streaming with Server-Sent Events
+
+- **Google Gemini Provider**: Complete API integration with massive context support
+  - 2M token context windows (Gemini 2.5 Pro, 1.5 Pro)
+  - Function calling with AUTO/ANY/NONE modes
+  - Configurable safety settings
+  - System instruction separation
+  - Vision and multimodal capabilities
+
+### Enhanced Provider Architecture
+- Unified provider interface for all LLM backends
+- Health monitoring and availability checks
+- Model capability introspection
+- Streaming support across all providers
+- Error handling with context-aware retries
