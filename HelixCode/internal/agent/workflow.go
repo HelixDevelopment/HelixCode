@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"dev.helix.code/internal/agent/task"
+	"github.com/google/uuid"
 )
 
 // WorkflowStep represents a single step in a workflow
@@ -129,12 +130,17 @@ func (w *Workflow) IsStepReady(step *WorkflowStep) bool {
 		}
 		if !result.Success {
 			// If dependency failed, check if it was optional
+			isOptional := false
 			for _, s := range w.Steps {
 				if s.ID == depID && s.Optional {
-					continue // Optional step can fail
+					isOptional = true
+					break
 				}
 			}
-			return false // Required dependency failed
+			if !isOptional {
+				return false // Required dependency failed
+			}
+			// Optional dependency failed, continue to next dependency
 		}
 	}
 	return true
@@ -385,5 +391,6 @@ func (we *WorkflowExecutor) ListWorkflows() []*Workflow {
 
 // GenerateWorkflowID generates a unique workflow ID
 func GenerateWorkflowID() string {
-	return fmt.Sprintf("workflow-%d", time.Now().UnixNano())
+	// Use UUID for better uniqueness guarantee
+	return fmt.Sprintf("workflow-%s", uuid.New().String())
 }
