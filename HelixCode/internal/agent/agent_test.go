@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -805,38 +806,39 @@ func TestBaseAgentConcurrentHealthChecks(t *testing.T) {
 	agent := NewBaseAgent(config)
 
 	// Concurrently check health while modifying counters
-	done := make(chan bool, 100)
+	var wg sync.WaitGroup
 
 	// Start health checkers
 	for i := 0; i < 50; i++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			health := agent.Health()
 			if health.AgentID != agent.ID() {
 				t.Errorf("Expected agent ID %s, got %s", agent.ID(), health.AgentID)
 			}
-			done <- true
 		}()
 	}
 
 	// Start counter incrementers
 	for i := 0; i < 25; i++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			agent.IncrementTaskCount()
-			done <- true
 		}()
 	}
 
 	for i := 0; i < 25; i++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			agent.IncrementErrorCount()
-			done <- true
 		}()
 	}
 
 	// Wait for all operations
-	for i := 0; i < 100; i++ {
-		<-done
-	}
+	wg.Wait()
 
 	// Final health check
 	health := agent.Health()

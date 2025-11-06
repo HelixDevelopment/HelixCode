@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"dev.helix.code/internal/agent/task"
@@ -92,6 +93,7 @@ type AgentConfig struct {
 
 // BaseAgent provides common functionality for all agents
 type BaseAgent struct {
+	mu           sync.Mutex
 	id           string
 	agentType    AgentType
 	name         string
@@ -140,11 +142,15 @@ func (a *BaseAgent) Capabilities() []Capability {
 
 // Status returns the agent's current status
 func (a *BaseAgent) Status() AgentStatus {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	return a.status
 }
 
 // SetStatus updates the agent's status
 func (a *BaseAgent) SetStatus(status AgentStatus) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.status = status
 }
 
@@ -173,16 +179,23 @@ func (a *BaseAgent) CanHandle(task *task.Task) bool {
 
 // IncrementTaskCount increments the task counter
 func (a *BaseAgent) IncrementTaskCount() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.taskCount++
 }
 
 // IncrementErrorCount increments the error counter
 func (a *BaseAgent) IncrementErrorCount() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.errorCount++
 }
 
 // Health returns health check information
 func (a *BaseAgent) Health() *HealthCheck {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
 	uptime := time.Since(a.startTime)
 	errorRate := float64(0)
 	if a.taskCount > 0 {

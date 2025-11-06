@@ -329,3 +329,305 @@ func TestDebuggingAgentMetrics(t *testing.T) {
 	assert.NotNil(t, result.Metrics)
 	assert.Greater(t, result.Duration.Nanoseconds(), int64(0))
 }
+// MockTool for testing tool interactions
+type MockTool struct {
+	name        string
+	executeFunc func(ctx context.Context, params map[string]interface{}) (interface{}, error)
+}
+
+func (m *MockTool) Name() string {
+	return m.name
+}
+
+func (m *MockTool) Description() string {
+	return "Mock tool for testing"
+}
+
+func (m *MockTool) Execute(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+	if m.executeFunc != nil {
+		return m.executeFunc(ctx, params)
+	}
+	return nil, nil
+}
+
+func (m *MockTool) Schema() tools.ToolSchema {
+	return tools.ToolSchema{}
+}
+
+func (m *MockTool) Category() tools.ToolCategory {
+	return tools.CategoryFileSystem
+}
+
+func (m *MockTool) Validate(params map[string]interface{}) error {
+	return nil
+}
+
+// MockToolRegistry for testing
+type MockToolRegistry struct {
+	tools map[string]tools.Tool
+}
+
+func NewMockToolRegistry() *MockToolRegistry {
+	return &MockToolRegistry{
+		tools: make(map[string]tools.Tool),
+	}
+}
+
+func (m *MockToolRegistry) Register(tool tools.Tool) error {
+	m.tools[tool.Name()] = tool
+	return nil
+}
+
+func (m *MockToolRegistry) Get(name string) (tools.Tool, error) {
+	tool, exists := m.tools[name]
+	if !exists {
+		return nil, fmt.Errorf("tool %s not found", name)
+	}
+	return tool, nil
+}
+
+// TestDebuggingAgentReadFile tests the readFile helper function
+func TestDebuggingAgentReadFile(t *testing.T) {
+	t.Run("Successful file read", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		// Create mock tool registry with FSRead tool
+		mockRegistry := NewMockToolRegistry()
+		fsReadTool := &MockTool{
+			name: "FSRead",
+			executeFunc: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "file content here", nil
+			},
+		}
+		mockRegistry.Register(fsReadTool)
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		content, err := debuggingAgent.readFile(ctx, "/path/to/file.go")
+		require.NoError(t, err)
+		assert.Equal(t, "file content here", content)
+	})
+
+	t.Run("Tool not found error", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{}
+		mockRegistry := NewMockToolRegistry()
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		_, err := debuggingAgent.readFile(ctx, "/path/to/file.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get FSRead tool")
+	})
+}
+
+//TestDebuggingAgentRunDiagnostics tests the runDiagnostics helper function
+func TestDebuggingAgentRunDiagnostics(t *testing.T) {
+	t.Run("Successful diagnostics", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := NewMockToolRegistry()
+		shellTool := &MockTool{
+			name: "Shell",
+			executeFunc: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "command output", nil
+			},
+		}
+		mockRegistry.Register(shellTool)
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		results, err := debuggingAgent.runDiagnostics(ctx, "test.go", "compile error")
+		require.NoError(t, err)
+		assert.NotNil(t, results)
+		assert.Contains(t, results, "go_vet")
+		assert.Contains(t, results, "go_build")
+		assert.Contains(t, results, "go_test")
+	})
+
+	t.Run("Shell tool not found", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{}
+		mockRegistry := NewMockToolRegistry()
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		_, err := debuggingAgent.runDiagnostics(ctx, "test.go", "error")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get Shell tool")
+	})
+}
+
+// TestDebuggingAgentApplyFix tests the applyFix helper function
+func TestDebuggingAgentApplyFix(t *testing.T) {
+	t.Run("Successful fix application", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{
+			generateFunc: func(ctx context.Context, request *llm.LLMRequest) (*llm.LLMResponse, error) {
+				return &llm.LLMResponse{
+					Content: `{"fixed_code": "fixed code content"}`,
+				}, nil
+			},
+		}
+		
+		mockRegistry := NewMockToolRegistry()
+		fsReadTool := &MockTool{
+			name: "FSRead",
+			executeFunc: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "original code", nil
+			},
+		}
+		fsWriteTool := &MockTool{
+			name: "FSWrite",
+			executeFunc: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return nil, nil
+			},
+		}
+		mockRegistry.Register(fsReadTool)
+		mockRegistry.Register(fsWriteTool)
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		result, err := debuggingAgent.applyFix(ctx, "test.go", "fix the bug")
+		require.NoError(t, err)
+		assert.Equal(t, "success", result["status"])
+		assert.Equal(t, "test.go", result["file_path"])
+	})
+
+	t.Run("Empty file path", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{}
+		mockRegistry := NewMockToolRegistry()
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		result, err := debuggingAgent.applyFix(ctx, "", "fix")
+		require.NoError(t, err)
+		assert.Equal(t, "skipped", result["status"])
+	})
+}
+
+// TestDebuggingAgentGenerateFixedCode tests the generateFixedCode helper function
+func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
+	t.Run("Successful code generation", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{
+			generateFunc: func(ctx context.Context, request *llm.LLMRequest) (*llm.LLMResponse, error) {
+				return &llm.LLMResponse{
+					Content: `{"fixed_code": "corrected code"}`,
+				}, nil
+			},
+		}
+		
+		mockRegistry := NewMockToolRegistry()
+		fsReadTool := &MockTool{
+			name: "FSRead",
+			executeFunc: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "original code", nil
+			},
+		}
+		mockRegistry.Register(fsReadTool)
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		fixedCode, err := debuggingAgent.generateFixedCode(ctx, "test.go", "apply fix")
+		require.NoError(t, err)
+		assert.Equal(t, "corrected code", fixedCode)
+	})
+
+	t.Run("No models available", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "debugging-1",
+			Type: agent.AgentTypeDebugging,
+			Name: "Test Debugging Agent",
+		}
+		provider := &MockLLMProvider{
+			models: []llm.ModelInfo{}, // No models
+		}
+		
+		mockRegistry := NewMockToolRegistry()
+		fsReadTool := &MockTool{
+			name: "FSRead",
+			executeFunc: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "original code", nil
+			},
+		}
+		mockRegistry.Register(fsReadTool)
+
+		debuggingAgent := &DebuggingAgent{
+			BaseAgent:    agent.NewBaseAgent(config),
+			llmProvider:  provider,
+			toolRegistry: (*tools.ToolRegistry)(unsafe.Pointer(mockRegistry)),
+		}
+
+		ctx := context.Background()
+		_, err := debuggingAgent.generateFixedCode(ctx, "test.go", "apply fix")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "no models available")
+	})
+}
