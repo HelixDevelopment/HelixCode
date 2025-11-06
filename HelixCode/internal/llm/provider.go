@@ -165,6 +165,8 @@ type ProviderManager struct {
 	config       ProviderConfig
 	tokenTracker *TokenTracker // Track token usage across providers
 	cacheMetrics *CacheMetrics // Track caching performance
+	// Note: Context compaction framework exists in internal/llm/compression/
+	// Full integration pending architectural refactor to avoid circular dependencies
 }
 
 // ProviderConfig holds configuration for the provider manager
