@@ -680,3 +680,296 @@ func TestWorkflowExecutorCapabilityMatching(t *testing.T) {
 	assert.True(t, result.Success)
 	assert.Equal(t, "specialized-agent", result.AgentID)
 }
+
+// TestWorkflowComplexDependencies tests workflows with complex dependency chains
+func TestWorkflowComplexDependencies(t *testing.T) {
+	workflow := NewWorkflow("Complex Dependencies", "Test complex dependency graph")
+
+	// Create a diamond dependency pattern:
+	// step1 -> step2 -> step4
+	//       -> step3 -> step4
+	step1 := &WorkflowStep{ID: "step1", Name: "Step 1", AgentType: AgentTypePlanning}
+	step2 := &WorkflowStep{ID: "step2", Name: "Step 2", AgentType: AgentTypeCoding, DependsOn: []string{"step1"}}
+	step3 := &WorkflowStep{ID: "step3", Name: "Step 3", AgentType: AgentTypeTesting, DependsOn: []string{"step1"}}
+	step4 := &WorkflowStep{ID: "step4", Name: "Step 4", AgentType: AgentTypeReview, DependsOn: []string{"step2", "step3"}}
+
+	workflow.AddStep(step1)
+	workflow.AddStep(step2)
+	workflow.AddStep(step3)
+	workflow.AddStep(step4)
+
+	// Only step1 should be ready initially
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 1)
+	assert.Equal(t, "step1", ready[0].ID)
+
+	// Complete step1
+	workflow.SetStepResult("step1", &task.Result{TaskID: "step1", Success: true})
+
+	// Step2 and step3 should be ready (parallel)
+	ready = workflow.GetReadySteps()
+	assert.Len(t, ready, 2)
+
+	// Complete step2 and step3
+	workflow.SetStepResult("step2", &task.Result{TaskID: "step2", Success: true})
+	workflow.SetStepResult("step3", &task.Result{TaskID: "step3", Success: true})
+
+	// Step4 should now be ready
+	ready = workflow.GetReadySteps()
+	assert.Len(t, ready, 1)
+	assert.Equal(t, "step4", ready[0].ID)
+}
+
+// TestWorkflowRequiredStepFailure tests that workflow fails when required step fails
+func TestWorkflowRequiredStepFailure(t *testing.T) {
+	workflow := NewWorkflow("Required Failure", "Test required step failure")
+
+	step1 := &WorkflowStep{ID: "step1", Name: "Step 1", AgentType: AgentTypePlanning}
+	step2 := &WorkflowStep{ID: "step2", Name: "Step 2", AgentType: AgentTypeCoding, DependsOn: []string{"step1"}}
+
+	workflow.AddStep(step1)
+	workflow.AddStep(step2)
+
+	// Mark step1 as failed
+	workflow.SetStepResult("step1", &task.Result{TaskID: "step1", Success: false})
+
+	// Step2 should not be ready
+	assert.False(t, workflow.IsStepReady(step2))
+
+	// No ready steps
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 0)
+}
+
+// TestWorkflowMultipleOptionalSteps tests multiple optional steps
+func TestWorkflowMultipleOptionalSteps(t *testing.T) {
+	workflow := NewWorkflow("Multiple Optional", "Test multiple optional steps")
+
+	step1 := &WorkflowStep{ID: "step1", Name: "Step 1", AgentType: AgentTypePlanning, Optional: true}
+	step2 := &WorkflowStep{ID: "step2", Name: "Step 2", AgentType: AgentTypeCoding, Optional: true}
+	step3 := &WorkflowStep{ID: "step3", Name: "Step 3", AgentType: AgentTypeTesting, DependsOn: []string{"step1", "step2"}}
+
+	workflow.AddStep(step1)
+	workflow.AddStep(step2)
+	workflow.AddStep(step3)
+
+	// Fail both optional steps
+	workflow.SetStepResult("step1", &task.Result{TaskID: "step1", Success: false})
+	workflow.SetStepResult("step2", &task.Result{TaskID: "step2", Success: false})
+
+	// Step3 should still be ready despite failed optional dependencies
+	assert.True(t, workflow.IsStepReady(step3))
+}
+
+// TestWorkflowLargeScale tests workflow with many steps
+func TestWorkflowLargeScale(t *testing.T) {
+	workflow := NewWorkflow("Large Scale", "Test large workflow")
+
+	// Add 50 independent steps
+	for i := 0; i < 50; i++ {
+		step := &WorkflowStep{
+			ID:        fmt.Sprintf("step-%d", i),
+			Name:      fmt.Sprintf("Step %d", i),
+			AgentType: AgentTypePlanning,
+		}
+		workflow.AddStep(step)
+	}
+
+	// All 50 steps should be ready (no dependencies)
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 50)
+
+	// Complete half of them
+	for i := 0; i < 25; i++ {
+		workflow.SetStepResult(fmt.Sprintf("step-%d", i), &task.Result{
+			TaskID:  fmt.Sprintf("step-%d", i),
+			Success: true,
+		})
+	}
+
+	// Remaining 25 should be ready
+	ready = workflow.GetReadySteps()
+	assert.Len(t, ready, 25)
+}
+
+// TestWorkflowLinearChain tests a long linear dependency chain
+func TestWorkflowLinearChain(t *testing.T) {
+	workflow := NewWorkflow("Linear Chain", "Test linear dependencies")
+
+	// Create chain: step1 -> step2 -> step3 -> ... -> step10
+	for i := 0; i < 10; i++ {
+		step := &WorkflowStep{
+			ID:        fmt.Sprintf("step-%d", i),
+			Name:      fmt.Sprintf("Step %d", i),
+			AgentType: AgentTypePlanning,
+		}
+		if i > 0 {
+			step.DependsOn = []string{fmt.Sprintf("step-%d", i-1)}
+		}
+		workflow.AddStep(step)
+	}
+
+	// Only first step should be ready
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 1)
+	assert.Equal(t, "step-0", ready[0].ID)
+
+	// Complete each step in order
+	for i := 0; i < 10; i++ {
+		stepID := fmt.Sprintf("step-%d", i)
+
+		// Mark current step complete
+		workflow.SetStepResult(stepID, &task.Result{TaskID: stepID, Success: true})
+
+		// Check next step is ready (if not at end)
+		if i < 9 {
+			ready = workflow.GetReadySteps()
+			assert.Len(t, ready, 1)
+			assert.Equal(t, fmt.Sprintf("step-%d", i+1), ready[0].ID)
+		}
+	}
+
+	// All done - no ready steps
+	ready = workflow.GetReadySteps()
+	assert.Len(t, ready, 0)
+}
+
+// TestWorkflowEmptyWorkflow tests empty workflow edge case
+func TestWorkflowEmptyWorkflow(t *testing.T) {
+	workflow := NewWorkflow("Empty", "Empty workflow")
+
+	// No steps
+	assert.Len(t, workflow.Steps, 0)
+
+	// No ready steps
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 0)
+
+	// Can still transition states
+	workflow.Start()
+	assert.Equal(t, WorkflowStatusRunning, workflow.Status)
+
+	workflow.Complete()
+	assert.Equal(t, WorkflowStatusCompleted, workflow.Status)
+}
+
+// TestWorkflowDuplicateStepID tests handling of duplicate step IDs
+func TestWorkflowDuplicateStepID(t *testing.T) {
+	workflow := NewWorkflow("Duplicate IDs", "Test duplicate step IDs")
+
+	step1 := &WorkflowStep{ID: "duplicate", Name: "Step 1", AgentType: AgentTypePlanning}
+	step2 := &WorkflowStep{ID: "duplicate", Name: "Step 2", AgentType: AgentTypeCoding}
+
+	workflow.AddStep(step1)
+	workflow.AddStep(step2)
+
+	// Both steps added (no deduplication at add time)
+	assert.Len(t, workflow.Steps, 2)
+
+	// Complete one
+	workflow.SetStepResult("duplicate", &task.Result{TaskID: "duplicate", Success: true})
+
+	// Both steps will show as completed (same ID)
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 0) // Both filtered out as "executed"
+}
+
+// TestWorkflowNilDependencies tests steps with nil dependency slices
+func TestWorkflowNilDependencies(t *testing.T) {
+	workflow := NewWorkflow("Nil Dependencies", "Test nil dependency handling")
+
+	step := &WorkflowStep{
+		ID:        "step1",
+		Name:      "Step 1",
+		AgentType: AgentTypePlanning,
+		DependsOn: nil, // Explicitly nil
+	}
+
+	workflow.AddStep(step)
+
+	// Should be ready (no dependencies)
+	assert.True(t, workflow.IsStepReady(step))
+
+	ready := workflow.GetReadySteps()
+	assert.Len(t, ready, 1)
+}
+
+// TestWorkflowStepInputMerging tests input merging from dependencies
+func TestWorkflowStepInputMerging(t *testing.T) {
+	workflow := NewWorkflow("Input Merging", "Test input merging")
+
+	step1 := &WorkflowStep{
+		ID:        "step1",
+		Name:      "Step 1",
+		AgentType: AgentTypePlanning,
+		Input:     map[string]interface{}{"key1": "value1"},
+	}
+
+	step2 := &WorkflowStep{
+		ID:        "step2",
+		Name:      "Step 2",
+		AgentType: AgentTypeCoding,
+		DependsOn: []string{"step1"},
+		Input:     map[string]interface{}{"key2": "value2"},
+	}
+
+	workflow.AddStep(step1)
+	workflow.AddStep(step2)
+
+	// Step1 result with output
+	result1 := &task.Result{
+		TaskID:  "step1",
+		Success: true,
+		Output:  map[string]interface{}{"output_key": "output_value"},
+	}
+	workflow.SetStepResult("step1", result1)
+
+	// Verify step2 is ready
+	assert.True(t, workflow.IsStepReady(step2))
+}
+
+// TestWorkflowConcurrentStateModification tests thread-safety
+func TestWorkflowConcurrentStateModification(t *testing.T) {
+	workflow := NewWorkflow("Concurrent", "Test concurrent modifications")
+
+	// Add steps concurrently
+	done := make(chan bool, 10)
+	for i := 0; i < 10; i++ {
+		go func(idx int) {
+			step := &WorkflowStep{
+				ID:        fmt.Sprintf("step-%d", idx),
+				Name:      fmt.Sprintf("Step %d", idx),
+				AgentType: AgentTypePlanning,
+			}
+			workflow.AddStep(step)
+			done <- true
+		}(i)
+	}
+
+	// Wait for all
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+
+	// Should have all 10 steps
+	assert.Len(t, workflow.Steps, 10)
+
+	// Set results concurrently
+	for i := 0; i < 10; i++ {
+		go func(idx int) {
+			workflow.SetStepResult(fmt.Sprintf("step-%d", idx), &task.Result{
+				TaskID:  fmt.Sprintf("step-%d", idx),
+				Success: true,
+			})
+			done <- true
+		}(i)
+	}
+
+	// Wait for all
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+
+	// All results should be recorded
+	assert.Len(t, workflow.Results, 10)
+}

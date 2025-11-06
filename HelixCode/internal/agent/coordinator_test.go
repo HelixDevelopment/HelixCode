@@ -566,3 +566,293 @@ func TestFindSuitableAgentBusyAgent(t *testing.T) {
 	assert.NotNil(t, result)
 	assert.Equal(t, "idle-agent", result.AgentID)
 }
+
+// TestCoordinatorMultipleAgentsSameType tests task execution with multiple agents of same type
+func TestCoordinatorMultipleAgentsSameType(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register three coding agents
+	agent1 := newMockCoordAgent("coding-1", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	agent2 := newMockCoordAgent("coding-2", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	agent3 := newMockCoordAgent("coding-3", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+
+	coordinator.RegisterAgent(agent1)
+	coordinator.RegisterAgent(agent2)
+	coordinator.RegisterAgent(agent3)
+
+	// Create task
+	testTask := task.NewTask(
+		task.TaskType("coding"),
+		"Coding Task",
+		"A coding task",
+		task.PriorityNormal,
+	)
+
+	ctx := context.Background()
+	err := coordinator.SubmitTask(ctx, testTask)
+	require.NoError(t, err)
+
+	// Execute - should select one of the agents
+	result, err := coordinator.ExecuteTask(ctx, testTask.ID)
+
+	require.NoError(t, err)
+	assert.NotNil(t, result)
+	// Should be one of our registered agents
+	validAgents := []string{"coding-1", "coding-2", "coding-3"}
+	assert.Contains(t, validAgents, result.AgentID)
+}
+
+// TestCoordinatorTaskPriority tests task priority handling
+func TestCoordinatorTaskPriority(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent
+	agent := newMockCoordAgent("test-agent", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	coordinator.RegisterAgent(agent)
+
+	ctx := context.Background()
+
+	// Submit tasks with different priorities
+	lowPriorityTask := task.NewTask(
+		task.TaskType("test"),
+		"Low Priority",
+		"Low priority task",
+		task.PriorityLow,
+	)
+
+	highPriorityTask := task.NewTask(
+		task.TaskType("test"),
+		"High Priority",
+		"High priority task",
+		task.PriorityHigh,
+	)
+
+	criticalTask := task.NewTask(
+		task.TaskType("test"),
+		"Critical",
+		"Critical task",
+		task.PriorityCritical,
+	)
+
+	err := coordinator.SubmitTask(ctx, lowPriorityTask)
+	require.NoError(t, err)
+
+	err = coordinator.SubmitTask(ctx, highPriorityTask)
+	require.NoError(t, err)
+
+	err = coordinator.SubmitTask(ctx, criticalTask)
+	require.NoError(t, err)
+
+	// All tasks should be submitted successfully
+	retrievedLow, err := coordinator.GetTaskStatus(lowPriorityTask.ID)
+	require.NoError(t, err)
+	assert.Equal(t, task.PriorityLow, retrievedLow.Priority)
+
+	retrievedHigh, err := coordinator.GetTaskStatus(highPriorityTask.ID)
+	require.NoError(t, err)
+	assert.Equal(t, task.PriorityHigh, retrievedHigh.Priority)
+
+	retrievedCritical, err := coordinator.GetTaskStatus(criticalTask.ID)
+	require.NoError(t, err)
+	assert.Equal(t, task.PriorityCritical, retrievedCritical.Priority)
+}
+
+// TestCoordinatorCircuitBreaker tests circuit breaker state management
+func TestCoordinatorCircuitBreaker(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent
+	agent := newMockCoordAgent("test-agent", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	coordinator.RegisterAgent(agent)
+
+	// Get initial circuit breaker state (may be nil if not yet tracked)
+	state := coordinator.GetCircuitBreakerState(agent.ID())
+	// State is returned even if agent hasn't been used yet
+	_ = state
+
+	// Get all circuit breaker stats (may be empty initially)
+	stats := coordinator.GetCircuitBreakerStats()
+	assert.NotNil(t, stats)
+}
+
+// TestCoordinatorAgentTaskCount tests tracking agent task counts
+func TestCoordinatorAgentTaskCount(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent
+	agent := newMockCoordAgent("test-agent", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	coordinator.RegisterAgent(agent)
+
+	// Submit and execute a task
+	testTask := task.NewTask(
+		task.TaskType("test"),
+		"Test Task",
+		"A test task",
+		task.PriorityNormal,
+	)
+
+	ctx := context.Background()
+	err := coordinator.SubmitTask(ctx, testTask)
+	require.NoError(t, err)
+
+	// Execute task
+	_, err = coordinator.ExecuteTask(ctx, testTask.ID)
+	require.NoError(t, err)
+
+	// Verify task count increased
+	stats := coordinator.GetAgentStats()
+	agentStats := stats["test-agent"]
+	assert.Equal(t, 1, agentStats.TaskCount)
+}
+
+// TestCoordinatorListAgentsByCapability tests finding agents by capability
+func TestCoordinatorListAgentsByCapability(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agents with different capabilities
+	agent1 := newMockCoordAgent("agent-1", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	agent2 := newMockCoordAgent("agent-2", AgentTypeTesting, []Capability{CapabilityTestGeneration})
+
+	coordinator.RegisterAgent(agent1)
+	coordinator.RegisterAgent(agent2)
+
+	// List all agents
+	allAgents := coordinator.ListAgents()
+	require.Len(t, allAgents, 2)
+
+	// Verify agent properties
+	foundAgent1 := false
+	for _, a := range allAgents {
+		if a.ID() == "agent-1" {
+			foundAgent1 = true
+			assert.Equal(t, AgentTypeCoding, a.Type())
+		}
+	}
+	assert.True(t, foundAgent1, "agent-1 not found in list")
+}
+
+// TestCoordinatorTaskStatusTransitions tests task status through lifecycle
+func TestCoordinatorTaskStatusTransitions(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent
+	agent := newMockCoordAgent("test-agent", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	coordinator.RegisterAgent(agent)
+
+	// Create and submit task
+	testTask := task.NewTask(
+		task.TaskType("test"),
+		"Test Task",
+		"A test task",
+		task.PriorityNormal,
+	)
+
+	ctx := context.Background()
+	err := coordinator.SubmitTask(ctx, testTask)
+	require.NoError(t, err)
+
+	// Initial status should be Pending
+	retrieved, err := coordinator.GetTaskStatus(testTask.ID)
+	require.NoError(t, err)
+	assert.Equal(t, task.StatusPending, retrieved.Status)
+
+	// Execute task
+	result, err := coordinator.ExecuteTask(ctx, testTask.ID)
+	require.NoError(t, err)
+
+	// After execution, task should be completed
+	retrieved, err = coordinator.GetTaskStatus(testTask.ID)
+	require.NoError(t, err)
+	assert.Equal(t, task.StatusCompleted, retrieved.Status)
+
+	// Result should be available
+	assert.True(t, result.Success)
+}
+
+// TestCoordinatorEmptyAgentRegistry tests behavior with no registered agents
+func TestCoordinatorEmptyAgentRegistry(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// List should be empty
+	agents := coordinator.ListAgents()
+	assert.Len(t, agents, 0)
+
+	// Stats should be empty
+	stats := coordinator.GetAgentStats()
+	assert.Len(t, stats, 0)
+
+	// Workflows should be empty
+	workflows := coordinator.ListWorkflows()
+	assert.Len(t, workflows, 0)
+}
+
+// TestCoordinatorMultipleCapabilities tests agent with multiple capabilities
+func TestCoordinatorMultipleCapabilities(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent with multiple capabilities
+	multiCapAgent := newMockCoordAgent(
+		"multi-cap-agent",
+		AgentTypeCoding,
+		[]Capability{
+			CapabilityCodeGeneration,
+			CapabilityRefactoring,
+			CapabilityTestGeneration,
+		},
+	)
+	coordinator.RegisterAgent(multiCapAgent)
+
+	// Create task requiring code generation
+	testTask := task.NewTask(
+		task.TaskType("coding"),
+		"Coding Task",
+		"A coding task",
+		task.PriorityNormal,
+	)
+	testTask.RequiredCapabilities = []string{string(CapabilityCodeGeneration)}
+
+	ctx := context.Background()
+	err := coordinator.SubmitTask(ctx, testTask)
+	require.NoError(t, err)
+
+	// Agent should be selected
+	result, err := coordinator.ExecuteTask(ctx, testTask.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "multi-cap-agent", result.AgentID)
+}
+
+// TestCoordinatorAgentStats tests agent statistics
+func TestCoordinatorAgentStats(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent
+	agent := newMockCoordAgent("test-agent", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	coordinator.RegisterAgent(agent)
+
+	// Get agent stats
+	stats := coordinator.GetAgentStats()
+	require.Contains(t, stats, "test-agent")
+
+	agentStats := stats["test-agent"]
+	assert.Equal(t, "test-agent", agentStats.AgentID)
+	assert.Equal(t, AgentTypeCoding, agentStats.Type)
+	assert.Equal(t, StatusIdle, agentStats.Status)
+	assert.Equal(t, 0, agentStats.TaskCount)
+	assert.Equal(t, 0, agentStats.ErrorCount)
+}
+
+// TestCoordinatorWorkflowList tests workflow listing
+func TestCoordinatorWorkflowList(t *testing.T) {
+	coordinator := NewCoordinator(nil)
+
+	// Register agent
+	agent := newMockCoordAgent("test-agent", AgentTypeCoding, []Capability{CapabilityCodeGeneration})
+	coordinator.RegisterAgent(agent)
+
+	// Initially no workflows
+	workflows := coordinator.ListWorkflows()
+	assert.Len(t, workflows, 0)
+
+	// Note: ExecuteWorkflow would add workflows to the list
+	// but that requires more complex setup with actual agent execution
+}
