@@ -11,12 +11,15 @@ import (
 
 // Coordinator manages and orchestrates multiple agents
 type Coordinator struct {
-	registry     *AgentRegistry
-	tasks        map[string]*task.Task
-	taskQueue    []*task.Task
-	results      map[string]*task.Result
-	mu           sync.RWMutex
-	config       *CoordinatorConfig
+	registry         *AgentRegistry
+	tasks            map[string]*task.Task
+	taskQueue        []*task.Task
+	results          map[string]*task.Result
+	mu               sync.RWMutex
+	config           *CoordinatorConfig
+	workflowExecutor *WorkflowExecutor
+	circuitBreakers  *CircuitBreakerManager
+	retryPolicy      *RetryPolicy
 }
 
 // CoordinatorConfig holds coordinator configuration
@@ -25,6 +28,10 @@ type CoordinatorConfig struct {
 	TaskTimeout        time.Duration
 	EnableCollaboration bool
 	ConflictResolution ResolutionMethod
+	EnableResilience   bool          // Enable circuit breakers and retries
+	FailureThreshold   int           // Circuit breaker failure threshold
+	SuccessThreshold   int           // Circuit breaker success threshold
+	CircuitBreakerTimeout time.Duration // Circuit breaker timeout
 }
 
 // NewCoordinator creates a new agent coordinator
@@ -35,16 +42,35 @@ func NewCoordinator(config *CoordinatorConfig) *Coordinator {
 			TaskTimeout:        30 * time.Minute,
 			EnableCollaboration: true,
 			ConflictResolution: ResolutionMethodVoting,
+			EnableResilience:   true,
+			FailureThreshold:   5,
+			SuccessThreshold:   2,
+			CircuitBreakerTimeout: 60 * time.Second,
 		}
 	}
 
-	return &Coordinator{
+	coordinator := &Coordinator{
 		registry:  NewAgentRegistry(),
 		tasks:     make(map[string]*task.Task),
 		taskQueue: make([]*task.Task, 0),
 		results:   make(map[string]*task.Result),
 		config:    config,
 	}
+
+	// Initialize workflow executor
+	coordinator.workflowExecutor = NewWorkflowExecutor(coordinator)
+
+	// Initialize circuit breaker manager if resilience is enabled
+	if config.EnableResilience {
+		coordinator.circuitBreakers = NewCircuitBreakerManager(
+			config.FailureThreshold,
+			config.SuccessThreshold,
+			config.CircuitBreakerTimeout,
+		)
+		coordinator.retryPolicy = DefaultRetryPolicy()
+	}
+
+	return coordinator
 }
 
 // RegisterAgent registers an agent with the coordinator
@@ -83,9 +109,19 @@ func (c *Coordinator) ExecuteTask(ctx context.Context, taskID string) (*task.Res
 		return nil, fmt.Errorf("no suitable agent found: %w", err)
 	}
 
-	// Execute task
+	// Execute task with or without resilience
+	var result *task.Result
 	t.Start(agent.ID())
-	result, err := agent.Execute(ctx, t)
+
+	if c.config.EnableResilience && c.circuitBreakers != nil {
+		// Execute with circuit breaker and retry
+		circuitBreaker := c.circuitBreakers.GetOrCreate(agent.ID())
+		resilientExecutor := NewResilientExecutor(agent, circuitBreaker, c.retryPolicy)
+		result, err = resilientExecutor.Execute(ctx, t)
+	} else {
+		// Execute directly
+		result, err = agent.Execute(ctx, t)
+	}
 
 	if err != nil {
 		t.Fail(err.Error())
@@ -188,4 +224,51 @@ func (c *Coordinator) Shutdown(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// ExecuteWorkflow executes a multi-step workflow
+func (c *Coordinator) ExecuteWorkflow(ctx context.Context, workflow *Workflow) error {
+	if c.workflowExecutor == nil {
+		return fmt.Errorf("workflow executor not initialized")
+	}
+	return c.workflowExecutor.Execute(ctx, workflow)
+}
+
+// GetWorkflow retrieves a workflow by ID
+func (c *Coordinator) GetWorkflow(id string) (*Workflow, error) {
+	if c.workflowExecutor == nil {
+		return nil, fmt.Errorf("workflow executor not initialized")
+	}
+	return c.workflowExecutor.GetWorkflow(id)
+}
+
+// ListWorkflows returns all workflows
+func (c *Coordinator) ListWorkflows() []*Workflow {
+	if c.workflowExecutor == nil {
+		return []*Workflow{}
+	}
+	return c.workflowExecutor.ListWorkflows()
+}
+
+// GetCircuitBreakerState returns the state of a circuit breaker for an agent
+func (c *Coordinator) GetCircuitBreakerState(agentID string) CircuitBreakerState {
+	if c.circuitBreakers == nil {
+		return CircuitBreakerClosed
+	}
+	return c.circuitBreakers.GetState(agentID)
+}
+
+// ResetCircuitBreaker resets a circuit breaker for an agent
+func (c *Coordinator) ResetCircuitBreaker(agentID string) {
+	if c.circuitBreakers != nil {
+		c.circuitBreakers.Reset(agentID)
+	}
+}
+
+// GetCircuitBreakerStats returns statistics for all circuit breakers
+func (c *Coordinator) GetCircuitBreakerStats() map[string]CircuitBreakerState {
+	if c.circuitBreakers == nil {
+		return make(map[string]CircuitBreakerState)
+	}
+	return c.circuitBreakers.GetStats()
 }

@@ -318,17 +318,4 @@ func (a *CodingAgent) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// Helper functions
-
-func countLines(code string) int {
-	if code == "" {
-		return 0
-	}
-	lines := 1
-	for _, c := range code {
-		if c == '\n' {
-			lines++
-		}
-	}
-	return lines
-}
+// Helper functions are in utils.go
