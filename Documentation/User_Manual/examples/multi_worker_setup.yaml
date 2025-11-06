@@ -1,0 +1,261 @@
+# Multi-Worker Distributed Setup
+# For large-scale parallel development
+
+workers:
+  # Health monitoring
+  health_check_interval: 30s
+  health_ttl: 120s
+  max_concurrent_tasks: 20
+  
+  # Auto-installation
+  auto_install: true
+  ssh_timeout: 30s
+  ssh_key_path: "~/.ssh/helixcode_worker"
+  
+  # Pool configuration
+  pool:
+    - name: "build-farm"
+      description: "High-performance build workers"
+      workers:
+        - host: "builder-01.internal"
+          user: "helix"
+          capabilities:
+            os: "linux"
+            arch: "amd64"
+            cpu: 32
+            ram_gb: 128
+            gpu: false
+          max_tasks: 10
+          tags: ["build", "compile", "test"]
+        
+        - host: "builder-02.internal"
+          user: "helix"
+          capabilities:
+            os: "linux"
+            arch: "arm64"
+            cpu: 64
+            ram_gb: 256
+            gpu: false
+          max_tasks: 20
+          tags: ["build", "compile", "test", "arm"]
+        
+        - host: "builder-mac-01.internal"
+          user: "helix"
+          capabilities:
+            os: "darwin"
+            arch: "arm64"
+            cpu: 10
+            ram_gb: 32
+            gpu: false
+          max_tasks: 5
+          tags: ["build", "macos", "ios"]
+    
+    - name: "gpu-cluster"
+      description: "GPU workers for AI inference"
+      workers:
+        - host: "gpu-01.internal"
+          user: "helix"
+          capabilities:
+            os: "linux"
+            arch: "amd64"
+            cpu: 32
+            ram_gb: 256
+            gpu: true
+            gpu_model: "NVIDIA RTX 4090"
+            gpu_count: 2
+            gpu_memory_gb: 48
+          max_tasks: 5
+          tags: ["ai", "inference", "training"]
+        
+        - host: "gpu-02.internal"
+          user: "helix"
+          capabilities:
+            os: "linux"
+            arch: "amd64"
+            cpu: 64
+            ram_gb: 512
+            gpu: true
+            gpu_model: "NVIDIA A100"
+            gpu_count: 4
+            gpu_memory_gb: 160
+          max_tasks: 10
+          tags: ["ai", "inference", "training", "large-models"]
+    
+    - name: "test-runners"
+      description: "Dedicated test execution workers"
+      workers:
+        - host: "test-01.internal"
+          user: "helix"
+          capabilities:
+            os: "linux"
+            arch: "amd64"
+            cpu: 16
+            ram_gb: 64
+          max_tasks: 10
+          tags: ["test", "integration", "e2e"]
+        
+        - host: "test-02.internal"
+          user: "helix"
+          capabilities:
+            os: "linux"
+            arch: "amd64"
+            cpu: 16
+            ram_gb: 64
+          max_tasks: 10
+          tags: ["test", "integration", "e2e"]
+
+# Task assignment strategy
+tasks:
+  assignment:
+    strategy: "capability_match"
+    
+    # Rules for task routing
+    rules:
+      - name: "GPU Tasks to GPU Workers"
+        condition: "task.requires_gpu == true"
+        target_pool: "gpu-cluster"
+      
+      - name: "macOS Builds to Mac Workers"
+        condition: "task.os == 'darwin'"
+        target_pool: "build-farm"
+        target_tags: ["macos"]
+      
+      - name: "ARM Builds to ARM Workers"
+        condition: "task.arch == 'arm64'"
+        target_pool: "build-farm"
+        target_tags: ["arm"]
+      
+      - name: "Tests to Test Runners"
+        condition: "task.type == 'test'"
+        target_pool: "test-runners"
+      
+      - name: "Load Balancing"
+        condition: "true"
+        strategy: "least_loaded"
+  
+  # Retry policy
+  retry:
+    max_attempts: 3
+    backoff: "exponential"
+    initial_delay: 5s
+    max_delay: 300s
+  
+  # Checkpointing
+  checkpoint:
+    enabled: true
+    interval: 300s
+    max_checkpoints: 10
+
+# Network configuration
+network:
+  ssh:
+    connection_pool_size: 10
+    keepalive_interval: 60s
+    compression: true
+  
+  # VPN/tunneling if needed
+  vpn:
+    enabled: false
+    type: "wireguard"
+    config_path: "/etc/wireguard/wg0.conf"
+
+# LLM providers for workers
+llm:
+  # Workers can use local models
+  worker_providers:
+    - type: "ollama"
+      url: "http://localhost:11434"
+      models: ["codellama:13b", "llama3:70b"]
+    
+    - type: "llamacpp"
+      url: "http://localhost:8080"
+      model_path: "/models/llama-3-70b.gguf"
+  
+  # Or shared remote providers
+  shared_providers:
+    anthropic:
+      type: "anthropic"
+      api_key: "${ANTHROPIC_API_KEY}"
+    
+    gemini:
+      type: "gemini"
+      api_key: "${GEMINI_API_KEY}"
+
+# Monitoring
+monitoring:
+  workers:
+    metrics:
+      - cpu_usage
+      - memory_usage
+      - gpu_usage
+      - disk_usage
+      - network_io
+      - task_queue_length
+      - task_completion_rate
+    
+    export:
+      prometheus:
+        enabled: true
+        port: 9091
+      
+      influxdb:
+        enabled: false
+        url: "http://influxdb:8086"
+        database: "helixcode_workers"
+
+# Auto-scaling
+autoscaling:
+  enabled: true
+  
+  # Cloud provider integration
+  cloud:
+    provider: "aws"  # aws, gcp, azure
+    region: "us-east-1"
+    
+    # Instance templates
+    templates:
+      - name: "standard-builder"
+        instance_type: "c5.4xlarge"
+        ami: "ami-0c55b159cbfafe1f0"
+        tags: ["build"]
+        min_count: 2
+        max_count: 10
+      
+      - name: "gpu-worker"
+        instance_type: "p3.2xlarge"
+        ami: "ami-gpu-worker"
+        tags: ["gpu", "ai"]
+        min_count: 1
+        max_count: 5
+  
+  # Scale triggers
+  triggers:
+    - name: "Queue Length"
+      metric: "task_queue_length"
+      scale_up_threshold: 10
+      scale_down_threshold: 2
+      cooldown: 300s
+    
+    - name: "CPU Usage"
+      metric: "avg_cpu_usage"
+      scale_up_threshold: 0.8
+      scale_down_threshold: 0.3
+      cooldown: 600s
+
+# Cost optimization
+cost_optimization:
+  enabled: true
+  
+  # Prefer cheaper workers
+  prefer_spot_instances: true
+  
+  # Shutdown idle workers
+  idle_shutdown:
+    enabled: true
+    idle_timeout: 1800s  # 30 minutes
+    preserve_min_count: true
+  
+  # Budget alerts
+  budget:
+    monthly_limit: 5000
+    alert_threshold: 0.9

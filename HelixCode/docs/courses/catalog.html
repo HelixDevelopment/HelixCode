@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HelixCode Video Courses - Master distributed AI development from beginner to advanced">
+    <meta name="keywords" content="HelixCode courses, AI development training, distributed systems, video tutorials">
+    <title>Video Courses - HelixCode</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Catalog-specific styles */
+        .catalog-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0 3rem;
+            text-align: center;
+        }
+
+        .catalog-search {
+            max-width: 600px;
+            margin: 2rem auto 0;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .filters-bar {
+            background-color: var(--bg-secondary);
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .filters-container {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: var(--spacing-xs);
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .filter-btn {
+            background-color: white;
+            border: 1px solid var(--border-light);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary-color);
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .courses-section {
+            padding: var(--spacing-2xl) 0;
+        }
+
+        .section-header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .section-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .course-card {
+            background-color: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .course-thumbnail {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            position: relative;
+        }
+
+        .course-progress-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .course-progress-bar {
+            height: 100%;
+            background-color: var(--secondary-color);
+            transition: width var(--transition-base);
+        }
+
+        .course-content {
+            padding: var(--spacing-lg);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .course-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-beginner {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .badge-intermediate {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--accent-color);
+        }
+
+        .badge-advanced {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .course-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-md);
+            flex: 1;
+        }
+
+        .course-stats {
+            display: flex;
+            gap: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-light);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .course-action {
+            margin-top: var(--spacing-md);
+        }
+
+        .continue-learning {
+            background-color: var(--bg-secondary);
+            padding: var(--spacing-2xl) 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: var(--spacing-md);
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <a href="../index.html" style="text-decoration: none; color: inherit;">
+                    <span class="logo-helix">Helix</span><span class="logo-code">Code</span>
+                </a>
+            </div>
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="../index.html#home" class="nav-link">Home</a></li>
+                <li><a href="../index.html#features" class="nav-link">Features</a></li>
+                <li><a href="catalog.html" class="nav-link active">Courses</a></li>
+                <li><a href="../manual/" class="nav-link">Manual</a></li>
+                <li><a href="https://github.com/your-org/helixcode" class="nav-link" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="catalog-header">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 1rem;">HelixCode Video Courses</h1>
+            <p style="font-size: 1.25rem; margin-bottom: 2rem; opacity: 0.95;">
+                Master distributed AI development with our comprehensive video training program
+            </p>
+
+            <div class="catalog-search">
+                <input
+                    type="text"
+                    id="courseSearch"
+                    class="search-input"
+                    placeholder="Search courses..."
+                    aria-label="Search courses"
+                >
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="container">
+            <div class="filters-container">
+                <div class="filter-group">
+                    <span class="filter-label">Level:</span>
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="beginner">Beginner</button>
+                    <button class="filter-btn" data-filter="intermediate">Intermediate</button>
+                    <button class="filter-btn" data-filter="advanced">Advanced</button>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">Sort by:</span>
+                    <select id="sortSelect" class="filter-btn" style="cursor: pointer;">
+                        <option value="newest">Newest</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="level">By Level</option>
+                        <option value="duration">By Duration</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Continue Learning Section -->
+    <section class="continue-learning" id="continueLearning" style="display: none;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Continue Learning</h2>
+                <p>Pick up where you left off</p>
+            </div>
+            <div class="courses-grid" id="continueGrid"></div>
+        </div>
+    </section>
+
+    <!-- All Courses Section -->
+    <section class="courses-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>All Courses</h2>
+                <p>Explore our complete course catalog</p>
+            </div>
+            <div class="courses-grid" id="coursesGrid">
+                <!-- Courses will be loaded dynamically -->
+            </div>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <p style="font-size: 1.125rem; margin-bottom: 0.5rem;">No courses found</p>
+                <p>Try adjusting your search or filters</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">HelixCode</h3>
+                    <p class="footer-description">
+                        Enterprise-grade distributed AI development platform
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-heading">Learning</h4>
+                    <ul class="footer-links">
+                        <li><a href="catalog.html">Browse Courses</a></li>
+                        <li><a href="index.html">Start Learning</a></li>
+                        <li><a href="../manual/">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-heading">Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="../manual/">Documentation</a></li>
+                        <li><a href="../index.html#features">Features</a></li>
+                        <li><a href="https://github.com/your-org/helixcode" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 HelixCode. Open source under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+    <script src="course-data.js"></script>
+    <script src="progress.js"></script>
+    <script src="search.js"></script>
+    <script>
+        // Initialize catalog
+        document.addEventListener('DOMContentLoaded', () => {
+            const catalog = new CourseCatalog();
+            catalog.init();
+        });
+    </script>
+</body>
+</html>

@@ -408,14 +408,19 @@ func (ap *AnthropicProvider) buildRequest(request *LLMRequest) (*anthropicReques
 		req.MaxTokens = 4096
 	}
 
-	// Convert messages and apply prompt caching
-	// Based on OpenCode pattern: cache last 2 messages for efficiency
+	// Convert messages
 	systemMsg, messages := ap.convertMessages(request.Messages)
 	req.Messages = messages
 
-	// Apply prompt caching to system message if present
-	// This can save up to 90% on input token costs for repeated contexts
-	if systemMsg != "" {
+	// Apply prompt caching based on config
+	cacheConfig := request.CacheConfig
+	if cacheConfig == nil {
+		defaultCache := DefaultCacheConfig()
+		cacheConfig = &defaultCache
+	}
+
+	// Apply caching to system message if enabled
+	if systemMsg != "" && cacheConfig.Enabled {
 		req.System = []anthropicSystemBlock{
 			{
 				Type:         "text",
@@ -423,41 +428,70 @@ func (ap *AnthropicProvider) buildRequest(request *LLMRequest) (*anthropicReques
 				CacheControl: &anthropicCacheControl{Type: "ephemeral"},
 			},
 		}
+	} else if systemMsg != "" {
+		req.System = systemMsg
 	}
 
-	// Apply prompt caching to last message (if multiple messages)
-	// This maintains conversation context efficiently
-	if len(messages) > 1 {
-		lastMsg := &messages[len(messages)-1]
-		if content, ok := lastMsg.Content.([]anthropicContentBlock); ok {
-			// Add cache control to last content block
-			if len(content) > 0 {
-				content[len(content)-1].CacheControl = &anthropicCacheControl{Type: "ephemeral"}
-				lastMsg.Content = content
+	// Apply prompt caching to messages based on strategy
+	if cacheConfig.Enabled && len(messages) > 0 {
+		switch cacheConfig.Strategy {
+		case CacheStrategyContext, CacheStrategyAggressive:
+			// Cache last message for context preservation
+			lastMsg := &messages[len(messages)-1]
+			if content, ok := lastMsg.Content.([]anthropicContentBlock); ok {
+				if len(content) > 0 {
+					content[len(content)-1].CacheControl = &anthropicCacheControl{Type: "ephemeral"}
+					lastMsg.Content = content
+				}
 			}
 		}
 	}
 
 	// Convert tools with caching
-	// Cache the last tool definition to optimize multi-turn conversations
 	if len(request.Tools) > 0 {
 		req.Tools = ap.convertTools(request.Tools)
 
-		// Apply caching to last tool for efficiency
-		if len(req.Tools) > 0 {
-			req.Tools[len(req.Tools)-1].CacheControl = &anthropicCacheControl{Type: "ephemeral"}
+		// Apply caching to tools based on strategy
+		if cacheConfig.Enabled && (cacheConfig.Strategy == CacheStrategyTools ||
+			cacheConfig.Strategy == CacheStrategyContext ||
+			cacheConfig.Strategy == CacheStrategyAggressive) {
+			if len(req.Tools) > 0 {
+				req.Tools[len(req.Tools)-1].CacheControl = &anthropicCacheControl{Type: "ephemeral"}
+			}
 		}
 	}
 
-	// Extended thinking mode - automatic detection based on content
-	// Allocates 80% of max tokens for thinking when enabled
-	if ap.shouldEnableThinking(request) {
-		thinkingBudget := int(float64(req.MaxTokens) * 0.8)
+	// Apply reasoning configuration
+	reasoningConfig := request.Reasoning
+	if reasoningConfig == nil {
+		// Auto-detect if this is a reasoning model
+		isReasoning, modelType := IsReasoningModel(request.Model)
+		if isReasoning {
+			reasoningConfig = NewReasoningConfig(modelType)
+		} else if ap.shouldEnableThinking(request) {
+			// Use generic reasoning for keyword-based detection
+			reasoningConfig = NewReasoningConfig(ReasoningModelClaude_Sonnet)
+		}
+	}
+
+	// Configure extended thinking if reasoning is enabled
+	if reasoningConfig != nil && reasoningConfig.Enabled {
+		// Use thinking budget from config or default to 80% of max tokens
+		thinkingBudget := reasoningConfig.ThinkingBudget
+		if thinkingBudget == 0 {
+			thinkingBudget = int(float64(req.MaxTokens) * 0.8)
+		}
+		// Use request-level thinking budget if specified
+		if request.ThinkingBudget > 0 {
+			thinkingBudget = request.ThinkingBudget
+		}
+
 		req.Thinking = &anthropicThinkingConfig{
 			Type:   "enabled",
 			Budget: thinkingBudget,
 		}
-		// Adjust temperature for thinking mode
+
+		// Adjust temperature for thinking mode if not explicitly set
 		if req.Temperature == 0 {
 			req.Temperature = 1.0
 		}

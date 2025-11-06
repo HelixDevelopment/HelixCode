@@ -1,0 +1,57 @@
+# Basic HelixCode Configuration
+# For development and small projects
+
+server:
+  address: "0.0.0.0"
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "helixcode"
+  password: ""  # Set via HELIX_DATABASE_PASSWORD
+  dbname: "helixcode"
+  sslmode: "disable"
+  max_connections: 20
+
+redis:
+  enabled: false  # Optional for small projects
+
+auth:
+  jwt_secret: ""  # Set via HELIX_AUTH_JWT_SECRET
+  token_expiry: 86400
+
+llm:
+  default_provider: "ollama"  # Use local model
+  providers:
+    ollama:
+      type: "local"
+      url: "http://localhost:11434"
+      models:
+        - "llama3:8b"
+        - "codellama:7b"
+      default_model: "codellama:7b"
+
+tools:
+  filesystem:
+    enable_cache: true
+    cache_size: 500
+  
+  shell:
+    allowlist: ["git", "npm", "go", "make"]
+    blocklist: ["rm", "sudo"]
+
+workflow:
+  planmode:
+    enabled: true
+  autocommit:
+    enabled: true
+  snapshots:
+    enabled: true
+
+logging:
+  level: "debug"
+  format: "text"
+  output: "stdout"

@@ -19,10 +19,14 @@ const (
 	ProviderTypeOpenAI     ProviderType = "openai"
 	ProviderTypeAnthropic  ProviderType = "anthropic"
 	ProviderTypeGemini     ProviderType = "gemini"
+	ProviderTypeVertexAI   ProviderType = "vertexai"
 	ProviderTypeQwen       ProviderType = "qwen"
 	ProviderTypeXAI        ProviderType = "xai"
 	ProviderTypeOpenRouter ProviderType = "openrouter"
 	ProviderTypeCopilot    ProviderType = "copilot"
+	ProviderTypeBedrock    ProviderType = "bedrock"
+	ProviderTypeAzure      ProviderType = "azure"
+	ProviderTypeGroq       ProviderType = "groq"
 	ProviderTypeCustom     ProviderType = "custom"
 )
 
@@ -54,6 +58,13 @@ type LLMRequest struct {
 	ToolChoice   string            `json:"tool_choice"`
 	Capabilities []ModelCapability `json:"capabilities"`
 	CreatedAt    time.Time         `json:"created_at"`
+
+	// Advanced features
+	Reasoning      *ReasoningConfig `json:"reasoning,omitempty"`       // Reasoning/thinking configuration
+	CacheConfig    *CacheConfig     `json:"cache_config,omitempty"`    // Prompt caching configuration
+	TokenBudget    *TokenBudget     `json:"token_budget,omitempty"`    // Token budget limits
+	ThinkingBudget int              `json:"thinking_budget,omitempty"` // Token budget for thinking
+	SessionID      string           `json:"session_id,omitempty"`      // Session ID for tracking
 }
 
 // Message represents a message in a conversation
@@ -150,8 +161,10 @@ type ProviderHealth struct {
 
 // ProviderManager manages multiple LLM providers
 type ProviderManager struct {
-	providers map[ProviderType]Provider
-	config    ProviderConfig
+	providers    map[ProviderType]Provider
+	config       ProviderConfig
+	tokenTracker *TokenTracker // Track token usage across providers
+	cacheMetrics *CacheMetrics // Track caching performance
 }
 
 // ProviderConfig holds configuration for the provider manager
@@ -175,8 +188,20 @@ type ProviderConfigEntry struct {
 // NewProviderManager creates a new provider manager
 func NewProviderManager(config ProviderConfig) *ProviderManager {
 	return &ProviderManager{
-		providers: make(map[ProviderType]Provider),
-		config:    config,
+		providers:    make(map[ProviderType]Provider),
+		config:       config,
+		tokenTracker: NewTokenTracker(DefaultTokenBudget()),
+		cacheMetrics: &CacheMetrics{},
+	}
+}
+
+// NewProviderManagerWithBudget creates a provider manager with custom token budget
+func NewProviderManagerWithBudget(config ProviderConfig, budget TokenBudget) *ProviderManager {
+	return &ProviderManager{
+		providers:    make(map[ProviderType]Provider),
+		config:       config,
+		tokenTracker: NewTokenTracker(budget),
+		cacheMetrics: &CacheMetrics{},
 	}
 }
 
@@ -234,13 +259,76 @@ func (pm *ProviderManager) Generate(ctx context.Context, request *LLMRequest) (*
 	}
 	request.CreatedAt = time.Now()
 
+	// Apply default reasoning config if not set
+	if request.Reasoning == nil && IsReasoningModelByName(request.Model) {
+		isReasoning, modelType := IsReasoningModel(request.Model)
+		if isReasoning {
+			request.Reasoning = NewReasoningConfig(modelType)
+		}
+	}
+
+	// Apply default cache config if not set
+	if request.CacheConfig == nil {
+		defaultCache := DefaultCacheConfig()
+		request.CacheConfig = &defaultCache
+	}
+
+	// Check token budget if enabled
+	if request.SessionID != "" && pm.tokenTracker != nil {
+		estimatedTokens := EstimateTokens(request)
+		estimatedCost := EstimateCost(request.Model, estimatedTokens, 0.01) // Default cost estimation
+
+		if err := pm.tokenTracker.CheckBudget(ctx, request.SessionID, estimatedTokens, estimatedCost); err != nil {
+			return nil, fmt.Errorf("budget check failed: %v", err)
+		}
+	}
+
 	// Generate response
 	response, err := provider.Generate(ctx, request)
 	if err != nil {
 		return nil, fmt.Errorf("generation failed: %v", err)
 	}
 
+	// Track token usage
+	if request.SessionID != "" && pm.tokenTracker != nil {
+		cost := EstimateCost(request.Model, response.Usage.TotalTokens, 0.01)
+		pm.tokenTracker.TrackRequest(request.SessionID, request, response, cost)
+	}
+
+	// Track cache metrics if available
+	if cacheStats, ok := response.ProviderMetadata.(map[string]interface{}); ok {
+		if _, hasCacheData := cacheStats["cache_creation_tokens"]; hasCacheData {
+			stats := CacheStats{
+				CacheCreationInputTokens: getIntFromMap(cacheStats, "cache_creation_tokens"),
+				CacheReadInputTokens:     getIntFromMap(cacheStats, "cache_read_tokens"),
+				InputTokens:              response.Usage.PromptTokens,
+				OutputTokens:             response.Usage.CompletionTokens,
+			}
+			savings := CalculateCacheSavings(stats, 0.01, 0.001) // Example pricing
+			pm.cacheMetrics.UpdateMetrics(stats, savings)
+		}
+	}
+
 	return response, nil
+}
+
+// Helper function to extract int from map
+func getIntFromMap(m map[string]interface{}, key string) int {
+	if val, ok := m[key]; ok {
+		if intVal, ok := val.(int); ok {
+			return intVal
+		}
+		if floatVal, ok := val.(float64); ok {
+			return int(floatVal)
+		}
+	}
+	return 0
+}
+
+// IsReasoningModelByName checks if model name suggests reasoning capability
+func IsReasoningModelByName(modelName string) bool {
+	isReasoning, _ := IsReasoningModel(modelName)
+	return isReasoning
 }
 
 // GetAvailableProviders returns all available providers
@@ -287,6 +375,39 @@ func (pm *ProviderManager) FindProviderForCapabilities(capabilities []ModelCapab
 	}
 
 	return matching
+}
+
+// GetTokenTracker returns the token tracker for budget management
+func (pm *ProviderManager) GetTokenTracker() *TokenTracker {
+	return pm.tokenTracker
+}
+
+// GetCacheMetrics returns cache performance metrics
+func (pm *ProviderManager) GetCacheMetrics() *CacheMetrics {
+	return pm.cacheMetrics
+}
+
+// GetSessionUsage returns token usage for a session
+func (pm *ProviderManager) GetSessionUsage(sessionID string) (*SessionUsage, error) {
+	if pm.tokenTracker == nil {
+		return nil, fmt.Errorf("token tracker not initialized")
+	}
+	return pm.tokenTracker.GetSessionUsage(sessionID)
+}
+
+// GetBudgetStatus returns budget status for a session
+func (pm *ProviderManager) GetBudgetStatus(sessionID string) *BudgetStatus {
+	if pm.tokenTracker == nil {
+		return nil
+	}
+	return pm.tokenTracker.GetBudgetStatus(sessionID)
+}
+
+// ResetSession clears usage data for a session
+func (pm *ProviderManager) ResetSession(sessionID string) {
+	if pm.tokenTracker != nil {
+		pm.tokenTracker.ResetSession(sessionID)
+	}
 }
 
 // Close closes all providers
@@ -346,6 +467,8 @@ func (pf *ProviderFactory) CreateProvider(config ProviderConfigEntry) (Provider,
 		return NewAnthropicProvider(config)
 	case ProviderTypeGemini:
 		return NewGeminiProvider(config)
+	case ProviderTypeVertexAI:
+		return NewVertexAIProvider(config)
 	case ProviderTypeQwen:
 		return NewQwenProvider(config)
 	case ProviderTypeXAI:
@@ -354,6 +477,12 @@ func (pf *ProviderFactory) CreateProvider(config ProviderConfigEntry) (Provider,
 		return NewOpenRouterProvider(config)
 	case ProviderTypeCopilot:
 		return NewCopilotProvider(config)
+	case ProviderTypeBedrock:
+		return NewBedrockProvider(config)
+	case ProviderTypeAzure:
+		return NewAzureProvider(config)
+	case ProviderTypeGroq:
+		return NewGroqProvider(config)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", config.Type)
 	}

@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelixCode User Manual - Distributed AI Development Platform</title>
+    <meta name="description" content="Complete user manual for HelixCode, the distributed AI-powered software development platform">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        /* CSS Variables for Theme Support */
+        :root {
+            --primary-500: #0ea5e9;
+            --primary-600: #0284c7;
+            --primary-700: #0369a1;
+            --accent-1: #10b981;
+            --accent-2: #f59e0b;
+            --accent-3: #ef4444;
+            --accent-4: #8b5cf6;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-code: #1e293b;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --sidebar-width: 280px;
+            --header-height: 64px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-code: #0f172a;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-light: #334155;
+            --border-medium: #475569;
+        }
+
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            height: 40px;
+            width: auto;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.05);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            width: 300px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Layout */
+        .layout {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: var(--header-height);
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-light);
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 100;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .toc-title {
+            padding: 1.5rem 1rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc-item {
+            margin-bottom: 0.25rem;
+        }
+
+        .toc-link {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .toc-link:hover {
+            background: var(--bg-tertiary);
+            color: var(--primary-600);
+            border-left-color: var(--primary-500);
+        }
+
+        .toc-link.active {
+            background: var(--bg-tertiary);
+            color: var(--primary-600);
+            border-left-color: var(--primary-500);
+            font-weight: 500;
+        }
+
+        .toc-item-sub {
+            margin-left: 1rem;
+        }
+
+        .toc-link-sub {
+            font-size: 0.8125rem;
+            padding: 0.375rem 1rem;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 3rem;
+            max-width: 900px;
+        }
+
+        .content-header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .content-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-500), var(--accent-4));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .content-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin: 3rem 0 1.5rem;
+            color: var(--text-primary);
+            scroll-margin-top: calc(var(--header-height) + 2rem);
+        }
+
+        h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin: 2.5rem 0 1.25rem;
+            color: var(--text-primary);
+            scroll-margin-top: calc(var(--header-height) + 2rem);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+            scroll-margin-top: calc(var(--header-height) + 2rem);
+        }
+
+        h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+        }
+
+        strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Lists */
+        ul, ol {
+            margin-bottom: 1.25rem;
+            padding-left: 2rem;
+            color: var(--text-secondary);
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        li code {
+            font-size: 0.875em;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #e2e8f0;
+        }
+
+        p code, li code, td code {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.875em;
+            color: var(--accent-3);
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        thead {
+            background: var(--bg-tertiary);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-medium);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Alert Boxes */
+        .alert {
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: rgba(14, 165, 233, 0.1);
+            border-left-color: var(--primary-500);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: var(--accent-2);
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: var(--accent-3);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--accent-1);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Links */
+        a {
+            color: var(--primary-600);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--primary-700);
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        .footer {
+            margin-left: var(--sidebar-width);
+            padding: 2rem 3rem;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 0;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
+
+            .footer {
+                margin-left: 0;
+                padding: 2rem 1rem;
+            }
+
+            .search-input {
+                width: 150px;
+            }
+
+            .search-input:focus {
+                width: 200px;
+            }
+
+            .header-title {
+                font-size: 1rem;
+            }
+
+            .logo {
+                height: 32px;
+            }
+
+            .content-title {
+                font-size: 2rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h3 {
+                font-size: 1.25rem;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: var(--bg-tertiary);
+                border: 1px solid var(--border-light);
+                border-radius: 8px;
+                padding: 0.5rem;
+                cursor: pointer;
+                font-size: 1.25rem;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* Timestamp */
+        .timestamp {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-light);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        /* Section Anchors */
+        .anchor {
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+            padding-right: 0.25em;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        h1:hover .anchor,
+        h2:hover .anchor,
+        h3:hover .anchor {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-container">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">☰</button>
+                <img src="../../Assets/Logo.png" alt="HelixCode Logo" class="logo">
+                <span class="header-title">HelixCode User Manual</span>
+            </div>
+            <div class="header-actions">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search documentation...">
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="toc-title">Table of Contents</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#overview" class="toc-link">Overview</a>
+                </li>
+                <li class="toc-item">
+                    <a href="#features" class="toc-link">Features</a>
+                </li>
+                <li class="toc-item">
+                    <a href="#quick-start" class="toc-link">Quick Start</a>
+                    <ul class="toc-list">
+                        <li class="toc-item toc-item-sub">
+                            <a href="#development" class="toc-link toc-link-sub">Development</a>
+                        </li>
+                        <li class="toc-item toc-item-sub">
+                            <a href="#production" class="toc-link toc-link-sub">Production Deployment</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="toc-item">
+                    <a href="#architecture" class="toc-link">Architecture</a>
+                    <ul class="toc-list">
+                        <li class="toc-item toc-item-sub">
+                            <a href="#core-components" class="toc-link toc-link-sub">Core Components</a>
+                        </li>
+                        <li class="toc-item toc-item-sub">
+                            <a href="#ai-providers" class="toc-link toc-link-sub">AI Providers</a>
+                        </li>
+                        <li class="toc-item toc-item-sub">
+                            <a href="#applications" class="toc-link toc-link-sub">Applications</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="toc-item">
+                    <a href="#configuration" class="toc-link">Configuration</a>
+                    <ul class="toc-list">
+                        <li class="toc-item toc-item-sub">
+                            <a href="#getting-started-ai" class="toc-link toc-link-sub">Getting Started with AI</a>
+                        </li>
+                        <li class="toc-item toc-item-sub">
+                            <a href="#environment-variables" class="toc-link toc-link-sub">Environment Variables</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="toc-item">
+                    <a href="#api-documentation" class="toc-link">API Documentation</a>
+                    <ul class="toc-list">
+                        <li class="toc-item toc-item-sub">
+                            <a href="#authentication-endpoints" class="toc-link toc-link-sub">Authentication</a>
+                        </li>
+                        <li class="toc-item toc-item-sub">
+                            <a href="#task-management" class="toc-link toc-link-sub">Task Management</a>
+                        </li>
+                        <li class="toc-item toc-item-sub">
+                            <a href="#worker-management" class="toc-link toc-link-sub">Worker Management</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="toc-item">
+                    <a href="#development-guide" class="toc-link">Development Guide</a>
+                </li>
+                <li class="toc-item">
+                    <a href="#deployment" class="toc-link">Deployment Options</a>
+                </li>
+                <li class="toc-item">
+                    <a href="#monitoring" class="toc-link">Monitoring</a>
+                </li>
+                <li class="toc-item">
+                    <a href="#security" class="toc-link">Security</a>
+                </li>
+                <li class="toc-item">
+                    <a href="#contributing" class="toc-link">Contributing</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="content-header">
+                <h1 class="content-title">HelixCode User Manual</h1>
+                <div class="content-meta">
+                    <div class="meta-item">
+                        <span>📚</span>
+                        <span>Version 1.0</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>📅</span>
+                        <span>Last Updated: <span id="lastUpdated">2025-11-06</span></span>
+                    </div>
+                    <div class="meta-item">
+                        <span>🔗</span>
+                        <a href="https://github.com/helixcode/helixcode" target="_blank">GitHub Repository</a>
+                    </div>
+                </div>
+            </div>
+
+            <section id="overview">
+                <h1><span class="anchor">#</span>Overview</h1>
+                <p>
+                    <strong>HelixCode</strong> is a distributed, AI-powered software development platform with multi-platform support.
+                    It revolutionizes software development by combining the power of distributed computing with advanced AI capabilities,
+                    enabling developers to build better software faster.
+                </p>
+
+                <div class="alert alert-info">
+                    <div class="alert-title">🎯 What Makes HelixCode Unique?</div>
+                    <p>HelixCode is the world's first distributed AI development platform that combines:</p>
+                    <ul>
+                        <li>9 AI provider integrations including Anthropic Claude and Google Gemini</li>
+                        <li>Extended thinking capabilities for complex problem-solving</li>
+                        <li>Massive 2M token context windows for entire codebase analysis</li>
+                        <li>Multi-client support (CLI, TUI, REST API, Mobile)</li>
+                        <li>Enterprise-grade security and compliance</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="features">
+                <h1><span class="anchor">#</span>Features</h1>
+
+                <h3>Core Features</h3>
+                <ul>
+                    <li><strong>Multi-Platform Support</strong>: Desktop, mobile, terminal, and specialized OS clients</li>
+                    <li><strong>Distributed Computing</strong>: Worker nodes for parallel task execution</li>
+                    <li><strong>AI Integration</strong>: LLM-powered code generation and reasoning with multiple free providers</li>
+                    <li><strong>Free AI Models</strong>: Access to XAI (Grok), OpenRouter, GitHub Copilot, and Qwen without API keys</li>
+                    <li><strong>Real-time Collaboration</strong>: MCP protocol for tool execution</li>
+                    <li><strong>Authentication & Security</strong>: JWT-based auth with session management</li>
+                    <li><strong>Task Management</strong>: Checkpoint-based work preservation</li>
+                    <li><strong>Notification System</strong>: Multi-channel notifications (Slack, Email, Discord)</li>
+                </ul>
+            </section>
+
+            <section id="quick-start">
+                <h1><span class="anchor">#</span>Quick Start</h1>
+
+                <h2 id="development"><span class="anchor">#</span>Development</h2>
+                <pre><code class="language-bash"># Clone the repository
+git clone https://github.com/your-org/helixcode.git
+cd helixcode
+
+# Install dependencies
+go mod download
+
+# Generate assets
+make logo-assets
+
+# Build the server
+make build
+
+# Run tests
+make test
+
+# Start development server
+make dev</code></pre>
+
+                <h2 id="production"><span class="anchor">#</span>Production Deployment</h2>
+
+                <h3>1. Clone and Setup</h3>
+                <pre><code class="language-bash">git clone https://github.com/your-org/helixcode.git
+cd helixcode
+cp .env.example .env</code></pre>
+
+                <h3>2. Configure Environment Variables</h3>
+                <p>Edit the <code>.env</code> file with your production values:</p>
+                <pre><code class="language-bash">HELIX_AUTH_JWT_SECRET=your-super-secure-jwt-secret
+HELIX_DATABASE_PASSWORD=your-secure-database-password
+HELIX_REDIS_PASSWORD=your-secure-redis-password</code></pre>
+
+                <h3>3. Deploy with Docker Compose</h3>
+                <pre><code class="language-bash">docker-compose up -d</code></pre>
+
+                <h3>4. Check Deployment</h3>
+                <pre><code class="language-bash">docker-compose ps
+curl http://localhost/health</code></pre>
+            </section>
+
+            <section id="architecture">
+                <h1><span class="anchor">#</span>Architecture</h1>
+
+                <h2 id="core-components"><span class="anchor">#</span>Core Components</h2>
+                <ul>
+                    <li><strong>Server</strong>: Main API server with REST and WebSocket endpoints</li>
+                    <li><strong>Database</strong>: PostgreSQL for persistent data storage</li>
+                    <li><strong>Cache</strong>: Redis for session and task state management</li>
+                    <li><strong>Workers</strong>: Distributed worker nodes for task execution</li>
+                    <li><strong>MCP Server</strong>: Model Context Protocol for AI tool integration</li>
+                </ul>
+
+                <h2 id="ai-providers"><span class="anchor">#</span>AI Providers</h2>
+                <p>HelixCode supports multiple AI providers with a focus on free and accessible models, plus enterprise-grade premium providers with advanced features:</p>
+
+                <h3>Free Providers (No API Key Required)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Provider</th>
+                            <th>Models</th>
+                            <th>Features</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>XAI (Grok)</strong></td>
+                            <td>grok-3-fast-beta, grok-3-mini-fast-beta, grok-3-beta</td>
+                            <td>Fast and capable models</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OpenRouter</strong></td>
+                            <td>deepseek-r1-free, llama-3.2-3b-instruct</td>
+                            <td>Free models from various providers</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GitHub Copilot</strong></td>
+                            <td>gpt-4o, claude-3.5-sonnet, o1, gemini-2.0-flash</td>
+                            <td>Free with GitHub subscription</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qwen</strong></td>
+                            <td>Various Qwen models</td>
+                            <td>OAuth2 auth, 2,000 requests/day free</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Premium Providers (Advanced Features)</h3>
+
+                <div class="alert alert-success">
+                    <div class="alert-title">⭐ Anthropic Claude - Industry-Leading AI</div>
+                    <p>The most powerful coding assistant with industry-leading reasoning capabilities:</p>
+                    <ul>
+                        <li><strong>Models</strong>: Claude 4 Sonnet/Opus, Claude 3.7 Sonnet, Claude 3.5 Sonnet/Haiku</li>
+                        <li><strong>Context Windows</strong>: 200K tokens (all models)</li>
+                        <li><strong>Max Output</strong>: Up to 50K tokens (Claude 4/3.7)</li>
+                        <li><strong>Extended Thinking</strong>: Automatic reasoning mode for complex problems</li>
+                        <li><strong>Prompt Caching</strong>: Up to 90% cost reduction on repeated contexts</li>
+                        <li><strong>Tool Caching</strong>: Cache tool definitions for multi-turn conversations</li>
+                        <li><strong>Vision Support</strong>: Analyze images and diagrams</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info">
+                    <div class="alert-title">⭐ Google Gemini - Massive Context</div>
+                    <p>Google's most capable AI models with massive context windows:</p>
+                    <ul>
+                        <li><strong>Models</strong>: Gemini 2.5 Pro/Flash, Gemini 2.0 Flash, Gemini 1.5 Pro/Flash</li>
+                        <li><strong>Context Windows</strong>: Up to 2M tokens (Gemini 2.5 Pro, 1.5 Pro)</li>
+                        <li><strong>Max Output</strong>: 8K tokens</li>
+                        <li><strong>Massive Context</strong>: Handle entire codebases (2M tokens = ~1.5M words)</li>
+                        <li><strong>Multimodal</strong>: Text, images, and code understanding</li>
+                        <li><strong>Flash Models</strong>: Ultra-fast responses with 1M token context</li>
+                        <li><strong>Function Calling</strong>: Native tool integration</li>
+                    </ul>
+                </div>
+
+                <h3>OpenAI</h3>
+                <p>Industry-standard models with broad ecosystem support:</p>
+                <ul>
+                    <li><strong>Models</strong>: GPT-4.1, GPT-4.5 Preview, GPT-4o, O1/O3 (reasoning), O4 Mini</li>
+                    <li><strong>Context Windows</strong>: Up to 1M+ tokens (GPT-4.1)</li>
+                    <li><strong>Features</strong>: Function calling, vision support, reasoning models</li>
+                </ul>
+
+                <h3>Local Models</h3>
+                <ul>
+                    <li><strong>Ollama</strong>: Run any GGUF model locally</li>
+                    <li><strong>Llama.cpp</strong>: Direct llama.cpp integration</li>
+                    <li><strong>Privacy</strong>: 100% offline, no data leaves your machine</li>
+                </ul>
+
+                <h2 id="applications"><span class="anchor">#</span>Applications</h2>
+                <ul>
+                    <li><strong>Desktop</strong>: Full-featured desktop application (Fyne)</li>
+                    <li><strong>Terminal UI</strong>: Terminal-based interface (tview)</li>
+                    <li><strong>Aurora OS</strong>: Specialized Aurora OS client</li>
+                    <li><strong>Symphony OS</strong>: Optimized Symphony OS client</li>
+                    <li><strong>Mobile</strong>: Cross-platform mobile applications</li>
+                </ul>
+            </section>
+
+            <section id="configuration">
+                <h1><span class="anchor">#</span>Configuration</h1>
+                <p>Configuration is managed through YAML files and environment variables. See <code>config/config.yaml</code> for default settings.</p>
+
+                <h3>Key Configuration Areas</h3>
+                <ul>
+                    <li>Server settings (ports, timeouts)</li>
+                    <li>Database connection</li>
+                    <li>Redis configuration</li>
+                    <li>Authentication settings</li>
+                    <li>Worker management</li>
+                    <li>LLM provider settings (XAI, OpenRouter, Copilot, Qwen OAuth2)</li>
+                </ul>
+
+                <h2 id="getting-started-ai"><span class="anchor">#</span>Getting Started with Free AI</h2>
+                <p>HelixCode comes with multiple free AI providers pre-configured:</p>
+
+                <h3>Quick AI Setup</h3>
+                <pre><code class="language-bash"># Use XAI (Grok) - no setup required
+helixcode llm provider set xai
+
+# Use OpenRouter free models
+helixcode llm provider set openrouter
+
+# Use GitHub Copilot (requires GitHub token)
+export GITHUB_TOKEN="your_github_token"
+helixcode llm provider set copilot
+
+# Use Qwen with OAuth2 (interactive setup)
+helixcode llm auth qwen</code></pre>
+
+                <h2 id="environment-variables"><span class="anchor">#</span>Environment Variables</h2>
+
+                <h3>Free Providers</h3>
+                <pre><code class="language-bash"># GitHub Copilot
+export GITHUB_TOKEN="ghp_your_github_token"
+
+# OpenRouter (optional, for higher rate limits)
+export OPENROUTER_API_KEY="sk-or-your-key"
+
+# XAI (optional, for higher rate limits)
+export XAI_API_KEY="xai-your-key"</code></pre>
+
+                <h3>Premium Providers</h3>
+                <pre><code class="language-bash"># Anthropic Claude
+export ANTHROPIC_API_KEY="sk-ant-your-key"
+
+# Google Gemini
+export GEMINI_API_KEY="your-gemini-key"
+# or
+export GOOGLE_API_KEY="your-google-key"
+
+# OpenAI
+export OPENAI_API_KEY="sk-your-openai-key"</code></pre>
+
+                <h3>Quick Setup for New Providers</h3>
+
+                <h4>Anthropic Claude (with Extended Thinking & Prompt Caching)</h4>
+                <pre><code class="language-bash"># Set API key
+export ANTHROPIC_API_KEY="sk-ant-your-key-here"
+
+# Use Claude 4 Sonnet (most powerful)
+helixcode llm provider set anthropic --model claude-4-sonnet
+
+# Or use Claude 3.5 Sonnet (best for coding)
+helixcode llm provider set anthropic --model claude-3-5-sonnet-latest
+
+# Generate code with extended thinking
+helixcode generate "Think carefully: design a distributed cache system"</code></pre>
+
+                <h4>Google Gemini (with 2M token context)</h4>
+                <pre><code class="language-bash"># Set API key
+export GEMINI_API_KEY="your-gemini-key"
+
+# Use Gemini 2.5 Pro (2M context)
+helixcode llm provider set gemini --model gemini-2.5-pro
+
+# Or use Gemini 2.5 Flash (fast with 1M context)
+helixcode llm provider set gemini --model gemini-2.5-flash
+
+# Process entire codebase
+helixcode analyze --full-context --model gemini-2.5-pro</code></pre>
+            </section>
+
+            <section id="api-documentation">
+                <h1><span class="anchor">#</span>API Documentation</h1>
+
+                <h2 id="authentication-endpoints"><span class="anchor">#</span>Authentication Endpoints</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/api/auth/register</code></td>
+                            <td>POST</td>
+                            <td>User registration</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/auth/login</code></td>
+                            <td>POST</td>
+                            <td>User login</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/auth/logout</code></td>
+                            <td>POST</td>
+                            <td>User logout</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/auth/refresh</code></td>
+                            <td>POST</td>
+                            <td>Token refresh</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/auth/me</code></td>
+                            <td>GET</td>
+                            <td>Current user info</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="task-management"><span class="anchor">#</span>Task Management</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/api/tasks</code></td>
+                            <td>GET</td>
+                            <td>List tasks</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/tasks</code></td>
+                            <td>POST</td>
+                            <td>Create task</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/tasks/{id}</code></td>
+                            <td>GET</td>
+                            <td>Get task details</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/tasks/{id}</code></td>
+                            <td>PUT</td>
+                            <td>Update task</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/tasks/{id}</code></td>
+                            <td>DELETE</td>
+                            <td>Delete task</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="worker-management"><span class="anchor">#</span>Worker Management</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Method</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/api/workers</code></td>
+                            <td>GET</td>
+                            <td>List workers</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/workers</code></td>
+                            <td>POST</td>
+                            <td>Register worker</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/workers/{id}</code></td>
+                            <td>GET</td>
+                            <td>Get worker details</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/workers/{id}</code></td>
+                            <td>DELETE</td>
+                            <td>Remove worker</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="development-guide">
+                <h1><span class="anchor">#</span>Development Guide</h1>
+
+                <h3>Building Applications</h3>
+                <pre><code class="language-bash"># Build all applications
+make prod
+
+# Build specific applications
+make aurora-os
+make symphony-os
+
+# Build mobile bindings
+make mobile-ios
+make mobile-android</code></pre>
+
+                <h3>Testing</h3>
+                <pre><code class="language-bash"># Run all tests
+make test
+
+# Run specific test suites
+go test ./internal/auth/...
+go test ./internal/worker/...
+
+# Run with coverage
+go test -cover ./...</code></pre>
+
+                <h3>Code Quality</h3>
+                <pre><code class="language-bash"># Format code
+make fmt
+
+# Lint code
+make lint</code></pre>
+            </section>
+
+            <section id="deployment">
+                <h1><span class="anchor">#</span>Deployment Options</h1>
+
+                <h3>Docker Compose (Recommended)</h3>
+                <p>The production <code>docker-compose.yml</code> includes:</p>
+                <ul>
+                    <li>HelixCode server</li>
+                    <li>PostgreSQL database</li>
+                    <li>Redis cache</li>
+                    <li>Nginx reverse proxy</li>
+                    <li>Prometheus monitoring</li>
+                    <li>Grafana dashboards</li>
+                </ul>
+
+                <h3>Manual Deployment</h3>
+                <ol>
+                    <li>Build the binary: <code>make prod</code></li>
+                    <li>Setup PostgreSQL and Redis</li>
+                    <li>Configure environment variables</li>
+                    <li>Run the server: <code>./bin/helixcode-server</code></li>
+                </ol>
+
+                <h3>Kubernetes</h3>
+                <p>For large-scale deployments, use the provided Kubernetes manifests in the <code>k8s/</code> directory.</p>
+            </section>
+
+            <section id="monitoring">
+                <h1><span class="anchor">#</span>Monitoring</h1>
+                <p>The deployment includes Prometheus and Grafana for monitoring:</p>
+                <ul>
+                    <li>Application metrics</li>
+                    <li>Database performance</li>
+                    <li>Worker health</li>
+                    <li>Task execution stats</li>
+                </ul>
+                <p>Access Grafana at <code>http://localhost:3000</code> (default credentials: admin/admin)</p>
+            </section>
+
+            <section id="security">
+                <h1><span class="anchor">#</span>Security</h1>
+                <ul>
+                    <li>JWT-based authentication</li>
+                    <li>Password hashing with bcrypt</li>
+                    <li>SSH key-based worker authentication</li>
+                    <li>Environment variable configuration</li>
+                    <li>No secrets in code or config files</li>
+                </ul>
+
+                <div class="alert alert-warning">
+                    <div class="alert-title">⚠️ Security Best Practices</div>
+                    <p>Always use strong, unique secrets for production deployments. Never commit secrets to version control.</p>
+                </div>
+            </section>
+
+            <section id="contributing">
+                <h1><span class="anchor">#</span>Contributing</h1>
+                <ol>
+                    <li>Fork the repository</li>
+                    <li>Create a feature branch</li>
+                    <li>Make your changes</li>
+                    <li>Add tests</li>
+                    <li>Submit a pull request</li>
+                </ol>
+
+                <div class="alert alert-success">
+                    <div class="alert-title">🎉 We Welcome Contributions!</div>
+                    <p>Whether it's bug fixes, new features, or documentation improvements, we appreciate all contributions to HelixCode.</p>
+                </div>
+            </section>
+
+            <div class="timestamp">
+                Generated on: <span id="timestamp"></span>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 HelixCode. All rights reserved. | <a href="https://github.com/helixcode/helixcode" target="_blank">GitHub</a> | <a href="https://docs.helixcode.dev" target="_blank">Documentation</a></p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Active section highlighting
+        const sections = document.querySelectorAll('section[id]');
+        const tocLinks = document.querySelectorAll('.toc-link');
+
+        function highlightActiveSection() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', highlightActiveSection);
+        highlightActiveSection();
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const content = document.querySelector('.content');
+            const sections = content.querySelectorAll('section');
+
+            sections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                if (text.includes(searchTerm) || searchTerm === '') {
+                    section.style.display = '';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        });
+
+        // Smooth scrolling for anchor links
+        tocLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const target = document.querySelector(targetId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Close mobile menu
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+
+        // Set timestamp
+        const timestamp = document.getElementById('timestamp');
+        timestamp.textContent = new Date().toLocaleString();
+
+        // Set last updated date
+        const lastUpdated = document.getElementById('lastUpdated');
+        lastUpdated.textContent = new Date().toLocaleDateString();
+    </script>
+</body>
+</html>

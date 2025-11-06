@@ -31,6 +31,17 @@ redis:
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
 	require.NoError(t, err)
 
+	// Clear any environment variables that might override config file
+	oldJWTSecret := os.Getenv("HELIX_AUTH_JWT_SECRET")
+	defer func() {
+		if oldJWTSecret != "" {
+			os.Setenv("HELIX_AUTH_JWT_SECRET", oldJWTSecret)
+		} else {
+			os.Unsetenv("HELIX_AUTH_JWT_SECRET")
+		}
+	}()
+	os.Unsetenv("HELIX_AUTH_JWT_SECRET")
+
 	// Set config path environment variable
 	oldConfig := os.Getenv("HELIX_CONFIG")
 	defer os.Setenv("HELIX_CONFIG", oldConfig)

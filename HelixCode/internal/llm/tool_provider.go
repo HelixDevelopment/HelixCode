@@ -54,17 +54,15 @@ type EnhancedLLMProvider interface {
 
 // ToolCallingProvider implements EnhancedLLMProvider with tool calling support
 type ToolCallingProvider struct {
-	baseProvider    Provider
-	tools           map[string]Tool
-	reasoningEngine *ReasoningEngine
+	baseProvider Provider
+	tools        map[string]Tool
 }
 
 // NewToolCallingProvider creates a new tool calling provider
 func NewToolCallingProvider(baseProvider Provider) *ToolCallingProvider {
 	return &ToolCallingProvider{
-		baseProvider:    baseProvider,
-		tools:           make(map[string]Tool),
-		reasoningEngine: NewReasoningEngine(baseProvider),
+		baseProvider: baseProvider,
+		tools:        make(map[string]Tool),
 	}
 }
 
@@ -247,21 +245,6 @@ func (p *ToolCallingProvider) RegisterTool(tool Tool) error {
 		return fmt.Errorf("tool %s already registered", tool.Function.Name)
 	}
 	p.tools[tool.Function.Name] = tool
-
-	// Also register with reasoning engine
-	if p.reasoningEngine != nil {
-		// Convert Tool to ReasoningTool
-		reasoningTool := ReasoningTool{
-			Name:        tool.Function.Name,
-			Description: tool.Function.Description,
-			Parameters:  tool.Function.Parameters,
-			Handler: func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-				// This would need to be implemented based on the actual tool functionality
-				return "tool_executed", nil
-			},
-		}
-		p.reasoningEngine.RegisterTool(reasoningTool)
-	}
 
 	log.Printf("Tool registered: %s", tool.Function.Name)
 	return nil

@@ -1,0 +1,101 @@
+# Azure OpenAI Provider Configuration Example
+# This file demonstrates all available configuration options for the Azure provider
+
+llm:
+  providers:
+    # Example 1: Basic API Key Authentication
+    azure_basic:
+      type: "azure"
+      enabled: true
+      api_key: "${AZURE_OPENAI_API_KEY}"  # Or set directly
+      endpoint: "https://myresource.openai.azure.com"
+      api_version: "2025-04-01-preview"  # Latest stable API version
+
+      # Deployment mapping: model name -> deployment name
+      deployment_map:
+        gpt-4-turbo: "my-gpt4-turbo-deployment"
+        gpt-35-turbo: "my-gpt35-deployment"
+        gpt-4o: "my-gpt4o-deployment"
+        gpt-4o-mini: "my-gpt4o-mini-deployment"
+        o1-preview: "my-o1-deployment"
+        text-embedding-3-large: "my-embeddings-deployment"
+
+      models:
+        - "gpt-4-turbo"
+        - "gpt-35-turbo"
+        - "gpt-4o"
+        - "gpt-4o-mini"
+        - "o1-preview"
+
+    # Example 2: Microsoft Entra ID (formerly Azure AD) Authentication
+    azure_entra:
+      type: "azure"
+      enabled: true
+      endpoint: "https://myresource.openai.azure.com"
+      api_version: "2025-04-01-preview"
+
+      # Enable Entra ID authentication (no API key needed)
+      use_entra_id: true
+
+      # Optional: Use managed identity
+      managed_identity: false
+
+      # Optional: For user-assigned managed identity
+      # managed_identity_client_id: "00000000-0000-0000-0000-000000000000"
+
+      deployment_map:
+        gpt-4-turbo: "production-gpt4"
+        gpt-35-turbo: "production-gpt35"
+
+    # Example 3: Using deployment map from JSON file
+    azure_from_file:
+      type: "azure"
+      enabled: true
+      api_key: "${AZURE_OPENAI_API_KEY}"
+      endpoint: "https://myresource.openai.azure.com"
+      api_version: "2025-04-01-preview"
+
+      # Load deployment map from external JSON file
+      deployment_map: "/etc/helixcode/azure-deployments.json"
+
+    # Example 4: Using environment variables
+    azure_env:
+      type: "azure"
+      enabled: true
+      # API key from AZURE_OPENAI_API_KEY env var
+      # Endpoint from AZURE_OPENAI_ENDPOINT env var
+      # API version from AZURE_API_VERSION env var
+      # Deployment map from AZURE_DEPLOYMENTS_MAP env var
+
+  # Default provider to use
+  default_provider: "azure_basic"
+
+  # General LLM settings
+  max_tokens: 4096
+  temperature: 0.7
+  timeout: 120
+
+# Environment variables to set:
+# export AZURE_OPENAI_API_KEY="your-api-key-here"
+# export AZURE_OPENAI_ENDPOINT="https://myresource.openai.azure.com"
+# export AZURE_API_VERSION="2025-04-01-preview"
+# export AZURE_DEPLOYMENTS_MAP='{"gpt-4-turbo":"my-deployment"}'
+
+# For Entra ID authentication:
+# export AZURE_TENANT_ID="your-tenant-id"
+# export AZURE_CLIENT_ID="your-client-id"
+# export AZURE_CLIENT_SECRET="your-client-secret"
+
+# Example deployment map JSON file (/etc/helixcode/azure-deployments.json):
+# {
+#   "gpt-4-turbo": "production-gpt4-turbo-deployment",
+#   "gpt-4": "production-gpt4-deployment",
+#   "gpt-35-turbo": "production-gpt35-deployment",
+#   "gpt-4-vision-preview": "vision-deployment",
+#   "gpt-4o": "gpt4o-deployment",
+#   "gpt-4o-mini": "gpt4o-mini-deployment",
+#   "o1-preview": "o1-reasoning-deployment",
+#   "o1-mini": "o1-mini-deployment",
+#   "text-embedding-3-large": "embeddings-large-deployment",
+#   "text-embedding-ada-002": "embeddings-ada-deployment"
+# }

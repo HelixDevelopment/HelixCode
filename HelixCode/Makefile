@@ -1,4 +1,4 @@
-.PHONY: all build test clean logo-assets setup-deps
+.PHONY: all build test clean logo-assets setup-deps sync-manual manual-html docs release
 
 # Build variables
 BINARY_NAME=helixcode
@@ -88,33 +88,72 @@ logo-deps:
 	@echo "✅ Logo dependencies installed"
 
 # Generate all assets (logo + documentation)
-assets: logo-assets
-	@echo "📚 Generating documentation..."
-	# Documentation generation will be added later
+assets: logo-assets sync-manual
 	@echo "✅ All assets generated"
+
+# Sync user manual to website
+sync-manual:
+	@echo "📚 Syncing user manual to website..."
+	$(SCRIPTS_DIR)/sync-manual.sh
+	@echo "✅ Manual synced"
+
+# Convert manual Markdown to HTML
+manual-html:
+	@echo "📄 Converting manual to HTML..."
+	@if command -v pandoc > /dev/null; then \
+		mkdir -p website/manual; \
+		pandoc docs/USER_MANUAL.md -f markdown -t html5 --standalone --toc --toc-depth=3 \
+			--css=style.css --metadata title="HelixCode User Manual" \
+			-o website/manual/USER_MANUAL.html; \
+		echo "✅ HTML manual generated"; \
+	else \
+		echo "⚠️  pandoc not installed - skipping HTML conversion"; \
+		echo "   Install with: brew install pandoc (macOS) or apt-get install pandoc (Linux)"; \
+	fi
+
+# Build documentation
+docs: manual-html sync-manual
+	@echo "📚 Building documentation..."
+	@echo "✅ Documentation built"
+
+# Release build with all assets and documentation
+release: clean logo-assets docs build test
+	@echo "🚀 Building release..."
+	@echo "✅ Release build complete"
 
 help:
 	@echo "HelixCode Build System"
 	@echo ""
 	@echo "Usage:"
-	@echo "  make build         - Build the application"
-	@echo "  make test          - Run tests"
-	@echo "  make clean         - Clean build artifacts"
-	@echo "  make logo-assets   - Generate logo assets and themes"
-	@echo "  make setup-deps    - Setup dependencies"
-	@echo "  make fmt           - Format code"
-	@echo "  make lint          - Lint code"
-	@echo "  make dev           - Run development server"
-	@echo "  make prod          - Build for production"
-	@echo "  make assets        - Generate all assets"
-	@echo "  make mobile-init   - Initialize gomobile"
-	@echo "  make mobile-ios    - Build iOS framework"
-	@echo "  make mobile-android- Build Android AAR"
-	@echo "  make mobile        - Build all mobile bindings"
-	@echo "  make aurora-os     - Build Aurora OS client"
-	@echo "  make symphony-os   - Build Symphony OS client"
+	@echo "  make build           - Build the application"
+	@echo "  make test            - Run tests"
+	@echo "  make clean           - Clean build artifacts"
+	@echo "  make logo-assets     - Generate logo assets and themes"
+	@echo "  make setup-deps      - Setup dependencies"
+	@echo "  make fmt             - Format code"
+	@echo "  make lint            - Lint code"
+	@echo "  make dev             - Run development server"
+	@echo "  make prod            - Build for production"
+	@echo "  make assets          - Generate all assets"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  make sync-manual     - Sync user manual to website"
+	@echo "  make manual-html     - Convert manual Markdown to HTML"
+	@echo "  make docs            - Build all documentation"
+	@echo "  make release         - Full release build (code + docs + tests)"
+	@echo ""
+	@echo "Mobile:"
+	@echo "  make mobile-init     - Initialize gomobile"
+	@echo "  make mobile-ios      - Build iOS framework"
+	@echo "  make mobile-android  - Build Android AAR"
+	@echo "  make mobile          - Build all mobile bindings"
+	@echo ""
+	@echo "Platform-Specific:"
+	@echo "  make aurora-os       - Build Aurora OS client"
+	@echo "  make symphony-os     - Build Symphony OS client"
 	@echo "  make aurora-symphony - Build Aurora and Symphony OS clients"
-	@echo "  make help          - Show this help"
+	@echo ""
+	@echo "  make help            - Show this help"
 
 # Mobile build targets
 mobile-init:

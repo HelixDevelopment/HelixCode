@@ -1,0 +1,174 @@
+# Provider-Specific Configurations
+# Examples for all 14+ LLM providers
+
+# === Premium Providers ===
+
+anthropic:
+  type: "anthropic"
+  api_key: "${ANTHROPIC_API_KEY}"
+  enabled: true
+  models:
+    - "claude-4-sonnet"
+    - "claude-3-5-sonnet-latest"
+    - "claude-3-5-haiku-latest"
+  default_model: "claude-3-5-sonnet-latest"
+  
+  # Advanced features
+  enable_caching: true
+  enable_thinking: true
+  max_tokens: 8192
+
+gemini:
+  type: "gemini"
+  api_key: "${GEMINI_API_KEY}"
+  enabled: true
+  models:
+    - "gemini-2.5-pro"
+    - "gemini-2.5-flash"
+    - "gemini-2.0-flash"
+  default_model: "gemini-2.5-flash"
+  max_tokens: 8192
+  
+  # Safety settings
+  safety_settings:
+    harassment: "BLOCK_ONLY_HIGH"
+    hate_speech: "BLOCK_ONLY_HIGH"
+    sexually_explicit: "BLOCK_ONLY_HIGH"
+    dangerous_content: "BLOCK_ONLY_HIGH"
+
+openai:
+  type: "openai"
+  api_key: "${OPENAI_API_KEY}"
+  enabled: true
+  models:
+    - "gpt-4.1"
+    - "gpt-4o"
+    - "o1"
+  default_model: "gpt-4o"
+  organization: ""  # Optional
+
+bedrock:
+  type: "bedrock"
+  region: "us-east-1"
+  enabled: true
+  models:
+    - "anthropic.claude-4-sonnet-v1"
+    - "anthropic.claude-3-5-sonnet-v2"
+  default_model: "anthropic.claude-3-5-sonnet-v2"
+  
+  # AWS credentials (uses default chain if not specified)
+  access_key_id: "${AWS_ACCESS_KEY_ID}"
+  secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+
+azure:
+  type: "azure"
+  endpoint: "${AZURE_OPENAI_ENDPOINT}"
+  api_key: "${AZURE_OPENAI_API_KEY}"
+  enabled: true
+  
+  # Deployment mappings
+  deployments:
+    gpt4o:
+      model: "gpt-4o"
+      deployment_name: "gpt-4o-deployment"
+  default_deployment: "gpt4o"
+
+vertexai:
+  type: "vertexai"
+  project_id: "${GOOGLE_CLOUD_PROJECT}"
+  location: "us-central1"
+  enabled: true
+  models:
+    - "gemini-2.5-pro"
+    - "claude-4-sonnet@001"
+  default_model: "gemini-2.5-pro"
+
+groq:
+  type: "groq"
+  api_key: "${GROQ_API_KEY}"
+  enabled: true
+  models:
+    - "llama-3.3-70b-versatile"
+    - "mixtral-8x7b-32768"
+  default_model: "llama-3.3-70b-versatile"
+
+mistral:
+  type: "mistral"
+  api_key: "${MISTRAL_API_KEY}"
+  enabled: true
+  models:
+    - "mistral-large-latest"
+    - "codestral"
+  default_model: "mistral-large-latest"
+
+# === Free/Open Providers ===
+
+xai:
+  type: "xai"
+  api_key: "${XAI_API_KEY}"  # Optional for basic usage
+  enabled: true
+  models:
+    - "grok-3-beta"
+    - "grok-3-fast-beta"
+  default_model: "grok-3-fast-beta"
+
+openrouter:
+  type: "openrouter"
+  api_key: "${OPENROUTER_API_KEY}"  # Optional for free models
+  enabled: true
+  models:
+    - "deepseek-r1-free"
+    - "meta-llama/llama-3.2-3b-instruct:free"
+  default_model: "deepseek-r1-free"
+  
+  # Fallback models
+  fallback_models:
+    - "deepseek-r1-free"
+    - "meta-llama/llama-3.2-3b-instruct:free"
+
+copilot:
+  type: "copilot"
+  github_token: "${GITHUB_TOKEN}"
+  enabled: true
+  models:
+    - "claude-3.5-sonnet"
+    - "gpt-4o"
+    - "gemini-2.0-flash"
+  default_model: "claude-3.5-sonnet"
+
+qwen:
+  type: "qwen"
+  enabled: true
+  oauth:
+    enabled: true
+    refresh_token_path: "~/.helixcode/qwen_token.json"
+  models:
+    - "qwen-max"
+    - "qwen-plus"
+  default_model: "qwen-plus"
+
+ollama:
+  type: "local"
+  url: "http://localhost:11434"
+  enabled: true
+  models:
+    - "llama3:8b"
+    - "llama3:70b"
+    - "codellama:13b"
+    - "mistral:7b"
+  default_model: "llama3:8b"
+  
+  # Local inference settings
+  num_ctx: 4096
+  num_gpu: -1  # Use all GPU layers
+
+llamacpp:
+  type: "llamacpp"
+  url: "http://localhost:8080"
+  enabled: true
+  model_path: "/models/llama-2-13b-chat.Q4_K_M.gguf"
+  
+  # Performance tuning
+  n_ctx: 4096
+  n_gpu_layers: -1
+  n_threads: 8

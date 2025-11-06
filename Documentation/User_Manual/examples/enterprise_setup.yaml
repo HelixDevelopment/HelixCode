@@ -1,0 +1,248 @@
+# Enterprise Production Setup
+# High availability, security, monitoring
+
+server:
+  address: "0.0.0.0"
+  port: 80
+  read_timeout: 60s
+  write_timeout: 60s
+  idle_timeout: 120s
+  max_request_size: 52428800  # 50MB
+
+  # Rate limiting
+  rate_limit:
+    enabled: true
+    requests_per_second: 100
+    burst: 200
+
+  # CORS
+  cors:
+    enabled: true
+    allowed_origins: ["https://app.company.com"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE"]
+
+database:
+  host: "postgres-primary.internal"
+  port: 5432
+  user: "helixcode"
+  password: ""  # From secret manager
+  dbname: "helixcode_prod"
+  sslmode: "require"
+  
+  # High availability
+  max_connections: 100
+  max_idle_connections: 25
+  connection_timeout: 10s
+  query_timeout: 30s
+  
+  # Read replicas
+  replicas:
+    - host: "postgres-replica-1.internal"
+      port: 5432
+    - host: "postgres-replica-2.internal"
+      port: 5432
+
+redis:
+  enabled: true
+  host: "redis-cluster.internal"
+  port: 6379
+  password: ""  # From secret manager
+  pool_size: 50
+  max_retries: 3
+  
+  # Sentinel for HA
+  sentinel:
+    enabled: true
+    master_name: "helixcode"
+    sentinels:
+      - "sentinel-1.internal:26379"
+      - "sentinel-2.internal:26379"
+      - "sentinel-3.internal:26379"
+
+auth:
+  jwt_secret: ""  # From secret manager
+  token_expiry: 3600  # 1 hour
+  refresh_expiry: 2592000  # 30 days
+  bcrypt_cost: 14
+  max_login_attempts: 3
+  lockout_duration: 1800  # 30 minutes
+  
+  # SSO integration
+  sso:
+    enabled: true
+    provider: "okta"
+    issuer: "https://company.okta.com"
+    client_id: "${OKTA_CLIENT_ID}"
+
+llm:
+  default_provider: "anthropic"
+  
+  # Provider fallback chain
+  fallback:
+    enabled: true
+    providers:
+      - "anthropic/claude-3-5-sonnet-latest"
+      - "openai/gpt-4o"
+      - "azure/gpt-4o-deployment"
+  
+  # Cost management
+  budget:
+    enabled: true
+    monthly_limit: 10000  # $10,000/month
+    alert_threshold: 0.8  # Alert at 80%
+
+workers:
+  health_check_interval: 30s
+  max_concurrent_tasks: 50
+  task_timeout: 7200s  # 2 hours
+  
+  # Auto-scaling
+  auto_scale:
+    enabled: true
+    min_workers: 3
+    max_workers: 20
+    scale_up_threshold: 0.8  # CPU > 80%
+    scale_down_threshold: 0.3  # CPU < 30%
+
+tools:
+  shell:
+    enable_sandbox: true
+    allowlist: ["git"]  # Minimal in production
+    blocklist: ["rm", "dd", "mkfs", "sudo", "curl", "wget"]
+  
+  confirmation:
+    enabled: true
+    require_for_risk_levels: ["low", "medium", "high", "critical"]
+
+workflow:
+  autonomy:
+    default_mode: "basic"  # Require approval
+    allow_escalation: false
+  
+  snapshots:
+    enabled: true
+    auto_create: true
+    auto_create_interval: 1800s  # 30 minutes
+    max_snapshots: 1000
+    retention_days: 90
+
+logging:
+  level: "info"
+  format: "json"
+  output: "file"
+  file: "/var/log/helixcode/app.log"
+  
+  # Log rotation
+  max_size: 100
+  max_backups: 30
+  max_age: 90
+  compress: true
+  
+  # Audit logging
+  audit:
+    enabled: true
+    file: "/var/log/helixcode/audit.log"
+    events:
+      - "auth.*"
+      - "tool.shell.execute"
+      - "tool.filesystem.delete"
+      - "workflow.snapshot.*"
+    retention_days: 365
+
+monitoring:
+  enabled: true
+  
+  # Prometheus
+  prometheus:
+    enabled: true
+    port: 9090
+    path: "/metrics"
+  
+  # Grafana
+  grafana:
+    enabled: true
+    port: 3000
+  
+  # Alerts
+  alerts:
+    enabled: true
+    channels: ["pagerduty", "slack", "email"]
+    rules:
+      - name: "High Error Rate"
+        condition: "error_rate > 0.05"
+        severity: "critical"
+      - name: "Database Connection Pool Exhausted"
+        condition: "db_connections >= 95"
+        severity: "high"
+      - name: "Worker Unhealthy"
+        condition: "worker_health == unhealthy"
+        severity: "high"
+
+notifications:
+  enabled: true
+  
+  channels:
+    pagerduty:
+      enabled: true
+      api_key: "${PAGERDUTY_API_KEY}"
+      service_id: "${PAGERDUTY_SERVICE_ID}"
+    
+    slack:
+      enabled: true
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#ops-alerts"
+    
+    email:
+      enabled: true
+      smtp:
+        server: "smtp.company.com"
+        port: 587
+        username: "${EMAIL_USERNAME}"
+        password: "${EMAIL_PASSWORD}"
+        from: "helixcode@company.com"
+      recipients: ["ops@company.com"]
+
+# Backup and disaster recovery
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention:
+    daily: 7
+    weekly: 4
+    monthly: 12
+  
+  destinations:
+    - type: "s3"
+      bucket: "company-backups"
+      prefix: "helixcode/"
+    - type: "gcs"
+      bucket: "company-backups-gcs"
+      prefix: "helixcode/"
+
+# Compliance
+compliance:
+  gdpr:
+    enabled: true
+    data_retention_days: 365
+  
+  sox:
+    enabled: true
+    audit_all_actions: true
+  
+  hipaa:
+    enabled: false
+
+# Security
+security:
+  encryption:
+    at_rest: true
+    in_transit: true
+  
+  vulnerability_scanning:
+    enabled: true
+    schedule: "0 3 * * *"
+  
+  secrets_manager:
+    type: "vault"  # HashiCorp Vault
+    address: "https://vault.company.com"
+    token: "${VAULT_TOKEN}"

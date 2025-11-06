@@ -3,329 +3,507 @@ package llm
 import (
 	"context"
 	"fmt"
-	"log"
+	"regexp"
 	"strings"
-	"time"
-
-	"github.com/google/uuid"
 )
 
-// ReasoningRequest represents a request for reasoning-based generation
-type ReasoningRequest struct {
-	ID            uuid.UUID
-	Prompt        string
-	Tools         []ReasoningTool
-	ReasoningType ReasoningType
-	MaxSteps      int
-	Temperature   float64
-	Context       map[string]interface{}
-	Constraints   []string
+// ReasoningConfig holds configuration for reasoning model support
+type ReasoningConfig struct {
+	// Enabled indicates whether reasoning mode is enabled
+	Enabled bool `json:"enabled"`
+
+	// ExtractThinking determines if thinking blocks should be extracted
+	ExtractThinking bool `json:"extract_thinking"`
+
+	// HideFromUser determines if thinking should be hidden from the end user
+	HideFromUser bool `json:"hide_from_user"`
+
+	// ThinkingTags specifies the XML tags used for thinking blocks (e.g., "thinking", "internal_thoughts")
+	ThinkingTags string `json:"thinking_tags"`
+
+	// ThinkingBudget specifies the token budget for thinking (0 = unlimited)
+	ThinkingBudget int `json:"thinking_budget"`
+
+	// ReasoningEffort specifies the effort level for reasoning models
+	// Valid values: "low", "medium", "high"
+	ReasoningEffort string `json:"reasoning_effort"`
+
+	// Model-specific configuration
+	ModelType ReasoningModelType `json:"model_type"`
 }
 
-// ReasoningResponse represents the response from reasoning-based generation
-type ReasoningResponse struct {
-	ID             uuid.UUID
-	FinalAnswer    string
-	ReasoningSteps []ReasoningStep
-	ToolsUsed      []string
-	Duration       time.Duration
-	Confidence     float64
-	Error          string
-}
-
-// ReasoningStep represents a single step in the reasoning process
-type ReasoningStep struct {
-	StepNumber int
-	Thought    string
-	Action     string
-	ToolCall   *ReasoningToolCall
-	Result     interface{}
-	Confidence float64
-}
-
-// ReasoningToolCall represents a call to a tool during reasoning
-type ReasoningToolCall struct {
-	ToolName  string                 `json:"tool_name"`
-	Arguments map[string]interface{} `json:"arguments"`
-}
-
-// ReasoningType defines different types of reasoning approaches
-type ReasoningType string
+// ReasoningModelType identifies the type of reasoning model
+type ReasoningModelType string
 
 const (
-	ReasoningTypeChainOfThought ReasoningType = "chain_of_thought"
-	ReasoningTypeTreeOfThoughts ReasoningType = "tree_of_thoughts"
-	ReasoningTypeSelfReflection ReasoningType = "self_reflection"
-	ReasoningTypeProgressive    ReasoningType = "progressive"
+	// OpenAI o1/o3/o4 series
+	ReasoningModelOpenAI_O1     ReasoningModelType = "openai_o1"
+	ReasoningModelOpenAI_O3     ReasoningModelType = "openai_o3"
+	ReasoningModelOpenAI_O4     ReasoningModelType = "openai_o4"
+
+	// Claude reasoning modes
+	ReasoningModelClaude_Opus   ReasoningModelType = "claude_opus"
+	ReasoningModelClaude_Sonnet ReasoningModelType = "claude_sonnet"
+
+	// DeepSeek reasoning models
+	ReasoningModelDeepSeek_R1       ReasoningModelType = "deepseek_r1"
+	ReasoningModelDeepSeek_Reasoner ReasoningModelType = "deepseek_reasoner"
+
+	// QwQ-32B reasoning model
+	ReasoningModelQwQ_32B ReasoningModelType = "qwq_32b"
+
+	// Generic reasoning model
+	ReasoningModelGeneric ReasoningModelType = "generic"
 )
 
-// ReasoningTool represents a tool that can be used during reasoning
-type ReasoningTool struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Parameters  map[string]interface{} `json:"parameters"`
-	Handler     ReasoningToolHandler   `json:"-"`
+// ReasoningEffortLevel defines the effort level for reasoning
+type ReasoningEffortLevel string
+
+const (
+	ReasoningEffortLow    ReasoningEffortLevel = "low"
+	ReasoningEffortMedium ReasoningEffortLevel = "medium"
+	ReasoningEffortHigh   ReasoningEffortLevel = "high"
+)
+
+// ReasoningTrace represents extracted reasoning/thinking information
+type ReasoningTrace struct {
+	// ThinkingContent contains the extracted thinking blocks
+	ThinkingContent []string `json:"thinking_content"`
+
+	// OutputContent contains the final output without thinking
+	OutputContent string `json:"output_content"`
+
+	// ThinkingTokens tracks tokens used for thinking
+	ThinkingTokens int `json:"thinking_tokens"`
+
+	// OutputTokens tracks tokens used for output
+	OutputTokens int `json:"output_tokens"`
+
+	// TotalTokens is the sum of thinking and output tokens
+	TotalTokens int `json:"total_tokens"`
 }
 
-// ReasoningToolHandler is the function signature for tool execution in reasoning
-type ReasoningToolHandler func(ctx context.Context, args map[string]interface{}) (interface{}, error)
-
-// ReasoningEngine handles advanced reasoning capabilities
-type ReasoningEngine struct {
-	provider    Provider
-	tools       map[string]ReasoningTool
-	maxSteps    int
-	temperature float64
-}
-
-// NewReasoningEngine creates a new reasoning engine
-func NewReasoningEngine(provider Provider) *ReasoningEngine {
-	return &ReasoningEngine{
-		provider:    provider,
-		tools:       make(map[string]ReasoningTool),
-		maxSteps:    10,
-		temperature: 0.7,
+// DefaultReasoningConfig returns a default reasoning configuration
+func DefaultReasoningConfig() *ReasoningConfig {
+	return &ReasoningConfig{
+		Enabled:         false,
+		ExtractThinking: true,
+		HideFromUser:    false,
+		ThinkingTags:    "thinking",
+		ThinkingBudget:  0, // unlimited
+		ReasoningEffort: string(ReasoningEffortMedium),
+		ModelType:       ReasoningModelGeneric,
 	}
 }
 
-// RegisterTool registers a tool with the reasoning engine
-func (e *ReasoningEngine) RegisterTool(tool ReasoningTool) error {
-	if tool.Name == "" {
-		return fmt.Errorf("tool name cannot be empty")
+// NewReasoningConfig creates a new reasoning config for a specific model
+func NewReasoningConfig(modelType ReasoningModelType) *ReasoningConfig {
+	config := DefaultReasoningConfig()
+	config.ModelType = modelType
+	config.Enabled = true
+
+	// Set model-specific defaults
+	switch modelType {
+	case ReasoningModelOpenAI_O1, ReasoningModelOpenAI_O3, ReasoningModelOpenAI_O4:
+		config.ThinkingTags = "thinking"
+		config.ExtractThinking = true
+		config.HideFromUser = false
+		config.ThinkingBudget = 10000 // OpenAI o1 uses thinking tokens
+
+	case ReasoningModelClaude_Opus, ReasoningModelClaude_Sonnet:
+		config.ThinkingTags = "thinking"
+		config.ExtractThinking = true
+		config.HideFromUser = false
+		config.ThinkingBudget = 5000 // Claude extended thinking budget
+
+	case ReasoningModelDeepSeek_R1, ReasoningModelDeepSeek_Reasoner:
+		config.ThinkingTags = "think"
+		config.ExtractThinking = true
+		config.HideFromUser = false
+		config.ThinkingBudget = 8000
+
+	case ReasoningModelQwQ_32B:
+		config.ThinkingTags = "thinking"
+		config.ExtractThinking = true
+		config.HideFromUser = false
+		config.ThinkingBudget = 7000
 	}
-	if tool.Handler == nil {
-		return fmt.Errorf("tool handler cannot be nil")
-	}
-	if _, exists := e.tools[tool.Name]; exists {
-		return fmt.Errorf("tool %s already registered", tool.Name)
-	}
-	e.tools[tool.Name] = tool
-	log.Printf("Reasoning tool registered: %s", tool.Name)
-	return nil
+
+	return config
 }
 
-// GenerateWithReasoning performs reasoning-based generation
-func (e *ReasoningEngine) GenerateWithReasoning(ctx context.Context, req ReasoningRequest) (*ReasoningResponse, error) {
-	startTime := time.Now()
-	response := &ReasoningResponse{
-		ID:             uuid.New(),
-		ReasoningSteps: []ReasoningStep{},
-		ToolsUsed:      []string{},
+// ExtractReasoningTrace extracts thinking blocks and separates them from output
+func ExtractReasoningTrace(content string, config *ReasoningConfig) *ReasoningTrace {
+	if !config.Enabled || !config.ExtractThinking {
+		return &ReasoningTrace{
+			ThinkingContent: []string{},
+			OutputContent:   content,
+			ThinkingTokens:  0,
+			OutputTokens:    estimateTokens(content),
+			TotalTokens:     estimateTokens(content),
+		}
 	}
 
-	// Validate request
-	if err := e.validateRequest(req); err != nil {
-		response.Error = err.Error()
-		return response, err
+	trace := &ReasoningTrace{
+		ThinkingContent: []string{},
 	}
 
-	// Execute reasoning based on type
-	var err error
-	switch req.ReasoningType {
-	case ReasoningTypeChainOfThought:
-		err = e.executeChainOfThought(ctx, req, response)
-	case ReasoningTypeTreeOfThoughts:
-		err = e.executeTreeOfThoughts(ctx, req, response)
-	case ReasoningTypeSelfReflection:
-		err = e.executeSelfReflection(ctx, req, response)
-	case ReasoningTypeProgressive:
-		err = e.executeProgressiveReasoning(ctx, req, response)
-	default:
-		err = fmt.Errorf("unsupported reasoning type: %s", req.ReasoningType)
+	// Extract thinking blocks based on configured tags
+	tags := strings.Split(config.ThinkingTags, ",")
+	remainingContent := content
+
+	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
+		thinkingBlocks, cleanContent := extractThinkingBlocks(remainingContent, tag)
+		trace.ThinkingContent = append(trace.ThinkingContent, thinkingBlocks...)
+		remainingContent = cleanContent
 	}
 
-	response.Duration = time.Since(startTime)
-	if err != nil {
-		response.Error = err.Error()
-	}
+	trace.OutputContent = strings.TrimSpace(remainingContent)
 
-	return response, err
+	// Calculate token counts
+	for _, thinking := range trace.ThinkingContent {
+		trace.ThinkingTokens += estimateTokens(thinking)
+	}
+	trace.OutputTokens = estimateTokens(trace.OutputContent)
+	trace.TotalTokens = trace.ThinkingTokens + trace.OutputTokens
+
+	return trace
 }
 
-// executeChainOfThought implements chain-of-thought reasoning
-func (e *ReasoningEngine) executeChainOfThought(ctx context.Context, req ReasoningRequest, response *ReasoningResponse) error {
-	currentThought := req.Prompt
-	step := 1
+// extractThinkingBlocks extracts content from specified XML-style tags
+func extractThinkingBlocks(content string, tag string) ([]string, string) {
+	var blocks []string
 
-	for step <= req.MaxSteps {
-		// Generate next thought step
-		thoughtPrompt := e.buildChainOfThoughtPrompt(currentThought, step, req.MaxSteps)
-		thought, err := e.generateThought(ctx, thoughtPrompt, req.Temperature)
-		if err != nil {
-			return fmt.Errorf("failed to generate thought at step %d: %v", step, err)
+	// Create regex pattern for opening and closing tags
+	// Handles both <tag> and <tag ...> formats
+	// (?s) enables dot to match newlines (DOTALL mode)
+	pattern := fmt.Sprintf(`(?s)<%s[^>]*>(.*?)</%s>`, regexp.QuoteMeta(tag), regexp.QuoteMeta(tag))
+	re := regexp.MustCompile(pattern)
+
+	// Extract all thinking blocks
+	matches := re.FindAllStringSubmatch(content, -1)
+	for _, match := range matches {
+		if len(match) > 1 {
+			blocks = append(blocks, strings.TrimSpace(match[1]))
+		}
+	}
+
+	// Remove thinking blocks from content
+	cleanContent := re.ReplaceAllString(content, "")
+
+	return blocks, cleanContent
+}
+
+// ApplyReasoningBudget enforces token budget constraints for reasoning
+func ApplyReasoningBudget(trace *ReasoningTrace, config *ReasoningConfig) *ReasoningTrace {
+	if !config.Enabled || config.ThinkingBudget == 0 {
+		return trace
+	}
+
+	// If thinking tokens exceed budget, truncate thinking content
+	if trace.ThinkingTokens > config.ThinkingBudget {
+		budgetedTrace := &ReasoningTrace{
+			ThinkingContent: []string{},
+			OutputContent:   trace.OutputContent,
+			OutputTokens:    trace.OutputTokens,
 		}
 
-		// Check if we have a final answer
-		if e.isFinalAnswer(thought) {
-			response.FinalAnswer = e.extractFinalAnswer(thought)
-			break
-		}
+		remainingBudget := config.ThinkingBudget
 
-		// Check if we need to use tools
-		toolCall, shouldUseTool := e.shouldUseTool(thought)
-		var result interface{}
-		if shouldUseTool {
-			result, err = e.executeTool(ctx, toolCall)
-			if err != nil {
-				log.Printf("Tool execution failed: %v", err)
-				// Continue reasoning even if tool fails
-				result = fmt.Sprintf("Tool error: %v", err)
+		for _, thinking := range trace.ThinkingContent {
+			thinkingTokens := estimateTokens(thinking)
+
+			if remainingBudget >= thinkingTokens {
+				budgetedTrace.ThinkingContent = append(budgetedTrace.ThinkingContent, thinking)
+				budgetedTrace.ThinkingTokens += thinkingTokens
+				remainingBudget -= thinkingTokens
+			} else if remainingBudget > 0 {
+				// Truncate the last block to fit budget
+				truncated := truncateToTokenBudget(thinking, remainingBudget)
+				budgetedTrace.ThinkingContent = append(budgetedTrace.ThinkingContent, truncated)
+				budgetedTrace.ThinkingTokens += remainingBudget
+				remainingBudget = 0
+				break
+			} else {
+				break
 			}
-			response.ToolsUsed = append(response.ToolsUsed, toolCall.ToolName)
 		}
 
-		// Record reasoning step
-		stepRecord := ReasoningStep{
-			StepNumber: step,
-			Thought:    thought,
-			Action:     e.determineAction(thought, shouldUseTool),
-			ToolCall:   toolCall,
-			Result:     result,
-			Confidence: e.calculateConfidence(thought),
-		}
-		response.ReasoningSteps = append(response.ReasoningSteps, stepRecord)
-
-		// Update current thought with result
-		if shouldUseTool && result != nil {
-			currentThought = fmt.Sprintf("%s\nTool Result: %v", thought, result)
-		} else {
-			currentThought = thought
-		}
-
-		step++
+		budgetedTrace.TotalTokens = budgetedTrace.ThinkingTokens + budgetedTrace.OutputTokens
+		return budgetedTrace
 	}
 
-	// If no final answer found, use the last thought
-	if response.FinalAnswer == "" && len(response.ReasoningSteps) > 0 {
-		lastStep := response.ReasoningSteps[len(response.ReasoningSteps)-1]
-		response.FinalAnswer = e.extractFinalAnswer(lastStep.Thought)
-	}
-
-	return nil
+	return trace
 }
 
-// Helper methods
+// ValidateReasoningEffort validates and normalizes the reasoning effort level
+func ValidateReasoningEffort(effort string) (ReasoningEffortLevel, error) {
+	normalized := strings.ToLower(strings.TrimSpace(effort))
 
-func (e *ReasoningEngine) validateRequest(req ReasoningRequest) error {
-	if req.Prompt == "" {
-		return fmt.Errorf("prompt cannot be empty")
+	switch normalized {
+	case "low":
+		return ReasoningEffortLow, nil
+	case "medium", "med", "":
+		return ReasoningEffortMedium, nil
+	case "high":
+		return ReasoningEffortHigh, nil
+	default:
+		return "", fmt.Errorf("invalid reasoning effort level: %s (valid: low, medium, high)", effort)
 	}
-	if req.MaxSteps <= 0 {
-		return fmt.Errorf("max steps must be positive")
-	}
-	if req.Temperature < 0 || req.Temperature > 2.0 {
-		return fmt.Errorf("temperature must be between 0 and 2")
-	}
-	return nil
 }
 
-func (e *ReasoningEngine) buildChainOfThoughtPrompt(currentThought string, step, maxSteps int) string {
-	return fmt.Sprintf(`
-Current reasoning step %d/%d:
-%s
-
-Think step by step. If you need to use a tool, specify which one and why.
-If you have reached a final conclusion, state it clearly starting with "FINAL ANSWER:".
-Next step:`, step, maxSteps, currentThought)
-}
-
-func (e *ReasoningEngine) generateThought(ctx context.Context, prompt string, temperature float64) (string, error) {
-	genReq := &LLMRequest{
-		Model:       "default",
-		Messages:    []Message{{Role: "user", Content: prompt}},
-		MaxTokens:   500,
-		Temperature: temperature,
-		Stream:      false,
+// FormatReasoningPrompt formats a prompt for reasoning models
+func FormatReasoningPrompt(prompt string, config *ReasoningConfig) string {
+	if !config.Enabled {
+		return prompt
 	}
 
-	resp, err := e.provider.Generate(ctx, genReq)
-	if err != nil {
-		return "", err
+	var formatted strings.Builder
+
+	// Add reasoning mode instructions based on model type
+	switch config.ModelType {
+	case ReasoningModelOpenAI_O1, ReasoningModelOpenAI_O3, ReasoningModelOpenAI_O4:
+		// OpenAI o-series models handle reasoning automatically
+		// No special prompt formatting needed
+		formatted.WriteString(prompt)
+
+	case ReasoningModelClaude_Opus, ReasoningModelClaude_Sonnet:
+		// Claude extended thinking - encourage use of thinking tags
+		formatted.WriteString("Please approach this problem step-by-step, showing your reasoning process.\n\n")
+		formatted.WriteString(prompt)
+
+	case ReasoningModelDeepSeek_R1, ReasoningModelDeepSeek_Reasoner:
+		// DeepSeek models expect <think> tags
+		formatted.WriteString("Use <think></think> tags to show your reasoning process.\n\n")
+		formatted.WriteString(prompt)
+
+	case ReasoningModelQwQ_32B:
+		// QwQ-32B expects detailed reasoning
+		formatted.WriteString("Think through this problem carefully, showing your reasoning:\n\n")
+		formatted.WriteString(prompt)
+
+	default:
+		// Generic reasoning model
+		formatted.WriteString("Please reason through this problem step-by-step:\n\n")
+		formatted.WriteString(prompt)
 	}
 
-	return resp.Content, nil
-}
-
-func (e *ReasoningEngine) isFinalAnswer(thought string) bool {
-	return strings.Contains(strings.ToLower(thought), "final answer:")
-}
-
-func (e *ReasoningEngine) extractFinalAnswer(thought string) string {
-	if idx := strings.Index(strings.ToLower(thought), "final answer:"); idx != -1 {
-		return strings.TrimSpace(thought[idx+len("final answer:"):])
-	}
-	return thought
-}
-
-func (e *ReasoningEngine) shouldUseTool(thought string) (*ReasoningToolCall, bool) {
-	// Simple heuristic to detect tool usage
-	for toolName := range e.tools {
-		if strings.Contains(strings.ToLower(thought), strings.ToLower(toolName)) {
-			return &ReasoningToolCall{
-				ToolName:  toolName,
-				Arguments: make(map[string]interface{}),
-			}, true
+	// Add effort level guidance
+	if config.ReasoningEffort != "" {
+		effort, err := ValidateReasoningEffort(config.ReasoningEffort)
+		if err == nil {
+			switch effort {
+			case ReasoningEffortLow:
+				formatted.WriteString("\n\nProvide a brief analysis.")
+			case ReasoningEffortMedium:
+				formatted.WriteString("\n\nProvide a thorough analysis.")
+			case ReasoningEffortHigh:
+				formatted.WriteString("\n\nProvide a comprehensive, detailed analysis with careful consideration of all aspects.")
+			}
 		}
 	}
-	return nil, false
+
+	return formatted.String()
 }
 
-func (e *ReasoningEngine) executeTool(ctx context.Context, toolCall *ReasoningToolCall) (interface{}, error) {
-	tool, exists := e.tools[toolCall.ToolName]
-	if !exists {
-		return nil, fmt.Errorf("tool not found: %s", toolCall.ToolName)
+// IsReasoningModel checks if a model name indicates a reasoning model
+func IsReasoningModel(modelName string) (bool, ReasoningModelType) {
+	modelName = strings.ToLower(modelName)
+
+	// OpenAI o-series
+	if strings.Contains(modelName, "o1") || strings.Contains(modelName, "o1-preview") || strings.Contains(modelName, "o1-mini") {
+		return true, ReasoningModelOpenAI_O1
+	}
+	if strings.Contains(modelName, "o3") {
+		return true, ReasoningModelOpenAI_O3
+	}
+	if strings.Contains(modelName, "o4") {
+		return true, ReasoningModelOpenAI_O4
 	}
 
-	return tool.Handler(ctx, toolCall.Arguments)
+	// Claude models with extended thinking
+	if strings.Contains(modelName, "claude") && strings.Contains(modelName, "opus") {
+		return true, ReasoningModelClaude_Opus
+	}
+	if strings.Contains(modelName, "claude") && strings.Contains(modelName, "sonnet") {
+		return true, ReasoningModelClaude_Sonnet
+	}
+
+	// DeepSeek reasoning models
+	if strings.Contains(modelName, "deepseek") && (strings.Contains(modelName, "r1") || strings.Contains(modelName, "reasoner")) {
+		return true, ReasoningModelDeepSeek_R1
+	}
+
+	// QwQ-32B
+	if strings.Contains(modelName, "qwq") {
+		return true, ReasoningModelQwQ_32B
+	}
+
+	return false, ReasoningModelGeneric
 }
 
-func (e *ReasoningEngine) determineAction(thought string, usedTool bool) string {
-	if usedTool {
-		return "tool_execution"
+// CalculateReasoningCost calculates the cost of a reasoning request
+// Returns (thinkingCost, outputCost, totalCost)
+func CalculateReasoningCost(trace *ReasoningTrace, config *ReasoningConfig, modelType ReasoningModelType) (float64, float64, float64) {
+	// Cost per 1M tokens (in USD)
+	var thinkingCostPer1M, outputCostPer1M float64
+
+	switch modelType {
+	case ReasoningModelOpenAI_O1:
+		// o1-preview pricing: $15/1M input, $60/1M output, thinking tokens at input rate
+		thinkingCostPer1M = 15.0
+		outputCostPer1M = 60.0
+
+	case ReasoningModelOpenAI_O3:
+		// o3 pricing (estimated): $20/1M input, $80/1M output
+		thinkingCostPer1M = 20.0
+		outputCostPer1M = 80.0
+
+	case ReasoningModelOpenAI_O4:
+		// o4 pricing (estimated): $25/1M input, $100/1M output
+		thinkingCostPer1M = 25.0
+		outputCostPer1M = 100.0
+
+	case ReasoningModelClaude_Opus:
+		// Claude Opus with extended thinking: $15/1M input, $75/1M output
+		thinkingCostPer1M = 15.0
+		outputCostPer1M = 75.0
+
+	case ReasoningModelClaude_Sonnet:
+		// Claude Sonnet with extended thinking: $3/1M input, $15/1M output
+		thinkingCostPer1M = 3.0
+		outputCostPer1M = 15.0
+
+	case ReasoningModelDeepSeek_R1, ReasoningModelDeepSeek_Reasoner:
+		// DeepSeek R1: $2.19/1M input, $8.19/1M output
+		thinkingCostPer1M = 2.19
+		outputCostPer1M = 8.19
+
+	case ReasoningModelQwQ_32B:
+		// QwQ-32B (often free or very cheap): $0.50/1M input, $1.50/1M output
+		thinkingCostPer1M = 0.50
+		outputCostPer1M = 1.50
+
+	default:
+		// Generic model - use average pricing
+		thinkingCostPer1M = 5.0
+		outputCostPer1M = 15.0
 	}
-	if e.isFinalAnswer(thought) {
-		return "final_answer"
-	}
-	return "reasoning_step"
+
+	thinkingCost := float64(trace.ThinkingTokens) / 1_000_000.0 * thinkingCostPer1M
+	outputCost := float64(trace.OutputTokens) / 1_000_000.0 * outputCostPer1M
+	totalCost := thinkingCost + outputCost
+
+	return thinkingCost, outputCost, totalCost
 }
 
-func (e *ReasoningEngine) calculateConfidence(thought string) float64 {
-	// Simple confidence calculation based on thought characteristics
-	confidence := 0.5
+// GetReasoningBudgetRecommendation returns recommended token budgets for different use cases
+func GetReasoningBudgetRecommendation(useCase string) int {
+	useCase = strings.ToLower(strings.TrimSpace(useCase))
 
-	// Higher confidence for longer, more detailed thoughts
-	if len(thought) > 100 {
-		confidence += 0.2
+	switch useCase {
+	case "simple", "quick", "basic":
+		return 2000 // Simple queries
+	case "standard", "normal", "medium", "":
+		return 5000 // Standard queries
+	case "complex", "detailed", "thorough":
+		return 10000 // Complex queries
+	case "research", "deep", "comprehensive":
+		return 20000 // Research/deep analysis
+	default:
+		return 5000 // Default
 	}
-
-	// Higher confidence for thoughts that reference specific facts
-	if strings.Contains(strings.ToLower(thought), "because") ||
-		strings.Contains(strings.ToLower(thought), "therefore") ||
-		strings.Contains(strings.ToLower(thought), "thus") {
-		confidence += 0.2
-	}
-
-	// Cap at 1.0
-	if confidence > 1.0 {
-		confidence = 1.0
-	}
-
-	return confidence
 }
 
-// Simplified implementations for other reasoning types
+// OptimizeReasoningConfig optimizes reasoning configuration based on context
+func OptimizeReasoningConfig(config *ReasoningConfig, ctx context.Context) *ReasoningConfig {
+	if !config.Enabled {
+		return config
+	}
 
-func (e *ReasoningEngine) executeTreeOfThoughts(ctx context.Context, req ReasoningRequest, response *ReasoningResponse) error {
-	// For now, fall back to chain of thought
-	return e.executeChainOfThought(ctx, req, response)
+	optimized := *config
+
+	// Adjust budget based on effort level
+	if optimized.ThinkingBudget == 0 {
+		effort, err := ValidateReasoningEffort(optimized.ReasoningEffort)
+		if err == nil {
+			switch effort {
+			case ReasoningEffortLow:
+				optimized.ThinkingBudget = 3000
+			case ReasoningEffortMedium:
+				optimized.ThinkingBudget = 7000
+			case ReasoningEffortHigh:
+				optimized.ThinkingBudget = 15000
+			}
+		}
+	}
+
+	return &optimized
 }
 
-func (e *ReasoningEngine) executeSelfReflection(ctx context.Context, req ReasoningRequest, response *ReasoningResponse) error {
-	// For now, fall back to chain of thought
-	return e.executeChainOfThought(ctx, req, response)
+// Helper functions
+
+// estimateTokens provides a rough estimate of token count
+// More accurate tokenization would require model-specific tokenizers
+func estimateTokens(text string) int {
+	// Rough estimation: ~4 characters per token on average
+	// This is a simplification; actual tokenization varies by model
+	return len(text) / 4
 }
 
-func (e *ReasoningEngine) executeProgressiveReasoning(ctx context.Context, req ReasoningRequest, response *ReasoningResponse) error {
-	// For now, fall back to chain of thought
-	return e.executeChainOfThought(ctx, req, response)
+// truncateToTokenBudget truncates text to fit within a token budget
+func truncateToTokenBudget(text string, budget int) string {
+	estimatedTokens := estimateTokens(text)
+	if estimatedTokens <= budget {
+		return text
+	}
+
+	// Rough truncation based on character count
+	charsPerToken := 4
+	targetChars := budget * charsPerToken
+
+	if targetChars >= len(text) {
+		return text
+	}
+
+	// Truncate and add indicator
+	truncated := text[:targetChars]
+	return truncated + "... [truncated due to budget]"
+}
+
+// MergeReasoningConfigs merges two reasoning configs, with override taking precedence
+func MergeReasoningConfigs(base *ReasoningConfig, override *ReasoningConfig) *ReasoningConfig {
+	if override == nil {
+		return base
+	}
+	if base == nil {
+		return override
+	}
+
+	merged := *base
+
+	if override.Enabled {
+		merged.Enabled = override.Enabled
+	}
+	if override.ExtractThinking {
+		merged.ExtractThinking = override.ExtractThinking
+	}
+	if override.HideFromUser {
+		merged.HideFromUser = override.HideFromUser
+	}
+	if override.ThinkingTags != "" {
+		merged.ThinkingTags = override.ThinkingTags
+	}
+	if override.ThinkingBudget > 0 {
+		merged.ThinkingBudget = override.ThinkingBudget
+	}
+	if override.ReasoningEffort != "" {
+		merged.ReasoningEffort = override.ReasoningEffort
+	}
+	if override.ModelType != "" {
+		merged.ModelType = override.ModelType
+	}
+
+	return &merged
 }
