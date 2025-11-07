@@ -424,53 +424,54 @@ func (s *Server) getWorker(c *gin.Context) {
 // System Handlers
 
 func (s *Server) getSystemStats(c *gin.Context) {
-	// TODO: Implement task and worker statistics
-	// taskManager := task.NewManager(nil)
-	// tasks, _ := taskManager.ListTasks(c.Request.Context())
-	// workerManager := worker.NewManager(nil)
-	// workers, _ := workerManager.ListWorkers(c.Request.Context())
-
-	// Placeholder data for now
-	tasks := []interface{}{}
-	workers := []interface{}{}
-
-	// Calculate statistics
+	// Initialize counters
 	var (
-		totalTasks     = len(tasks)
+		totalTasks     = 0
 		pendingTasks   = 0
 		runningTasks   = 0
 		completedTasks = 0
 		failedTasks    = 0
-		totalWorkers   = len(workers)
+		totalWorkers   = 0
 		activeWorkers  = 0
 	)
 
-	// TODO: Implement proper task and worker status counting
-	// for _, t := range tasks {
-	// 	switch t.Status {
-	// 	case "pending":
-	// 		pendingTasks++
-	// 	case "running":
-	// 		runningTasks++
-	// 	case "completed":
-	// 		completedTasks++
-	// 	case "failed":
-	// 		failedTasks++
-	// 	}
-	// }
-	//
-	// for _, w := range workers {
-	// 	if w.Status == "active" {
-	// 		activeWorkers++
-	// 	}
-	// }
+	// Get task statistics if task manager is available
+	if s.taskManager != nil {
+		tasks, err := s.taskManager.ListTasks(c.Request.Context())
+		if err == nil {
+			totalTasks = len(tasks)
+			// Count tasks by status
+			for _, t := range tasks {
+				switch string(t.Status) {
+				case "pending":
+					pendingTasks++
+				case "running":
+					runningTasks++
+				case "completed":
+					completedTasks++
+				case "failed":
+					failedTasks++
+				}
+			}
+		}
+	}
 
-	// Placeholder values for now
-	pendingTasks = 0
-	runningTasks = 0
-	completedTasks = 0
-	failedTasks = 0
-	activeWorkers = 0
+	// Get worker statistics if worker manager is available
+	if s.workerManager != nil {
+		workers, err := s.workerManager.ListWorkers(c.Request.Context())
+		if err == nil {
+			totalWorkers = len(workers)
+			// Count active workers
+			for _, w := range workers {
+				if string(w.Status) == "active" {
+					activeWorkers++
+				}
+			}
+		}
+	}
+
+	// Calculate uptime
+	uptime := time.Since(s.startTime)
 
 	stats := gin.H{
 		"tasks": gin.H{
@@ -485,7 +486,7 @@ func (s *Server) getSystemStats(c *gin.Context) {
 			"active": activeWorkers,
 		},
 		"system": gin.H{
-			"uptime": "0s", // TODO: Implement actual uptime tracking
+			"uptime": uptime.String(),
 		},
 	}
 

@@ -14,20 +14,25 @@ import (
 	"dev.helix.code/internal/mcp"
 	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/redis"
+	"dev.helix.code/internal/task"
+	"dev.helix.code/internal/worker"
 	"github.com/gin-gonic/gin"
 )
 
 // Server represents the HTTP server
 type Server struct {
-	config       *config.Config
-	db           *database.Database
-	redis        *redis.Client
-	auth         *auth.AuthService
-	llm          *llm.Provider
-	mcp          *mcp.MCPServer
-	notification *notification.NotificationEngine
-	server       *http.Server
-	router       *gin.Engine
+	config         *config.Config
+	db             *database.Database
+	redis          *redis.Client
+	auth           *auth.AuthService
+	llm            *llm.Provider
+	mcp            *mcp.MCPServer
+	notification   *notification.NotificationEngine
+	taskManager    *task.DatabaseManager
+	workerManager  *worker.DatabaseManager
+	server         *http.Server
+	router         *gin.Engine
+	startTime      time.Time
 }
 
 // New creates a new HTTP server
@@ -69,14 +74,25 @@ func New(cfg *config.Config, db *database.Database, rds *redis.Client) *Server {
 	// Initialize LLM provider (basic setup - would be configured based on config)
 	// For now, we'll skip LLM initialization as it requires more complex setup
 
+	// Initialize task and worker managers if database is available
+	var taskMgr *task.DatabaseManager
+	var workerMgr *worker.DatabaseManager
+	if db != nil {
+		taskMgr = task.NewDatabaseManager(db)
+		workerMgr = worker.NewDatabaseManager(db)
+	}
+
 	server := &Server{
-		config:       cfg,
-		db:           db,
-		redis:        rds,
-		auth:         authService,
-		mcp:          mcpServer,
-		notification: notificationEngine,
-		router:       router,
+		config:         cfg,
+		db:             db,
+		redis:          rds,
+		auth:           authService,
+		mcp:            mcpServer,
+		notification:   notificationEngine,
+		taskManager:    taskMgr,
+		workerManager:  workerMgr,
+		router:         router,
+		startTime:      time.Now(),
 	}
 
 	// Setup routes

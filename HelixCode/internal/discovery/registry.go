@@ -1,10 +1,18 @@
 package discovery
 
 import (
+	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 var (
@@ -334,16 +342,124 @@ func (r *ServiceRegistry) healthCheckLoop() {
 }
 
 func (r *ServiceRegistry) performHealthChecks() {
-	// TODO: Implement actual health checks based on service protocol
-	// For now, we just mark services as unhealthy if they haven't sent a heartbeat
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	for _, service := range r.services {
+		// First check heartbeat-based health
 		if service.TTL > 0 && time.Since(service.LastHeartbeat) > service.TTL/2 {
-			// Service hasn't sent heartbeat in half the TTL period
-			// Mark as potentially unhealthy
 			service.Healthy = false
+			continue
 		}
+
+		// Perform protocol-specific health check
+		healthy := r.checkServiceHealth(service)
+		service.Healthy = healthy
 	}
+}
+
+// checkServiceHealth performs protocol-specific health check
+func (r *ServiceRegistry) checkServiceHealth(service *ServiceInfo) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	switch service.Protocol {
+	case "http", "https":
+		return r.checkHTTPHealth(ctx, service)
+	case "grpc":
+		return r.checkGRPCHealth(ctx, service)
+	case "tcp", "udp":
+		return r.checkTCPHealth(ctx, service)
+	default:
+		// For unknown protocols, rely on heartbeat only
+		return service.Healthy
+	}
+}
+
+// checkHTTPHealth performs HTTP/HTTPS health check
+func (r *ServiceRegistry) checkHTTPHealth(ctx context.Context, service *ServiceInfo) bool {
+	// Check for custom health endpoint in metadata
+	healthPath := service.Metadata["health_endpoint"]
+	if healthPath == "" {
+		healthPath = "/health"
+	}
+
+	scheme := service.Protocol
+	if scheme == "" {
+		scheme = "http"
+	}
+
+	url := fmt.Sprintf("%s://%s:%d%s", scheme, service.Host, service.Port, healthPath)
+
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, // For testing/internal services
+			},
+		},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return false
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	// Consider 2xx and 3xx status codes as healthy
+	return resp.StatusCode >= 200 && resp.StatusCode < 400
+}
+
+// checkGRPCHealth performs gRPC health check using standard health checking protocol
+func (r *ServiceRegistry) checkGRPCHealth(ctx context.Context, service *ServiceInfo) bool {
+	address := fmt.Sprintf("%s:%d", service.Host, service.Port)
+
+	// Create gRPC connection with timeout
+	conn, err := grpc.DialContext(
+		ctx,
+		address,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	// Use standard gRPC health checking protocol
+	healthClient := grpc_health_v1.NewHealthClient(conn)
+
+	// Check the service specified in metadata, or empty string for server health
+	serviceName := service.Metadata["grpc_service_name"]
+
+	resp, err := healthClient.Check(ctx, &grpc_health_v1.HealthCheckRequest{
+		Service: serviceName,
+	})
+	if err != nil {
+		return false
+	}
+
+	return resp.Status == grpc_health_v1.HealthCheckResponse_SERVING
+}
+
+// checkTCPHealth performs TCP connection health check
+func (r *ServiceRegistry) checkTCPHealth(ctx context.Context, service *ServiceInfo) bool {
+	address := fmt.Sprintf("%s:%d", service.Host, service.Port)
+
+	// Attempt to establish TCP connection
+	var d net.Dialer
+	conn, err := d.DialContext(ctx, "tcp", address)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	// Successfully connected, service is healthy
+	return true
 }
