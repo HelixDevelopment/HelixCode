@@ -47,6 +47,9 @@ type DiscoveryClientConfig struct {
 	// PortAllocator is the port allocator for managing ports
 	PortAllocator *PortAllocator
 
+	// BroadcastService is the broadcast service for UDP multicast discovery
+	BroadcastService *BroadcastService
+
 	// DefaultPorts maps service names to their default ports
 	DefaultPorts map[string]int
 
@@ -273,8 +276,27 @@ func (c *DiscoveryClient) discoverByBroadcast(serviceName string) (*DiscoveryRes
 		return nil, errors.New("broadcast discovery not enabled")
 	}
 
-	// TODO: Implement broadcast discovery in Phase 2
-	return nil, errors.New("broadcast discovery not implemented yet")
+	if c.config.BroadcastService == nil {
+		return nil, errors.New("broadcast service not configured")
+	}
+
+	// Ensure broadcast service is running
+	if !c.config.BroadcastService.IsRunning() {
+		if err := c.config.BroadcastService.Start(); err != nil {
+			return nil, fmt.Errorf("failed to start broadcast service: %w", err)
+		}
+	}
+
+	// Discover service via broadcast
+	serviceInfo, err := c.config.BroadcastService.Discover(serviceName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DiscoveryResult{
+		ServiceInfo: serviceInfo,
+		Strategy:    StrategyBroadcast,
+	}, nil
 }
 
 func (c *DiscoveryClient) discoverByDNS(serviceName string) (*DiscoveryResult, error) {
