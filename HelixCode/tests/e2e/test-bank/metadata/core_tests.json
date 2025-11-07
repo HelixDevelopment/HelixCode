@@ -1,0 +1,306 @@
+[
+  {
+    "id": "TC-001",
+    "name": "User Authentication",
+    "category": "core",
+    "priority": "critical",
+    "tags": ["auth", "security", "smoke"],
+    "estimated_duration": "5s",
+    "dependencies": ["database"],
+    "timeout": "30s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify user can authenticate with valid credentials and receive JWT token",
+    "preconditions": [
+      "Database is running and initialized",
+      "Test user exists in database"
+    ],
+    "steps": [
+      "Send POST request to /api/v1/auth/login with valid credentials",
+      "Verify JWT token is returned in response",
+      "Verify token contains correct user ID and permissions",
+      "Verify token expiration is set correctly"
+    ],
+    "expected_results": [
+      "HTTP 200 status code",
+      "Valid JWT token returned",
+      "Token expires in 24 hours",
+      "Token can be used for authenticated requests"
+    ]
+  },
+  {
+    "id": "TC-002",
+    "name": "Project Creation",
+    "category": "core",
+    "priority": "critical",
+    "tags": ["projects", "api", "smoke"],
+    "estimated_duration": "8s",
+    "dependencies": ["database", "auth"],
+    "timeout": "30s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify authenticated user can create a new project",
+    "preconditions": [
+      "User is authenticated",
+      "Database is running"
+    ],
+    "steps": [
+      "Authenticate user and get JWT token",
+      "Send POST request to /api/v1/projects with project data",
+      "Verify project is created with correct attributes",
+      "Verify project ID is returned",
+      "Verify project appears in user's project list"
+    ],
+    "expected_results": [
+      "HTTP 201 status code",
+      "Project created successfully",
+      "Valid project ID returned",
+      "Project visible in GET /api/v1/projects"
+    ]
+  },
+  {
+    "id": "TC-003",
+    "name": "Session Management",
+    "category": "core",
+    "priority": "high",
+    "tags": ["sessions", "api"],
+    "estimated_duration": "10s",
+    "dependencies": ["database", "auth", "projects"],
+    "timeout": "30s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify session creation, retrieval, and lifecycle management",
+    "preconditions": [
+      "User is authenticated",
+      "Project exists"
+    ],
+    "steps": [
+      "Create a new development session for project",
+      "Verify session ID is returned",
+      "Retrieve session details",
+      "Verify session context is maintained",
+      "End session and verify cleanup"
+    ],
+    "expected_results": [
+      "Session created successfully",
+      "Session ID is valid UUID",
+      "Session context preserved across requests",
+      "Session cleanup completed"
+    ]
+  },
+  {
+    "id": "TC-004",
+    "name": "System Health Check",
+    "category": "core",
+    "priority": "critical",
+    "tags": ["health", "monitoring", "smoke"],
+    "estimated_duration": "3s",
+    "dependencies": [],
+    "timeout": "15s",
+    "retry_count": 3,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify system health check endpoint returns correct status",
+    "preconditions": [
+      "Server is running"
+    ],
+    "steps": [
+      "Send GET request to /health",
+      "Verify response contains status",
+      "Verify all components are healthy",
+      "Check database connectivity status",
+      "Check service uptime"
+    ],
+    "expected_results": [
+      "HTTP 200 status code",
+      "Status is 'healthy'",
+      "All components report healthy",
+      "Response time < 1 second"
+    ]
+  },
+  {
+    "id": "TC-005",
+    "name": "Database Connectivity",
+    "category": "core",
+    "priority": "critical",
+    "tags": ["database", "infrastructure", "smoke"],
+    "estimated_duration": "5s",
+    "dependencies": ["database"],
+    "timeout": "20s",
+    "retry_count": 3,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify database connection and basic operations work correctly",
+    "preconditions": [
+      "PostgreSQL database is running",
+      "Database schema is initialized"
+    ],
+    "steps": [
+      "Establish database connection",
+      "Execute test query",
+      "Verify connection pool is healthy",
+      "Test transaction support",
+      "Close connection gracefully"
+    ],
+    "expected_results": [
+      "Connection established successfully",
+      "Query executes without errors",
+      "Connection pool has available connections",
+      "Transactions commit/rollback correctly"
+    ]
+  },
+  {
+    "id": "TC-006",
+    "name": "Worker Registration",
+    "category": "core",
+    "priority": "high",
+    "tags": ["workers", "distributed"],
+    "estimated_duration": "12s",
+    "dependencies": ["database", "auth"],
+    "timeout": "30s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos"],
+    "description": "Verify worker can register with the system and receive tasks",
+    "preconditions": [
+      "Worker node is accessible",
+      "SSH keys are configured"
+    ],
+    "steps": [
+      "Register worker with system",
+      "Verify worker appears in worker pool",
+      "Check worker health status",
+      "Verify worker capabilities are recorded",
+      "Test worker heartbeat mechanism"
+    ],
+    "expected_results": [
+      "Worker registered successfully",
+      "Worker ID assigned",
+      "Worker status is 'active'",
+      "Capabilities reported correctly",
+      "Heartbeat working"
+    ]
+  },
+  {
+    "id": "TC-007",
+    "name": "Task Creation and Assignment",
+    "category": "core",
+    "priority": "high",
+    "tags": ["tasks", "workflow"],
+    "estimated_duration": "15s",
+    "dependencies": ["database", "auth", "workers"],
+    "timeout": "45s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify task can be created, queued, and assigned to worker",
+    "preconditions": [
+      "At least one worker is available",
+      "Project exists"
+    ],
+    "steps": [
+      "Create a new task",
+      "Verify task is queued",
+      "Wait for task assignment",
+      "Verify task assigned to appropriate worker",
+      "Check task status updates"
+    ],
+    "expected_results": [
+      "Task created with valid ID",
+      "Task enters pending state",
+      "Task assigned within 5 seconds",
+      "Worker with matching capabilities selected",
+      "Status updates received"
+    ]
+  },
+  {
+    "id": "TC-008",
+    "name": "LLM Provider Configuration",
+    "category": "core",
+    "priority": "high",
+    "tags": ["llm", "configuration"],
+    "estimated_duration": "8s",
+    "dependencies": ["database", "auth"],
+    "timeout": "30s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify LLM provider can be configured and validated",
+    "preconditions": [
+      "User is authenticated",
+      "Configuration system is available"
+    ],
+    "steps": [
+      "Create LLM provider configuration",
+      "Validate provider settings",
+      "Test provider connectivity",
+      "Retrieve provider list",
+      "Update provider configuration"
+    ],
+    "expected_results": [
+      "Provider configuration saved",
+      "Validation passes",
+      "Provider appears in list",
+      "Configuration updates applied",
+      "Provider type correctly identified"
+    ]
+  },
+  {
+    "id": "TC-009",
+    "name": "API Basic Operations (CRUD)",
+    "category": "core",
+    "priority": "critical",
+    "tags": ["api", "crud", "smoke"],
+    "estimated_duration": "20s",
+    "dependencies": ["database", "auth"],
+    "timeout": "60s",
+    "retry_count": 2,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify basic CRUD operations work for all major resources",
+    "preconditions": [
+      "User is authenticated",
+      "Database is empty or in known state"
+    ],
+    "steps": [
+      "Create resource (POST)",
+      "Read resource (GET)",
+      "Update resource (PUT/PATCH)",
+      "List resources (GET collection)",
+      "Delete resource (DELETE)",
+      "Verify deletion (GET returns 404)"
+    ],
+    "expected_results": [
+      "All CRUD operations succeed",
+      "Correct HTTP status codes returned",
+      "Resource data persists correctly",
+      "Deletion removes resource",
+      "No orphaned data remains"
+    ]
+  },
+  {
+    "id": "TC-010",
+    "name": "Configuration Loading",
+    "category": "core",
+    "priority": "critical",
+    "tags": ["config", "initialization", "smoke"],
+    "estimated_duration": "5s",
+    "dependencies": [],
+    "timeout": "20s",
+    "retry_count": 3,
+    "platforms": ["linux", "macos", "windows"],
+    "description": "Verify system configuration loads correctly from all sources",
+    "preconditions": [
+      "Configuration files exist",
+      "Environment variables are set"
+    ],
+    "steps": [
+      "Load configuration from YAML file",
+      "Override with environment variables",
+      "Validate all required config values present",
+      "Check config precedence (env > file > defaults)",
+      "Verify sensitive values are masked in logs"
+    ],
+    "expected_results": [
+      "Configuration loads without errors",
+      "All required values present",
+      "Environment variables take precedence",
+      "Defaults applied for missing values",
+      "Passwords/secrets not logged"
+    ]
+  }
+]

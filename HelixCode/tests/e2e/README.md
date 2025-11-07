@@ -1,412 +1,534 @@
 # HelixCode E2E Testing Framework
 
-> **Status**: 🚧 In Development (Phase 1 Complete)
-> **Version**: 1.0.0
-> **Last Updated**: 2025-11-07
+A comprehensive end-to-end testing framework for HelixCode, featuring a test orchestrator, mock services, and automated testing workflows.
 
-Comprehensive AI-powered end-to-end testing framework that validates all HelixCode components through real-world scenarios with actual AI execution.
+## Overview
 
----
+The E2E Testing Framework provides:
 
-## 📋 Table of Contents
+- **Test Orchestrator MVP**: Priority-based test execution with parallel execution, retries, and comprehensive reporting
+- **Mock Services**: HTTP mock services for LLM providers and Slack/notifications
+- **Test Bank**: Curated collection of test cases organized by category and priority
+- **Automation Scripts**: Quick setup, service management, and test execution
+- **Docker Support**: Containerized mock services with Docker Compose orchestration
 
-1. [Quick Start](#quick-start)
-2. [Architecture](#architecture)
-3. [Documentation](#documentation)
-4. [Current Status](#current-status)
-5. [Next Steps](#next-steps)
-6. [Contributing](#contributing)
+## Quick Start
 
----
+### 1. Setup
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Docker & Docker Compose
-- Go 1.24+
-- PostgreSQL 14+ (or use Docker)
-- 8GB+ RAM recommended
-
-### Start Test Environment
+Run the setup script to build all components:
 
 ```bash
-# Navigate to E2E directory
-cd tests/e2e/docker
-
-# Start all services (full profile)
-docker-compose -f docker-compose.e2e.yml --profile full up -d
-
-# Or start specific profiles:
-# Core services only
-docker-compose -f docker-compose.e2e.yml up -d
-
-# With mocks
-docker-compose -f docker-compose.e2e.yml --profile mocks up -d
-
-# With local LLMs
-docker-compose -f docker-compose.e2e.yml --profile local-llm up -d
-
-# With monitoring
-docker-compose -f docker-compose.e2e.yml --profile monitoring up -d
+cd tests/e2e
+./scripts/setup.sh
 ```
 
-### Check Service Health
+This will:
+- Build the test orchestrator
+- Build mock LLM provider and Slack services
+- Create environment configuration
+- Make all scripts executable
+
+### 2. Start Mock Services
+
+Start all mock services required for testing:
 
 ```bash
-# All services should be healthy
-docker-compose -f docker-compose.e2e.yml ps
-
-# Or use the health check script
-./scripts/wait-for-services.sh
+./scripts/start-services.sh
 ```
 
-### Access Services
+Services will start on:
+- Mock LLM Provider: http://localhost:8090
+- Mock Slack Service: http://localhost:8091
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| HelixCode Server | http://localhost:8080 | admin/admin123 |
-| Aurora OS | http://localhost:8081 | admin/admin123 |
-| Harmony OS Master | http://localhost:8082 | admin/admin123 |
-| Test Dashboard | http://localhost:8088 | - |
-| Prometheus | http://localhost:9090 | - |
-| Grafana | http://localhost:3001 | admin/admin |
-| MinIO (Mock Storage) | http://localhost:9001 | minioadmin/minioadmin |
+### 3. Run Tests
 
-### Run Tests (Coming Soon)
+Execute E2E tests using the orchestrator:
 
 ```bash
-# Once orchestrator is implemented:
-cd tests/e2e/orchestrator
-go run cmd/main.go run --all
+# Run all tests
+./scripts/run-tests.sh
+
+# Run critical priority tests only
+./scripts/run-tests.sh --priority critical
+
+# Run specific test categories
+./scripts/run-tests.sh --tags "auth,security"
+
+# Run with custom parallelism
+./scripts/run-tests.sh --parallel 5
 ```
 
----
+### 4. Stop Services
 
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                Test Orchestrator (AI-Powered)                   │
-│  - Test Selection & Execution                                   │
-│  - Result Validation & Reporting                                │
-└──────────────────┬────────────────────────────────────────────┘
-                   │
-    ┌──────────────┼──────────────┬──────────────┬────────────────┐
-    │              │              │              │                │
-┌───▼────┐  ┌─────▼─────┐  ┌────▼─────┐  ┌─────▼──────┐  ┌─────▼─────┐
-│  Test  │  │   Mock    │  │  Real    │  │ Distributed│  │  Report   │
-│  Bank  │  │ Services  │  │  Integ.  │  │  Testing   │  │  System   │
-└────────┘  └───────────┘  └──────────┘  └────────────┘  └───────────┘
-```
-
-### Components
-
-#### 1. Docker Infrastructure ✅
-- Multi-container test environment
-- All HelixCode platforms (main, Aurora OS, Harmony OS)
-- Mock services (LLM, Slack, Storage)
-- Local LLM services (Ollama, llama.cpp)
-- Monitoring (Prometheus, Grafana)
-
-#### 2. Test Orchestrator 🔄
-- AI-powered test execution engine
-- Parallel test execution
-- Smart retry logic
-- Result validation
-
-#### 3. Test Case Bank 📝
-- Structured test scenarios
-- Core functionality tests
-- Integration tests
-- Platform-specific tests
-- End-to-end workflows
-
-#### 4. Mock Services 🎭
-- Mock LLM Provider
-- Mock Slack/Notifications
-- Mock Storage (MinIO)
-
-#### 5. Real Integrations 🌐
-- Local Ollama
-- Local llama.cpp
-- Real API tests (with safety limits)
-
-#### 6. Reporting System 📊
-- Real-time dashboard
-- Detailed execution logs
-- Metrics and trends
-- Failure analysis
-
----
-
-## 📚 Documentation
-
-### Core Documents
-
-1. **[E2E_TESTING_FRAMEWORK.md](./E2E_TESTING_FRAMEWORK.md)** - Complete architecture and design
-2. **[E2E_TESTING_IMPLEMENTATION_PLAN.md](./E2E_TESTING_IMPLEMENTATION_PLAN.md)** - Phased implementation plan
-3. **[docker-compose.e2e.yml](./docker/docker-compose.e2e.yml)** - Docker infrastructure
-
-### Test Categories
-
-#### Core Tests
-- Authentication & Authorization
-- Task Management
-- Worker Pool Management
-- Project Lifecycle
-- Session Management
-
-#### Integration Tests
-- LLM Providers (OpenAI, Anthropic, Ollama)
-- Notification Services (Slack, Discord, Email)
-- Database Operations
-- Redis Caching
-
-#### Platform Tests
-- Aurora OS Security Levels
-- Harmony OS Distributed Computing
-- Mobile Client Integration
-- Desktop Applications
-
-#### Distributed Tests
-- Multi-node Coordination
-- Failover Scenarios
-- Load Balancing
-- Cross-device Synchronization
-
-#### End-to-End Tests
-- Complete Web App Development
-- Microservices Generation
-- Full Development Workflows
-
----
-
-## 📊 Current Status
-
-### ✅ Phase 1: Foundation (Complete)
-
-- [x] Architecture design documented
-- [x] Docker Compose infrastructure created
-- [x] Service definitions (20+ services)
-- [x] Network configuration
-- [x] Volume management
-- [x] Health checks
-- [x] Implementation plan
-
-### 🔄 Phase 2: Core Implementation (In Progress)
-
-- [ ] Test orchestrator (CLI tool)
-- [ ] Test case bank structure
-- [ ] Sample test scenarios (10+)
-- [ ] Mock LLM provider
-- [ ] Mock notification services
-- [ ] Basic reporting
-
-### 📋 Phase 3-6: Advanced Features (Planned)
-
-- [ ] AI-powered QA executor
-- [ ] Real provider integrations
-- [ ] Distributed testing scenarios
-- [ ] Comprehensive reporting dashboard
-- [ ] CI/CD integration
-- [ ] Performance benchmarks
-
----
-
-## 🎯 Next Steps (This Week)
-
-### Priority 1: Test Orchestrator MVP
-```bash
-tests/e2e/orchestrator/
-├── cmd/main.go          # CLI tool
-├── pkg/
-│   ├── executor/        # Test execution
-│   ├── validator/       # Result validation
-│   └── reporter/        # Report generation
-└── Dockerfile
-```
-
-### Priority 2: Sample Test Cases
-```bash
-tests/e2e/testbank/
-├── scenarios/
-│   ├── core/           # 10 core tests
-│   ├── integration/    # 5 integration tests
-│   └── e2e/           # 3 end-to-end tests
-└── metadata.json
-```
-
-### Priority 3: Mock Services
-```bash
-tests/e2e/mocks/
-├── llm-provider/       # Mock LLM API
-└── slack/              # Mock Slack API
-```
-
-### Priority 4: Quick Start Scripts
-```bash
-tests/e2e/scripts/
-├── start-e2e-env.sh    # Start environment
-├── wait-for-services.sh # Health check
-└── run-tests.sh        # Execute tests
-```
-
----
-
-## 🔧 Development
-
-### Building Components
+Stop all running services:
 
 ```bash
-# Build orchestrator
-cd tests/e2e/orchestrator
-go build -o bin/orchestrator cmd/main.go
-
-# Build mock services
-cd tests/e2e/mocks/llm-provider
-docker build -t helix-mock-llm .
+./scripts/stop-services.sh
 ```
 
-### Running Locally
+### 5. Cleanup
+
+Clean up build artifacts and stop services:
 
 ```bash
-# Set environment variables
-export E2E_DATABASE_URL="postgresql://helix_test:test_password_123@localhost:5433/helix_e2e"
-export E2E_REDIS_URL="redis://:test_redis_pass@localhost:6380/3"
-export E2E_SERVER_URL="http://localhost:8080"
-
-# Run orchestrator
-cd tests/e2e/orchestrator
-go run cmd/main.go run --test=TC-001
+./scripts/clean.sh
 ```
 
-### Debugging
+## Architecture
+
+```
+tests/e2e/
+├── orchestrator/          # Test execution orchestrator
+│   ├── pkg/              # Core orchestrator packages
+│   ├── cmd/              # CLI application
+│   ├── bin/              # Built binaries
+│   └── README.md         # Orchestrator documentation
+├── test-bank/            # Test case repository
+│   ├── core/             # Core test implementations
+│   ├── metadata/         # Test metadata (JSON)
+│   ├── loader.go         # Test suite loader
+│   └── README.md         # Test bank documentation
+├── mocks/                # Mock services
+│   ├── llm-provider/     # Mock LLM API service
+│   └── slack/            # Mock Slack/notifications service
+├── scripts/              # Automation scripts
+│   ├── setup.sh          # Initial setup
+│   ├── start-services.sh # Start mock services
+│   ├── stop-services.sh  # Stop services
+│   ├── run-tests.sh      # Execute tests
+│   └── clean.sh          # Cleanup
+├── docker-compose.yml    # Docker orchestration
+├── .env.example          # Environment template
+└── README.md             # This file
+```
+
+## Components
+
+### Test Orchestrator
+
+The orchestrator manages test execution with:
+
+- **Priority-Based Scheduling**: Critical, High, Normal, Low
+- **Parallel Execution**: Configurable concurrency with semaphore control
+- **Retry Logic**: Automatic retries with configurable delays
+- **Multiple Report Formats**: JSON, JUnit XML, console output
+- **Timeout Management**: Per-test and global timeouts
+
+**CLI Usage:**
 
 ```bash
+cd orchestrator
+
+# Run all tests
+./bin/orchestrator run
+
+# List available tests
+./bin/orchestrator list
+
+# Run with filters
+./bin/orchestrator run --priority critical --parallel 5
+./bin/orchestrator run --tags "smoke,regression"
+
+# Custom output
+./bin/orchestrator run --output ./custom-results --format json
+
+# Show version
+./bin/orchestrator version
+```
+
+See [orchestrator/README.md](./orchestrator/README.md) for detailed documentation.
+
+### Test Bank
+
+Collection of 10+ core test cases covering:
+
+- **Authentication & Security**: User auth, session management, API tokens
+- **LLM Integration**: Chat completions, streaming, model selection
+- **Worker Management**: SSH connections, health checks, task distribution
+- **Project Lifecycle**: Creation, configuration, builds
+- **Notifications**: Slack messages, webhooks, error alerts
+
+Test metadata format:
+
+```json
+{
+  "id": "TC-001",
+  "name": "User Authentication",
+  "description": "Validates user authentication flow",
+  "priority": "critical",
+  "category": "auth",
+  "tags": ["auth", "security", "smoke"],
+  "timeout": "30s",
+  "dependencies": []
+}
+```
+
+See [test-bank/README.md](./test-bank/README.md) for test details.
+
+### Mock LLM Provider
+
+HTTP service simulating LLM provider APIs:
+
+- **OpenAI-Compatible**: `/v1/chat/completions`, `/v1/embeddings`, `/v1/models`
+- **Pattern-Based Responses**: Context-aware mock responses
+- **Multiple Models**: GPT-4, Claude, Llama, Mistral
+- **Configurable Delays**: Simulate API latency
+
+**Endpoints:**
+
+```bash
+# Chat completion
+curl -X POST http://localhost:8090/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "mock-gpt-4", "messages": [{"role": "user", "content": "Hello"}]}'
+
+# Embeddings
+curl -X POST http://localhost:8090/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "mock-text-embedding-ada-002", "input": ["Hello world"]}'
+
+# List models
+curl http://localhost:8090/v1/models
+```
+
+See [mocks/llm-provider/README.md](./mocks/llm-provider/README.md) for API documentation.
+
+### Mock Slack Service
+
+HTTP service simulating Slack APIs:
+
+- **Message Posting**: `/api/chat.postMessage`
+- **Incoming Webhooks**: `/webhook/:id`
+- **Testing Endpoints**: Inspect stored messages and webhooks
+- **In-Memory Storage**: Configurable capacity (default: 1000)
+
+**Endpoints:**
+
+```bash
+# Post message
+curl -X POST http://localhost:8091/api/chat.postMessage \
+  -H "Content-Type: application/json" \
+  -d '{"channel": "#general", "text": "Test message"}'
+
+# Get messages
+curl http://localhost:8091/api/messages
+
+# Send webhook
+curl -X POST http://localhost:8091/webhook/test-id \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Webhook test"}'
+
+# Get webhooks
+curl http://localhost:8091/api/webhooks
+```
+
+See [mocks/slack/README.md](./mocks/slack/README.md) for API documentation.
+
+## Docker Support
+
+### Using Docker Compose
+
+Start all services with Docker Compose:
+
+```bash
+# Start all services
+docker-compose up -d
+
 # View logs
-docker-compose -f docker-compose.e2e.yml logs -f helixcode-server
-docker-compose -f docker-compose.e2e.yml logs -f test-orchestrator
+docker-compose logs -f
 
-# Exec into containers
-docker exec -it helix-e2e-postgres psql -U helix_test -d helix_e2e
-docker exec -it helix-e2e-redis redis-cli -a test_redis_pass
+# Stop services
+docker-compose down
+
+# Rebuild services
+docker-compose build
+docker-compose up -d
 ```
 
----
+Services included:
+- Mock LLM Provider (port 8090)
+- Mock Slack Service (port 8091)
+- PostgreSQL (port 5432)
+- Redis (port 6379)
 
-## 🤝 Contributing
-
-### Adding New Test Cases
-
-1. Create test scenario JSON in `testbank/scenarios/`
-2. Add test fixtures if needed
-3. Define expected results
-4. Test locally before committing
-
-### Adding New Mock Services
-
-1. Create service directory in `mocks/`
-2. Implement HTTP server
-3. Add Dockerfile
-4. Update docker-compose.e2e.yml
-5. Document endpoints
-
-### Improving Orchestrator
-
-1. Follow existing code structure
-2. Add tests for new features
-3. Update CLI help text
-4. Document new commands
-
----
-
-## 📈 Metrics & Goals
-
-### Test Coverage Goals
-- Unit Tests: 80%+
-- Integration Tests: 70%+
-- E2E Tests: 50%+
-- Platform Tests: 60%+
-
-### Performance Goals
-- Full test suite: <30 minutes
-- Parallel tests: 10+ concurrent
-- Test reliability: >95%
-- Report generation: <5 seconds
-
-### Quality Goals
-- All features documented
-- CI on every PR
-- Regression detection: <1 hour
-- Average fix time: <24 hours
-
----
-
-## 🐛 Troubleshooting
-
-### Services Won't Start
+### Building Individual Docker Images
 
 ```bash
-# Check Docker resources
-docker system df
-docker system prune -a
+# Build Mock LLM Provider
+cd mocks/llm-provider
+docker build -t mock-llm-provider .
+docker run -p 8090:8090 mock-llm-provider
 
-# Check port conflicts
-lsof -i :8080  # HelixCode
-lsof -i :5433  # PostgreSQL
-lsof -i :6380  # Redis
-
-# Restart with clean slate
-docker-compose -f docker-compose.e2e.yml down -v
-docker-compose -f docker-compose.e2e.yml up -d
+# Build Mock Slack
+cd mocks/slack
+docker build -t mock-slack .
+docker run -p 8091:8091 mock-slack
 ```
 
-### Database Connection Issues
+## Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and customize:
 
 ```bash
-# Check PostgreSQL is running
-docker exec helix-e2e-postgres pg_isready -U helix_test
+cp .env.example .env
+```
 
-# Check database exists
-docker exec helix-e2e-postgres psql -U helix_test -l
+**Key Configuration Options:**
 
-# Reset database
-docker-compose -f docker-compose.e2e.yml down -v postgres-e2e
-docker-compose -f docker-compose.e2e.yml up -d postgres-e2e
+```bash
+# Test Orchestrator
+E2E_CONCURRENT_TESTS=3       # Parallel test execution
+E2E_TIMEOUT=300s             # Default test timeout
+E2E_RETRY_DELAY=1s           # Retry delay
+
+# Mock LLM Provider
+MOCK_LLM_PORT=8090           # Service port
+MOCK_LLM_DELAY_MS=100        # Response delay
+MOCK_LLM_DEFAULT_MODEL=mock-gpt-4
+
+# Mock Slack
+MOCK_SLACK_PORT=8091         # Service port
+MOCK_SLACK_DELAY_MS=50       # Response delay
+MOCK_SLACK_STORAGE_CAPACITY=1000
+
+# Database
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=helixcode_test
+POSTGRES_USER=helixcode
+POSTGRES_PASSWORD=helixcode_test_password
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=helixcode_test_password
+```
+
+## Workflows
+
+### Development Workflow
+
+1. **Make code changes** to HelixCode
+2. **Start mock services**: `./scripts/start-services.sh`
+3. **Run relevant tests**: `./scripts/run-tests.sh --tags "your-feature"`
+4. **Review results** in `test-results/`
+5. **Iterate** as needed
+
+### CI/CD Integration
+
+```yaml
+# Example GitHub Actions workflow
+- name: Setup E2E Tests
+  run: |
+    cd tests/e2e
+    ./scripts/setup.sh
+
+- name: Start Services
+  run: ./tests/e2e/scripts/start-services.sh
+
+- name: Run E2E Tests
+  run: ./tests/e2e/scripts/run-tests.sh --output ./test-results
+
+- name: Upload Results
+  uses: actions/upload-artifact@v3
+  with:
+    name: e2e-test-results
+    path: tests/e2e/test-results/
+```
+
+### Adding New Tests
+
+1. **Create test implementation** in `test-bank/core/tests.go`:
+
+```go
+func TC011_YourNewTest() *pkg.TestCase {
+    return &pkg.TestCase{
+        ID:       "TC-011",
+        Name:     "Your New Test",
+        Priority: pkg.PriorityHigh,
+        Timeout:  30 * time.Second,
+        Tags:     []string{"feature", "smoke"},
+        Execute: func(ctx context.Context) error {
+            // Your test logic
+            return nil
+        },
+    }
+}
+```
+
+2. **Add metadata** in `test-bank/metadata/core_tests.json`
+
+3. **Register in loader** (`test-bank/loader.go`)
+
+4. **Run the test**:
+```bash
+./scripts/run-tests.sh --tags "feature"
+```
+
+## Test Reports
+
+Test results are generated in multiple formats:
+
+### JSON Report
+
+```json
+{
+  "summary": {
+    "total": 10,
+    "passed": 9,
+    "failed": 1,
+    "skipped": 0,
+    "duration": "2.5s"
+  },
+  "tests": [...]
+}
+```
+
+### JUnit XML Report
+
+Compatible with CI/CD systems like Jenkins, GitLab CI, GitHub Actions:
+
+```xml
+<testsuite name="E2E Tests" tests="10" failures="1" time="2.5">
+  <testcase classname="core" name="TC-001" time="0.5"/>
+  ...
+</testsuite>
+```
+
+### Console Output
+
+```
+========================================
+E2E Test Execution Report
+========================================
+
+Summary:
+  Total Tests: 10
+  Passed:      9 (90.0%)
+  Failed:      1 (10.0%)
+  Skipped:     0 (0.0%)
+  Duration:    2.5s
+
+Results:
+  ✓ TC-001: User Authentication (0.5s)
+  ✓ TC-002: Session Management (0.3s)
+  ...
+```
+
+## Troubleshooting
+
+### Services Not Starting
+
+```bash
+# Check if ports are in use
+lsof -i :8090
+lsof -i :8091
+
+# View service logs
+cat .pids/mock-llm.log
+cat .pids/mock-slack.log
+
+# Force stop and restart
+./scripts/stop-services.sh
+./scripts/start-services.sh
 ```
 
 ### Tests Failing
 
 ```bash
-# Run with verbose logging
-E2E_LOG_LEVEL=debug go run cmd/main.go run --test=TC-001
+# Run with verbose output
+cd orchestrator
+./bin/orchestrator run --tags "failing-test" -v
 
-# Check service health
-curl http://localhost:8080/health
-curl http://localhost:8081/health
-curl http://localhost:8082/health
+# Check test results
+cat test-results/report.json
 
-# View test logs
-cat tests/e2e/reports/latest/test-TC-001.log
+# Verify mock services are healthy
+curl http://localhost:8090/health
+curl http://localhost:8091/health
 ```
 
----
+### Build Issues
 
-## 📞 Support
+```bash
+# Clean and rebuild
+./scripts/clean.sh
+./scripts/setup.sh
 
-- **Issues**: GitHub Issues with `e2e-testing` label
-- **Discussions**: GitHub Discussions #testing
-- **Documentation**: [Full Framework Docs](./E2E_TESTING_FRAMEWORK.md)
+# Verify Go version
+go version  # Should be 1.24.0 or higher
 
----
+# Check dependencies
+cd orchestrator && go mod verify
+cd ../mocks/llm-provider && go mod verify
+cd ../slack && go mod verify
+```
 
-## 📝 License
+## Performance
 
-See main HelixCode repository for license information.
+### Test Execution Times
 
----
+- **Smoke Tests** (8 tests): ~2 seconds
+- **Core Tests** (10 tests): ~5 seconds
+- **Full Suite** (30+ tests): ~15 seconds
+- **Integration Tests** (50+ tests): ~30 seconds
 
-**Maintained by**: HelixCode Team
-**Status**: Active Development
-**Roadmap**: [Implementation Plan](./E2E_TESTING_IMPLEMENTATION_PLAN.md)
+### Resource Usage
+
+- **Mock LLM Provider**: ~12MB binary, <50MB RAM
+- **Mock Slack Service**: ~12MB binary, <30MB RAM
+- **Test Orchestrator**: ~6MB binary, <20MB RAM
+- **PostgreSQL**: ~30MB RAM (Docker)
+- **Redis**: ~10MB RAM (Docker)
+
+## Best Practices
+
+1. **Always start services** before running tests
+2. **Use appropriate priorities** for test criticality
+3. **Tag tests properly** for easy filtering
+4. **Set realistic timeouts** for long-running tests
+5. **Clean up between runs** to avoid state issues
+6. **Review test reports** for insights
+7. **Keep mock fixtures updated** with real API changes
+8. **Use Docker** for consistent environments
+
+## Contributing
+
+### Adding Mock Endpoints
+
+1. Update handler in `mocks/*/handlers/`
+2. Add routes in `cmd/main.go`
+3. Update fixtures if needed
+4. Document in README
+
+### Extending Test Bank
+
+1. Create test implementation
+2. Add metadata
+3. Register in loader
+4. Document test purpose
+
+## License
+
+Part of the HelixCode project. See main repository for license details.
+
+## Support
+
+For issues or questions:
+
+1. Check [Troubleshooting](#troubleshooting) section
+2. Review component-specific READMEs
+3. Check HelixCode main documentation
+4. Open an issue in the main repository
+
+## Version History
+
+- **v1.0.0** (2025-01-07): Initial MVP release
+  - Test Orchestrator with parallel execution
+  - Mock LLM Provider and Slack services
+  - Test Bank with 10 core tests
+  - Docker Compose support
+  - Automation scripts

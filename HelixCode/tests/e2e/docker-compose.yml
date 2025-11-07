@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Mock LLM Provider Service
+  mock-llm-provider:
+    build:
+      context: ./mocks/llm-provider
+      dockerfile: Dockerfile
+    container_name: e2e-mock-llm-provider
+    ports:
+      - "${MOCK_LLM_PORT:-8090}:8090"
+    environment:
+      - MOCK_LLM_PORT=8090
+      - MOCK_LLM_DELAY_MS=${MOCK_LLM_DELAY_MS:-100}
+      - MOCK_LLM_LOGGING=${MOCK_LLM_LOGGING:-true}
+      - MOCK_LLM_DEFAULT_MODEL=${MOCK_LLM_DEFAULT_MODEL:-mock-gpt-4}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8090/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - e2e-network
+
+  # Mock Slack Service
+  mock-slack:
+    build:
+      context: ./mocks/slack
+      dockerfile: Dockerfile
+    container_name: e2e-mock-slack
+    ports:
+      - "${MOCK_SLACK_PORT:-8091}:8091"
+    environment:
+      - MOCK_SLACK_PORT=8091
+      - MOCK_SLACK_DELAY_MS=${MOCK_SLACK_DELAY_MS:-50}
+      - MOCK_SLACK_LOGGING=${MOCK_SLACK_LOGGING:-true}
+      - MOCK_SLACK_STORAGE_CAPACITY=${MOCK_SLACK_STORAGE_CAPACITY:-1000}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8091/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - e2e-network
+
+  # PostgreSQL (for tests that require database)
+  postgres:
+    image: postgres:16-alpine
+    container_name: e2e-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-helixcode_test}
+      - POSTGRES_USER=${POSTGRES_USER:-helixcode}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-helixcode_test_password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helixcode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - e2e-network
+
+  # Redis (for tests that require caching)
+  redis:
+    image: redis:7-alpine
+    container_name: e2e-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-helixcode_test_password}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - e2e-network
+
+networks:
+  e2e-network:
+    driver: bridge
+    name: e2e-network
+
+volumes:
+  postgres-data:
+    name: e2e-postgres-data
+  redis-data:
+    name: e2e-redis-data
