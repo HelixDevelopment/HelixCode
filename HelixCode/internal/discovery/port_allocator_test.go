@@ -103,16 +103,24 @@ func TestAllocatePort_ReservedPort(t *testing.T) {
 }
 
 func TestAllocatePort_RangeExhausted_NoEphemeral(t *testing.T) {
-	pa := NewDefaultPortAllocator()
-	
-	// Exhaust the database port range (5433-5442 = 10 ports)
-	for i := 0; i < 10; i++ {
-		_, err := pa.AllocatePort(fmt.Sprintf("db-%d", i), 5432)
+	// Create a custom allocator with a small port range for this test
+	config := PortAllocatorConfig{
+		PortRanges: map[string]PortRange{
+			"test": {Start: 15000, End: 15002}, // Only 3 ports
+		},
+		ReservedPorts:  []int{},
+		AllowEphemeral: false,
+	}
+	pa := NewPortAllocator(config)
+
+	// Exhaust the test port range (3 ports)
+	for i := 0; i < 3; i++ {
+		_, err := pa.AllocatePortInRange(fmt.Sprintf("test-%d", i), 15000, 15002)
 		require.NoError(t, err)
 	}
-	
+
 	// Try to allocate one more
-	_, err := pa.AllocatePort("db-11", 5432)
+	_, err := pa.AllocatePortInRange("test-4", 15000, 15002)
 	assert.ErrorIs(t, err, ErrNoPortsAvailable)
 }
 

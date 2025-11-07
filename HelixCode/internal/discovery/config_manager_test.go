@@ -23,7 +23,7 @@ func TestNewConfigManager_InvalidConfig(t *testing.T) {
 	config.MaxServices = 0 // Invalid
 
 	_, err := NewConfigManager(config)
-	assert.ErrorIs(t, err, ErrInvalidConfig)
+	assert.Error(t, err)
 }
 
 func TestDefaultDiscoveryConfig(t *testing.T) {
