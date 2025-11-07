@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Type represents the template type
@@ -270,7 +272,7 @@ func hasUnreplacedPlaceholders(s string) bool {
 
 // generateTemplateID generates a unique template ID
 func generateTemplateID() string {
-	return fmt.Sprintf("tpl-%d", time.Now().UnixNano())
+	return fmt.Sprintf("tpl-%s", uuid.New().String())
 }
 
 // ParseTemplate parses a template string and creates a Template

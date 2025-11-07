@@ -681,6 +681,7 @@ func TestConcurrency(t *testing.T) {
 	t.Run("concurrent_register", func(t *testing.T) {
 		mgr := NewManager()
 		var wg sync.WaitGroup
+		errors := make(chan error, 10)
 
 		for i := 0; i < 10; i++ {
 			wg.Add(1)
@@ -688,11 +689,20 @@ func TestConcurrency(t *testing.T) {
 				defer wg.Done()
 				tpl := NewTemplate(fmt.Sprintf("Test%d", idx), "Test", TypeCode)
 				tpl.SetContent("Content")
-				mgr.Register(tpl)
+				if err := mgr.Register(tpl); err != nil {
+					errors <- err
+				}
 			}(i)
 		}
 
 		wg.Wait()
+		close(errors)
+
+		// Check for any errors
+		for err := range errors {
+			t.Errorf("Registration error: %v", err)
+		}
+
 		assert.Equal(t, 10, mgr.Count())
 	})
 
