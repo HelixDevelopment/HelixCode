@@ -1,0 +1,467 @@
+version: '3.8'
+
+networks:
+  helix-e2e:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+
+volumes:
+  postgres-e2e-data:
+  redis-e2e-data:
+  ollama-e2e-models:
+  test-reports:
+  test-logs:
+
+services:
+  # ============================================================================
+  # Core Database Services
+  # ============================================================================
+
+  postgres-e2e:
+    image: postgres:16-alpine
+    container_name: helix-e2e-postgres
+    environment:
+      POSTGRES_DB: helix_e2e
+      POSTGRES_USER: helix_test
+      POSTGRES_PASSWORD: test_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-e2e-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.10
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helix_test -d helix_e2e"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-e2e:
+    image: redis:7-alpine
+    container_name: helix-e2e-redis
+    command: redis-server --requirepass test_redis_pass --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-e2e-data:/data
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.11
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ============================================================================
+  # Main HelixCode Server
+  # ============================================================================
+
+  helixcode-server:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    container_name: helix-e2e-server
+    environment:
+      - HELIX_DATABASE_URL=postgresql://helix_test:test_password_123@postgres-e2e:5432/helix_e2e?sslmode=disable
+      - HELIX_REDIS_URL=redis://:test_redis_pass@redis-e2e:6379/0
+      - HELIX_AUTH_JWT_SECRET=e2e_test_jwt_secret_key_123456
+      - HELIX_SERVER_PORT=8080
+      - HELIX_LOG_LEVEL=debug
+      - HELIX_WORKERS_ENABLED=true
+      - HELIX_WORKERS_MAX_CONCURRENT=10
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-e2e:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_healthy
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.20
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - test-logs:/var/log/helixcode
+
+  # ============================================================================
+  # Aurora OS (Security-focused Platform)
+  # ============================================================================
+
+  aurora-os:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile.aurora-os
+    container_name: helix-e2e-aurora-os
+    environment:
+      - AURORA_DATABASE_URL=postgresql://helix_test:test_password_123@postgres-e2e:5432/aurora_e2e?sslmode=disable
+      - AURORA_REDIS_URL=redis://:test_redis_pass@redis-e2e:6379/1
+      - AURORA_SECURITY_LEVEL=enhanced
+      - AURORA_AUDIT_LOGGING=true
+      - AURORA_AUDIT_RETENTION_DAYS=30
+      - AURORA_AUTH_JWT_SECRET=aurora_e2e_secret_123
+      - AURORA_SERVER_PORT=8081
+      - AURORA_PROMETHEUS_PORT=9091
+    ports:
+      - "8081:8081"
+      - "9091:9091"
+    depends_on:
+      postgres-e2e:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_healthy
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.30
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - test-logs:/var/log/aurora-os
+    profiles:
+      - aurora
+      - full
+
+  # ============================================================================
+  # Harmony OS (Distributed Computing Platform)
+  # ============================================================================
+
+  harmony-os-master:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile.harmony-os
+    container_name: helix-e2e-harmony-master
+    environment:
+      - HARMONY_DATABASE_URL=postgresql://helix_test:test_password_123@postgres-e2e:5432/harmony_e2e?sslmode=disable
+      - HARMONY_REDIS_URL=redis://:test_redis_pass@redis-e2e:6379/2
+      - HARMONY_NODE_TYPE=master
+      - HARMONY_DISTRIBUTED_ENABLED=true
+      - HARMONY_AI_ACCELERATION=true
+      - HARMONY_SERVER_PORT=8082
+      - HARMONY_PEER_PORT=8092
+      - HARMONY_DATA_PORT=8093
+    ports:
+      - "8082:8082"
+      - "8092:8092"
+      - "8093:8093"
+    depends_on:
+      postgres-e2e:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_healthy
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.40
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - test-logs:/var/log/harmony-os
+    profiles:
+      - harmony
+      - distributed
+      - full
+
+  harmony-os-worker-1:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile.harmony-os
+    container_name: helix-e2e-harmony-worker-1
+    environment:
+      - HARMONY_NODE_TYPE=worker
+      - HARMONY_MASTER_URL=http://harmony-os-master:8082
+      - HARMONY_REDIS_URL=redis://:test_redis_pass@redis-e2e:6379/2
+      - HARMONY_WORKER_ID=worker-1
+      - HARMONY_AI_ACCELERATION=true
+      - HARMONY_SERVER_PORT=8083
+    ports:
+      - "8083:8083"
+    depends_on:
+      harmony-os-master:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_healthy
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.41
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - harmony
+      - distributed
+      - full
+
+  harmony-os-worker-2:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile.harmony-os
+    container_name: helix-e2e-harmony-worker-2
+    environment:
+      - HARMONY_NODE_TYPE=worker
+      - HARMONY_MASTER_URL=http://harmony-os-master:8082
+      - HARMONY_REDIS_URL=redis://:test_redis_pass@redis-e2e:6379/2
+      - HARMONY_WORKER_ID=worker-2
+      - HARMONY_AI_ACCELERATION=true
+      - HARMONY_SERVER_PORT=8084
+    ports:
+      - "8084:8084"
+    depends_on:
+      harmony-os-master:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_healthy
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.42
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - harmony
+      - distributed
+      - full
+
+  # ============================================================================
+  # Local LLM Services
+  # ============================================================================
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: helix-e2e-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-e2e-models:/root/.ollama
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.50
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - local-llm
+      - full
+
+  llama-cpp:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: helix-e2e-llama-cpp
+    command: --host 0.0.0.0 --port 8085
+    ports:
+      - "8085:8085"
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.51
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - local-llm
+      - full
+
+  # ============================================================================
+  # Mock Services
+  # ============================================================================
+
+  mock-llm-provider:
+    build:
+      context: ../mocks/llm-provider
+      dockerfile: Dockerfile
+    container_name: helix-e2e-mock-llm
+    environment:
+      - MOCK_LLM_PORT=8086
+      - MOCK_LLM_LATENCY_MS=100
+      - MOCK_LLM_ERROR_RATE=0.0
+    ports:
+      - "8086:8086"
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.60
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - mocks
+      - full
+
+  mock-slack:
+    build:
+      context: ../mocks/slack
+      dockerfile: Dockerfile
+    container_name: helix-e2e-mock-slack
+    environment:
+      - MOCK_SLACK_PORT=8087
+    ports:
+      - "8087:8087"
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.61
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - mocks
+      - full
+
+  mock-storage:
+    image: minio/minio:latest
+    container_name: helix-e2e-mock-storage
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.62
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - mocks
+      - full
+
+  # ============================================================================
+  # Test Orchestrator & AI QA
+  # ============================================================================
+
+  test-orchestrator:
+    build:
+      context: ../orchestrator
+      dockerfile: Dockerfile
+    container_name: helix-e2e-orchestrator
+    environment:
+      - E2E_DATABASE_URL=postgresql://helix_test:test_password_123@postgres-e2e:5432/helix_e2e?sslmode=disable
+      - E2E_REDIS_URL=redis://:test_redis_pass@redis-e2e:6379/3
+      - E2E_SERVER_URL=http://helixcode-server:8080
+      - E2E_AURORA_URL=http://aurora-os:8081
+      - E2E_HARMONY_URL=http://harmony-os-master:8082
+      - E2E_MOCK_LLM_URL=http://mock-llm-provider:8086
+      - E2E_OLLAMA_URL=http://ollama:11434
+      - E2E_PARALLEL_TESTS=5
+      - E2E_TIMEOUT_SECONDS=600
+      - E2E_RETRY_COUNT=3
+      - E2E_MOCK_MODE=${E2E_MOCK_MODE:-false}
+      - E2E_AI_MODEL=${E2E_AI_MODEL:-claude-3-5-sonnet-20241022}
+      - E2E_AI_PROVIDER=${E2E_AI_PROVIDER:-anthropic}
+      - E2E_ANTHROPIC_API_KEY=${E2E_ANTHROPIC_API_KEY}
+      - E2E_OPENAI_API_KEY=${E2E_OPENAI_API_KEY}
+    depends_on:
+      helixcode-server:
+        condition: service_healthy
+      postgres-e2e:
+        condition: service_healthy
+      redis-e2e:
+        condition: service_healthy
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.100
+    volumes:
+      - ../testbank:/app/testbank:ro
+      - test-reports:/app/reports
+      - test-logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: ["run", "--all", "--format=json"]
+    profiles:
+      - orchestrator
+      - full
+
+  # ============================================================================
+  # Test Reporter & Dashboard
+  # ============================================================================
+
+  test-reporter:
+    build:
+      context: ../reporter
+      dockerfile: Dockerfile
+    container_name: helix-e2e-reporter
+    environment:
+      - REPORTER_PORT=8088
+      - REPORTER_REPORT_DIR=/reports
+    ports:
+      - "8088:8088"
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.101
+    volumes:
+      - test-reports:/reports:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    profiles:
+      - reporter
+      - full
+
+  # ============================================================================
+  # Monitoring Stack (Optional)
+  # ============================================================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: helix-e2e-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.110
+    profiles:
+      - monitoring
+      - full
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: helix-e2e-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      helix-e2e:
+        ipv4_address: 172.30.0.111
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+      - full

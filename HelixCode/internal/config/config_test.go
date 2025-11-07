@@ -198,3 +198,455 @@ func TestGetEnvIntOrDefault(t *testing.T) {
 
 	assert.Equal(t, 10, GetEnvIntOrDefault("TEST_INVALID_INT", 10))
 }
+
+// TestLoad_NoConfigFile tests loading config when no config file exists
+func TestLoad_NoConfigFile(t *testing.T) {
+	// Set JWT secret via env var to pass validation
+	oldJWTSecret := os.Getenv("HELIX_AUTH_JWT_SECRET")
+	defer func() {
+		if oldJWTSecret != "" {
+			os.Setenv("HELIX_AUTH_JWT_SECRET", oldJWTSecret)
+		} else {
+			os.Unsetenv("HELIX_AUTH_JWT_SECRET")
+		}
+	}()
+	os.Setenv("HELIX_AUTH_JWT_SECRET", "test-secret-for-no-config")
+
+	// Ensure HELIX_CONFIG points to non-existent file
+	oldConfig := os.Getenv("HELIX_CONFIG")
+	defer os.Setenv("HELIX_CONFIG", oldConfig)
+	os.Setenv("HELIX_CONFIG", "/tmp/non-existent-config.yaml")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+	assert.NotNil(t, cfg)
+	// Should use defaults
+	assert.Equal(t, "0.0.0.0", cfg.Server.Address)
+	assert.Equal(t, 8080, cfg.Server.Port)
+}
+
+// TestLoad_MalformedConfig tests loading with malformed YAML
+func TestLoad_MalformedConfig(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "malformed.yaml")
+
+	// Create malformed YAML
+	malformedContent := `
+server:
+  port: invalid_port
+  address: 127.0.0.1
+auth:
+  jwt_secret: "test-secret"
+`
+	err := os.WriteFile(configPath, []byte(malformedContent), 0644)
+	require.NoError(t, err)
+
+	oldConfig := os.Getenv("HELIX_CONFIG")
+	defer os.Setenv("HELIX_CONFIG", oldConfig)
+	os.Setenv("HELIX_CONFIG", configPath)
+
+	oldJWTSecret := os.Getenv("HELIX_AUTH_JWT_SECRET")
+	defer func() {
+		if oldJWTSecret != "" {
+			os.Setenv("HELIX_AUTH_JWT_SECRET", oldJWTSecret)
+		} else {
+			os.Unsetenv("HELIX_AUTH_JWT_SECRET")
+		}
+	}()
+	os.Unsetenv("HELIX_AUTH_JWT_SECRET")
+
+	_, err = Load()
+	// Should fail to unmarshal
+	assert.Error(t, err)
+}
+
+// TestLoad_EnvironmentOverrides tests environment variable overrides
+func TestLoad_EnvironmentOverrides(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "config.yaml")
+
+	configContent := `
+server:
+  port: 8080
+database:
+  host: "localhost"
+  port: 5432
+  dbname: "testdb"
+auth:
+  jwt_secret: "file-secret"
+redis:
+  enabled: false
+`
+	err := os.WriteFile(configPath, []byte(configContent), 0644)
+	require.NoError(t, err)
+
+	// Set environment overrides
+	oldConfig := os.Getenv("HELIX_CONFIG")
+	oldDBHost := os.Getenv("HELIX_DATABASE_HOST")
+	oldDBPort := os.Getenv("HELIX_DATABASE_PORT")
+	oldJWTSecret := os.Getenv("HELIX_AUTH_JWT_SECRET")
+
+	defer func() {
+		os.Setenv("HELIX_CONFIG", oldConfig)
+		os.Setenv("HELIX_DATABASE_HOST", oldDBHost)
+		os.Setenv("HELIX_DATABASE_PORT", oldDBPort)
+		if oldJWTSecret != "" {
+			os.Setenv("HELIX_AUTH_JWT_SECRET", oldJWTSecret)
+		} else {
+			os.Unsetenv("HELIX_AUTH_JWT_SECRET")
+		}
+	}()
+
+	os.Setenv("HELIX_CONFIG", configPath)
+	os.Setenv("HELIX_DATABASE_HOST", "db.example.com")
+	os.Setenv("HELIX_DATABASE_PORT", "5433")
+	os.Setenv("HELIX_AUTH_JWT_SECRET", "env-secret")
+
+	cfg, err := Load()
+	require.NoError(t, err)
+	assert.Equal(t, "db.example.com", cfg.Database.Host)
+	assert.Equal(t, 5433, cfg.Database.Port)
+	assert.Equal(t, "env-secret", cfg.Auth.JWTSecret)
+}
+
+// TestFindConfigFile_NonExistent tests findConfigFile with non-existent path
+func TestFindConfigFile_NonExistent(t *testing.T) {
+	oldValue := os.Getenv("HELIX_CONFIG")
+	defer os.Setenv("HELIX_CONFIG", oldValue)
+
+	os.Setenv("HELIX_CONFIG", "/tmp/does-not-exist.yaml")
+	found := findConfigFile()
+	assert.Empty(t, found)
+}
+
+// TestFindConfigFile_EmptyEnvVar tests findConfigFile with empty env var
+func TestFindConfigFile_EmptyEnvVar(t *testing.T) {
+	oldValue := os.Getenv("HELIX_CONFIG")
+	defer os.Setenv("HELIX_CONFIG", oldValue)
+
+	os.Setenv("HELIX_CONFIG", "")
+	found := findConfigFile()
+	// Should return empty since no config files exist in default locations
+	assert.Empty(t, found)
+}
+
+// TestValidateConfig_EdgeCases tests all validation edge cases
+func TestValidateConfig_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  Config
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "missing database name",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host: "localhost",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "database name is required",
+		},
+		{
+			name: "server port zero",
+			config: Config{
+				Server: ServerConfig{Port: 0},
+			},
+			wantErr: true,
+			errMsg:  "server port must be between 1 and 65535",
+		},
+		{
+			name: "server port negative",
+			config: Config{
+				Server: ServerConfig{Port: -1},
+			},
+			wantErr: true,
+			errMsg:  "server port must be between 1 and 65535",
+		},
+		{
+			name: "redis enabled with missing host",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{
+					Enabled: true,
+					Port:    6379,
+				},
+				Auth: AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "redis host is required when redis is enabled",
+		},
+		{
+			name: "redis invalid port zero",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{
+					Enabled: true,
+					Host:    "localhost",
+					Port:    0,
+				},
+				Auth: AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "redis port must be between 1 and 65535",
+		},
+		{
+			name: "redis disabled should skip validation",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{
+					Enabled: false,
+					// Missing host and invalid port should be ignored
+					Port: 0,
+				},
+				Auth: AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty JWT secret",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: ""},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "JWT secret must be set",
+		},
+		{
+			name: "invalid health check interval",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 0,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "health check interval must be positive",
+		},
+		{
+			name: "invalid max concurrent tasks",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  0,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "max concurrent tasks must be positive",
+		},
+		{
+			name: "negative max retries",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: -1},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "max retries cannot be negative",
+		},
+		{
+			name: "invalid max tokens",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   0,
+					Temperature: 0.7,
+				},
+			},
+			wantErr: true,
+			errMsg:  "max tokens must be positive",
+		},
+		{
+			name: "temperature too low",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: -0.1,
+				},
+			},
+			wantErr: true,
+			errMsg:  "temperature must be between 0 and 2",
+		},
+		{
+			name: "temperature too high",
+			config: Config{
+				Server: ServerConfig{Port: 8080},
+				Database: database.Config{
+					Host:   "localhost",
+					DBName: "test",
+				},
+				Redis: RedisConfig{Enabled: false},
+				Auth:  AuthConfig{JWTSecret: "test-secret"},
+				Workers: WorkersConfig{
+					HealthCheckInterval: 30,
+					MaxConcurrentTasks:  10,
+				},
+				Tasks: TasksConfig{MaxRetries: 3},
+				LLM: LLMConfig{
+					MaxTokens:   4096,
+					Temperature: 2.1,
+				},
+			},
+			wantErr: true,
+			errMsg:  "temperature must be between 0 and 2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateConfig(&tt.config)
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.errMsg != "" {
+					assert.Contains(t, err.Error(), tt.errMsg)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestCreateDefaultConfig_DirectoryCreation tests directory creation
+func TestCreateDefaultConfig_DirectoryCreation(t *testing.T) {
+	tempDir := t.TempDir()
+	configPath := filepath.Join(tempDir, "nested", "path", "config.yaml")
+
+	err := CreateDefaultConfig(configPath)
+	assert.NoError(t, err)
+
+	// Check if file and directories were created
+	_, err = os.Stat(configPath)
+	assert.NoError(t, err)
+
+	// Verify content
+	content, err := os.ReadFile(configPath)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), "HelixCode Server Configuration")
+}
