@@ -1,0 +1,141 @@
+# Docker Compose for HelixCode Aurora OS
+# Enhanced security and system monitoring platform
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: helixcode-aurora-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: helixcode
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      POSTGRES_DB: helixcode
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - aurora-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helixcode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache (Optional for Aurora OS)
+  redis:
+    image: redis:7-alpine
+    container_name: helixcode-aurora-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - aurora-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - with-redis
+
+  # Aurora OS Application
+  aurora-os:
+    build:
+      context: .
+      dockerfile: Dockerfile.aurora-os
+    container_name: helixcode-aurora-os
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+
+      # Database Configuration
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: helixcode
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_NAME: helixcode
+      DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
+
+      # Redis Configuration (Optional)
+      REDIS_ENABLED: ${REDIS_ENABLED:-false}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+
+      # Aurora OS Configuration
+      AURORA_SECURITY_LEVEL: ${AURORA_SECURITY_LEVEL:-enhanced}
+      AURORA_MONITORING: ${AURORA_MONITORING:-true}
+      AURORA_AUDIT_LOGGING: ${AURORA_AUDIT_LOGGING:-true}
+
+      # Security Settings
+      SECURITY_ENCRYPTION: ${SECURITY_ENCRYPTION:-true}
+      SECURITY_RATE_LIMITING: ${SECURITY_RATE_LIMITING:-true}
+      SECURITY_IP_WHITELIST: ${SECURITY_IP_WHITELIST:-}
+      SECURITY_MFA_REQUIRED: ${SECURITY_MFA_REQUIRED:-false}
+
+      # System Monitoring
+      MONITORING_INTERVAL: ${MONITORING_INTERVAL:-30}
+      MONITORING_METRICS_ENABLED: ${MONITORING_METRICS_ENABLED:-true}
+      MONITORING_PROMETHEUS_ENABLED: ${MONITORING_PROMETHEUS_ENABLED:-true}
+
+      # Audit Configuration
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-365}
+      AUDIT_LOG_ENCRYPTION: ${AUDIT_LOG_ENCRYPTION:-true}
+      AUDIT_INCLUDE_AUTHENTICATION: ${AUDIT_INCLUDE_AUTH:-true}
+      AUDIT_INCLUDE_AUTHORIZATION: ${AUDIT_INCLUDE_AUTHZ:-true}
+      AUDIT_INCLUDE_DATA_ACCESS: ${AUDIT_INCLUDE_DATA:-true}
+
+      # Authentication
+      AUTH_TOKEN_EXPIRY: ${AUTH_TOKEN_EXPIRY:-86400}
+      AUTH_SESSION_EXPIRY: ${AUTH_SESSION_EXPIRY:-604800}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: /var/log/helixcode/aurora-os.log
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+
+    volumes:
+      - aurora_logs:/var/log/helixcode
+      - aurora_data:/var/lib/helixcode
+      - ./config/aurora-config.yaml:/etc/helixcode/aurora-config.yaml:ro
+    ports:
+      - "8080:8080"
+      - "9090:9090"  # Prometheus metrics
+    networks:
+      - aurora-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  aurora-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  aurora_logs:
+    driver: local
+  aurora_data:
+    driver: local

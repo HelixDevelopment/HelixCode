@@ -1,0 +1,331 @@
+# Docker Compose for HelixCode - Combined Aurora OS and Harmony OS
+# Multi-platform deployment with shared infrastructure
+version: '3.8'
+
+services:
+  # Shared PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: helixcode-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: helixcode
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      POSTGRES_DB: helixcode
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Performance tuning
+      POSTGRES_SHARED_BUFFERS: ${PG_SHARED_BUFFERS:-256MB}
+      POSTGRES_MAX_CONNECTIONS: ${PG_MAX_CONNECTIONS:-200}
+      POSTGRES_WORK_MEM: ${PG_WORK_MEM:-4MB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./config/postgres.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helixcode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Shared Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: helixcode-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-changeme}
+      --maxmemory ${REDIS_MAX_MEMORY:-512mb}
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aurora OS - Enhanced Security Platform
+  aurora-os:
+    build:
+      context: .
+      dockerfile: Dockerfile.aurora-os
+    container_name: helixcode-aurora-os
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+
+      # Database Configuration
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: helixcode
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_NAME: helixcode
+      DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
+
+      # Redis Configuration
+      REDIS_ENABLED: true
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+
+      # Aurora OS Configuration
+      AURORA_SECURITY_LEVEL: ${AURORA_SECURITY_LEVEL:-enhanced}
+      AURORA_MONITORING: ${AURORA_MONITORING:-true}
+      AURORA_AUDIT_LOGGING: ${AURORA_AUDIT_LOGGING:-true}
+
+      # Security Settings
+      SECURITY_ENCRYPTION: ${AURORA_ENCRYPTION:-true}
+      SECURITY_RATE_LIMITING: ${AURORA_RATE_LIMITING:-true}
+      SECURITY_MFA_REQUIRED: ${AURORA_MFA_REQUIRED:-false}
+
+      # Monitoring
+      MONITORING_INTERVAL: ${AURORA_MONITORING_INTERVAL:-30}
+      MONITORING_PROMETHEUS_ENABLED: ${AURORA_PROMETHEUS:-true}
+
+      # Audit
+      AUDIT_RETENTION_DAYS: ${AURORA_AUDIT_RETENTION:-365}
+      AUDIT_LOG_ENCRYPTION: ${AURORA_AUDIT_ENCRYPTION:-true}
+
+      # Authentication
+      AUTH_TOKEN_EXPIRY: ${AUTH_TOKEN_EXPIRY:-86400}
+      AUTH_SESSION_EXPIRY: ${AUTH_SESSION_EXPIRY:-604800}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: /var/log/helixcode/aurora-os.log
+      LOG_FORMAT: json
+
+    volumes:
+      - aurora_logs:/var/log/helixcode
+      - aurora_data:/var/lib/helixcode
+      - ./config/aurora-config.yaml:/etc/helixcode/aurora-config.yaml:ro
+    ports:
+      - "8080:8080"    # Aurora OS HTTP API
+      - "9090:9090"    # Aurora OS Prometheus metrics
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.helixcode.platform=aurora-os"
+      - "com.helixcode.type=security"
+
+  # Harmony OS - Distributed Computing Platform
+  harmony-os:
+    build:
+      context: .
+      dockerfile: Dockerfile.harmony-os
+    container_name: helixcode-harmony-os
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8081
+
+      # Database Configuration
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: helixcode
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_NAME: helixcode
+      DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
+
+      # Redis Configuration (Required for distributed features)
+      REDIS_ENABLED: true
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+
+      # Harmony OS Distributed Computing
+      HARMONY_DISTRIBUTED_ENABLED: ${HARMONY_DISTRIBUTED_ENABLED:-true}
+      HARMONY_SYNC_ENABLED: ${HARMONY_SYNC_ENABLED:-true}
+      HARMONY_SYNC_INTERVAL: ${HARMONY_SYNC_INTERVAL:-30}
+
+      # AI Acceleration
+      HARMONY_RESOURCE_OPT: ${HARMONY_RESOURCE_OPT:-true}
+      HARMONY_AI_ACCEL: ${HARMONY_AI_ACCEL:-true}
+      HARMONY_GPU_ENABLED: ${HARMONY_GPU_ENABLED:-true}
+      HARMONY_NPU_ENABLED: ${HARMONY_NPU_ENABLED:-false}
+
+      # System Features
+      HARMONY_MONITORING: ${HARMONY_MONITORING:-true}
+      HARMONY_MULTI_SCREEN: ${HARMONY_MULTI_SCREEN:-true}
+      HARMONY_SUPER_DEVICE: ${HARMONY_SUPER_DEVICE:-true}
+
+      # Service Coordination
+      HARMONY_SERVICE_DISCOVERY: ${HARMONY_SERVICE_DISCOVERY:-true}
+      HARMONY_SERVICE_FAILOVER: ${HARMONY_SERVICE_FAILOVER:-true}
+      HARMONY_HEALTH_CHECK: ${HARMONY_HEALTH_CHECK:-15}
+
+      # Workers Configuration
+      WORKERS_HEALTH_CHECK: ${WORKERS_HEALTH_CHECK:-30}
+      WORKERS_MAX_TASKS: ${HARMONY_MAX_TASKS:-20}
+      WORKERS_DISTRIBUTED: ${HARMONY_DISTRIBUTED_WORKERS:-true}
+
+      # Task Management
+      TASKS_DISTRIBUTED: ${HARMONY_DISTRIBUTED_TASKS:-true}
+      TASKS_CHECKPOINT: ${TASKS_CHECKPOINT:-300}
+      TASKS_MAX_RETRIES: ${TASKS_MAX_RETRIES:-3}
+
+      # Authentication
+      AUTH_TOKEN_EXPIRY: ${AUTH_TOKEN_EXPIRY:-86400}
+      AUTH_SESSION_EXPIRY: ${AUTH_SESSION_EXPIRY:-604800}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: /var/log/helixcode/harmony-os.log
+      LOG_DISTRIBUTED: ${HARMONY_LOG_DISTRIBUTED:-true}
+
+    volumes:
+      - harmony_logs:/var/log/helixcode
+      - harmony_data:/var/lib/helixcode
+      - harmony_distributed:/var/lib/helixcode/distributed
+      - harmony_services:/var/lib/helixcode/services
+      - ./config/harmony-config.yaml:/etc/helixcode/harmony-config.yaml:ro
+    ports:
+      - "8081:8081"    # Harmony OS HTTP API
+      - "8091:8082"    # Harmony OS peer discovery
+      - "8092:8083"    # Harmony OS data transfer
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.helixcode.platform=harmony-os"
+      - "com.helixcode.type=distributed"
+
+  # Load Balancer (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: helixcode-nginx
+    restart: unless-stopped
+    depends_on:
+      - aurora-os
+      - harmony-os
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - production
+
+  # Prometheus Monitoring (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: helixcode-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9091:9090"
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - monitoring
+
+  # Grafana Dashboards (Optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: helixcode-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: ${GRAFANA_PLUGINS:-}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - helix-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - monitoring
+
+networks:
+  helix-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: helix0
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  aurora_logs:
+    driver: local
+  aurora_data:
+    driver: local
+  harmony_logs:
+    driver: local
+  harmony_data:
+    driver: local
+  harmony_distributed:
+    driver: local
+  harmony_services:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

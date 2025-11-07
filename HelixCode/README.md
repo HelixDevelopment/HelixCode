@@ -131,7 +131,7 @@ Industry-standard models with broad ecosystem support:
 - **Desktop**: Full-featured desktop application (Fyne)
 - **Terminal UI**: Terminal-based interface (tview)
 - **Aurora OS**: Specialized Aurora OS client
-- **Symphony OS**: Optimized Symphony OS client
+- **Harmony OS**: Specialized Harmony OS client
 - **Mobile**: Cross-platform mobile applications
 
 ## Configuration
@@ -261,7 +261,7 @@ make prod
 
 # Build specific applications
 make aurora-os
-make symphony-os
+make harmony-os
 
 # Build mobile bindings
 make mobile-ios

@@ -150,8 +150,8 @@ help:
 	@echo ""
 	@echo "Platform-Specific:"
 	@echo "  make aurora-os       - Build Aurora OS client"
-	@echo "  make symphony-os     - Build Symphony OS client"
-	@echo "  make aurora-symphony - Build Aurora and Symphony OS clients"
+	@echo "  make harmony-os      - Build Harmony OS client"
+	@echo "  make aurora-harmony  - Build Aurora and Harmony OS clients"
 	@echo ""
 	@echo "  make help            - Show this help"
 
@@ -173,19 +173,19 @@ mobile-android: mobile-init
 mobile: mobile-ios mobile-android
 	@echo "📱 All mobile bindings built"
 
-# Aurora OS and Symphony OS build targets
+# Aurora OS and Harmony OS build targets
 aurora-os:
 	@echo "🌟 Building Aurora OS client..."
 	$(GO_BUILD) -ldflags="-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)" -o bin/aurora-os ./applications/aurora-os
 	@echo "✅ Aurora OS client built: bin/aurora-os"
 
-symphony-os:
-	@echo "🎼 Building Symphony OS client..."
-	$(GO_BUILD) -ldflags="-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)" -o bin/symphony-os ./applications/symphony-os
-	@echo "✅ Symphony OS client built: bin/symphony-os"
+harmony-os:
+	@echo "🔶 Building Harmony OS client..."
+	$(GO_BUILD) -ldflags="-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)" -o bin/harmony-os ./applications/harmony-os
+	@echo "✅ Harmony OS client built: bin/harmony-os"
 
-aurora-symphony: aurora-os symphony-os
-	@echo "🌟🎼 Aurora OS and Symphony OS clients built"
+aurora-harmony: aurora-os harmony-os
+	@echo "🌟🔶 Aurora OS and Harmony OS clients built"
 
 # Development tools setup
 dev-setup: setup-deps logo-deps
@@ -197,3 +197,5 @@ dev-setup: setup-deps logo-deps
 	@echo "  3. Run 'make dev' to start development server"
 	@echo "  4. Run 'make mobile-ios' to build iOS framework"
 	@echo "  5. Run 'make mobile-android' to build Android AAR"
+	@echo "  6. Run 'make aurora-os' to build Aurora OS client"
+	@echo "  7. Run 'make harmony-os' to build Harmony OS client"

@@ -1,0 +1,230 @@
+name: Docker Compose Test
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'docker-compose*.yml'
+      - 'Dockerfile.*'
+      - '.github/workflows/docker-compose-test.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'docker-compose*.yml'
+      - 'Dockerfile.*'
+      - '.github/workflows/docker-compose-test.yml'
+  workflow_dispatch:
+
+jobs:
+  # Test Aurora OS Docker Compose
+  test-aurora-compose:
+    name: Test Aurora OS Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          DATABASE_PASSWORD=test123
+          REDIS_PASSWORD=test123
+          AURORA_SECURITY_LEVEL=standard
+          LOG_LEVEL=info
+          EOF
+
+      - name: Build Aurora OS image
+        run: docker-compose -f docker-compose.aurora-os.yml build
+
+      - name: Start Aurora OS services
+        run: docker-compose -f docker-compose.aurora-os.yml up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          timeout 120 bash -c '
+            until docker-compose -f docker-compose.aurora-os.yml ps | grep -q "healthy"; do
+              echo "Waiting for services to be healthy..."
+              sleep 5
+            done
+          '
+
+      - name: Check Aurora OS health
+        run: |
+          sleep 10
+          curl -f http://localhost:8080/health || exit 1
+
+      - name: View logs on failure
+        if: failure()
+        run: docker-compose -f docker-compose.aurora-os.yml logs
+
+      - name: Stop services
+        if: always()
+        run: docker-compose -f docker-compose.aurora-os.yml down -v
+
+  # Test Harmony OS Docker Compose
+  test-harmony-compose:
+    name: Test Harmony OS Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          DATABASE_PASSWORD=test123
+          REDIS_PASSWORD=test123
+          HARMONY_DISTRIBUTED_ENABLED=true
+          HARMONY_AI_ACCEL=true
+          LOG_LEVEL=info
+          EOF
+
+      - name: Build Harmony OS image
+        run: docker-compose -f docker-compose.harmony-os.yml build
+
+      - name: Start Harmony OS services
+        run: docker-compose -f docker-compose.harmony-os.yml up -d
+
+      - name: Wait for services to be healthy
+        run: |
+          timeout 120 bash -c '
+            until docker-compose -f docker-compose.harmony-os.yml ps | grep -q "healthy"; do
+              echo "Waiting for services to be healthy..."
+              sleep 5
+            done
+          '
+
+      - name: Check Harmony OS health
+        run: |
+          sleep 10
+          curl -f http://localhost:8080/health || exit 1
+
+      - name: View logs on failure
+        if: failure()
+        run: docker-compose -f docker-compose.harmony-os.yml logs
+
+      - name: Stop services
+        if: always()
+        run: docker-compose -f docker-compose.harmony-os.yml down -v
+
+  # Test Combined Deployment
+  test-combined-compose:
+    name: Test Combined Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          DATABASE_PASSWORD=test123
+          REDIS_PASSWORD=test123
+          AURORA_SECURITY_LEVEL=standard
+          HARMONY_DISTRIBUTED_ENABLED=true
+          LOG_LEVEL=info
+          EOF
+
+      - name: Build images
+        run: docker-compose -f docker-compose.specialized-platforms.yml build aurora-os harmony-os
+
+      - name: Start services
+        run: docker-compose -f docker-compose.specialized-platforms.yml up -d aurora-os harmony-os postgres redis
+
+      - name: Wait for services to be healthy
+        run: |
+          timeout 120 bash -c '
+            until docker-compose -f docker-compose.specialized-platforms.yml ps | grep -q "healthy"; do
+              echo "Waiting for services to be healthy..."
+              sleep 5
+            done
+          '
+
+      - name: Check Aurora OS health
+        run: |
+          sleep 10
+          curl -f http://localhost:8080/health || exit 1
+
+      - name: Check Harmony OS health
+        run: |
+          curl -f http://localhost:8081/health || exit 1
+
+      - name: Check services are running
+        run: |
+          docker-compose -f docker-compose.specialized-platforms.yml ps
+          docker-compose -f docker-compose.specialized-platforms.yml ps | grep "aurora-os" | grep "Up"
+          docker-compose -f docker-compose.specialized-platforms.yml ps | grep "harmony-os" | grep "Up"
+
+      - name: View logs on failure
+        if: failure()
+        run: docker-compose -f docker-compose.specialized-platforms.yml logs
+
+      - name: Stop services
+        if: always()
+        run: docker-compose -f docker-compose.specialized-platforms.yml down -v
+
+  # Test with monitoring stack
+  test-monitoring-stack:
+    name: Test Monitoring Stack
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          DATABASE_PASSWORD=test123
+          REDIS_PASSWORD=test123
+          AURORA_SECURITY_LEVEL=standard
+          HARMONY_DISTRIBUTED_ENABLED=true
+          GRAFANA_ADMIN_PASSWORD=admin
+          LOG_LEVEL=info
+          EOF
+
+      - name: Create Prometheus config
+        run: |
+          mkdir -p config
+          cat > config/prometheus.yml <<EOF
+          global:
+            scrape_interval: 15s
+          scrape_configs:
+            - job_name: 'aurora-os'
+              static_configs:
+                - targets: ['aurora-os:9090']
+            - job_name: 'harmony-os'
+              static_configs:
+                - targets: ['harmony-os:8081']
+          EOF
+
+      - name: Build images
+        run: docker-compose -f docker-compose.specialized-platforms.yml build aurora-os harmony-os
+
+      - name: Start services with monitoring
+        run: docker-compose -f docker-compose.specialized-platforms.yml --profile monitoring up -d
+
+      - name: Wait for services
+        run: |
+          sleep 30
+          timeout 120 bash -c '
+            until docker-compose -f docker-compose.specialized-platforms.yml ps | grep -q "healthy"; do
+              echo "Waiting for services to be healthy..."
+              sleep 5
+            done
+          '
+
+      - name: Check Prometheus
+        run: |
+          curl -f http://localhost:9091/-/healthy || echo "Prometheus not healthy"
+
+      - name: Check Grafana
+        run: |
+          curl -f http://localhost:3000/api/health || echo "Grafana not healthy"
+
+      - name: View logs on failure
+        if: failure()
+        run: docker-compose -f docker-compose.specialized-platforms.yml --profile monitoring logs
+
+      - name: Stop services
+        if: always()
+        run: docker-compose -f docker-compose.specialized-platforms.yml --profile monitoring down -v

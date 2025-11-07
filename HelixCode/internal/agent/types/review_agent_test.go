@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"dev.helix.code/internal/agent"
@@ -471,4 +472,241 @@ func TestReviewAgentDefaultReviewType(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, result.Success)
 	assert.Equal(t, "comprehensive", result.Output["review_type"])
+}
+
+// TestReviewAgentReadFile tests the readFile helper function
+func TestReviewAgentReadFile(t *testing.T) {
+	t.Run("Successful file read", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "file content for review", nil
+			},
+			nil,
+			nil,
+		)
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		content, err := reviewAgent.readFile(ctx, "/path/to/file.go")
+		require.NoError(t, err)
+		assert.Equal(t, "file content for review", content)
+	})
+
+	t.Run("FSRead tool not found", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		mockRegistry := NewMockToolRegistry()
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = reviewAgent.readFile(ctx, "/path/to/file.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get FSRead tool")
+	})
+
+	t.Run("File read error", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return nil, fmt.Errorf("permission denied")
+			},
+			nil,
+			nil,
+		)
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = reviewAgent.readFile(ctx, "/restricted/file.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to read file")
+	})
+
+	t.Run("Unexpected output type", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return []byte("bytes not string"), nil
+			},
+			nil,
+			nil,
+		)
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = reviewAgent.readFile(ctx, "/path/to/file.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "unexpected output type")
+	})
+}
+
+// TestReviewAgentRunStaticAnalysis tests the runStaticAnalysis helper function
+func TestReviewAgentRunStaticAnalysis(t *testing.T) {
+	t.Run("Successful static analysis", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			nil,
+			nil,
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "analysis output", nil
+			},
+		)
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		results, err := reviewAgent.runStaticAnalysis(ctx, "test.go")
+		require.NoError(t, err)
+		assert.NotNil(t, results)
+		
+		// Should have static analysis commands for Go files
+		assert.Contains(t, results, "go_vet")
+		assert.Contains(t, results, "staticcheck")
+		assert.Contains(t, results, "golint")
+		
+		// Check success status
+		vetResult := results["go_vet"].(map[string]interface{})
+		assert.Equal(t, "success", vetResult["status"])
+	})
+
+	t.Run("Shell tool not found", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		mockRegistry := NewMockToolRegistry()
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = reviewAgent.runStaticAnalysis(ctx, "test.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get Shell tool")
+	})
+
+	t.Run("Analysis tool failures recorded", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			nil,
+			nil,
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				command := params["command"].(string)
+				if command == "staticcheck ." {
+					return nil, fmt.Errorf("staticcheck not installed")
+				}
+				return "success", nil
+			},
+		)
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		results, err := reviewAgent.runStaticAnalysis(ctx, "test.go")
+		require.NoError(t, err)
+		
+		// staticcheck should have failed status
+		staticcheckResult := results["staticcheck"].(map[string]interface{})
+		assert.Equal(t, "failed", staticcheckResult["status"])
+		assert.Contains(t, staticcheckResult["error"], "staticcheck not installed")
+	})
+
+	t.Run("Non-Go file no analysis commands", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "review-1",
+			Type: agent.AgentTypeReview,
+			Name: "Test Review Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			nil,
+			nil,
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "output", nil
+			},
+		)
+
+		reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		results, err := reviewAgent.runStaticAnalysis(ctx, "script.py")
+		require.NoError(t, err)
+		
+		// Should have no analysis commands for non-Go files
+		assert.Empty(t, results)
+	})
+}
+
+// TestReviewAgentDetermineStaticAnalysisCommands tests the determineStaticAnalysisCommands helper
+func TestReviewAgentDetermineStaticAnalysisCommands(t *testing.T) {
+	config := &agent.AgentConfig{
+		ID:   "review-1",
+		Type: agent.AgentTypeReview,
+		Name: "Test Review Agent",
+	}
+	provider := &MockLLMProvider{}
+	mockRegistry := NewMockToolRegistry()
+
+	reviewAgent, err := NewReviewAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+	require.NoError(t, err)
+
+	t.Run("Go file commands", func(t *testing.T) {
+		commands := reviewAgent.determineStaticAnalysisCommands("internal/api/handler.go")
+		assert.Contains(t, commands, "go_vet")
+		assert.Contains(t, commands, "staticcheck")
+		assert.Contains(t, commands, "golint")
+	})
+
+	t.Run("Non-Go file no commands", func(t *testing.T) {
+		commands := reviewAgent.determineStaticAnalysisCommands("script.js")
+		assert.Empty(t, commands)
+	})
 }

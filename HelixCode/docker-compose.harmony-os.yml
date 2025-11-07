@@ -1,0 +1,252 @@
+# Docker Compose for HelixCode Harmony OS
+# Distributed computing and AI acceleration platform
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: helixcode-harmony-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: helixcode
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      POSTGRES_DB: helixcode
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - harmony-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helixcode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache (Required for Harmony OS distributed computing)
+  redis:
+    image: redis:7-alpine
+    container_name: helixcode-harmony-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeme}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - harmony-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Harmony OS Application
+  harmony-os:
+    build:
+      context: .
+      dockerfile: Dockerfile.harmony-os
+    container_name: helixcode-harmony-os
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Server Configuration
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+
+      # Database Configuration
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: helixcode
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_NAME: helixcode
+      DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
+
+      # Redis Configuration (Required)
+      REDIS_ENABLED: true
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+
+      # Harmony OS Distributed Computing
+      HARMONY_DISTRIBUTED_ENABLED: ${HARMONY_DISTRIBUTED_ENABLED:-true}
+      HARMONY_SYNC_ENABLED: ${HARMONY_SYNC_ENABLED:-true}
+      HARMONY_SYNC_INTERVAL: ${HARMONY_SYNC_INTERVAL:-30}
+
+      # AI Acceleration
+      HARMONY_RESOURCE_OPT: ${HARMONY_RESOURCE_OPT:-true}
+      HARMONY_AI_ACCEL: ${HARMONY_AI_ACCEL:-true}
+      HARMONY_GPU_ENABLED: ${HARMONY_GPU_ENABLED:-true}
+      HARMONY_NPU_ENABLED: ${HARMONY_NPU_ENABLED:-false}
+
+      # System Features
+      HARMONY_MONITORING: ${HARMONY_MONITORING:-true}
+      HARMONY_MULTI_SCREEN: ${HARMONY_MULTI_SCREEN:-true}
+      HARMONY_SUPER_DEVICE: ${HARMONY_SUPER_DEVICE:-true}
+
+      # Service Coordination
+      HARMONY_SERVICE_DISCOVERY: ${HARMONY_SERVICE_DISCOVERY:-true}
+      HARMONY_SERVICE_FAILOVER: ${HARMONY_SERVICE_FAILOVER:-true}
+      HARMONY_HEALTH_CHECK: ${HARMONY_HEALTH_CHECK:-15}
+
+      # Workers Configuration
+      WORKERS_HEALTH_CHECK: ${WORKERS_HEALTH_CHECK:-30}
+      WORKERS_MAX_TASKS: ${WORKERS_MAX_TASKS:-20}
+      WORKERS_DISTRIBUTED: ${WORKERS_DISTRIBUTED:-true}
+
+      # Task Management
+      TASKS_DISTRIBUTED: ${TASKS_DISTRIBUTED:-true}
+      TASKS_CHECKPOINT: ${TASKS_CHECKPOINT:-300}
+      TASKS_MAX_RETRIES: ${TASKS_MAX_RETRIES:-3}
+
+      # Authentication
+      AUTH_TOKEN_EXPIRY: ${AUTH_TOKEN_EXPIRY:-86400}
+      AUTH_SESSION_EXPIRY: ${AUTH_SESSION_EXPIRY:-604800}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE: /var/log/helixcode/harmony-os.log
+      LOG_DISTRIBUTED: ${LOG_DISTRIBUTED:-true}
+
+    volumes:
+      - harmony_logs:/var/log/helixcode
+      - harmony_data:/var/lib/helixcode
+      - harmony_distributed:/var/lib/helixcode/distributed
+      - harmony_services:/var/lib/helixcode/services
+      - ./config/harmony-config.yaml:/etc/helixcode/harmony-config.yaml:ro
+    ports:
+      - "8080:8080"    # HTTP API
+      - "8081:8081"    # Peer discovery
+      - "8082:8082"    # Data transfer
+    networks:
+      - harmony-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Harmony Worker Node 1 (Optional - for distributed computing demo)
+  harmony-worker-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.harmony-os
+    container_name: helixcode-harmony-worker-1
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      harmony-os:
+        condition: service_healthy
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8083
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: helixcode
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_NAME: helixcode
+      REDIS_ENABLED: true
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      HARMONY_DISTRIBUTED_ENABLED: true
+      HARMONY_WORKER_MODE: true
+      HARMONY_MASTER_HOST: harmony-os
+      HARMONY_MASTER_PORT: 8080
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - harmony_worker1_data:/var/lib/helixcode
+    ports:
+      - "8083:8083"
+    networks:
+      - harmony-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - distributed
+
+  # Harmony Worker Node 2 (Optional - for distributed computing demo)
+  harmony-worker-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.harmony-os
+    container_name: helixcode-harmony-worker-2
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      harmony-os:
+        condition: service_healthy
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8084
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: helixcode
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-changeme}
+      DATABASE_NAME: helixcode
+      REDIS_ENABLED: true
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-changeme}
+      HARMONY_DISTRIBUTED_ENABLED: true
+      HARMONY_WORKER_MODE: true
+      HARMONY_MASTER_HOST: harmony-os
+      HARMONY_MASTER_PORT: 8080
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - harmony_worker2_data:/var/lib/helixcode
+    ports:
+      - "8084:8084"
+    networks:
+      - harmony-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - distributed
+
+networks:
+  harmony-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  harmony_logs:
+    driver: local
+  harmony_data:
+    driver: local
+  harmony_distributed:
+    driver: local
+  harmony_services:
+    driver: local
+  harmony_worker1_data:
+    driver: local
+  harmony_worker2_data:
+    driver: local

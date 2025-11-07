@@ -40,7 +40,7 @@ make prod                     # Build for Linux, macOS, Windows
 make mobile-ios               # Build iOS framework
 make mobile-android           # Build Android AAR
 make aurora-os                # Build Aurora OS client
-make symphony-os              # Build Symphony OS client
+make harmony-os               # Build Harmony OS client
 ```
 
 ## Architecture Overview
@@ -249,7 +249,7 @@ This extracts colors and creates themed variations of the logo.
 The platform supports:
 - **Standard**: Linux, macOS, Windows (via `make prod`)
 - **Mobile**: iOS and Android (via gomobile bindings in `make mobile`)
-- **Embedded**: Aurora OS and Symphony OS (Russian platforms via `make aurora-os` and `make symphony-os`)
+- **Embedded**: Aurora OS (Russian platform via `make aurora-os`) and Harmony OS (Chinese platform via `make harmony-os`)
 
 ## Important Notes
 

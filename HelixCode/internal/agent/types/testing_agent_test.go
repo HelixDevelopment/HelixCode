@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"dev.helix.code/internal/agent"
@@ -448,4 +449,108 @@ func TestGetTestDirectory(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+// TestTestingAgentExecuteTests tests the executeTests helper function
+func TestTestingAgentExecuteTests(t *testing.T) {
+	t.Run("Successful test execution", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "testing-1",
+			Type: agent.AgentTypeTesting,
+			Name: "Test Testing Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			nil,
+			nil,
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return "PASS: TestExample\nok\tpackage\t0.123s", nil
+			},
+		)
+
+		testingAgent, err := NewTestingAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		results, err := testingAgent.executeTests(ctx, "/path/to/test.go")
+		require.NoError(t, err)
+		assert.NotNil(t, results)
+		assert.Equal(t, "completed", results["status"])
+		assert.Contains(t, results["raw_output"], "PASS")
+	})
+
+	t.Run("Shell tool not found", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "testing-1",
+			Type: agent.AgentTypeTesting,
+			Name: "Test Testing Agent",
+		}
+		provider := &MockLLMProvider{}
+		mockRegistry := NewMockToolRegistry() // Empty registry
+
+		testingAgent, err := NewTestingAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = testingAgent.executeTests(ctx, "/path/to/test.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get Shell tool")
+	})
+
+	t.Run("Test execution failure", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "testing-1",
+			Type: agent.AgentTypeTesting,
+			Name: "Test Testing Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		mockRegistry := CreateMockToolRegistry(
+			nil,
+			nil,
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				return nil, fmt.Errorf("test failed: compilation error")
+			},
+		)
+
+		testingAgent, err := NewTestingAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = testingAgent.executeTests(ctx, "/path/to/test.go")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to execute tests")
+	})
+
+	t.Run("Test directory extraction", func(t *testing.T) {
+		config := &agent.AgentConfig{
+			ID:   "testing-1",
+			Type: agent.AgentTypeTesting,
+			Name: "Test Testing Agent",
+		}
+		provider := &MockLLMProvider{}
+		
+		// Track which command was executed
+		var executedCommand string
+		mockRegistry := CreateMockToolRegistry(
+			nil,
+			nil,
+			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
+				executedCommand = params["command"].(string)
+				return "test output", nil
+			},
+		)
+
+		testingAgent, err := NewTestingAgent(config, provider, ConvertToToolRegistry(mockRegistry))
+		require.NoError(t, err)
+
+		ctx := context.Background()
+		_, err = testingAgent.executeTests(ctx, "/path/to/package/file_test.go")
+		require.NoError(t, err)
+		
+		// Verify the correct directory was used in the command
+		assert.Contains(t, executedCommand, "/path/to/package")
+		assert.Contains(t, executedCommand, "go test")
+	})
 }
