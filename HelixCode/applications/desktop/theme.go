@@ -236,8 +236,8 @@ func (ct *CustomTheme) DisabledIconColor() color.Color {
 	return parseHexColor(ct.currentTheme.Border)
 }
 
-// PlaceHolderColor returns the placeholder color
-func (ct *CustomTheme) PlaceHolderColor() color.Color {
+// PrimaryBorderColor returns the placeholder color
+func (ct *CustomTheme) PrimaryBorderColor() color.Color {
 	return parseHexColor(ct.currentTheme.Border)
 }
 

@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"dev.helix.code/internal/template"
+	"github.com/helixcode/helixcode/internal/template"
 )
 
 func main() {

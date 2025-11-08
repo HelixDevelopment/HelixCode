@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"log"
 
-	"dev.helix.code/internal/memory"
-	"dev.helix.code/internal/session"
-	"dev.helix.code/internal/template"
+	"github.com/helixcode/helixcode/internal/memory"
+	"github.com/helixcode/helixcode/internal/session"
+	"github.com/helixcode/helixcode/internal/template"
 )
 
 func main() {

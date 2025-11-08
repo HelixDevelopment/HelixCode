@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"dev.helix.code/internal/session"
+	"github.com/helixcode/helixcode/internal/session"
 )
 
 func main() {

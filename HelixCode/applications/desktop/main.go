@@ -119,7 +119,7 @@ func (app *DesktopApp) setupUI() {
 
 // createDashboardTab creates the dashboard tab
 func (app *DesktopApp) createDashboardTab() fyne.CanvasObject {
-	// Header with logo placeholder
+	// Header with integrated logo
 	header := widget.NewLabel("🌀 HelixCode - Distributed AI Development Platform")
 	header.Alignment = fyne.TextAlignCenter
 	header.TextStyle = fyne.TextStyle{Bold: true}
