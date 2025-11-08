@@ -1,0 +1,201 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "HelixCode",
+    "description": "Distributed AI Development Platform",
+    "version": "1.0.0",
+    "author": "HelixCode Team",
+    "license": "MIT",
+    "homepage": "https://helixcode.dev",
+    "repository": "https://github.com/helixcode/helixcode"
+  },
+
+  "security": {
+    "scanning": {
+      "enabled": true,
+      "deep_scan_every_feature": true,
+      "zero_tolerance": true,
+      "fail_on_issues": false,
+      "scan_after_feature_complete": true,
+      "automatic_fixes": false,
+      "scan_timeout": "10m",
+      "parallel_scans": 4
+    },
+    "sonarqube": {
+      "enabled": true,
+      "url": "${SONAR_HOST_URL:http://localhost:9000}",
+      "project_key": "${SONAR_PROJECT_KEY:helixcode}",
+      "organization": "${SONAR_ORGANIZATION}",
+      "token": "${SONAR_TOKEN}",
+      "quality_gate": "production-ready",
+      "coverage_minimum": 80,
+      "duplications_maximum": 3,
+      "maintainability_rating": "A",
+      "reliability_rating": "A",
+      "security_rating": "A"
+    },
+    "snyk": {
+      "enabled": true,
+      "token": "${SNYK_TOKEN}",
+      "organization": "${SNYK_ORGANIZATION}",
+      "project": "${SNYK_PROJECT:helixcode}",
+      "monitoring": true,
+      "severity_threshold": "medium",
+      "fail_on_severity": "high",
+      "scan_dependencies": true,
+      "scan_code": true,
+      "scan_containers": true,
+      "scan_licenses": true,
+      "exclude_dev_dependencies": false
+    },
+    "additional_scanners": {
+      "trivy": {
+        "enabled": true,
+        "scan_containers": true,
+        "scan_filesystem": true,
+        "severity_threshold": "medium"
+      },
+      "semgrep": {
+        "enabled": true,
+        "rules": ["owasp-top-ten", "security", "performance"],
+        "config_file": ".semgrep.yaml"
+      },
+      "gosec": {
+        "enabled": true,
+        "severity_threshold": "medium",
+        "rules": {
+          "G101": true,  // Credentials
+          "G102": true,  // Binds to all interfaces
+          "G104": false, // Errors unhandled
+          "G107": true,  // SSRF via URL parsing
+          "G108": true,  // Profiling endpoint
+          "G110": true,  // Potential DoS via decompression bomb
+          "G201": true,  // SQL injection
+          "G202": true,  // SQL string formatting
+          "G203": true,  // Unescaped template
+          "G204": true,  // Command injection
+          "G301": true,  // Directory traversal
+          "G302": true,  // File permissions
+          "G303": true,  // Temp file creation
+          "G304": true,  // File path traversal
+          "G305": true,  // File traversal
+          "G401": true,  // Detected cipher
+          "G402": true,  // Weak TLS version
+          "G403": true,  // Weak key type
+          "G404": true,  // Insecure random number
+          "G501": true,  // Blocklisted import
+          "G502": true,  // Blocklisted import
+          "G503": true,  // Blocklisted import
+          "G504": true,  // Blocklisted import
+          "G505": true,  // Blocklisted import
+          "G601": true   // Implicit memory aliasing
+        }
+      },
+      "nancy": {
+        "enabled": true,
+        "skip_update_check": false,
+        "quiet": false
+      }
+    },
+    "policies": {
+      "feature_completion_check": {
+        "scan_before_next_feature": true,
+        "deep_analysis_enabled": true,
+        "performance_profiling": true,
+        "memory_leak_detection": true,
+        "race_condition_detection": true,
+        "deadlock_detection": true,
+        "code_coverage_check": true,
+        "documentation_coverage": true
+      },
+      "quality_gates": {
+        "new_code_coverage": ">85%",
+        "maintainability_rating": "A",
+        "reliability_rating": "A", 
+        "security_hotspots_reviewed": 0,
+        "new_security_hotspots": 0,
+        "new_bugs": 0,
+        "new_vulnerabilities": 0,
+        "duplicated_lines_density": "<3%"
+      },
+      "security_thresholds": {
+        "critical_vulnerabilities": 0,
+        "high_vulnerabilities": 0,
+        "medium_vulnerabilities": 5,
+        "low_vulnerabilities": 20,
+        "security_rating_required": "A",
+        "security_hotspots_max_new": 0
+      }
+    }
+  },
+
+  "development": {
+    "workflow": {
+      "feature_implementation": {
+        "deep_scan_before_next": true,
+        "automatic_polishing": true,
+        "issue_prioritization": true,
+        "performance_analysis": true,
+        "documentation_generation": true
+      },
+      "code_review": {
+        "security_first": true,
+        "performance_mandatory": true,
+        "documentation_required": true,
+        "test_coverage_minimum": 85,
+        "automated_review": true
+      }
+    }
+  },
+
+  "monitoring": {
+    "security": {
+      "continuous_monitoring": true,
+      "alert_on_new_issues": true,
+      "dashboard_integration": true,
+      "report_generation": true,
+      "trend_analysis": true,
+      "compliance_tracking": true
+    },
+    "quality": {
+      "code_quality_trending": true,
+      "performance_trending": true,
+      "security_trending": true,
+      "coverage_trending": true,
+      "technical_debt_tracking": true
+    }
+  },
+
+  "build": {
+    "security": {
+      "scan_before_build": true,
+      "scan_on_build": true,
+      "fail_build_on_security_issues": true,
+      "container_image_scanning": true,
+      "dependency_scanning": true,
+      "code_scanning": true,
+      "license_compliance": true
+    }
+  },
+
+  "deployment": {
+    "security": {
+      "pre_deployment_scan": true,
+      "production_security_gate": true,
+      "vulnerability_monitoring": true,
+      "compliance_checking": true,
+      "rollback_on_issues": true
+    }
+  },
+
+  "testing": {
+    "security": {
+      "penetration_testing": true,
+      "vulnerability_scanning": true,
+      "security_unit_tests": true,
+      "security_integration_tests": true,
+      "static_analysis": true,
+      "dynamic_analysis": true
+    }
+  }
+}
