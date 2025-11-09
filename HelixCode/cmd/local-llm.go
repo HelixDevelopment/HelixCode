@@ -67,6 +67,13 @@ func init() {
 	localLLMCmd.AddCommand(listSharedCmd)
 	localLLMCmd.AddCommand(optimizeModelCmd)
 	localLLMCmd.AddCommand(syncModelsCmd)
+	
+	// Advanced discovery and analytics commands
+	localLLMCmd.AddCommand(discoverCmd)
+	localLLMCmd.AddCommand(recommendCmd)
+	localLLMCmd.AddCommand(analyticsCmd)
+	localLLMCmd.AddCommand(reportCmd)
+	localLLMCmd.AddCommand(insightsCmd)
 }
 
 // initCmd represents the local-llm init command
@@ -539,7 +546,36 @@ func init() {
 	syncModelsCmd.Flags().BoolVar(&syncAllProviders, "all", false, "Sync with all providers (default: compatible only)")
 	
 	optimizeModelCmd.MarkFlagRequired("provider")
-}
+	
+	// Advanced command flags
+	discoverCmd.Flags().StringVar(&discoverSource, "source", "all", "Source for discovery (local, huggingface, all)")
+	discoverCmd.Flags().StringVar(&discoverFilter, "filter", "", "Filter models by name, capability, or size")
+	
+	recommendCmd.Flags().StringSliceVar(&recommendTaskTypes, "tasks", []string{}, "Task types (code_generation, planning, debugging, etc.)")
+	recommendCmd.Flags().StringVar(&recommendQualityPreference, "quality", "balanced", "Quality preference (fast, balanced, quality)")
+	recommendCmd.Flags().StringVar(&recommendPrivacyLevel, "privacy", "local", "Privacy level (local, hybrid, cloud)")
+	recommendCmd.Flags().IntVar(&recommendMaxMemory, "max-memory", 0, "Maximum memory in MB")
+	recommendCmd.Flags().Float64Var(&recommendBudgetLimit, "budget", 0, "Budget limit per million tokens")
+	recommendCmd.Flags().StringSliceVar(&recommendProviders, "providers", []string{}, "Include only specific providers")
+	
+	analyticsCmd.Flags().StringVar(&analyticsTimeRange, "time-range", "7d", "Time range for analytics (1d, 7d, 30d, all)")
+	reportCmd.Flags().StringVar(&reportFormat, "format", "table", "Report format (table, json, csv)")
+	insightsCmd.Flags().StringVar(&insightsType, "type", "all", "Insights type (performance, usage, models, all)")
+
+// Advanced discovery and analytics flags
+var (
+	recommendTaskTypes        []string
+	recommendQualityPreference string
+	recommendPrivacyLevel      string
+	recommendMaxMemory       int
+	recommendBudgetLimit      float64
+	recommendProviders       []string
+	analyticsTimeRange      string
+	reportFormat            string
+	insightsType            string
+	discoverSource          string
+	discoverFilter          string
+)
 
 // Command implementations for model management
 
@@ -982,7 +1018,115 @@ This command will:
 	RunE: runSyncModels,
 }
 
-// Command implementations for cross-provider model sharing
+// Advanced discovery and analytics commands
+
+// discoverCmd represents the model discovery command
+var discoverCmd = &cobra.Command{
+	Use:   "discover",
+	Short: "Discover and explore available models",
+	Long: `Discover models from various sources with advanced filtering
+and search capabilities. This command provides a comprehensive
+catalog of models with detailed information about capabilities,
+performance, and compatibility.
+
+Sources include:
+- Local downloaded models
+- HuggingFace model hub
+- Community repositories
+- Private repositories
+
+Examples:
+  helix local-llm discover
+  helix local-llm discover --filter "code generation"
+  helix local-llm discover --source huggingface --filter "7b"`,
+	RunE: runDiscover,
+}
+
+// recommendCmd represents the model recommendation command
+var recommendCmd = &cobra.Command{
+	Use:   "recommend",
+	Short: "Get intelligent model recommendations",
+	Long: `Get personalized model recommendations based on your
+specific requirements, hardware, usage patterns, and preferences.
+
+The recommendation engine considers:
+- Task requirements and complexity
+- Hardware capabilities and constraints
+- Performance preferences (speed vs quality)
+- Budget limitations
+- Privacy requirements
+- Historical usage patterns
+
+Examples:
+  helix local-llm recommend --tasks code_generation,debugging
+  helix local-llm recommend --quality fast --max-memory 8192
+  helix local-llm recommend --budget 0.1 --privacy local`,
+	RunE: runRecommend,
+}
+
+// analyticsCmd represents the usage analytics command
+var analyticsCmd = &cobra.Command{
+	Use:   "analytics",
+	Short: "View usage analytics and statistics",
+	Long: `View comprehensive usage analytics including model performance,
+user behavior, task patterns, and system utilization.
+
+Analytics include:
+- Model usage statistics and trends
+- Performance metrics and bottlenecks
+- User behavior and preferences
+- Task patterns and efficiency
+- Optimization impact
+- Cost analysis
+
+Examples:
+  helix local-llm analytics
+  helix local-llm analytics --time-range 30d`,
+	RunE: runAnalytics,
+}
+
+// reportCmd represents the report generation command
+var reportCmd = &cobra.Command{
+	Use:   "report",
+	Short: "Generate comprehensive usage reports",
+	Long: `Generate detailed usage reports in various formats.
+Reports can be exported as tables, JSON, or CSV for further analysis.
+
+Report types:
+- Executive summary
+- Performance analysis
+- User behavior analysis
+- Cost analysis
+- Optimization impact
+- Recommendations
+
+Examples:
+  helix local-llm report
+  helix local-llm report --format json --time-range 30d`,
+	RunE: runReport,
+}
+
+// insightsCmd represents the insights command
+var insightsCmd = &cobra.Command{
+	Use:   "insights",
+	Short: "Get AI-powered insights and recommendations",
+	Long: `Get AI-powered insights about your LLM usage, performance,
+optimization opportunities, and strategic recommendations.
+
+Insights include:
+- Performance bottlenecks and solutions
+- Cost optimization opportunities
+- Usage pattern analysis
+- Predictive recommendations
+- Trend analysis
+- Competitive insights
+
+Examples:
+  helix local-llm insights
+  helix local-llm insights --type performance
+  helix local-llm insights --type usage`,
+	RunE: runInsights,
+}
 
 func runShareModel(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
