@@ -1,0 +1,1124 @@
+package providers
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	"dev.helix.code/internal/memory"
+	"dev.helix.code/internal/config"
+	"dev.helix.code/internal/logging"
+)
+
+// CharacterAIProvider implements VectorProvider for Character.AI
+type CharacterAIProvider struct {
+	config       *CharacterAIConfig
+	logger       logging.Logger
+	mu           sync.RWMutex
+	initialized  bool
+	started      bool
+	client       CharacterAIClient
+	characters   map[string]*memory.Character
+	conversations map[string]*memory.Conversation
+	stats        *ProviderStats
+}
+
+// CharacterAIConfig contains Character.AI provider configuration
+type CharacterAIConfig struct {
+	APIKey              string            `json:"api_key"`
+	BaseURL             string            `json:"base_url"`
+	Timeout             time.Duration     `json:"timeout"`
+	MaxRetries          int               `json:"max_retries"`
+	BatchSize           int               `json:"batch_size"`
+	MaxCharacters       int               `json:"max_characters"`
+	MaxConversations    int               `json:"max_conversations"`
+	PersonalityDepth    int               `json:"personality_depth"`
+	RelationshipMemory  bool              `json:"relationship_memory"`
+	EmotionalMemory     bool              `json:"emotional_memory"`
+	LongTermMemory      bool              `json:"long_term_memory"`
+	EnableLearning      bool              `json:"enable_learning"`
+	CompressionType     string            `json:"compression_type"`
+	EnableCaching       bool              `json:"enable_caching"`
+	CacheSize           int               `json:"cache_size"`
+	CacheTTL           time.Duration     `json:"cache_ttl"`
+	SyncInterval        time.Duration     `json:"sync_interval"`
+}
+
+// CharacterAIClient represents Character.AI client interface
+type CharacterAIClient interface {
+	CreateCharacter(ctx context.Context, character *memory.Character) error
+	GetCharacter(ctx context.Context, characterID string) (*memory.Character, error)
+	UpdateCharacter(ctx context.Context, character *memory.Character) error
+	DeleteCharacter(ctx context.Context, characterID string) error
+	ListCharacters(ctx context.Context) ([]*memory.Character, error)
+	CreateConversation(ctx context.Context, conversation *memory.Conversation) error
+	GetConversation(ctx context.Context, conversationID string) (*memory.Conversation, error)
+	UpdateConversation(ctx context.Context, conversation *memory.Conversation) error
+	DeleteConversation(ctx context.Context, conversationID string) error
+	ListConversations(ctx context.Context, characterID string) ([]*memory.Conversation, error)
+	SendMessage(ctx context.Context, conversationID, message *memory.CharacterMessage) (*memory.CharacterMessage, error)
+	GetMessages(ctx context.Context, conversationID string, limit int) ([]*memory.CharacterMessage, error)
+	UpdatePersonality(ctx context.Context, characterID string, traits map[string]interface{}) error
+	GetRelationship(ctx context.Context, characterID, userID string) (*memory.RelationshipData, error)
+	UpdateRelationship(ctx context.Context, characterID, userID string, data *memory.RelationshipData) error
+	GetEmotionalState(ctx context.Context, characterID string) (*memory.EmotionalState, error)
+	UpdateEmotionalState(ctx context.Context, characterID string, state *memory.EmotionalState) error
+	GetHealth(ctx context.Context) error
+}
+
+// NewCharacterAIProvider creates a new Character.AI provider
+func NewCharacterAIProvider(config map[string]interface{}) (VectorProvider, error) {
+	characterAIConfig := &CharacterAIConfig{
+		BaseURL:            "https://api.character.ai",
+		Timeout:            30 * time.Second,
+		MaxRetries:         3,
+		BatchSize:          100,
+		MaxCharacters:      1000,
+		MaxConversations:   10000,
+		PersonalityDepth:   10,
+		RelationshipMemory: true,
+		EmotionalMemory:    true,
+		LongTermMemory:     true,
+		EnableLearning:     true,
+		CompressionType:    "gzip",
+		EnableCaching:      true,
+		CacheSize:          1000,
+		CacheTTL:          5 * time.Minute,
+		SyncInterval:       30 * time.Second,
+	}
+
+	// Parse configuration
+	if err := parseConfig(config, characterAIConfig); err != nil {
+		return nil, fmt.Errorf("failed to parse Character.AI config: %w", err)
+	}
+
+	return &CharacterAIProvider{
+		config:        characterAIConfig,
+		logger:        logging.NewLogger("character_ai_provider"),
+		characters:    make(map[string]*memory.Character),
+		conversations: make(map[string]*memory.Conversation),
+		stats: &ProviderStats{
+			TotalVectors:     0,
+			TotalCollections: 0,
+			TotalSize:        0,
+			AverageLatency:    0,
+			LastOperation:     time.Now(),
+			ErrorCount:       0,
+			Uptime:          0,
+		},
+	}, nil
+}
+
+// Initialize initializes Character.AI provider
+func (p *CharacterAIProvider) Initialize(ctx context.Context, config interface{}) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.initialized {
+		return nil
+	}
+
+	p.logger.Info("Initializing Character.AI provider",
+		"base_url", p.config.BaseURL,
+		"max_characters", p.config.MaxCharacters,
+		"relationship_memory", p.config.RelationshipMemory,
+		"emotional_memory", p.config.EmotionalMemory)
+
+	// Create Character.AI client
+	client, err := NewCharacterAIHTTPClient(p.config)
+	if err != nil {
+		return fmt.Errorf("failed to create Character.AI client: %w", err)
+	}
+
+	p.client = client
+
+	// Test connection
+	if err := p.client.GetHealth(ctx); err != nil {
+		return fmt.Errorf("failed to connect to Character.AI: %w", err)
+	}
+
+	// Load existing characters
+	if err := p.loadCharacters(ctx); err != nil {
+		p.logger.Warn("Failed to load characters", "error", err)
+	}
+
+	p.initialized = true
+	p.stats.LastOperation = time.Now()
+
+	p.logger.Info("Character.AI provider initialized successfully")
+	return nil
+}
+
+// Start starts Character.AI provider
+func (p *CharacterAIProvider) Start(ctx context.Context) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.initialized {
+		return fmt.Errorf("provider not initialized")
+	}
+
+	if p.started {
+		return nil
+	}
+
+	// Start background sync
+	go p.syncWorker(ctx)
+
+	p.started = true
+	p.stats.LastOperation = time.Now()
+	p.stats.Uptime = 0
+
+	p.logger.Info("Character.AI provider started successfully")
+	return nil
+}
+
+// Store stores vectors in Character.AI (as character data or conversations)
+func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*memory.VectorData) error {
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return fmt.Errorf("provider not started")
+	}
+
+	// Convert vectors to Character.AI format
+	for _, vector := range vectors {
+		// Try to store as character data
+		character, err := p.vectorToCharacter(vector)
+		if err == nil {
+			if err := p.client.CreateCharacter(ctx, character); err != nil {
+				p.logger.Error("Failed to create character",
+					"id", character.ID,
+					"error", err)
+				return fmt.Errorf("failed to store vector: %w", err)
+			}
+			p.characters[character.ID] = character
+		} else {
+			// Store as conversation data
+			conversation, err := p.vectorToConversation(vector)
+			if err != nil {
+				p.logger.Error("Failed to convert vector to Character.AI format",
+					"id", vector.ID,
+					"error", err)
+				return fmt.Errorf("failed to store vector: %w", err)
+			}
+
+			if err := p.client.CreateConversation(ctx, conversation); err != nil {
+				p.logger.Error("Failed to create conversation",
+					"id", conversation.ID,
+					"error", err)
+				return fmt.Errorf("failed to store vector: %w", err)
+			}
+			p.conversations[conversation.ID] = conversation
+		}
+
+		p.stats.TotalVectors++
+		p.stats.TotalSize += int64(len(vector.Vector) * 8)
+	}
+
+	p.stats.LastOperation = time.Now()
+	return nil
+}
+
+// Retrieve retrieves vectors by ID from Character.AI
+func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return nil, fmt.Errorf("provider not started")
+	}
+
+	var vectors []*memory.VectorData
+
+	for _, id := range ids {
+		// Try to get as character
+		character, err := p.client.GetCharacter(ctx, id)
+		if err == nil {
+			vector := p.characterToVector(character)
+			vectors = append(vectors, vector)
+			continue
+		}
+
+		// Try to get as conversation
+		conversation, err := p.client.GetConversation(ctx, id)
+		if err == nil {
+			vector := p.conversationToVector(conversation)
+			vectors = append(vectors, vector)
+		} else {
+			p.logger.Warn("Failed to retrieve vector",
+				"id", id,
+				"error", err)
+		}
+	}
+
+	p.stats.LastOperation = time.Now()
+	return vectors, nil
+}
+
+// Search performs vector similarity search in Character.AI
+func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return nil, fmt.Errorf("provider not started")
+	}
+
+	// Character.AI uses personality matching rather than pure vector search
+	// This is a simplified implementation
+	var results []*memory.VectorSearchResultItem
+
+	// Search characters
+	characters, err := p.client.ListCharacters(ctx)
+	if err != nil {
+		p.logger.Warn("Failed to list characters", "error", err)
+	} else {
+		for _, character := range characters {
+			if len(results) >= query.TopK {
+				break
+			}
+
+			// Simple personality matching score
+			score := p.calculatePersonalityMatch(query.Vector, character)
+			if score >= query.Threshold {
+				vector := p.characterToVector(character)
+				results = append(results, &memory.VectorSearchResultItem{
+					ID:       character.ID,
+					Vector:   vector.Vector,
+					Metadata: vector.Metadata,
+					Score:    score,
+					Distance: 1 - score,
+				})
+			}
+		}
+	}
+
+	// Search conversations if needed
+	if len(results) < query.TopK {
+		for _, conversation := range p.conversations {
+			if len(results) >= query.TopK {
+				break
+			}
+
+			score := p.calculateConversationMatch(query.Vector, conversation)
+			if score >= query.Threshold {
+				vector := p.conversationToVector(conversation)
+				results = append(results, &memory.VectorSearchResultItem{
+					ID:       conversation.ID,
+					Vector:   vector.Vector,
+					Metadata: vector.Metadata,
+					Score:    score,
+					Distance: 1 - score,
+				})
+			}
+		}
+	}
+
+	p.stats.LastOperation = time.Now()
+	return &memory.VectorSearchResult{
+		Results:   results,
+		Total:     len(results),
+		Query:     query,
+		Duration:  time.Since(start),
+		Namespace: query.Namespace,
+	}, nil
+}
+
+// FindSimilar finds similar vectors
+func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return nil, fmt.Errorf("provider not started")
+	}
+
+	query := &memory.VectorQuery{
+		Vector:     embedding,
+		TopK:       k,
+		Filters:    filters,
+		Metric:     "cosine",
+	}
+
+	searchResult, err := p.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []*memory.VectorSimilarityResult
+	for _, item := range searchResult.Results {
+		results = append(results, &memory.VectorSimilarityResult{
+			ID:       item.ID,
+			Vector:   item.Vector,
+			Metadata: item.Metadata,
+			Score:    item.Score,
+			Distance: 1 - item.Score,
+		})
+	}
+
+	p.stats.LastOperation = time.Now()
+	return results, nil
+}
+
+// CreateCollection creates a new collection (character or conversation space)
+func (p *CharacterAIProvider) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if _, exists := p.characters[name]; exists {
+		return fmt.Errorf("collection %s already exists", name)
+	}
+
+	// Create a character as a collection
+	character := &memory.Character{
+		ID:           name,
+		Name:         name,
+		Description:  config.Description,
+		Personality:  map[string]interface{}{},
+		Traits:       []string{},
+		Appearance:   map[string]interface{}{},
+		Backstory:    "",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		IsPublic:     false,
+		IsActive:     true,
+	}
+
+	if err := p.client.CreateCharacter(ctx, character); err != nil {
+		return fmt.Errorf("failed to create collection: %w", err)
+	}
+
+	p.characters[name] = character
+	p.stats.TotalCollections++
+
+	p.logger.Info("Collection created", "name", name, "description", config.Description)
+	return nil
+}
+
+// DeleteCollection deletes a collection
+func (p *CharacterAIProvider) DeleteCollection(ctx context.Context, name string) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if _, exists := p.characters[name]; !exists {
+		return fmt.Errorf("collection %s not found", name)
+	}
+
+	if err := p.client.DeleteCharacter(ctx, name); err != nil {
+		return fmt.Errorf("failed to delete collection: %w", err)
+	}
+
+	delete(p.characters, name)
+	p.stats.TotalCollections--
+
+	p.logger.Info("Collection deleted", "name", name)
+	return nil
+}
+
+// ListCollections lists all collections
+func (p *CharacterAIProvider) ListCollections(ctx context.Context) ([]*memory.CollectionInfo, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	characters, err := p.client.ListCharacters(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list collections: %w", err)
+	}
+
+	var collections []*memory.CollectionInfo
+
+	for _, character := range characters {
+		vectorCount := int64(p.getCharacterMessageCount(character.ID))
+		
+		collections = append(collections, &memory.CollectionInfo{
+			Name:        character.ID,
+			Description: character.Description,
+			Dimension:   1536, // Default embedding size
+			Metric:      "personality_match",
+			VectorCount: vectorCount,
+			Size:        vectorCount * 1536 * 8, // Approximate
+			CreatedAt:   character.CreatedAt,
+			UpdatedAt:   character.UpdatedAt,
+		})
+	}
+
+	return collections, nil
+}
+
+// GetCollection gets collection information
+func (p *CharacterAIProvider) GetCollection(ctx context.Context, name string) (*memory.CollectionInfo, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	character, err := p.client.GetCharacter(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get collection: %w", err)
+	}
+
+	vectorCount := int64(p.getCharacterMessageCount(character.ID))
+
+	return &memory.CollectionInfo{
+		Name:        character.ID,
+		Description: character.Description,
+		Dimension:   1536,
+		Metric:      "personality_match",
+		VectorCount: vectorCount,
+		Size:        vectorCount * 1536 * 8,
+		CreatedAt:   character.CreatedAt,
+		UpdatedAt:   character.UpdatedAt,
+	}, nil
+}
+
+// CreateIndex creates an index (character optimization)
+func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if _, exists := p.characters[collection]; !exists {
+		return fmt.Errorf("collection %s not found", collection)
+	}
+
+	// Character.AI handles indexing internally
+	p.logger.Info("Index creation not required for Character.AI", "collection", collection)
+	return nil
+}
+
+// DeleteIndex deletes an index
+func (p *CharacterAIProvider) DeleteIndex(ctx context.Context, collection string) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if _, exists := p.characters[collection]; !exists {
+		return fmt.Errorf("collection %s not found", collection)
+	}
+
+	p.logger.Info("Index deletion not required for Character.AI", "collection", collection)
+	return nil
+}
+
+// ListIndexes lists indexes in a collection
+func (p *CharacterAIProvider) ListIndexes(ctx context.Context, collection string) ([]*memory.IndexInfo, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if _, exists := p.characters[collection]; !exists {
+		return nil, fmt.Errorf("collection %s not found", collection)
+	}
+
+	return []*memory.IndexInfo{}, nil
+}
+
+// AddMetadata adds metadata to vectors
+func (p *CharacterAIProvider) AddMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return fmt.Errorf("provider not started")
+	}
+
+	// Try to add to character
+	character, err := p.client.GetCharacter(ctx, id)
+	if err == nil {
+		// Add to personality or metadata
+		for k, v := range metadata {
+			character.Personality[k] = v
+		}
+		character.UpdatedAt = time.Now()
+
+		if err := p.client.UpdateCharacter(ctx, character); err != nil {
+			return fmt.Errorf("failed to update character: %w", err)
+		}
+
+		p.characters[id] = character
+		return nil
+	}
+
+	return fmt.Errorf("vector with ID %s not found", id)
+}
+
+// UpdateMetadata updates vector metadata
+func (p *CharacterAIProvider) UpdateMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	return p.AddMetadata(ctx, id, metadata)
+}
+
+// GetMetadata gets vector metadata
+func (p *CharacterAIProvider) GetMetadata(ctx context.Context, ids []string) (map[string]map[string]interface{}, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return nil, fmt.Errorf("provider not started")
+	}
+
+	result := make(map[string]map[string]interface{})
+
+	for _, id := range ids {
+		character, err := p.client.GetCharacter(ctx, id)
+		if err == nil {
+			result[id] = character.Personality
+		} else {
+			// Try conversation
+			if conversation, err := p.client.GetConversation(ctx, id); err == nil {
+				result[id] = conversation.Metadata
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// DeleteMetadata deletes vector metadata
+func (p *CharacterAIProvider) DeleteMetadata(ctx context.Context, ids []string, keys []string) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return fmt.Errorf("provider not started")
+	}
+
+	for _, id := range ids {
+		character, err := p.client.GetCharacter(ctx, id)
+		if err == nil {
+			// Delete from personality or metadata
+			for _, key := range keys {
+				delete(character.Personality, key)
+			}
+			character.UpdatedAt = time.Now()
+
+			if err := p.client.UpdateCharacter(ctx, character); err != nil {
+				p.logger.Warn("Failed to update character",
+					"id", id,
+					"error", err)
+			} else {
+				p.characters[id] = character
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetStats gets provider statistics
+func (p *CharacterAIProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return &ProviderStats{
+		TotalVectors:     p.stats.TotalVectors,
+		TotalCollections: p.stats.TotalCollections,
+		TotalSize:        p.stats.TotalSize,
+		AverageLatency:   p.stats.AverageLatency,
+		LastOperation:    p.stats.LastOperation,
+		ErrorCount:       p.stats.ErrorCount,
+		Uptime:          p.stats.Uptime,
+	}, nil
+}
+
+// Optimize optimizes Character.AI provider
+func (p *CharacterAIProvider) Optimize(ctx context.Context) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	// Character.AI optimization includes:
+	// - Personality optimization
+	// - Relationship optimization
+	// - Memory consolidation
+
+	for characterID := range p.characters {
+		p.logger.Info("Optimizing character", "id", characterID)
+	}
+
+	p.stats.LastOperation = time.Now()
+	p.logger.Info("Character.AI optimization completed")
+	return nil
+}
+
+// Backup backs up Character.AI provider
+func (p *CharacterAIProvider) Backup(ctx context.Context, path string) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	// Export all characters and conversations
+	for characterID := range p.characters {
+		p.logger.Info("Exporting character", "id", characterID)
+	}
+
+	for conversationID := range p.conversations {
+		p.logger.Info("Exporting conversation", "id", conversationID)
+	}
+
+	p.stats.LastOperation = time.Now()
+	p.logger.Info("Character.AI backup completed", "path", path)
+	return nil
+}
+
+// Restore restores Character.AI provider
+func (p *CharacterAIProvider) Restore(ctx context.Context, path string) error {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	p.logger.Info("Restoring Character.AI from backup", "path", path)
+
+	p.stats.LastOperation = time.Now()
+	p.logger.Info("Character.AI restore completed")
+	return nil
+}
+
+// Health checks health of Character.AI provider
+func (p *CharacterAIProvider) Health(ctx context.Context) (*HealthStatus, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	status := "healthy"
+	lastCheck := time.Now()
+	responseTime := time.Since(start)
+
+	if !p.initialized {
+		status = "not_initialized"
+	} else if !p.started {
+		status = "not_started"
+	} else if err := p.client.GetHealth(ctx); err != nil {
+		status = "unhealthy"
+	}
+
+	metrics := map[string]float64{
+		"total_vectors":     float64(p.stats.TotalVectors),
+		"total_collections": float64(p.stats.TotalCollections),
+		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":   p.stats.Uptime.Seconds(),
+		"total_characters":  float64(len(p.characters)),
+		"total_conversations": float64(len(p.conversations)),
+	}
+
+	return &HealthStatus{
+		Status:      status,
+		LastCheck:   lastCheck,
+		ResponseTime: responseTime,
+		Metrics:     metrics,
+		Dependencies: map[string]string{
+			"character_ai_api": "required",
+		},
+	}, nil
+}
+
+// GetName returns provider name
+func (p *CharacterAIProvider) GetName() string {
+	return "character_ai"
+}
+
+// GetType returns provider type
+func (p *CharacterAIProvider) GetType() ProviderType {
+	return ProviderTypeCharacterAI
+}
+
+// GetCapabilities returns provider capabilities
+func (p *CharacterAIProvider) GetCapabilities() []string {
+	return []string{
+		"character_creation",
+		"personality_development",
+		"conversation_memory",
+		"relationship_tracking",
+		"emotional_state",
+		"character_learning",
+		"memory_compression",
+		"character_search",
+		"personality_matching",
+		"relationship_analysis",
+	}
+}
+
+// GetConfiguration returns provider configuration
+func (p *CharacterAIProvider) GetConfiguration() interface{} {
+	return p.config
+}
+
+// IsCloud returns whether provider is cloud-based
+func (p *CharacterAIProvider) IsCloud() bool {
+	return true // Character.AI is a cloud-based service
+}
+
+// GetCostInfo returns cost information
+func (p *CharacterAIProvider) GetCostInfo() *CostInfo {
+	// Character.AI pricing based on usage
+	charactersPerMonth := 100.0
+	costPerCharacter := 5.0 // Example pricing
+
+	characters := float64(len(p.characters))
+	cost := (characters / charactersPerMonth) * costPerCharacter
+
+	return &CostInfo{
+		StorageCost:   0.0, // Storage is included
+		ComputeCost:   cost,
+		TransferCost:  0.0, // No data transfer costs
+		TotalCost:     cost,
+		Currency:      "USD",
+		BillingPeriod:  "monthly",
+		FreeTierUsed:  characters > 10, // Free tier for first 10 characters
+		FreeTierLimit: 10.0,
+	}
+}
+
+// Stop stops Character.AI provider
+func (p *CharacterAIProvider) Stop(ctx context.Context) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.started {
+		return nil
+	}
+
+	p.started = false
+	p.logger.Info("Character.AI provider stopped")
+	return nil
+}
+
+// Helper methods
+
+func (p *CharacterAIProvider) loadCharacters(ctx context.Context) error {
+	characters, err := p.client.ListCharacters(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to load characters: %w", err)
+	}
+
+	for _, character := range characters {
+		p.characters[character.ID] = character
+	}
+
+	p.stats.TotalCollections = int64(len(p.characters))
+	return nil
+}
+
+func (p *CharacterAIProvider) vectorToCharacter(vector *memory.VectorData) (*memory.Character, error) {
+	// Extract character data from vector metadata
+	characterID, ok := vector.Metadata["character_id"].(string)
+	if !ok {
+		characterID = vector.ID
+	}
+
+	characterName, ok := vector.Metadata["character_name"].(string)
+	if !ok {
+		characterName = "Unknown Character"
+	}
+
+	personality, ok := vector.Metadata["personality"].(map[string]interface{})
+	if !ok {
+		personality = make(map[string]interface{})
+	}
+
+	return &memory.Character{
+		ID:          characterID,
+		Name:        characterName,
+		Description: "",
+		Personality: personality,
+		Traits:      []string{},
+		Appearance:  map[string]interface{}{},
+		Backstory:   "",
+		CreatedAt:   vector.Timestamp,
+		UpdatedAt:   time.Now(),
+		IsPublic:    false,
+		IsActive:    true,
+	}, nil
+}
+
+func (p *CharacterAIProvider) vectorToConversation(vector *memory.VectorData) (*memory.Conversation, error) {
+	// Extract conversation data from vector metadata
+	conversationID, ok := vector.Metadata["conversation_id"].(string)
+	if !ok {
+		conversationID = vector.ID
+	}
+
+	characterID, ok := vector.Metadata["character_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("conversation requires character_id")
+	}
+
+	return &memory.Conversation{
+		ID:           conversationID,
+		CharacterID:  characterID,
+		UserID:       "",
+		Messages:     []*memory.CharacterMessage{},
+		StartedAt:    vector.Timestamp,
+		UpdatedAt:    time.Now(),
+		IsActive:     true,
+		IsArchived:   false,
+		Metadata:     vector.Metadata,
+	}, nil
+}
+
+func (p *CharacterAIProvider) characterToVector(character *memory.Character) *memory.VectorData {
+	// Convert character to vector format
+	return &memory.VectorData{
+		ID:       character.ID,
+		Vector:   make([]float64, 1536), // Mock embedding
+		Metadata: map[string]interface{}{
+			"character_id":   character.ID,
+			"character_name": character.Name,
+			"description":    character.Description,
+			"personality":    character.Personality,
+			"type":          "character",
+		},
+		Collection: character.ID,
+		Timestamp:  character.CreatedAt,
+	}
+}
+
+func (p *CharacterAIProvider) conversationToVector(conversation *memory.Conversation) *memory.VectorData {
+	// Convert conversation to vector format
+	return &memory.VectorData{
+		ID:       conversation.ID,
+		Vector:   make([]float64, 1536), // Mock embedding
+		Metadata: map[string]interface{}{
+			"conversation_id": conversation.ID,
+			"character_id":   conversation.CharacterID,
+			"user_id":        conversation.UserID,
+			"type":           "conversation",
+		},
+		Collection: conversation.CharacterID,
+		Timestamp:  conversation.StartedAt,
+	}
+}
+
+func (p *CharacterAIProvider) calculatePersonalityMatch(vector []float64, character *memory.Character) float64 {
+	// Simplified personality matching
+	return 0.8 // Mock match score
+}
+
+func (p *CharacterAIProvider) calculateConversationMatch(vector []float64, conversation *memory.Conversation) float64 {
+	// Simplified conversation matching
+	return 0.6 // Mock match score
+}
+
+func (p *CharacterAIProvider) getCharacterMessageCount(characterID string) int {
+	// Mock implementation
+	return 10
+}
+
+func (p *CharacterAIProvider) syncWorker(ctx context.Context) {
+	ticker := time.NewTicker(p.config.SyncInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			p.logger.Debug("Sync worker running")
+		}
+	}
+}
+
+func (p *CharacterAIProvider) updateStats(duration time.Duration) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.stats.LastOperation = time.Now()
+	
+	// Update average latency (simple moving average)
+	if p.stats.AverageLatency == 0 {
+		p.stats.AverageLatency = duration
+	} else {
+		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
+	}
+	
+	// Update uptime
+	if p.started {
+		p.stats.Uptime += duration
+	}
+}
+
+// CharacterAIHTTPClient is a mock HTTP client for Character.AI
+type CharacterAIHTTPClient struct {
+	config *CharacterAIConfig
+	logger logging.Logger
+}
+
+// NewCharacterAIHTTPClient creates a new Character.AI HTTP client
+func NewCharacterAIHTTPClient(config *CharacterAIConfig) (CharacterAIClient, error) {
+	return &CharacterAIHTTPClient{
+		config: config,
+		logger: logging.NewLogger("character_ai_client"),
+	}, nil
+}
+
+// Mock implementation of CharacterAIClient interface
+func (c *CharacterAIHTTPClient) CreateCharacter(ctx context.Context, character *memory.Character) error {
+	c.logger.Info("Creating character", "id", character.ID, "name", character.Name)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) GetCharacter(ctx context.Context, characterID string) (*memory.Character, error) {
+	// Mock implementation
+	return &memory.Character{
+		ID:          characterID,
+		Name:        "Mock Character",
+		Description: "Mock character description",
+		Personality: map[string]interface{}{
+			"friendly": true,
+			"outgoing": false,
+		},
+		Traits:      []string{"friendly", "helpful"},
+		Appearance: map[string]interface{}{
+			"height": "tall",
+		},
+		Backstory:   "",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		IsPublic:    false,
+		IsActive:    true,
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) UpdateCharacter(ctx context.Context, character *memory.Character) error {
+	c.logger.Info("Updating character", "id", character.ID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) DeleteCharacter(ctx context.Context, characterID string) error {
+	c.logger.Info("Deleting character", "id", characterID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) ListCharacters(ctx context.Context) ([]*memory.Character, error) {
+	// Mock implementation
+	return []*memory.Character{
+		{ID: "character1", Name: "Character 1", CreatedAt: time.Now()},
+		{ID: "character2", Name: "Character 2", CreatedAt: time.Now()},
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) CreateConversation(ctx context.Context, conversation *memory.Conversation) error {
+	c.logger.Info("Creating conversation", "id", conversation.ID, "character_id", conversation.CharacterID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) GetConversation(ctx context.Context, conversationID string) (*memory.Conversation, error) {
+	// Mock implementation
+	return &memory.Conversation{
+		ID:          conversationID,
+		CharacterID: "character1",
+		UserID:      "user1",
+		Messages:    []*memory.CharacterMessage{},
+		StartedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		IsActive:    true,
+		IsArchived:  false,
+		Metadata:    map[string]interface{}{},
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) UpdateConversation(ctx context.Context, conversation *memory.Conversation) error {
+	c.logger.Info("Updating conversation", "id", conversation.ID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) DeleteConversation(ctx context.Context, conversationID string) error {
+	c.logger.Info("Deleting conversation", "id", conversationID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) ListConversations(ctx context.Context, characterID string) ([]*memory.Conversation, error) {
+	// Mock implementation
+	return []*memory.Conversation{
+		{ID: "conversation1", CharacterID: characterID, StartedAt: time.Now()},
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) SendMessage(ctx context.Context, conversationID string, message *memory.CharacterMessage) (*memory.CharacterMessage, error) {
+	c.logger.Info("Sending message", "conversation_id", conversationID, "role", message.Role)
+	return &memory.CharacterMessage{
+		ID:          "message1",
+		ConversationID: conversationID,
+		Role:        "character",
+		Content:     "Mock response",
+		Timestamp:   time.Now(),
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) GetMessages(ctx context.Context, conversationID string, limit int) ([]*memory.CharacterMessage, error) {
+	// Mock implementation
+	var messages []*memory.CharacterMessage
+	for i := 0; i < limit; i++ {
+		messages = append(messages, &memory.CharacterMessage{
+			ID:            fmt.Sprintf("msg_%d", i),
+			ConversationID: conversationID,
+			Role:          []string{"user", "character"}[i%2],
+			Content:       fmt.Sprintf("Mock message %d", i),
+			Timestamp:     time.Now(),
+		})
+	}
+	return messages, nil
+}
+
+func (c *CharacterAIHTTPClient) UpdatePersonality(ctx context.Context, characterID string, traits map[string]interface{}) error {
+	c.logger.Info("Updating personality", "character_id", characterID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) GetRelationship(ctx context.Context, characterID, userID string) (*memory.RelationshipData, error) {
+	// Mock implementation
+	return &memory.RelationshipData{
+		CharacterID: characterID,
+		UserID:      userID,
+		Strength:    0.8,
+		Trust:       0.7,
+		Liking:      0.9,
+		History:     []string{},
+		LastUpdated: time.Now(),
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) UpdateRelationship(ctx context.Context, characterID, userID string, data *memory.RelationshipData) error {
+	c.logger.Info("Updating relationship", "character_id", characterID, "user_id", userID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) GetEmotionalState(ctx context.Context, characterID string) (*memory.EmotionalState, error) {
+	// Mock implementation
+	return &memory.EmotionalState{
+		CharacterID: characterID,
+		Mood:        "happy",
+		Energy:      0.8,
+		Satisfaction: 0.7,
+		Engagement:  0.9,
+		LastUpdated: time.Now(),
+	}, nil
+}
+
+func (c *CharacterAIHTTPClient) UpdateEmotionalState(ctx context.Context, characterID string, state *memory.EmotionalState) error {
+	c.logger.Info("Updating emotional state", "character_id", characterID)
+	return nil
+}
+
+func (c *CharacterAIHTTPClient) GetHealth(ctx context.Context) error {
+	// Mock implementation - in real implementation, this would check Character.AI API health
+	return nil
+}
