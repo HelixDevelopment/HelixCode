@@ -1,32 +1,33 @@
 package llm
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-// Core LLM types that are missing from the package
-
-type ProviderConfigEntry struct {
-	Type       ProviderType           `json:"type"`
-	Endpoint   string                 `json:"endpoint"`
-	APIKey     string                 `json:"api_key"`
-	Models     []string               `json:"models"`
-	Enabled    bool                   `json:"enabled"`
-	Parameters map[string]interface{} `json:"parameters"`
-}
+// Missing types for command line interface
 
 type ModelInfo struct {
 	ID             string            `json:"id"`
 	Name           string            `json:"name"`
-	Provider       ProviderType     `json:"provider"`
+	Provider       string            `json:"provider"`
 	ContextSize    int              `json:"context_size"`
 	MaxTokens      int              `json:"max_tokens"`
 	Capabilities   []ModelCapability `json:"capabilities"`
 	SupportsTools  bool             `json:"supports_tools"`
 	SupportsVision bool             `json:"supports_vision"`
 	Description    string            `json:"description"`
+}
+
+type ProviderConfigEntry struct {
+	Type       string                 `json:"type"`
+	Endpoint   string                 `json:"endpoint"`
+	APIKey     string                 `json:"api_key"`
+	Models     []string               `json:"models"`
+	Enabled    bool                   `json:"enabled"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 type ProviderHealth struct {
@@ -100,9 +101,27 @@ type Usage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 
+type CacheConfig struct {
+	Enabled  bool          `json:"enabled"`
+	Strategy CacheStrategy `json:"strategy"`
+	TTL      time.Duration `json:"ttl"`
+}
+
+type CacheStrategy string
+
+type ReasoningConfig struct {
+	Enabled         bool          `json:"enabled"`
+	MaxDepth        int           `json:"max_depth"`
+	ThinkingBudget  int           `json:"thinking_budget"`
+	ModelType       ReasoningModel `json:"model_type"`
+	Timeout         time.Duration `json:"timeout"`
+}
+
+type ReasoningModel string
+
 // Provider interface
 type Provider interface {
-	GetType() ProviderType
+	GetType() string
 	GetName() string
 	GetModels() []ModelInfo
 	GetCapabilities() []ModelCapability
@@ -111,11 +130,4 @@ type Provider interface {
 	IsAvailable(ctx context.Context) bool
 	GetHealth(ctx context.Context) (*ProviderHealth, error)
 	Close() error
-}
-
-// Local LLM specific types for command line interface
-type ProviderStatus struct {
-	Status       string
-	DefaultPort  int
-	LastCheck    time.Time
 }
