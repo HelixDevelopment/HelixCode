@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/helixcode/internal/llm"
+	"github.com/helixcode/internal/hardware"
 )
 
 // localLLMCmd represents the local-llm command
@@ -59,6 +60,13 @@ func init() {
 	localLLMCmd.AddCommand(convertModelCmd)
 	localLLMCmd.AddCommand(listModelsCmd)
 	localLLMCmd.AddCommand(searchModelsCmd)
+	
+	// Cross-provider model sharing commands
+	localLLMCmd.AddCommand(shareModelCmd)
+	localLLMCmd.AddCommand(downloadAllCmd)
+	localLLMCmd.AddCommand(listSharedCmd)
+	localLLMCmd.AddCommand(optimizeModelCmd)
+	localLLMCmd.AddCommand(syncModelsCmd)
 }
 
 // initCmd represents the local-llm init command
@@ -506,6 +514,9 @@ var (
 	convertQuantMethod   string
 	convertOptimizeFor   string
 	convertTargetHardware string
+	shareModelProvider   string
+	optimizeProvider     string
+	syncAllProviders    bool
 )
 
 func init() {
@@ -521,6 +532,13 @@ func init() {
 	convertModelCmd.Flags().StringVar(&convertTargetHardware, "hardware", "", "Target hardware (nvidia, amd, apple, intel)")
 	
 	convertModelCmd.MarkFlagRequired("format")
+	
+	// Cross-provider command flags
+	shareModelCmd.Flags().StringVar(&shareModelProvider, "provider", "", "Share with specific provider only (default: all compatible)")
+	optimizeModelCmd.Flags().StringVar(&optimizeProvider, "provider", "", "Target provider for optimization (required)")
+	syncModelsCmd.Flags().BoolVar(&syncAllProviders, "all", false, "Sync with all providers (default: compatible only)")
+	
+	optimizeModelCmd.MarkFlagRequired("provider")
 }
 
 // Command implementations for model management
@@ -887,4 +905,295 @@ func truncateString(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// Cross-provider model sharing commands
+
+// shareModelCmd represents the model sharing command
+var shareModelCmd = &cobra.Command{
+	Use:   "share [model-path]",
+	Short: "Share a model with all compatible providers",
+	Long: `Share a downloaded model with all compatible providers by creating
+symlinks or copying to provider model directories.
+
+This enables models downloaded for one provider to be used by
+all other compatible providers without re-downloading.
+
+Examples:
+  helix local-llm share ./models/llama-3-8b.gguf
+  helix local-llm share ./models/mistral-7b.gguf --provider vllm`,
+	RunE: runShareModel,
+}
+
+// downloadAllCmd represents the download for all providers command
+var downloadAllCmd = &cobra.Command{
+	Use:   "download-all [model-id]",
+	Short: "Download a model and make it available to all providers",
+	Long: `Download a model in the most compatible format and automatically
+share it with all compatible providers. This ensures the model can
+be used by any provider without manual conversion.
+
+Examples:
+  helix local-llm download-all llama-3-8b-instruct
+  helix local-llm download-all mistral-7b-instruct --format gguf`,
+	RunE: runDownloadForAll,
+}
+
+// listSharedCmd represents the list shared models command
+var listSharedCmd = &cobra.Command{
+	Use:   "list-shared",
+	Short: "List models shared across providers",
+	Long: `List all models that are shared across multiple providers,
+showing which providers have access to each model.
+
+This helps you understand which models are available to
+which providers without additional downloads.`,
+	RunE: runListShared,
+}
+
+// optimizeModelCmd represents the model optimization command
+var optimizeModelCmd = &cobra.Command{
+	Use:   "optimize [model-path] --provider [provider]",
+	Short: "Optimize a model for a specific provider",
+	Long: `Optimize a model specifically for a target provider by converting
+it to the optimal format and applying provider-specific optimizations.
+
+This ensures maximum performance and compatibility for the target provider.
+
+Examples:
+  helix local-llm optimize ./model.gguf --provider vllm
+  helix local-llm optimize ./model.hf --provider llamacpp`,
+	RunE: runOptimizeModel,
+}
+
+// syncModelsCmd represents the model synchronization command
+var syncModelsCmd = &cobra.Command{
+	Use:   "sync",
+	Short: "Synchronize models across all providers",
+	Long: `Synchronize all downloaded models across providers by sharing
+compatible models and converting when necessary. This ensures all
+providers have access to all available models.
+
+This command will:
+- Scan all provider model directories
+- Share compatible models across providers
+- Convert models when needed for compatibility
+- Report any incompatibilities or conversion failures`,
+	RunE: runSyncModels,
+}
+
+// Command implementations for cross-provider model sharing
+
+func runShareModel(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	if len(args) == 0 {
+		return fmt.Errorf("model path is required")
+	}
+	
+	modelPath := args[0]
+	
+	// Check if model file exists
+	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
+		return fmt.Errorf("model file does not exist: %s", modelPath)
+	}
+	
+	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
+	if err := manager.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize manager: %w", err)
+	}
+	
+	modelName := filepath.Base(modelPath)
+	fmt.Printf("🔗 Sharing model: %s\n", modelName)
+	
+	if shareModelProvider != "" {
+		fmt.Printf("🎯 Target provider: %s\n", shareModelProvider)
+	}
+	
+	// Share model
+	if err := manager.ShareModelWithProviders(ctx, modelPath, modelName); err != nil {
+		return fmt.Errorf("failed to share model: %w", err)
+	}
+	
+	fmt.Println("✅ Model shared successfully!")
+	return nil
+}
+
+func runDownloadForAll(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	if len(args) == 0 {
+		return fmt.Errorf("model ID is required")
+	}
+	
+	modelID := args[0]
+	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
+	if err := manager.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize manager: %w", err)
+	}
+	
+	fmt.Printf("🌐 Downloading model for all providers: %s\n", modelID)
+	
+	// Determine source format (default to GGUF for broad compatibility)
+	sourceFormat := llm.ModelFormat(downloadFormat)
+	if sourceFormat == "" {
+		sourceFormat = llm.FormatGGUF
+	}
+	
+	// Download for all providers
+	if err := manager.DownloadModelForAllProviders(ctx, modelID, sourceFormat); err != nil {
+		return fmt.Errorf("failed to download for all providers: %w", err)
+	}
+	
+	fmt.Println("✅ Model downloaded and shared with all compatible providers!")
+	return nil
+}
+
+func runListShared(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
+	if err := manager.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize manager: %w", err)
+	}
+	
+	shared, err := manager.GetSharedModels(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get shared models: %w", err)
+	}
+	
+	if len(shared) == 0 {
+		fmt.Println("❌ No shared models found")
+		fmt.Println("💡 Use 'helix local-llm share <model-path>' to share models across providers")
+		return nil
+	}
+	
+	fmt.Printf("🔗 Shared Models (%d providers):\n\n", len(shared))
+	
+	for provider, models := range shared {
+		fmt.Printf("📦 %s:\n", provider)
+		for _, model := range models {
+			fmt.Printf("  • %s\n", model)
+		}
+		fmt.Println()
+	}
+	
+	return nil
+}
+
+func runOptimizeModel(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	if len(args) == 0 {
+		return fmt.Errorf("model path is required")
+	}
+	
+	modelPath := args[0]
+	
+	// Check if model file exists
+	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
+		return fmt.Errorf("model file does not exist: %s", modelPath)
+	}
+	
+	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
+	if err := manager.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize manager: %w", err)
+	}
+	
+	modelName := filepath.Base(modelPath)
+	fmt.Printf("⚡ Optimizing model: %s\n", modelName)
+	fmt.Printf("🎯 Target provider: %s\n", optimizeProvider)
+	
+	// Optimize model
+	if err := manager.OptimizeModelForProvider(ctx, modelPath, optimizeProvider); err != nil {
+		return fmt.Errorf("failed to optimize model: %w", err)
+	}
+	
+	fmt.Printf("✅ Model optimized and shared for %s!\n", optimizeProvider)
+	return nil
+}
+
+func runSyncModels(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
+	if err := manager.Initialize(ctx); err != nil {
+		return fmt.Errorf("failed to initialize manager: %w", err)
+	}
+	
+	fmt.Println("🔄 Synchronizing models across all providers...")
+	
+	// Get cross-provider registry
+	registry := llm.NewCrossProviderRegistry(filepath.Join(getLocalLLMBaseDir(), "registry"))
+	
+	// Get all downloaded models
+	downloadedModels := registry.GetDownloadedModels()
+	
+	if len(downloadedModels) == 0 {
+		fmt.Println("❌ No downloaded models found")
+		fmt.Println("💡 Use 'helix local-llm models download <model-id>' to download models first")
+		return nil
+	}
+	
+	fmt.Printf("📊 Found %d downloaded models\n", len(downloadedModels))
+	
+	// Process each model
+	syncedCount := 0
+	errorCount := 0
+	
+	for _, model := range downloadedModels {
+		fmt.Printf("🔗 Processing: %s (%s)\n", model.ModelID, model.Format)
+		
+		// Check if model needs optimization for any provider
+		providers := []string{"vllm", "llamacpp", "ollama", "localai", "fastchat", "textgen", "lmstudio", "jan", "koboldai", "gpt4all", "tabbyapi", "mlx", "mistralrs"}
+		
+		for _, provider := range providers {
+			// Check compatibility
+			query := llm.ModelCompatibilityQuery{
+				ModelID:       model.ModelID,
+				SourceFormat:  model.Format,
+				TargetProvider: provider,
+			}
+			
+			result, err := registry.CheckCompatibility(query)
+			if err != nil {
+				fmt.Printf("  ⚠️  %s: failed to check compatibility - %v\n", provider, err)
+				errorCount++
+				continue
+			}
+			
+			if !result.IsCompatible {
+				fmt.Printf("  ❌ %s: not compatible\n", provider)
+				continue
+			}
+			
+			if result.ConversionRequired {
+				fmt.Printf("  🔄 %s: conversion required (%.0f min est.)\n", provider, result.EstimatedTime)
+				// Perform optimization/conversion
+				if err := manager.OptimizeModelForProvider(ctx, model.Path, provider); err != nil {
+					fmt.Printf("    ❌ Conversion failed: %v\n", err)
+					errorCount++
+				} else {
+					fmt.Printf("    ✅ Converted successfully\n")
+					syncedCount++
+				}
+			} else {
+				fmt.Printf("  ✅ %s: already compatible\n", provider)
+				// Share directly
+				if err := manager.ShareModelWithProviders(ctx, model.Path, filepath.Base(model.Path)); err != nil {
+					fmt.Printf("    ❌ Failed to share: %v\n", err)
+					errorCount++
+				} else {
+					syncedCount++
+				}
+			}
+		}
+	}
+	
+	fmt.Printf("\n📊 Sync completed: %d successful, %d errors\n", syncedCount, errorCount)
+	if errorCount == 0 {
+		fmt.Println("✅ All models synchronized successfully!")
+	} else {
+		fmt.Printf("⚠️  %d models failed to sync. Check logs for details.\n", errorCount)
+	}
+	
+	return nil
 }

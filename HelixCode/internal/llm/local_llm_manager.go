@@ -654,3 +654,390 @@ func (m *LocalLLMManager) Cleanup(ctx context.Context) error {
 	log.Println("✅ Cleanup completed")
 	return nil
 }
+
+// UpdateProvider updates a specific provider to the latest version
+func (m *LocalLLMManager) UpdateProvider(ctx context.Context, providerName string) error {
+	provider, exists := m.providers[providerName]
+	if !exists {
+		return fmt.Errorf("provider %s not found", providerName)
+	}
+	
+	log.Printf("🔄 Updating %s...", provider.Name)
+	
+	// Stop provider if running
+	if provider.Status == "running" {
+		if err := m.StopProvider(ctx, providerName); err != nil {
+			log.Printf("⚠️  Failed to stop provider for update: %v", err)
+		}
+	}
+	
+	// Pull latest changes
+	providerDir := filepath.Join(m.dataDir, strings.ToLower(provider.Name))
+	cmd := exec.CommandContext(ctx, "git", "pull", "origin", provider.Version)
+	cmd.Dir = providerDir
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("git pull failed: %s", string(output))
+	}
+	
+	// Rebuild provider
+	if err := m.buildProvider(ctx, provider, providerDir); err != nil {
+		return fmt.Errorf("failed to rebuild provider: %w", err)
+	}
+	
+	// Update startup script
+	if err := m.createStartupScript(provider); err != nil {
+		return fmt.Errorf("failed to update startup script: %w", err)
+	}
+	
+	log.Printf("✅ Successfully updated %s", provider.Name)
+	return nil
+}
+
+// ShareModelWithProviders shares a downloaded model with all compatible providers
+func (m *LocalLLMManager) ShareModelWithProviders(ctx context.Context, modelPath string, modelName string) error {
+	log.Printf("🔗 Sharing model %s with compatible providers...", modelName)
+	
+	// Detect model format
+	format, err := m.detectModelFormat(modelPath)
+	if err != nil {
+		return fmt.Errorf("failed to detect model format: %w", err)
+	}
+	
+	// Find compatible providers
+	compatibleProviders := []string{}
+	for name, provider := range m.providers {
+		if m.isFormatCompatibleWithProvider(format, name) {
+			compatibleProviders = append(compatibleProviders, name)
+		}
+	}
+	
+	if len(compatibleProviders) == 0 {
+		return fmt.Errorf("no providers found compatible with format %s", format)
+	}
+	
+	// Create symlinks or copies for each compatible provider
+	for _, providerName := range compatibleProviders {
+		provider := m.providers[providerName]
+		targetDir := filepath.Join(provider.DataPath, "models")
+		os.MkdirAll(targetDir, 0755)
+		
+		targetPath := filepath.Join(targetDir, filepath.Base(modelPath))
+		
+		// Remove existing target if it exists
+		os.Remove(targetPath)
+		
+		// Create symlink (or copy if symlink fails)
+		err := os.Symlink(modelPath, targetPath)
+		if err != nil {
+			// Fallback to copy
+			log.Printf("⚠️  Symlink failed for %s, copying instead: %v", providerName, err)
+			if err := m.copyModel(modelPath, targetPath); err != nil {
+				log.Printf("❌ Failed to copy model for %s: %v", providerName, err)
+				continue
+			}
+		} else {
+			log.Printf("✅ Linked model for %s", providerName)
+		}
+	}
+	
+	log.Printf("✅ Model shared with %d providers", len(compatibleProviders))
+	return nil
+}
+
+// DownloadModelForAllProviders downloads a model and makes it available to all compatible providers
+func (m *LocalLLMManager) DownloadModelForAllProviders(ctx context.Context, modelID string, sourceFormat ModelFormat) error {
+	log.Printf("🌐 Downloading model %s for all providers...", modelID)
+	
+	// Initialize download manager
+	downloadManager := NewModelDownloadManager(m.baseDir)
+	
+	// Get model info
+	model, err := downloadManager.GetModelByID(modelID)
+	if err != nil {
+		return fmt.Errorf("model not found: %w", err)
+	}
+	
+	// Find best format to download (most compatible)
+	bestFormat := m.findMostCompatibleFormat(sourceFormat)
+	
+	// Download model in best format
+	req := ModelDownloadRequest{
+		ModelID:       modelID,
+		Format:        bestFormat,
+		TargetProvider: "", // Download to shared location
+		ForceDownload:  false,
+	}
+	
+	progressChan, err := downloadManager.DownloadModel(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to start download: %w", err)
+	}
+	
+	// Monitor download
+	for progress := range progressChan {
+		if progress.Error != "" {
+			return fmt.Errorf("download failed: %s", progress.Error)
+		}
+		if progress.Progress == 1.0 {
+			log.Printf("✅ Download completed for model %s", modelID)
+			break
+		}
+	}
+	
+	// Get the downloaded model path
+	downloadedPath := filepath.Join(m.baseDir, "shared", modelID, fmt.Sprintf("model.%s", bestFormat))
+	
+	// Share with all compatible providers
+	return m.ShareModelWithProviders(ctx, downloadedPath, modelID)
+}
+
+// GetSharedModels returns list of models shared across providers
+func (m *LocalLLMManager) GetSharedModels(ctx context.Context) (map[string][]string, error) {
+	shared := make(map[string][]string)
+	
+	for name, provider := range m.providers {
+		modelsDir := filepath.Join(provider.DataPath, "models")
+		if _, err := os.Stat(modelsDir); err == nil {
+			entries, err := os.ReadDir(modelsDir)
+			if err != nil {
+				continue
+			}
+			
+			var models []string
+			for _, entry := range entries {
+				if !entry.IsDir() {
+					models = append(models, entry.Name())
+				}
+			}
+			
+			if len(models) > 0 {
+				shared[name] = models
+			}
+		}
+	}
+	
+	return shared, nil
+}
+
+// OptimizeModelForProvider optimizes a model specifically for a provider
+func (m *LocalLLMManager) OptimizeModelForProvider(ctx context.Context, modelPath string, targetProvider string) error {
+	provider, exists := m.providers[targetProvider]
+	if !exists {
+		return fmt.Errorf("provider %s not found", targetProvider)
+	}
+	
+	log.Printf("⚡ Optimizing model for %s...", provider.Name)
+	
+	// Detect current format
+	currentFormat, err := m.detectModelFormat(modelPath)
+	if err != nil {
+		return fmt.Errorf("failed to detect current format: %w", err)
+	}
+	
+	// Get optimal format for provider
+	optimalFormat := m.getOptimalFormatForProvider(targetProvider)
+	
+	// If already in optimal format, just share it
+	if currentFormat == optimalFormat {
+		return m.ShareModelWithProviders(ctx, modelPath, filepath.Base(modelPath))
+	}
+	
+	// Convert model
+	converter := NewModelConverter(m.baseDir)
+	config := ConversionConfig{
+		SourcePath:   modelPath,
+		SourceFormat: currentFormat,
+		TargetFormat: optimalFormat,
+		Optimization: &OptimizationConfig{
+			OptimizeFor:    m.getOptimizationTarget(targetProvider),
+			TargetHardware: m.getTargetHardware(targetProvider),
+		},
+		Timeout: 60,
+	}
+	
+	job, err := converter.ConvertModel(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to start conversion: %w", err)
+	}
+	
+	// Wait for conversion completion
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			status, err := converter.GetConversionStatus(job.ID)
+			if err != nil {
+				return fmt.Errorf("failed to get conversion status: %w", err)
+			}
+			
+			switch status.Status {
+			case StatusCompleted:
+				log.Printf("✅ Model optimized for %s", provider.Name)
+				return m.ShareModelWithProviders(ctx, status.TargetPath, filepath.Base(status.TargetPath))
+			case StatusFailed:
+				return fmt.Errorf("conversion failed: %s", status.Error)
+			case StatusCancelled:
+				return fmt.Errorf("conversion cancelled")
+			}
+		}
+	}
+}
+
+// Helper methods for cross-provider functionality
+
+func (m *LocalLLMManager) detectModelFormat(modelPath string) (ModelFormat, error) {
+	ext := strings.ToLower(filepath.Ext(modelPath))
+	switch ext {
+	case ".gguf":
+		return FormatGGUF, nil
+	case ".pt", ".pth", ".safetensors":
+		return FormatHF, nil
+	case ".bin":
+		return FormatGPTQ, nil
+	default:
+		return "", fmt.Errorf("unknown model format for extension: %s", ext)
+	}
+}
+
+func (m *LocalLLMManager) isFormatCompatibleWithProvider(format ModelFormat, providerName string) bool {
+	// Get supported formats for provider
+	var supportedFormats []ModelFormat
+	switch providerName {
+	case "vllm":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF, FormatFP16, FormatBF16}
+	case "llamacpp":
+		supportedFormats = []ModelFormat{FormatGGUF}
+	case "ollama":
+		supportedFormats = []ModelFormat{FormatGGUF}
+	case "localai":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF}
+	case "fastchat":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatHF}
+	case "textgen":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatHF}
+	case "lmstudio":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatHF}
+	case "jan":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatHF}
+	case "koboldai":
+		supportedFormats = []ModelFormat{FormatGGUF}
+	case "gpt4all":
+		supportedFormats = []ModelFormat{FormatGGUF}
+	case "tabbyapi":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatHF}
+	case "mlx":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatHF}
+	case "mistralrs":
+		supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatHF, FormatBF16, FormatFP16}
+	default:
+		supportedFormats = []ModelFormat{FormatGGUF} // Most universal format
+	}
+	
+	for _, supportedFormat := range supportedFormats {
+		if supportedFormat == format {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *LocalLLMManager) findMostCompatibleFormat(sourceFormat ModelFormat) ModelFormat {
+	// Count how many providers support each format
+	formatCounts := make(map[ModelFormat]int)
+	
+	for _, provider := range m.providers {
+		var supportedFormats []ModelFormat
+		switch provider.Name {
+		case "VLLM":
+			supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF, FormatFP16, FormatBF16}
+		case "Llama.cpp":
+			supportedFormats = []ModelFormat{FormatGGUF}
+		case "Ollama":
+			supportedFormats = []ModelFormat{FormatGGUF}
+		default:
+			supportedFormats = []ModelFormat{FormatGGUF}
+		}
+		
+		for _, format := range supportedFormats {
+			formatCounts[format]++
+		}
+	}
+	
+	// Return format with highest compatibility
+	maxCount := 0
+	bestFormat := FormatGGUF // Default
+	for format, count := range formatCounts {
+		if count > maxCount {
+			maxCount = count
+			bestFormat = format
+		}
+	}
+	
+	return bestFormat
+}
+
+func (m *LocalLLMManager) getOptimalFormatForProvider(providerName string) ModelFormat {
+	switch providerName {
+	case "llamacpp":
+		return FormatGGUF
+	case "vllm":
+		return FormatGGUF // Best performance/speed balance
+	case "ollama":
+		return FormatGGUF
+	case "localai":
+		return FormatGGUF
+	case "mistralrs":
+		return FormatGGUF
+	default:
+		return FormatGGUF
+	}
+}
+
+func (m *LocalLLMManager) getOptimizationTarget(providerName string) string {
+	switch providerName {
+	case "vllm":
+		return "gpu"
+	case "llamacpp":
+		return "cpu" // Can be GPU too, but CPU is more universal
+	case "mlx":
+		return "gpu" // Apple Silicon GPU
+	case "mistralrs":
+		return "gpu"
+	default:
+		return "cpu" // Most universal
+	}
+}
+
+func (m *LocalLLMManager) getTargetHardware(providerName string) string {
+	switch providerName {
+	case "vllm":
+		return "nvidia"
+	case "mlx":
+		return "apple"
+	case "mistralrs":
+		return "nvidia"
+	default:
+		return "cpu"
+	}
+}
+
+func (m *LocalLLMManager) copyModel(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer sourceFile.Close()
+	
+	destFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+	
+	_, err = destFile.ReadFrom(sourceFile)
+	return err
+}
