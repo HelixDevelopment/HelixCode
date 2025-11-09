@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,8 +15,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/helixcode/internal/llm"
-	"github.com/helixcode/internal/hardware"
+	"dev.helix.code/internal/llm"
+	"dev.helix.code/internal/hardware"
 )
 
 // localLLMCmd represents the local-llm command
