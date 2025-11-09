@@ -488,7 +488,6 @@ func (p *OpenAICompatibleProvider) makeStreamingRequest(ctx context.Context, req
 	}
 
 	// Process SSE stream
-	decoder := json.NewDecoder(resp.Body)
 	for {
 		var line string
 		line, err = readSSELine(resp.Body)

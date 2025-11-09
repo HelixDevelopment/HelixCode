@@ -6,7 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"text/tabwriter"
 	"time"
@@ -50,6 +52,13 @@ func init() {
 	localLLMCmd.AddCommand(cleanupCmd)
 	localLLMCmd.AddCommand(updateCmd)
 	localLLMCmd.AddCommand(logsCmd)
+	
+	// Model management commands
+	localLLMCmd.AddCommand(modelsCmd)
+	localLLMCmd.AddCommand(downloadModelCmd)
+	localLLMCmd.AddCommand(convertModelCmd)
+	localLLMCmd.AddCommand(listModelsCmd)
+	localLLMCmd.AddCommand(searchModelsCmd)
 }
 
 // initCmd represents the local-llm init command
@@ -421,4 +430,461 @@ func clearScreen() {
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
+}
+
+// Model management commands
+
+// modelsCmd represents the models command group
+var modelsCmd = &cobra.Command{
+	Use:   "models",
+	Short: "Manage LLM models (download, convert, list)",
+	Long: `Manage LLM models including downloading from various sources,
+converting between formats, and listing available models.`,
+}
+
+// downloadModelCmd represents the model download command
+var downloadModelCmd = &cobra.Command{
+	Use:   "download [model-id]",
+	Short: "Download a model from available sources",
+	Long: `Download a model from various sources (HuggingFace, TheBloke, etc.)
+and convert it to the desired format if needed.
+
+Examples:
+  helix local-llm models download llama-3-8b-instruct --format gguf --provider vllm
+  helix local-llm models download mistral-7b-instruct --format gptq --provider localai`,
+	RunE: runDownloadModel,
+}
+
+// convertModelCmd represents the model conversion command
+var convertModelCmd = &cobra.Command{
+	Use:   "convert [input-path]",
+	Short: "Convert a model to a different format",
+	Long: `Convert a model from one format to another using specialized tools.
+
+Supported conversions:
+  HF -> GGUF (llama.cpp)
+  HF -> GPTQ (AutoGPTQ)
+  HF -> AWQ (AutoAWQ)
+  HF -> FP16/BF16 (transformers)
+
+Examples:
+  helix local-llm models convert ./model.hf --format gguf --quantize q4_k_m
+  helix local-llm models convert ./model.gguf --format fp16`,
+	RunE: runConvertModel,
+}
+
+// listModelsCmd represents the list models command
+var listModelsCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all available models",
+	Long: `List all available models from the model registry with their
+information including available formats, sizes, and requirements.`,
+	RunE: runListModels,
+}
+
+// searchModelsCmd represents the search models command
+var searchModelsCmd = &cobra.Command{
+	Use:   "search [query]",
+	Short: "Search for models by name, description, or tags",
+	Long: `Search for models in the registry by name, description, or tags.
+This is useful for finding models for specific tasks or requirements.
+
+Examples:
+  helix local-llm models search "code"
+  helix local-llm models search "instruct"
+  helix local-llm models search "7b"`,
+	RunE: runSearchModels,
+}
+
+// Model management flags
+var (
+	downloadFormat       string
+	downloadProvider     string
+	downloadTargetPath   string
+	forceDownload        bool
+	convertTargetFormat  string
+	convertQuantMethod   string
+	convertOptimizeFor   string
+	convertTargetHardware string
+)
+
+func init() {
+	// Model command flags
+	downloadModelCmd.Flags().StringVar(&downloadFormat, "format", "gguf", "Target model format (gguf, gptq, awq, hf, fp16, bf16)")
+	downloadModelCmd.Flags().StringVar(&downloadProvider, "provider", "", "Target provider for the model")
+	downloadModelCmd.Flags().StringVar(&downloadTargetPath, "output", "", "Custom output path for the model")
+	downloadModelCmd.Flags().BoolVar(&forceDownload, "force", false, "Force download even if model already exists")
+	
+	convertModelCmd.Flags().StringVar(&convertTargetFormat, "format", "", "Target format (required)")
+	convertModelCmd.Flags().StringVar(&convertQuantMethod, "quantize", "", "Quantization method (q4_0, q4_k_m, q8_0, etc.)")
+	convertModelCmd.Flags().StringVar(&convertOptimizeFor, "optimize", "", "Optimize for (cpu, gpu, mobile)")
+	convertModelCmd.Flags().StringVar(&convertTargetHardware, "hardware", "", "Target hardware (nvidia, amd, apple, intel)")
+	
+	convertModelCmd.MarkFlagRequired("format")
+}
+
+// Command implementations for model management
+
+func runDownloadModel(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	if len(args) == 0 {
+		return fmt.Errorf("model ID is required")
+	}
+	
+	modelID := args[0]
+	manager := llm.NewModelDownloadManager(getLocalLLMBaseDir())
+	
+	// Check if model exists
+	model, err := manager.GetModelByID(modelID)
+	if err != nil {
+		return fmt.Errorf("model not found: %w", err)
+	}
+	
+	fmt.Printf("📥 Downloading model: %s\n", model.Name)
+	fmt.Printf("📝 Description: %s\n", model.Description)
+	fmt.Printf("📊 Model size: %s, Context: %d tokens\n", model.ModelSize, model.ContextSize)
+	
+	// Get compatible formats
+	if downloadProvider == "" {
+		fmt.Println("⚠️  No provider specified, showing compatible formats for all providers:")
+		formats := map[string]bool{}
+		for _, provider := range []string{"vllm", "localai", "ollama", "llamacpp"} {
+			compatible, _ := manager.GetCompatibleFormats(provider, modelID)
+			for _, format := range compatible {
+				formats[string(format)] = true
+			}
+		}
+		var formatList []string
+		for format := range formats {
+			formatList = append(formatList, format)
+		}
+		fmt.Printf("Available formats: %s\n", strings.Join(formatList, ", "))
+	}
+	
+	// Validate format compatibility
+	if downloadProvider != "" {
+		compatible, err := manager.GetCompatibleFormats(downloadProvider, modelID)
+		if err != nil {
+			return fmt.Errorf("failed to get compatible formats: %w", err)
+		}
+		
+		formatFound := false
+		for _, format := range compatible {
+			if string(format) == downloadFormat {
+				formatFound = true
+				break
+			}
+		}
+		
+		if !formatFound {
+			return fmt.Errorf("format %s is not compatible with provider %s", downloadFormat, downloadProvider)
+		}
+	}
+	
+	// Create download request
+	req := llm.ModelDownloadRequest{
+		ModelID:        modelID,
+		Format:         llm.ModelFormat(downloadFormat),
+		TargetProvider: downloadProvider,
+		TargetPath:     downloadTargetPath,
+		ForceDownload:  forceDownload,
+	}
+	
+	// Start download
+	progressChan, err := manager.DownloadModel(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to start download: %w", err)
+	}
+	
+	// Monitor progress
+	fmt.Println("\n🚀 Starting download...")
+	lastProgress := -1.0
+	
+	for progress := range progressChan {
+		if progress.Progress != lastProgress {
+			fmt.Printf("\r⏳ Progress: %.1f%%", progress.Progress*100)
+			if progress.Speed > 0 {
+				fmt.Printf(" | Speed: %s/s", formatBytes(progress.Speed))
+			}
+			if progress.ETA > 0 {
+				fmt.Printf(" | ETA: %ds", progress.ETA)
+			}
+			lastProgress = progress.Progress
+		}
+		
+		if progress.Error != "" {
+			fmt.Printf("\n❌ Error: %s\n", progress.Error)
+			return fmt.Errorf("download failed: %s", progress.Error)
+		}
+	}
+	
+	fmt.Println("\n✅ Download completed successfully!")
+	if downloadTargetPath != "" {
+		fmt.Printf("📁 Model saved to: %s\n", downloadTargetPath)
+	} else if downloadProvider != "" {
+		fmt.Printf("📁 Model saved to provider directory: %s\n", filepath.Join(getLocalLLMBaseDir(), downloadProvider, modelID))
+	}
+	
+	return nil
+}
+
+func runConvertModel(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	if len(args) == 0 {
+		return fmt.Errorf("input model path is required")
+	}
+	
+	inputPath := args[0]
+	
+	// Check if input file exists
+	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
+		return fmt.Errorf("input file does not exist: %s", inputPath)
+	}
+	
+	// Detect source format
+	sourceFormat, err := detectModelFormat(inputPath)
+	if err != nil {
+		return fmt.Errorf("failed to detect source format: %w", err)
+	}
+	
+	targetFormat := llm.ModelFormat(convertTargetFormat)
+	
+	fmt.Printf("🔄 Converting model: %s\n", inputPath)
+	fmt.Printf("📝 Source format: %s\n", sourceFormat)
+	fmt.Printf("🎯 Target format: %s\n", targetFormat)
+	
+	// Initialize converter
+	converter := llm.NewModelConverter(getLocalLLMBaseDir())
+	
+	// Validate conversion
+	result, err := converter.ValidateConversion(sourceFormat, targetFormat)
+	if err != nil {
+		return fmt.Errorf("conversion validation failed: %w", err)
+	}
+	
+	if !result.IsPossible {
+		fmt.Println("❌ Conversion is not possible")
+		for _, warning := range result.Warnings {
+			fmt.Printf("⚠️  %s\n", warning)
+		}
+		return fmt.Errorf("conversion not supported")
+	}
+	
+	// Show warnings and recommendations
+	for _, warning := range result.Warnings {
+		fmt.Printf("⚠️  %s\n", warning)
+	}
+	for _, recommendation := range result.Recommendations {
+		fmt.Printf("💡 %s\n", recommendation)
+	}
+	
+	// Prepare conversion config
+	config := llm.ConversionConfig{
+		SourcePath:   inputPath,
+		SourceFormat: sourceFormat,
+		TargetFormat: targetFormat,
+		Timeout:      60, // 60 minutes default
+	}
+	
+	// Add quantization if specified
+	if convertQuantMethod != "" {
+		config.Quantization = &llm.QuantizationConfig{
+			Method: convertQuantMethod,
+		}
+	}
+	
+	// Add optimization if specified
+	if convertOptimizeFor != "" || convertTargetHardware != "" {
+		config.Optimization = &llm.OptimizationConfig{
+			OptimizeFor:    convertOptimizeFor,
+			TargetHardware: convertTargetHardware,
+		}
+	}
+	
+	// Start conversion
+	job, err := converter.ConvertModel(ctx, config)
+	if err != nil {
+		return fmt.Errorf("failed to start conversion: %w", err)
+	}
+	
+	fmt.Printf("🚀 Conversion started (Job ID: %s)\n", job.ID)
+	fmt.Printf("📁 Output will be saved to: %s\n", job.TargetPath)
+	fmt.Printf("📋 Logs available at: %s\n", job.LogPath)
+	
+	// Monitor conversion progress
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	
+	for {
+		select {
+		case <-ticker.C:
+			status, err := converter.GetConversionStatus(job.ID)
+			if err != nil {
+				fmt.Printf("❌ Failed to get status: %v\n", err)
+				break
+			}
+			
+			switch status.Status {
+			case llm.StatusRunning:
+				fmt.Printf("\r⏳ Progress: %.1f%% | Step: %s", 
+					status.Progress*100, status.CurrentStep)
+			case llm.StatusCompleted:
+				fmt.Printf("\n✅ Conversion completed successfully!\n")
+				fmt.Printf("📁 Output saved to: %s\n", status.TargetPath)
+				if status.EndTime != nil {
+					duration := status.EndTime.Sub(status.StartTime)
+					fmt.Printf("⏱️  Duration: %v\n", duration)
+				}
+				return nil
+			case llm.StatusFailed:
+				fmt.Printf("\n❌ Conversion failed: %s\n", status.Error)
+				fmt.Printf("📋 Check logs for details: %s\n", status.LogPath)
+				return fmt.Errorf("conversion failed")
+			case llm.StatusCancelled:
+				fmt.Println("\n🚫 Conversion was cancelled")
+				return fmt.Errorf("conversion cancelled")
+			}
+		case <-time.After(time.Hour): // Timeout after 1 hour
+			return fmt.Errorf("conversion timed out")
+		}
+	}
+}
+
+func runListModels(cmd *cobra.Command, args []string) error {
+	manager := llm.NewModelDownloadManager(getLocalLLMBaseDir())
+	models := manager.GetAvailableModels()
+	
+	if len(models) == 0 {
+		fmt.Println("❌ No models available in registry")
+		return nil
+	}
+	
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "ID\tNAME\tSIZE\tFORMATS\tCONTEXT\tTAGS")
+	fmt.Fprintln(w, "--\t----\t----\t-------\t-------\t----")
+	
+	for _, model := range models {
+		formats := make([]string, len(model.AvailableFormats))
+		for i, f := range model.AvailableFormats {
+			formats[i] = string(f)
+		}
+		
+		tags := strings.Join(model.Tags[:min(len(model.Tags), 3)], ", ")
+		if len(model.Tags) > 3 {
+			tags += "..."
+		}
+		
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%s\n",
+			model.ID,
+			truncateString(model.Name, 30),
+			model.ModelSize,
+			strings.Join(formats, ","),
+			model.ContextSize,
+			tags)
+	}
+	
+	w.Flush()
+	
+	fmt.Printf("\n📊 Total models: %d\n", len(models))
+	fmt.Println("💡 Use 'helix local-llm models search <query>' to find specific models")
+	fmt.Println("💡 Use 'helix local-llm models download <model-id>' to download a model")
+	
+	return nil
+}
+
+func runSearchModels(cmd *cobra.Command, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("search query is required")
+	}
+	
+	query := args[0]
+	manager := llm.NewModelDownloadManager(getLocalLLMBaseDir())
+	results := manager.SearchModels(query)
+	
+	if len(results) == 0 {
+		fmt.Printf("❌ No models found for query: %s\n", query)
+		return nil
+	}
+	
+	fmt.Printf("🔍 Search results for '%s' (%d models found):\n\n", query, len(results))
+	
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "ID\tNAME\tSIZE\tDESCRIPTION\tTAGS")
+	fmt.Fprintln(w, "--\t----\t----\t-----------\t----")
+	
+	for _, model := range results {
+		tags := strings.Join(model.Tags[:min(len(model.Tags), 2)], ", ")
+		if len(model.Tags) > 2 {
+			tags += "..."
+		}
+		
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+			model.ID,
+			truncateString(model.Name, 25),
+			model.ModelSize,
+			truncateString(model.Description, 40),
+			tags)
+	}
+	
+	w.Flush()
+	
+	fmt.Printf("\n💡 Use 'helix local-llm models download <model-id>' to download a model")
+	
+	return nil
+}
+
+// Helper functions
+
+func getLocalLLMBaseDir() string {
+	if localLLMDir != "" {
+		return localLLMDir
+	}
+	
+	homeDir, _ := os.UserHomeDir()
+	return filepath.Join(homeDir, ".helixcode", "local-llm")
+}
+
+func detectModelFormat(path string) (llm.ModelFormat, error) {
+	ext := strings.ToLower(filepath.Ext(path))
+	
+	switch ext {
+	case ".gguf":
+		return llm.FormatGGUF, nil
+	case ".pt", ".pth", ".safetensors":
+		// Could be HF or GPTQ, check file content
+		return llm.FormatHF, nil // Default to HF
+	case ".bin":
+		return llm.FormatGPTQ, nil
+	default:
+		return "", fmt.Errorf("unknown model format for extension: %s", ext)
+	}
+}
+
+func formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-3] + "..."
 }

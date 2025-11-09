@@ -509,7 +509,16 @@ func (pf *ProviderFactory) CreateProvider(config ProviderConfigEntry) (Provider,
 	case ProviderTypeJan:
 		return NewJanProvider(config)
 	case ProviderTypeKoboldAI:
-		return NewKoboldAIProvider(config)
+		koboldAIConfig := KoboldAIConfig{
+			BaseURL:         getEndpoint(config.Endpoint, "http://localhost:5001"),
+			APIKey:          config.APIKey,
+			DefaultModel:    getFirstModel(config.Models, "kobold-model"),
+			Timeout:         getTimeout(config.Parameters, 30*time.Second),
+			MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
+			Headers:         getStringMapParam(config.Parameters, "headers"),
+			StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
+		}
+		return NewKoboldAIProvider(koboldAIConfig)
 	case ProviderTypeGPT4All:
 		return NewGPT4AllProvider(config)
 	case ProviderTypeTabbyAPI:

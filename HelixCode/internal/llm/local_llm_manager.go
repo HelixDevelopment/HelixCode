@@ -3,18 +3,14 @@ package llm
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // LocalLLMManager manages all local LLM providers
@@ -588,7 +584,7 @@ func (m *LocalLLMManager) isProviderHealthy(ctx context.Context, provider *Local
 
 // GetProviderStatus returns the status of all providers
 func (m *LocalLLMManager) GetProviderStatus(ctx context.Context) map[string]*LocalLLMProvider {
-	for name, provider := range m.providers {
+	for _, provider := range m.providers {
 		if provider.Status == "running" {
 			if m.isProviderHealthy(ctx, provider) {
 				provider.Status = "running"
@@ -606,7 +602,7 @@ func (m *LocalLLMManager) GetRunningProviders(ctx context.Context) []string {
 	var running []string
 	status := m.GetProviderStatus(ctx)
 	
-	for name, provider := range status {
+	for _, provider := range status {
 		if provider.Status == "running" {
 			endpoint := fmt.Sprintf("http://127.0.0.1:%d", provider.DefaultPort)
 			running = append(running, endpoint)

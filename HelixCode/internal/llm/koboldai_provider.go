@@ -49,7 +49,7 @@ type KoboldAIRequest struct {
 	UseStory   bool                   `json:"use_story,omitempty"`
 	UseMemory  bool                   `json:"use_memory,omitempty"`
 	UseAuthorsNote bool               `json:"use_authors_note,omitempty"`
-	UseWorldInfo bool                  `json:"use_world_info,omitempty"
+	UseWorldInfo    bool               `json:"use_world_info,omitempty"`
 }
 
 // KoboldAIResponse represents a response from the KoboldAI API
@@ -451,7 +451,6 @@ func (p *KoboldAIProvider) makeStreamingRequest(ctx context.Context, request *Ko
 	}
 
 	// Process SSE stream
-	decoder := json.NewDecoder(resp.Body)
 	for {
 		var line string
 		line, err = readSSELine(resp.Body)

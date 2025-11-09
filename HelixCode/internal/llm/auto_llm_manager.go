@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -84,7 +82,7 @@ type UpdateConfig struct {
 
 // AutoProvider represents a managed provider
 type AutoProvider struct {
-	Provider
+	LocalLLMProvider
 	Status         string                 `json:"status"`
 	Process        *os.Process            `json:"-"`
 	Config         map[string]interface{} `json:"config"`
@@ -325,7 +323,7 @@ func (m *AutoLLMManager) initializeProviders() error {
 
 	for name, providerDef := range providerDefinitions {
 		autoProvider := &AutoProvider{
-			Provider: Provider{
+			LocalLLMProvider: LocalLLMProvider{
 				Name:         providerDef.Name,
 				Repository:   providerDef.Repository,
 				Version:      providerDef.Version,
@@ -395,13 +393,14 @@ func (m *AutoLLMManager) autoInstallAllProviders() {
 		}
 
 		// Create startup script
-		if err := m.createStartupScript(provider); err != nil {
+		startupScriptPath := filepath.Join(m.providers[name].BinaryPath, strings.ToLower(name)+".sh")
+		if err := m.createStartupScriptForProvider(m.providers[name], startupScriptPath); err != nil {
 			log.Printf("❌ Failed to create startup script for %s: %v", name, err)
 			continue
 		}
 
-		provider.Status = "installed"
-		provider.LastHealthCheck = time.Now()
+		m.providers[name].Status = "installed"
+		m.providers[name].LastHealthCheck = time.Now()
 		
 		log.Printf("✅ Auto-installed %s", name)
 	}
@@ -920,5 +919,33 @@ func (m *AutoLLMManager) Stop() error {
 	m.isRunning = false
 	log.Println("✅ Auto-LLM Manager stopped")
 
+	return nil
+}
+
+// createStartupScriptForProvider creates a startup script for a provider
+func (m *AutoLLMManager) createStartupScriptForProvider(provider *AutoProvider, scriptPath string) error {
+	var script strings.Builder
+	script.WriteString("#!/bin/bash\n")
+	script.WriteString(fmt.Sprintf("# Auto-generated startup script for %s\n", provider.Name))
+	script.WriteString("\n")
+	
+	// Change to provider directory
+	script.WriteString(fmt.Sprintf("cd %s\n", provider.DataPath))
+	
+	// Set environment variables
+	for key, value := range provider.Environment {
+		script.WriteString(fmt.Sprintf("export %s=\"%s\"\n", key, value))
+	}
+	script.WriteString("\n")
+	
+	// Execute startup command
+	script.WriteString(fmt.Sprintf("%s\n", strings.Join(provider.StartupCmd, " ")))
+	
+	// Create script file
+	if err := os.WriteFile(scriptPath, []byte(script.String()), 0755); err != nil {
+		return fmt.Errorf("failed to write startup script: %w", err)
+	}
+	
+	log.Printf("📝 Created startup script: %s", scriptPath)
 	return nil
 }

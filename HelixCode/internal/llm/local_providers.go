@@ -108,26 +108,6 @@ func NewJanProvider(config ProviderConfigEntry) (Provider, error) {
 	return NewOpenAICompatibleProvider("jan", janConfig)
 }
 
-// NewKoboldAIProvider creates a new KoboldAI provider
-func NewKoboldAIProvider(config ProviderConfigEntry) (Provider, error) {
-	koboldAIConfig := KoboldAIConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:5001"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "kobold-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
-		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-	}
-
-	return NewKoboldAIProviderDirect(koboldAIConfig)
-}
-
-// NewKoboldAIProviderDirect creates a new KoboldAI provider with direct config
-func NewKoboldAIProviderDirect(config KoboldAIConfig) (*KoboldAIProvider, error) {
-	return NewKoboldAIProvider(config)
-}
-
 // NewGPT4AllProvider creates a new GPT4All provider
 func NewGPT4AllProvider(config ProviderConfigEntry) (Provider, error) {
 	gpt4AllConfig := OpenAICompatibleConfig{
