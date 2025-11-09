@@ -42,10 +42,151 @@ tasks:
 llm:
   default_provider: "local"
   providers:
-    local: "http://localhost:11434"
+    # Existing providers
+    local:
+      type: local
+      endpoint: "http://localhost:11434"
+    ollama:
+      type: ollama
+      endpoint: "http://localhost:11434"
+    llamacpp:
+      type: llamacpp
+      endpoint: "http://localhost:8080"
+    
+    # New OpenAI-compatible providers
+    vllm:
+      type: vllm
+      endpoint: "http://localhost:8000"
+      models: ["llama-2-7b-chat-hf"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    localai:
+      type: localai
+      endpoint: "http://localhost:8080"
+      models: ["gpt-3.5-turbo"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    fastchat:
+      type: fastchat
+      endpoint: "http://localhost:7860"
+      models: ["vicuna-13b-v1.5"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    textgen:
+      type: textgen
+      endpoint: "http://localhost:5000"
+      models: ["llama-2-7b-chat-hf"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    lmstudio:
+      type: lmstudio
+      endpoint: "http://localhost:1234"
+      models: ["local-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    jan:
+      type: jan
+      endpoint: "http://localhost:1337"
+      models: ["jan-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    gpt4all:
+      type: gpt4all
+      endpoint: "http://localhost:4891"
+      models: ["gpt4all-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: false
+    
+    koboldai:
+      type: koboldai
+      endpoint: "http://localhost:5001"
+      models: ["kobold-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    tabbyapi:
+      type: tabbyapi
+      endpoint: "http://localhost:5000"
+      models: ["tabby-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    mlx:
+      type: mlx
+      endpoint: "http://localhost:8080"
+      models: ["mlx-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    mistralrs:
+      type: mistralrs
+      endpoint: "http://localhost:8080"
+      models: ["mistral-model"]
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    # Cloud providers (existing)
     openai: "" # Set API key via environment variable
+    anthropic: "" # Set API key via environment variable
+    gemini: "" # Set API key via environment variable
+    vertexai: "" # Set credentials via environment variables
+    qwen: "" # Set API key via environment variable
+    xai: "" # Set API key via environment variable
+    openrouter: "" # Set API key via environment variable
+    copilot: "" # Set GitHub token via environment variable
+    bedrock: "" # Set AWS credentials via environment variables
+    azure: "" # Set Azure credentials via environment variables
+    groq: "" # Set API key via environment variable
+  
   max_tokens: 4096
   temperature: 0.7
+  timeout: 30
+  max_retries: 3
+  
+  # Provider selection preferences
+  selection:
+    strategy: "performance"  # performance, cost, availability, round-robin
+    fallback_enabled: true
+    health_check_interval: 30
 
 logging:
   level: "info"

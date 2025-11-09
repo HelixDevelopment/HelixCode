@@ -27,6 +27,17 @@ const (
 	ProviderTypeBedrock    ProviderType = "bedrock"
 	ProviderTypeAzure      ProviderType = "azure"
 	ProviderTypeGroq       ProviderType = "groq"
+	ProviderTypeVLLM       ProviderType = "vllm"
+	ProviderTypeLocalAI    ProviderType = "localai"
+	ProviderTypeFastChat   ProviderType = "fastchat"
+	ProviderTypeTextGen    ProviderType = "textgen"
+	ProviderTypeLMStudio   ProviderType = "lmstudio"
+	ProviderTypeJan        ProviderType = "jan"
+	ProviderTypeKoboldAI   ProviderType = "koboldai"
+	ProviderTypeGPT4All    ProviderType = "gpt4all"
+	ProviderTypeTabbyAPI   ProviderType = "tabbyapi"
+	ProviderTypeMLX        ProviderType = "mlx"
+	ProviderTypeMistralRS  ProviderType = "mistralrs"
 	ProviderTypeCustom     ProviderType = "custom"
 )
 
@@ -485,6 +496,28 @@ func (pf *ProviderFactory) CreateProvider(config ProviderConfigEntry) (Provider,
 		return NewAzureProvider(config)
 	case ProviderTypeGroq:
 		return NewGroqProvider(config)
+	case ProviderTypeVLLM:
+		return NewVLLMProvider(config)
+	case ProviderTypeLocalAI:
+		return NewLocalAIProvider(config)
+	case ProviderTypeFastChat:
+		return NewFastChatProvider(config)
+	case ProviderTypeTextGen:
+		return NewTextGenProvider(config)
+	case ProviderTypeLMStudio:
+		return NewLMStudioProvider(config)
+	case ProviderTypeJan:
+		return NewJanProvider(config)
+	case ProviderTypeKoboldAI:
+		return NewKoboldAIProvider(config)
+	case ProviderTypeGPT4All:
+		return NewGPT4AllProvider(config)
+	case ProviderTypeTabbyAPI:
+		return NewTabbyAPIProvider(config)
+	case ProviderTypeMLX:
+		return NewMLXProvider(config)
+	case ProviderTypeMistralRS:
+		return NewMistralRSProvider(config)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", config.Type)
 	}
