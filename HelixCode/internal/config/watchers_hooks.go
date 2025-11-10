@@ -149,13 +149,10 @@ func (w *LoggingWatcher) OnConfigChange(change *ConfigChange) error {
 	switch w.Format {
 	case "json":
 		changeJSON, _ := json.Marshal(change)
-		w.logger.Info("Configuration change", "change", string(changeJSON))
+		w.logger.Info("Configuration change: %s", string(changeJSON))
 	case "text":
-		w.logger.Info("Configuration change",
-			"type", change.Type,
-			"path", change.Path,
-			"property", change.Property,
-			"timestamp", change.Timestamp)
+		w.logger.Info("Configuration change: type=%s, path=%s, property=%s, timestamp=%v",
+			change.Type, change.Path, change.Property, change.Timestamp)
 	default:
 		w.logger.Info("Configuration change detected")
 	}
@@ -202,7 +199,7 @@ func (w *AlertWatcher) OnConfigChange(change *ConfigChange) error {
 
 	// Check rate limiting
 	if time.Since(w.lastAlert) < w.RateLimit {
-		w.logger.Debug("Alert rate limited", "path", change.Path)
+		w.logger.Debug("Alert rate limited: path=%s", change.Path)
 		return nil
 	}
 
@@ -213,11 +210,8 @@ func (w *AlertWatcher) OnConfigChange(change *ConfigChange) error {
 	}
 
 	// Send alert
-	w.logger.Warn("Configuration change alert",
-		"path", change.Path,
-		"type", change.Type,
-		"severity", severity,
-		"timestamp", change.Timestamp)
+	w.logger.Warn("Configuration change alert: path=%s, type=%s, severity=%s, timestamp=%v",
+		change.Path, change.Type, severity, change.Timestamp)
 
 	if w.AlertURL != "" {
 		w.sendAlert(change, severity)
@@ -238,7 +232,7 @@ func (w *AlertWatcher) GetWatchPaths() []string {
 func (w *AlertWatcher) sendAlert(change *ConfigChange, severity string) {
 	// This would implement actual alert sending
 	// For now, just log
-	w.logger.Info("Alert sent", "url", w.AlertURL, "channel", w.AlertChannel, "severity", severity)
+	w.logger.Info("Alert sent: url=%s, channel=%s, severity=%s", w.AlertURL, w.AlertChannel, severity)
 }
 
 // Built-in configuration hooks
@@ -252,34 +246,31 @@ type ValidationHook struct {
 }
 
 func (h *ValidationHook) BeforeLoad(path string, config *HelixConfig) error {
-	h.logger.Debug("Before load validation", "path", path)
+	h.logger.Debug("Before load validation: path=%s", path)
 	// Validation before load is optional
 	return nil
 }
 
 func (h *ValidationHook) AfterLoad(path string, config *HelixConfig) error {
-	h.logger.Debug("After load validation", "path", path)
+	h.logger.Debug("After load validation: path=%s", path)
 	// Validate loaded configuration
 	return h.validateConfiguration(config)
 }
 
 func (h *ValidationHook) BeforeSave(path string, config *HelixConfig) error {
-	h.logger.Debug("Before save validation", "path", path)
+	h.logger.Debug("Before save validation: path=%s", path)
 	// Validate configuration before save
 	return h.validateConfiguration(config)
 }
 
 func (h *ValidationHook) AfterSave(path string, config *HelixConfig) error {
-	h.logger.Debug("After save validation", "path", path)
+	h.logger.Debug("After save validation: path=%s", path)
 	// Validation after save is optional
 	return nil
 }
 
 func (h *ValidationHook) OnError(path string, err error, operation string) error {
-	h.logger.Error("Configuration operation error",
-		"path", path,
-		"operation", operation,
-		"error", err)
+	h.logger.Error("Configuration operation error: path=%s, operation=%s, error=%v", path, operation, err)
 	return nil
 }
 
@@ -322,7 +313,7 @@ func (h *BackupHook) AfterLoad(path string, config *HelixConfig) error {
 }
 
 func (h *BackupHook) BeforeSave(path string, config *HelixConfig) error {
-	h.logger.Debug("Creating backup before save", "path", path)
+	h.logger.Debug("Creating backup before save: path=%s", path)
 
 	if h.BackupDir == "" {
 		return nil
@@ -330,7 +321,7 @@ func (h *BackupHook) BeforeSave(path string, config *HelixConfig) error {
 
 	// Create backup directory if it doesn't exist
 	if err := os.MkdirAll(h.BackupDir, 0755); err != nil {
-		h.logger.Error("Failed to create backup directory", "dir", h.BackupDir, "error", err)
+		h.logger.Error("Failed to create backup directory: dir=%s, error=%v", h.BackupDir, err)
 		return nil // Don't fail save due to backup issues
 	}
 
@@ -342,7 +333,7 @@ func (h *BackupHook) BeforeSave(path string, config *HelixConfig) error {
 	if _, err := os.Stat(path); err == nil {
 		data, err := os.ReadFile(path)
 		if err != nil {
-			h.logger.Error("Failed to read config for backup", "error", err)
+			h.logger.Error("Failed to read config for backup: error=%v", err)
 			return nil
 		}
 
@@ -352,11 +343,11 @@ func (h *BackupHook) BeforeSave(path string, config *HelixConfig) error {
 		}
 
 		if err := os.WriteFile(backupFile, data, 0644); err != nil {
-			h.logger.Error("Failed to write backup file", "error", err)
+			h.logger.Error("Failed to write backup file: error=%v", err)
 			return nil
 		}
 
-		h.logger.Info("Configuration backup created", "file", backupFile)
+		h.logger.Info("Configuration backup created: file=%s", backupFile)
 
 		// Clean up old backups
 		h.cleanupOldBackups()
@@ -371,10 +362,7 @@ func (h *BackupHook) AfterSave(path string, config *HelixConfig) error {
 }
 
 func (h *BackupHook) OnError(path string, err error, operation string) error {
-	h.logger.Error("Configuration operation error",
-		"path", path,
-		"operation", operation,
-		"error", err)
+	h.logger.Error("Configuration operation error: path=%s, operation=%s, error=%v", path, operation, err)
 	return nil
 }
 
@@ -417,9 +405,9 @@ func (h *BackupHook) cleanupOldBackups() {
 		for i := h.MaxBackups; i < len(backupFiles); i++ {
 			oldBackup := filepath.Join(h.BackupDir, backupFiles[i].Name())
 			if err := os.Remove(oldBackup); err != nil {
-				h.logger.Warn("Failed to remove old backup", "file", oldBackup, "error", err)
+				h.logger.Warn("Failed to remove old backup: file=%s, error=%v", oldBackup, err)
 			} else {
-				h.logger.Debug("Removed old backup", "file", oldBackup)
+				h.logger.Debug("Removed old backup: file=%s", oldBackup)
 			}
 		}
 	}
@@ -435,7 +423,7 @@ type EncryptionHook struct {
 }
 
 func (h *EncryptionHook) BeforeLoad(path string, config *HelixConfig) error {
-	h.logger.Debug("Before load decryption", "path", path)
+	h.logger.Debug("Before load decryption: path=%s", path)
 	// Decrypt configuration after loading
 	return h.decryptConfiguration(config)
 }
@@ -446,7 +434,7 @@ func (h *EncryptionHook) AfterLoad(path string, config *HelixConfig) error {
 }
 
 func (h *EncryptionHook) BeforeSave(path string, config *HelixConfig) error {
-	h.logger.Debug("Before save encryption", "path", path)
+	h.logger.Debug("Before save encryption: path=%s", path)
 	// Encrypt sensitive data before save
 	return h.encryptConfiguration(config)
 }
@@ -457,10 +445,7 @@ func (h *EncryptionHook) AfterSave(path string, config *HelixConfig) error {
 }
 
 func (h *EncryptionHook) OnError(path string, err error, operation string) error {
-	h.logger.Error("Configuration operation error",
-		"path", path,
-		"operation", operation,
-		"error", err)
+	h.logger.Error("Configuration operation error: path=%s, operation=%s, error=%v", path, operation, err)
 	return nil
 }
 
@@ -554,7 +539,7 @@ func (h *MetricsHook) recordMetric(name string, data map[string]interface{}) {
 	defer h.mu.Unlock()
 
 	h.metrics[name] = data
-	h.logger.Debug("Configuration metric recorded", "name", name, "data", data)
+	h.logger.Debug("Configuration metric recorded: name=%s, data=%v", name, data)
 }
 
 func (h *MetricsHook) GetMetrics() map[string]interface{} {

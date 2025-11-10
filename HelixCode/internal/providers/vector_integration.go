@@ -6,40 +6,40 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/memory/providers"
-	"dev.helix.code/internal/logging"
 )
 
 // VectorIntegration provides vector database integration for all providers
 type VectorIntegration struct {
-	mu       sync.RWMutex
-	registry *providers.ProviderRegistry
+	mu        sync.RWMutex
+	registry  *providers.ProviderRegistry
 	manager   *providers.ProviderManager
-	logger    logging.Logger
+	logger    *logging.Logger
 	config    *VectorConfig
 	providers map[string]providers.VectorProvider
 }
 
 // VectorConfig contains vector integration configuration
 type VectorConfig struct {
-	DefaultProvider string                          `json:"default_provider"`
-	Providers      map[string]*ProviderVectorConfig   `json:"providers"`
-	LoadBalancing  providers.LoadBalanceType        `json:"load_balancing"`
-	FailoverEnabled bool                          `json:"failover_enabled"`
-	CacheEnabled   bool                           `json:"cache_enabled"`
-	CacheSize      int                            `json:"cache_size"`
-	CacheTTL       int64                         `json:"cache_ttl"`
+	DefaultProvider string                           `json:"default_provider"`
+	Providers       map[string]*ProviderVectorConfig `json:"providers"`
+	LoadBalancing   providers.LoadBalanceType        `json:"load_balancing"`
+	FailoverEnabled bool                             `json:"failover_enabled"`
+	CacheEnabled    bool                             `json:"cache_enabled"`
+	CacheSize       int                              `json:"cache_size"`
+	CacheTTL        int64                            `json:"cache_ttl"`
 }
 
 // ProviderVectorConfig contains vector configuration for a specific provider
 type ProviderVectorConfig struct {
-	Type     providers.ProviderType       `json:"type"`
-	Enabled  bool                        `json:"enabled"`
-	Config   map[string]interface{}       `json:"config"`
-	IndexName string                      `json:"index_name"`
-	Dimension int                        `json:"dimension"`
-	Metric    string                      `json:"metric"`
+	Type      providers.ProviderType `json:"type"`
+	Enabled   bool                   `json:"enabled"`
+	Config    map[string]interface{} `json:"config"`
+	IndexName string                 `json:"index_name"`
+	Dimension int                    `json:"dimension"`
+	Metric    string                 `json:"metric"`
 }
 
 // NewVectorIntegration creates a new vector integration
@@ -49,27 +49,27 @@ func NewVectorIntegration(config *VectorConfig) *VectorIntegration {
 			DefaultProvider: "pinecone",
 			Providers: map[string]*ProviderVectorConfig{
 				"pinecone": {
-					Type:       providers.ProviderTypePinecone,
-					Enabled:    true,
-					IndexName:  "helixcode_vectors",
-					Dimension:  1536,
-					Metric:     "cosine",
+					Type:      providers.ProviderTypePinecone,
+					Enabled:   true,
+					IndexName: "helixcode_vectors",
+					Dimension: 1536,
+					Metric:    "cosine",
 					Config: map[string]interface{}{
 						"environment": "us-west1-gcp",
 					},
 				},
 			},
-			LoadBalancing:  providers.LoadBalanceRoundRobin,
+			LoadBalancing:   providers.LoadBalanceRoundRobin,
 			FailoverEnabled: true,
-			CacheEnabled:   true,
-			CacheSize:      1000,
-			CacheTTL:       300000, // 5 minutes
+			CacheEnabled:    true,
+			CacheSize:       1000,
+			CacheTTL:        300000, // 5 minutes
 		}
 	}
 
 	return &VectorIntegration{
-		registry: providers.GetRegistry(),
-		logger:    logging.NewLogger("vector_integration"),
+		registry:  providers.GetRegistry(),
+		logger:    logging.NewLogger(logging.INFO),
 		config:    config,
 		providers: make(map[string]providers.VectorProvider),
 	}
@@ -85,35 +85,35 @@ func (vi *VectorIntegration) Initialize(ctx context.Context) error {
 		"providers_count", len(vi.config.Providers))
 
 	// Create and initialize all providers
-	providerConfigs := make([]providers.ProviderConfig, 0)
-	
+	providerConfigs := make(map[string]*providers.SingleProviderConfig)
+
 	for name, providerConfig := range vi.config.Providers {
 		if !providerConfig.Enabled {
 			vi.logger.Info("Skipping disabled provider", "name", name)
 			continue
 		}
 
-		providerConfigs = append(providerConfigs, providers.ProviderConfig{
+		providerConfigs[name] = &providers.SingleProviderConfig{
 			Name:     name,
 			Type:     providerConfig.Type,
 			Config:   providerConfig.Config,
 			Priority: 1,
 			Enabled:  true,
-		})
+		}
 	}
 
 	// Create provider manager
 	managerConfig := &providers.ManagerConfig{
-		Providers:           providerConfigs,
-		DefaultProvider:      vi.config.DefaultProvider,
-		LoadBalancing:       vi.config.LoadBalancing,
-		FailoverEnabled:     vi.config.FailoverEnabled,
-		RetryAttempts:       3,
-		RetryBackoff:        1000,
-		HealthCheckInterval: 60000,
+		Providers:             providerConfigs,
+		DefaultProvider:       vi.config.DefaultProvider,
+		LoadBalancing:         vi.config.LoadBalancing,
+		FailoverEnabled:       vi.config.FailoverEnabled,
+		RetryAttempts:         3,
+		RetryBackoff:          1000,
+		HealthCheckInterval:   60000,
 		PerformanceMonitoring: true,
-		CostTracking:        true,
-		BackupEnabled:       false,
+		CostTracking:          true,
+		BackupEnabled:         false,
 	}
 
 	var err error
@@ -145,7 +145,7 @@ func (vi *VectorIntegration) StoreVector(ctx context.Context, vector *VectorData
 func (vi *VectorIntegration) StoreVectorInProvider(ctx context.Context, providerName string, vector *VectorData) error {
 	// Convert to provider format
 	providerVector := vi.convertToProviderVector(vector)
-	
+
 	// Store using provider manager
 	return vi.manager.Store(ctx, []*memory.VectorData{providerVector})
 }
@@ -170,7 +170,7 @@ func (vi *VectorIntegration) RetrieveVector(ctx context.Context, id string) (*Ve
 func (vi *VectorIntegration) SearchVectors(ctx context.Context, query *VectorSearchQuery) ([]*VectorSearchResult, error) {
 	// Convert to provider format
 	providerQuery := vi.convertToProviderQuery(query)
-	
+
 	// Search using provider manager
 	result, err := vi.manager.Search(ctx, providerQuery)
 	if err != nil {
@@ -269,14 +269,14 @@ func (vi *VectorIntegration) GetVectorStats(ctx context.Context) (*VectorStats, 
 	}
 
 	return &VectorStats{
-		TotalVectors:     stats.TotalVectors,
-		TotalIndexes:     stats.TotalCollections,
-		TotalSize:        stats.TotalSize,
-		AverageLatency:   stats.AverageLatency,
-		LastOperation:    stats.LastOperation,
-		ErrorCount:       stats.ErrorCount,
-		Uptime:          stats.Uptime,
-		Cost:            stats.TotalCost,
+		TotalVectors:   stats.TotalVectors,
+		TotalIndexes:   stats.TotalCollections,
+		TotalSize:      stats.TotalSize,
+		AverageLatency: stats.AverageLatency,
+		LastOperation:  stats.LastOperation,
+		ErrorCount:     stats.ErrorCount,
+		Uptime:         stats.Uptime,
+		Cost:           stats.TotalCost,
 	}, nil
 }
 
@@ -306,12 +306,12 @@ func (vi *VectorIntegration) HealthCheck(ctx context.Context) (*VectorHealthStat
 	}
 
 	return &VectorHealthStatus{
-		Status:           status,
-		TotalProviders:   len(healthStatuses),
-		HealthyProviders:  len(healthStatuses) - unhealthyCount,
+		Status:             status,
+		TotalProviders:     len(healthStatuses),
+		HealthyProviders:   len(healthStatuses) - unhealthyCount,
 		UnhealthyProviders: unhealthyCount,
-		ProviderStatuses: healthStatuses,
-		LastCheck:        time.Now(),
+		ProviderStatuses:   healthStatuses,
+		LastCheck:          time.Now(),
 	}, nil
 }
 
@@ -344,11 +344,11 @@ func (vi *VectorIntegration) convertToProviderVector(vector *VectorData) *memory
 // convertFromProviderVector converts from provider vector format
 func (vi *VectorIntegration) convertFromProviderVector(vector *memory.VectorData) *VectorData {
 	return &VectorData{
-		ID:         vector.ID,
-		Embedding:  vector.Vector,
-		Metadata:   vector.Metadata,
-		IndexName:  vector.Collection,
-		CreatedAt:  vector.Timestamp,
+		ID:        vector.ID,
+		Embedding: vector.Vector,
+		Metadata:  vector.Metadata,
+		IndexName: vector.Collection,
+		CreatedAt: vector.Timestamp,
 	}
 }
 
@@ -383,21 +383,21 @@ func (vi *VectorIntegration) Stop(ctx context.Context) error {
 
 // VectorData represents a vector with metadata
 type VectorData struct {
-	ID         string                 `json:"id"`
-	Embedding  []float64              `json:"embedding"`
-	Metadata   map[string]interface{} `json:"metadata"`
-	IndexName  string                 `json:"index_name"`
-	CreatedAt  time.Time              `json:"created_at"`
+	ID        string                 `json:"id"`
+	Embedding []float64              `json:"embedding"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	IndexName string                 `json:"index_name"`
+	CreatedAt time.Time              `json:"created_at"`
 }
 
 // VectorSearchQuery represents a vector search query
 type VectorSearchQuery struct {
-	Embedding  []float64              `json:"embedding"`
-	IndexName  string                 `json:"index_name"`
-	K          int                    `json:"k"`
-	Threshold  float64                `json:"threshold"`
-	Filters    map[string]interface{} `json:"filters"`
-	Metric     string                 `json:"metric"`
+	Embedding []float64              `json:"embedding"`
+	IndexName string                 `json:"index_name"`
+	K         int                    `json:"k"`
+	Threshold float64                `json:"threshold"`
+	Filters   map[string]interface{} `json:"filters"`
+	Metric    string                 `json:"metric"`
 }
 
 // VectorSearchResult represents a vector search result
@@ -412,8 +412,8 @@ type VectorSearchResult struct {
 // VectorIndexConfig contains configuration for a vector index
 type VectorIndexConfig struct {
 	Dimension   int    `json:"dimension"`
-	Metric      string  `json:"metric"`
-	Description string  `json:"description"`
+	Metric      string `json:"metric"`
+	Description string `json:"description"`
 }
 
 // VectorIndexInfo contains information about a vector index
@@ -430,22 +430,22 @@ type VectorIndexInfo struct {
 
 // VectorStats contains statistics about vector storage
 type VectorStats struct {
-	TotalVectors     int64         `json:"total_vectors"`
-	TotalIndexes     int64         `json:"total_indexes"`
-	TotalSize        int64         `json:"total_size"`
-	AverageLatency   time.Duration `json:"average_latency"`
-	LastOperation    time.Time      `json:"last_operation"`
-	ErrorCount       int64         `json:"error_count"`
-	Uptime          time.Duration `json:"uptime"`
-	Cost            float64       `json:"cost"`
+	TotalVectors   int64         `json:"total_vectors"`
+	TotalIndexes   int64         `json:"total_indexes"`
+	TotalSize      int64         `json:"total_size"`
+	AverageLatency time.Duration `json:"average_latency"`
+	LastOperation  time.Time     `json:"last_operation"`
+	ErrorCount     int64         `json:"error_count"`
+	Uptime         time.Duration `json:"uptime"`
+	Cost           float64       `json:"cost"`
 }
 
 // VectorHealthStatus contains health status of vector providers
 type VectorHealthStatus struct {
-	Status             string                                `json:"status"`
-	TotalProviders     int                                   `json:"total_providers"`
-	HealthyProviders    int                                   `json:"healthy_providers"`
-	UnhealthyProviders  int                                   `json:"unhealthy_providers"`
-	ProviderStatuses   map[string]*providers.HealthStatus      `json:"provider_statuses"`
-	LastCheck          time.Time                              `json:"last_check"`
+	Status             string                             `json:"status"`
+	TotalProviders     int                                `json:"total_providers"`
+	HealthyProviders   int                                `json:"healthy_providers"`
+	UnhealthyProviders int                                `json:"unhealthy_providers"`
+	ProviderStatuses   map[string]*providers.HealthStatus `json:"provider_statuses"`
+	LastCheck          time.Time                          `json:"last_check"`
 }

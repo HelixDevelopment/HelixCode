@@ -10,16 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/helixcode/helixcode/internal/security"
+	"dev.helix.code/internal/security"
 )
 
 // SecurityIssueFixer provides automated security issue resolution
 type SecurityIssueFixer struct {
-	projectPath   string
+	projectPath     string
 	securityManager *security.SecurityManager
-	fixedIssues   map[string]bool
-	criticalOnly  bool
-	backupFiles   bool
+	fixedIssues     map[string]bool
+	criticalOnly    bool
+	backupFiles     bool
 }
 
 // SecurityFix represents a security issue with fix information
@@ -33,9 +33,9 @@ type SecurityFix struct {
 	Description     string
 	SuggestedFix    string
 	AutomatedFix    bool
-	FixType        FixType
+	FixType         FixType
 	ValidationRegex string
-	FixCommand     string
+	FixCommand      string
 	Criticality     int
 	Dependencies    []string
 }
@@ -44,22 +44,22 @@ type SecurityFix struct {
 type FixType string
 
 const (
-	CodeFix            FixType = "code_fix"
-	ConfigurationFix  FixType = "configuration_fix"
-	DependencyFix     FixType = "dependency_fix"
-	PermissionFix     FixType = "permission_fix"
-	ContainerFix      FixType = "container_fix"
-	PolicyFix         FixType = "policy_fix"
-	ManualFix         FixType = "manual_fix"
+	CodeFix          FixType = "code_fix"
+	ConfigurationFix FixType = "configuration_fix"
+	DependencyFix    FixType = "dependency_fix"
+	PermissionFix    FixType = "permission_fix"
+	ContainerFix     FixType = "container_fix"
+	PolicyFix        FixType = "policy_fix"
+	ManualFix        FixType = "manual_fix"
 )
 
 // NewSecurityIssueFixer creates a new security issue fixer
 func NewSecurityIssueFixer(projectPath string, criticalOnly bool) (*SecurityIssueFixer, error) {
 	fixer := &SecurityIssueFixer{
-		projectPath:   projectPath,
-		fixedIssues:   make(map[string]bool),
-		criticalOnly:  criticalOnly,
-		backupFiles:   true,
+		projectPath:  projectPath,
+		fixedIssues:  make(map[string]bool),
+		criticalOnly: criticalOnly,
+		backupFiles:  true,
 	}
 
 	// Initialize security manager if needed
@@ -79,11 +79,11 @@ func (sif *SecurityIssueFixer) FixAllCriticalIssues() (*FixResult, error) {
 	log.Printf("🎯 Policy: ZERO TOLERANCE - All critical issues must be fixed")
 
 	result := &FixResult{
-		StartTime:   time.Now(),
-		TotalIssues: 0,
-		FixedIssues: 0,
-		FailedFixes:  0,
-		ManualFixes:  0,
+		StartTime:     time.Now(),
+		TotalIssues:   0,
+		FixedIssues:   0,
+		FailedFixes:   0,
+		ManualFixes:   0,
 		SkippedIssues: 0,
 	}
 
@@ -165,7 +165,7 @@ func (sif *SecurityIssueFixer) FixAllCriticalIssues() (*FixResult, error) {
 	result.EndTime = time.Now()
 
 	// Determine overall success
-	result.Success = result.FixedIssues == len(criticalIssues) && 
+	result.Success = result.FixedIssues == len(criticalIssues) &&
 		validationResult.RemainingCriticalIssues == 0
 
 	// Generate comprehensive fix report
@@ -354,7 +354,7 @@ func (sif *SecurityIssueFixer) scanConfigurationIssues() []SecurityFix {
 		}
 
 		for _, pattern := range secretPatterns {
-			regex := regexp.MustCompile(pattern, regexp.MustCompile(`(?i)`))
+			regex := regexp.MustCompile(`(?i)` + pattern)
 			matches := regex.FindAllStringIndex(string(content), -1)
 			for _, match := range matches {
 				line := sif.getLineNumber(content, match[0])
@@ -425,8 +425,8 @@ func (sif *SecurityIssueFixer) scanAuthenticationIssues() []SecurityFix {
 		}
 
 		// Look for missing JWT validation
-		if strings.Contains(string(content), "jwt.Parse") && 
-		   !strings.Contains(string(content), "jwt.ParseWithClaims") {
+		if strings.Contains(string(content), "jwt.Parse") &&
+			!strings.Contains(string(content), "jwt.ParseWithClaims") {
 			issues = append(issues, SecurityFix{
 				ID:           "AUTH001",
 				Title:        "JWT Token Not Properly Validated",
@@ -543,9 +543,9 @@ func (sif *SecurityIssueFixer) scanWorkerIsolationIssues() []SecurityFix {
 		}
 
 		// Check for exec.Command without sandboxing
-		if strings.Contains(string(content), "exec.Command") && 
-		   !strings.Contains(string(content), "chroot") && 
-		   !strings.Contains(string(content), "namespace") {
+		if strings.Contains(string(content), "exec.Command") &&
+			!strings.Contains(string(content), "chroot") &&
+			!strings.Contains(string(content), "namespace") {
 			issues = append(issues, SecurityFix{
 				ID:           "WORKER001",
 				Title:        "Insufficient Worker Isolation",
@@ -613,22 +613,22 @@ func (sif *SecurityIssueFixer) filterCriticalIssues(issues []SecurityFix) []Secu
 
 // Supporting types
 type FixResult struct {
-	StartTime              time.Time
-	EndTime                time.Time
-	TotalIssues            int
-	FixedIssues             int
-	FailedFixes             int
-	ManualFixes             int
-	SkippedIssues           int
-	Success                 bool
-	Validation              *ValidationResult
+	StartTime     time.Time
+	EndTime       time.Time
+	TotalIssues   int
+	FixedIssues   int
+	FailedFixes   int
+	ManualFixes   int
+	SkippedIssues int
+	Success       bool
+	Validation    *ValidationResult
 }
 
 type ValidationResult struct {
 	ScanResults             *security.FeatureScanResult
-	RemainingCriticalIssues  int
-	RemainingHighIssues      int
-	FixesValidated         bool
+	RemainingCriticalIssues int
+	RemainingHighIssues     int
+	FixesValidated          bool
 }
 
 // Main execution function
@@ -665,8 +665,8 @@ func (sif *SecurityIssueFixer) fixSSHHostKey(issue *SecurityFix) (bool, error) {
 	}
 
 	// Replace InsecureIgnoreHostKey with secure alternative
-	modifiedContent := strings.ReplaceAll(string(content), 
-		"InsecureIgnoreHostKey()", 
+	modifiedContent := strings.ReplaceAll(string(content),
+		"InsecureIgnoreHostKey()",
 		"ssh.HostKeyCallback(ssh.FixedHostKey(hostKey))")
 
 	// Write back to file
@@ -713,10 +713,10 @@ func (sif *SecurityIssueFixer) validateFixes() (*ValidationResult, error) {
 	}
 
 	return &ValidationResult{
-		ScanResults:            scanResult,
+		ScanResults:             scanResult,
 		RemainingCriticalIssues: criticalCount,
 		RemainingHighIssues:     highCount,
-		FixesValidated:         criticalCount == 0,
+		FixesValidated:          criticalCount == 0,
 	}, nil
 }
 
@@ -762,7 +762,7 @@ PRODUCTION READINESS:
 %s
 
 ========================================
-`, 
+`,
 		result.StartTime.Format(time.RFC3339),
 		sif.projectPath,
 		result.TotalIssues,
@@ -774,7 +774,7 @@ PRODUCTION READINESS:
 		result.EndTime.Sub(result.StartTime),
 		result.Success,
 		sif.formatCriticalIssues(issues),
-		result.Validation.ScanResult.SecurityScore,
+		result.Validation.ScanResults.SecurityScore,
 		result.Validation.RemainingCriticalIssues,
 		result.Validation.RemainingHighIssues,
 		result.Validation.FixesValidated,
@@ -787,10 +787,10 @@ PRODUCTION READINESS:
 	// Save fix report
 	reportDir := filepath.Join(sif.projectPath, "reports/security/fixes")
 	os.MkdirAll(reportDir, 0755)
-	
+
 	reportFile := filepath.Join(reportDir, "zero_tolerance_security_fix_report.txt")
 	os.WriteFile(reportFile, []byte(report), 0644)
-	
+
 	log.Printf("📝 Security fix report saved: %s", reportFile)
 }
 
@@ -822,23 +822,23 @@ func (sif *SecurityIssueFixer) formatCriticalIssues(issues []SecurityFix) string
 
 func (sif *SecurityIssueFixer) generateFixRecommendations(result *FixResult) string {
 	var recs []string
-	
+
 	if result.FailedFixes > 0 {
 		recs = append(recs, fmt.Sprintf("URGENT: %d security fixes failed - manual intervention required", result.FailedFixes))
 	}
-	
+
 	if result.ManualFixes > 0 {
 		recs = append(recs, fmt.Sprintf("IMPORTANT: %d manual security fixes required", result.ManualFixes))
 	}
-	
+
 	if !result.Validation.FixesValidated {
 		recs = append(recs, "CRITICAL: Security fixes did not resolve all issues - review and retry")
 	}
-	
+
 	if result.Success {
 		recs = append(recs, "EXCELLENT: All security issues resolved successfully")
 	}
-	
+
 	if len(recs) == 0 {
 		recs = append(recs, "Continue security monitoring and maintenance")
 	}
@@ -880,6 +880,6 @@ func FixAllCriticalSecurityIssues(projectPath string, criticalOnly bool) (*FixRe
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return fixer.FixAllCriticalIssues()
 }

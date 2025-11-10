@@ -8,6 +8,16 @@ import (
 // ProviderType represents the type of vector provider
 type ProviderType string
 
+// LoadBalanceType represents the type of load balancing
+type LoadBalanceType string
+
+// Load balancing type constants
+const (
+	LoadBalanceRoundRobin LoadBalanceType = "round_robin"
+	LoadBalanceWeighted   LoadBalanceType = "weighted"
+	LoadBalanceRandom     LoadBalanceType = "random"
+)
+
 // Provider type constants
 const (
 	ProviderTypePinecone    ProviderType = "pinecone"

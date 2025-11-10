@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/security"
 	"github.com/google/uuid"
-	"github.com/helixcode/helixcode/internal/security"
 	"github.com/pkg/errors"
 )
 
@@ -32,42 +32,42 @@ type SecurityTestConfig struct {
 	ScanOnTestFailure   bool     `json:"scan_on_test_failure"`
 	DeepScanEnabled     bool     `json:"deep_scan_enabled"`
 	FailTestOnIssues    bool     `json:"fail_test_on_issues"`
-	SecurityGatePass     bool     `json:"security_gate_pass"`
+	SecurityGatePass    bool     `json:"security_gate_pass"`
 	FeatureScanRequired bool     `json:"feature_scan_required"`
-	ExcludedPaths      []string `json:"excluded_paths"`
-	RequiredScanners   []string `json:"required_scanners"`
-	ScoreThreshold     int      `json:"score_threshold"`
+	ExcludedPaths       []string `json:"excluded_paths"`
+	RequiredScanners    []string `json:"required_scanners"`
+	ScoreThreshold      int      `json:"score_threshold"`
 }
 
 // SecurityTestResult holds results of security testing
 type SecurityTestResult struct {
-	ID                uuid.UUID           `json:"id"`
-	TestName          string             `json:"test_name"`
-	TestType          SecurityTestType   `json:"test_type"`
-	StartTime         time.Time          `json:"start_time"`
-	EndTime           time.Time          `json:"end_time"`
-	Duration          time.Duration      `json:"duration"`
-	SecurityScan      *security.FeatureScanResult `json:"security_scan"`
-	TestPassed        bool               `json:"test_passed"`
-	SecurityPassed    bool               `json:"security_passed"`
-	CanProceed       bool               `json:"can_proceed"`
-	IssuesFound      int                `json:"issues_found"`
-	CriticalIssues    int                `json:"critical_issues"`
-	SecurityScore     int                `json:"security_score"`
-	Recommendations   []string           `json:"recommendations"`
+	ID              uuid.UUID                   `json:"id"`
+	TestName        string                      `json:"test_name"`
+	TestType        SecurityTestType            `json:"test_type"`
+	StartTime       time.Time                   `json:"start_time"`
+	EndTime         time.Time                   `json:"end_time"`
+	Duration        time.Duration               `json:"duration"`
+	SecurityScan    *security.FeatureScanResult `json:"security_scan"`
+	TestPassed      bool                        `json:"test_passed"`
+	SecurityPassed  bool                        `json:"security_passed"`
+	CanProceed      bool                        `json:"can_proceed"`
+	IssuesFound     int                         `json:"issues_found"`
+	CriticalIssues  int                         `json:"critical_issues"`
+	SecurityScore   int                         `json:"security_score"`
+	Recommendations []string                    `json:"recommendations"`
 }
 
 // SecurityTestType defines types of security tests
 type SecurityTestType string
 
 const (
-	UnitTestSecurity       SecurityTestType = "unit_test_security"
+	UnitTestSecurity        SecurityTestType = "unit_test_security"
 	IntegrationTestSecurity SecurityTestType = "integration_test_security"
-	E2ETestSecurity        SecurityTestType = "e2e_test_security"
+	E2ETestSecurity         SecurityTestType = "e2e_test_security"
 	PerformanceTestSecurity SecurityTestType = "performance_test_security"
-	FeatureSecurityTest    SecurityTestType = "feature_security_test"
-	BuildSecurityTest     SecurityTestType = "build_security_test"
-	DeploymentSecurityTest SecurityTestType = "deployment_security_test"
+	FeatureSecurityTest     SecurityTestType = "feature_security_test"
+	BuildSecurityTest       SecurityTestType = "build_security_test"
+	DeploymentSecurityTest  SecurityTestType = "deployment_security_test"
 )
 
 // NewSecurityTestRunner creates a new security test runner
@@ -93,10 +93,10 @@ func (str *SecurityTestRunner) RunTestWithSecurity(ctx context.Context, testName
 	log.Printf("🔍 Running security-enabled test: %s", testName)
 
 	result := &SecurityTestResult{
-		ID:          uuid.New(),
-		TestName:    testName,
-		TestType:    determineTestType(testName),
-		StartTime:   time.Now(),
+		ID:        uuid.New(),
+		TestName:  testName,
+		TestType:  determineTestType(testName),
+		StartTime: time.Now(),
 	}
 
 	// Pre-test security scan if configured
@@ -171,7 +171,7 @@ func (str *SecurityTestRunner) RunTestWithSecurity(ctx context.Context, testName
 		return result, fmt.Errorf("security gate failed for test %s - critical issues found", testName)
 	}
 
-	log.Printf("✅ Security-enabled test completed: %s - Test: %t - Security: %t - Issues: %d", 
+	log.Printf("✅ Security-enabled test completed: %s - Test: %t - Security: %t - Issues: %d",
 		testName, testPassed, result.SecurityPassed, result.IssuesFound)
 
 	return result, nil
@@ -182,10 +182,10 @@ func (str *SecurityTestRunner) RunFeatureWithSecurity(ctx context.Context, featu
 	log.Printf("🔍 Running security-enabled feature development: %s", featureName)
 
 	result := &SecurityTestResult{
-		ID:          uuid.New(),
-		TestName:    featureName,
-		TestType:    FeatureSecurityTest,
-		StartTime:   time.Now(),
+		ID:        uuid.New(),
+		TestName:  featureName,
+		TestType:  FeatureSecurityTest,
+		StartTime: time.Now(),
 	}
 
 	// Pre-feature deep security scan
@@ -194,7 +194,7 @@ func (str *SecurityTestRunner) RunFeatureWithSecurity(ctx context.Context, featu
 	} else {
 		result.IssuesFound += len(preScan.Issues)
 		result.CriticalIssues += countCriticalIssues(preScan.Issues)
-		
+
 		// Check if pre-existing issues prevent feature development
 		if str.config.DeepScanEnabled && result.CriticalIssues > 0 {
 			return nil, fmt.Errorf("critical security issues exist - cannot proceed with feature %s", featureName)
@@ -241,7 +241,7 @@ func (str *SecurityTestRunner) RunFeatureWithSecurity(ctx context.Context, featu
 
 	// Add specific recommendations based on feature changes
 	if newIssues > 0 {
-		result.Recommendations = append(result.Recommendations, 
+		result.Recommendations = append(result.Recommendations,
 			fmt.Sprintf("Feature %s introduced %d new security issues", featureName, newIssues))
 	}
 	if newCritical > 0 {
@@ -264,11 +264,11 @@ func (str *SecurityTestRunner) RunFeatureWithSecurity(ctx context.Context, featu
 
 	// Security score check
 	if str.config.ScoreThreshold > 0 && postScan.SecurityScore < str.config.ScoreThreshold {
-		return result, fmt.Errorf("security score too low for feature %s: %d < %d", 
+		return result, fmt.Errorf("security score too low for feature %s: %d < %d",
 			featureName, postScan.SecurityScore, str.config.ScoreThreshold)
 	}
 
-	log.Printf("✅ Security-enabled feature completed: %s - Success: %t - Security Score: %d - New Issues: %d", 
+	log.Printf("✅ Security-enabled feature completed: %s - Success: %t - Security Score: %d - New Issues: %d",
 		featureName, result.TestPassed, postScan.SecurityScore, newIssues)
 
 	return result, nil
@@ -293,18 +293,18 @@ func (str *SecurityTestRunner) GetSecurityTestDashboard(ctx context.Context) (*S
 	defer str.mutex.RUnlock()
 
 	dashboard := &SecurityTestDashboard{
-		Timestamp:          time.Now(),
-		TotalTests:         len(str.testResults),
-		PassedTests:        0,
-		FailedTests:        0,
-		SecurityPassed:     0,
-		SecurityFailed:     0,
-		TotalIssues:        0,
-		CriticalIssues:     0,
-		AverageScore:       0,
-		RecentTests:        make([]*SecurityTestResult, 0),
-		TestTypes:          make(map[SecurityTestType]int),
-		Recommendations:    make([]string, 0),
+		Timestamp:       time.Now(),
+		TotalTests:      len(str.testResults),
+		PassedTests:     0,
+		FailedTests:     0,
+		SecurityPassed:  0,
+		SecurityFailed:  0,
+		TotalIssues:     0,
+		CriticalIssues:  0,
+		AverageScore:    0,
+		RecentTests:     make([]*SecurityTestResult, 0),
+		TestTypes:       make(map[SecurityTestType]int),
+		Recommendations: make([]string, 0),
 	}
 
 	var totalScore int
@@ -380,15 +380,15 @@ Issues Found During Test: %d
 Recommendations:
 %s
 ========================================
-`, result.TestName, result.TestType, result.Duration, result.TestPassed, 
-		result.SecurityPassed, result.CanProceed, result.IssuesFound, 
-		result.CriticalIssues, result.SecurityScore, testDuration, 
+`, result.TestName, result.TestType, result.Duration, result.TestPassed,
+		result.SecurityPassed, result.CanProceed, result.IssuesFound,
+		result.CriticalIssues, result.SecurityScore, testDuration,
 		result.IssuesFound, strings.Join(result.Recommendations, "\n- "))
 
 	// Save report to file
 	reportDir := "reports/security/tests"
 	os.MkdirAll(reportDir, 0755)
-	
+
 	reportFile := filepath.Join(reportDir, result.TestName+"_security_report.txt")
 	os.WriteFile(reportFile, []byte(report), 0644)
 }
@@ -427,7 +427,7 @@ Security Analysis:
 	// Save report to file
 	reportDir := "reports/security/features"
 	os.MkdirAll(reportDir, 0755)
-	
+
 	reportFile := filepath.Join(reportDir, result.TestName+"_feature_security_report.txt")
 	os.WriteFile(reportFile, []byte(report), 0644)
 }
@@ -476,24 +476,24 @@ func (str *SecurityTestRunner) generateDashboardRecommendations() []string {
 
 // Supporting types
 type SecurityTestDashboard struct {
-	Timestamp       time.Time                      `json:"timestamp"`
-	TotalTests      int                            `json:"total_tests"`
-	PassedTests     int                            `json:"passed_tests"`
-	FailedTests     int                            `json:"failed_tests"`
-	SecurityPassed  int                            `json:"security_passed"`
-	SecurityFailed  int                            `json:"security_failed"`
-	TotalIssues     int                            `json:"total_issues"`
-	CriticalIssues  int                            `json:"critical_issues"`
-	AverageScore    int                            `json:"average_score"`
-	RecentTests     []*SecurityTestResult          `json:"recent_tests"`
-	TestTypes       map[SecurityTestType]int       `json:"test_types"`
-	Recommendations []string                       `json:"recommendations"`
+	Timestamp       time.Time                `json:"timestamp"`
+	TotalTests      int                      `json:"total_tests"`
+	PassedTests     int                      `json:"passed_tests"`
+	FailedTests     int                      `json:"failed_tests"`
+	SecurityPassed  int                      `json:"security_passed"`
+	SecurityFailed  int                      `json:"security_failed"`
+	TotalIssues     int                      `json:"total_issues"`
+	CriticalIssues  int                      `json:"critical_issues"`
+	AverageScore    int                      `json:"average_score"`
+	RecentTests     []*SecurityTestResult    `json:"recent_tests"`
+	TestTypes       map[SecurityTestType]int `json:"test_types"`
+	Recommendations []string                 `json:"recommendations"`
 }
 
 // Helper functions
 func determineTestType(testName string) SecurityTestType {
 	testName = strings.ToLower(testName)
-	
+
 	if strings.Contains(testName, "unit") {
 		return UnitTestSecurity
 	} else if strings.Contains(testName, "integration") {
@@ -509,7 +509,7 @@ func determineTestType(testName string) SecurityTestType {
 	} else if strings.Contains(testName, "deploy") {
 		return DeploymentSecurityTest
 	}
-	
+
 	// Default to unit test
 	return UnitTestSecurity
 }
@@ -534,7 +534,7 @@ func InitGlobalSecurityTestRunner(config SecurityTestConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize global security test runner")
 	}
-	
+
 	log.Printf("✅ Global security test runner initialized")
 	return nil
 }
@@ -550,8 +550,8 @@ func GetGlobalSecurityTestRunner() *SecurityTestRunner {
 			ScanOnTestFailure:   true,
 			DeepScanEnabled:     false,
 			FailTestOnIssues:    false,
-			SecurityGatePass:     true,
-			FeatureScanRequired:  false,
+			SecurityGatePass:    true,
+			FeatureScanRequired: false,
 			ExcludedPaths:       []string{"vendor", "test", "mock"},
 			RequiredScanners:    []string{"gosec", "trivy"},
 			ScoreThreshold:      70,

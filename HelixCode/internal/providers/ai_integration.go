@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"dev.helix.code/internal/logging"
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/memory/providers"
 )
 
@@ -18,7 +17,7 @@ type AIIntegration struct {
 	manager         *providers.ProviderManager
 	vector          *VectorIntegration
 	memory          *MemoryIntegration
-	logger          logging.Logger
+	logger          *logging.Logger
 	config          *AIConfig
 	providers       map[string]AIProvider
 	conversationMgr *ConversationManager
@@ -206,7 +205,7 @@ func NewAIIntegration(config *AIConfig) *AIIntegration {
 
 	ai := &AIIntegration{
 		registry:  providers.GetRegistry(),
-		logger:    logging.NewLogger("ai_integration"),
+		logger:    logging.NewLogger(logging.INFO),
 		config:    config,
 		providers: make(map[string]AIProvider),
 	}
@@ -696,7 +695,34 @@ type AIStatsProvider interface {
 }
 
 // Placeholder implementations for missing types and functions
-type MemoryIntegration struct{}
+type MemoryIntegration struct {
+	// TODO: Add memory integration fields
+}
+
+func NewMemoryIntegration(config *MemoryConfig) *MemoryIntegration {
+	return &MemoryIntegration{}
+}
+
+func (mi *MemoryIntegration) Initialize(ctx context.Context) error {
+	return nil
+}
+
+func (mi *MemoryIntegration) StoreGeneration(ctx context.Context, providerName, prompt string, generation *GenerationResult) error {
+	return nil
+}
+
+func (mi *MemoryIntegration) StoreConversation(ctx context.Context, providerName string, messages []*ChatMessage, result *ChatResult) error {
+	return nil
+}
+
+func (mi *MemoryIntegration) GetMemoryStats(ctx context.Context) (*MemoryStats, error) {
+	return &MemoryStats{}, nil
+}
+
+func (mi *MemoryIntegration) Stop(ctx context.Context) error {
+	return nil
+}
+
 type MemoryConfig struct{}
 type ConversationManager struct {
 	// TODO: Integrate context compression
@@ -711,6 +737,10 @@ func NewConversationManager(ai *AIIntegration, config *AIConfig) *ConversationMa
 	}
 }
 func (cm *ConversationManager) Stop(ctx context.Context) error { return nil }
+
+type PersonalityManager struct {
+	// TODO: Add personality management fields
+}
 
 func NewPersonalityManager(ai *AIIntegration, config *AIConfig) *PersonalityManager {
 	return &PersonalityManager{}

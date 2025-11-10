@@ -48,6 +48,8 @@ run_unit_tests() {
     log "Running unit tests..."
 
     cd "$PROJECT_ROOT"
+    # Test only the main HelixCode module, excluding example projects
+    cd HelixCode
     go test -v ./... -short -timeout 30s
 
     success "Unit tests completed"
@@ -57,7 +59,7 @@ run_unit_tests() {
 run_integration_tests() {
     log "Running integration tests..."
 
-    cd "$PROJECT_ROOT"
+    cd "$PROJECT_ROOT/HelixCode"
     go test -v ./... -run Integration -timeout 60s
 
     success "Integration tests completed"
@@ -104,23 +106,15 @@ run_all_tests() {
 run_coverage() {
     log "Running tests with coverage..."
 
-    cd "$PROJECT_ROOT"
+    cd "$PROJECT_ROOT/HelixCode"
 
     # Run coverage for main packages
-    go test -coverprofile="$COVERAGE_FILE" -covermode=atomic ./... -short
-
-    # Run coverage for task-related packages specifically
-    go test -coverprofile="$TASK_COVERAGE_FILE" -covermode=atomic ./internal/task/...
+    go test -coverprofile="$PROJECT_ROOT/$COVERAGE_FILE" -covermode=atomic ./... -short
 
     # Display coverage summary
-    if [ -f "$COVERAGE_FILE" ]; then
+    if [ -f "$PROJECT_ROOT/$COVERAGE_FILE" ]; then
         log "Coverage summary:"
-        go tool cover -func="$COVERAGE_FILE" | tail -1
-    fi
-
-    if [ -f "$TASK_COVERAGE_FILE" ]; then
-        log "Task package coverage summary:"
-        go tool cover -func="$TASK_COVERAGE_FILE" | tail -1
+        go tool cover -func="$PROJECT_ROOT/$COVERAGE_FILE" | tail -1
     fi
 
     success "Coverage report generated"
