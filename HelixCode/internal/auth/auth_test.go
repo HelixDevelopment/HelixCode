@@ -199,3 +199,379 @@ func TestAuthService_generateSessionToken(t *testing.T) {
 	assert.NotEmpty(t, token)
 	assert.Len(t, token, 44) // Should be 32 bytes base64 encoded (32 * 4/3 = 42.67, rounded up to 44)
 }
+
+func TestAuthService_Register(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+
+	t.Run("successful registration", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		// Mock that user doesn't exist
+		mockRepo.On("GetUserByUsername", ctx, "newuser").Return(nil, "", ErrUserNotFound)
+		mockRepo.On("GetUserByEmail", ctx, "new@example.com").Return(nil, "", ErrUserNotFound)
+		mockRepo.On("CreateUser", ctx, mock.AnythingOfType("*auth.User"), mock.AnythingOfType("string")).Return(nil)
+
+		user, err := service.Register(ctx, "newuser", "new@example.com", "password123", "New User")
+		require.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, "newuser", user.Username)
+		assert.Equal(t, "new@example.com", user.Email)
+		assert.Equal(t, "New User", user.DisplayName)
+		assert.True(t, user.IsActive)
+		assert.False(t, user.IsVerified)
+		assert.False(t, user.MFAEnabled)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("user already exists by username", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		existingUser := &User{ID: uuid.New(), Username: "existinguser"}
+		mockRepo.On("GetUserByUsername", ctx, "existinguser").Return(existingUser, "hash", nil)
+
+		user, err := service.Register(ctx, "existinguser", "new@example.com", "password123", "New User")
+		assert.Error(t, err)
+		assert.Equal(t, ErrUserExists, err)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("user already exists by email", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		existingUser := &User{ID: uuid.New(), Email: "existing@example.com"}
+		mockRepo.On("GetUserByUsername", ctx, "newuser").Return(nil, "", ErrUserNotFound)
+		mockRepo.On("GetUserByEmail", ctx, "existing@example.com").Return(existingUser, "hash", nil)
+
+		user, err := service.Register(ctx, "newuser", "existing@example.com", "password123", "New User")
+		assert.Error(t, err)
+		assert.Equal(t, ErrUserExists, err)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("invalid username", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		user, err := service.Register(ctx, "ab", "new@example.com", "password123", "New User")
+		assert.Error(t, err)
+		assert.Nil(t, user)
+		assert.Contains(t, err.Error(), "username")
+	})
+
+	t.Run("invalid email", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		user, err := service.Register(ctx, "newuser", "invalid-email", "password123", "New User")
+		assert.Error(t, err)
+		assert.Nil(t, user)
+		assert.Contains(t, err.Error(), "email")
+	})
+
+	t.Run("weak password", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		user, err := service.Register(ctx, "newuser", "new@example.com", "123", "New User")
+		assert.Error(t, err)
+		assert.Nil(t, user)
+		assert.Contains(t, err.Error(), "password")
+	})
+}
+
+func TestAuthService_Login(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+
+	t.Run("successful login by username", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		// Create test user and password hash
+		userID := uuid.New()
+		testUser := &User{
+			ID:       userID,
+			Username: "testuser",
+			Email:    "test@example.com",
+			IsActive: true,
+		}
+		passwordHash, _ := service.hashPassword("password123")
+
+		// Set up mocks
+		mockRepo.On("GetUserByUsername", ctx, "testuser").Return(testUser, passwordHash, nil)
+		mockRepo.On("UpdateUserLastLogin", ctx, userID).Return(nil)
+		mockRepo.On("CreateSession", ctx, mock.AnythingOfType("*auth.Session")).Return(nil)
+
+		session, user, err := service.Login(ctx, "testuser", "password123", "web", "127.0.0.1", "Mozilla/5.0")
+		require.NoError(t, err)
+		assert.NotNil(t, session)
+		assert.NotNil(t, user)
+		assert.Equal(t, userID, user.ID)
+		assert.Equal(t, "testuser", user.Username)
+		assert.NotEmpty(t, session.SessionToken)
+		assert.Equal(t, "web", session.ClientType)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("successful login by email", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		userID := uuid.New()
+		testUser := &User{
+			ID:       userID,
+			Username: "testuser",
+			Email:    "test@example.com",
+			IsActive: true,
+		}
+		passwordHash, _ := service.hashPassword("password123")
+
+		// Username lookup fails, email lookup succeeds
+		mockRepo.On("GetUserByUsername", ctx, "test@example.com").Return(nil, "", ErrUserNotFound)
+		mockRepo.On("GetUserByEmail", ctx, "test@example.com").Return(testUser, passwordHash, nil)
+		mockRepo.On("UpdateUserLastLogin", ctx, userID).Return(nil)
+		mockRepo.On("CreateSession", ctx, mock.AnythingOfType("*auth.Session")).Return(nil)
+
+		session, user, err := service.Login(ctx, "test@example.com", "password123", "web", "127.0.0.1", "Mozilla/5.0")
+		require.NoError(t, err)
+		assert.NotNil(t, session)
+		assert.NotNil(t, user)
+		assert.Equal(t, userID, user.ID)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		mockRepo.On("GetUserByUsername", ctx, "nonexistent").Return(nil, "", ErrUserNotFound)
+		mockRepo.On("GetUserByEmail", ctx, "nonexistent").Return(nil, "", ErrUserNotFound)
+
+		session, user, err := service.Login(ctx, "nonexistent", "password123", "web", "127.0.0.1", "Mozilla/5.0")
+		assert.Error(t, err)
+		assert.Equal(t, ErrInvalidCredentials, err)
+		assert.Nil(t, session)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("incorrect password", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		testUser := &User{
+			ID:       uuid.New(),
+			Username: "testuser",
+			IsActive: true,
+		}
+		passwordHash, _ := service.hashPassword("correctpassword")
+
+		mockRepo.On("GetUserByUsername", ctx, "testuser").Return(testUser, passwordHash, nil)
+
+		session, user, err := service.Login(ctx, "testuser", "wrongpassword", "web", "127.0.0.1", "Mozilla/5.0")
+		assert.Error(t, err)
+		assert.Equal(t, ErrInvalidCredentials, err)
+		assert.Nil(t, session)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("inactive user", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		testUser := &User{
+			ID:       uuid.New(),
+			Username: "testuser",
+			IsActive: false,
+		}
+		passwordHash, _ := service.hashPassword("password123")
+
+		mockRepo.On("GetUserByUsername", ctx, "testuser").Return(testUser, passwordHash, nil)
+
+		session, user, err := service.Login(ctx, "testuser", "password123", "web", "127.0.0.1", "Mozilla/5.0")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "deactivated")
+		assert.Nil(t, session)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthService_VerifySession(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+
+	t.Run("valid session", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		userID := uuid.New()
+		testSession := &Session{
+			ID:           uuid.New(),
+			UserID:       userID,
+			SessionToken: "valid-token",
+			ExpiresAt:    time.Now().Add(1 * time.Hour),
+		}
+		testUser := &User{
+			ID:       userID,
+			Username: "testuser",
+			IsActive: true,
+		}
+
+		mockRepo.On("GetSession", ctx, "valid-token").Return(testSession, nil)
+		mockRepo.On("GetUserByID", ctx, userID).Return(testUser, nil)
+
+		user, err := service.VerifySession(ctx, "valid-token")
+		require.NoError(t, err)
+		assert.NotNil(t, user)
+		assert.Equal(t, userID, user.ID)
+		assert.Equal(t, "testuser", user.Username)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("invalid session token", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		mockRepo.On("GetSession", ctx, "invalid-token").Return(nil, ErrTokenInvalid)
+
+		user, err := service.VerifySession(ctx, "invalid-token")
+		assert.Error(t, err)
+		assert.Equal(t, ErrTokenInvalid, err)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("expired session", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		testSession := &Session{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			SessionToken: "expired-token",
+			ExpiresAt:    time.Now().Add(-1 * time.Hour), // Expired 1 hour ago
+		}
+
+		mockRepo.On("GetSession", ctx, "expired-token").Return(testSession, nil)
+		mockRepo.On("DeleteSession", ctx, "expired-token").Return(nil)
+
+		user, err := service.VerifySession(ctx, "expired-token")
+		assert.Error(t, err)
+		assert.Equal(t, ErrTokenExpired, err)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		userID := uuid.New()
+		testSession := &Session{
+			ID:           uuid.New(),
+			UserID:       userID,
+			SessionToken: "valid-token",
+			ExpiresAt:    time.Now().Add(1 * time.Hour),
+		}
+
+		mockRepo.On("GetSession", ctx, "valid-token").Return(testSession, nil)
+		mockRepo.On("GetUserByID", ctx, userID).Return(nil, ErrUserNotFound)
+
+		user, err := service.VerifySession(ctx, "valid-token")
+		assert.Error(t, err)
+		assert.Equal(t, ErrUserNotFound, err)
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("inactive user", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		userID := uuid.New()
+		testSession := &Session{
+			ID:           uuid.New(),
+			UserID:       userID,
+			SessionToken: "valid-token",
+			ExpiresAt:    time.Now().Add(1 * time.Hour),
+		}
+		testUser := &User{
+			ID:       userID,
+			Username: "testuser",
+			IsActive: false,
+		}
+
+		mockRepo.On("GetSession", ctx, "valid-token").Return(testSession, nil)
+		mockRepo.On("GetUserByID", ctx, userID).Return(testUser, nil)
+
+		user, err := service.VerifySession(ctx, "valid-token")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "deactivated")
+		assert.Nil(t, user)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthService_Logout(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+
+	t.Run("successful logout", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		mockRepo.On("DeleteSession", ctx, "session-token").Return(nil)
+
+		err := service.Logout(ctx, "session-token")
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("logout with error", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		mockRepo.On("DeleteSession", ctx, "session-token").Return(assert.AnError)
+
+		err := service.Logout(ctx, "session-token")
+		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthService_LogoutAll(t *testing.T) {
+	ctx := context.Background()
+	config := DefaultConfig()
+
+	t.Run("successful logout all", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		userID := uuid.New()
+		mockRepo.On("DeleteUserSessions", ctx, userID).Return(nil)
+
+		err := service.LogoutAll(ctx, userID)
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("logout all with error", func(t *testing.T) {
+		mockRepo := &MockAuthRepository{}
+		service := NewAuthService(config, mockRepo)
+
+		userID := uuid.New()
+		mockRepo.On("DeleteUserSessions", ctx, userID).Return(assert.AnError)
+
+		err := service.LogoutAll(ctx, userID)
+		assert.Error(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+}
