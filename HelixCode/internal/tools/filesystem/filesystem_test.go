@@ -512,11 +512,11 @@ func TestFileSearcher(t *testing.T) {
 
 	// Create test files
 	files := map[string]string{
-		"file1.txt": "content 1",
-		"file2.txt": "content 2",
-		"file3.go":  "package main",
+		"file1.txt":        "content 1",
+		"file2.txt":        "content 2",
+		"file3.go":         "package main",
 		"subdir/file4.txt": "content 4",
-		".hidden": "hidden content",
+		".hidden":          "hidden content",
 	}
 
 	for path, content := range files {

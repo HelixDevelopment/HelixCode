@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/memory/providers"
-	"dev.helix.code/internal/logging"
 )
 
 // AIIntegration provides unified interface for AI systems integration
@@ -27,28 +27,28 @@ type AIIntegration struct {
 
 // AIConfig contains AI integration configuration
 type AIConfig struct {
-	DefaultLLM      string                    `json:"default_llm"`
-	DefaultMemory   string                    `json:"default_memory"`
-	Providers       map[string]*AIProviderConfig `json:"providers"`
-	VectorConfig    *VectorConfig             `json:"vector_config"`
-	MemoryConfig    *MemoryConfig            `json:"memory_config"`
-	CacheEnabled    bool                      `json:"cache_enabled"`
-	CacheSize       int                       `json:"cache_size"`
-	CacheTTL        int64                     `json:"cache_ttl"`
-	ProfilingEnabled bool                      `json:"profiling_enabled"`
+	DefaultLLM       string                       `json:"default_llm"`
+	DefaultMemory    string                       `json:"default_memory"`
+	Providers        map[string]*AIProviderConfig `json:"providers"`
+	VectorConfig     *VectorConfig                `json:"vector_config"`
+	MemoryConfig     *MemoryConfig                `json:"memory_config"`
+	CacheEnabled     bool                         `json:"cache_enabled"`
+	CacheSize        int                          `json:"cache_size"`
+	CacheTTL         int64                        `json:"cache_ttl"`
+	ProfilingEnabled bool                         `json:"profiling_enabled"`
 }
 
 // AIProviderConfig contains configuration for AI provider
 type AIProviderConfig struct {
-	Type           providers.ProviderType `json:"type"`
-	Enabled        bool                 `json:"enabled"`
-	Config         map[string]interface{} `json:"config"`
-	Model          string               `json:"model"`
-	MaxTokens      int                  `json:"max_tokens"`
-	Temperature    float64              `json:"temperature"`
-	TopP           float64              `json:"top_p"`
-	FrequencyPenalty float64             `json:"frequency_penalty"`
-	PresencePenalty float64              `json:"presence_penalty"`
+	Type             providers.ProviderType `json:"type"`
+	Enabled          bool                   `json:"enabled"`
+	Config           map[string]interface{} `json:"config"`
+	Model            string                 `json:"model"`
+	MaxTokens        int                    `json:"max_tokens"`
+	Temperature      float64                `json:"temperature"`
+	TopP             float64                `json:"top_p"`
+	FrequencyPenalty float64                `json:"frequency_penalty"`
+	PresencePenalty  float64                `json:"presence_penalty"`
 }
 
 // AIProvider defines interface for AI providers
@@ -64,44 +64,44 @@ type AIProvider interface {
 
 // GenerationOptions contains options for text generation
 type GenerationOptions struct {
-	MaxTokens        int               `json:"max_tokens"`
-	Temperature      float64           `json:"temperature"`
-	TopP             float64           `json:"top_p"`
-	FrequencyPenalty float64           `json:"frequency_penalty"`
-	PresencePenalty  float64           `json:"presence_penalty"`
-	Stop            []string          `json:"stop"`
-	Stream           bool              `json:"stream"`
+	MaxTokens        int                `json:"max_tokens"`
+	Temperature      float64            `json:"temperature"`
+	TopP             float64            `json:"top_p"`
+	FrequencyPenalty float64            `json:"frequency_penalty"`
+	PresencePenalty  float64            `json:"presence_penalty"`
+	Stop             []string           `json:"stop"`
+	Stream           bool               `json:"stream"`
 	Callback         func(string) error `json:"callback"`
 }
 
 // GenerationResult contains result of text generation
 type GenerationResult struct {
-	Text         string            `json:"text"`
-	Tokens       int               `json:"tokens"`
-	FinishReason string            `json:"finish_reason"`
+	Text         string                 `json:"text"`
+	Tokens       int                    `json:"tokens"`
+	FinishReason string                 `json:"finish_reason"`
 	Metadata     map[string]interface{} `json:"metadata"`
-	Cost         float64           `json:"cost"`
-	Duration     time.Duration     `json:"duration"`
+	Cost         float64                `json:"cost"`
+	Duration     time.Duration          `json:"duration"`
 }
 
 // ChatMessage represents a chat message
 type ChatMessage struct {
-	Role    string            `json:"role"`
-	Content string            `json:"content"`
-	Name    string            `json:"name,omitempty"`
-	Tokens  int               `json:"tokens"`
+	Role     string                 `json:"role"`
+	Content  string                 `json:"content"`
+	Name     string                 `json:"name,omitempty"`
+	Tokens   int                    `json:"tokens"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ChatOptions contains options for chat generation
 type ChatOptions struct {
-	Model            string  `json:"model"`
-	MaxTokens        int     `json:"max_tokens"`
-	Temperature      float64 `json:"temperature"`
-	TopP             float64 `json:"top_p"`
-	FrequencyPenalty float64 `json:"frequency_penalty"`
-	PresencePenalty  float64 `json:"presence_penalty"`
-	Stop            []string `json:"stop"`
+	Model            string   `json:"model"`
+	MaxTokens        int      `json:"max_tokens"`
+	Temperature      float64  `json:"temperature"`
+	TopP             float64  `json:"top_p"`
+	FrequencyPenalty float64  `json:"frequency_penalty"`
+	PresencePenalty  float64  `json:"presence_penalty"`
+	Stop             []string `json:"stop"`
 	Stream           bool     `json:"stream"`
 	SystemPrompt     string   `json:"system_prompt"`
 	Tools            []string `json:"tools"`
@@ -109,23 +109,23 @@ type ChatOptions struct {
 
 // ChatResult contains result of chat generation
 type ChatResult struct {
-	Message         *ChatMessage      `json:"message"`
-	Messages        []*ChatMessage    `json:"messages"`
-	Tokens          int               `json:"tokens"`
-	FinishReason    string            `json:"finish_reason"`
-	Metadata        map[string]interface{} `json:"metadata"`
-	Cost            float64           `json:"cost"`
-	Duration        time.Duration     `json:"duration"`
+	Message      *ChatMessage           `json:"message"`
+	Messages     []*ChatMessage         `json:"messages"`
+	Tokens       int                    `json:"tokens"`
+	FinishReason string                 `json:"finish_reason"`
+	Metadata     map[string]interface{} `json:"metadata"`
+	Cost         float64                `json:"cost"`
+	Duration     time.Duration          `json:"duration"`
 }
 
 // ClassificationResult contains result of text classification
 type ClassificationResult struct {
-	Category       string  `json:"category"`
-	Confidence     float64 `json:"confidence"`
-	AllCategories  []*CategoryScore `json:"all_categories"`
-	Tokens         int      `json:"tokens"`
-	Cost           float64  `json:"cost"`
-	Duration       time.Duration `json:"duration"`
+	Category      string           `json:"category"`
+	Confidence    float64          `json:"confidence"`
+	AllCategories []*CategoryScore `json:"all_categories"`
+	Tokens        int              `json:"tokens"`
+	Cost          float64          `json:"cost"`
+	Duration      time.Duration    `json:"duration"`
 }
 
 // CategoryScore contains category with score
@@ -136,78 +136,78 @@ type CategoryScore struct {
 
 // Entity represents an extracted entity
 type Entity struct {
-	Type       string            `json:"type"`
-	Text       string            `json:"text"`
-	Confidence float64           `json:"confidence"`
-	Start      int               `json:"start"`
-	End        int               `json:"end"`
+	Type       string                 `json:"type"`
+	Text       string                 `json:"text"`
+	Confidence float64                `json:"confidence"`
+	Start      int                    `json:"start"`
+	End        int                    `json:"end"`
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
 // CostInfo contains cost information
 type CostInfo struct {
-	InputTokens   int     `json:"input_tokens"`
-	OutputTokens  int     `json:"output_tokens"`
-	TotalTokens   int     `json:"total_tokens"`
-	Cost          float64 `json:"cost"`
-	Currency      string  `json:"currency"`
+	InputTokens  int     `json:"input_tokens"`
+	OutputTokens int     `json:"output_tokens"`
+	TotalTokens  int     `json:"total_tokens"`
+	Cost         float64 `json:"cost"`
+	Currency     string  `json:"currency"`
 }
 
 // NewAIIntegration creates a new AI integration
 func NewAIIntegration(config *AIConfig) *AIIntegration {
 	if config == nil {
 		config = &AIConfig{
-			DefaultLLM: "openai",
+			DefaultLLM:    "openai",
 			DefaultMemory: "memgpt",
 			Providers: map[string]*AIProviderConfig{
 				"openai": {
-					Type:           providers.ProviderTypeOpenAI,
-					Enabled:        true,
-					Model:          "gpt-4",
-					MaxTokens:      4096,
-					Temperature:    0.7,
-					TopP:           1.0,
+					Type:             providers.ProviderTypeOpenAI,
+					Enabled:          true,
+					Model:            "gpt-4",
+					MaxTokens:        4096,
+					Temperature:      0.7,
+					TopP:             1.0,
 					FrequencyPenalty: 0.0,
-					PresencePenalty: 0.0,
+					PresencePenalty:  0.0,
 					Config: map[string]interface{}{
 						"api_key": "",
 					},
 				},
 				"anthropic": {
-					Type:           providers.ProviderTypeAnthropic,
-					Enabled:        true,
-					Model:          "claude-3-haiku-20240307",
-					MaxTokens:      4096,
-					Temperature:    0.7,
-					TopP:           1.0,
+					Type:             providers.ProviderTypeAnthropic,
+					Enabled:          true,
+					Model:            "claude-3-haiku-20240307",
+					MaxTokens:        4096,
+					Temperature:      0.7,
+					TopP:             1.0,
 					FrequencyPenalty: 0.0,
-					PresencePenalty: 0.0,
+					PresencePenalty:  0.0,
 					Config: map[string]interface{}{
 						"api_key": "",
 					},
 				},
 				"memgpt": {
-					Type:           providers.ProviderTypeMemGPT,
-					Enabled:        true,
-					Model:          "memgpt-1.0",
-					MaxTokens:      4096,
-					Temperature:    0.7,
+					Type:        providers.ProviderTypeMemGPT,
+					Enabled:     true,
+					Model:       "memgpt-1.0",
+					MaxTokens:   4096,
+					Temperature: 0.7,
 					Config: map[string]interface{}{
 						"base_url": "https://api.memgpt.ai",
 					},
 				},
 			},
-			CacheEnabled:    true,
-			CacheSize:       1000,
-			CacheTTL:        300000, // 5 minutes
+			CacheEnabled:     true,
+			CacheSize:        1000,
+			CacheTTL:         300000, // 5 minutes
 			ProfilingEnabled: false,
 		}
 	}
 
 	ai := &AIIntegration{
-		registry: providers.GetRegistry(),
-		logger:   logging.NewLogger("ai_integration"),
-		config:   config,
+		registry:  providers.GetRegistry(),
+		logger:    logging.NewLogger("ai_integration"),
+		config:    config,
 		providers: make(map[string]AIProvider),
 	}
 
@@ -424,7 +424,7 @@ func (ai *AIIntegration) GenerateEmbeddingWithProvider(ctx context.Context, prov
 				"created_at":  time.Now(),
 			},
 			IndexName: "text_embeddings",
-			CreatedAt:  time.Now(),
+			CreatedAt: time.Now(),
 		}
 
 		if err := ai.vector.StoreVector(ctx, vectorData); err != nil {
@@ -660,34 +660,34 @@ func (ai *AIIntegration) Stop(ctx context.Context) error {
 
 // AIStats contains statistics about AI integration
 type AIStats struct {
-	Providers    map[string]*AIProviderStats `json:"providers"`
-	VectorStats  *VectorStats               `json:"vector_stats"`
-	MemoryStats  *MemoryStats               `json:"memory_stats"`
-	TotalCost    float64                    `json:"total_cost"`
-	TotalTokens  int                        `json:"total_tokens"`
-	LastUpdate   time.Time                  `json:"last_update"`
+	Providers   map[string]*AIProviderStats `json:"providers"`
+	VectorStats *VectorStats                `json:"vector_stats"`
+	MemoryStats *MemoryStats                `json:"memory_stats"`
+	TotalCost   float64                     `json:"total_cost"`
+	TotalTokens int                         `json:"total_tokens"`
+	LastUpdate  time.Time                   `json:"last_update"`
 }
 
 // AIProviderStats contains statistics for AI provider
 type AIProviderStats struct {
-	Name           string    `json:"name"`
-	Type           string    `json:"type"`
-	Requests       int64     `json:"requests"`
-	Successes      int64     `json:"successes"`
-	Failures       int64     `json:"failures"`
+	Name           string        `json:"name"`
+	Type           string        `json:"type"`
+	Requests       int64         `json:"requests"`
+	Successes      int64         `json:"successes"`
+	Failures       int64         `json:"failures"`
 	AverageLatency time.Duration `json:"average_latency"`
-	TotalCost      float64   `json:"total_cost"`
-	TotalTokens    int       `json:"total_tokens"`
-	LastRequest    time.Time `json:"last_request"`
+	TotalCost      float64       `json:"total_cost"`
+	TotalTokens    int           `json:"total_tokens"`
+	LastRequest    time.Time     `json:"last_request"`
 }
 
 // AIHealthStatus contains health status of AI integration
 type AIHealthStatus struct {
-	Status             string            `json:"status"`
-	TotalProviders     int               `json:"total_providers"`
-	HealthyProviders    int               `json:"healthy_providers"`
-	ProviderStatuses   map[string]string  `json:"provider_statuses"`
-	LastCheck          time.Time         `json:"last_check"`
+	Status           string            `json:"status"`
+	TotalProviders   int               `json:"total_providers"`
+	HealthyProviders int               `json:"healthy_providers"`
+	ProviderStatuses map[string]string `json:"provider_statuses"`
+	LastCheck        time.Time         `json:"last_check"`
 }
 
 // AIStatsProvider interface for providers that can provide statistics
@@ -698,22 +698,17 @@ type AIStatsProvider interface {
 // Placeholder implementations for missing types and functions
 type MemoryIntegration struct{}
 type MemoryConfig struct{}
-type ConversationManager struct{}
-type PersonalityManager struct{}
-
-func NewMemoryIntegration(config *MemoryConfig) *MemoryIntegration {
-	return &MemoryIntegration{}
+type ConversationManager struct {
+	// TODO: Integrate context compression
+	// compressionCoordinator *compression.CompressionCoordinator
 }
-func (mi *MemoryIntegration) Initialize(ctx context.Context) error { return nil }
-func (mi *MemoryIntegration) StoreGeneration(ctx context.Context, provider, prompt string, result *GenerationResult) {}
-func (mi *MemoryIntegration) StoreConversation(ctx context.Context, provider string, messages []*ChatMessage, result *ChatResult) {}
-func (mi *MemoryIntegration) GetMemoryStats(ctx context.Context) (*MemoryStats, error) {
-	return &MemoryStats{}, nil
-}
-func (mi *MemoryIntegration) Stop(ctx context.Context) error { return nil }
 
 func NewConversationManager(ai *AIIntegration, config *AIConfig) *ConversationManager {
-	return &ConversationManager{}
+	return &ConversationManager{
+		// TODO: Initialize compression coordinator
+		// Note: Circular dependency prevents direct import of compression package
+		// Solution: Create compression interface in separate package
+	}
 }
 func (cm *ConversationManager) Stop(ctx context.Context) error { return nil }
 
@@ -725,19 +720,19 @@ func (pm *PersonalityManager) Stop(ctx context.Context) error { return nil }
 type MemoryStats struct{}
 
 // Placeholder provider implementations
-func NewOpenAIProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewAnthropicProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewCohereProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
+func NewOpenAIProvider(config *AIProviderConfig) AIProvider      { return &MockAIProvider{} }
+func NewAnthropicProvider(config *AIProviderConfig) AIProvider   { return &MockAIProvider{} }
+func NewCohereProvider(config *AIProviderConfig) AIProvider      { return &MockAIProvider{} }
 func NewHuggingFaceProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewMistralProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewGeminiProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewGemmaProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewLlamaIndexProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewMemGPTAIProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewCrewAIProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
+func NewMistralProvider(config *AIProviderConfig) AIProvider     { return &MockAIProvider{} }
+func NewGeminiProvider(config *AIProviderConfig) AIProvider      { return &MockAIProvider{} }
+func NewGemmaProvider(config *AIProviderConfig) AIProvider       { return &MockAIProvider{} }
+func NewLlamaIndexProvider(config *AIProviderConfig) AIProvider  { return &MockAIProvider{} }
+func NewMemGPTAIProvider(config *AIProviderConfig) AIProvider    { return &MockAIProvider{} }
+func NewCrewAIProvider(config *AIProviderConfig) AIProvider      { return &MockAIProvider{} }
 func NewCharacterAIProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewReplikaAIProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
-func NewAnimaAIProvider(config *AIProviderConfig) AIProvider { return &MockAIProvider{} }
+func NewReplikaAIProvider(config *AIProviderConfig) AIProvider   { return &MockAIProvider{} }
+func NewAnimaAIProvider(config *AIProviderConfig) AIProvider     { return &MockAIProvider{} }
 
 // MockAIProvider provides mock implementation
 type MockAIProvider struct{}
@@ -768,11 +763,11 @@ func (m *MockAIProvider) GenerateChat(ctx context.Context, messages []*ChatMessa
 			Content: "Mock chat response",
 			Tokens:  15,
 		},
-		Tokens:      25,
+		Tokens:       25,
 		FinishReason: "stop",
-		Metadata:    map[string]interface{}{"mock": true},
-		Cost:        0.002,
-		Duration:    time.Millisecond * 150,
+		Metadata:     map[string]interface{}{"mock": true},
+		Cost:         0.002,
+		Duration:     time.Millisecond * 150,
 	}, nil
 }
 

@@ -332,7 +332,8 @@ func (cm *CacheManager) Invalidate(path string) {
 
 // LockManager manages file locks to prevent concurrent modifications
 type LockManager struct {
-	locks sync.Map
+	locks map[string]*FileLock
+	mu    sync.RWMutex
 }
 
 // FileLock represents a lock on a file
@@ -345,20 +346,33 @@ type FileLock struct {
 
 // NewLockManager creates a new lock manager
 func NewLockManager() *LockManager {
-	return &LockManager{}
+	return &LockManager{
+		locks: make(map[string]*FileLock),
+	}
 }
 
 // Acquire acquires a lock on a file
 func (lm *LockManager) Acquire(ctx context.Context, path, owner string) (*FileLock, error) {
-	for {
-		lock := &FileLock{
-			Path:       path,
-			Owner:      owner,
-			AcquiredAt: time.Now(),
-		}
+	maxRetries := 500 // Prevent infinite loops in tests (5 seconds max)
+	retryCount := 0
 
-		if _, loaded := lm.locks.LoadOrStore(path, lock); !loaded {
+	for {
+		lm.mu.Lock()
+		if _, exists := lm.locks[path]; !exists {
+			lock := &FileLock{
+				Path:       path,
+				Owner:      owner,
+				AcquiredAt: time.Now(),
+			}
+			lm.locks[path] = lock
+			lm.mu.Unlock()
 			return lock, nil
+		}
+		lm.mu.Unlock()
+
+		retryCount++
+		if retryCount >= maxRetries {
+			return nil, fmt.Errorf("failed to acquire lock: max retries exceeded (path: %s, owner: %s)", path, owner)
 		}
 
 		select {
@@ -372,7 +386,9 @@ func (lm *LockManager) Acquire(ctx context.Context, path, owner string) (*FileLo
 
 // Release releases a file lock
 func (lm *LockManager) Release(lock *FileLock) {
-	lm.locks.Delete(lock.Path)
+	lm.mu.Lock()
+	delete(lm.locks, lock.Path)
+	lm.mu.Unlock()
 }
 
 // PermissionChecker validates file permissions

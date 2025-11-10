@@ -99,12 +99,7 @@ func (e *fileEditor) Edit(ctx context.Context, path string, ops []EditOperation)
 		return nil, err
 	}
 
-	// Acquire lock
-	lock, err := e.fs.lockManager.Acquire(ctx, normalizedPath, "editor")
-	if err != nil {
-		return nil, fmt.Errorf("failed to acquire lock: %w", err)
-	}
-	defer e.fs.lockManager.Release(lock)
+	// Note: Lock acquisition is handled by the writer
 
 	// Read original content
 	originalContent, err := os.ReadFile(normalizedPath)
@@ -360,7 +355,7 @@ func (e *fileEditor) generateDiff(original, new []byte) string {
 
 // BackupManager manages file backups
 type BackupManager struct {
-	backupDir string
+	backupDir  string
 	maxBackups int
 }
 

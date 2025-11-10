@@ -2,14 +2,14 @@ package repomap
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
-	"crypto/sha256"
-	"encoding/hex"
 )
 
 func init() {
@@ -202,18 +202,32 @@ func (rc *RepoCache) saveToDisk(key string, entry *cacheEntry) error {
 		return fmt.Errorf("failed to encode cache entry: %w", err)
 	}
 
-	// Write to disk atomically
+	// Write to disk atomically with retry for macOS file system quirks
 	tempFile := filename + ".tmp"
 	if err := os.WriteFile(tempFile, buf.Bytes(), 0644); err != nil {
 		return fmt.Errorf("failed to write cache file: %w", err)
 	}
 
+	// Try rename first (most efficient)
 	if err := os.Rename(tempFile, filename); err != nil {
+		// Rename failed, try copy + remove approach (more robust on macOS)
+		if err := rc.atomicCopy(tempFile, filename); err != nil {
+			os.Remove(tempFile)
+			return fmt.Errorf("failed to save cache file: %w", err)
+		}
 		os.Remove(tempFile)
-		return fmt.Errorf("failed to rename cache file: %w", err)
 	}
 
 	return nil
+}
+
+// atomicCopy performs an atomic copy operation for macOS compatibility
+func (rc *RepoCache) atomicCopy(src, dst string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, 0644)
 }
 
 // loadFromDisk loads all cache entries from disk
