@@ -105,7 +105,7 @@ func NewCLIOptionPresenter(output io.Writer, input io.Reader) OptionPresenter {
 
 // Present presents options to the user
 func (p *CLIOptionPresenter) Present(ctx context.Context, options []*PlanOption) (*Selection, error) {
-	fmt.Fprintln(p.output, "\n=== Implementation Options ===\n")
+	fmt.Fprintln(p.output, "\n=== Implementation Options ===")
 
 	for i, opt := range options {
 		fmt.Fprintf(p.output, "Option %d: %s", i+1, opt.Title)
@@ -132,7 +132,7 @@ func (p *CLIOptionPresenter) Present(ctx context.Context, options []*PlanOption)
 		fmt.Fprintf(p.output, "Estimated Duration: %s\n", opt.Plan.Estimates.Duration)
 		fmt.Fprintf(p.output, "Complexity: %s\n", opt.Plan.Estimates.Complexity)
 		fmt.Fprintf(p.output, "Confidence: %.0f%%\n", opt.Plan.Estimates.Confidence*100)
-		fmt.Fprintln(p.output, "\n---\n")
+		fmt.Fprintln(p.output, "\n---")
 	}
 
 	// Prompt for selection
