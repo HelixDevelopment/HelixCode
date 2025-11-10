@@ -30,6 +30,7 @@ type ProviderConfig struct {
 
 // SingleProviderConfig contains configuration for a single provider
 type SingleProviderConfig struct {
+	Name      string                 `json:"name"`
 	Type      memory.ProviderType    `json:"type"`
 	Enabled   bool                   `json:"enabled"`
 	Config    map[string]interface{} `json:"config"`

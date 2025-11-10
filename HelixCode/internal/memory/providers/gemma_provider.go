@@ -14,7 +14,7 @@ import (
 // GemmaProvider implements VectorProvider for Gemma
 type GemmaProvider struct {
 	config      *GemmaConfig
-	logger      logging.Logger
+	logger      *logging.Logger
 	mu          sync.RWMutex
 	initialized bool
 	started     bool
@@ -96,7 +96,7 @@ func NewGemmaProvider(config map[string]interface{}) (VectorProvider, error) {
 
 	return &GemmaProvider{
 		config:     gemmaConfig,
-		logger:     logging.NewLogger("gemma_provider"),
+		logger:     logging.NewLoggerWithName("gemma_provider"),
 		models:     make(map[string]*memory.Model),
 		embeddings: make(map[string]*memory.Embedding),
 		stats: &ProviderStats{

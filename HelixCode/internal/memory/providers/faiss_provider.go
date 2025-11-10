@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
 )
@@ -151,7 +150,7 @@ func (p *FAISSProvider) Start(ctx context.Context) error {
 }
 
 // Store stores vectors in FAISS
-func (p *FAISSProvider) Store(ctx context.Context, vectors []*memory.VectorData) error {
+func (p *FAISSProvider) Store(ctx context.Context, vectors []*VectorData) error {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -188,7 +187,7 @@ func (p *FAISSProvider) Store(ctx context.Context, vectors []*memory.VectorData)
 }
 
 // Retrieve retrieves vectors by ID from FAISS
-func (p *FAISSProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
+func (p *FAISSProvider) Retrieve(ctx context.Context, ids []string) ([]*VectorData, error) {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -201,7 +200,7 @@ func (p *FAISSProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.V
 		return nil, fmt.Errorf("provider not started")
 	}
 
-	var results []*memory.VectorData
+	var results []*VectorData
 
 	for name := range p.collections {
 		if index, exists := p.indices[name]; exists {
@@ -215,12 +214,12 @@ func (p *FAISSProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.V
 }
 
 // Update updates a vector in FAISS
-func (p *FAISSProvider) Update(ctx context.Context, id string, vector *memory.VectorData) error {
+func (p *FAISSProvider) Update(ctx context.Context, id string, vector *VectorData) error {
 	// FAISS doesn't support direct updates, so delete and re-insert
 	if err := p.Delete(ctx, []string{id}); err != nil {
 		return err
 	}
-	return p.Store(ctx, []*memory.VectorData{vector})
+	return p.Store(ctx, []*VectorData{vector})
 }
 
 // Delete deletes vectors from FAISS
@@ -252,7 +251,7 @@ func (p *FAISSProvider) Delete(ctx context.Context, ids []string) error {
 }
 
 // Search performs vector similarity search in FAISS
-func (p *FAISSProvider) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
+func (p *FAISSProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -272,8 +271,8 @@ func (p *FAISSProvider) Search(ctx context.Context, query *memory.VectorQuery) (
 
 	index, exists := p.indices[collection]
 	if !exists {
-		return &memory.VectorSearchResult{
-			Results:  []*memory.VectorSearchResultItem{},
+		return &VectorSearchResult{
+			Results:  []*VectorSearchResultItem{},
 			Total:    0,
 			Query:    query,
 			Duration: time.Since(start),
@@ -285,7 +284,7 @@ func (p *FAISSProvider) Search(ctx context.Context, query *memory.VectorQuery) (
 		return nil, fmt.Errorf("search failed: %w", err)
 	}
 
-	return &memory.VectorSearchResult{
+	return &VectorSearchResult{
 		Results:   results,
 		Total:     len(results),
 		Query:     query,
@@ -295,7 +294,7 @@ func (p *FAISSProvider) Search(ctx context.Context, query *memory.VectorQuery) (
 }
 
 // FindSimilar finds similar vectors
-func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -308,7 +307,7 @@ func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 		return nil, fmt.Errorf("provider not started")
 	}
 
-	query := &memory.VectorQuery{
+	query := &VectorQuery{
 		Vector:  embedding,
 		TopK:    k,
 		Filters: filters,
@@ -319,9 +318,9 @@ func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 		return nil, err
 	}
 
-	var results []*memory.VectorSimilarityResult
+	var results []*VectorSimilarityResult
 	for _, item := range searchResult.Results {
-		results = append(results, &memory.VectorSimilarityResult{
+		results = append(results, &VectorSimilarityResult{
 			ID:       item.ID,
 			Vector:   item.Vector,
 			Metadata: item.Metadata,
@@ -388,11 +387,11 @@ func (p *FAISSProvider) DeleteCollection(ctx context.Context, name string) error
 }
 
 // ListCollections lists all collections
-func (p *FAISSProvider) ListCollections(ctx context.Context) ([]*memory.CollectionInfo, error) {
+func (p *FAISSProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	var collections []*memory.CollectionInfo
+	var collections []*CollectionInfo
 
 	for name, config := range p.collections {
 		var vectorCount int64
@@ -400,13 +399,13 @@ func (p *FAISSProvider) ListCollections(ctx context.Context) ([]*memory.Collecti
 			vectorCount = int64(index.vectorCount())
 		}
 
-		collections = append(collections, &memory.CollectionInfo{
-			Name:         name,
-			Dimension:    config.Dimension,
-			Metric:       config.Metric,
-			VectorsCount: vectorCount,
-			CreatedAt:    time.Now(), // FAISS doesn't store creation time
-			UpdatedAt:    time.Now(),
+		collections = append(collections, &CollectionInfo{
+			Name:        name,
+			Dimension:   config.Dimension,
+			Metric:      config.Metric,
+			VectorCount: vectorCount,
+			CreatedAt:   time.Now(), // FAISS doesn't store creation time
+			UpdatedAt:   time.Now(),
 		})
 	}
 
@@ -414,7 +413,7 @@ func (p *FAISSProvider) ListCollections(ctx context.Context) ([]*memory.Collecti
 }
 
 // GetCollection gets collection information
-func (p *FAISSProvider) GetCollection(ctx context.Context, name string) (*memory.CollectionInfo, error) {
+func (p *FAISSProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -428,13 +427,13 @@ func (p *FAISSProvider) GetCollection(ctx context.Context, name string) (*memory
 		vectorCount = int64(index.vectorCount())
 	}
 
-	return &memory.CollectionInfo{
-		Name:         name,
-		Dimension:    config.Dimension,
-		Metric:       config.Metric,
-		VectorsCount: vectorCount,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+	return &CollectionInfo{
+		Name:        name,
+		Dimension:   config.Dimension,
+		Metric:      config.Metric,
+		VectorCount: vectorCount,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}, nil
 }
 
@@ -465,7 +464,7 @@ func (p *FAISSProvider) DeleteIndex(ctx context.Context, collection, name string
 }
 
 // ListIndexes lists indexes in a collection
-func (p *FAISSProvider) ListIndexes(ctx context.Context, collection string) ([]*memory.IndexInfo, error) {
+func (p *FAISSProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -809,7 +808,7 @@ func (idx *FAISSIndex) initialize(config *FAISSConfig) error {
 	return nil
 }
 
-func (idx *FAISSIndex) addVector(vector *memory.VectorData) error {
+func (idx *FAISSIndex) addVector(vector *VectorData) error {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 
@@ -818,16 +817,28 @@ func (idx *FAISSIndex) addVector(vector *memory.VectorData) error {
 	return nil
 }
 
-func (idx *FAISSIndex) getVectors(ids []string) []*memory.VectorData {
+func (idx *FAISSIndex) removeVector(id string) bool {
+	idx.mu.Lock()
+	defer idx.mu.Unlock()
+
+	if _, exists := idx.vectorMap[id]; exists {
+		delete(idx.vectorMap, id)
+		delete(idx.metadataMap, id)
+		return true
+	}
+	return false
+}
+
+func (idx *FAISSIndex) getVectors(ids []string) []*VectorData {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	var vectors []*memory.VectorData
+	var vectors []*VectorData
 
 	for _, id := range ids {
 		if vector, exists := idx.vectorMap[id]; exists {
 			metadata := idx.metadataMap[id]
-			vectors = append(vectors, &memory.VectorData{
+			vectors = append(vectors, &VectorData{
 				ID:       id,
 				Vector:   vector,
 				Metadata: metadata,
@@ -838,12 +849,12 @@ func (idx *FAISSIndex) getVectors(ids []string) []*memory.VectorData {
 	return vectors
 }
 
-func (idx *FAISSIndex) search(query *memory.VectorQuery, nprobe int) ([]*memory.VectorSearchResultItem, error) {
+func (idx *FAISSIndex) search(query *VectorQuery, nprobe int) ([]*VectorSearchResultItem, error) {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
 	// Mock implementation - in real FAISS, this would use actual vector search
-	var results []*memory.VectorSearchResultItem
+	var results []*VectorSearchResultItem
 	count := 0
 
 	for id, vector := range idx.vectorMap {
@@ -854,7 +865,7 @@ func (idx *FAISSIndex) search(query *memory.VectorQuery, nprobe int) ([]*memory.
 		// Mock similarity calculation (in real implementation, use FAISS)
 		score := calculateCosineSimilarity(query.Vector, vector)
 		if score >= query.Threshold {
-			results = append(results, &memory.VectorSearchResultItem{
+			results = append(results, &VectorSearchResultItem{
 				ID:       id,
 				Vector:   vector,
 				Score:    score,
@@ -933,7 +944,7 @@ func (idx *FAISSIndex) deleteMetadata(ids []string, keys []string) {
 	}
 }
 
-func (idx *FAISSIndex) createSubIndex(config *memory.IndexConfig) error {
+func (idx *FAISSIndex) createSubIndex(config *IndexConfig) error {
 	// Mock implementation
 	return nil
 }
@@ -943,9 +954,9 @@ func (idx *FAISSIndex) deleteSubIndex(name string) error {
 	return nil
 }
 
-func (idx *FAISSIndex) listIndexes() []*memory.IndexInfo {
+func (idx *FAISSIndex) listIndexes() []*IndexInfo {
 	// Mock implementation
-	return []*memory.IndexInfo{}
+	return []*IndexInfo{}
 }
 
 func (idx *FAISSIndex) optimize() error {
