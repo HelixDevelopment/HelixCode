@@ -271,11 +271,11 @@ func TestDiffEditorApplyHunks(t *testing.T) {
 	editor := NewDiffEditor()
 
 	tests := []struct {
-		name          string
-		original      []string
-		hunks         []DiffHunk
-		expected      []string
-		expectError   bool
+		name        string
+		original    []string
+		hunks       []DiffHunk
+		expected    []string
+		expectError bool
 	}{
 		{
 			name:     "Simple addition",

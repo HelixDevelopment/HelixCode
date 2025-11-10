@@ -308,18 +308,18 @@ func TestRetryNonRetryableError(t *testing.T) {
 
 // Mock agent for testing ResilientExecutor
 type mockResilientAgent struct {
-	id          string
-	executeFunc func(context.Context, *task.Task) (*task.Result, error)
+	id           string
+	executeFunc  func(context.Context, *task.Task) (*task.Result, error)
 	executeCalls int
 }
 
-func (m *mockResilientAgent) ID() string { return m.id }
-func (m *mockResilientAgent) Type() AgentType { return AgentTypePlanning }
-func (m *mockResilientAgent) Name() string { return "Mock Resilient Agent" }
-func (m *mockResilientAgent) Status() AgentStatus { return StatusIdle }
-func (m *mockResilientAgent) Capabilities() []Capability { return []Capability{} }
-func (m *mockResilientAgent) CanHandle(t *task.Task) bool { return true }
-func (m *mockResilientAgent) Health() *HealthCheck { return &HealthCheck{} }
+func (m *mockResilientAgent) ID() string                         { return m.id }
+func (m *mockResilientAgent) Type() AgentType                    { return AgentTypePlanning }
+func (m *mockResilientAgent) Name() string                       { return "Mock Resilient Agent" }
+func (m *mockResilientAgent) Status() AgentStatus                { return StatusIdle }
+func (m *mockResilientAgent) Capabilities() []Capability         { return []Capability{} }
+func (m *mockResilientAgent) CanHandle(t *task.Task) bool        { return true }
+func (m *mockResilientAgent) Health() *HealthCheck               { return &HealthCheck{} }
 func (m *mockResilientAgent) Shutdown(ctx context.Context) error { return nil }
 func (m *mockResilientAgent) Initialize(ctx context.Context, config *AgentConfig) error {
 	return nil

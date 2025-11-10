@@ -60,18 +60,18 @@ all supported providers. This includes:
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("🔧 Initializing Local LLM Management System...")
 			fmt.Println("📦 Installing providers:")
-			
+
 			providers := []string{
 				"VLLM", "LocalAI", "FastChat", "Text Generation WebUI",
 				"LM Studio", "Jan AI", "KoboldAI", "GPT4All",
 				"TabbyAPI", "MLX", "MistralRS", "Ollama", "Llama.cpp",
 			}
-			
+
 			for i, provider := range providers {
 				fmt.Printf("  [%d/%d] %s\n", i+1, len(providers), provider)
 				time.Sleep(200 * time.Millisecond)
 			}
-			
+
 			fmt.Println("✅ Local LLM Management System initialized successfully!")
 		},
 	}
@@ -124,27 +124,27 @@ providers including:
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("📊 Provider Status Report")
 			fmt.Println("━" + strings.Repeat("━", 50))
-			
+
 			providers := map[string]string{
-				"VLLM":           "running  | 8000 | 5 models | 42 TPS",
-				"LocalAI":        "running  | 8080 | 8 models | 38 TPS", 
-				"FastChat":       "stopped   | 7860 | 3 models |  -  ",
-				"TextGen":        "running  | 5000 | 12 models| 35 TPS",
-				"LM Studio":      "stopped   | 1234 | 2 models |  -  ",
-				"Jan AI":        "running  | 1337 | 4 models | 28 TPS",
-				"KoboldAI":      "stopped   | 5001 | 6 models |  -  ",
-				"GPT4All":       "running  | 4891 | 3 models | 15 TPS",
-				"TabbyAPI":      "stopped   | 5000 | 7 models |  -  ",
-				"MLX":           "running  | 8080 | 4 models | 45 TPS",
-				"MistralRS":     "stopped   | 8080 | 2 models |  -  ",
-				"Ollama":        "running  | 11434| 9 models | 40 TPS",
-				"Llama.cpp":     "running  | 8080 | 11 models| 48 TPS",
+				"VLLM":      "running  | 8000 | 5 models | 42 TPS",
+				"LocalAI":   "running  | 8080 | 8 models | 38 TPS",
+				"FastChat":  "stopped   | 7860 | 3 models |  -  ",
+				"TextGen":   "running  | 5000 | 12 models| 35 TPS",
+				"LM Studio": "stopped   | 1234 | 2 models |  -  ",
+				"Jan AI":    "running  | 1337 | 4 models | 28 TPS",
+				"KoboldAI":  "stopped   | 5001 | 6 models |  -  ",
+				"GPT4All":   "running  | 4891 | 3 models | 15 TPS",
+				"TabbyAPI":  "stopped   | 5000 | 7 models |  -  ",
+				"MLX":       "running  | 8080 | 4 models | 45 TPS",
+				"MistralRS": "stopped   | 8080 | 2 models |  -  ",
+				"Ollama":    "running  | 11434| 9 models | 40 TPS",
+				"Llama.cpp": "running  | 8080 | 11 models| 48 TPS",
 			}
-			
+
 			for name, status := range providers {
 				fmt.Printf("%-12s │ %s\n", name, status)
 			}
-			
+
 			running := 0
 			total := len(providers)
 			for _, status := range providers {
@@ -152,9 +152,9 @@ providers including:
 					running++
 				}
 			}
-			
+
 			fmt.Println("━" + strings.Repeat("━", 50))
-			fmt.Printf("Summary: %d/%d providers running (%.1f%%)\n", 
+			fmt.Printf("Summary: %d/%d providers running (%.1f%%)\n",
 				running, total, float64(running)/float64(total)*100)
 		},
 	}
@@ -165,7 +165,7 @@ providers including:
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("📋 Available Local LLM Providers")
 			fmt.Println("━" + strings.Repeat("━", 60))
-			
+
 			providers := []struct {
 				name, desc, port, features string
 			}{
@@ -183,7 +183,7 @@ providers including:
 				{"Ollama", "Simple model management", "11434", "Easy setup, CLI"},
 				{"Llama.cpp", "Universal GGUF support", "8080", "GGUF, Universal"},
 			}
-			
+
 			for _, p := range providers {
 				fmt.Printf("%-12s │ %-5s │ %s\n", p.name, p.port, p.desc)
 				fmt.Printf("            │       │ %s\n", p.features)
@@ -216,7 +216,7 @@ providers including:
 				fmt.Println("Usage: local-llm models download <model-id>")
 				return
 			}
-			
+
 			modelID := args[0]
 			fmt.Printf("📥 Downloading model: %s\n", modelID)
 			fmt.Printf("🌐 Source: HuggingFace (bartowski)\n")
@@ -224,10 +224,10 @@ providers including:
 			fmt.Printf("💾 Size: 4.7 GB\n")
 			fmt.Printf("🎯 Target: All compatible providers\n")
 			fmt.Println()
-			
+
 			// Simulate download progress
 			for i := 0; i <= 100; i += 5 {
-				fmt.Printf("\r⏳ Progress: %d%% | %s/s | ETA: %s", 
+				fmt.Printf("\r⏳ Progress: %d%% | %s/s | ETA: %s",
 					i, "2.4MB", fmt.Sprintf("%ds", (100-i)/10))
 				time.Sleep(100 * time.Millisecond)
 			}
@@ -250,23 +250,23 @@ across all running providers that support the model format.`,
 				fmt.Println("Usage: local-llm share <model-path>")
 				return
 			}
-			
+
 			modelPath := args[0]
 			fmt.Printf("🔗 Sharing model: %s\n", modelPath)
 			fmt.Printf("🔍 Detected format: GGUF\n")
 			fmt.Printf("📊 Checking compatibility...\n")
-			
+
 			compatible := []string{
 				"VLLM ✅", "Llama.cpp ✅", "Ollama ✅", "LocalAI ✅",
 				"FastChat ✅", "TextGen ✅", "LM Studio ✅",
 				"Jan AI ✅", "TabbyAPI ✅", "MLX ✅",
 			}
-			
+
 			for _, provider := range compatible {
 				fmt.Printf("  %s\n", provider)
 				time.Sleep(100 * time.Millisecond)
 			}
-			
+
 			fmt.Println("✅ Model shared successfully with 10 providers!")
 		},
 	}
@@ -285,14 +285,14 @@ across all running providers that support the model format.`,
 			fmt.Println("📊 Local LLM Analytics Dashboard")
 			fmt.Println("━" + strings.Repeat("━", 60))
 			fmt.Println()
-			
+
 			fmt.Println("🚀 Performance Overview")
 			fmt.Printf("  • Average TPS: 38.5 (↑ 12% from last week)\n")
 			fmt.Printf("  • Total Requests: 1,247,892\n")
 			fmt.Printf("  • Success Rate: 99.3%%\n")
 			fmt.Printf("  • Average Latency: 125ms\n")
 			fmt.Println()
-			
+
 			fmt.Println("🤖 Top Models (Last 7 Days)")
 			topModels := []struct {
 				name, requests, satisfaction string
@@ -303,12 +303,12 @@ across all running providers that support the model format.`,
 				{"Qwen-7B-Chat", "8.3%", "4.5/5.0 ⭐"},
 				{"Gemma-7B-Instruct", "2.7%", "4.3/5.0 ⭐"},
 			}
-			
+
 			for _, model := range topModels {
 				fmt.Printf("  • %-25s │ %-8s │ %s\n", model.name, model.requests, model.satisfaction)
 			}
 			fmt.Println()
-			
+
 			fmt.Println("💡 AI-Powered Recommendations")
 			recommendations := []string{
 				"Enable GPU acceleration for VLLM (35% performance boost expected)",
@@ -317,7 +317,7 @@ across all running providers that support the model format.`,
 				"Consider MLX for Apple Silicon workloads (28% faster)",
 				"Upgrade RAM to 32GB for optimal Llama-3-70B performance",
 			}
-			
+
 			for i, rec := range recommendations {
 				fmt.Printf("  %d. %s\n", i+1, rec)
 			}

@@ -266,20 +266,20 @@ func (t *NotebookEditTool) findCellIndex(notebook *Notebook, params map[string]i
 
 // Notebook represents a Jupyter notebook structure
 type Notebook struct {
-	Cells        []NotebookCell         `json:"cells"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	NBFormat     int                    `json:"nbformat"`
-	NBFormatMinor int                   `json:"nbformat_minor"`
+	Cells         []NotebookCell         `json:"cells"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	NBFormat      int                    `json:"nbformat"`
+	NBFormatMinor int                    `json:"nbformat_minor"`
 }
 
 // NotebookCell represents a cell in a Jupyter notebook
 type NotebookCell struct {
-	ID           string                   `json:"id,omitempty"`
-	CellType     string                   `json:"cell_type"`
-	Source       []string                 `json:"source"`
-	Metadata     map[string]interface{}   `json:"metadata"`
-	Outputs      []map[string]interface{} `json:"outputs,omitempty"`
-	ExecutionCount interface{}            `json:"execution_count,omitempty"`
+	ID             string                   `json:"id,omitempty"`
+	CellType       string                   `json:"cell_type"`
+	Source         []string                 `json:"source"`
+	Metadata       map[string]interface{}   `json:"metadata"`
+	Outputs        []map[string]interface{} `json:"outputs,omitempty"`
+	ExecutionCount interface{}              `json:"execution_count,omitempty"`
 }
 
 // splitSource splits source code into lines as Jupyter expects

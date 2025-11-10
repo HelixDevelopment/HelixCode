@@ -18,11 +18,11 @@ import (
 
 // TestConfig holds test configuration
 type TestConfig struct {
-	BaseURL      string
-	DatabaseURL  string
-	RedisURL     string
-	AuthToken    string
-	Timeout      time.Duration
+	BaseURL     string
+	DatabaseURL string
+	RedisURL    string
+	AuthToken   string
+	Timeout     time.Duration
 }
 
 // LoadTestConfig loads test configuration from environment

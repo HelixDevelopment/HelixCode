@@ -130,12 +130,12 @@ func (s *DefaultScreenshotCapture) Capture(ctx context.Context, browserID string
 
 // ScreenshotAnnotator annotates screenshots with element information
 type ScreenshotAnnotator struct {
-	borderColor   color.Color
-	labelColor    color.Color
-	labelBgColor  color.Color
-	borderWidth   int
-	showLabels    bool
-	showBounds    bool
+	borderColor  color.Color
+	labelColor   color.Color
+	labelBgColor color.Color
+	borderWidth  int
+	showLabels   bool
+	showBounds   bool
 }
 
 // AnnotationOptions configures screenshot annotation

@@ -61,9 +61,9 @@ const (
 
 // ToolRegistry manages all available tools
 type ToolRegistry struct {
-	tools    map[string]Tool
-	aliases  map[string]string // alias -> tool name
-	mu       sync.RWMutex
+	tools   map[string]Tool
+	aliases map[string]string // alias -> tool name
+	mu      sync.RWMutex
 
 	// Component instances
 	filesystem   *filesystem.FileSystemTools

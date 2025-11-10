@@ -24,12 +24,12 @@ type WorkerIsolationManager struct {
 
 // WorkerSandbox represents an isolated execution environment
 type WorkerSandbox struct {
-	ID           uuid.UUID
+	ID            uuid.UUID
 	WorkerID      uuid.UUID
 	Directory     string
 	User          string
 	Group         string
-	MaxMemory     int64 // in bytes
+	MaxMemory     int64   // in bytes
 	MaxCPU        float64 // percentage
 	MaxProcesses  int
 	NetworkAccess bool
@@ -50,7 +50,7 @@ func (wim *WorkerIsolationManager) CreateSandbox(ctx context.Context, workerID u
 	defer wim.mutex.Unlock()
 
 	sandboxID := uuid.New()
-	
+
 	// Create sandbox directory
 	sandboxDir := filepath.Join(os.TempDir(), "helix-sandbox-"+sandboxID.String())
 	if err := os.MkdirAll(sandboxDir, 0750); err != nil {
@@ -66,10 +66,10 @@ func (wim *WorkerIsolationManager) CreateSandbox(ctx context.Context, workerID u
 
 	// Convert Resources to sandbox limits
 	maxMemory := resourceLimits.TotalMemory / 2 // Use half of available memory
-	maxCPU := float64(resourceLimits.CPUCount) // Use all available CPUs
+	maxCPU := float64(resourceLimits.CPUCount)  // Use all available CPUs
 
 	sandbox := &WorkerSandbox{
-		ID:           sandboxID,
+		ID:            sandboxID,
 		WorkerID:      workerID,
 		Directory:     sandboxDir,
 		User:          username,
@@ -216,7 +216,7 @@ func (wim *WorkerIsolationManager) applyCgroupLimits(sandbox *WorkerSandbox) err
 func (wim *WorkerIsolationManager) buildSandboxedCommand(sandbox *WorkerSandbox, command string) string {
 	// Escape shell injection
 	command = strings.ReplaceAll(command, "'", "'\"'\"'")
-	
+
 	// Build sandboxed command with security measures
 	sandboxedCommand := fmt.Sprintf(`
 # Set up sandbox environment
@@ -247,12 +247,12 @@ ulimit -f 100   # 100MB file size limit
 // setSandboxEnvironment sets environment variables for the sandbox
 func (wim *WorkerIsolationManager) setSandboxEnvironment(session *ssh.Session, sandbox *WorkerSandbox) error {
 	envVars := map[string]string{
-		"HELIX_SANDBOX_ID":     sandbox.ID.String(),
-		"HELIX_SANDBOX_DIR":      sandbox.Directory,
-		"HELIX_WORKER_ID":        sandbox.WorkerID.String(),
-		"HELIX_ISOLATED":          "true",
-		"PATH":                   "/usr/local/bin:/usr/bin:/bin",
-		"TMPDIR":                 filepath.Join(sandbox.Directory, "tmp"),
+		"HELIX_SANDBOX_ID":  sandbox.ID.String(),
+		"HELIX_SANDBOX_DIR": sandbox.Directory,
+		"HELIX_WORKER_ID":   sandbox.WorkerID.String(),
+		"HELIX_ISOLATED":    "true",
+		"PATH":              "/usr/local/bin:/usr/bin:/bin",
+		"TMPDIR":            filepath.Join(sandbox.Directory, "tmp"),
 	}
 
 	for key, value := range envVars {

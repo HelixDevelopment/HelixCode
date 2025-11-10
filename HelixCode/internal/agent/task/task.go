@@ -8,38 +8,38 @@ import (
 
 // Task represents a unit of work to be performed by an agent
 type Task struct {
-	ID          string                 `json:"id"`
-	Type        TaskType               `json:"type"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	Priority    Priority               `json:"priority"`
-	Status      TaskStatus             `json:"status"`
+	ID          string     `json:"id"`
+	Type        TaskType   `json:"type"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Priority    Priority   `json:"priority"`
+	Status      TaskStatus `json:"status"`
 
 	// Requirements
-	RequiredCapabilities []string               `json:"required_capabilities"`
-	EstimatedDuration    time.Duration          `json:"estimated_duration"`
-	Deadline             *time.Time             `json:"deadline,omitempty"`
+	RequiredCapabilities []string      `json:"required_capabilities"`
+	EstimatedDuration    time.Duration `json:"estimated_duration"`
+	Deadline             *time.Time    `json:"deadline,omitempty"`
 
 	// Dependencies
-	DependsOn    []string               `json:"depends_on"`    // Task IDs
-	BlockedBy    []string               `json:"blocked_by"`    // Task IDs
+	DependsOn []string `json:"depends_on"` // Task IDs
+	BlockedBy []string `json:"blocked_by"` // Task IDs
 
 	// Input/Output
-	Input        map[string]interface{} `json:"input"`
-	Output       map[string]interface{} `json:"output"`
+	Input  map[string]interface{} `json:"input"`
+	Output map[string]interface{} `json:"output"`
 
 	// Execution
-	AssignedTo   string                 `json:"assigned_to"`   // Agent ID
-	StartedAt    *time.Time             `json:"started_at,omitempty"`
-	CompletedAt  *time.Time             `json:"completed_at,omitempty"`
-	Duration     time.Duration          `json:"duration"`
+	AssignedTo  string        `json:"assigned_to"` // Agent ID
+	StartedAt   *time.Time    `json:"started_at,omitempty"`
+	CompletedAt *time.Time    `json:"completed_at,omitempty"`
+	Duration    time.Duration `json:"duration"`
 
 	// Metadata
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
-	CreatedBy    string                 `json:"created_by"`    // Agent ID or "user"
-	Tags         []string               `json:"tags"`
-	Metadata     map[string]interface{} `json:"metadata"`
+	CreatedAt time.Time              `json:"created_at"`
+	UpdatedAt time.Time              `json:"updated_at"`
+	CreatedBy string                 `json:"created_by"` // Agent ID or "user"
+	Tags      []string               `json:"tags"`
+	Metadata  map[string]interface{} `json:"metadata"`
 }
 
 // TaskType defines the category of a task
@@ -210,39 +210,39 @@ func (t *Task) IsActive() bool {
 
 // Result represents the outcome of a task execution
 type Result struct {
-	TaskID      string                 `json:"task_id"`
-	AgentID     string                 `json:"agent_id"`
-	Success     bool                   `json:"success"`
-	Output      map[string]interface{} `json:"output"`
-	Error       string                 `json:"error,omitempty"`
-	Duration    time.Duration          `json:"duration"`
-	Confidence  float64                `json:"confidence"`  // 0.0 to 1.0
-	Artifacts   []Artifact             `json:"artifacts"`
-	Metrics     *TaskMetrics           `json:"metrics"`
-	Timestamp   time.Time              `json:"timestamp"`
+	TaskID     string                 `json:"task_id"`
+	AgentID    string                 `json:"agent_id"`
+	Success    bool                   `json:"success"`
+	Output     map[string]interface{} `json:"output"`
+	Error      string                 `json:"error,omitempty"`
+	Duration   time.Duration          `json:"duration"`
+	Confidence float64                `json:"confidence"` // 0.0 to 1.0
+	Artifacts  []Artifact             `json:"artifacts"`
+	Metrics    *TaskMetrics           `json:"metrics"`
+	Timestamp  time.Time              `json:"timestamp"`
 }
 
 // Artifact represents a file or resource created by a task
 type Artifact struct {
-	ID          string    `json:"id"`
-	Type        string    `json:"type"`         // "code", "test", "doc", "config"
-	Path        string    `json:"path"`
-	Content     string    `json:"content"`
-	Size        int64     `json:"size"`
-	Checksum    string    `json:"checksum"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID        string    `json:"id"`
+	Type      string    `json:"type"` // "code", "test", "doc", "config"
+	Path      string    `json:"path"`
+	Content   string    `json:"content"`
+	Size      int64     `json:"size"`
+	Checksum  string    `json:"checksum"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // TaskMetrics contains metrics about task execution
 type TaskMetrics struct {
-	TokensUsed      int           `json:"tokens_used"`
-	LLMCalls        int           `json:"llm_calls"`
-	ToolCalls       int           `json:"tool_calls"`
-	FilesModified   int           `json:"files_modified"`
-	LinesAdded      int           `json:"lines_added"`
-	LinesRemoved    int           `json:"lines_removed"`
-	TestsGenerated  int           `json:"tests_generated"`
-	ExecutionTime   time.Duration `json:"execution_time"`
+	TokensUsed     int           `json:"tokens_used"`
+	LLMCalls       int           `json:"llm_calls"`
+	ToolCalls      int           `json:"tool_calls"`
+	FilesModified  int           `json:"files_modified"`
+	LinesAdded     int           `json:"lines_added"`
+	LinesRemoved   int           `json:"lines_removed"`
+	TestsGenerated int           `json:"tests_generated"`
+	ExecutionTime  time.Duration `json:"execution_time"`
 }
 
 // NewResult creates a new result

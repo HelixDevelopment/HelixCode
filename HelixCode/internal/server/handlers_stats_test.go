@@ -218,9 +218,9 @@ func TestGetSystemStatus_UptimeInStats(t *testing.T) {
 // TestNewServer_ManagerInitialization tests that managers are initialized correctly
 func TestNewServer_ManagerInitialization(t *testing.T) {
 	tests := []struct {
-		name              string
-		db                *database.Database
-		expectTaskManager bool
+		name                string
+		db                  *database.Database
+		expectTaskManager   bool
 		expectWorkerManager bool
 	}{
 		{

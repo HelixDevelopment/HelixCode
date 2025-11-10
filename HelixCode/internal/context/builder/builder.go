@@ -24,38 +24,38 @@ const (
 type SourceType string
 
 const (
-	SourceSession  SourceType = "session"
-	SourceFocus    SourceType = "focus"
-	SourceFile     SourceType = "file"
-	SourceGit      SourceType = "git"
-	SourceProject  SourceType = "project"
-	SourceError    SourceType = "error"
-	SourceLog      SourceType = "log"
-	SourceCustom   SourceType = "custom"
+	SourceSession SourceType = "session"
+	SourceFocus   SourceType = "focus"
+	SourceFile    SourceType = "file"
+	SourceGit     SourceType = "git"
+	SourceProject SourceType = "project"
+	SourceError   SourceType = "error"
+	SourceLog     SourceType = "log"
+	SourceCustom  SourceType = "custom"
 )
 
 // ContextItem represents a single piece of context
 type ContextItem struct {
-	Type     SourceType            // Type of source
-	Priority Priority              // Priority for inclusion
-	Title    string                // Item title/label
-	Content  string                // Item content
-	Metadata map[string]string     // Additional metadata
-	Size     int                   // Size in bytes
+	Type     SourceType        // Type of source
+	Priority Priority          // Priority for inclusion
+	Title    string            // Item title/label
+	Content  string            // Item content
+	Metadata map[string]string // Additional metadata
+	Size     int               // Size in bytes
 }
 
 // Builder builds context for LLM calls
 type Builder struct {
-	items          []*ContextItem        // All context items
-	sessionMgr     *session.Manager      // Session manager
-	focusMgr       *focus.Manager        // Focus manager
-	maxSize        int                   // Maximum context size (bytes)
-	maxTokens      int                   // Maximum tokens (approximate)
-	templates      map[string]*Template  // Context templates
-	sources        map[SourceType]Source // Registered sources
-	mu             sync.RWMutex          // Thread-safety
-	cache          *cache                // Context cache
-	cacheEnabled   bool                  // Whether caching is enabled
+	items        []*ContextItem        // All context items
+	sessionMgr   *session.Manager      // Session manager
+	focusMgr     *focus.Manager        // Focus manager
+	maxSize      int                   // Maximum context size (bytes)
+	maxTokens    int                   // Maximum tokens (approximate)
+	templates    map[string]*Template  // Context templates
+	sources      map[SourceType]Source // Registered sources
+	mu           sync.RWMutex          // Thread-safety
+	cache        *cache                // Context cache
+	cacheEnabled bool                  // Whether caching is enabled
 }
 
 // Source provides context from a specific source
@@ -66,25 +66,25 @@ type Source interface {
 
 // Template defines a context structure
 type Template struct {
-	Name        string              // Template name
-	Description string              // Template description
-	Sections    []*TemplateSection  // Template sections
+	Name        string             // Template name
+	Description string             // Template description
+	Sections    []*TemplateSection // Template sections
 }
 
 // TemplateSection represents a section in a template
 type TemplateSection struct {
-	Title    string     // Section title
+	Title    string       // Section title
 	Types    []SourceType // Source types to include
-	Priority Priority   // Priority for this section
-	MaxItems int        // Maximum items in section (0 = unlimited)
+	Priority Priority     // Priority for this section
+	MaxItems int          // Maximum items in section (0 = unlimited)
 }
 
 // NewBuilder creates a new context builder
 func NewBuilder() *Builder {
 	return &Builder{
 		items:        make([]*ContextItem, 0),
-		maxSize:      100000,  // 100KB default
-		maxTokens:    4000,    // ~4K tokens default
+		maxSize:      100000, // 100KB default
+		maxTokens:    4000,   // ~4K tokens default
 		templates:    make(map[string]*Template),
 		sources:      make(map[SourceType]Source),
 		cache:        newCache(),
@@ -484,12 +484,12 @@ func (b *Builder) sortByPriority(items []*ContextItem) {
 
 // Statistics contains builder statistics
 type Statistics struct {
-	TotalItems    int                   // Total context items
-	TotalSize     int                   // Total size in bytes
-	ByType        map[SourceType]int    // Count by source type
-	ByPriority    map[Priority]int      // Count by priority
-	CacheHits     int                   // Cache hits
-	CacheMisses   int                   // Cache misses
+	TotalItems  int                // Total context items
+	TotalSize   int                // Total size in bytes
+	ByType      map[SourceType]int // Count by source type
+	ByPriority  map[Priority]int   // Count by priority
+	CacheHits   int                // Cache hits
+	CacheMisses int                // Cache misses
 }
 
 // GetStatistics returns builder statistics
@@ -519,12 +519,12 @@ func (b *Builder) GetStatistics() *Statistics {
 
 // cache manages context caching
 type cache struct {
-	data       map[string]string // Cached contexts by key
+	data       map[string]string    // Cached contexts by key
 	validUntil map[string]time.Time // Expiration times
-	ttl        time.Duration     // Time to live
-	hits       int               // Cache hits
-	misses     int               // Cache misses
-	mu         sync.RWMutex      // Thread-safety
+	ttl        time.Duration        // Time to live
+	hits       int                  // Cache hits
+	misses     int                  // Cache misses
+	mu         sync.RWMutex         // Thread-safety
 }
 
 // newCache creates a new cache

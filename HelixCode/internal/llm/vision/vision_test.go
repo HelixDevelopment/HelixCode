@@ -92,9 +92,9 @@ func TestImageDetectionByExtension(t *testing.T) {
 	detector := NewImageDetector(config)
 
 	tests := []struct {
-		name       string
-		extension  string
-		wantImage  bool
+		name      string
+		extension string
+		wantImage bool
 	}{
 		{"jpg extension", "jpg", true},
 		{"jpeg extension", "jpeg", true},
@@ -132,9 +132,9 @@ func TestImageDetectionBase64(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name       string
-		text       string
-		wantCount  int
+		name      string
+		text      string
+		wantCount int
 	}{
 		{
 			name:      "base64 PNG image",
@@ -287,10 +287,10 @@ func TestModelCapabilities(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name         string
-		modelID      string
-		wantVision   bool
-		wantError    bool
+		name       string
+		modelID    string
+		wantVision bool
+		wantError  bool
 	}{
 		{
 			name:       "Claude 3.5 Sonnet supports vision",
@@ -560,9 +560,9 @@ func TestConfigValidation(t *testing.T) {
 		{
 			name: "no fallback model",
 			config: &Config{
-				SwitchMode:       SwitchSession,
-				DetectionMethods: []DetectionMethod{DetectByMIME},
-				FallbackModel:    "",
+				SwitchMode:           SwitchSession,
+				DetectionMethods:     []DetectionMethod{DetectByMIME},
+				FallbackModel:        "",
 				PreferredVisionModel: "",
 			},
 			wantError: true,
@@ -610,9 +610,9 @@ func TestFindBestVisionModel(t *testing.T) {
 			wantModel: "gpt-4o",
 		},
 		{
-			name: "no preferences - use default",
+			name:        "no preferences - use default",
 			preferences: &ModelPreferences{},
-			wantModel: "", // Will accept any vision model
+			wantModel:   "", // Will accept any vision model
 		},
 	}
 

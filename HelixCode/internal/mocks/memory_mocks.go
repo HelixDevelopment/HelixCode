@@ -278,13 +278,13 @@ func (m *MockVectorProvider) ListCollections(ctx context.Context) ([]*memory.Col
 	for name, config := range m.collections {
 		size := len(m.store[name])
 		result = append(result, &memory.CollectionInfo{
-			Name:        name,
-			Dimension:   config.Dimension,
-			Metric:      config.Metric,
-			VectorCount: int64(size),
-			Size:        int64(size * 1536 * 8), // Approximate
-			CreatedAt:   time.Now(),
-			UpdatedAt:   time.Now(),
+			Name:         name,
+			Dimension:    config.Dimension,
+			Metric:       config.Metric,
+			VectorsCount: int64(size),
+			Status:       "active",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 		})
 	}
 
@@ -315,14 +315,13 @@ func (m *MockVectorProvider) GetCollection(ctx context.Context, name string) (*m
 
 	size := len(m.store[name])
 	return &memory.CollectionInfo{
-		Name:        name,
-		Description: config.Description,
-		Dimension:   config.Dimension,
-		Metric:      config.Metric,
-		VectorCount: int64(size),
-		Size:        int64(size * 1536 * 8), // Approximate
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		Name:         name,
+		Dimension:    config.Dimension,
+		Metric:       config.Metric,
+		VectorsCount: int64(size),
+		Status:       "active",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}, nil
 }
 

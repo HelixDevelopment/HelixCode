@@ -11,17 +11,17 @@ import (
 
 // CodebaseMap represents a complete codebase map
 type CodebaseMap struct {
-	Root         string                `json:"root"`
-	Files        map[string]*FileMap   `json:"files"`
-	Languages    map[string]int        `json:"languages"`
-	TotalFiles   int                   `json:"total_files"`
-	TotalLines   int                   `json:"total_lines"`
-	TotalTokens  int                   `json:"total_tokens"`
+	Root         string                 `json:"root"`
+	Files        map[string]*FileMap    `json:"files"`
+	Languages    map[string]int         `json:"languages"`
+	TotalFiles   int                    `json:"total_files"`
+	TotalLines   int                    `json:"total_lines"`
+	TotalTokens  int                    `json:"total_tokens"`
 	Definitions  map[string]*Definition `json:"definitions"`
-	Dependencies map[string][]string   `json:"dependencies"`
-	CreatedAt    time.Time             `json:"created_at"`
-	UpdatedAt    time.Time             `json:"updated_at"`
-	Version      string                `json:"version"`
+	Dependencies map[string][]string    `json:"dependencies"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
+	Version      string                 `json:"version"`
 }
 
 // FileMap represents a single file's map

@@ -11,9 +11,9 @@ import (
 
 // AliasConfig represents the alias configuration file
 type AliasConfig struct {
-	Version        string         `yaml:"version"`
-	FuzzyThreshold float64        `yaml:"fuzzy_threshold"`
-	Aliases        []*ModelAlias  `yaml:"aliases"`
+	Version        string        `yaml:"version"`
+	FuzzyThreshold float64       `yaml:"fuzzy_threshold"`
+	Aliases        []*ModelAlias `yaml:"aliases"`
 }
 
 // DefaultAliasConfig returns default configuration
@@ -182,7 +182,7 @@ func GetConfigPaths() []string {
 	return []string{
 		".helix/model-aliases.yaml",                                    // Workspace
 		filepath.Join(homeDir, ".config/helixcode/model-aliases.yaml"), // User
-		"/etc/helixcode/model-aliases.yaml",                           // System (Linux)
+		"/etc/helixcode/model-aliases.yaml",                            // System (Linux)
 	}
 }
 

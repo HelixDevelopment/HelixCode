@@ -106,10 +106,10 @@ func (c *NewRuleCommand) Execute(ctx context.Context, cmdCtx *commands.CommandCo
 		Actions:     actions,
 		ShouldReply: true,
 		Metadata: map[string]interface{}{
-			"category":  category,
-			"scope":     scope,
-			"name":      ruleName,
-			"location":  location,
+			"category": category,
+			"scope":    scope,
+			"name":     ruleName,
+			"location": location,
 		},
 	}, nil
 }

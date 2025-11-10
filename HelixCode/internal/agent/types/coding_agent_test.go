@@ -38,7 +38,7 @@ func TestNewCodingAgent(t *testing.T) {
 			Name: "Test Coding Agent",
 		}
 		registry, err := tools.NewToolRegistry(nil)
-	require.NoError(t, err)
+		require.NoError(t, err)
 
 		agent, err := NewCodingAgent(config, nil, registry)
 		assert.Error(t, err)

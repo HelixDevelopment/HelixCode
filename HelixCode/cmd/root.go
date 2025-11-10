@@ -41,7 +41,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.helix.yaml)")
 	rootCmd.PersistentFlags().Bool("debug", false, "enable debug logging")
 	rootCmd.PersistentFlags().String("log-level", "info", "log level (debug, info, warn, error)")
-	
+
 	// Bind flags to viper
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup("log-level"))

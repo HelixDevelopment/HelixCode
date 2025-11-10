@@ -45,14 +45,14 @@ func TestRealAIReasoning(t *testing.T) {
 
 			// Test simple reasoning
 			request := llm.ReasoningRequest{
-				Prompt:       "What is 2 + 2? Think step by step.",
+				Prompt:        "What is 2 + 2? Think step by step.",
 				ReasoningType: llm.ReasoningTypeChainOfThought,
-				MaxSteps:     5,
-				Temperature:  0.3,
+				MaxSteps:      5,
+				Temperature:   0.3,
 			}
 
 			response, err := reasoningEngine.GenerateWithReasoning(ctx, request)
-			
+
 			if err != nil {
 				t.Logf("Provider %s reasoning failed: %v", provider.GetName(), err)
 				return
@@ -96,7 +96,7 @@ func TestDistributedTaskExecution(t *testing.T) {
 			t.Run(workerID.String(), func(t *testing.T) {
 				// Execute simple command
 				output, err := workerPool.ExecuteCommand(ctx, workerID, "echo 'automation test'")
-				
+
 				if err != nil {
 					t.Logf("Worker %s command execution failed: %v", workerID, err)
 					return
@@ -123,14 +123,14 @@ func TestPerformanceBenchmarks(t *testing.T) {
 	workerPool := worker.NewSSHWorkerPool(false)
 
 	start := time.Now()
-	
+
 	// Perform multiple operations
 	for i := 0; i < 100; i++ {
 		_ = workerPool.GetWorkerStats(ctx)
 	}
-	
+
 	duration := time.Since(start)
-	
+
 	// Performance target: 100 operations in under 1 second
 	assert.Less(t, duration, time.Second)
 	t.Logf("✅ Worker pool performance: %d operations in %v", 100, duration)
@@ -139,13 +139,13 @@ func TestPerformanceBenchmarks(t *testing.T) {
 	notificationEngine := notification.NewNotificationEngine()
 
 	start = time.Now()
-	
+
 	for i := 0; i < 50; i++ {
 		_ = notificationEngine.GetChannelStats()
 	}
-	
+
 	duration = time.Since(start)
-	
+
 	// Performance target: 50 operations in under 500ms
 	assert.Less(t, duration, 500*time.Millisecond)
 	t.Logf("✅ Notification system performance: %d operations in %v", 50, duration)
@@ -170,7 +170,7 @@ func TestConcurrentOperations(t *testing.T) {
 			// Concurrent worker operations
 			_ = workerPool.HealthCheck(ctx)
 			_ = workerPool.GetWorkerStats(ctx)
-			
+
 			done <- true
 		}(i)
 	}
@@ -181,7 +181,7 @@ func TestConcurrentOperations(t *testing.T) {
 	}
 
 	duration := time.Since(start)
-	
+
 	// Should complete quickly even with concurrent access
 	assert.Less(t, duration, 5*time.Second)
 	t.Logf("✅ Concurrent operations completed: %d goroutines in %v", numGoroutines, duration)
@@ -209,7 +209,7 @@ func TestResourceUsage(t *testing.T) {
 
 	// Test worker pool memory efficiency
 	workerPool := worker.NewSSHWorkerPool(false)
-	
+
 	// Add multiple workers (simulated)
 	for i := 0; i < 100; i++ {
 		workerID := uuid.New()
@@ -239,7 +239,7 @@ func TestErrorRecovery(t *testing.T) {
 		// These operations should not panic even with errors
 		_ = workerPool.HealthCheck(ctx)
 		_ = workerPool.GetWorkerStats(ctx)
-		
+
 		// Simulate error conditions
 		_, err := workerPool.ExecuteCommand(ctx, uuid.New(), "invalid command")
 		// We expect this to fail, but system should remain stable
@@ -267,17 +267,17 @@ func TestLongRunningOperations(t *testing.T) {
 	// Test continuous health monitoring
 	for i := 0; i < 5; i++ {
 		start := time.Now()
-		
+
 		err := workerPool.HealthCheck(ctx)
 		assert.NoError(t, err)
-		
+
 		_ = workerPool.GetWorkerStats(ctx)
-		
+
 		duration := time.Since(start)
-		
+
 		// Each health check should complete quickly
 		assert.Less(t, duration, 10*time.Second)
-		
+
 		time.Sleep(1 * time.Second) // Wait between checks
 	}
 

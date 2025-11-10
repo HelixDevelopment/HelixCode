@@ -38,7 +38,7 @@ func (df *DiffFormat) CanHandle(content string) bool {
 		"---",  // Original file marker
 		"+++",  // Modified file marker
 		"@@",   // Hunk marker
-		"diff",  // Diff header
+		"diff", // Diff header
 	}
 
 	markerCount := 0
@@ -92,7 +92,7 @@ func (df *DiffFormat) splitDiffs(content string) []string {
 	for _, line := range lines {
 		// Start of new diff section
 		if strings.HasPrefix(line, "diff ") ||
-		   (strings.HasPrefix(line, "--- ") && currentSection.Len() > 0) {
+			(strings.HasPrefix(line, "--- ") && currentSection.Len() > 0) {
 			if currentSection.Len() > 0 {
 				sections = append(sections, currentSection.String())
 				currentSection.Reset()
@@ -140,9 +140,9 @@ func (df *DiffFormat) parseSingleDiff(content string) (*FileEdit, error) {
 	}
 
 	edit := &FileEdit{
-		FilePath:   filePath,
-		Operation:  EditOperationUpdate,
-		Metadata:   map[string]interface{}{
+		FilePath:  filePath,
+		Operation: EditOperationUpdate,
+		Metadata: map[string]interface{}{
 			"format": "diff",
 			"hunks":  hunks,
 		},
@@ -153,11 +153,11 @@ func (df *DiffFormat) parseSingleDiff(content string) (*FileEdit, error) {
 
 // Hunk represents a diff hunk
 type Hunk struct {
-	OldStart  int
-	OldCount  int
-	NewStart  int
-	NewCount  int
-	Lines     []string
+	OldStart int
+	OldCount int
+	NewStart int
+	NewCount int
+	Lines    []string
 }
 
 // parseHunks parses diff hunks from content

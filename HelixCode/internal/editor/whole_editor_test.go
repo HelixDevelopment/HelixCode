@@ -290,8 +290,8 @@ nested:
 			expectError: false,
 		},
 		{
-			name: "Invalid - tabs",
-			content: "key: value\n\tindented: wrong",
+			name:        "Invalid - tabs",
+			content:     "key: value\n\tindented: wrong",
 			expectError: true,
 		},
 		{
@@ -393,49 +393,49 @@ func TestWholeEditorGetFileStats(t *testing.T) {
 	editor := NewWholeEditor()
 
 	tests := []struct {
-		name         string
-		oldContent   string
-		newContent   string
-		expectedOld  int
-		expectedNew  int
-		expectedAdd  int
-		expectedDel  int
+		name        string
+		oldContent  string
+		newContent  string
+		expectedOld int
+		expectedNew int
+		expectedAdd int
+		expectedDel int
 	}{
 		{
-			name:         "Same line count",
-			oldContent:   "line1\nline2\nline3",
-			newContent:   "new1\nnew2\nnew3",
-			expectedOld:  3,
-			expectedNew:  3,
-			expectedAdd:  0,
-			expectedDel:  0,
+			name:        "Same line count",
+			oldContent:  "line1\nline2\nline3",
+			newContent:  "new1\nnew2\nnew3",
+			expectedOld: 3,
+			expectedNew: 3,
+			expectedAdd: 0,
+			expectedDel: 0,
 		},
 		{
-			name:         "Lines added",
-			oldContent:   "line1\nline2",
-			newContent:   "line1\nline2\nline3\nline4",
-			expectedOld:  2,
-			expectedNew:  4,
-			expectedAdd:  2,
-			expectedDel:  -2,
+			name:        "Lines added",
+			oldContent:  "line1\nline2",
+			newContent:  "line1\nline2\nline3\nline4",
+			expectedOld: 2,
+			expectedNew: 4,
+			expectedAdd: 2,
+			expectedDel: -2,
 		},
 		{
-			name:         "Lines removed",
-			oldContent:   "line1\nline2\nline3\nline4",
-			newContent:   "line1\nline2",
-			expectedOld:  4,
-			expectedNew:  2,
-			expectedAdd:  -2,
-			expectedDel:  2,
+			name:        "Lines removed",
+			oldContent:  "line1\nline2\nline3\nline4",
+			newContent:  "line1\nline2",
+			expectedOld: 4,
+			expectedNew: 2,
+			expectedAdd: -2,
+			expectedDel: 2,
 		},
 		{
-			name:         "Empty to content",
-			oldContent:   "",
-			newContent:   "line1\nline2",
-			expectedOld:  1,
-			expectedNew:  2,
-			expectedAdd:  1,
-			expectedDel:  -1,
+			name:        "Empty to content",
+			oldContent:  "",
+			newContent:  "line1\nline2",
+			expectedOld: 1,
+			expectedNew: 2,
+			expectedAdd: 1,
+			expectedDel: -1,
 		},
 	}
 

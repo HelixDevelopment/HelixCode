@@ -10,63 +10,63 @@ import (
 
 // WebTools provides web search and fetching capabilities
 type WebTools struct {
-	config        *Config
-	searchEngine  *SearchEngine
-	fetcher       *Fetcher
-	parser        *Parser
-	cacheManager  *CacheManager
-	rateLimiter   *RateLimiter
-	httpClient    *http.Client
-	mu            sync.RWMutex
+	config       *Config
+	searchEngine *SearchEngine
+	fetcher      *Fetcher
+	parser       *Parser
+	cacheManager *CacheManager
+	rateLimiter  *RateLimiter
+	httpClient   *http.Client
+	mu           sync.RWMutex
 }
 
 // Config contains web tools configuration
 type Config struct {
 	// Search configuration
-	DefaultProvider   SearchProvider
-	GoogleAPIKey      string
-	GoogleCSEID       string
-	BingAPIKey        string
-	MaxSearchResults  int
-	SearchTimeout     time.Duration
+	DefaultProvider  SearchProvider
+	GoogleAPIKey     string
+	GoogleCSEID      string
+	BingAPIKey       string
+	MaxSearchResults int
+	SearchTimeout    time.Duration
 
 	// Fetch configuration
-	FetchTimeout      time.Duration
-	MaxContentSize    int64
-	FollowRedirects   bool
-	MaxRedirects      int
-	UserAgents        []string
+	FetchTimeout    time.Duration
+	MaxContentSize  int64
+	FollowRedirects bool
+	MaxRedirects    int
+	UserAgents      []string
 
 	// Parsing configuration
-	RemoveScripts     bool
-	RemoveStyles      bool
-	RemoveNavigation  bool
-	ExtractMetadata   bool
+	RemoveScripts    bool
+	RemoveStyles     bool
+	RemoveNavigation bool
+	ExtractMetadata  bool
 
 	// Caching configuration
-	CacheEnabled      bool
-	CacheTTL          time.Duration
-	CacheDir          string
-	MaxCacheSize      int64
+	CacheEnabled bool
+	CacheTTL     time.Duration
+	CacheDir     string
+	MaxCacheSize int64
 
 	// Rate limiting
-	RateLimitEnabled  bool
+	RateLimitEnabled bool
 
 	// Security
-	BlockedDomains    []string
-	AllowPrivateIPs   bool
+	BlockedDomains  []string
+	AllowPrivateIPs bool
 }
 
 // DefaultConfig returns default configuration
 func DefaultConfig() *Config {
 	return &Config{
-		DefaultProvider:   ProviderDuckDuckGo,
-		MaxSearchResults:  10,
-		SearchTimeout:     30 * time.Second,
-		FetchTimeout:      30 * time.Second,
-		MaxContentSize:    10 * 1024 * 1024, // 10 MB
-		FollowRedirects:   true,
-		MaxRedirects:      10,
+		DefaultProvider:  ProviderDuckDuckGo,
+		MaxSearchResults: 10,
+		SearchTimeout:    30 * time.Second,
+		FetchTimeout:     30 * time.Second,
+		MaxContentSize:   10 * 1024 * 1024, // 10 MB
+		FollowRedirects:  true,
+		MaxRedirects:     10,
 		UserAgents: []string{
 			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
 			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -84,7 +84,7 @@ func DefaultConfig() *Config {
 			"*.onion",
 			"*.i2p",
 		},
-		AllowPrivateIPs:  false,
+		AllowPrivateIPs: false,
 	}
 }
 

@@ -53,12 +53,12 @@ func TestSelectFormatForModel(t *testing.T) {
 
 func TestGetModelCapability(t *testing.T) {
 	tests := []struct {
-		name          string
-		modelName     string
-		expectDiff    bool
-		expectSearch  bool
-		expectLines   bool
-		expectWhole   bool
+		name         string
+		modelName    string
+		expectDiff   bool
+		expectSearch bool
+		expectLines  bool
+		expectWhole  bool
 	}{
 		{
 			name:         "GPT-4",
@@ -116,10 +116,10 @@ func TestGetModelCapability(t *testing.T) {
 
 func TestSupportsFormat(t *testing.T) {
 	tests := []struct {
-		name        string
-		modelName   string
-		format      EditFormat
-		expectTrue  bool
+		name       string
+		modelName  string
+		format     EditFormat
+		expectTrue bool
 	}{
 		{"GPT-4 supports diff", "gpt-4", EditFormatDiff, true},
 		{"GPT-4 supports search/replace", "gpt-4", EditFormatSearchReplace, true},
@@ -240,12 +240,12 @@ func TestSelectFormatByComplexity(t *testing.T) {
 
 func TestRecommendFormat(t *testing.T) {
 	tests := []struct {
-		name             string
-		modelName        string
-		fileSize         int64
-		editComplexity   FormatComplexity
-		expectedFormat   EditFormat
-		minConfidence    float64
+		name           string
+		modelName      string
+		fileSize       int64
+		editComplexity FormatComplexity
+		expectedFormat EditFormat
+		minConfidence  float64
 	}{
 		{
 			name:           "Small file, preferred format",

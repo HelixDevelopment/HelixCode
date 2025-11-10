@@ -14,8 +14,8 @@ type NetworkMode int
 
 const (
 	NetworkFull NetworkMode = iota // Full network access
-	NetworkNone                     // No network access
-	NetworkHost                     // Host network only
+	NetworkNone                    // No network access
+	NetworkHost                    // Host network only
 )
 
 func (n NetworkMode) String() string {
@@ -249,7 +249,7 @@ func DefaultSandboxConfig() *SandboxConfig {
 		},
 		Resources: ResourceLimits{
 			MaxMemory:    500 * 1024 * 1024, // 500 MB
-			MaxCPU:       0,                  // Unlimited
+			MaxCPU:       0,                 // Unlimited
 			MaxProcesses: 20,
 			MaxFileSize:  100 * 1024 * 1024, // 100 MB
 			MaxOpenFiles: 1024,

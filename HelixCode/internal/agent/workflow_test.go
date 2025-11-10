@@ -263,13 +263,13 @@ type mockWorkflowAgent struct {
 	executeFunc  func(context.Context, *task.Task) (*task.Result, error)
 }
 
-func (m *mockWorkflowAgent) ID() string                       { return m.id }
-func (m *mockWorkflowAgent) Type() AgentType                  { return m.agentType }
-func (m *mockWorkflowAgent) Name() string                     { return "Mock Agent" }
-func (m *mockWorkflowAgent) Status() AgentStatus              { return StatusIdle }
-func (m *mockWorkflowAgent) Capabilities() []Capability       { return m.capabilities }
-func (m *mockWorkflowAgent) CanHandle(t *task.Task) bool      { return true }
-func (m *mockWorkflowAgent) Health() *HealthCheck             { return &HealthCheck{} }
+func (m *mockWorkflowAgent) ID() string                         { return m.id }
+func (m *mockWorkflowAgent) Type() AgentType                    { return m.agentType }
+func (m *mockWorkflowAgent) Name() string                       { return "Mock Agent" }
+func (m *mockWorkflowAgent) Status() AgentStatus                { return StatusIdle }
+func (m *mockWorkflowAgent) Capabilities() []Capability         { return m.capabilities }
+func (m *mockWorkflowAgent) CanHandle(t *task.Task) bool        { return true }
+func (m *mockWorkflowAgent) Health() *HealthCheck               { return &HealthCheck{} }
 func (m *mockWorkflowAgent) Shutdown(ctx context.Context) error { return nil }
 func (m *mockWorkflowAgent) Initialize(ctx context.Context, config *AgentConfig) error {
 	return nil

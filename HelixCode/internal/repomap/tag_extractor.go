@@ -12,30 +12,30 @@ import (
 type SymbolType string
 
 const (
-	SymbolTypeFunction   SymbolType = "function"
-	SymbolTypeMethod     SymbolType = "method"
-	SymbolTypeClass      SymbolType = "class"
-	SymbolTypeInterface  SymbolType = "interface"
-	SymbolTypeStruct     SymbolType = "struct"
-	SymbolTypeEnum       SymbolType = "enum"
-	SymbolTypeTrait      SymbolType = "trait"
-	SymbolTypeModule     SymbolType = "module"
-	SymbolTypeVariable   SymbolType = "variable"
-	SymbolTypeConstant   SymbolType = "constant"
-	SymbolTypeImport     SymbolType = "import"
-	SymbolTypeExport     SymbolType = "export"
+	SymbolTypeFunction  SymbolType = "function"
+	SymbolTypeMethod    SymbolType = "method"
+	SymbolTypeClass     SymbolType = "class"
+	SymbolTypeInterface SymbolType = "interface"
+	SymbolTypeStruct    SymbolType = "struct"
+	SymbolTypeEnum      SymbolType = "enum"
+	SymbolTypeTrait     SymbolType = "trait"
+	SymbolTypeModule    SymbolType = "module"
+	SymbolTypeVariable  SymbolType = "variable"
+	SymbolTypeConstant  SymbolType = "constant"
+	SymbolTypeImport    SymbolType = "import"
+	SymbolTypeExport    SymbolType = "export"
 )
 
 // Symbol represents a code symbol (function, class, method, etc.)
 type Symbol struct {
-	Name       string
-	Type       SymbolType
-	FilePath   string
-	LineStart  int
-	LineEnd    int
-	Signature  string
-	Docstring  string
-	Parent     string // For methods, the class/struct they belong to
+	Name      string
+	Type      SymbolType
+	FilePath  string
+	LineStart int
+	LineEnd   int
+	Signature string
+	Docstring string
+	Parent    string // For methods, the class/struct they belong to
 }
 
 // TagExtractor extracts symbols from syntax trees

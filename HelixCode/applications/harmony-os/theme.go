@@ -78,16 +78,16 @@ var (
 	HarmonyTheme = Theme{
 		Name:       "Harmony",
 		IsDark:     true,
-		Primary:    "#FF6B35",  // Warm orange
-		Secondary:  "#F7931E",  // Golden orange
-		Accent:     "#FDB462",  // Light amber
+		Primary:    "#FF6B35", // Warm orange
+		Secondary:  "#F7931E", // Golden orange
+		Accent:     "#FDB462", // Light amber
 		Text:       "#FFFFFF",
-		Background: "#1A1512",  // Dark warm brown
-		Border:     "#3D2A1F",  // Medium warm brown
-		Success:    "#52C41A",  // Green
-		Warning:    "#FAAD14",  // Amber
-		Error:      "#FF4D4F",  // Red
-		Info:       "#1890FF",  // Blue
+		Background: "#1A1512", // Dark warm brown
+		Border:     "#3D2A1F", // Medium warm brown
+		Success:    "#52C41A", // Green
+		Warning:    "#FAAD14", // Amber
+		Error:      "#FF4D4F", // Red
+		Info:       "#1890FF", // Blue
 	}
 )
 
@@ -303,9 +303,9 @@ func (ct *CustomTheme) darken(c color.Color, factor float32) color.Color {
 
 // ThemeManager manages theme switching
 type ThemeManager struct {
-	themes        map[string]*Theme
-	currentTheme  string
-	customTheme   *CustomTheme
+	themes       map[string]*Theme
+	currentTheme string
+	customTheme  *CustomTheme
 }
 
 // NewThemeManager creates a new theme manager

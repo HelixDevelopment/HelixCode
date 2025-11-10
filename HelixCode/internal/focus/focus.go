@@ -52,16 +52,16 @@ type Focus struct {
 func NewFocus(focusType FocusType, target string) *Focus {
 	now := time.Now()
 	return &Focus{
-		ID:          generateFocusID(focusType, target),
-		Type:        focusType,
-		Target:      target,
-		Priority:    PriorityNormal,
-		Context:     make(map[string]interface{}),
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		Children:    make([]*Focus, 0),
-		Tags:        make([]string, 0),
-		Metadata:    make(map[string]string),
+		ID:        generateFocusID(focusType, target),
+		Type:      focusType,
+		Target:    target,
+		Priority:  PriorityNormal,
+		Context:   make(map[string]interface{}),
+		CreatedAt: now,
+		UpdatedAt: now,
+		Children:  make([]*Focus, 0),
+		Tags:      make([]string, 0),
+		Metadata:  make(map[string]string),
 	}
 }
 

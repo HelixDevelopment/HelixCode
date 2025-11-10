@@ -240,13 +240,13 @@ func (a *AudioRecorder) writeAudioFile() error {
 
 	// Write fmt chunk
 	file.WriteString("fmt ")
-	binary.Write(file, binary.LittleEndian, uint32(16))           // Chunk size
-	binary.Write(file, binary.LittleEndian, uint16(1))            // PCM format
+	binary.Write(file, binary.LittleEndian, uint32(16)) // Chunk size
+	binary.Write(file, binary.LittleEndian, uint16(1))  // PCM format
 	binary.Write(file, binary.LittleEndian, uint16(a.config.Channels))
 	binary.Write(file, binary.LittleEndian, uint32(a.config.SampleRate))
 	binary.Write(file, binary.LittleEndian, uint32(a.config.SampleRate*a.config.Channels*2))
 	binary.Write(file, binary.LittleEndian, uint16(a.config.Channels*2))
-	binary.Write(file, binary.LittleEndian, uint16(16))          // Bits per sample
+	binary.Write(file, binary.LittleEndian, uint16(16)) // Bits per sample
 
 	// Write data chunk
 	file.WriteString("data")

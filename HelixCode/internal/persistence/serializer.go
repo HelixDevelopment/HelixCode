@@ -11,9 +11,9 @@ import (
 type Format string
 
 const (
-	FormatJSON       Format = "json"        // JSON format
-	FormatJSONGzip   Format = "json.gz"     // Compressed JSON
-	FormatBinary     Format = "bin"         // Binary format (future)
+	FormatJSON     Format = "json"    // JSON format
+	FormatJSONGzip Format = "json.gz" // Compressed JSON
+	FormatBinary   Format = "bin"     // Binary format (future)
 )
 
 // Serializer handles serialization and deserialization

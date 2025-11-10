@@ -317,8 +317,8 @@ func (a *DebuggingAgent) applyFix(ctx context.Context, filePath string, fix stri
 	}
 
 	return map[string]interface{}{
-		"status":     "success",
-		"file_path":  filePath,
+		"status":      "success",
+		"file_path":   filePath,
 		"fix_applied": fix,
 	}, nil
 }
@@ -410,8 +410,8 @@ func (a *DebuggingAgent) Collaborate(ctx context.Context, agents []agent.Agent, 
 				task.PriorityHigh,
 			)
 			testTask.Input = map[string]interface{}{
-				"file_path":      myResult.Output["file_path"],
-				"execute_tests":  true,
+				"file_path":     myResult.Output["file_path"],
+				"execute_tests": true,
 			}
 
 			testResult, err := other.Execute(ctx, testTask)

@@ -37,43 +37,43 @@ func (s SwitchMode) IsValid() bool {
 // Config contains vision auto-switch configuration
 type Config struct {
 	// Detection settings
-	EnableAutoDetect   bool             `yaml:"enable_auto_detect" json:"enable_auto_detect"`
-	DetectionMethods   []DetectionMethod `yaml:"detection_methods" json:"detection_methods"`
-	ContentInspection  bool             `yaml:"content_inspection" json:"content_inspection"`
+	EnableAutoDetect  bool              `yaml:"enable_auto_detect" json:"enable_auto_detect"`
+	DetectionMethods  []DetectionMethod `yaml:"detection_methods" json:"detection_methods"`
+	ContentInspection bool              `yaml:"content_inspection" json:"content_inspection"`
 
 	// Switch behavior
-	SwitchMode         SwitchMode       `yaml:"switch_mode" json:"switch_mode"`
-	RequireConfirm     bool             `yaml:"require_confirm" json:"require_confirm"`
-	FallbackModel      string           `yaml:"fallback_model" json:"fallback_model"`
-	AllowDowngrade     bool             `yaml:"allow_downgrade" json:"allow_downgrade"`
+	SwitchMode     SwitchMode `yaml:"switch_mode" json:"switch_mode"`
+	RequireConfirm bool       `yaml:"require_confirm" json:"require_confirm"`
+	FallbackModel  string     `yaml:"fallback_model" json:"fallback_model"`
+	AllowDowngrade bool       `yaml:"allow_downgrade" json:"allow_downgrade"`
 
 	// Model preferences
-	PreferredVisionModel string         `yaml:"preferred_vision_model" json:"preferred_vision_model"`
-	ModelPriority       []string        `yaml:"model_priority" json:"model_priority"`
-	ProviderPreference  []string        `yaml:"provider_preference" json:"provider_preference"`
+	PreferredVisionModel string   `yaml:"preferred_vision_model" json:"preferred_vision_model"`
+	ModelPriority        []string `yaml:"model_priority" json:"model_priority"`
+	ProviderPreference   []string `yaml:"provider_preference" json:"provider_preference"`
 
 	// Revert settings
-	AutoRevert         bool             `yaml:"auto_revert" json:"auto_revert"`
-	RevertDelay        time.Duration    `yaml:"revert_delay" json:"revert_delay"`
-	KeepForSession     bool             `yaml:"keep_for_session" json:"keep_for_session"`
+	AutoRevert     bool          `yaml:"auto_revert" json:"auto_revert"`
+	RevertDelay    time.Duration `yaml:"revert_delay" json:"revert_delay"`
+	KeepForSession bool          `yaml:"keep_for_session" json:"keep_for_session"`
 }
 
 // DetectionConfig configures image detection
 type DetectionConfig struct {
-	Methods           []DetectionMethod `yaml:"methods" json:"methods"`
-	SupportedFormats  []string         `yaml:"supported_formats" json:"supported_formats"`
-	MaxFileSize       int64            `yaml:"max_file_size" json:"max_file_size"`
-	InspectContent    bool             `yaml:"inspect_content" json:"inspect_content"`
-	URLPatterns       []string         `yaml:"url_patterns" json:"url_patterns"`
+	Methods          []DetectionMethod `yaml:"methods" json:"methods"`
+	SupportedFormats []string          `yaml:"supported_formats" json:"supported_formats"`
+	MaxFileSize      int64             `yaml:"max_file_size" json:"max_file_size"`
+	InspectContent   bool              `yaml:"inspect_content" json:"inspect_content"`
+	URLPatterns      []string          `yaml:"url_patterns" json:"url_patterns"`
 }
 
 // SwitchConfig configures switching behavior
 type SwitchConfig struct {
-	Mode              SwitchMode    `yaml:"mode" json:"mode"`
-	RequireConfirm    bool          `yaml:"require_confirm" json:"require_confirm"`
-	AutoRevert        bool          `yaml:"auto_revert" json:"auto_revert"`
-	RevertDelay       time.Duration `yaml:"revert_delay" json:"revert_delay"`
-	MaxSwitchesPerSession int       `yaml:"max_switches_per_session" json:"max_switches_per_session"`
+	Mode                  SwitchMode    `yaml:"mode" json:"mode"`
+	RequireConfirm        bool          `yaml:"require_confirm" json:"require_confirm"`
+	AutoRevert            bool          `yaml:"auto_revert" json:"auto_revert"`
+	RevertDelay           time.Duration `yaml:"revert_delay" json:"revert_delay"`
+	MaxSwitchesPerSession int           `yaml:"max_switches_per_session" json:"max_switches_per_session"`
 }
 
 // DefaultConfig returns default configuration
@@ -101,9 +101,9 @@ func DefaultConfig() *Config {
 			"openai",
 			"google",
 		},
-		AutoRevert:      false,
-		RevertDelay:     5 * time.Minute,
-		KeepForSession:  true,
+		AutoRevert:     false,
+		RevertDelay:    5 * time.Minute,
+		KeepForSession: true,
 	}
 }
 

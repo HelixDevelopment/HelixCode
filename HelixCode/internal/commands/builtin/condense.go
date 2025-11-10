@@ -88,13 +88,13 @@ func (c *CondenseCommand) Execute(ctx context.Context, cmdCtx *commands.CommandC
 		{
 			Type: "condense_history",
 			Data: map[string]interface{}{
-				"total_messages":   totalMessages,
-				"keep_last":        keepMessages,
-				"condense_count":   condenseCount,
-				"preserve_code":    preserveCode,
-				"preserve_errors":  preserveErrors,
-				"target_ratio":     ratio,
-				"session_id":       cmdCtx.SessionID,
+				"total_messages":  totalMessages,
+				"keep_last":       keepMessages,
+				"condense_count":  condenseCount,
+				"preserve_code":   preserveCode,
+				"preserve_errors": preserveErrors,
+				"target_ratio":    ratio,
+				"session_id":      cmdCtx.SessionID,
 			},
 		},
 	}

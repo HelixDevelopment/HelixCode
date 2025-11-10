@@ -24,13 +24,13 @@ type Coordinator struct {
 
 // CoordinatorConfig holds coordinator configuration
 type CoordinatorConfig struct {
-	MaxConcurrentTasks int
-	TaskTimeout        time.Duration
-	EnableCollaboration bool
-	ConflictResolution ResolutionMethod
-	EnableResilience   bool          // Enable circuit breakers and retries
-	FailureThreshold   int           // Circuit breaker failure threshold
-	SuccessThreshold   int           // Circuit breaker success threshold
+	MaxConcurrentTasks    int
+	TaskTimeout           time.Duration
+	EnableCollaboration   bool
+	ConflictResolution    ResolutionMethod
+	EnableResilience      bool          // Enable circuit breakers and retries
+	FailureThreshold      int           // Circuit breaker failure threshold
+	SuccessThreshold      int           // Circuit breaker success threshold
 	CircuitBreakerTimeout time.Duration // Circuit breaker timeout
 }
 
@@ -38,13 +38,13 @@ type CoordinatorConfig struct {
 func NewCoordinator(config *CoordinatorConfig) *Coordinator {
 	if config == nil {
 		config = &CoordinatorConfig{
-			MaxConcurrentTasks: 10,
-			TaskTimeout:        30 * time.Minute,
-			EnableCollaboration: true,
-			ConflictResolution: ResolutionMethodVoting,
-			EnableResilience:   true,
-			FailureThreshold:   5,
-			SuccessThreshold:   2,
+			MaxConcurrentTasks:    10,
+			TaskTimeout:           30 * time.Minute,
+			EnableCollaboration:   true,
+			ConflictResolution:    ResolutionMethodVoting,
+			EnableResilience:      true,
+			FailureThreshold:      5,
+			SuccessThreshold:      2,
 			CircuitBreakerTimeout: 60 * time.Second,
 		}
 	}

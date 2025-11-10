@@ -98,10 +98,10 @@ func NewCompressionEngine(provider llm.Provider) *CompressionEngine {
 		keepPinned: true,
 	}
 	ce.strategies[StrategySemanticSummarization] = &SemanticSummarizationStrategy{
-		llmClient:      llmClient,
-		summaryLength:  200,
-		chunkSize:      5000,
-		preserveTypes:  []MessageType{TypeCommand, TypeError, TypeToolCall},
+		llmClient:     llmClient,
+		summaryLength: 200,
+		chunkSize:     5000,
+		preserveTypes: []MessageType{TypeCommand, TypeError, TypeToolCall},
 	}
 	ce.strategies[StrategyHybrid] = &HybridStrategy{
 		slidingWindow: ce.strategies[StrategySlidingWindow].(*SlidingWindowStrategy),
@@ -256,10 +256,10 @@ func (sws *SlidingWindowStrategy) Estimate(conv *Conversation, policy *Retention
 
 // SemanticSummarizationStrategy uses LLM to summarize old messages
 type SemanticSummarizationStrategy struct {
-	llmClient      LLMClient
-	summaryLength  int
-	chunkSize      int
-	preserveTypes  []MessageType
+	llmClient     LLMClient
+	summaryLength int
+	chunkSize     int
+	preserveTypes []MessageType
 }
 
 // Name implements Strategy
@@ -419,10 +419,10 @@ func (sss *SemanticSummarizationStrategy) summarizeChunk(ctx context.Context, me
 
 	// Create summary message
 	return &Message{
-		ID:        uuid.New().String(),
-		Role:      RoleAssistant,
-		Content:   fmt.Sprintf("[SUMMARY] %s", summary),
-		Timestamp: messages[len(messages)-1].Timestamp,
+		ID:         uuid.New().String(),
+		Role:       RoleAssistant,
+		Content:    fmt.Sprintf("[SUMMARY] %s", summary),
+		Timestamp:  messages[len(messages)-1].Timestamp,
 		TokenCount: (len(summary) + 3) / 4, // Approximate token count
 		Metadata: MessageMetadata{
 			Type:    TypeNormal,

@@ -21,14 +21,14 @@ type QueuedNotification struct {
 
 // NotificationQueue manages a queue of notifications to be sent
 type NotificationQueue struct {
-	queue      []*QueuedNotification
-	mutex      sync.RWMutex
-	engine     *NotificationEngine
-	workers    int
-	stopChan   chan struct{}
-	wg         sync.WaitGroup
-	stats      *QueueStats
-	maxSize    int
+	queue    []*QueuedNotification
+	mutex    sync.RWMutex
+	engine   *NotificationEngine
+	workers  int
+	stopChan chan struct{}
+	wg       sync.WaitGroup
+	stats    *QueueStats
+	maxSize  int
 }
 
 // QueueStats tracks queue statistics

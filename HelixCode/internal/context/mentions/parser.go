@@ -9,14 +9,14 @@ import (
 
 // MentionParser parses and resolves @ mentions in user input
 type MentionParser struct {
-	handlers    map[MentionType]MentionHandler
+	handlers     map[MentionType]MentionHandler
 	mentionRegex *regexp.Regexp
 }
 
 // NewMentionParser creates a new mention parser
 func NewMentionParser() *MentionParser {
 	return &MentionParser{
-		handlers:    make(map[MentionType]MentionHandler),
+		handlers:     make(map[MentionType]MentionHandler),
 		mentionRegex: regexp.MustCompile(`@([a-zA-Z0-9-_]+)(?:\[([^\]]*)\])?(?:\(([^\)]*)\))?`),
 	}
 }

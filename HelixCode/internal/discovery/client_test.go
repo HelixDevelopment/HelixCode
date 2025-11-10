@@ -296,9 +296,9 @@ func TestGetDefaultPort(t *testing.T) {
 		{"api", 8080},
 		{"grpc", 9090},
 		{"metrics", 9100},
-		{"postgres-primary", 5432},  // Keyword match
-		{"redis-cache", 6379},        // Keyword match
-		{"unknown-service", 0},       // No default
+		{"postgres-primary", 5432}, // Keyword match
+		{"redis-cache", 6379},      // Keyword match
+		{"unknown-service", 0},     // No default
 	}
 
 	for _, tt := range tests {

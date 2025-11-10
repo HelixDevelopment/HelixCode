@@ -129,13 +129,13 @@ func (c *ReportBugCommand) Execute(ctx context.Context, cmdCtx *commands.Command
 // collectSystemInfo gathers system information
 func collectSystemInfo() map[string]string {
 	return map[string]string{
-		"go_version":      runtime.Version(),
-		"os":              runtime.GOOS,
-		"arch":            runtime.GOARCH,
-		"num_cpu":         fmt.Sprintf("%d", runtime.NumCPU()),
-		"helix_version":   "0.1.0", // TODO: Get from build info
-		"timestamp":       time.Now().Format(time.RFC3339),
-		"goroutines":      fmt.Sprintf("%d", runtime.NumGoroutine()),
+		"go_version":    runtime.Version(),
+		"os":            runtime.GOOS,
+		"arch":          runtime.GOARCH,
+		"num_cpu":       fmt.Sprintf("%d", runtime.NumCPU()),
+		"helix_version": "0.1.0", // TODO: Get from build info
+		"timestamp":     time.Now().Format(time.RFC3339),
+		"goroutines":    fmt.Sprintf("%d", runtime.NumGoroutine()),
 	}
 }
 

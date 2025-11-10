@@ -472,8 +472,8 @@ func TestMultiStrategyDiscoveryFallback(t *testing.T) {
 		DefaultPorts: map[string]int{
 			"localhost": 80,
 		},
-		EnableRegistry: true,
-		EnableDNS:      true,
+		EnableRegistry:   true,
+		EnableDNS:        true,
 		DiscoveryTimeout: 5 * time.Second,
 		PreferredStrategies: []DiscoveryStrategy{
 			StrategyRegistry,

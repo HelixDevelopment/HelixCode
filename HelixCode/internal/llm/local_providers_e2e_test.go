@@ -19,17 +19,17 @@ import (
 // TestE2EAllLocalProviders tests all local providers end-to-end with mock servers
 func TestE2EAllLocalProviders(t *testing.T) {
 	providers := map[string]func(t *testing.T) Provider{
-		"VLLM":       testE2EVLLMProvider,
-		"LocalAI":     testE2ELocalAIProvider,
-		"FastChat":    testE2EFastChatProvider,
-		"TextGen":     testE2ETextGenProvider,
-		"LM Studio":   testE2ELMStudioProvider,
-		"Jan AI":      testE2EJanProvider,
-		"KoboldAI":    testE2EKoboldAIProvider,
-		"GPT4All":     testE2EGPT4AllProvider,
-		"TabbyAPI":    testE2ETabbyAPIProvider,
-		"MLX":         testE2EMLXProvider,
-		"MistralRS":   testE2EMistralRSProvider,
+		"VLLM":      testE2EVLLMProvider,
+		"LocalAI":   testE2ELocalAIProvider,
+		"FastChat":  testE2EFastChatProvider,
+		"TextGen":   testE2ETextGenProvider,
+		"LM Studio": testE2ELMStudioProvider,
+		"Jan AI":    testE2EJanProvider,
+		"KoboldAI":  testE2EKoboldAIProvider,
+		"GPT4All":   testE2EGPT4AllProvider,
+		"TabbyAPI":  testE2ETabbyAPIProvider,
+		"MLX":       testE2EMLXProvider,
+		"MistralRS": testE2EMistralRSProvider,
 	}
 
 	for name, testFunc := range providers {
@@ -146,9 +146,9 @@ func testE2EVLLMProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "llama-2-7b-chat-hf",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "llama-2-7b-chat-hf",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "vllm",
 					},
 				},
@@ -165,15 +165,15 @@ func testE2EVLLMProvider(t *testing.T) Provider {
 				// Non-streaming response
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(map[string]interface{}{
-					"id": "chat-1",
-					"object": "chat.completion",
+					"id":      "chat-1",
+					"object":  "chat.completion",
 					"created": time.Now().Unix(),
-					"model": "llama-2-7b-chat-hf",
+					"model":   "llama-2-7b-chat-hf",
 					"choices": []map[string]interface{}{
 						{
 							"index": 0,
 							"message": map[string]interface{}{
-								"role": "assistant",
+								"role":    "assistant",
 								"content": "Hello World",
 							},
 							"finish_reason": "stop",
@@ -182,7 +182,7 @@ func testE2EVLLMProvider(t *testing.T) Provider {
 					"usage": map[string]interface{}{
 						"prompt_tokens":     10,
 						"completion_tokens": 5,
-						"total_tokens":     15,
+						"total_tokens":      15,
 					},
 				})
 			}
@@ -193,9 +193,9 @@ func testE2EVLLMProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "llama-2-7b-chat-hf",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "llama-2-7b-chat-hf",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -212,9 +212,9 @@ func testE2ELocalAIProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "gpt-3.5-turbo",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "gpt-3.5-turbo",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "localai",
 					},
 				},
@@ -222,15 +222,15 @@ func testE2ELocalAIProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "gpt-3.5-turbo",
+				"model":   "gpt-3.5-turbo",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from LocalAI",
 						},
 						"finish_reason": "stop",
@@ -239,7 +239,7 @@ func testE2ELocalAIProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -249,9 +249,9 @@ func testE2ELocalAIProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "gpt-3.5-turbo",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "gpt-3.5-turbo",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -268,9 +268,9 @@ func testE2EFastChatProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "vicuna-13b-v1.5",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "vicuna-13b-v1.5",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "fastchat",
 					},
 				},
@@ -278,15 +278,15 @@ func testE2EFastChatProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "vicuna-13b-v1.5",
+				"model":   "vicuna-13b-v1.5",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from FastChat",
 						},
 						"finish_reason": "stop",
@@ -295,7 +295,7 @@ func testE2EFastChatProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -305,9 +305,9 @@ func testE2EFastChatProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "vicuna-13b-v1.5",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "vicuna-13b-v1.5",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -324,9 +324,9 @@ func testE2ETextGenProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "llama-2-7b-chat-hf",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "llama-2-7b-chat-hf",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "textgen",
 					},
 				},
@@ -334,15 +334,15 @@ func testE2ETextGenProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "llama-2-7b-chat-hf",
+				"model":   "llama-2-7b-chat-hf",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from TextGen",
 						},
 						"finish_reason": "stop",
@@ -351,7 +351,7 @@ func testE2ETextGenProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -361,9 +361,9 @@ func testE2ETextGenProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "llama-2-7b-chat-hf",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "llama-2-7b-chat-hf",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -380,9 +380,9 @@ func testE2ELMStudioProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "local-model",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "local-model",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "lmstudio",
 					},
 				},
@@ -390,15 +390,15 @@ func testE2ELMStudioProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "local-model",
+				"model":   "local-model",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from LM Studio",
 						},
 						"finish_reason": "stop",
@@ -407,7 +407,7 @@ func testE2ELMStudioProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -417,9 +417,9 @@ func testE2ELMStudioProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "local-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "local-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -436,9 +436,9 @@ func testE2EJanProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "jan-model",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "jan-model",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "jan",
 					},
 				},
@@ -446,15 +446,15 @@ func testE2EJanProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "jan-model",
+				"model":   "jan-model",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from Jan AI",
 						},
 						"finish_reason": "stop",
@@ -463,7 +463,7 @@ func testE2EJanProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -473,9 +473,9 @@ func testE2EJanProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "jan-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "jan-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -497,7 +497,7 @@ func testE2EKoboldAIProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"results": []map[string]interface{}{
 					{
-						"text": "Hello from KoboldAI",
+						"text":      "Hello from KoboldAI",
 						"generated": true,
 					},
 				},
@@ -509,9 +509,9 @@ func testE2EKoboldAIProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := KoboldAIConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "kobold-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "kobold-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -528,9 +528,9 @@ func testE2EGPT4AllProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "gpt4all-model",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "gpt4all-model",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "gpt4all",
 					},
 				},
@@ -538,15 +538,15 @@ func testE2EGPT4AllProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "gpt4all-model",
+				"model":   "gpt4all-model",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from GPT4All",
 						},
 						"finish_reason": "stop",
@@ -555,7 +555,7 @@ func testE2EGPT4AllProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -565,9 +565,9 @@ func testE2EGPT4AllProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "gpt4all-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "gpt4all-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: false, // GPT4All might not support streaming
 	}
 
@@ -584,9 +584,9 @@ func testE2ETabbyAPIProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "tabby-model",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "tabby-model",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "tabbyapi",
 					},
 				},
@@ -594,15 +594,15 @@ func testE2ETabbyAPIProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "tabby-model",
+				"model":   "tabby-model",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from TabbyAPI",
 						},
 						"finish_reason": "stop",
@@ -611,7 +611,7 @@ func testE2ETabbyAPIProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -621,9 +621,9 @@ func testE2ETabbyAPIProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "tabby-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "tabby-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -640,9 +640,9 @@ func testE2EMLXProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "mlx-model",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "mlx-model",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "mlx",
 					},
 				},
@@ -650,15 +650,15 @@ func testE2EMLXProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "mlx-model",
+				"model":   "mlx-model",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from MLX",
 						},
 						"finish_reason": "stop",
@@ -667,7 +667,7 @@ func testE2EMLXProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -677,9 +677,9 @@ func testE2EMLXProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "mlx-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "mlx-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 
@@ -696,9 +696,9 @@ func testE2EMistralRSProvider(t *testing.T) Provider {
 			json.NewEncoder(w).Encode(map[string]interface{}{
 				"data": []map[string]interface{}{
 					{
-						"id":      "mistral-model",
-						"object":  "model",
-						"created": time.Now().Unix(),
+						"id":       "mistral-model",
+						"object":   "model",
+						"created":  time.Now().Unix(),
 						"owned_by": "mistralrs",
 					},
 				},
@@ -706,15 +706,15 @@ func testE2EMistralRSProvider(t *testing.T) Provider {
 		case "/v1/chat/completions":
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(map[string]interface{}{
-				"id": "chat-1",
-				"object": "chat.completion",
+				"id":      "chat-1",
+				"object":  "chat.completion",
 				"created": time.Now().Unix(),
-				"model": "mistral-model",
+				"model":   "mistral-model",
 				"choices": []map[string]interface{}{
 					{
 						"index": 0,
 						"message": map[string]interface{}{
-							"role": "assistant",
+							"role":    "assistant",
 							"content": "Hello from MistralRS",
 						},
 						"finish_reason": "stop",
@@ -723,7 +723,7 @@ func testE2EMistralRSProvider(t *testing.T) Provider {
 				"usage": map[string]interface{}{
 					"prompt_tokens":     10,
 					"completion_tokens": 5,
-					"total_tokens":     15,
+					"total_tokens":      15,
 				},
 			})
 		default:
@@ -733,9 +733,9 @@ func testE2EMistralRSProvider(t *testing.T) Provider {
 	t.Cleanup(server.Close)
 
 	config := OpenAICompatibleConfig{
-		BaseURL:         server.URL,
-		DefaultModel:    "mistral-model",
-		Timeout:         30 * time.Second,
+		BaseURL:          server.URL,
+		DefaultModel:     "mistral-model",
+		Timeout:          30 * time.Second,
 		StreamingSupport: true,
 	}
 

@@ -6,17 +6,17 @@ import (
 
 // Snapshot represents a workspace snapshot
 type Snapshot struct {
-	ID          string           `json:"id"`
-	StashRef    string           `json:"stash_ref"`    // Git stash reference
-	StashIndex  int              `json:"stash_index"`  // Index in stash list
-	CreatedAt   time.Time        `json:"created_at"`
-	Description string           `json:"description"`
-	TaskID      string           `json:"task_id,omitempty"`
-	Status      SnapshotStatus   `json:"status"`
-	Metadata    *Metadata        `json:"metadata"`
-	Tags        []string         `json:"tags,omitempty"`
-	FileCount   int              `json:"file_count"`
-	Size        int64            `json:"size"` // Approximate size in bytes
+	ID          string         `json:"id"`
+	StashRef    string         `json:"stash_ref"`   // Git stash reference
+	StashIndex  int            `json:"stash_index"` // Index in stash list
+	CreatedAt   time.Time      `json:"created_at"`
+	Description string         `json:"description"`
+	TaskID      string         `json:"task_id,omitempty"`
+	Status      SnapshotStatus `json:"status"`
+	Metadata    *Metadata      `json:"metadata"`
+	Tags        []string       `json:"tags,omitempty"`
+	FileCount   int            `json:"file_count"`
+	Size        int64          `json:"size"` // Approximate size in bytes
 }
 
 // SnapshotStatus represents snapshot state
@@ -62,11 +62,11 @@ type CreateOptions struct {
 
 // Comparison represents a comparison between two snapshots
 type Comparison struct {
-	From       *Snapshot    `json:"from"`
-	To         *Snapshot    `json:"to"`
-	Summary    *Summary     `json:"summary"`
-	FileDiffs  []*FileDiff  `json:"file_diffs"`
-	Statistics *Statistics  `json:"statistics"`
+	From       *Snapshot   `json:"from"`
+	To         *Snapshot   `json:"to"`
+	Summary    *Summary    `json:"summary"`
+	FileDiffs  []*FileDiff `json:"file_diffs"`
+	Statistics *Statistics `json:"statistics"`
 }
 
 // Summary provides high-level comparison information
@@ -109,28 +109,28 @@ type Statistics struct {
 
 // RestoreOptions specifies restoration behavior
 type RestoreOptions struct {
-	CreateBackup bool   `json:"create_backup"` // Create backup before restore
-	DryRun       bool   `json:"dry_run"`       // Preview without applying
-	Force        bool   `json:"force"`         // Force restore (skip checks)
-	KeepIndex    bool   `json:"keep_index"`    // Keep current index (staged changes)
+	CreateBackup bool `json:"create_backup"` // Create backup before restore
+	DryRun       bool `json:"dry_run"`       // Preview without applying
+	Force        bool `json:"force"`         // Force restore (skip checks)
+	KeepIndex    bool `json:"keep_index"`    // Keep current index (staged changes)
 }
 
 // RestoreResult contains restoration results
 type RestoreResult struct {
-	Success          bool       `json:"success"`
-	BackupSnapshot   *Snapshot  `json:"backup_snapshot,omitempty"`
-	FilesRestored    []string   `json:"files_restored"`
-	ConflictFiles    []string   `json:"conflict_files,omitempty"`
-	Errors           []string   `json:"errors,omitempty"`
-	Duration         time.Duration `json:"duration"`
+	Success        bool          `json:"success"`
+	BackupSnapshot *Snapshot     `json:"backup_snapshot,omitempty"`
+	FilesRestored  []string      `json:"files_restored"`
+	ConflictFiles  []string      `json:"conflict_files,omitempty"`
+	Errors         []string      `json:"errors,omitempty"`
+	Duration       time.Duration `json:"duration"`
 }
 
 // Filter for querying snapshots
 type Filter struct {
-	TaskID    string         `json:"task_id,omitempty"`
-	Tags      []string       `json:"tags,omitempty"`
-	Status    SnapshotStatus `json:"status,omitempty"`
-	FromDate  time.Time      `json:"from_date,omitempty"`
-	ToDate    time.Time      `json:"to_date,omitempty"`
-	Limit     int            `json:"limit,omitempty"`
+	TaskID   string         `json:"task_id,omitempty"`
+	Tags     []string       `json:"tags,omitempty"`
+	Status   SnapshotStatus `json:"status,omitempty"`
+	FromDate time.Time      `json:"from_date,omitempty"`
+	ToDate   time.Time      `json:"to_date,omitempty"`
+	Limit    int            `json:"limit,omitempty"`
 }

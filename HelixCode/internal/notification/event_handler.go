@@ -142,12 +142,12 @@ func (h *EventNotificationHandler) createWorkflowCompletedNotification(evt event
 		Type:     NotificationTypeSuccess,
 		Priority: NotificationPriorityMedium,
 		Metadata: map[string]interface{}{
-			"event_id":     evt.ID,
-			"event_type":   string(evt.Type),
-			"workflow_id":  workflowID,
+			"event_id":      evt.ID,
+			"event_type":    string(evt.Type),
+			"workflow_id":   workflowID,
 			"workflow_name": workflowName,
-			"project_id":   evt.ProjectID,
-			"user_id":      evt.UserID,
+			"project_id":    evt.ProjectID,
+			"user_id":       evt.UserID,
 		},
 	}
 }
@@ -187,11 +187,11 @@ func (h *EventNotificationHandler) createWorkerDisconnectedNotification(evt even
 		Type:     NotificationTypeWarning,
 		Priority: NotificationPriorityMedium,
 		Metadata: map[string]interface{}{
-			"event_id":  evt.ID,
+			"event_id":   evt.ID,
 			"event_type": string(evt.Type),
-			"worker_id": workerID,
-			"host":      workerHost,
-			"reason":    reason,
+			"worker_id":  workerID,
+			"host":       workerHost,
+			"reason":     reason,
 		},
 	}
 }
@@ -228,10 +228,10 @@ func (h *EventNotificationHandler) createSystemErrorNotification(evt event.Event
 		Type:     NotificationTypeError,
 		Priority: NotificationPriorityUrgent,
 		Metadata: map[string]interface{}{
-			"event_id":  evt.ID,
+			"event_id":   evt.ID,
 			"event_type": string(evt.Type),
-			"component": component,
-			"error":     errorMsg,
+			"component":  component,
+			"error":      errorMsg,
 		},
 	}
 }
@@ -250,9 +250,9 @@ func (h *EventNotificationHandler) createSystemStartupNotification(evt event.Eve
 		Type:     NotificationTypeInfo,
 		Priority: NotificationPriorityLow,
 		Metadata: map[string]interface{}{
-			"event_id":  evt.ID,
+			"event_id":   evt.ID,
 			"event_type": string(evt.Type),
-			"version":   version,
+			"version":    version,
 		},
 	}
 }
@@ -266,9 +266,9 @@ func (h *EventNotificationHandler) createSystemShutdownNotification(evt event.Ev
 		Type:     NotificationTypeWarning,
 		Priority: NotificationPriorityMedium,
 		Metadata: map[string]interface{}{
-			"event_id":  evt.ID,
+			"event_id":   evt.ID,
 			"event_type": string(evt.Type),
-			"reason":    reason,
+			"reason":     reason,
 		},
 	}
 }

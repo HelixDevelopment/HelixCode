@@ -65,7 +65,7 @@ type DiffHunk struct {
 
 // DiffLine represents a line in a diff hunk
 type DiffLine struct {
-	Type    byte   // '+', '-', or ' '
+	Type    byte // '+', '-', or ' '
 	Content string
 }
 

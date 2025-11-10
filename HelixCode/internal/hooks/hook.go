@@ -10,19 +10,19 @@ import (
 type HookType string
 
 const (
-	HookTypeBeforeTask  HookType = "before_task"   // Before task execution
-	HookTypeAfterTask   HookType = "after_task"    // After task execution
-	HookTypeBeforeLLM   HookType = "before_llm"    // Before LLM call
-	HookTypeAfterLLM    HookType = "after_llm"     // After LLM call
-	HookTypeBeforeEdit  HookType = "before_edit"   // Before file edit
-	HookTypeAfterEdit   HookType = "after_edit"    // After file edit
-	HookTypeBeforeBuild HookType = "before_build"  // Before build
-	HookTypeAfterBuild  HookType = "after_build"   // After build
-	HookTypeBeforeTest  HookType = "before_test"   // Before test run
-	HookTypeAfterTest   HookType = "after_test"    // After test run
-	HookTypeOnError     HookType = "on_error"      // On error occurrence
-	HookTypeOnSuccess   HookType = "on_success"    // On success
-	HookTypeCustom      HookType = "custom"        // Custom hook
+	HookTypeBeforeTask  HookType = "before_task"  // Before task execution
+	HookTypeAfterTask   HookType = "after_task"   // After task execution
+	HookTypeBeforeLLM   HookType = "before_llm"   // Before LLM call
+	HookTypeAfterLLM    HookType = "after_llm"    // After LLM call
+	HookTypeBeforeEdit  HookType = "before_edit"  // Before file edit
+	HookTypeAfterEdit   HookType = "after_edit"   // After file edit
+	HookTypeBeforeBuild HookType = "before_build" // Before build
+	HookTypeAfterBuild  HookType = "after_build"  // After build
+	HookTypeBeforeTest  HookType = "before_test"  // Before test run
+	HookTypeAfterTest   HookType = "after_test"   // After test run
+	HookTypeOnError     HookType = "on_error"     // On error occurrence
+	HookTypeOnSuccess   HookType = "on_success"   // On success
+	HookTypeCustom      HookType = "custom"       // Custom hook
 )
 
 // HookPriority determines execution order (higher = earlier)
@@ -53,35 +53,35 @@ type HookFunc func(ctx context.Context, event *Event) error
 
 // Hook represents a hook that can be executed in response to events
 type Hook struct {
-	ID          string                 // Unique identifier
-	Name        string                 // Human-readable name
-	Type        HookType               // Type of hook event
-	Description string                 // Hook description
-	Handler     HookFunc               // Handler function
-	Priority    HookPriority           // Execution priority
-	Async       bool                   // Execute asynchronously
-	Timeout     time.Duration          // Execution timeout (0 = no timeout)
-	Condition   func(*Event) bool      // Optional condition to check before execution
-	Tags        []string               // Tags for categorization
-	Metadata    map[string]string      // Custom metadata
-	Enabled     bool                   // Whether hook is enabled
-	CreatedAt   time.Time              // When hook was created
+	ID          string            // Unique identifier
+	Name        string            // Human-readable name
+	Type        HookType          // Type of hook event
+	Description string            // Hook description
+	Handler     HookFunc          // Handler function
+	Priority    HookPriority      // Execution priority
+	Async       bool              // Execute asynchronously
+	Timeout     time.Duration     // Execution timeout (0 = no timeout)
+	Condition   func(*Event) bool // Optional condition to check before execution
+	Tags        []string          // Tags for categorization
+	Metadata    map[string]string // Custom metadata
+	Enabled     bool              // Whether hook is enabled
+	CreatedAt   time.Time         // When hook was created
 }
 
 // NewHook creates a new hook
 func NewHook(name string, hookType HookType, handler HookFunc) *Hook {
 	return &Hook{
-		ID:          generateHookID(name, hookType),
-		Name:        name,
-		Type:        hookType,
-		Handler:     handler,
-		Priority:    PriorityNormal,
-		Async:       false,
-		Timeout:     0,
-		Tags:        make([]string, 0),
-		Metadata:    make(map[string]string),
-		Enabled:     true,
-		CreatedAt:   time.Now(),
+		ID:        generateHookID(name, hookType),
+		Name:      name,
+		Type:      hookType,
+		Handler:   handler,
+		Priority:  PriorityNormal,
+		Async:     false,
+		Timeout:   0,
+		Tags:      make([]string, 0),
+		Metadata:  make(map[string]string),
+		Enabled:   true,
+		CreatedAt: time.Now(),
 	}
 }
 

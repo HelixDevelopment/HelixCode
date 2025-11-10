@@ -89,10 +89,10 @@ func (askf *AskFormat) Parse(ctx context.Context, content string) ([]*FileEdit, 
 
 // Question represents a clarification question
 type Question struct {
-	FilePath    string
+	FilePath     string
 	QuestionText string
-	Context     string
-	Options     []string
+	Context      string
+	Options      []string
 }
 
 // Proposal represents a proposed change
@@ -124,9 +124,9 @@ func (askf *AskFormat) parseQuestions(content string) []*Question {
 		}
 
 		questions = append(questions, &Question{
-			FilePath:    filePath,
+			FilePath:     filePath,
 			QuestionText: questionText,
-			Context:     context,
+			Context:      context,
 		})
 	}
 

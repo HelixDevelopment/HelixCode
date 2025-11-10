@@ -21,18 +21,18 @@ import (
 
 // Server represents the HTTP server
 type Server struct {
-	config         *config.Config
-	db             *database.Database
-	redis          *redis.Client
-	auth           *auth.AuthService
-	llm            *llm.Provider
-	mcp            *mcp.MCPServer
-	notification   *notification.NotificationEngine
-	taskManager    *task.DatabaseManager
-	workerManager  *worker.DatabaseManager
-	server         *http.Server
-	router         *gin.Engine
-	startTime      time.Time
+	config        *config.Config
+	db            *database.Database
+	redis         *redis.Client
+	auth          *auth.AuthService
+	llm           *llm.Provider
+	mcp           *mcp.MCPServer
+	notification  *notification.NotificationEngine
+	taskManager   *task.DatabaseManager
+	workerManager *worker.DatabaseManager
+	server        *http.Server
+	router        *gin.Engine
+	startTime     time.Time
 }
 
 // New creates a new HTTP server
@@ -83,16 +83,16 @@ func New(cfg *config.Config, db *database.Database, rds *redis.Client) *Server {
 	}
 
 	server := &Server{
-		config:         cfg,
-		db:             db,
-		redis:          rds,
-		auth:           authService,
-		mcp:            mcpServer,
-		notification:   notificationEngine,
-		taskManager:    taskMgr,
-		workerManager:  workerMgr,
-		router:         router,
-		startTime:      time.Now(),
+		config:        cfg,
+		db:            db,
+		redis:         rds,
+		auth:          authService,
+		mcp:           mcpServer,
+		notification:  notificationEngine,
+		taskManager:   taskMgr,
+		workerManager: workerMgr,
+		router:        router,
+		startTime:     time.Now(),
 	}
 
 	// Setup routes

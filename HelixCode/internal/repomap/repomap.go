@@ -255,8 +255,8 @@ func (rm *RepoMap) discoverFiles() ([]string, error) {
 			// Skip common directories to ignore
 			name := info.Name()
 			if name == ".git" || name == "node_modules" || name == "vendor" ||
-			   name == ".helix" || name == "__pycache__" || name == "dist" ||
-			   name == "build" || name == "target" {
+				name == ".helix" || name == "__pycache__" || name == "dist" ||
+				name == "build" || name == "target" {
 				return filepath.SkipDir
 			}
 			return nil

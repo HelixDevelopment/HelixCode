@@ -9,13 +9,13 @@ import (
 type MentionType string
 
 const (
-	MentionTypeFile     MentionType = "file"
-	MentionTypeFolder   MentionType = "folder"
-	MentionTypeURL      MentionType = "url"
+	MentionTypeFile       MentionType = "file"
+	MentionTypeFolder     MentionType = "folder"
+	MentionTypeURL        MentionType = "url"
 	MentionTypeGitChanges MentionType = "git-changes"
-	MentionTypeCommit   MentionType = "commit"
-	MentionTypeTerminal MentionType = "terminal"
-	MentionTypeProblems MentionType = "problems"
+	MentionTypeCommit     MentionType = "commit"
+	MentionTypeTerminal   MentionType = "terminal"
+	MentionTypeProblems   MentionType = "problems"
 )
 
 // MentionContext contains the resolved context for a mention

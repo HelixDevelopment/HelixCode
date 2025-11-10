@@ -9,12 +9,12 @@ import (
 
 // Problem represents a workspace problem (error, warning, etc.)
 type Problem struct {
-	Type     string // error, warning, info
-	File     string
-	Line     int
-	Column   int
-	Message  string
-	Source   string // compiler, linter, test, etc.
+	Type    string // error, warning, info
+	File    string
+	Line    int
+	Column  int
+	Message string
+	Source  string // compiler, linter, test, etc.
 }
 
 // ProblemsMentionHandler handles @problems mentions

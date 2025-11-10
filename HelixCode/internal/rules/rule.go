@@ -36,13 +36,13 @@ const (
 type RuleCategory string
 
 const (
-	RuleCategoryStyle       RuleCategory = "style"       // Code style rules
-	RuleCategoryArchitecture RuleCategory = "architecture" // Architecture guidelines
-	RuleCategorySecurity    RuleCategory = "security"    // Security requirements
-	RuleCategoryTesting     RuleCategory = "testing"     // Testing guidelines
+	RuleCategoryStyle         RuleCategory = "style"         // Code style rules
+	RuleCategoryArchitecture  RuleCategory = "architecture"  // Architecture guidelines
+	RuleCategorySecurity      RuleCategory = "security"      // Security requirements
+	RuleCategoryTesting       RuleCategory = "testing"       // Testing guidelines
 	RuleCategoryDocumentation RuleCategory = "documentation" // Documentation rules
-	RuleCategoryPerformance RuleCategory = "performance" // Performance guidelines
-	RuleCategoryGeneral     RuleCategory = "general"     // General guidelines
+	RuleCategoryPerformance   RuleCategory = "performance"   // Performance guidelines
+	RuleCategoryGeneral       RuleCategory = "general"       // General guidelines
 )
 
 // RuleScope defines where a rule applies

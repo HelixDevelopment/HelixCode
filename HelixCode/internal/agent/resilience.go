@@ -14,8 +14,8 @@ import (
 type CircuitBreakerState string
 
 const (
-	CircuitBreakerClosed   CircuitBreakerState = "closed"   // Normal operation
-	CircuitBreakerOpen     CircuitBreakerState = "open"     // Blocking requests
+	CircuitBreakerClosed   CircuitBreakerState = "closed"    // Normal operation
+	CircuitBreakerOpen     CircuitBreakerState = "open"      // Blocking requests
 	CircuitBreakerHalfOpen CircuitBreakerState = "half_open" // Testing if service recovered
 )
 

@@ -16,71 +16,71 @@ import (
 type ModelFormat string
 
 const (
-	FormatGGUF    ModelFormat = "gguf"
-	FormatGPTQ    ModelFormat = "gptq"
-	FormatAWQ     ModelFormat = "awq"
-	FormatBF16    ModelFormat = "bf16"
-	FormatFP16    ModelFormat = "fp16"
-	FormatINT8    ModelFormat = "int8"
-	FormatINT4    ModelFormat = "int4"
-	FormatHF      ModelFormat = "hf" // HuggingFace format
+	FormatGGUF ModelFormat = "gguf"
+	FormatGPTQ ModelFormat = "gptq"
+	FormatAWQ  ModelFormat = "awq"
+	FormatBF16 ModelFormat = "bf16"
+	FormatFP16 ModelFormat = "fp16"
+	FormatINT8 ModelFormat = "int8"
+	FormatINT4 ModelFormat = "int4"
+	FormatHF   ModelFormat = "hf" // HuggingFace format
 )
 
 // ModelDownloadSource represents a source for downloading models
 type ModelDownloadSource struct {
-	Name         string            `json:"name"`
-	URL          string            `json:"url"`
-	Formats      []ModelFormat    `json:"formats"`
-	Headers      map[string]string `json:"headers"`
-	Description  string            `json:"description"`
-	Priority     int               `json:"priority"` // Lower number = higher priority
+	Name        string            `json:"name"`
+	URL         string            `json:"url"`
+	Formats     []ModelFormat     `json:"formats"`
+	Headers     map[string]string `json:"headers"`
+	Description string            `json:"description"`
+	Priority    int               `json:"priority"` // Lower number = higher priority
 }
 
 // DownloadableModelInfo represents a downloadable model
 type DownloadableModelInfo struct {
-	ID              string             `json:"id"`
-	Name            string             `json:"name"`
-	Description     string             `json:"description"`
-	Provider        string             `json:"provider"`
-	AvailableFormats []ModelFormat      `json:"available_formats"`
-	DefaultFormat   ModelFormat        `json:"default_format"`
-	Sources         []ModelDownloadSource `json:"sources"`
-	ModelSize       string             `json:"model_size"` // "7B", "13B", "34B", "70B"
-	ContextSize     int                `json:"context_size"`
-	Requirements    ModelRequirements  `json:"requirements"`
-	DownloadURLs    map[ModelFormat]string `json:"download_urls"`
-	LastUpdated     time.Time         `json:"last_updated"`
-	Tags            []string           `json:"tags"`
+	ID               string                 `json:"id"`
+	Name             string                 `json:"name"`
+	Description      string                 `json:"description"`
+	Provider         string                 `json:"provider"`
+	AvailableFormats []ModelFormat          `json:"available_formats"`
+	DefaultFormat    ModelFormat            `json:"default_format"`
+	Sources          []ModelDownloadSource  `json:"sources"`
+	ModelSize        string                 `json:"model_size"` // "7B", "13B", "34B", "70B"
+	ContextSize      int                    `json:"context_size"`
+	Requirements     ModelRequirements      `json:"requirements"`
+	DownloadURLs     map[ModelFormat]string `json:"download_urls"`
+	LastUpdated      time.Time              `json:"last_updated"`
+	Tags             []string               `json:"tags"`
 }
 
 // ModelRequirements specifies hardware requirements
 type ModelRequirements struct {
-	MinRAM         string   `json:"min_ram"`
-	MinVRAM        string   `json:"min_vram,omitempty"`
-	RecommendedVRAM string  `json:"recommended_vram,omitempty"`
-	SupportedOS    []string `json:"supported_os"`
-	GPURequired    bool     `json:"gpu_required"`
-	CPUOnly        bool     `json:"cpu_only"`
+	MinRAM          string   `json:"min_ram"`
+	MinVRAM         string   `json:"min_vram,omitempty"`
+	RecommendedVRAM string   `json:"recommended_vram,omitempty"`
+	SupportedOS     []string `json:"supported_os"`
+	GPURequired     bool     `json:"gpu_required"`
+	CPUOnly         bool     `json:"cpu_only"`
 }
 
 // ModelDownloadRequest represents a model download request
 type ModelDownloadRequest struct {
-	ModelID      string     `json:"model_id"`
-	Format       ModelFormat `json:"format"`
-	TargetProvider string   `json:"target_provider"`
-	TargetPath   string     `json:"target_path,omitempty"`
-	ForceDownload bool      `json:"force_download"`
+	ModelID        string      `json:"model_id"`
+	Format         ModelFormat `json:"format"`
+	TargetProvider string      `json:"target_provider"`
+	TargetPath     string      `json:"target_path,omitempty"`
+	ForceDownload  bool        `json:"force_download"`
 }
 
 // ModelDownloadProgress represents download progress
 type ModelDownloadProgress struct {
-	ModelID      string    `json:"model_id"`
-	Format       ModelFormat `json:"format"`
-	Progress     float64   `json:"progress"` // 0.0 to 1.0
-	Speed        int64     `json:"speed"`    // bytes per second
-	ETA          int64     `json:"eta"`      // estimated time remaining in seconds
-	Error        string    `json:"error,omitempty"`
-	StartTime    time.Time `json:"start_time"`
+	ModelID   string      `json:"model_id"`
+	Format    ModelFormat `json:"format"`
+	Progress  float64     `json:"progress"` // 0.0 to 1.0
+	Speed     int64       `json:"speed"`    // bytes per second
+	ETA       int64       `json:"eta"`      // estimated time remaining in seconds
+	Error     string      `json:"error,omitempty"`
+	StartTime time.Time   `json:"start_time"`
 }
 
 // ModelDownloadManager handles model downloading and format conversion
@@ -95,12 +95,12 @@ type ModelDownloadManager struct {
 
 // ConversionTool represents a format conversion tool
 type ConversionTool struct {
-	Name         string            `json:"name"`
-	Command      string            `json:"command"`
-	Args         []string          `json:"args"`
-	SourceFormats []ModelFormat    `json:"source_formats"`
-	TargetFormat ModelFormat       `json:"target_format"`
-	EnvVars      map[string]string `json:"env_vars"`
+	Name          string            `json:"name"`
+	Command       string            `json:"command"`
+	Args          []string          `json:"args"`
+	SourceFormats []ModelFormat     `json:"source_formats"`
+	TargetFormat  ModelFormat       `json:"target_format"`
+	EnvVars       map[string]string `json:"env_vars"`
 }
 
 // NewModelDownloadManager creates a new model download manager
@@ -116,10 +116,10 @@ func NewModelDownloadManager(baseDir string) *ModelDownloadManager {
 
 	// Ensure base directory exists
 	os.MkdirAll(baseDir, 0755)
-	
+
 	// Load model registry
 	m.loadModelRegistry()
-	
+
 	return m
 }
 
@@ -136,14 +136,14 @@ func (m *ModelDownloadManager) GetAvailableModels() []*DownloadableModelInfo {
 func (m *ModelDownloadManager) SearchModels(query string) []*DownloadableModelInfo {
 	query = strings.ToLower(query)
 	var results []*DownloadableModelInfo
-	
+
 	for _, model := range m.availableModels {
 		if strings.Contains(strings.ToLower(model.Name), query) ||
-		   strings.Contains(strings.ToLower(model.Description), query) {
+			strings.Contains(strings.ToLower(model.Description), query) {
 			results = append(results, model)
 			continue
 		}
-		
+
 		for _, tag := range model.Tags {
 			if strings.Contains(strings.ToLower(tag), query) {
 				results = append(results, model)
@@ -151,7 +151,7 @@ func (m *ModelDownloadManager) SearchModels(query string) []*DownloadableModelIn
 			}
 		}
 	}
-	
+
 	return results
 }
 
@@ -170,10 +170,10 @@ func (m *ModelDownloadManager) GetCompatibleFormats(provider string, modelID str
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Get supported formats for provider
 	supportedFormats := m.getProviderSupportedFormats(provider)
-	
+
 	// Find intersection
 	var compatible []ModelFormat
 	for _, format := range model.AvailableFormats {
@@ -183,7 +183,7 @@ func (m *ModelDownloadManager) GetCompatibleFormats(provider string, modelID str
 			}
 		}
 	}
-	
+
 	return compatible, nil
 }
 
@@ -193,7 +193,7 @@ func (m *ModelDownloadManager) DownloadModel(ctx context.Context, req ModelDownl
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Check if format is available
 	formatAvailable := false
 	for _, format := range model.AvailableFormats {
@@ -202,7 +202,7 @@ func (m *ModelDownloadManager) DownloadModel(ctx context.Context, req ModelDownl
 			break
 		}
 	}
-	
+
 	if !formatAvailable {
 		// Check if we can convert from another format
 		canConvert := false
@@ -224,27 +224,27 @@ func (m *ModelDownloadManager) DownloadModel(ctx context.Context, req ModelDownl
 				break
 			}
 		}
-		
+
 		if !canConvert {
 			return nil, fmt.Errorf("format %s not available for model %s and no conversion path found", req.Format, req.ModelID)
 		}
 	}
-	
+
 	// Create progress channel
 	progressChan := make(chan ModelDownloadProgress)
-	
+
 	// Start download
 	go m.downloadModelWithProgress(ctx, model, req, progressChan)
-	
+
 	return progressChan, nil
 }
 
 // downloadModelWithProgress handles the actual download with progress reporting
 func (m *ModelDownloadManager) downloadModelWithProgress(ctx context.Context, model *DownloadableModelInfo, req ModelDownloadRequest, progressChan chan<- ModelDownloadProgress) {
 	defer close(progressChan)
-	
+
 	progressKey := fmt.Sprintf("%s:%s", req.ModelID, req.Format)
-	
+
 	// Initialize progress
 	progress := &ModelDownloadProgress{
 		ModelID:   req.ModelID,
@@ -253,10 +253,10 @@ func (m *ModelDownloadManager) downloadModelWithProgress(ctx context.Context, mo
 		StartTime: time.Now(),
 	}
 	m.downloads[progressKey] = progress
-	
+
 	// Send initial progress
 	progressChan <- *progress
-	
+
 	// Find download source
 	downloadURL, err := m.getDownloadURL(model, req.Format)
 	if err != nil {
@@ -264,13 +264,13 @@ func (m *ModelDownloadManager) downloadModelWithProgress(ctx context.Context, mo
 		progressChan <- *progress
 		return
 	}
-	
+
 	// Determine target path
 	targetPath := req.TargetPath
 	if targetPath == "" {
 		targetPath = m.getModelPath(req.TargetProvider, req.ModelID, req.Format)
 	}
-	
+
 	// Ensure directory exists
 	dir := filepath.Dir(targetPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -278,14 +278,14 @@ func (m *ModelDownloadManager) downloadModelWithProgress(ctx context.Context, mo
 		progressChan <- *progress
 		return
 	}
-	
+
 	// Download file
 	if err := m.downloadFile(ctx, downloadURL, targetPath, progress); err != nil {
 		progress.Error = err.Error()
 		progressChan <- *progress
 		return
 	}
-	
+
 	// Convert if necessary
 	if !m.isFormatAvailableDirectly(model, req.Format) {
 		conversionProgress := m.convertModel(targetPath, req.Format, progressChan)
@@ -295,11 +295,11 @@ func (m *ModelDownloadManager) downloadModelWithProgress(ctx context.Context, mo
 			return
 		}
 	}
-	
+
 	// Complete
 	progress.Progress = 1.0
 	progressChan <- *progress
-	
+
 	log.Printf("✅ Successfully downloaded model %s in %s format", req.ModelID, req.Format)
 }
 
@@ -309,35 +309,35 @@ func (m *ModelDownloadManager) downloadFile(ctx context.Context, url, targetPath
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	resp, err := m.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to download: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download failed with status: %s", resp.Status)
 	}
-	
+
 	// Get file size
 	totalSize := resp.ContentLength
 	if totalSize <= 0 {
 		totalSize = 0 // Unknown size
 	}
-	
+
 	// Create file
 	file, err := os.Create(targetPath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
 	defer file.Close()
-	
+
 	// Download with progress
 	var downloaded int64 = 0
 	buffer := make([]byte, 32*1024) // 32KB buffer
 	startTime := time.Now()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -350,12 +350,12 @@ func (m *ModelDownloadManager) downloadFile(ctx context.Context, url, targetPath
 					return fmt.Errorf("failed to write file: %w", err)
 				}
 				downloaded += int64(wrote)
-				
+
 				// Update progress
 				if totalSize > 0 {
 					progress.Progress = float64(downloaded) / float64(totalSize)
 				}
-				
+
 				// Calculate speed and ETA
 				elapsed := time.Since(startTime).Seconds()
 				if elapsed > 0 {
@@ -365,11 +365,11 @@ func (m *ModelDownloadManager) downloadFile(ctx context.Context, url, targetPath
 					}
 				}
 			}
-			
+
 			if err == io.EOF {
 				return nil
 			}
-			
+
 			if err != nil {
 				return fmt.Errorf("download error: %w", err)
 			}
@@ -380,7 +380,7 @@ func (m *ModelDownloadManager) downloadFile(ctx context.Context, url, targetPath
 // convertModel converts a model to the target format
 func (m *ModelDownloadManager) convertModel(inputPath string, targetFormat ModelFormat, progressChan chan<- ModelDownloadProgress) *ModelDownloadProgress {
 	progress := &ModelDownloadProgress{}
-	
+
 	// Find conversion tool
 	var tool *ConversionTool
 	for _, t := range m.conversionTools {
@@ -389,29 +389,29 @@ func (m *ModelDownloadManager) convertModel(inputPath string, targetFormat Model
 			break
 		}
 	}
-	
+
 	if tool == nil {
 		progress.Error = fmt.Sprintf("no conversion tool found for format %s", targetFormat)
 		return progress
 	}
-	
+
 	// This is a placeholder for actual conversion logic
 	// In a real implementation, you would call the conversion tool
 	log.Printf("Converting model to %s format using %s", targetFormat, tool.Name)
-	
+
 	// Simulate conversion progress
 	progress.Progress = 0.5
 	progressChan <- *progress
-	
+
 	// TODO: Implement actual conversion using tools like:
 	// - llama.cpp for GGUF conversion
 	// - AutoGPTQ for GPTQ conversion
 	// - AutoAWQ for AWQ conversion
 	// - transformers library for BF16/FP16 conversion
-	
+
 	progress.Progress = 1.0
 	progressChan <- *progress
-	
+
 	return progress
 }
 
@@ -422,7 +422,7 @@ func (m *ModelDownloadManager) getDownloadURL(model *DownloadableModelInfo, form
 	if url, exists := model.DownloadURLs[format]; exists {
 		return url, nil
 	}
-	
+
 	// Find source that provides this format
 	for _, source := range model.Sources {
 		for _, f := range source.Formats {
@@ -432,7 +432,7 @@ func (m *ModelDownloadManager) getDownloadURL(model *DownloadableModelInfo, form
 			}
 		}
 	}
-	
+
 	return "", fmt.Errorf("no download source found for format %s", format)
 }
 
@@ -472,76 +472,76 @@ func (m *ModelDownloadManager) getProviderSupportedFormats(provider string) []Mo
 func (m *ModelDownloadManager) loadModelRegistry() {
 	// In a real implementation, this would load from a JSON file or API
 	// For now, we'll add some popular models
-	
+
 	m.availableModels["llama-3-8b-instruct"] = &DownloadableModelInfo{
-		ID:              "llama-3-8b-instruct",
-		Name:            "Llama 3 8B Instruct",
-		Description:     "Meta's Llama 3 8B instruction-tuned model",
-		Provider:        "meta",
+		ID:               "llama-3-8b-instruct",
+		Name:             "Llama 3 8B Instruct",
+		Description:      "Meta's Llama 3 8B instruction-tuned model",
+		Provider:         "meta",
 		AvailableFormats: []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF},
-		DefaultFormat:   FormatGGUF,
-		ModelSize:       "8B",
-		ContextSize:     8192,
-		Tags:           []string{"instruct", "chat", "general", "english"},
+		DefaultFormat:    FormatGGUF,
+		ModelSize:        "8B",
+		ContextSize:      8192,
+		Tags:             []string{"instruct", "chat", "general", "english"},
 		DownloadURLs: map[ModelFormat]string{
 			FormatGGUF: "https://huggingface.co/bartowski/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf",
 		},
 		LastUpdated: time.Now(),
 		Requirements: ModelRequirements{
-			MinRAM:         "8GB",
-			MinVRAM:        "6GB",
+			MinRAM:          "8GB",
+			MinVRAM:         "6GB",
 			RecommendedVRAM: "8GB",
-			SupportedOS:    []string{"linux", "darwin", "windows"},
-			GPURequired:    false,
-			CPUOnly:        true,
+			SupportedOS:     []string{"linux", "darwin", "windows"},
+			GPURequired:     false,
+			CPUOnly:         true,
 		},
 	}
-	
+
 	m.availableModels["mistral-7b-instruct"] = &DownloadableModelInfo{
-		ID:              "mistral-7b-instruct",
-		Name:            "Mistral 7B Instruct",
-		Description:     "Mistral AI's 7B instruction-tuned model",
-		Provider:        "mistral",
+		ID:               "mistral-7b-instruct",
+		Name:             "Mistral 7B Instruct",
+		Description:      "Mistral AI's 7B instruction-tuned model",
+		Provider:         "mistral",
 		AvailableFormats: []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF},
-		DefaultFormat:   FormatGGUF,
-		ModelSize:       "7B",
-		ContextSize:     32768,
-		Tags:           []string{"instruct", "chat", "general", "multilingual"},
+		DefaultFormat:    FormatGGUF,
+		ModelSize:        "7B",
+		ContextSize:      32768,
+		Tags:             []string{"instruct", "chat", "general", "multilingual"},
 		DownloadURLs: map[ModelFormat]string{
 			FormatGGUF: "https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/Mistral-7B-Instruct-v0.2-Q4_K_M.gguf",
 		},
 		LastUpdated: time.Now(),
 		Requirements: ModelRequirements{
-			MinRAM:         "8GB",
-			MinVRAM:        "6GB",
+			MinRAM:          "8GB",
+			MinVRAM:         "6GB",
 			RecommendedVRAM: "8GB",
-			SupportedOS:    []string{"linux", "darwin", "windows"},
-			GPURequired:    false,
-			CPUOnly:        true,
+			SupportedOS:     []string{"linux", "darwin", "windows"},
+			GPURequired:     false,
+			CPUOnly:         true,
 		},
 	}
-	
+
 	m.availableModels["codellama-7b-instruct"] = &DownloadableModelInfo{
-		ID:              "codellama-7b-instruct",
-		Name:            "CodeLlama 7B Instruct",
-		Description:     "Meta's CodeLlama 7B instruction-tuned model for code generation",
-		Provider:        "meta",
+		ID:               "codellama-7b-instruct",
+		Name:             "CodeLlama 7B Instruct",
+		Description:      "Meta's CodeLlama 7B instruction-tuned model for code generation",
+		Provider:         "meta",
 		AvailableFormats: []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF},
-		DefaultFormat:   FormatGGUF,
-		ModelSize:       "7B",
-		ContextSize:     16384,
-		Tags:           []string{"instruct", "code", "programming", "development"},
+		DefaultFormat:    FormatGGUF,
+		ModelSize:        "7B",
+		ContextSize:      16384,
+		Tags:             []string{"instruct", "code", "programming", "development"},
 		DownloadURLs: map[ModelFormat]string{
 			FormatGGUF: "https://huggingface.co/bartowski/CodeLlama-7B-Instruct-GGUF/resolve/main/codellama-7b-instruct.Q4_K_M.gguf",
 		},
 		LastUpdated: time.Now(),
 		Requirements: ModelRequirements{
-			MinRAM:         "8GB",
-			MinVRAM:        "6GB",
+			MinRAM:          "8GB",
+			MinVRAM:         "6GB",
 			RecommendedVRAM: "8GB",
-			SupportedOS:    []string{"linux", "darwin", "windows"},
-			GPURequired:    false,
-			CPUOnly:        true,
+			SupportedOS:     []string{"linux", "darwin", "windows"},
+			GPURequired:     false,
+			CPUOnly:         true,
 		},
 	}
 }
@@ -575,28 +575,28 @@ func initializeDownloadSources() []ModelDownloadSource {
 func initializeConversionTools() map[ModelFormat]*ConversionTool {
 	return map[ModelFormat]*ConversionTool{
 		FormatGGUF: {
-			Name:         "llama.cpp",
-			Command:      "python",
-			Args:         []string{"-m", "llama_cpp.convert"},
+			Name:          "llama.cpp",
+			Command:       "python",
+			Args:          []string{"-m", "llama_cpp.convert"},
 			SourceFormats: []ModelFormat{FormatHF, FormatFP16, FormatBF16},
-			TargetFormat: FormatGGUF,
-			EnvVars:      map[string]string{"HF_HUB_DISABLE_TELEMETRY": "1"},
+			TargetFormat:  FormatGGUF,
+			EnvVars:       map[string]string{"HF_HUB_DISABLE_TELEMETRY": "1"},
 		},
 		FormatGPTQ: {
-			Name:         "AutoGPTQ",
-			Command:      "python",
-			Args:         []string{"-m", "auto_gptq"},
+			Name:          "AutoGPTQ",
+			Command:       "python",
+			Args:          []string{"-m", "auto_gptq"},
 			SourceFormats: []ModelFormat{FormatHF, FormatFP16, FormatBF16},
-			TargetFormat: FormatGPTQ,
-			EnvVars:      map[string]string{"HF_HUB_DISABLE_TELEMETRY": "1"},
+			TargetFormat:  FormatGPTQ,
+			EnvVars:       map[string]string{"HF_HUB_DISABLE_TELEMETRY": "1"},
 		},
 		FormatAWQ: {
-			Name:         "AutoAWQ",
-			Command:      "python",
-			Args:         []string{"-m", "awq"},
+			Name:          "AutoAWQ",
+			Command:       "python",
+			Args:          []string{"-m", "awq"},
 			SourceFormats: []ModelFormat{FormatHF, FormatFP16, FormatBF16},
-			TargetFormat: FormatAWQ,
-			EnvVars:      map[string]string{"HF_HUB_DISABLE_TELEMETRY": "1"},
+			TargetFormat:  FormatAWQ,
+			EnvVars:       map[string]string{"HF_HUB_DISABLE_TELEMETRY": "1"},
 		},
 	}
 }

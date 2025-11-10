@@ -24,8 +24,8 @@ import (
 type AzureProvider struct {
 	config             ProviderConfigEntry
 	apiKey             string
-	endpoint           string         // e.g., https://myresource.openai.azure.com
-	apiVersion         string         // e.g., 2025-04-01-preview
+	endpoint           string            // e.g., https://myresource.openai.azure.com
+	apiVersion         string            // e.g., 2025-04-01-preview
 	deploymentMap      map[string]string // model name -> deployment name
 	httpClient         *http.Client
 	models             []ModelInfo
@@ -44,15 +44,15 @@ type EntraTokenProvider struct {
 // Azure API structures - OpenAI-compatible with Azure-specific extensions
 
 type azureRequest struct {
-	Model         string                 `json:"model,omitempty"` // Not used in URL, but can be in body
-	Messages      []azureMessage         `json:"messages"`
-	MaxTokens     int                    `json:"max_tokens,omitempty"`
-	Temperature   float64                `json:"temperature,omitempty"`
-	TopP          float64                `json:"top_p,omitempty"`
-	Stream        bool                   `json:"stream,omitempty"`
-	Tools         []azureTool            `json:"tools,omitempty"`
-	ToolChoice    interface{}            `json:"tool_choice,omitempty"`
-	StopSequences []string               `json:"stop,omitempty"`
+	Model         string         `json:"model,omitempty"` // Not used in URL, but can be in body
+	Messages      []azureMessage `json:"messages"`
+	MaxTokens     int            `json:"max_tokens,omitempty"`
+	Temperature   float64        `json:"temperature,omitempty"`
+	TopP          float64        `json:"top_p,omitempty"`
+	Stream        bool           `json:"stream,omitempty"`
+	Tools         []azureTool    `json:"tools,omitempty"`
+	ToolChoice    interface{}    `json:"tool_choice,omitempty"`
+	StopSequences []string       `json:"stop,omitempty"`
 }
 
 type azureMessage struct {
@@ -62,7 +62,7 @@ type azureMessage struct {
 }
 
 type azureTool struct {
-	Type     string                 `json:"type"`
+	Type     string                  `json:"type"`
 	Function azureFunctionDefinition `json:"function"`
 }
 
@@ -73,14 +73,14 @@ type azureFunctionDefinition struct {
 }
 
 type azureResponse struct {
-	ID                  string                  `json:"id"`
-	Object              string                  `json:"object"`
-	Created             int64                   `json:"created"`
-	Model               string                  `json:"model"`
-	Choices             []azureChoice           `json:"choices"`
-	Usage               azureUsage              `json:"usage"`
-	PromptFilterResults []ContentFilterResult   `json:"prompt_filter_results,omitempty"` // Azure-specific
-	SystemFingerprint   string                  `json:"system_fingerprint,omitempty"`
+	ID                  string                `json:"id"`
+	Object              string                `json:"object"`
+	Created             int64                 `json:"created"`
+	Model               string                `json:"model"`
+	Choices             []azureChoice         `json:"choices"`
+	Usage               azureUsage            `json:"usage"`
+	PromptFilterResults []ContentFilterResult `json:"prompt_filter_results,omitempty"` // Azure-specific
+	SystemFingerprint   string                `json:"system_fingerprint,omitempty"`
 }
 
 type azureChoice struct {
@@ -98,8 +98,8 @@ type azureUsage struct {
 
 // Azure-specific content filtering structures
 type ContentFilterResult struct {
-	PromptIndex          int                   `json:"prompt_index"`
-	ContentFilterResults ContentFilterDetails  `json:"content_filter_results"`
+	PromptIndex          int                  `json:"prompt_index"`
+	ContentFilterResults ContentFilterDetails `json:"content_filter_results"`
 }
 
 type ContentFilterDetails struct {

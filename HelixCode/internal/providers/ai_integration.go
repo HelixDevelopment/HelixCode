@@ -225,10 +225,7 @@ func (ai *AIIntegration) Initialize(ctx context.Context) error {
 	ai.mu.Lock()
 	defer ai.mu.Unlock()
 
-	ai.logger.Info("Initializing AI integration",
-		"default_llm", ai.config.DefaultLLM,
-		"default_memory", ai.config.DefaultMemory,
-		"providers_count", len(ai.config.Providers))
+	ai.logger.Info("Initializing AI integration: default_llm=%s, default_memory=%s, providers_count=%d", ai.config.DefaultLLM, ai.config.DefaultMemory, len(ai.config.Providers))
 
 	// Initialize vector integration
 	if err := ai.vector.Initialize(ctx); err != nil {
@@ -243,23 +240,18 @@ func (ai *AIIntegration) Initialize(ctx context.Context) error {
 	// Initialize AI providers
 	for name, providerConfig := range ai.config.Providers {
 		if !providerConfig.Enabled {
-			ai.logger.Info("Skipping disabled AI provider", "name", name)
+			ai.logger.Info("Skipping disabled AI provider: name=%s", name)
 			continue
 		}
 
 		provider, err := ai.createAIProvider(providerConfig)
 		if err != nil {
-			ai.logger.Error("Failed to create AI provider",
-				"name", name,
-				"error", err)
+			ai.logger.Error("Failed to create AI provider: name=%s, error=%v", name, err)
 			continue
 		}
 
 		ai.providers[name] = provider
-		ai.logger.Info("AI provider created",
-			"name", name,
-			"type", providerConfig.Type,
-			"model", providerConfig.Model)
+		ai.logger.Info("AI provider created: name=%s, type=%s, model=%s", name, providerConfig.Type, providerConfig.Model)
 	}
 
 	// Initialize conversation manager
@@ -323,16 +315,12 @@ func (ai *AIIntegration) GenerateTextWithProvider(ctx context.Context, providerN
 
 	start := time.Now()
 	defer func() {
-		ai.logger.Debug("Text generation completed",
-			"provider", providerName,
-			"duration", time.Since(start))
+		ai.logger.Debug("Text generation completed: provider=%s, duration=%v", providerName, time.Since(start))
 	}()
 
 	result, err := provider.GenerateText(ctx, prompt, options)
 	if err != nil {
-		ai.logger.Error("Text generation failed",
-			"provider", providerName,
-			"error", err)
+		ai.logger.Error("Text generation failed: provider=%s, error=%v", providerName, err)
 		return nil, err
 	}
 
@@ -361,16 +349,12 @@ func (ai *AIIntegration) GenerateChatWithProvider(ctx context.Context, providerN
 
 	start := time.Now()
 	defer func() {
-		ai.logger.Debug("Chat generation completed",
-			"provider", providerName,
-			"duration", time.Since(start))
+		ai.logger.Debug("Chat generation completed: provider=%s, duration=%v", providerName, time.Since(start))
 	}()
 
 	result, err := provider.GenerateChat(ctx, messages, options)
 	if err != nil {
-		ai.logger.Error("Chat generation failed",
-			"provider", providerName,
-			"error", err)
+		ai.logger.Error("Chat generation failed: provider=%s, error=%v", providerName, err)
 		return nil, err
 	}
 

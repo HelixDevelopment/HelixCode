@@ -104,7 +104,7 @@ func (e *Executor) Autocomplete(partial string) []string {
 		return nil
 	}
 
-	partial = partial[1:] // Remove leading /
+	partial = partial[1:]  // Remove leading /
 	partial = partial + "" // ensure string
 
 	matches := make([]string, 0)

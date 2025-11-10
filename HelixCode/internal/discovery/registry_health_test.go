@@ -289,10 +289,10 @@ func TestCheckTCPHealth(t *testing.T) {
 func TestPerformHealthChecks_Integration(t *testing.T) {
 	// Create registry with disabled background health checks
 	config := RegistryConfig{
-		DefaultTTL:             30 * time.Second,
-		CleanupInterval:        10 * time.Second,
-		EnableHealthChecks:     false, // Disable automatic checks
-		HealthCheckInterval:    15 * time.Second,
+		DefaultTTL:          30 * time.Second,
+		CleanupInterval:     10 * time.Second,
+		EnableHealthChecks:  false, // Disable automatic checks
+		HealthCheckInterval: 15 * time.Second,
 	}
 	registry := NewServiceRegistry(config)
 
@@ -358,10 +358,10 @@ func TestPerformHealthChecks_Integration(t *testing.T) {
 // TestPerformHealthChecks_HeartbeatCheck tests heartbeat-based health detection
 func TestPerformHealthChecks_HeartbeatCheck(t *testing.T) {
 	config := RegistryConfig{
-		DefaultTTL:             10 * time.Second,
-		CleanupInterval:        10 * time.Second,
-		EnableHealthChecks:     false,
-		HealthCheckInterval:    15 * time.Second,
+		DefaultTTL:          10 * time.Second,
+		CleanupInterval:     10 * time.Second,
+		EnableHealthChecks:  false,
+		HealthCheckInterval: 15 * time.Second,
 	}
 	registry := NewServiceRegistry(config)
 

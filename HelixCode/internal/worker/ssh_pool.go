@@ -45,28 +45,28 @@ type SSHWorker struct {
 
 // SSHWorkerConfig represents SSH connection configuration for worker pool
 type SSHWorkerConfig struct {
-	Host            string
-	Port            int
-	Username        string
-	PrivateKey      string
-	Password        string
-	KeyPath         string
-	KnownHostsPath  string // Path to known_hosts file
-	HostKeyFingerprint string // Expected host key fingerprint for verification
-	StrictHostKeyChecking bool // Enable strict host key verification
+	Host                  string
+	Port                  int
+	Username              string
+	PrivateKey            string
+	Password              string
+	KeyPath               string
+	KnownHostsPath        string // Path to known_hosts file
+	HostKeyFingerprint    string // Expected host key fingerprint for verification
+	StrictHostKeyChecking bool   // Enable strict host key verification
 }
 
 // HostKeyManager manages SSH host keys for secure connections
 type HostKeyManager struct {
-	knownHosts map[string][]ssh.PublicKey
-	mutex      sync.RWMutex
+	knownHosts     map[string][]ssh.PublicKey
+	mutex          sync.RWMutex
 	knownHostsFile string
 }
 
 // NewHostKeyManager creates a new host key manager
 func NewHostKeyManager(knownHostsFile string) *HostKeyManager {
 	return &HostKeyManager{
-		knownHosts: make(map[string][]ssh.PublicKey),
+		knownHosts:     make(map[string][]ssh.PublicKey),
 		knownHostsFile: knownHostsFile,
 	}
 }
@@ -182,7 +182,7 @@ func (hkm *HostKeyManager) VerifyHostKey() ssh.HostKeyCallback {
 		}
 
 		// First host - allow but log warning
-		log.Printf("WARNING: Accepting unknown host key for %s (type: %s, fingerprint: %s)", 
+		log.Printf("WARNING: Accepting unknown host key for %s (type: %s, fingerprint: %s)",
 			hostname, key.Type(), ssh.FingerprintSHA256(key))
 		return nil
 	}
@@ -202,15 +202,15 @@ func NewSSHWorkerPool(autoInstall bool) *SSHWorkerPool {
 		hostKeys:    NewHostKeyManager(""),
 		isolation:   NewWorkerIsolationManager(),
 	}
-	
+
 	// Load known hosts
 	if err := pool.hostKeys.LoadKnownHosts(); err != nil {
 		log.Printf("Warning: Failed to load known hosts: %v", err)
 	}
-	
+
 	// Start cleanup goroutine for expired sandboxes
 	go pool.startSandboxCleanup()
-	
+
 	return pool
 }
 

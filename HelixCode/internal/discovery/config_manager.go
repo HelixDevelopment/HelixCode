@@ -27,19 +27,19 @@ type DiscoveryConfig struct {
 	EphemeralPortEnd   int
 
 	// Registry settings
-	DefaultTTL           time.Duration
-	CleanupInterval      time.Duration
-	EnableHealthChecks   bool
-	HealthCheckInterval  time.Duration
-	HealthCheckTimeout   time.Duration
-	MaxRetries           int
+	DefaultTTL          time.Duration
+	CleanupInterval     time.Duration
+	EnableHealthChecks  bool
+	HealthCheckInterval time.Duration
+	HealthCheckTimeout  time.Duration
+	MaxRetries          int
 
 	// Broadcast settings
-	BroadcastEnabled         bool
-	MulticastAddress         string
-	AnnouncementInterval     time.Duration
-	DiscoveryTimeout         time.Duration
-	BroadcastTTL             int
+	BroadcastEnabled     bool
+	MulticastAddress     string
+	AnnouncementInterval time.Duration
+	DiscoveryTimeout     time.Duration
+	BroadcastTTL         int
 
 	// Discovery client settings
 	EnableRegistry      bool
@@ -428,20 +428,20 @@ func (cm *ConfigManager) ExportConfig() map[string]interface{} {
 	defer cm.mu.RUnlock()
 
 	return map[string]interface{}{
-		"port_ranges":             cm.config.PortRanges,
-		"reserved_ports":          cm.config.ReservedPorts,
-		"allow_ephemeral":         cm.config.AllowEphemeral,
-		"default_ttl":             cm.config.DefaultTTL.String(),
-		"cleanup_interval":        cm.config.CleanupInterval.String(),
-		"enable_health_checks":    cm.config.EnableHealthChecks,
-		"health_check_interval":   cm.config.HealthCheckInterval.String(),
-		"broadcast_enabled":       cm.config.BroadcastEnabled,
-		"multicast_address":       cm.config.MulticastAddress,
-		"enable_registry":         cm.config.EnableRegistry,
-		"enable_broadcast":        cm.config.EnableBroadcast,
-		"enable_dns":              cm.config.EnableDNS,
-		"preferred_strategies":    cm.config.PreferredStrategies,
-		"max_services":            cm.config.MaxServices,
-		"log_level":               cm.config.LogLevel,
+		"port_ranges":           cm.config.PortRanges,
+		"reserved_ports":        cm.config.ReservedPorts,
+		"allow_ephemeral":       cm.config.AllowEphemeral,
+		"default_ttl":           cm.config.DefaultTTL.String(),
+		"cleanup_interval":      cm.config.CleanupInterval.String(),
+		"enable_health_checks":  cm.config.EnableHealthChecks,
+		"health_check_interval": cm.config.HealthCheckInterval.String(),
+		"broadcast_enabled":     cm.config.BroadcastEnabled,
+		"multicast_address":     cm.config.MulticastAddress,
+		"enable_registry":       cm.config.EnableRegistry,
+		"enable_broadcast":      cm.config.EnableBroadcast,
+		"enable_dns":            cm.config.EnableDNS,
+		"preferred_strategies":  cm.config.PreferredStrategies,
+		"max_services":          cm.config.MaxServices,
+		"log_level":             cm.config.LogLevel,
 	}
 }

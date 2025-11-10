@@ -48,14 +48,14 @@ type SearchEngine struct {
 
 // SearchOptions configures search behavior
 type SearchOptions struct {
-	Provider     SearchProvider
-	MaxResults   int
-	Language     string
-	Country      string
-	SafeSearch   bool
-	TimeRange    TimeRange
-	FileType     string
-	Site         string
+	Provider   SearchProvider
+	MaxResults int
+	Language   string
+	Country    string
+	SafeSearch bool
+	TimeRange  TimeRange
+	FileType   string
+	Site       string
 }
 
 // TimeRange filters by time

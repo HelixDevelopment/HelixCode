@@ -12,19 +12,19 @@ import (
 
 // Manager manages development sessions
 type Manager struct {
-	sessions      map[string]*Session       // All sessions by ID
-	activeSession *Session                  // Currently active session
-	focusManager  *focus.Manager            // Focus chain manager
-	hooksManager  *hooks.Manager            // Hooks manager
-	mu            sync.RWMutex              // Thread-safety
-	onCreate      []SessionCallback         // Callbacks on session creation
-	onStart       []SessionCallback         // Callbacks on session start
-	onPause       []SessionCallback         // Callbacks on session pause
-	onResume      []SessionCallback         // Callbacks on session resume
-	onComplete    []SessionCallback         // Callbacks on session completion
-	onDelete      []SessionCallback         // Callbacks on session deletion
-	onSwitch      []SwitchCallback          // Callbacks on session switch
-	maxHistory    int                       // Maximum sessions to keep
+	sessions      map[string]*Session // All sessions by ID
+	activeSession *Session            // Currently active session
+	focusManager  *focus.Manager      // Focus chain manager
+	hooksManager  *hooks.Manager      // Hooks manager
+	mu            sync.RWMutex        // Thread-safety
+	onCreate      []SessionCallback   // Callbacks on session creation
+	onStart       []SessionCallback   // Callbacks on session start
+	onPause       []SessionCallback   // Callbacks on session pause
+	onResume      []SessionCallback   // Callbacks on session resume
+	onComplete    []SessionCallback   // Callbacks on session completion
+	onDelete      []SessionCallback   // Callbacks on session deletion
+	onSwitch      []SwitchCallback    // Callbacks on session switch
+	maxHistory    int                 // Maximum sessions to keep
 }
 
 // SessionCallback is called for session lifecycle events
@@ -667,10 +667,10 @@ func (m *Manager) emitHook(hookType hooks.HookType, eventName string, session *S
 
 // Statistics contains session statistics
 type Statistics struct {
-	Total           int                // Total sessions
-	ByStatus        map[Status]int     // Count by status
-	ByMode          map[Mode]int       // Count by mode
-	AverageDuration time.Duration      // Average session duration
+	Total           int            // Total sessions
+	ByStatus        map[Status]int // Count by status
+	ByMode          map[Mode]int   // Count by mode
+	AverageDuration time.Duration  // Average session duration
 }
 
 // String returns a string representation of the statistics

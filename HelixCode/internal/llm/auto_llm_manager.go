@@ -18,41 +18,41 @@ import (
 
 // AutoLLMManager provides fully automated, zero-configuration management
 type AutoLLMManager struct {
-	baseDir          string
-	providers         map[string]*AutoProvider
-	healthMonitor     *HealthMonitor
-	loadBalancer      *LoadBalancer
-	backgroundTasks   map[string]*BackgroundTask
-	mutex             sync.RWMutex
-	ctx               context.Context
-	cancel            context.CancelFunc
-	isInitialized      bool
-	isRunning          bool
-	config            *AutoConfig
+	baseDir         string
+	providers       map[string]*AutoProvider
+	healthMonitor   *HealthMonitor
+	loadBalancer    *LoadBalancer
+	backgroundTasks map[string]*BackgroundTask
+	mutex           sync.RWMutex
+	ctx             context.Context
+	cancel          context.CancelFunc
+	isInitialized   bool
+	isRunning       bool
+	config          *AutoConfig
 }
 
 // AutoConfig represents zero-touch configuration
 type AutoConfig struct {
-	Version        string            `json:"version"`
-	Mode           string            `json:"mode"`
-	AutoDiscover    bool              `json:"auto_discover"`
-	AutoInstall    bool              `json:"auto_install"`
-	AutoConfigure  bool              `json:"auto_configure"`
-	AutoStart      bool              `json:"auto_start"`
-	AutoMonitor    bool              `json:"auto_monitor"`
-	AutoUpdate     bool              `json:"auto_update"`
-	Health         HealthConfig        `json:"health"`
-	Performance    PerformanceConfig   `json:"performance"`
-	Security       SecurityConfig     `json:"security"`
-	Updates        UpdateConfig       `json:"updates"`
+	Version       string            `json:"version"`
+	Mode          string            `json:"mode"`
+	AutoDiscover  bool              `json:"auto_discover"`
+	AutoInstall   bool              `json:"auto_install"`
+	AutoConfigure bool              `json:"auto_configure"`
+	AutoStart     bool              `json:"auto_start"`
+	AutoMonitor   bool              `json:"auto_monitor"`
+	AutoUpdate    bool              `json:"auto_update"`
+	Health        HealthConfig      `json:"health"`
+	Performance   PerformanceConfig `json:"performance"`
+	Security      SecurityConfig    `json:"security"`
+	Updates       UpdateConfig      `json:"updates"`
 }
 
 // HealthConfig defines health monitoring configuration
 type HealthConfig struct {
-	CheckInterval    int `json:"check_interval"`
-	AutoRecovery    bool `json:"auto_recovery"`
-	MaxRetries      int  `json:"max_retries"`
-	RetryDelay      int  `json:"retry_delay"`
+	CheckInterval int  `json:"check_interval"`
+	AutoRecovery  bool `json:"auto_recovery"`
+	MaxRetries    int  `json:"max_retries"`
+	RetryDelay    int  `json:"retry_delay"`
 }
 
 // PerformanceConfig defines performance optimization configuration
@@ -66,15 +66,15 @@ type PerformanceConfig struct {
 // SecurityConfig defines security configuration
 type SecurityConfig struct {
 	AutoSandbox      bool `json:"auto_sandbox"`
-	MinPrivileges     bool `json:"min_privileges"`
-	NetworkIsolation  bool `json:"network_isolation"`
-	ResourceLimits    bool `json:"resource_limits"`
+	MinPrivileges    bool `json:"min_privileges"`
+	NetworkIsolation bool `json:"network_isolation"`
+	ResourceLimits   bool `json:"resource_limits"`
 }
 
 // UpdateConfig defines update configuration
 type UpdateConfig struct {
 	AutoCheck       bool `json:"auto_check"`
-	AutoDownload     bool `json:"auto_download"`
+	AutoDownload    bool `json:"auto_download"`
 	AutoInstall     bool `json:"auto_install"`
 	BackupConfig    bool `json:"backup_config"`
 	RollbackEnabled bool `json:"rollback_enabled"`
@@ -83,22 +83,22 @@ type UpdateConfig struct {
 // AutoProvider represents a managed provider
 type AutoProvider struct {
 	LocalLLMProvider
-	Status         string                 `json:"status"`
-	Process        *os.Process            `json:"-"`
-	Config         map[string]interface{} `json:"config"`
-	Health         *HealthStatus          `json:"health"`
-	Metrics        *PerformanceMetrics     `json:"metrics"`
+	Status          string                 `json:"status"`
+	Process         *os.Process            `json:"-"`
+	Config          map[string]interface{} `json:"config"`
+	Health          *HealthStatus          `json:"health"`
+	Metrics         *PerformanceMetrics    `json:"metrics"`
 	LastHealthCheck time.Time              `json:"last_health_check"`
-	RetryCount    int                   `json:"retry_count"`
+	RetryCount      int                    `json:"retry_count"`
 }
 
 // HealthStatus represents provider health
 type HealthStatus struct {
-	Status      string    `json:"status"`
+	Status       string    `json:"status"`
 	ResponseTime int       `json:"response_time"`
-	LastCheck   time.Time `json:"last_check"`
-	Error       string    `json:"error"`
-	IsHealthy   bool      `json:"is_healthy"`
+	LastCheck    time.Time `json:"last_check"`
+	Error        string    `json:"error"`
+	IsHealthy    bool      `json:"is_healthy"`
 }
 
 // PerformanceMetrics represents provider performance
@@ -106,7 +106,7 @@ type PerformanceMetrics struct {
 	TokensPerSecond float64   `json:"tokens_per_second"`
 	MemoryUsage     int64     `json:"memory_usage"`
 	CPUUsage        float64   `json:"cpu_usage"`
-	ActiveRequests   int       `json:"active_requests"`
+	ActiveRequests  int       `json:"active_requests"`
 	TotalRequests   int64     `json:"total_requests"`
 	ErrorRate       float64   `json:"error_rate"`
 	LastUpdated     time.Time `json:"last_updated"`
@@ -114,13 +114,13 @@ type PerformanceMetrics struct {
 
 // BackgroundTask represents a background automation task
 type BackgroundTask struct {
-	ID          string        `json:"id"`
-	Name        string        `json:"name"`
-	Function    func() error `json:"-"`
-	Interval    time.Duration `json:"interval"`
-	LastRun     time.Time     `json:"last_run"`
-	IsRunning   bool          `json:"is_running"`
-	StopChan    chan bool     `json:"-"`
+	ID        string        `json:"id"`
+	Name      string        `json:"name"`
+	Function  func() error  `json:"-"`
+	Interval  time.Duration `json:"interval"`
+	LastRun   time.Time     `json:"last_run"`
+	IsRunning bool          `json:"is_running"`
+	StopChan  chan bool     `json:"-"`
 }
 
 // NewAutoLLMManager creates a new automated LLM manager
@@ -133,15 +133,15 @@ func NewAutoLLMManager(baseDir string) *AutoLLMManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &AutoLLMManager{
-		baseDir:        baseDir,
-		providers:      make(map[string]*AutoProvider),
+		baseDir:         baseDir,
+		providers:       make(map[string]*AutoProvider),
 		backgroundTasks: make(map[string]*BackgroundTask),
-		ctx:            ctx,
-		cancel:         cancel,
+		ctx:             ctx,
+		cancel:          cancel,
 		config: &AutoConfig{
-			Version: "1.0.0",
-			Mode:    "zero_touch",
-			AutoDiscover:   true,
+			Version:       "1.0.0",
+			Mode:          "zero_touch",
+			AutoDiscover:  true,
 			AutoInstall:   true,
 			AutoConfigure: true,
 			AutoStart:     true,
@@ -149,9 +149,9 @@ func NewAutoLLMManager(baseDir string) *AutoLLMManager {
 			AutoUpdate:    true,
 			Health: HealthConfig{
 				CheckInterval: 30,
-				AutoRecovery: true,
-				MaxRetries:   3,
-				RetryDelay:   5,
+				AutoRecovery:  true,
+				MaxRetries:    3,
+				RetryDelay:    5,
 			},
 			Performance: PerformanceConfig{
 				AutoOptimize:   true,
@@ -161,13 +161,13 @@ func NewAutoLLMManager(baseDir string) *AutoLLMManager {
 			},
 			Security: SecurityConfig{
 				AutoSandbox:      true,
-				MinPrivileges:     true,
-				NetworkIsolation:  true,
-				ResourceLimits:    true,
+				MinPrivileges:    true,
+				NetworkIsolation: true,
+				ResourceLimits:   true,
 			},
 			Updates: UpdateConfig{
 				AutoCheck:       true,
-				AutoDownload:     true,
+				AutoDownload:    true,
 				AutoInstall:     true,
 				BackupConfig:    true,
 				RollbackEnabled: true,
@@ -334,8 +334,8 @@ func (m *AutoLLMManager) initializeProviders() error {
 				StartupCmd:   providerDef.StartupCmd,
 				Environment:  providerDef.Environment,
 			},
-			Status:  "not_installed",
-			Config:   make(map[string]interface{}),
+			Status: "not_installed",
+			Config: make(map[string]interface{}),
 			Health: &HealthStatus{
 				Status:    "unknown",
 				IsHealthy: false,
@@ -373,7 +373,7 @@ func (m *AutoLLMManager) autoInstallAllProviders() {
 		}
 
 		log.Printf("📦 Auto-installing %s...", name)
-		
+
 		// Clone repository
 		if err := m.autoCloneProvider(provider); err != nil {
 			log.Printf("❌ Failed to clone %s: %v", name, err)
@@ -401,7 +401,7 @@ func (m *AutoLLMManager) autoInstallAllProviders() {
 
 		m.providers[name].Status = "installed"
 		m.providers[name].LastHealthCheck = time.Now()
-		
+
 		log.Printf("✅ Auto-installed %s", name)
 	}
 
@@ -447,7 +447,7 @@ func (m *AutoLLMManager) autoBuildProvider(provider *AutoProvider) error {
 	// Execute build command
 	cmd := exec.Command("bash", "-c", script)
 	cmd.Dir = provider.DataPath
-	
+
 	// Set environment
 	env := os.Environ()
 	for k, v := range provider.Environment {
@@ -469,13 +469,13 @@ func (m *AutoLLMManager) autoConfigureProvider(provider *AutoProvider) error {
 
 	// Create optimized configuration
 	optimizedConfig := map[string]interface{}{
-		"host":       "127.0.0.1",
-		"port":       provider.DefaultPort,
-		"workers":    1,
-		"timeout":    30,
-		"max_tokens": 4096,
+		"host":        "127.0.0.1",
+		"port":        provider.DefaultPort,
+		"workers":     1,
+		"timeout":     30,
+		"max_tokens":  4096,
 		"temperature": 0.7,
-		"auto_gpu":   true,
+		"auto_gpu":    true,
 		"cpu_offload": true,
 	}
 
@@ -508,7 +508,7 @@ func (m *AutoLLMManager) autoStartAllProviders() {
 		}
 
 		log.Printf("🚀 Auto-starting %s...", name)
-		
+
 		if err := m.autoStartProvider(provider); err != nil {
 			log.Printf("❌ Failed to start %s: %v", name, err)
 			continue
@@ -524,7 +524,7 @@ func (m *AutoLLMManager) autoStartAllProviders() {
 func (m *AutoLLMManager) autoStartProvider(provider *AutoProvider) error {
 	// Create startup command
 	scriptPath := filepath.Join(m.baseDir, "auto-manager", "scripts", strings.ToLower(provider.Name)+".sh")
-	
+
 	// Write startup script
 	var script strings.Builder
 	script.WriteString("#!/bin/bash\n")
@@ -554,7 +554,7 @@ func (m *AutoLLMManager) autoStartProvider(provider *AutoProvider) error {
 
 	// Start provider process
 	cmd := exec.Command("bash", scriptPath)
-	
+
 	// Set environment
 	env := os.Environ()
 	for k, v := range provider.Environment {
@@ -610,7 +610,7 @@ func (m *AutoLLMManager) startBackgroundTasks() error {
 		healthTask := &BackgroundTask{
 			ID:       uuid.New().String(),
 			Name:     "Health Monitor",
-			Function:  m.autoHealthCheck,
+			Function: m.autoHealthCheck,
 			Interval: time.Duration(m.config.Health.CheckInterval) * time.Second,
 			StopChan: make(chan bool),
 		}
@@ -623,7 +623,7 @@ func (m *AutoLLMManager) startBackgroundTasks() error {
 		perfTask := &BackgroundTask{
 			ID:       uuid.New().String(),
 			Name:     "Performance Optimizer",
-			Function:  m.autoPerformanceOptimization,
+			Function: m.autoPerformanceOptimization,
 			Interval: 5 * time.Minute,
 			StopChan: make(chan bool),
 		}
@@ -636,7 +636,7 @@ func (m *AutoLLMManager) startBackgroundTasks() error {
 		updateTask := &BackgroundTask{
 			ID:       uuid.New().String(),
 			Name:     "Update Checker",
-			Function:  m.autoUpdateCheck,
+			Function: m.autoUpdateCheck,
 			Interval: 1 * time.Hour,
 			StopChan: make(chan bool),
 		}
@@ -685,12 +685,12 @@ func (m *AutoLLMManager) autoHealthCheck() error {
 
 		// Perform health check
 		isHealthy, responseTime, err := m.performHealthCheck(provider)
-		
+
 		// Update health status
 		provider.Health.LastCheck = time.Now()
 		provider.Health.ResponseTime = responseTime
 		provider.Health.IsHealthy = isHealthy
-		
+
 		if isHealthy {
 			provider.Health.Status = "healthy"
 			provider.Health.Error = ""
@@ -716,17 +716,17 @@ func (m *AutoLLMManager) autoHealthCheck() error {
 // performHealthCheck performs health check on a provider
 func (m *AutoLLMManager) performHealthCheck(provider *AutoProvider) (bool, int, error) {
 	start := time.Now()
-	
+
 	client := &http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(provider.HealthURL)
-	
+
 	responseTime := int(time.Since(start).Milliseconds())
-	
+
 	if err != nil {
 		return false, responseTime, err
 	}
 	defer resp.Body.Close()
-	
+
 	return resp.StatusCode == 200, responseTime, nil
 }
 
@@ -928,24 +928,24 @@ func (m *AutoLLMManager) createStartupScriptForProvider(provider *AutoProvider, 
 	script.WriteString("#!/bin/bash\n")
 	script.WriteString(fmt.Sprintf("# Auto-generated startup script for %s\n", provider.Name))
 	script.WriteString("\n")
-	
+
 	// Change to provider directory
 	script.WriteString(fmt.Sprintf("cd %s\n", provider.DataPath))
-	
+
 	// Set environment variables
 	for key, value := range provider.Environment {
 		script.WriteString(fmt.Sprintf("export %s=\"%s\"\n", key, value))
 	}
 	script.WriteString("\n")
-	
+
 	// Execute startup command
 	script.WriteString(fmt.Sprintf("%s\n", strings.Join(provider.StartupCmd, " ")))
-	
+
 	// Create script file
 	if err := os.WriteFile(scriptPath, []byte(script.String()), 0755); err != nil {
 		return fmt.Errorf("failed to write startup script: %w", err)
 	}
-	
+
 	log.Printf("📝 Created startup script: %s", scriptPath)
 	return nil
 }

@@ -11,13 +11,13 @@ import (
 var (
 	// ErrNoPortsAvailable is returned when no ports are available in the configured range
 	ErrNoPortsAvailable = errors.New("no ports available in configured range")
-	
+
 	// ErrInvalidPortRange is returned when the port range is invalid
 	ErrInvalidPortRange = errors.New("invalid port range")
-	
+
 	// ErrPortAlreadyAllocated is returned when trying to allocate an already allocated port
 	ErrPortAlreadyAllocated = errors.New("port already allocated")
-	
+
 	// ErrPortNotAllocated is returned when trying to release a port that wasn't allocated
 	ErrPortNotAllocated = errors.New("port not allocated")
 )
@@ -39,10 +39,10 @@ type PortAllocation struct {
 type PortAllocatorConfig struct {
 	// AllowEphemeral allows allocation of ephemeral ports when ranges are exhausted
 	AllowEphemeral bool
-	
+
 	// PortRanges defines port ranges for different service types
 	PortRanges map[string]PortRange
-	
+
 	// ReservedPorts are ports that should never be allocated
 	ReservedPorts []int
 }
@@ -90,7 +90,7 @@ func NewDefaultPortAllocator() *PortAllocator {
 func (pa *PortAllocator) AllocatePort(serviceName string, preferredPort int) (int, error) {
 	pa.mu.Lock()
 	defer pa.mu.Unlock()
-	
+
 	// Check if service already has a port
 	if existingPort, exists := pa.serviceMap[serviceName]; exists {
 		return existingPort, nil
@@ -103,7 +103,7 @@ func (pa *PortAllocator) AllocatePort(serviceName string, preferredPort int) (in
 
 	// Get service type from service name
 	serviceType := pa.getServiceType(serviceName)
-	
+
 	// Try fallback range
 	portRange, exists := pa.config.PortRanges[serviceType]
 	if exists {
@@ -112,12 +112,12 @@ func (pa *PortAllocator) AllocatePort(serviceName string, preferredPort int) (in
 			return port, nil
 		}
 	}
-	
+
 	// Try ephemeral if allowed
 	if pa.config.AllowEphemeral {
 		return pa.allocateEphemeralPortUnsafe(serviceName)
 	}
-	
+
 	return 0, ErrNoPortsAvailable
 }
 
@@ -125,16 +125,16 @@ func (pa *PortAllocator) AllocatePort(serviceName string, preferredPort int) (in
 func (pa *PortAllocator) AllocatePortInRange(serviceName string, startPort, endPort int) (int, error) {
 	pa.mu.Lock()
 	defer pa.mu.Unlock()
-	
+
 	if startPort < 1 || endPort > 65535 || startPort > endPort {
 		return 0, ErrInvalidPortRange
 	}
-	
+
 	// Check if service already has a port
 	if existingPort, exists := pa.serviceMap[serviceName]; exists {
 		return existingPort, nil
 	}
-	
+
 	return pa.allocateFromRangeUnsafe(serviceName, PortRange{Start: startPort, End: endPort})
 }
 
@@ -142,15 +142,15 @@ func (pa *PortAllocator) AllocatePortInRange(serviceName string, startPort, endP
 func (pa *PortAllocator) ReleasePort(port int) error {
 	pa.mu.Lock()
 	defer pa.mu.Unlock()
-	
+
 	allocation, exists := pa.allocations[port]
 	if !exists {
 		return ErrPortNotAllocated
 	}
-	
+
 	delete(pa.allocations, port)
 	delete(pa.serviceMap, allocation.ServiceName)
-	
+
 	return nil
 }
 
@@ -158,15 +158,15 @@ func (pa *PortAllocator) ReleasePort(port int) error {
 func (pa *PortAllocator) ReleaseServicePort(serviceName string) error {
 	pa.mu.Lock()
 	defer pa.mu.Unlock()
-	
+
 	port, exists := pa.serviceMap[serviceName]
 	if !exists {
 		return ErrPortNotAllocated
 	}
-	
+
 	delete(pa.allocations, port)
 	delete(pa.serviceMap, serviceName)
-	
+
 	return nil
 }
 
@@ -174,7 +174,7 @@ func (pa *PortAllocator) ReleaseServicePort(serviceName string) error {
 func (pa *PortAllocator) IsPortAvailable(port int) bool {
 	pa.mu.RLock()
 	defer pa.mu.RUnlock()
-	
+
 	return pa.isPortAvailableUnsafe(port)
 }
 
@@ -182,7 +182,7 @@ func (pa *PortAllocator) IsPortAvailable(port int) bool {
 func (pa *PortAllocator) GetPortForService(serviceName string) (int, bool) {
 	pa.mu.RLock()
 	defer pa.mu.RUnlock()
-	
+
 	port, exists := pa.serviceMap[serviceName]
 	return port, exists
 }
@@ -191,12 +191,12 @@ func (pa *PortAllocator) GetPortForService(serviceName string) (int, bool) {
 func (pa *PortAllocator) GetAllocation(port int) (*PortAllocation, bool) {
 	pa.mu.RLock()
 	defer pa.mu.RUnlock()
-	
+
 	allocation, exists := pa.allocations[port]
 	if !exists {
 		return nil, false
 	}
-	
+
 	// Return a copy to prevent modification
 	allocationCopy := *allocation
 	return &allocationCopy, true
@@ -206,13 +206,13 @@ func (pa *PortAllocator) GetAllocation(port int) (*PortAllocation, bool) {
 func (pa *PortAllocator) ListAllocations() []*PortAllocation {
 	pa.mu.RLock()
 	defer pa.mu.RUnlock()
-	
+
 	allocations := make([]*PortAllocation, 0, len(pa.allocations))
 	for _, allocation := range pa.allocations {
 		allocationCopy := *allocation
 		allocations = append(allocations, &allocationCopy)
 	}
-	
+
 	return allocations
 }
 
@@ -223,19 +223,19 @@ func (pa *PortAllocator) isPortAvailableUnsafe(port int) bool {
 	if _, exists := pa.allocations[port]; exists {
 		return false
 	}
-	
+
 	// Check if reserved
 	if pa.isReserved(port) {
 		return false
 	}
-	
+
 	// Try to bind to the port
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return false
 	}
 	listener.Close()
-	
+
 	return true
 }
 
@@ -243,16 +243,16 @@ func (pa *PortAllocator) reservePortUnsafe(port int, serviceName string) (int, e
 	if _, exists := pa.allocations[port]; exists {
 		return 0, ErrPortAlreadyAllocated
 	}
-	
+
 	allocation := &PortAllocation{
 		Port:        port,
 		ServiceName: serviceName,
 		AllocatedAt: time.Now(),
 	}
-	
+
 	pa.allocations[port] = allocation
 	pa.serviceMap[serviceName] = port
-	
+
 	return port, nil
 }
 
@@ -262,7 +262,7 @@ func (pa *PortAllocator) allocateFromRangeUnsafe(serviceName string, portRange P
 			return pa.reservePortUnsafe(port, serviceName)
 		}
 	}
-	
+
 	return 0, ErrNoPortsAvailable
 }
 
@@ -272,11 +272,11 @@ func (pa *PortAllocator) allocateEphemeralPortUnsafe(serviceName string) (int, e
 	if err != nil {
 		return 0, fmt.Errorf("failed to allocate ephemeral port: %w", err)
 	}
-	
+
 	addr := listener.Addr().(*net.TCPAddr)
 	port := addr.Port
 	listener.Close()
-	
+
 	// Reserve the port
 	return pa.reservePortUnsafe(port, serviceName)
 }
@@ -293,7 +293,7 @@ func (pa *PortAllocator) isReserved(port int) bool {
 func (pa *PortAllocator) getServiceType(serviceName string) string {
 	// Simple heuristic to determine service type from name
 	// This can be enhanced based on actual service naming conventions
-	
+
 	if contains(serviceName, "postgres", "pg", "database", "db") {
 		return "database"
 	}
@@ -309,7 +309,7 @@ func (pa *PortAllocator) getServiceType(serviceName string) string {
 	if contains(serviceName, "websocket", "ws") {
 		return "websocket"
 	}
-	
+
 	// Default to api
 	return "api"
 }

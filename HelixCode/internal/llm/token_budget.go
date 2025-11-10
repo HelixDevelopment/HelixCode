@@ -33,42 +33,42 @@ func DefaultTokenBudget() TokenBudget {
 	return TokenBudget{
 		MaxTokensPerRequest:  10000,
 		MaxTokensPerSession:  100000,
-		MaxCostPerSession:    10.0,  // $10 per session
-		MaxCostPerDay:        50.0,  // $50 per day
-		MaxRequestsPerMinute: 60,    // 1 per second
-		WarnThreshold:        80.0,  // Warn at 80%
+		MaxCostPerSession:    10.0, // $10 per session
+		MaxCostPerDay:        50.0, // $50 per day
+		MaxRequestsPerMinute: 60,   // 1 per second
+		WarnThreshold:        80.0, // Warn at 80%
 	}
 }
 
 // TokenTracker tracks token usage and enforces budgets
 type TokenTracker struct {
-	mu               sync.RWMutex
-	sessionTokens    map[string]*SessionUsage
-	dailyUsage       map[string]*DailyUsage
+	mu                sync.RWMutex
+	sessionTokens     map[string]*SessionUsage
+	dailyUsage        map[string]*DailyUsage
 	requestTimestamps map[string][]time.Time
-	budget           TokenBudget
+	budget            TokenBudget
 }
 
 // SessionUsage tracks usage for a single session
 type SessionUsage struct {
-	SessionID       string    `json:"session_id"`
-	TotalTokens     int       `json:"total_tokens"`
-	PromptTokens    int       `json:"prompt_tokens"`
-	CompletionTokens int      `json:"completion_tokens"`
-	ThinkingTokens  int       `json:"thinking_tokens"`
-	TotalCost       float64   `json:"total_cost"`
-	RequestCount    int       `json:"request_count"`
-	StartTime       time.Time `json:"start_time"`
-	LastUpdate      time.Time `json:"last_update"`
+	SessionID        string    `json:"session_id"`
+	TotalTokens      int       `json:"total_tokens"`
+	PromptTokens     int       `json:"prompt_tokens"`
+	CompletionTokens int       `json:"completion_tokens"`
+	ThinkingTokens   int       `json:"thinking_tokens"`
+	TotalCost        float64   `json:"total_cost"`
+	RequestCount     int       `json:"request_count"`
+	StartTime        time.Time `json:"start_time"`
+	LastUpdate       time.Time `json:"last_update"`
 }
 
 // DailyUsage tracks usage for a single day
 type DailyUsage struct {
-	Date         string    `json:"date"`
-	TotalTokens  int       `json:"total_tokens"`
-	TotalCost    float64   `json:"total_cost"`
-	RequestCount int       `json:"request_count"`
-	Sessions     []string  `json:"sessions"`
+	Date         string   `json:"date"`
+	TotalTokens  int      `json:"total_tokens"`
+	TotalCost    float64  `json:"total_cost"`
+	RequestCount int      `json:"request_count"`
+	Sessions     []string `json:"sessions"`
 }
 
 // NewTokenTracker creates a new token tracker with budget

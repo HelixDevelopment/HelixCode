@@ -41,11 +41,11 @@ type Edit struct {
 
 // EditResult contains the result of an edit operation
 type EditResult struct {
-	FilePath    string
-	Success     bool
-	Error       error
+	FilePath     string
+	Success      bool
+	Error        error
 	LinesChanged int
-	BackupPath  string
+	BackupPath   string
 }
 
 // CodeEditor is the main editor that coordinates different edit formats

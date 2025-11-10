@@ -33,17 +33,17 @@ type FileReader interface {
 
 // FileContent represents the content and metadata of a file
 type FileContent struct {
-	Path         string
-	Content      []byte
-	Lines        []string
-	TotalLines   int
-	Size         int64
-	ModTime      time.Time
-	IsPartial    bool
-	StartLine    int
-	EndLine      int
-	Encoding     string
-	LineEndings  LineEndingType
+	Path        string
+	Content     []byte
+	Lines       []string
+	TotalLines  int
+	Size        int64
+	ModTime     time.Time
+	IsPartial   bool
+	StartLine   int
+	EndLine     int
+	Encoding    string
+	LineEndings LineEndingType
 }
 
 // FileInfo contains file metadata

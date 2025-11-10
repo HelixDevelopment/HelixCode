@@ -164,11 +164,11 @@ func (r *RateLimitedChannel) ResetStats() {
 
 // ChannelRateLimits defines common rate limits for different channels
 var ChannelRateLimits = map[string]*RateLimiter{
-	"slack":    NewRateLimiter(1, 1*time.Second),      // 1 per second
-	"discord":  NewRateLimiter(5, 5*time.Second),      // 5 per 5 seconds
-	"telegram": NewRateLimiter(30, 1*time.Second),     // 30 per second
-	"email":    NewRateLimiter(10, 1*time.Minute),     // 10 per minute
-	"webhook":  NewRateLimiter(100, 1*time.Minute),    // 100 per minute
+	"slack":    NewRateLimiter(1, 1*time.Second),   // 1 per second
+	"discord":  NewRateLimiter(5, 5*time.Second),   // 5 per 5 seconds
+	"telegram": NewRateLimiter(30, 1*time.Second),  // 30 per second
+	"email":    NewRateLimiter(10, 1*time.Minute),  // 10 per minute
+	"webhook":  NewRateLimiter(100, 1*time.Minute), // 100 per minute
 }
 
 // GetDefaultRateLimiter returns a default rate limiter for a channel type

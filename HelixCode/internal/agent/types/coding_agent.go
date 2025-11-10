@@ -106,9 +106,9 @@ func (a *CodingAgent) Execute(ctx context.Context, t *task.Task) (*task.Result, 
 
 	// Set metrics
 	result.Metrics = &task.TaskMetrics{
-		FilesModified:  len(artifacts),
-		LinesAdded:     countLines(generatedCode),
-		ExecutionTime:  result.Duration,
+		FilesModified: len(artifacts),
+		LinesAdded:    countLines(generatedCode),
+		ExecutionTime: result.Duration,
 	}
 
 	return result, nil
@@ -280,7 +280,7 @@ func (a *CodingAgent) Collaborate(ctx context.Context, agents []agent.Agent, t *
 				task.PriorityNormal,
 			)
 			reviewTask.Input = map[string]interface{}{
-				"code":     myResult.Output["code"],
+				"code":      myResult.Output["code"],
 				"file_path": myResult.Output["file_path"],
 			}
 

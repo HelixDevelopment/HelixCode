@@ -13,7 +13,7 @@ import (
 func TestNewPortAllocator(t *testing.T) {
 	config := DefaultPortAllocatorConfig()
 	pa := NewPortAllocator(config)
-	
+
 	assert.NotNil(t, pa)
 	assert.NotNil(t, pa.allocations)
 	assert.NotNil(t, pa.serviceMap)
@@ -22,7 +22,7 @@ func TestNewPortAllocator(t *testing.T) {
 
 func TestNewDefaultPortAllocator(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	assert.NotNil(t, pa)
 	assert.False(t, pa.config.AllowEphemeral)
 	assert.Len(t, pa.config.PortRanges, 6)
@@ -57,19 +57,19 @@ func TestAllocatePort_PreferredAvailable(t *testing.T) {
 
 func TestAllocatePort_PreferredOccupied_FallbackToRange(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// Allocate first PostgreSQL port
 	port1, err := pa.AllocatePort("postgres-1", 5432)
 	require.NoError(t, err)
-	
+
 	// Since 5432 is reserved, it should fallback to range 5433-5442
 	assert.GreaterOrEqual(t, port1, 5433)
 	assert.LessOrEqual(t, port1, 5442)
-	
+
 	// Allocate second PostgreSQL port (should get next in range)
 	port2, err := pa.AllocatePort("postgres-2", 5432)
 	require.NoError(t, err)
-	
+
 	assert.GreaterOrEqual(t, port2, 5433)
 	assert.LessOrEqual(t, port2, 5442)
 	assert.NotEqual(t, port1, port2)
@@ -91,10 +91,10 @@ func TestAllocatePort_ServiceAlreadyHasPort(t *testing.T) {
 
 func TestAllocatePort_ReservedPort(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// Try to allocate a reserved port (5432 is in reserved list)
 	port, err := pa.AllocatePort("postgres", 5432)
-	
+
 	// Should fall back to range since 5432 is reserved
 	require.NoError(t, err)
 	assert.NotEqual(t, 5432, port)
@@ -128,13 +128,13 @@ func TestAllocatePort_RangeExhausted_WithEphemeral(t *testing.T) {
 	config := DefaultPortAllocatorConfig()
 	config.AllowEphemeral = true
 	pa := NewPortAllocator(config)
-	
+
 	// Exhaust the database port range
 	for i := 0; i < 10; i++ {
 		_, err := pa.AllocatePort(fmt.Sprintf("db-%d", i), 5432)
 		require.NoError(t, err)
 	}
-	
+
 	// Try to allocate one more - should get ephemeral
 	port, err := pa.AllocatePort("db-11", 5432)
 	require.NoError(t, err)
@@ -144,9 +144,9 @@ func TestAllocatePort_RangeExhausted_WithEphemeral(t *testing.T) {
 
 func TestAllocatePortInRange(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	port, err := pa.AllocatePortInRange("test-service", 7000, 7010)
-	
+
 	require.NoError(t, err)
 	assert.GreaterOrEqual(t, port, 7000)
 	assert.LessOrEqual(t, port, 7010)
@@ -154,7 +154,7 @@ func TestAllocatePortInRange(t *testing.T) {
 
 func TestAllocatePortInRange_InvalidRange(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	tests := []struct {
 		name      string
 		startPort int
@@ -164,7 +164,7 @@ func TestAllocatePortInRange_InvalidRange(t *testing.T) {
 		{"end > 65535", 1000, 70000},
 		{"start > end", 200, 100},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := pa.AllocatePortInRange("test", tt.startPort, tt.endPort)
@@ -175,41 +175,41 @@ func TestAllocatePortInRange_InvalidRange(t *testing.T) {
 
 func TestReleasePort(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// Allocate port
 	port, err := pa.AllocatePort("test-service", 55555)
 	require.NoError(t, err)
-	
+
 	// Release it
 	err = pa.ReleasePort(port)
 	assert.NoError(t, err)
-	
+
 	// Verify it's released
 	_, exists := pa.GetAllocation(port)
 	assert.False(t, exists)
-	
+
 	_, exists = pa.GetPortForService("test-service")
 	assert.False(t, exists)
 }
 
 func TestReleasePort_NotAllocated(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	err := pa.ReleasePort(55555)
 	assert.ErrorIs(t, err, ErrPortNotAllocated)
 }
 
 func TestReleaseServicePort(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// Allocate port
 	port, err := pa.AllocatePort("test-service", 55555)
 	require.NoError(t, err)
-	
+
 	// Release by service name
 	err = pa.ReleaseServicePort("test-service")
 	assert.NoError(t, err)
-	
+
 	// Verify it's released
 	_, exists := pa.GetAllocation(port)
 	assert.False(t, exists)
@@ -217,7 +217,7 @@ func TestReleaseServicePort(t *testing.T) {
 
 func TestReleaseServicePort_NotAllocated(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	err := pa.ReleaseServicePort("non-existent")
 	assert.ErrorIs(t, err, ErrPortNotAllocated)
 }
@@ -245,15 +245,15 @@ func TestIsPortAvailable(t *testing.T) {
 
 func TestGetPortForService(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// No port allocated
 	_, exists := pa.GetPortForService("test-service")
 	assert.False(t, exists)
-	
+
 	// Allocate port
 	expectedPort, err := pa.AllocatePort("test-service", 55555)
 	require.NoError(t, err)
-	
+
 	// Get port
 	port, exists := pa.GetPortForService("test-service")
 	assert.True(t, exists)
@@ -262,15 +262,15 @@ func TestGetPortForService(t *testing.T) {
 
 func TestGetAllocation(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// No allocation
 	_, exists := pa.GetAllocation(55555)
 	assert.False(t, exists)
-	
+
 	// Allocate port
 	port, err := pa.AllocatePort("test-service", 55555)
 	require.NoError(t, err)
-	
+
 	// Get allocation
 	allocation, exists := pa.GetAllocation(port)
 	require.True(t, exists)
@@ -281,11 +281,11 @@ func TestGetAllocation(t *testing.T) {
 
 func TestListAllocations(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	// No allocations
 	allocations := pa.ListAllocations()
 	assert.Empty(t, allocations)
-	
+
 	// Allocate some ports
 	services := []string{"service-1", "service-2", "service-3"}
 	for _, svc := range services {
@@ -293,17 +293,17 @@ func TestListAllocations(t *testing.T) {
 		require.NoError(t, err)
 		allocations = pa.ListAllocations()
 	}
-	
+
 	// Check allocations
 	allocations = pa.ListAllocations()
 	assert.Len(t, allocations, 3)
-	
+
 	// Verify service names are present
 	serviceNames := make(map[string]bool)
 	for _, alloc := range allocations {
 		serviceNames[alloc.ServiceName] = true
 	}
-	
+
 	for _, svc := range services {
 		assert.True(t, serviceNames[svc])
 	}
@@ -311,7 +311,7 @@ func TestListAllocations(t *testing.T) {
 
 func TestGetServiceType(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	tests := []struct {
 		serviceName  string
 		expectedType string
@@ -329,7 +329,7 @@ func TestGetServiceType(t *testing.T) {
 		{"api-server", "api"},
 		{"unknown-service", "api"},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.serviceName, func(t *testing.T) {
 			serviceType := pa.getServiceType(tt.serviceName)
@@ -340,24 +340,24 @@ func TestGetServiceType(t *testing.T) {
 
 func TestConcurrentAllocations(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	const numGoroutines = 50
 	const basePort = 50000
-	
+
 	var wg sync.WaitGroup
 	wg.Add(numGoroutines)
-	
+
 	errors := make(chan error, numGoroutines)
 	ports := make(chan int, numGoroutines)
-	
+
 	// Allocate ports concurrently
 	for i := 0; i < numGoroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			
+
 			serviceName := fmt.Sprintf("service-%d", id)
 			port, err := pa.AllocatePort(serviceName, basePort+id)
-			
+
 			if err != nil {
 				errors <- err
 			} else {
@@ -365,32 +365,32 @@ func TestConcurrentAllocations(t *testing.T) {
 			}
 		}(i)
 	}
-	
+
 	wg.Wait()
 	close(errors)
 	close(ports)
-	
+
 	// Check no errors
 	for err := range errors {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	
+
 	// Collect allocated ports
 	allocatedPorts := make(map[int]bool)
 	for port := range ports {
 		assert.False(t, allocatedPorts[port], "Port %d allocated multiple times", port)
 		allocatedPorts[port] = true
 	}
-	
+
 	// Verify we got numGoroutines unique ports
 	assert.Len(t, allocatedPorts, numGoroutines)
 }
 
 func TestConcurrentReleases(t *testing.T) {
 	pa := NewDefaultPortAllocator()
-	
+
 	const numServices = 20
-	
+
 	// Allocate ports first
 	servicePorts := make(map[string]int)
 	for i := 0; i < numServices; i++ {
@@ -399,11 +399,11 @@ func TestConcurrentReleases(t *testing.T) {
 		require.NoError(t, err)
 		servicePorts[serviceName] = port
 	}
-	
+
 	// Release them concurrently
 	var wg sync.WaitGroup
 	wg.Add(numServices)
-	
+
 	for serviceName := range servicePorts {
 		go func(svc string) {
 			defer wg.Done()
@@ -411,9 +411,9 @@ func TestConcurrentReleases(t *testing.T) {
 			assert.NoError(t, err)
 		}(serviceName)
 	}
-	
+
 	wg.Wait()
-	
+
 	// Verify all released
 	allocations := pa.ListAllocations()
 	assert.Empty(t, allocations)
@@ -437,7 +437,7 @@ func TestPortReallocation(t *testing.T) {
 	port2, err := pa.AllocatePort("service-2", preferredPort)
 	require.NoError(t, err)
 	assert.Equal(t, port1, port2, "Should get same port after release")
-	
+
 	// Verify new service owns the port
 	allocation, exists := pa.GetAllocation(port2)
 	require.True(t, exists)

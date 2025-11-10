@@ -98,11 +98,11 @@ func TestAliasManager_Resolve(t *testing.T) {
 	})
 
 	tests := []struct {
-		name           string
-		input          string
-		wantModel      string
-		wantProvider   string
-		wantResolved   bool
+		name         string
+		input        string
+		wantModel    string
+		wantProvider string
+		wantResolved bool
 	}{
 		{
 			name:         "exact match lowercase",
@@ -162,10 +162,10 @@ func TestAliasManager_FuzzyMatch(t *testing.T) {
 	})
 
 	tests := []struct {
-		name         string
-		input        string
-		shouldMatch  bool
-		wantModel    string
+		name        string
+		input       string
+		shouldMatch bool
+		wantModel   string
 	}{
 		{
 			name:        "exact match",
@@ -354,9 +354,9 @@ func TestAliasManager_SearchAliases(t *testing.T) {
 	})
 
 	tests := []struct {
-		name       string
-		query      string
-		wantCount  int
+		name      string
+		query     string
+		wantCount int
 	}{
 		{
 			name:      "search by tag",

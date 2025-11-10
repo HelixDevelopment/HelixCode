@@ -184,26 +184,26 @@ All operations are thread-safe:
 
 # Best Practices
 
-1. Always use context for cancellation support:
-   ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-   defer cancel()
+ 1. Always use context for cancellation support:
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
 
-2. Check for specific error types:
-   var secErr *filesystem.SecurityError
-   if errors.As(err, &secErr) {
-       // Handle security error
-   }
+ 2. Check for specific error types:
+    var secErr *filesystem.SecurityError
+    if errors.As(err, &secErr) {
+    // Handle security error
+    }
 
-3. Use atomic writes for critical files:
-   opts := filesystem.DefaultWriteOptions()
-   opts.Atomic = true
-   opts.Backup = true
+ 3. Use atomic writes for critical files:
+    opts := filesystem.DefaultWriteOptions()
+    opts.Atomic = true
+    opts.Backup = true
 
-4. Configure workspace root to prevent unauthorized access:
-   config.WorkspaceRoot = "/safe/workspace"
+ 4. Configure workspace root to prevent unauthorized access:
+    config.WorkspaceRoot = "/safe/workspace"
 
-5. Use appropriate permissions:
-   opts.Mode = 0644 // rw-r--r--
+ 5. Use appropriate permissions:
+    opts.Mode = 0644 // rw-r--r--
 
 # Examples
 

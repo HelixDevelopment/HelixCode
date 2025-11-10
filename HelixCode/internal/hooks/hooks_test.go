@@ -407,19 +407,19 @@ func TestManager(t *testing.T) {
 	t.Run("register_duplicate_id", func(t *testing.T) {
 		manager := NewManager()
 		hook1 := &Hook{
-			ID:      "test-id",
-			Name:    "test1",
-			Type:    HookTypeBeforeTask,
-			Handler: func(ctx context.Context, event *Event) error { return nil },
+			ID:       "test-id",
+			Name:     "test1",
+			Type:     HookTypeBeforeTask,
+			Handler:  func(ctx context.Context, event *Event) error { return nil },
 			Priority: PriorityNormal,
 			Enabled:  true,
 		}
 
 		hook2 := &Hook{
-			ID:      "test-id",
-			Name:    "test2",
-			Type:    HookTypeBeforeTask,
-			Handler: func(ctx context.Context, event *Event) error { return nil },
+			ID:       "test-id",
+			Name:     "test2",
+			Type:     HookTypeBeforeTask,
+			Handler:  func(ctx context.Context, event *Event) error { return nil },
 			Priority: PriorityNormal,
 			Enabled:  true,
 		}

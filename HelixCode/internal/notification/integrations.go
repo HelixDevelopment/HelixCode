@@ -93,11 +93,11 @@ func (c *PagerDutyChannel) getSeverity(notifType NotificationType) string {
 
 // JiraChannel implements Jira issue creation
 type JiraChannel struct {
-	name      string
-	enabled   bool
-	baseURL   string
-	email     string
-	apiToken  string
+	name       string
+	enabled    bool
+	baseURL    string
+	email      string
+	apiToken   string
 	projectKey string
 }
 
@@ -193,12 +193,12 @@ func (c *JiraChannel) getPriority(priority NotificationPriority) string {
 
 // GitHubIssuesChannel implements GitHub issue creation
 type GitHubIssuesChannel struct {
-	name   string
+	name    string
 	enabled bool
-	token  string
-	owner  string
-	repo   string
-	apiURL string
+	token   string
+	owner   string
+	repo    string
+	apiURL  string
 }
 
 // NewGitHubIssuesChannel creates a new GitHub Issues channel

@@ -483,7 +483,7 @@ func TestReviewAgentReadFile(t *testing.T) {
 			Name: "Test Review Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "file content for review", nil
@@ -526,7 +526,7 @@ func TestReviewAgentReadFile(t *testing.T) {
 			Name: "Test Review Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return nil, fmt.Errorf("permission denied")
@@ -551,7 +551,7 @@ func TestReviewAgentReadFile(t *testing.T) {
 			Name: "Test Review Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return []byte("bytes not string"), nil
@@ -579,7 +579,7 @@ func TestReviewAgentRunStaticAnalysis(t *testing.T) {
 			Name: "Test Review Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -595,12 +595,12 @@ func TestReviewAgentRunStaticAnalysis(t *testing.T) {
 		results, err := reviewAgent.runStaticAnalysis(ctx, "test.go")
 		require.NoError(t, err)
 		assert.NotNil(t, results)
-		
+
 		// Should have static analysis commands for Go files
 		assert.Contains(t, results, "go_vet")
 		assert.Contains(t, results, "staticcheck")
 		assert.Contains(t, results, "golint")
-		
+
 		// Check success status
 		vetResult := results["go_vet"].(map[string]interface{})
 		assert.Equal(t, "success", vetResult["status"])
@@ -631,7 +631,7 @@ func TestReviewAgentRunStaticAnalysis(t *testing.T) {
 			Name: "Test Review Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -650,7 +650,7 @@ func TestReviewAgentRunStaticAnalysis(t *testing.T) {
 		ctx := context.Background()
 		results, err := reviewAgent.runStaticAnalysis(ctx, "test.go")
 		require.NoError(t, err)
-		
+
 		// staticcheck should have failed status
 		staticcheckResult := results["staticcheck"].(map[string]interface{})
 		assert.Equal(t, "failed", staticcheckResult["status"])
@@ -664,7 +664,7 @@ func TestReviewAgentRunStaticAnalysis(t *testing.T) {
 			Name: "Test Review Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -679,7 +679,7 @@ func TestReviewAgentRunStaticAnalysis(t *testing.T) {
 		ctx := context.Background()
 		results, err := reviewAgent.runStaticAnalysis(ctx, "script.py")
 		require.NoError(t, err)
-		
+
 		// Should have no analysis commands for non-Go files
 		assert.Empty(t, results)
 	})

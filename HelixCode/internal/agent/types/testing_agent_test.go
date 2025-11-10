@@ -460,7 +460,7 @@ func TestTestingAgentExecuteTests(t *testing.T) {
 			Name: "Test Testing Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -505,7 +505,7 @@ func TestTestingAgentExecuteTests(t *testing.T) {
 			Name: "Test Testing Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -530,7 +530,7 @@ func TestTestingAgentExecuteTests(t *testing.T) {
 			Name: "Test Testing Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		// Track which command was executed
 		var executedCommand string
 		mockRegistry := CreateMockToolRegistry(
@@ -548,7 +548,7 @@ func TestTestingAgentExecuteTests(t *testing.T) {
 		ctx := context.Background()
 		_, err = testingAgent.executeTests(ctx, "/path/to/package/file_test.go")
 		require.NoError(t, err)
-		
+
 		// Verify the correct directory was used in the command
 		assert.Contains(t, executedCommand, "/path/to/package")
 		assert.Contains(t, executedCommand, "go test")

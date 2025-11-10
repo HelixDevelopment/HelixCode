@@ -81,9 +81,9 @@ func DefaultDiscoveryClientConfig(registry *ServiceRegistry, allocator *PortAllo
 			"grpc":     9090,
 			"metrics":  9100,
 		},
-		EnableRegistry:  true,
-		EnableBroadcast: false, // Phase 2
-		EnableDNS:       true,
+		EnableRegistry:   true,
+		EnableBroadcast:  false, // Phase 2
+		EnableDNS:        true,
 		DiscoveryTimeout: 5 * time.Second,
 		PreferredStrategies: []DiscoveryStrategy{
 			StrategyDefaultPort,

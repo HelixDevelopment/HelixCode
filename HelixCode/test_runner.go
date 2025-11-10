@@ -40,12 +40,12 @@ type TestConfig struct {
 
 // Test results
 type TestResults struct {
-	Total      int
-	Passed     int
-	Failed     int
-	Skipped    int
-	Duration   time.Duration
-	Suites     []SuiteResult
+	Total    int
+	Passed   int
+	Failed   int
+	Skipped  int
+	Duration time.Duration
+	Suites   []SuiteResult
 }
 
 type SuiteResult struct {
@@ -58,7 +58,7 @@ type SuiteResult struct {
 
 func main() {
 	config := parseFlags()
-	
+
 	if config.Verbose {
 		log.SetFlags(log.LstdFlags | log.Lshortfile)
 	}
@@ -117,7 +117,7 @@ func parseFlags() *TestConfig {
 	config := &TestConfig{
 		TestTimeout: 10 * time.Minute,
 		Parallel:    runtime.NumCPU(),
-		OutputDir:    "test-results",
+		OutputDir:   "test-results",
 	}
 
 	flag.BoolVar(&config.RunUnit, "unit", false, "Run unit tests")
@@ -184,7 +184,7 @@ func runUnitTests(config *TestConfig) SuiteResult {
 	}
 
 	cmd := exec.Command("go", args...)
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		suite.Error = fmt.Errorf("Unit tests failed: %v", err)
@@ -395,9 +395,9 @@ func printFinalReport(results *TestResults) {
 			status = "⚠️"
 		}
 
-		fmt.Printf("%s %s: %d passed, %d failed, %d skipped\n", 
+		fmt.Printf("%s %s: %d passed, %d failed, %d skipped\n",
 			status, suite.Name, suite.Passed, suite.Failed, suite.Skipped)
-		
+
 		if suite.Error != nil {
 			fmt.Printf("   Error: %v\n", suite.Error)
 		}
@@ -418,7 +418,7 @@ func printFinalReport(results *TestResults) {
 
 func printRecommendations(results *TestResults) {
 	fmt.Println("\n💡 Recommendations:")
-	
+
 	if results.Failed > 0 {
 		fmt.Println("• Check test logs in output directory for failure details")
 		fmt.Println("• Ensure all dependencies are installed")
@@ -445,7 +445,7 @@ func preflightChecks() error {
 	if err != nil {
 		return fmt.Errorf("Go not installed or not in PATH")
 	}
-	
+
 	fmt.Printf("✅ %s", string(output))
 
 	// Check required dependencies
@@ -477,12 +477,12 @@ func preflightChecks() error {
 func init() {
 	if len(os.Args) > 1 && os.Args[1] == "--preflight" {
 		fmt.Println("🔍 Running pre-flight checks...")
-		
+
 		if err := preflightChecks(); err != nil {
 			fmt.Printf("❌ Pre-flight checks failed: %v\n", err)
 			os.Exit(1)
 		}
-		
+
 		fmt.Println("✅ All pre-flight checks passed")
 		os.Exit(0)
 	}

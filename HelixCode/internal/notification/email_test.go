@@ -69,11 +69,11 @@ func TestEmailChannel_ExtractRecipients(t *testing.T) {
 	channel := NewEmailChannel("smtp.example.com", 587, "user", "pass", "from@example.com")
 
 	tests := []struct {
-		name         string
-		notification *Notification
+		name           string
+		notification   *Notification
 		wantRecipients []string
-		wantErr      bool
-		errContains  string
+		wantErr        bool
+		errContains    string
 	}{
 		{
 			name: "single recipient as string",

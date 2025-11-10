@@ -11,14 +11,14 @@ import (
 
 // VisionSwitchManager manages automatic vision model switching
 type VisionSwitchManager struct {
-	detector       *ImageDetector
-	capChecker     *CapabilityChecker
-	switchCtrl     *SwitchController
-	config         *Config
-	currentModel   *Model
-	originalModel  *Model
-	switchActive   bool
-	mu             sync.RWMutex
+	detector      *ImageDetector
+	capChecker    *CapabilityChecker
+	switchCtrl    *SwitchController
+	config        *Config
+	currentModel  *Model
+	originalModel *Model
+	switchActive  bool
+	mu            sync.RWMutex
 }
 
 // SwitchResult contains the result of switch processing

@@ -9,13 +9,13 @@ import (
 // TestModeCapabilities tests mode capability definitions
 func TestModeCapabilities(t *testing.T) {
 	tests := []struct {
-		mode            AutonomyMode
-		wantContext     bool
-		wantApply       bool
-		wantExecute     bool
-		wantDebug       bool
-		wantRetries     int
-		wantIterations  int
+		mode           AutonomyMode
+		wantContext    bool
+		wantApply      bool
+		wantExecute    bool
+		wantDebug      bool
+		wantRetries    int
+		wantIterations int
 	}{
 		{ModeNone, false, false, false, false, 0, 0},
 		{ModeBasic, false, false, false, false, 0, 1},

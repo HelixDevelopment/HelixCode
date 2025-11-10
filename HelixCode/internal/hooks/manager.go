@@ -433,11 +433,11 @@ func (m *Manager) Export() []*HookMetadata {
 
 // ManagerStatistics contains manager statistics
 type ManagerStatistics struct {
-	TotalHooks    int                   // Total registered hooks
-	EnabledHooks  int                   // Number of enabled hooks
-	DisabledHooks int                   // Number of disabled hooks
-	ByType        map[HookType]int      // Count by hook type
-	ExecutorStats *ExecutorStatistics   // Executor statistics
+	TotalHooks    int                 // Total registered hooks
+	EnabledHooks  int                 // Number of enabled hooks
+	DisabledHooks int                 // Number of disabled hooks
+	ByType        map[HookType]int    // Count by hook type
+	ExecutorStats *ExecutorStatistics // Executor statistics
 }
 
 // String returns a string representation of the statistics

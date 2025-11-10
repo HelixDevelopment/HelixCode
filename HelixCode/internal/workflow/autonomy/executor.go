@@ -134,9 +134,9 @@ func (a *ActionExecutor) executeAction(ctx context.Context, action *Action) *Act
 	// In production, this would dispatch to actual action handlers
 
 	result := &ActionResult{
-		Action:   action,
-		Success:  true,
-		Output:   fmt.Sprintf("Executed: %s", action.Description),
+		Action:  action,
+		Success: true,
+		Output:  fmt.Sprintf("Executed: %s", action.Description),
 	}
 
 	// Simulate different action types

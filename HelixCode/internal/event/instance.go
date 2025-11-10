@@ -3,8 +3,8 @@ package event
 import "sync"
 
 var (
-	globalBus     *EventBus
-	globalBusOnce sync.Once
+	globalBus      *EventBus
+	globalBusOnce  sync.Once
 	globalBusMutex sync.RWMutex
 )
 

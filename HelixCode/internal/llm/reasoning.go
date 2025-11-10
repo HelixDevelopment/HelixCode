@@ -37,9 +37,9 @@ type ReasoningModelType string
 
 const (
 	// OpenAI o1/o3/o4 series
-	ReasoningModelOpenAI_O1     ReasoningModelType = "openai_o1"
-	ReasoningModelOpenAI_O3     ReasoningModelType = "openai_o3"
-	ReasoningModelOpenAI_O4     ReasoningModelType = "openai_o4"
+	ReasoningModelOpenAI_O1 ReasoningModelType = "openai_o1"
+	ReasoningModelOpenAI_O3 ReasoningModelType = "openai_o3"
+	ReasoningModelOpenAI_O4 ReasoningModelType = "openai_o4"
 
 	// Claude reasoning modes
 	ReasoningModelClaude_Opus   ReasoningModelType = "claude_opus"

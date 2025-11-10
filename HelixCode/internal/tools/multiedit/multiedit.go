@@ -12,24 +12,24 @@ import (
 
 // MultiFileEditor coordinates multi-file editing operations
 type MultiFileEditor struct {
-	config            *Config
-	txManager         *TransactionManager
-	backupManager     *BackupManager
-	diffManager       *DiffManager
-	conflictResolver  *ConflictResolver
-	previewEngine     *PreviewEngine
-	fileSystem        *filesystem.FileSystemTools
-	logger            *slog.Logger
-	mu                sync.RWMutex
+	config           *Config
+	txManager        *TransactionManager
+	backupManager    *BackupManager
+	diffManager      *DiffManager
+	conflictResolver *ConflictResolver
+	previewEngine    *PreviewEngine
+	fileSystem       *filesystem.FileSystemTools
+	logger           *slog.Logger
+	mu               sync.RWMutex
 }
 
 // Config contains configuration for multi-file editing
 type Config struct {
 	// Transaction settings
-	MaxDuration       time.Duration
-	MaxFiles          int
-	MaxFileSize       int64
-	Timeout           time.Duration
+	MaxDuration time.Duration
+	MaxFiles    int
+	MaxFileSize int64
+	Timeout     time.Duration
 
 	// Backup settings
 	BackupEnabled     bool
@@ -38,33 +38,33 @@ type Config struct {
 	BackupCompression bool
 
 	// Conflict resolution
-	ConflictPolicy    ConflictPolicy
-	AutoResolve       bool
-	DetectGitChanges  bool
+	ConflictPolicy   ConflictPolicy
+	AutoResolve      bool
+	DetectGitChanges bool
 
 	// Preview settings
-	PreviewFormat     DiffFormat
-	ContextLines      int
-	SyntaxHighlight   bool
-	ShowLineNumbers   bool
+	PreviewFormat   DiffFormat
+	ContextLines    int
+	SyntaxHighlight bool
+	ShowLineNumbers bool
 
 	// Git integration
-	GitEnabled        bool
-	GitAutoStage      bool
-	CheckUncommitted  bool
-	RespectGitignore  bool
+	GitEnabled       bool
+	GitAutoStage     bool
+	CheckUncommitted bool
+	RespectGitignore bool
 
 	// Safety settings
-	RequirePreview    bool
-	WorkspaceRoot     string
-	AllowedPaths      []string
-	DeniedPaths       []string
-	MaxRetries        int
+	RequirePreview bool
+	WorkspaceRoot  string
+	AllowedPaths   []string
+	DeniedPaths    []string
+	MaxRetries     int
 
 	// Performance
-	ParallelWrites    int
-	BufferSize        int
-	UseMemoryCache    bool
+	ParallelWrites int
+	BufferSize     int
+	UseMemoryCache bool
 }
 
 // DefaultConfig returns default configuration
@@ -100,10 +100,10 @@ func DefaultConfig() *Config {
 			"**/node_modules/**",
 			"**/vendor/**",
 		},
-		MaxRetries:      3,
-		ParallelWrites:  4,
-		BufferSize:      4096,
-		UseMemoryCache:  true,
+		MaxRetries:     3,
+		ParallelWrites: 4,
+		BufferSize:     4096,
+		UseMemoryCache: true,
 	}
 }
 

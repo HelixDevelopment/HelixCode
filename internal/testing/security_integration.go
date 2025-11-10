@@ -73,7 +73,7 @@ const (
 // NewSecurityTestRunner creates a new security test runner
 func NewSecurityTestRunner(config SecurityTestConfig) (*SecurityTestRunner, error) {
 	// Initialize security manager
-	secManager, err := security.GetGlobalSecurityManager(), nil
+	secManager := security.GetGlobalSecurityManager()
 	if secManager == nil {
 		if err := security.InitGlobalSecurityManager(); err != nil {
 			return nil, errors.Wrap(err, "failed to initialize security manager")
@@ -160,8 +160,8 @@ func (str *SecurityTestRunner) RunTestWithSecurity(ctx context.Context, testName
 	str.testResults[testName] = result
 	str.mutex.Unlock()
 
-	// Determine overall success
-	overallSuccess := testPassed && result.SecurityPassed
+	// Determine overall success (for clarity)
+	_ = testPassed && result.SecurityPassed
 
 	// Generate comprehensive report
 	str.generateTestReport(result, testDuration)
@@ -348,13 +348,6 @@ func (str *SecurityTestRunner) GetSecurityTestDashboard(ctx context.Context) (*S
 }
 
 // Helper functions
-func (str *SecurityTestRunner) runSecurityScan(ctx context.Context, scanName, projectPath string) (*security.FeatureScanResult, error) {
-	if str.securityManager == nil {
-		return nil, fmt.Errorf("security manager not initialized")
-	}
-
-	return str.securityManager.ScanFeature(ctx, scanName, projectPath)
-}
 
 func (str *SecurityTestRunner) generateTestReport(result *SecurityTestResult, testDuration time.Duration) {
 	report := fmt.Sprintf(`

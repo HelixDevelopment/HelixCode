@@ -397,11 +397,11 @@ func TestLineEditorGetStats(t *testing.T) {
 	lines := []string{"line1", "line2", "line3", "line4", "line5"}
 
 	tests := []struct {
-		name              string
-		edits             []LineEdit
-		expectedInserted  int
-		expectedDeleted   int
-		expectedModified  int
+		name             string
+		edits            []LineEdit
+		expectedInserted int
+		expectedDeleted  int
+		expectedModified int
 	}{
 		{
 			name: "Replace with more lines",

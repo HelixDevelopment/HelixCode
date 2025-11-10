@@ -28,16 +28,16 @@ var (
 
 // ServiceInfo represents information about a registered service
 type ServiceInfo struct {
-	Name        string            `json:"name"`
-	Host        string            `json:"host"`
-	Port        int               `json:"port"`
-	Protocol    string            `json:"protocol"` // tcp, udp, http, https, grpc
-	Version     string            `json:"version"`
-	Metadata    map[string]string `json:"metadata"`
-	RegisteredAt time.Time         `json:"registered_at"`
-	LastHeartbeat time.Time        `json:"last_heartbeat"`
-	TTL          time.Duration     `json:"ttl"`
-	Healthy     bool              `json:"healthy"`
+	Name          string            `json:"name"`
+	Host          string            `json:"host"`
+	Port          int               `json:"port"`
+	Protocol      string            `json:"protocol"` // tcp, udp, http, https, grpc
+	Version       string            `json:"version"`
+	Metadata      map[string]string `json:"metadata"`
+	RegisteredAt  time.Time         `json:"registered_at"`
+	LastHeartbeat time.Time         `json:"last_heartbeat"`
+	TTL           time.Duration     `json:"ttl"`
+	Healthy       bool              `json:"healthy"`
 }
 
 // Address returns the full address of the service

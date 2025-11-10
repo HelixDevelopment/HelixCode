@@ -340,7 +340,7 @@ func TestDebuggingAgentReadFile(t *testing.T) {
 			Name: "Test Debugging Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		// Create mock registry with FSRead tool
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
@@ -384,7 +384,7 @@ func TestDebuggingAgentReadFile(t *testing.T) {
 			Name: "Test Debugging Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return nil, fmt.Errorf("file not found")
@@ -409,7 +409,7 @@ func TestDebuggingAgentReadFile(t *testing.T) {
 			Name: "Test Debugging Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return 12345, nil // Return non-string
@@ -437,7 +437,7 @@ func TestDebuggingAgentRunDiagnostics(t *testing.T) {
 			Name: "Test Debugging Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -453,12 +453,12 @@ func TestDebuggingAgentRunDiagnostics(t *testing.T) {
 		results, err := debuggingAgent.runDiagnostics(ctx, "test.go", "compile error")
 		require.NoError(t, err)
 		assert.NotNil(t, results)
-		
+
 		// Should have diagnostics for Go files
 		assert.Contains(t, results, "go_vet")
 		assert.Contains(t, results, "go_build")
 		assert.Contains(t, results, "go_test")
-		
+
 		// Check success status
 		vetResult := results["go_vet"].(map[string]interface{})
 		assert.Equal(t, "success", vetResult["status"])
@@ -489,7 +489,7 @@ func TestDebuggingAgentRunDiagnostics(t *testing.T) {
 			Name: "Test Debugging Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -509,7 +509,7 @@ func TestDebuggingAgentRunDiagnostics(t *testing.T) {
 		ctx := context.Background()
 		results, err := debuggingAgent.runDiagnostics(ctx, "test.go", "error")
 		require.NoError(t, err)
-		
+
 		// go_build should have failed status
 		buildResult := results["go_build"].(map[string]interface{})
 		assert.Equal(t, "failed", buildResult["status"])
@@ -523,7 +523,7 @@ func TestDebuggingAgentRunDiagnostics(t *testing.T) {
 			Name: "Test Debugging Agent",
 		}
 		provider := &MockLLMProvider{}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			nil,
 			nil,
@@ -538,7 +538,7 @@ func TestDebuggingAgentRunDiagnostics(t *testing.T) {
 		ctx := context.Background()
 		results, err := debuggingAgent.runDiagnostics(ctx, "script.js", "error")
 		require.NoError(t, err)
-		
+
 		// Should have no diagnostic commands for non-Go files
 		assert.Empty(t, results)
 	})
@@ -559,7 +559,7 @@ func TestDebuggingAgentApplyFix(t *testing.T) {
 				}, nil
 			},
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "original code", nil
@@ -609,7 +609,7 @@ func TestDebuggingAgentApplyFix(t *testing.T) {
 		provider := &MockLLMProvider{
 			models: []llm.ModelInfo{}, // No models available
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "original code", nil
@@ -640,7 +640,7 @@ func TestDebuggingAgentApplyFix(t *testing.T) {
 				}, nil
 			},
 		}
-		
+
 		// Only FSRead, no FSWrite
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
@@ -675,7 +675,7 @@ func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
 				}, nil
 			},
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "original code", nil
@@ -702,7 +702,7 @@ func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
 		provider := &MockLLMProvider{
 			models: []llm.ModelInfo{}, // No models
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "original code", nil
@@ -733,7 +733,7 @@ func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
 				}, nil
 			},
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return nil, fmt.Errorf("file not found")
@@ -762,7 +762,7 @@ func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
 				return nil, fmt.Errorf("LLM unavailable")
 			},
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "code", nil
@@ -793,7 +793,7 @@ func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
 				}, nil
 			},
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "code", nil
@@ -824,7 +824,7 @@ func TestDebuggingAgentGenerateFixedCode(t *testing.T) {
 				}, nil
 			},
 		}
-		
+
 		mockRegistry := CreateMockToolRegistry(
 			func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 				return "code", nil

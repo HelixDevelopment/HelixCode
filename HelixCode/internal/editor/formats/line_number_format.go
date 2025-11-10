@@ -77,7 +77,7 @@ func (lnf *LineNumberFormat) Parse(ctx context.Context, content string) ([]*File
 			Operation:  EditOperationUpdate,
 			NewContent: newContent,
 			Metadata: map[string]interface{}{
-				"format":        "line-number",
+				"format":         "line-number",
 				"numbered_lines": lines,
 			},
 		}

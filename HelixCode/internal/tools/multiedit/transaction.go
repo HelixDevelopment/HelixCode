@@ -20,13 +20,13 @@ type TransactionManager struct {
 
 // EditTransaction represents a multi-file edit operation
 type EditTransaction struct {
-	ID          string
-	State       TransactionState
-	Files       []*FileEdit
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Options     EditOptions
-	Metadata    map[string]interface{}
+	ID        string
+	State     TransactionState
+	Files     []*FileEdit
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Options   EditOptions
+	Metadata  map[string]interface{}
 
 	mu          sync.RWMutex
 	backupPaths map[string]string // file path -> backup path
@@ -75,13 +75,13 @@ func (s TransactionState) String() string {
 
 // FileEdit represents a single file edit operation
 type FileEdit struct {
-	FilePath    string
-	Operation   EditOperation
-	OldContent  []byte
-	NewContent  []byte
-	Checksum    string // SHA256 of original content
-	Applied     bool
-	Error       error
+	FilePath   string
+	Operation  EditOperation
+	OldContent []byte
+	NewContent []byte
+	Checksum   string // SHA256 of original content
+	Applied    bool
+	Error      error
 }
 
 // EditOperation type
@@ -286,10 +286,10 @@ func (tm *TransactionManager) monitorTimeout(tx *EditTransaction) {
 func isValidStateTransition(from, to TransactionState) bool {
 	// Define valid transitions
 	validTransitions := map[TransactionState][]TransactionState{
-		StatePending: {StatePreview, StateAborted},
-		StatePreview: {StateReady, StateAborted, StatePending},
-		StateReady:   {StateCommitting, StateAborted, StatePreview},
-		StateCommitting: {StateCommitted, StateFailed, StateRollingBack},
+		StatePending:     {StatePreview, StateAborted},
+		StatePreview:     {StateReady, StateAborted, StatePending},
+		StateReady:       {StateCommitting, StateAborted, StatePreview},
+		StateCommitting:  {StateCommitted, StateFailed, StateRollingBack},
 		StateRollingBack: {StateRolledBack, StateFailed},
 		// Terminal states can't transition
 		StateCommitted:  {},

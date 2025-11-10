@@ -10,8 +10,8 @@ import (
 
 // Manager manages rules with inheritance support
 type Manager struct {
-	workspaceRules *RuleSet // Workspace-level rules
-	projectRules   *RuleSet // Project-level rules
+	workspaceRules *RuleSet            // Workspace-level rules
+	projectRules   *RuleSet            // Project-level rules
 	fileRules      map[string]*RuleSet // File-specific rules
 	mu             sync.RWMutex
 }

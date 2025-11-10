@@ -252,9 +252,9 @@ func (l *SimpleLexer) ParseBasic(source []byte, language string) (*ParsedTree, e
 		Language: language,
 		Source:   source,
 		Root: &Node{
-			Type:      "program",
-			StartByte: 0,
-			EndByte:   len(source),
+			Type:       "program",
+			StartByte:  0,
+			EndByte:    len(source),
 			StartPoint: Point{Row: 0, Column: 0},
 			EndPoint: Point{
 				Row:    countLines(source) - 1,

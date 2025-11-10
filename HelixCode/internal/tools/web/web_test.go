@@ -307,11 +307,11 @@ func TestFetcher_ValidateURL_Invalid(t *testing.T) {
 	defer wt.Close()
 
 	invalidURLs := []string{
-		"ftp://example.com",       // Invalid scheme
-		"https://",                // Missing host
-		"not-a-url",              // Invalid URL
-		"https://localhost",      // Private IP (when disabled)
-		"https://127.0.0.1",      // Loopback
+		"ftp://example.com", // Invalid scheme
+		"https://",          // Missing host
+		"not-a-url",         // Invalid URL
+		"https://localhost", // Private IP (when disabled)
+		"https://127.0.0.1", // Loopback
 	}
 
 	for _, url := range invalidURLs {

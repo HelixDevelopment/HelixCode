@@ -30,16 +30,16 @@ const (
 
 // ModeCapabilities defines what each mode can do
 type ModeCapabilities struct {
-	Mode            AutonomyMode
-	AutoContext     bool // Automatically load relevant context
-	AutoApply       bool // Automatically apply code changes
-	AutoExecute     bool // Automatically execute commands
-	AutoDebug       bool // Automatically retry on errors
-	MaxRetries      int  // Maximum automatic retry attempts
-	RequireConfirm  bool // Require user confirmation
-	AllowRisky      bool // Allow risky operations
-	AutoEscalate    bool // Can escalate to higher mode
-	IterationLimit  int  // Maximum automatic iterations
+	Mode           AutonomyMode
+	AutoContext    bool // Automatically load relevant context
+	AutoApply      bool // Automatically apply code changes
+	AutoExecute    bool // Automatically execute commands
+	AutoDebug      bool // Automatically retry on errors
+	MaxRetries     int  // Maximum automatic retry attempts
+	RequireConfirm bool // Require user confirmation
+	AllowRisky     bool // Allow risky operations
+	AutoEscalate   bool // Can escalate to higher mode
+	IterationLimit int  // Maximum automatic iterations
 }
 
 // GetCapabilities returns the capabilities for a mode
@@ -47,72 +47,72 @@ func GetCapabilities(mode AutonomyMode) *ModeCapabilities {
 	switch mode {
 	case ModeNone:
 		return &ModeCapabilities{
-			Mode:            ModeNone,
-			AutoContext:     false,
-			AutoApply:       false,
-			AutoExecute:     false,
-			AutoDebug:       false,
-			MaxRetries:      0,
-			RequireConfirm:  true,
-			AllowRisky:      false,
-			AutoEscalate:    false,
-			IterationLimit:  0,
+			Mode:           ModeNone,
+			AutoContext:    false,
+			AutoApply:      false,
+			AutoExecute:    false,
+			AutoDebug:      false,
+			MaxRetries:     0,
+			RequireConfirm: true,
+			AllowRisky:     false,
+			AutoEscalate:   false,
+			IterationLimit: 0,
 		}
 
 	case ModeBasic:
 		return &ModeCapabilities{
-			Mode:            ModeBasic,
-			AutoContext:     false, // Manual context gathering
-			AutoApply:       false, // Must ask before changes
-			AutoExecute:     false, // Must ask before commands
-			AutoDebug:       false, // No auto-retry
-			MaxRetries:      0,
-			RequireConfirm:  true,
-			AllowRisky:      false,
-			AutoEscalate:    true, // Can ask to escalate
-			IterationLimit:  1,
+			Mode:           ModeBasic,
+			AutoContext:    false, // Manual context gathering
+			AutoApply:      false, // Must ask before changes
+			AutoExecute:    false, // Must ask before commands
+			AutoDebug:      false, // No auto-retry
+			MaxRetries:     0,
+			RequireConfirm: true,
+			AllowRisky:     false,
+			AutoEscalate:   true, // Can ask to escalate
+			IterationLimit: 1,
 		}
 
 	case ModeBasicPlus:
 		return &ModeCapabilities{
-			Mode:            ModeBasicPlus,
-			AutoContext:     false, // Context suggestions provided
-			AutoApply:       false, // Apply with confirmation
-			AutoExecute:     false, // Still asks for commands
-			AutoDebug:       false,
-			MaxRetries:      0,
-			RequireConfirm:  true, // Confirm risky operations
-			AllowRisky:      false,
-			AutoEscalate:    true,
-			IterationLimit:  5,
+			Mode:           ModeBasicPlus,
+			AutoContext:    false, // Context suggestions provided
+			AutoApply:      false, // Apply with confirmation
+			AutoExecute:    false, // Still asks for commands
+			AutoDebug:      false,
+			MaxRetries:     0,
+			RequireConfirm: true, // Confirm risky operations
+			AllowRisky:     false,
+			AutoEscalate:   true,
+			IterationLimit: 5,
 		}
 
 	case ModeSemiAuto:
 		return &ModeCapabilities{
-			Mode:            ModeSemiAuto,
-			AutoContext:     true,  // Automatic context gathering
-			AutoApply:       false, // Manual approval for changes (one-click)
-			AutoExecute:     false, // Manual approval for execution
-			AutoDebug:       false, // No auto-retry
-			MaxRetries:      0,
-			RequireConfirm:  true, // Confirm before apply
-			AllowRisky:      false,
-			AutoEscalate:    true,
-			IterationLimit:  10,
+			Mode:           ModeSemiAuto,
+			AutoContext:    true,  // Automatic context gathering
+			AutoApply:      false, // Manual approval for changes (one-click)
+			AutoExecute:    false, // Manual approval for execution
+			AutoDebug:      false, // No auto-retry
+			MaxRetries:     0,
+			RequireConfirm: true, // Confirm before apply
+			AllowRisky:     false,
+			AutoEscalate:   true,
+			IterationLimit: 10,
 		}
 
 	case ModeFullAuto:
 		return &ModeCapabilities{
-			Mode:            ModeFullAuto,
-			AutoContext:     true,
-			AutoApply:       true,
-			AutoExecute:     true,
-			AutoDebug:       true,
-			MaxRetries:      5,
-			RequireConfirm:  false, // No confirmation needed
-			AllowRisky:      true,  // Can do risky operations
-			AutoEscalate:    false, // Already at max
-			IterationLimit:  -1,    // Unlimited
+			Mode:           ModeFullAuto,
+			AutoContext:    true,
+			AutoApply:      true,
+			AutoExecute:    true,
+			AutoDebug:      true,
+			MaxRetries:     5,
+			RequireConfirm: false, // No confirmation needed
+			AllowRisky:     true,  // Can do risky operations
+			AutoEscalate:   false, // Already at max
+			IterationLimit: -1,    // Unlimited
 		}
 
 	default:

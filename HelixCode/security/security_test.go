@@ -20,7 +20,7 @@ func TestSecureByDesign(t *testing.T) {
 	// Test 1: No hardcoded credentials
 	testFiles := []string{
 		"cmd/local-llm.go",
-		"cmd/local-llm-advanced.go", 
+		"cmd/local-llm-advanced.go",
 		"internal/llm/",
 	}
 
@@ -77,7 +77,7 @@ func TestTLSConfiguration(t *testing.T) {
 
 func TestInputValidation(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test malicious input handling
 	maliciousInputs := []string{
 		"../../../etc/passwd",
@@ -92,7 +92,7 @@ func TestInputValidation(t *testing.T) {
 
 	// Create a mock manager to test input validation
 	manager := llm.NewLocalLLMManager("/tmp/test-local-llm")
-	
+
 	for _, input := range maliciousInputs {
 		// Test provider name validation
 		err := validateProviderName(input)
@@ -115,7 +115,7 @@ func TestFilePermissions(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	os.MkdirAll(testDir, 0755)
-	
+
 	// Test configuration files (should be 600)
 	configFile := filepath.Join(testDir, "config.yaml")
 	err := os.WriteFile(configFile, []byte("test: data"), 0644) // Intentionally insecure
@@ -165,8 +165,8 @@ func TestDependencySecurity(t *testing.T) {
 	// Test for known vulnerable dependencies
 	// In real implementation, this would use snyk or similar
 	vulnerablePackages := map[string]string{
-		"golang.org/x/crypto": "<=0.0.0-20190701092242-8e2f5b5a5d06",
-		"gopkg.in/yaml.v2":   "<=2.2.2",
+		"golang.org/x/crypto":          "<=0.0.0-20190701092242-8e2f5b5a5d06",
+		"gopkg.in/yaml.v2":             "<=2.2.2",
 		"github.com/gorilla/websocket": "<=1.4.0",
 	}
 
@@ -250,15 +250,15 @@ func (e *ValidationError) Error() string {
 // SAST tests for SonarQube compliance
 func TestSonarQubeRules(t *testing.T) {
 	// Test code quality rules
-	
+
 	// Rule 1: No hardcoded credentials (covered above)
-	
+
 	// Rule 2: Proper error handling
 	testErrorHandling(t)
-	
+
 	// Rule 3: No unused imports/variables
 	testUnusedCode(t)
-	
+
 	// Rule 4: Resource cleanup
 	testResourceCleanup(t)
 }
@@ -266,7 +266,7 @@ func TestSonarQubeRules(t *testing.T) {
 func testErrorHandling(t *testing.T) {
 	// Test that all functions properly handle errors
 	manager := llm.NewLocalLLMManager("")
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
@@ -286,7 +286,7 @@ func testUnusedCode(t *testing.T) {
 func testResourceCleanup(t *testing.T) {
 	// Test that providers are properly cleaned up
 	manager := llm.NewLocalLLMManager("")
-	
+
 	err := manager.Cleanup(context.Background())
 	if err != nil {
 		t.Errorf("Cleanup failed: %v", err)
@@ -296,13 +296,13 @@ func testResourceCleanup(t *testing.T) {
 // DAST tests for security scanning
 func TestDynamicSecurityScanning(t *testing.T) {
 	// Test runtime security vulnerabilities
-	
+
 	// Test 1: Injection resistance
 	testSQLInjection(t)
-	
-	// Test 2: XSS resistance  
+
+	// Test 2: XSS resistance
 	testXSSResistance(t)
-	
+
 	// Test 3: Authentication bypass resistance
 	testAuthBypassResistance(t)
 }
@@ -362,30 +362,30 @@ func sanitizeInput(input string) bool {
 	dangerousPatterns := []string{
 		"'", "\"", ";", "--", "/*", "*/", "${", "}",
 	}
-	
+
 	sanitized := input
 	for _, pattern := range dangerousPatterns {
 		sanitized = strings.ReplaceAll(sanitized, pattern, "")
 	}
-	
+
 	return sanitized != input
 }
 
 func sanitizeHTML(input string) string {
 	// Basic HTML sanitization
 	replacements := map[string]string{
-		"<": "&lt;",
-		">": "&gt;",
-		"&": "&amp;",
+		"<":  "&lt;",
+		">":  "&gt;",
+		"&":  "&amp;",
 		"\"": "&quot;",
-		"'": "&#39;",
+		"'":  "&#39;",
 	}
-	
+
 	sanitized := input
 	for dangerous, safe := range replacements {
 		sanitized = strings.ReplaceAll(sanitized, dangerous, safe)
 	}
-	
+
 	return sanitized
 }
 
@@ -394,7 +394,7 @@ func isValidAuthToken(token string) bool {
 	if token == "" || len(token) < 20 {
 		return false
 	}
-	
+
 	// In real implementation, would validate against proper auth system
 	return strings.HasPrefix(token, "hc-") && len(token) > 40
 }
@@ -403,31 +403,31 @@ func isValidAuthToken(token string) bool {
 func TestOWASPCompliance(t *testing.T) {
 	// OWASP A01: Broken Access Control
 	testAccessControl(t)
-	
+
 	// OWASP A02: Cryptographic Failures
 	testCryptography(t)
-	
+
 	// OWASP A03: Injection
 	testInjectionResistance(t)
-	
+
 	// OWASP A04: Insecure Design
 	testSecureDesign(t)
-	
+
 	// OWASP A05: Security Misconfiguration
-testSecurityConfiguration(t)
-	
+	testSecurityConfiguration(t)
+
 	// OWASP A06: Vulnerable Components
 	testComponentVulnerabilities(t)
-	
+
 	// OWASP A07: Authentication Failures
 	testAuthentication(t)
-	
+
 	// OWASP A08: Data Integrity Failures
 	testDataIntegrity(t)
-	
+
 	// OWASP A09: Security Logging Failures
 	testSecurityLogging(t)
-	
+
 	// OWASP A10: Server-Side Request Forgery
 	testSSRFProtection(t)
 }
@@ -455,7 +455,7 @@ func testCommandInjection(t *testing.T) {
 	// Test command injection resistance
 	maliciousCommands := []string{
 		"; rm -rf /",
-		"| cat /etc/passwd", 
+		"| cat /etc/passwd",
 		"&& echo 'injected'",
 		"`whoami`",
 		"$(id)",
@@ -471,7 +471,7 @@ func testCommandInjection(t *testing.T) {
 func sanitizeCommand(cmd string) bool {
 	// Remove shell metacharacters
 	dangerousChars := []string{";", "|", "&", "`", "$", "(", ")", "<", ">"}
-	
+
 	for _, char := range dangerousChars {
 		if strings.Contains(cmd, char) {
 			return false
@@ -533,11 +533,11 @@ func isSafeURL(rawURL string) bool {
 	}
 
 	// Block private/internal IPs
-	if u.Hostname() == "127.0.0.1" || 
-	   strings.HasPrefix(u.Hostname(), "192.168.") ||
-	   strings.HasPrefix(u.Hostname(), "10.") ||
-	   strings.HasPrefix(u.Hostname(), "169.254.") ||
-	   strings.HasPrefix(u.Hostname(), "172.") {
+	if u.Hostname() == "127.0.0.1" ||
+		strings.HasPrefix(u.Hostname(), "192.168.") ||
+		strings.HasPrefix(u.Hostname(), "10.") ||
+		strings.HasPrefix(u.Hostname(), "169.254.") ||
+		strings.HasPrefix(u.Hostname(), "172.") {
 		return false
 	}
 

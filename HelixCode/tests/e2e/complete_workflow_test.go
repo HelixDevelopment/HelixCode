@@ -22,10 +22,10 @@ import (
 // End-to-end tests for complete workflows
 
 const (
-	cliPath        = "./local-llm"
-	testTimeout     = 5 * time.Minute
-	healthTimeout   = 30 * time.Second
-	longTimeout     = 10 * time.Minute
+	cliPath       = "./local-llm"
+	testTimeout   = 5 * time.Minute
+	healthTimeout = 30 * time.Second
+	longTimeout   = 10 * time.Minute
 )
 
 // Test scenarios for complete user workflows
@@ -81,32 +81,32 @@ func TestCLICommands(t *testing.T) {
 			name:     "HelpCommand",
 			args:     []string{"--help"},
 			expected: "Local LLM Management System",
-			exitCode:  0,
+			exitCode: 0,
 		},
 		{
 			name:     "ListProviders",
 			args:     []string{"list"},
 			expected: "Available Local LLM Providers",
-			exitCode:  0,
+			exitCode: 0,
 		},
 		{
 			name:     "InvalidCommand",
 			args:     []string{"invalid-command"},
 			expected: "unknown command",
-			exitCode:  1,
+			exitCode: 1,
 		},
 		{
 			name:     "StatusCommand",
 			args:     []string{"status"},
 			expected: "Provider Status Report",
-			exitCode:  0,
+			exitCode: 0,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			output, exitCode := runCLICommand(t, tc.args...)
-			
+
 			assert.Equal(t, tc.exitCode, exitCode, "Exit code mismatch")
 			assert.Contains(t, output, tc.expected, "Expected output not found")
 		})
@@ -129,7 +129,7 @@ func testNewUserSetup(t *testing.T) {
 	t.Log("🔄 Testing new user setup workflow")
 
 	baseDir := t.TempDir()
-	
+
 	// Step 1: Initialize system
 	output, exitCode := runCLICommandWithEnv(t, []string{
 		"init",
@@ -201,7 +201,7 @@ func testAdvancedUserWorkflow(t *testing.T) {
 
 	// Step 1: Initialize with advanced configuration
 	configFile := createAdvancedConfig(t, baseDir)
-	
+
 	output, exitCode := runCLICommandWithEnv(t, []string{
 		"init",
 		"--config", configFile,
@@ -297,9 +297,9 @@ func testProductionDeployment(t *testing.T) {
 		"--production", "true",
 		"--base-dir", baseDir,
 	}, map[string]string{
-		"HELIX_BASE_DIR":      baseDir,
-		"HELIX_PRODUCTION":     "true",
-		"HELIX_LOG_LEVEL":      "info",
+		"HELIX_BASE_DIR":        baseDir,
+		"HELIX_PRODUCTION":      "true",
+		"HELIX_LOG_LEVEL":       "info",
 		"HELIX_METRICS_ENABLED": "true",
 	})
 
@@ -488,7 +488,7 @@ func testModelOptimizationWorkflow(t *testing.T) {
 			"HELIX_BASE_DIR": baseDir,
 		})
 
-		t.Logf("Optimization for %s/%s: %s (exit code: %d)", 
+		t.Logf("Optimization for %s/%s: %s (exit code: %d)",
 			target.provider, target.hardware, output, exitCode)
 	}
 
@@ -508,7 +508,7 @@ func testModelOptimizationWorkflow(t *testing.T) {
 	output, exitCode = runCLICommandWithEnv(t, []string{
 		"benchmark",
 		"--model", "llama-3-8b-instruct-gguf",
-		 "--duration", "60s",
+		"--duration", "60s",
 		"--base-dir", baseDir,
 	}, map[string]string{
 		"HELIX_BASE_DIR": baseDir,
@@ -613,7 +613,7 @@ func buildCLI() error {
 	cmd := exec.Command("go", "build", "-o", cliPath, "local-llm-test.go")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "GOFLAGS=-tags=test")
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("build failed: %v\nOutput: %s", err, string(output))
@@ -630,7 +630,7 @@ func runCLICommandWithEnv(t *testing.T, args []string, env map[string]string) (s
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, cliPath, args...)
-	
+
 	// Set environment
 	cmd.Env = os.Environ()
 	for k, v := range env {
@@ -726,7 +726,7 @@ func isProviderWorking(provider string) bool {
 		return cmd.Run() == nil
 	case "vllm":
 		// Check if vllm can be imported and basic functionality works
-		cmd := exec.Command("python", "-c", 
+		cmd := exec.Command("python", "-c",
 			"import vllm; print('VLLM available')")
 		return cmd.Run() == nil
 	default:
@@ -769,7 +769,7 @@ models:
 	configPath := filepath.Join(baseDir, "advanced-config.yaml")
 	err := os.WriteFile(configPath, []byte(config), 0644)
 	require.NoError(t, err)
-	
+
 	return configPath
 }
 
@@ -814,7 +814,7 @@ models:
 	configPath := filepath.Join(baseDir, "production-config.yaml")
 	err := os.WriteFile(configPath, []byte(config), 0644)
 	require.NoError(t, err)
-	
+
 	return configPath
 }
 
@@ -859,6 +859,6 @@ monitoring:
 	configPath := filepath.Join(baseDir, "orchestration-config.yaml")
 	err := os.WriteFile(configPath, []byte(config), 0644)
 	require.NoError(t, err)
-	
+
 	return configPath
 }

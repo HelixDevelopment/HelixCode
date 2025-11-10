@@ -206,60 +206,60 @@ func TestTaskCancel(t *testing.T) {
 
 func TestTaskIsReady(t *testing.T) {
 	tests := []struct {
-		name           string
-		status         TaskStatus
-		blocked        []string
-		depends        []string
-		completed      map[string]bool
-		expectedReady  bool
+		name          string
+		status        TaskStatus
+		blocked       []string
+		depends       []string
+		completed     map[string]bool
+		expectedReady bool
 	}{
 		{
-			name:           "Ready with no dependencies",
-			status:         StatusPending,
-			blocked:        []string{},
-			depends:        []string{},
-			completed:      map[string]bool{},
-			expectedReady:  true,
+			name:          "Ready with no dependencies",
+			status:        StatusPending,
+			blocked:       []string{},
+			depends:       []string{},
+			completed:     map[string]bool{},
+			expectedReady: true,
 		},
 		{
-			name:           "Ready with completed dependencies",
-			status:         StatusPending,
-			blocked:        []string{},
-			depends:        []string{"task-1", "task-2"},
-			completed:      map[string]bool{"task-1": true, "task-2": true},
-			expectedReady:  true,
+			name:          "Ready with completed dependencies",
+			status:        StatusPending,
+			blocked:       []string{},
+			depends:       []string{"task-1", "task-2"},
+			completed:     map[string]bool{"task-1": true, "task-2": true},
+			expectedReady: true,
 		},
 		{
-			name:           "Not ready - incomplete dependencies",
-			status:         StatusPending,
-			blocked:        []string{},
-			depends:        []string{"task-1", "task-2"},
-			completed:      map[string]bool{"task-1": true},
-			expectedReady:  false,
+			name:          "Not ready - incomplete dependencies",
+			status:        StatusPending,
+			blocked:       []string{},
+			depends:       []string{"task-1", "task-2"},
+			completed:     map[string]bool{"task-1": true},
+			expectedReady: false,
 		},
 		{
-			name:           "Not ready - blocked",
-			status:         StatusPending,
-			blocked:        []string{"blocker-1"},
-			depends:        []string{},
-			completed:      map[string]bool{},
-			expectedReady:  false,
+			name:          "Not ready - blocked",
+			status:        StatusPending,
+			blocked:       []string{"blocker-1"},
+			depends:       []string{},
+			completed:     map[string]bool{},
+			expectedReady: false,
 		},
 		{
-			name:           "Not ready - already completed",
-			status:         StatusCompleted,
-			blocked:        []string{},
-			depends:        []string{},
-			completed:      map[string]bool{},
-			expectedReady:  false,
+			name:          "Not ready - already completed",
+			status:        StatusCompleted,
+			blocked:       []string{},
+			depends:       []string{},
+			completed:     map[string]bool{},
+			expectedReady: false,
 		},
 		{
-			name:           "Not ready - in progress",
-			status:         StatusInProgress,
-			blocked:        []string{},
-			depends:        []string{},
-			completed:      map[string]bool{},
-			expectedReady:  false,
+			name:          "Not ready - in progress",
+			status:        StatusInProgress,
+			blocked:       []string{},
+			depends:       []string{},
+			completed:     map[string]bool{},
+			expectedReady: false,
 		},
 	}
 
@@ -356,7 +356,7 @@ func TestResultSetSuccess(t *testing.T) {
 	result := NewResult("task-123", "agent-456")
 
 	output := map[string]interface{}{
-		"code": "package main",
+		"code":  "package main",
 		"lines": 100,
 	}
 	confidence := 0.95
@@ -506,14 +506,14 @@ func TestTaskBlockUnblockLifecycle(t *testing.T) {
 
 func TestTaskMetrics(t *testing.T) {
 	metrics := &TaskMetrics{
-		TokensUsed:      1000,
-		LLMCalls:        5,
-		ToolCalls:       3,
-		FilesModified:   2,
-		LinesAdded:      150,
-		LinesRemoved:    50,
-		TestsGenerated:  10,
-		ExecutionTime:   5 * time.Second,
+		TokensUsed:     1000,
+		LLMCalls:       5,
+		ToolCalls:      3,
+		FilesModified:  2,
+		LinesAdded:     150,
+		LinesRemoved:   50,
+		TestsGenerated: 10,
+		ExecutionTime:  5 * time.Second,
 	}
 
 	result := NewResult("task-123", "agent-456")

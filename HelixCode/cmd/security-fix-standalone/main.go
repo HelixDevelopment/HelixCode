@@ -176,7 +176,7 @@ func findInputValidationIssues(projectPath string) []SecurityIssue {
 		}
 
 		contentStr := string(content)
-		
+
 		// Look for unsafe user input handling
 		unsafePatterns := []string{
 			`http\.Request\.Form.*exec\.Command`,
@@ -217,7 +217,7 @@ func findConfigurationIssues(projectPath string) []SecurityIssue {
 		}
 
 		contentStr := string(content)
-		
+
 		// Look for hardcoded security secrets
 		secretPatterns := []string{
 			`password\s*[:=]\s*["\'][^"\']+["\']`,
@@ -257,7 +257,7 @@ func findDatabaseIssues(projectPath string) []SecurityIssue {
 		}
 
 		contentStr := string(content)
-		
+
 		// Look for unsafe SQL string formatting
 		sqlPattern := regexp.MustCompile(`fmt\.Sprintf.*SELECT|fmt\.Sprintf.*INSERT|fmt\.Sprintf.*UPDATE|fmt\.Sprintf.*DELETE`)
 		if sqlPattern.MatchString(contentStr) {
@@ -288,7 +288,7 @@ func findFilesystemIssues(projectPath string) []SecurityIssue {
 		}
 
 		contentStr := string(content)
-		
+
 		// Look for unsafe file path construction
 		pathPattern := regexp.MustCompile(`filepath\.Join.*\+|os\.Open.*\+`)
 		if pathPattern.MatchString(contentStr) {
@@ -461,7 +461,7 @@ COMPLIANCE STATUS:
 `,
 		time.Now().Format(time.RFC3339),
 		len(issues),
-		fixedCount + failedCount,
+		fixedCount+failedCount,
 		fixedCount,
 		failedCount,
 		remainingCount,

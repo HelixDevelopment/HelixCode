@@ -49,13 +49,13 @@ type DetectionResult struct {
 
 // DetectedImage represents a detected image
 type DetectedImage struct {
-	Source      ImageSource
-	Location    string
-	Format      string
-	Size        int64
-	Dimensions  *Dimensions
-	MIMEType    string
-	Valid       bool
+	Source     ImageSource
+	Location   string
+	Format     string
+	Size       int64
+	Dimensions *Dimensions
+	MIMEType   string
+	Valid      bool
 }
 
 // ImageSource indicates where the image came from

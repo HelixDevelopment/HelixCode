@@ -32,12 +32,12 @@ const (
 	EventStepFailed        EventType = "step.failed"
 
 	// Worker events
-	EventWorkerConnected        EventType = "worker.connected"
-	EventWorkerDisconnected     EventType = "worker.disconnected"
-	EventWorkerHealthDegraded   EventType = "worker.health_degraded"
-	EventWorkerHeartbeatMissed  EventType = "worker.heartbeat_missed"
-	EventWorkerTaskAssigned     EventType = "worker.task_assigned"
-	EventWorkerTaskCompleted    EventType = "worker.task_completed"
+	EventWorkerConnected       EventType = "worker.connected"
+	EventWorkerDisconnected    EventType = "worker.disconnected"
+	EventWorkerHealthDegraded  EventType = "worker.health_degraded"
+	EventWorkerHeartbeatMissed EventType = "worker.heartbeat_missed"
+	EventWorkerTaskAssigned    EventType = "worker.task_assigned"
+	EventWorkerTaskCompleted   EventType = "worker.task_completed"
 
 	// API events
 	EventUserRegistered EventType = "user.registered"

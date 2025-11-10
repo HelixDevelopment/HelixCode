@@ -40,55 +40,55 @@ type Agent interface {
 type AgentType string
 
 const (
-	AgentTypePlanning    AgentType = "planning"
-	AgentTypeCoding      AgentType = "coding"
-	AgentTypeTesting     AgentType = "testing"
-	AgentTypeDebugging   AgentType = "debugging"
-	AgentTypeReview      AgentType = "review"
-	AgentTypeRefactoring AgentType = "refactoring"
+	AgentTypePlanning      AgentType = "planning"
+	AgentTypeCoding        AgentType = "coding"
+	AgentTypeTesting       AgentType = "testing"
+	AgentTypeDebugging     AgentType = "debugging"
+	AgentTypeReview        AgentType = "review"
+	AgentTypeRefactoring   AgentType = "refactoring"
 	AgentTypeDocumentation AgentType = "documentation"
-	AgentTypeCoordinator AgentType = "coordinator"
+	AgentTypeCoordinator   AgentType = "coordinator"
 )
 
 // AgentStatus represents the current status of an agent
 type AgentStatus string
 
 const (
-	StatusIdle       AgentStatus = "idle"
-	StatusBusy       AgentStatus = "busy"
-	StatusWaiting    AgentStatus = "waiting"
-	StatusError      AgentStatus = "error"
-	StatusShutdown   AgentStatus = "shutdown"
+	StatusIdle     AgentStatus = "idle"
+	StatusBusy     AgentStatus = "busy"
+	StatusWaiting  AgentStatus = "waiting"
+	StatusError    AgentStatus = "error"
+	StatusShutdown AgentStatus = "shutdown"
 )
 
 // Capability represents a specific capability an agent has
 type Capability string
 
 const (
-	CapabilityPlanning          Capability = "planning"
-	CapabilityCodeGeneration    Capability = "code_generation"
-	CapabilityCodeAnalysis      Capability = "code_analysis"
-	CapabilityTestGeneration    Capability = "test_generation"
-	CapabilityTestExecution     Capability = "test_execution"
-	CapabilityDebugging         Capability = "debugging"
-	CapabilityRefactoring       Capability = "refactoring"
-	CapabilityDocumentation     Capability = "documentation"
-	CapabilityCodeReview        Capability = "code_review"
-	CapabilitySecurityAudit     Capability = "security_audit"
+	CapabilityPlanning            Capability = "planning"
+	CapabilityCodeGeneration      Capability = "code_generation"
+	CapabilityCodeAnalysis        Capability = "code_analysis"
+	CapabilityTestGeneration      Capability = "test_generation"
+	CapabilityTestExecution       Capability = "test_execution"
+	CapabilityDebugging           Capability = "debugging"
+	CapabilityRefactoring         Capability = "refactoring"
+	CapabilityDocumentation       Capability = "documentation"
+	CapabilityCodeReview          Capability = "code_review"
+	CapabilitySecurityAudit       Capability = "security_audit"
 	CapabilityPerformanceAnalysis Capability = "performance_analysis"
 )
 
 // AgentConfig holds configuration for an agent
 type AgentConfig struct {
-	ID          string                 `json:"id"`
-	Type        AgentType              `json:"type"`
-	Name        string                 `json:"name"`
-	Model       string                 `json:"model"`        // LLM model to use
-	Provider    string                 `json:"provider"`     // LLM provider
-	Temperature float64                `json:"temperature"`
-	MaxTokens   int                    `json:"max_tokens"`
-	Capabilities []Capability          `json:"capabilities"`
-	Parameters  map[string]interface{} `json:"parameters"`
+	ID           string                 `json:"id"`
+	Type         AgentType              `json:"type"`
+	Name         string                 `json:"name"`
+	Model        string                 `json:"model"`    // LLM model to use
+	Provider     string                 `json:"provider"` // LLM provider
+	Temperature  float64                `json:"temperature"`
+	MaxTokens    int                    `json:"max_tokens"`
+	Capabilities []Capability           `json:"capabilities"`
+	Parameters   map[string]interface{} `json:"parameters"`
 }
 
 // BaseAgent provides common functionality for all agents
@@ -230,20 +230,20 @@ type HealthCheck struct {
 
 // CollaborationResult represents the result of agent collaboration
 type CollaborationResult struct {
-	Success       bool                     `json:"success"`
-	Results       map[string]*task.Result  `json:"results"`        // Results from each agent
-	Consensus     *task.Result             `json:"consensus"`      // Agreed-upon result
-	Conflicts     []*Conflict              `json:"conflicts"`      // Any conflicts that occurred
-	Duration      time.Duration            `json:"duration"`
-	Participants  []string                 `json:"participants"`   // Agent IDs
-	Messages      []*CollaborationMessage  `json:"messages"`       // Communication log
+	Success      bool                    `json:"success"`
+	Results      map[string]*task.Result `json:"results"`   // Results from each agent
+	Consensus    *task.Result            `json:"consensus"` // Agreed-upon result
+	Conflicts    []*Conflict             `json:"conflicts"` // Any conflicts that occurred
+	Duration     time.Duration           `json:"duration"`
+	Participants []string                `json:"participants"` // Agent IDs
+	Messages     []*CollaborationMessage `json:"messages"`     // Communication log
 }
 
 // CollaborationMessage represents a message between agents
 type CollaborationMessage struct {
 	ID        string                 `json:"id"`
-	From      string                 `json:"from"`       // Agent ID
-	To        string                 `json:"to"`         // Agent ID (or "all" for broadcast)
+	From      string                 `json:"from"` // Agent ID
+	To        string                 `json:"to"`   // Agent ID (or "all" for broadcast)
 	Type      MessageType            `json:"type"`
 	Content   string                 `json:"content"`
 	Metadata  map[string]interface{} `json:"metadata"`
@@ -254,51 +254,51 @@ type CollaborationMessage struct {
 type MessageType string
 
 const (
-	MessageTypeRequest     MessageType = "request"
-	MessageTypeResponse    MessageType = "response"
-	MessageTypeProposal    MessageType = "proposal"
-	MessageTypeAgreement   MessageType = "agreement"
+	MessageTypeRequest      MessageType = "request"
+	MessageTypeResponse     MessageType = "response"
+	MessageTypeProposal     MessageType = "proposal"
+	MessageTypeAgreement    MessageType = "agreement"
 	MessageTypeDisagreement MessageType = "disagreement"
-	MessageTypeQuestion    MessageType = "question"
-	MessageTypeAnswer      MessageType = "answer"
-	MessageTypeBroadcast   MessageType = "broadcast"
+	MessageTypeQuestion     MessageType = "question"
+	MessageTypeAnswer       MessageType = "answer"
+	MessageTypeBroadcast    MessageType = "broadcast"
 )
 
 // Conflict represents a disagreement between agents
 type Conflict struct {
-	ID          string                 `json:"id"`
-	Agents      []string               `json:"agents"`      // Agent IDs involved
-	Issue       string                 `json:"issue"`       // What they disagree on
-	Proposals   []*Proposal            `json:"proposals"`   // Each agent's proposal
-	Resolution  *Resolution            `json:"resolution"`  // How it was resolved
-	ResolvedBy  string                 `json:"resolved_by"` // Agent ID or "vote" or "coordinator"
-	Timestamp   time.Time              `json:"timestamp"`
+	ID         string      `json:"id"`
+	Agents     []string    `json:"agents"`      // Agent IDs involved
+	Issue      string      `json:"issue"`       // What they disagree on
+	Proposals  []*Proposal `json:"proposals"`   // Each agent's proposal
+	Resolution *Resolution `json:"resolution"`  // How it was resolved
+	ResolvedBy string      `json:"resolved_by"` // Agent ID or "vote" or "coordinator"
+	Timestamp  time.Time   `json:"timestamp"`
 }
 
 // Proposal represents an agent's proposed solution
 type Proposal struct {
-	AgentID     string                 `json:"agent_id"`
-	Solution    string                 `json:"solution"`
-	Reasoning   string                 `json:"reasoning"`
-	Confidence  float64                `json:"confidence"`
-	Supporting  map[string]interface{} `json:"supporting"`  // Supporting evidence
+	AgentID    string                 `json:"agent_id"`
+	Solution   string                 `json:"solution"`
+	Reasoning  string                 `json:"reasoning"`
+	Confidence float64                `json:"confidence"`
+	Supporting map[string]interface{} `json:"supporting"` // Supporting evidence
 }
 
 // Resolution represents how a conflict was resolved
 type Resolution struct {
-	Method      ResolutionMethod       `json:"method"`
-	Winner      string                 `json:"winner"`      // Agent ID whose proposal was chosen
-	Explanation string                 `json:"explanation"`
-	Final       *Proposal              `json:"final"`       // Final agreed solution
+	Method      ResolutionMethod `json:"method"`
+	Winner      string           `json:"winner"` // Agent ID whose proposal was chosen
+	Explanation string           `json:"explanation"`
+	Final       *Proposal        `json:"final"` // Final agreed solution
 }
 
 // ResolutionMethod defines how conflicts are resolved
 type ResolutionMethod string
 
 const (
-	ResolutionMethodVoting       ResolutionMethod = "voting"
-	ResolutionMethodCoordinator  ResolutionMethod = "coordinator"
-	ResolutionMethodConsensus    ResolutionMethod = "consensus"
+	ResolutionMethodVoting         ResolutionMethod = "voting"
+	ResolutionMethodCoordinator    ResolutionMethod = "coordinator"
+	ResolutionMethodConsensus      ResolutionMethod = "consensus"
 	ResolutionMethodHighConfidence ResolutionMethod = "high_confidence"
 )
 

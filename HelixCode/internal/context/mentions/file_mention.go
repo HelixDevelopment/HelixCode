@@ -83,10 +83,10 @@ func (h *FileMentionHandler) Resolve(ctx context.Context, target string, options
 		Content:    string(content),
 		TokenCount: tokenCount,
 		Metadata: map[string]interface{}{
-			"full_path":  filePath,
-			"size":       fileInfo.Size(),
-			"modified":   fileInfo.ModTime(),
-			"extension":  filepath.Ext(filePath),
+			"full_path": filePath,
+			"size":      fileInfo.Size(),
+			"modified":  fileInfo.ModTime(),
+			"extension": filepath.Ext(filePath),
 		},
 		ResolvedAt: time.Now(),
 	}

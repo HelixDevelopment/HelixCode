@@ -7,9 +7,16 @@ import (
 	"time"
 
 	"dev.helix.code/internal/logging"
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/memory/providers"
 )
+
+// VectorConfig contains configuration for vector integration
+type VectorConfig struct {
+	DefaultProvider string                                     `json:"default_provider"`
+	Providers       map[string]*providers.SingleProviderConfig `json:"providers"`
+	LoadBalancing   providers.LoadBalanceType                  `json:"load_balancing"`
+	FailoverEnabled bool                                       `json:"failover_enabled"`
+}
 
 // VectorIntegration provides vector database integration for all providers
 type VectorIntegration struct {
@@ -21,52 +28,8 @@ type VectorIntegration struct {
 	providers map[string]providers.VectorProvider
 }
 
-// VectorConfig contains vector integration configuration
-type VectorConfig struct {
-	DefaultProvider string                           `json:"default_provider"`
-	Providers       map[string]*ProviderVectorConfig `json:"providers"`
-	LoadBalancing   providers.LoadBalanceType        `json:"load_balancing"`
-	FailoverEnabled bool                             `json:"failover_enabled"`
-	CacheEnabled    bool                             `json:"cache_enabled"`
-	CacheSize       int                              `json:"cache_size"`
-	CacheTTL        int64                            `json:"cache_ttl"`
-}
-
-// ProviderVectorConfig contains vector configuration for a specific provider
-type ProviderVectorConfig struct {
-	Type      providers.ProviderType `json:"type"`
-	Enabled   bool                   `json:"enabled"`
-	Config    map[string]interface{} `json:"config"`
-	IndexName string                 `json:"index_name"`
-	Dimension int                    `json:"dimension"`
-	Metric    string                 `json:"metric"`
-}
-
-// NewVectorIntegration creates a new vector integration
+// NewVectorIntegration creates a new vector integration instance
 func NewVectorIntegration(config *VectorConfig) *VectorIntegration {
-	if config == nil {
-		config = &VectorConfig{
-			DefaultProvider: "pinecone",
-			Providers: map[string]*ProviderVectorConfig{
-				"pinecone": {
-					Type:      providers.ProviderTypePinecone,
-					Enabled:   true,
-					IndexName: "helixcode_vectors",
-					Dimension: 1536,
-					Metric:    "cosine",
-					Config: map[string]interface{}{
-						"environment": "us-west1-gcp",
-					},
-				},
-			},
-			LoadBalancing:   providers.LoadBalanceRoundRobin,
-			FailoverEnabled: true,
-			CacheEnabled:    true,
-			CacheSize:       1000,
-			CacheTTL:        300000, // 5 minutes
-		}
-	}
-
 	return &VectorIntegration{
 		registry:  providers.GetRegistry(),
 		logger:    logging.NewLogger(logging.INFO),
@@ -80,16 +43,14 @@ func (vi *VectorIntegration) Initialize(ctx context.Context) error {
 	vi.mu.Lock()
 	defer vi.mu.Unlock()
 
-	vi.logger.Info("Initializing vector integration",
-		"default_provider", vi.config.DefaultProvider,
-		"providers_count", len(vi.config.Providers))
+	vi.logger.Info("Initializing vector integration: default_provider=%s, providers_count=%d", vi.config.DefaultProvider, len(vi.config.Providers))
 
 	// Create and initialize all providers
 	providerConfigs := make(map[string]*providers.SingleProviderConfig)
 
 	for name, providerConfig := range vi.config.Providers {
 		if !providerConfig.Enabled {
-			vi.logger.Info("Skipping disabled provider", "name", name)
+			vi.logger.Info("Skipping disabled provider: name=%s", name)
 			continue
 		}
 
@@ -147,7 +108,7 @@ func (vi *VectorIntegration) StoreVectorInProvider(ctx context.Context, provider
 	providerVector := vi.convertToProviderVector(vector)
 
 	// Store using provider manager
-	return vi.manager.Store(ctx, []*memory.VectorData{providerVector})
+	return vi.manager.Store(ctx, []*providers.VectorData{providerVector})
 }
 
 // RetrieveVector retrieves a vector by ID
@@ -218,7 +179,8 @@ func (vi *VectorIntegration) FindSimilarVectors(ctx context.Context, embedding [
 // CreateVectorIndex creates a vector index
 func (vi *VectorIntegration) CreateVectorIndex(ctx context.Context, indexName string, config *VectorIndexConfig) error {
 	// Convert to provider format
-	providerConfig := &memory.CollectionConfig{
+	providerConfig := &providers.CollectionConfig{
+		Name:        indexName,
 		Dimension:   config.Dimension,
 		Metric:      config.Metric,
 		Description: config.Description,
@@ -242,19 +204,17 @@ func (vi *VectorIntegration) ListVectorIndexes(ctx context.Context) ([]*VectorIn
 
 	// Convert results
 	var indexes []*VectorIndexInfo
-	for name, collectionInfos := range collections {
-		for _, collectionInfo := range collectionInfos {
-			indexes = append(indexes, &VectorIndexInfo{
-				Name:        collectionInfo.Name,
-				Description: collectionInfo.Description,
-				Dimension:   collectionInfo.Dimension,
-				Metric:      collectionInfo.Metric,
-				VectorCount: collectionInfo.VectorCount,
-				Size:        collectionInfo.Size,
-				CreatedAt:   collectionInfo.CreatedAt,
-				UpdatedAt:   collectionInfo.UpdatedAt,
-			})
-		}
+	for _, collectionInfo := range collections {
+		indexes = append(indexes, &VectorIndexInfo{
+			Name:        collectionInfo.Name,
+			Description: "",
+			Dimension:   collectionInfo.Dimension,
+			Metric:      collectionInfo.Metric,
+			VectorCount: collectionInfo.VectorCount,
+			Size:        collectionInfo.Size,
+			CreatedAt:   collectionInfo.CreatedAt,
+			UpdatedAt:   collectionInfo.UpdatedAt,
+		})
 	}
 
 	return indexes, nil
@@ -268,6 +228,11 @@ func (vi *VectorIntegration) GetVectorStats(ctx context.Context) (*VectorStats, 
 		return nil, err
 	}
 
+	cost := 0.0
+	if stats.CostInfo != nil {
+		cost = stats.CostInfo.TotalCost
+	}
+
 	return &VectorStats{
 		TotalVectors:   stats.TotalVectors,
 		TotalIndexes:   stats.TotalCollections,
@@ -276,7 +241,7 @@ func (vi *VectorIntegration) GetVectorStats(ctx context.Context) (*VectorStats, 
 		LastOperation:  stats.LastOperation,
 		ErrorCount:     stats.ErrorCount,
 		Uptime:         stats.Uptime,
-		Cost:           stats.TotalCost,
+		Cost:           cost,
 	}, nil
 }
 
@@ -295,9 +260,7 @@ func (vi *VectorIntegration) HealthCheck(ctx context.Context) (*VectorHealthStat
 		if health.Status != "healthy" {
 			status = "degraded"
 			unhealthyCount++
-			vi.logger.Warn("Provider unhealthy",
-				"provider", providerName,
-				"status", health.Status)
+			vi.logger.Warn("Provider unhealthy: provider=%s, status=%s", providerName, health.Status)
 		}
 	}
 
@@ -331,8 +294,8 @@ func (vi *VectorIntegration) RestoreVectors(ctx context.Context, backupPath stri
 }
 
 // convertToProviderVector converts to provider vector format
-func (vi *VectorIntegration) convertToProviderVector(vector *VectorData) *memory.VectorData {
-	return &memory.VectorData{
+func (vi *VectorIntegration) convertToProviderVector(vector *VectorData) *providers.VectorData {
+	return &providers.VectorData{
 		ID:         vector.ID,
 		Vector:     vector.Embedding,
 		Metadata:   vector.Metadata,
@@ -342,7 +305,7 @@ func (vi *VectorIntegration) convertToProviderVector(vector *VectorData) *memory
 }
 
 // convertFromProviderVector converts from provider vector format
-func (vi *VectorIntegration) convertFromProviderVector(vector *memory.VectorData) *VectorData {
+func (vi *VectorIntegration) convertFromProviderVector(vector *providers.VectorData) *VectorData {
 	return &VectorData{
 		ID:        vector.ID,
 		Embedding: vector.Vector,
@@ -353,14 +316,13 @@ func (vi *VectorIntegration) convertFromProviderVector(vector *memory.VectorData
 }
 
 // convertToProviderQuery converts to provider query format
-func (vi *VectorIntegration) convertToProviderQuery(query *VectorSearchQuery) *memory.VectorQuery {
-	return &memory.VectorQuery{
+func (vi *VectorIntegration) convertToProviderQuery(query *VectorSearchQuery) *providers.VectorQuery {
+	return &providers.VectorQuery{
 		Vector:     query.Embedding,
 		Collection: query.IndexName,
 		TopK:       query.K,
 		Threshold:  query.Threshold,
 		Filters:    query.Filters,
-		Metric:     query.Metric,
 	}
 }
 
@@ -373,7 +335,7 @@ func (vi *VectorIntegration) Stop(ctx context.Context) error {
 
 	if vi.manager != nil {
 		if err := vi.manager.Stop(ctx); err != nil {
-			vi.logger.Warn("Failed to stop provider manager", "error", err)
+			vi.logger.Warn("Failed to stop provider manager: %v", err)
 		}
 	}
 

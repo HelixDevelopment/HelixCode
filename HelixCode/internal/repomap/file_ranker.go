@@ -22,12 +22,12 @@ type FileRanker struct {
 
 // RankingWeights defines the weights for different ranking factors
 type RankingWeights struct {
-	RecentlyChanged  float64
-	SymbolMatch      float64
-	ImportFrequency  float64
-	DependencyDepth  float64
-	FileSize         float64
-	SymbolDensity    float64
+	RecentlyChanged float64
+	SymbolMatch     float64
+	ImportFrequency float64
+	DependencyDepth float64
+	FileSize        float64
+	SymbolDensity   float64
 }
 
 // DefaultWeights returns sensible default weights

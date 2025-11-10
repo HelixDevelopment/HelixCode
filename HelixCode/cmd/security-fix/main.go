@@ -23,7 +23,7 @@ func main() {
 
 	// Execute zero-tolerance security issue resolution
 	log.Printf("🔧 Executing Zero-Tolerance Security Issue Resolution...")
-	
+
 	fixResult, err := fix.FixAllCriticalSecurityIssues(projectPath, true)
 	if err != nil {
 		log.Fatalf("❌ Security issue resolution failed: %v", err)

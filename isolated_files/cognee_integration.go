@@ -1,1192 +1,747 @@
-package memory
+package cognee
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
-	"sync"
 	"time"
 
-	"dev.helix.code/internal/config"
-	"dev.helix.code/internal/cognee"
 	"dev.helix.code/internal/hardware"
-	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/provider"
+	"github.com/google/uuid"
 )
 
-// CogneeIntegration provides seamless integration between Cognee and memory management
+// CogneeIntegration handles provider integration with Cognee
 type CogneeIntegration struct {
-	// Core components
-	memoryManager   *Manager
-	cogneeManager  *cognee.CogneeManager
-	providerManager *provider.ProviderManager
-	aikeyManager    *config.APIKeyManager
-	
-	// Configuration
-	config         *config.HelixConfig
-	hwProfile      *hardware.Profile
-	cogneeConfig   *config.CogneeConfig
-	
-	// State and synchronization
-	mu             sync.RWMutex
-	initialized     bool
-	healthStatus    *HealthStatus
-	
-	// Optimization
-	optimizer       *cognee.HostAwareOptimizer
-	perfOptimizer   *cognee.ResearchBasedOptimizer
-	
-	// Monitoring and metrics
-	logger          logging.Logger
-	metrics         *CogneeMetrics
-	performance     map[string]time.Duration
-	
-	// Context management
-	contextManager  *ContextManager
-	memoryStore     *MemoryStore
-	
-	// Provider-specific adapters
-	providerAdapters map[string]*ProviderAdapter
+	providerName     string
+	providerInstance provider.Provider
+	cogneeManager    *CogneeManager
+	config           *CogneeIntegrationConfig
+	logger           Logger
+	initialized      bool
+	connected        bool
+
+	// Integration features
+	features map[string]bool
+
+	// Metrics
+	metrics *CogneeIntegrationMetrics
+
+	// API client
+	apiClient *http.Client
+	baseURL   string
 }
 
-// CogneeMetrics tracks Cognee integration metrics
-type CogneeMetrics struct {
-	TotalOperations       int64         `json:"total_operations"`
-	SuccessfulOperations  int64         `json:"successful_operations"`
-	FailedOperations      int64         `json:"failed_operations"`
-	AverageLatency       time.Duration `json:"average_latency"`
-	LastOperation        time.Time     `json:"last_operation"`
-	MemoryEntries        int64         `json:"memory_entries"`
-	ContextEntries       int64         `json:"context_entries"`
-	ProviderUsage        map[string]int64 `json:"provider_usage"`
-	ErrorTypes          map[string]int64 `json:"error_types"`
-	ResourceUsage       *ResourceUsage `json:"resource_usage"`
-	Performance         map[string]*ProviderPerformance `json:"performance"`
+// CogneeIntegrationConfig contains integration configuration
+type CogneeIntegrationConfig struct {
+	Enabled            bool                   `json:"enabled"`
+	IntegrationType    string                 `json:"integration_type"`
+	Priority           int                    `json:"priority"`
+	Features           []string               `json:"features"`
+	AutoKnowledge      bool                   `json:"auto_knowledge"`
+	SemanticSearch     bool                   `json:"semantic_search"`
+	GraphAnalytics     bool                   `json:"graph_analytics"`
+	RealTimeProcessing bool                   `json:"real_time_processing"`
+	MaxKnowledgeNodes  int                    `json:"max_knowledge_nodes"`
+	SearchTimeout      time.Duration          `json:"search_timeout"`
+	CacheResults       bool                   `json:"cache_results"`
+	AnalyticsInterval  time.Duration          `json:"analytics_interval"`
+	HostAware          bool                   `json:"host_aware"`
+	Optimization       map[string]interface{} `json:"optimization"`
 }
 
-// ResourceUsage tracks resource utilization
-type ResourceUsage struct {
-	CPUUsage       float64 `json:"cpu_usage"`
-	MemoryUsage    int64   `json:"memory_usage"`
-	DiskUsage      int64   `json:"disk_usage"`
-	NetworkUsage   int64   `json:"network_usage"`
-	GPUUsage       float64 `json:"gpu_usage"`
-	Timestamp      time.Time `json:"timestamp"`
+// CogneeIntegrationMetrics contains integration metrics
+type CogneeIntegrationMetrics struct {
+	KnowledgeNodes      int64         `json:"knowledge_nodes"`
+	KnowledgeEdges      int64         `json:"knowledge_edges"`
+	SearchQueries       int64         `json:"search_queries"`
+	SearchResponses     int64         `json:"search_responses"`
+	AnalyticsRequests   int64         `json:"analytics_requests"`
+	CacheHits           int64         `json:"cache_hits"`
+	CacheMisses         int64         `json:"cache_misses"`
+	Errors              int64         `json:"errors"`
+	AverageResponseTime time.Duration `json:"average_response_time"`
+	LastActivity        time.Time     `json:"last_activity"`
+	StartTime           time.Time     `json:"start_time"`
 }
 
-// ProviderPerformance tracks per-provider performance metrics
-type ProviderPerformance struct {
-	ProviderName   string        `json:"provider_name"`
-	TotalRequests  int64         `json:"total_requests"`
-	SuccessfulRequests int64      `json:"successful_requests"`
-	FailedRequests int64         `json:"failed_requests"`
-	AverageLatency time.Duration `json:"average_latency"`
-	LastRequest   time.Time     `json:"last_request"`
-	ErrorRate     float64       `json:"error_rate"`
-	Throughput    float64       `json:"throughput"`
-	PerformanceScore float64     `json:"performance_score"`
-}
-
-// ContextManager manages conversation context across providers
-type ContextManager struct {
-	activeContexts map[string]*ConversationContext
-	maxContextSize int
-	maxContextAge  time.Duration
-	mu              sync.RWMutex
-	logger           logging.Logger
-}
-
-// ConversationContext represents the context of a conversation
-type ConversationContext struct {
-	ID              string                 `json:"id"`
-	Provider        string                 `json:"provider"`
-	Model           string                 `json:"model"`
-	SessionID       string                 `json:"session_id"`
-	ConversationID  string                 `json:"conversation_id"`
-	Memory          map[string]interface{} `json:"memory"`
-	Knowledge       []*KnowledgeItem       `json:"knowledge"`
-	Documents       []*DocumentItem        `json:"documents"`
-	LastUpdated     time.Time              `json:"last_updated"`
-	Expiration      time.Time              `json:"expiration"`
-}
-
-// KnowledgeItem represents a piece of knowledge from Cognee
-type KnowledgeItem struct {
-	ID           string                 `json:"id"`
-	Content      string                 `json:"content"`
-	Type         string                 `json:"type"`
-	Confidence   float64               `json:"confidence"`
-	Source       string                 `json:"source"`
-	Tags         []string               `json:"tags"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	CreatedAt    time.Time              `json:"created_at"`
-	AccessCount  int64                  `json:"access_count"`
-}
-
-// DocumentItem represents a document in the memory system
-type DocumentItem struct {
-	ID           string                 `json:"id"`
-	Title        string                 `json:"title"`
-	Content      string                 `json:"content"`
-	URL          string                 `json:"url"`
-	Size         int64                  `json:"size"`
-	Type         string                 `json:"type"`
-	Tags         []string               `json:"tags"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	CreatedAt    time.Time              `json:"created_at"`
-	ModifiedAt   time.Time              `json:"modified_at"`
-	AccessCount  int64                  `json:"access_count"`
-	Relevance    float64               `json:"relevance"`
-}
-
-// MemoryStore provides persistent storage for memory data
-type MemoryStore struct {
-	data           map[string]*MemoryEntry
-	index          map[string][]string // Type -> IDs
-	searchIndex    map[string][]string // Content -> IDs
-	maxEntries     int64
-	maxSize        int64
-	currentSize    int64
-	mu             sync.RWMutex
-	logger         logging.Logger
-}
-
-// MemoryEntry represents an entry in the memory store
-type MemoryEntry struct {
-	ID           string                 `json:"id"`
-	Type         string                 `json:"type"`
-	Content      string                 `json:"content"`
-	Provider     string                 `json:"provider"`
-	Model        string                 `json:"model"`
-	SessionID    string                 `json:"session_id"`
-	Timestamp    time.Time              `json:"timestamp"`
-	Expiration   *time.Time            `json:"expiration,omitempty"`
-	AccessCount  int64                  `json:"access_count"`
-	LastAccess   time.Time              `json:"last_access"`
-	Tags         []string               `json:"tags"`
-	Metadata     map[string]interface{} `json:"metadata"`
-}
-
-// ProviderAdapter adapts provider-specific memory operations
-type ProviderAdapter struct {
-	Provider       string
-	Model          string
-	MaxTokens      int
-	MaxContext     int
-	SupportedTypes []string
-	Capabilities   []string
+// Logger interface for logging
+type Logger interface {
+	Debug(msg string, args ...interface{})
+	Info(msg string, args ...interface{})
+	Warn(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
 }
 
 // NewCogneeIntegration creates a new Cognee integration
-func NewCogneeIntegration(
-	memoryManager *Manager,
-	providerManager *provider.ProviderManager,
-	aikeyManager *config.APIKeyManager,
-) *CogneeIntegration {
-	logger := logging.NewLogger("cognee_integration")
-	
-	return &CogneeIntegration{
-		memoryManager:    memoryManager,
-		providerManager:  providerManager,
-		aikeyManager:     aikeyManager,
-		logger:           logger,
-		performance:      make(map[string]time.Duration),
-		providerAdapters: make(map[string]*ProviderAdapter),
-		contextManager: &ContextManager{
-			activeContexts: make(map[string]*ConversationContext),
-			maxContextSize: 1000,
-			maxContextAge:  24 * time.Hour,
-			logger:         logging.NewLogger("context_manager"),
-		},
-		memoryStore: &MemoryStore{
-			data:        make(map[string]*MemoryEntry),
-			index:       make(map[string][]string),
-			searchIndex: make(map[string][]string),
-			maxEntries:  1000000,
-			maxSize:     1024 * 1024 * 1024, // 1GB
-			logger:      logging.NewLogger("memory_store"),
-		},
-		metrics: &CogneeMetrics{
-			ProviderUsage:  make(map[string]int64),
-			ErrorTypes:     make(map[string]int64),
-			Performance:    make(map[string]*ProviderPerformance),
-		},
+func NewCogneeIntegration(providerName string, provider provider.Provider,
+	cogneeManager *CogneeManager, config *CogneeIntegrationConfig) *CogneeIntegration {
+
+	// Default configuration
+	if config == nil {
+		config = &CogneeIntegrationConfig{
+			Enabled:            true,
+			IntegrationType:    "knowledge_graph",
+			Priority:           5,
+			Features:           []string{"knowledge", "search", "analytics"},
+			AutoKnowledge:      true,
+			SemanticSearch:     true,
+			GraphAnalytics:     true,
+			RealTimeProcessing: true,
+			MaxKnowledgeNodes:  10000,
+			SearchTimeout:      30 * time.Second,
+			CacheResults:       true,
+			AnalyticsInterval:  5 * time.Minute,
+			HostAware:          true,
+			Optimization:       make(map[string]interface{}),
+		}
 	}
+
+	// Create logger (stub for now)
+	logger := &stubLogger{}
+
+	// Initialize features
+	features := make(map[string]bool)
+	for _, feature := range config.Features {
+		features[feature] = true
+	}
+
+	integration := &CogneeIntegration{
+		providerName:     providerName,
+		providerInstance: provider,
+		cogneeManager:    cogneeManager,
+		config:           config,
+		logger:           logger,
+		features:         features,
+		metrics: &CogneeIntegrationMetrics{
+			StartTime: time.Now(),
+		},
+		apiClient: &http.Client{Timeout: config.SearchTimeout},
+		baseURL:   "http://localhost:8000", // Default Cognee URL
+	}
+
+	return integration
 }
 
 // Initialize initializes the Cognee integration
-func (ci *CogneeIntegration) Initialize(ctx context.Context, config *config.HelixConfig) error {
-	ci.mu.Lock()
-	defer ci.mu.Unlock()
-	
-	if ci.initialized {
+func (ci *CogneeIntegration) Initialize(ctx context.Context) error {
+	if !ci.config.Enabled {
+		ci.logger.Info("Cognee integration is disabled")
 		return nil
 	}
-	
-	ci.logger.Info("Initializing Cognee Integration...")
-	
-	// Set configuration
-	ci.config = config
-	ci.cogneeConfig = config.Cognee
-	
-	// Create hardware profile
-	var err error
-	ci.hwProfile, err = hardware.GetProfile()
-	if err != nil {
-		ci.logger.Warn("Failed to get hardware profile", "error", err)
-		// Create default profile
-		ci.hwProfile = hardware.DefaultProfile()
+
+	ci.logger.Info("Initializing Cognee integration...")
+
+	// Check if provider supports Cognee
+	if !ci.providerInstance.SupportsCognee() {
+		return fmt.Errorf("provider %s does not support Cognee integration", ci.providerName)
 	}
-	
-	// Initialize Cognee manager
-	ci.cogneeManager, err = cognee.NewCogneeManager(ci.cogneeConfig, ci.hwProfile)
-	if err != nil {
-		return fmt.Errorf("failed to create Cognee manager: %w", err)
+
+	// Get Cognee configuration
+	cogneeConfig := ci.cogneeManager.GetConfig()
+	if cogneeConfig == nil {
+		return fmt.Errorf("Cognee manager not initialized")
 	}
-	
-	// Initialize Cognee
-	if err := ci.cogneeManager.Initialize(ctx); err != nil {
-		return fmt.Errorf("failed to initialize Cognee manager: %w", err)
+
+	// Check provider configuration
+	providerConfig, exists := cogneeConfig.Providers[ci.providerName]
+	if !exists || !providerConfig.Enabled {
+		return fmt.Errorf("provider %s not configured for Cognee", ci.providerName)
 	}
-	
-	// Create optimizers
-	ci.optimizer = cognee.NewHostAwareOptimizer(ci.hwProfile)
-	ci.perfOptimizer = cognee.NewResearchBasedOptimizer(ci.cogneeConfig)
-	
-	// Initialize optimizers
-	if err := ci.optimizer.Initialize(ctx); err != nil {
-		ci.logger.Warn("Failed to initialize host optimizer", "error", err)
+
+	// Configure integration based on provider type
+	if err := ci.configureForProvider(); err != nil {
+		return fmt.Errorf("failed to configure for provider: %w", err)
 	}
-	
-	if err := ci.perfOptimizer.Initialize(ctx); err != nil {
-		ci.logger.Warn("Failed to initialize performance optimizer", "error", err)
+
+	// Apply host-aware optimization
+	if ci.config.HostAware {
+		if err := ci.applyHostOptimization(); err != nil {
+			ci.logger.Warn("Failed to apply host optimization", "error", err)
+		}
 	}
-	
-	// Create provider adapters
-	if err := ci.createProviderAdapters(); err != nil {
-		return fmt.Errorf("failed to create provider adapters: %w", err)
+
+	// Initialize provider for Cognee
+	if err := ci.providerInstance.InitializeCognee(cogneeConfig, nil); err != nil {
+		return fmt.Errorf("failed to initialize provider for Cognee: %w", err)
 	}
-	
-	// Start background tasks
-	if err := ci.startBackgroundTasks(ctx); err != nil {
-		return fmt.Errorf("failed to start background tasks: %w", err)
-	}
-	
-	// Update health status
-	ci.healthStatus = &HealthStatus{
-		Status:       "healthy",
-		LastCheck:    time.Now(),
-		ResponseTime:  0,
-		Metrics:       make(map[string]float64),
-		Dependencies:  make(map[string]string),
-	}
-	
+
 	ci.initialized = true
-	ci.logger.Info("Cognee Integration initialized successfully")
-	
+	ci.metrics.StartTime = time.Now()
+
+	ci.logger.Info("Cognee integration initialized successfully")
 	return nil
 }
 
-// StoreMemory stores memory data using Cognee
-func (ci *CogneeIntegration) StoreMemory(ctx context.Context, data *MemoryData) error {
+// Connect establishes connection to Cognee
+func (ci *CogneeIntegration) Connect(ctx context.Context) error {
 	if !ci.initialized {
-		return fmt.Errorf("cognee integration not initialized")
+		return fmt.Errorf("integration not initialized")
 	}
-	
-	start := time.Now()
-	defer func() {
-		ci.metrics.TotalOperations++
-		ci.metrics.LastOperation = time.Now()
-		
-		if err := recover(); err != nil {
-			ci.metrics.FailedOperations++
-			ci.logger.Error("Memory store panic", "error", err)
-		}
-		
-		latency := time.Since(start)
-		ci.performance["store"] = latency
-		ci.metrics.AverageLatency = time.Duration(
-			(ci.metrics.AverageLatency + latency) / 2,
-		)
-	}()
-	
-	ci.logger.Debug("Storing memory data", "id", data.ID, "type", data.Type)
-	
-	// Determine provider and model from context
-	provider, model := ci.getProviderFromContext(ctx)
-	
-	// Store in Cognee
-	if err := ci.storeInCognee(ctx, data, provider, model); err != nil {
-		ci.metrics.FailedOperations++
-		ci.metrics.ErrorTypes["cognee_store"]++
-		return fmt.Errorf("failed to store in Cognee: %w", err)
+
+	if ci.connected {
+		return nil
 	}
-	
-	// Store in memory store
-	if err := ci.storeInMemoryStore(data, provider, model); err != nil {
-		ci.metrics.ErrorTypes["memory_store"]++
-		ci.logger.Warn("Failed to store in memory store", "error", err)
+
+	ci.logger.Info("Connecting to Cognee...")
+
+	// Wait for Cognee to be ready
+	if err := ci.waitForCognee(ctx); err != nil {
+		return fmt.Errorf("Cognee not ready: %w", err)
 	}
-	
-	// Update context
-	if err := ci.updateContext(ctx, data, provider, model); err != nil {
-		ci.logger.Warn("Failed to update context", "error", err)
+
+	// Test connection
+	if err := ci.testConnection(ctx); err != nil {
+		return fmt.Errorf("connection test failed: %w", err)
 	}
-	
-	// Update metrics
-	ci.metrics.MemoryEntries++
-	if provider != "" {
-		ci.metrics.ProviderUsage[provider]++
+
+	// Initialize provider-specific features
+	if err := ci.initializeProviderFeatures(ctx); err != nil {
+		return fmt.Errorf("failed to initialize provider features: %w", err)
 	}
-	
-	ci.metrics.SuccessfulOperations++
-	ci.logger.Debug("Memory data stored successfully", "id", data.ID)
-	
+
+	ci.connected = true
+	ci.metrics.LastActivity = time.Now()
+
+	ci.logger.Info("Connected to Cognee successfully")
 	return nil
 }
 
-// RetrieveMemory retrieves memory data using Cognee
-func (ci *CogneeIntegration) RetrieveMemory(ctx context.Context, query *MemoryQuery) (*MemoryResult, error) {
-	if !ci.initialized {
-		return nil, fmt.Errorf("cognee integration not initialized")
+// Disconnect closes connection to Cognee
+func (ci *CogneeIntegration) Disconnect(ctx context.Context) error {
+	if !ci.connected {
+		return nil
 	}
-	
-	start := time.Now()
-	defer func() {
-		ci.metrics.TotalOperations++
-		ci.metrics.LastOperation = time.Now()
-		
-		if err := recover(); err != nil {
-			ci.metrics.FailedOperations++
-			ci.logger.Error("Memory retrieve panic", "error", err)
-		}
-		
-		latency := time.Since(start)
-		ci.performance["retrieve"] = latency
-		ci.metrics.AverageLatency = time.Duration(
-			(ci.metrics.AverageLatency + latency) / 2,
-		)
-	}()
-	
-	ci.logger.Debug("Retrieving memory data", "query", query)
-	
-	// Determine provider and model from context
-	provider, model := ci.getProviderFromContext(ctx)
-	
-	// Optimize query
-	optimizedQuery, err := ci.optimizeQuery(ctx, query, provider, model)
-	if err != nil {
-		ci.logger.Warn("Failed to optimize query", "error", err)
-		optimizedQuery = query
+
+	ci.logger.Info("Disconnecting from Cognee...")
+
+	// Cleanup provider resources
+	if err := ci.cleanupProviderFeatures(ctx); err != nil {
+		ci.logger.Warn("Failed to cleanup provider features", "error", err)
 	}
-	
-	// Retrieve from Cognee
-	cogneeResult, err := ci.retrieveFromCognee(ctx, optimizedQuery, provider, model)
-	if err != nil {
-		ci.metrics.FailedOperations++
-		ci.metrics.ErrorTypes["cognee_retrieve"]++
-		return nil, fmt.Errorf("failed to retrieve from Cognee: %w", err)
-	}
-	
-	// Retrieve from memory store
-	memoryResult, err := ci.retrieveFromMemoryStore(optimizedQuery, provider, model)
-	if err != nil {
-		ci.logger.Warn("Failed to retrieve from memory store", "error", err)
-		memoryResult = &MemoryResult{Data: []*MemoryData{}}
-	}
-	
-	// Merge results
-	mergedResult := ci.mergeResults(cogneeResult, memoryResult, optimizedQuery)
-	
-	ci.metrics.SuccessfulOperations++
-	ci.logger.Debug("Memory data retrieved successfully", "count", len(mergedResult.Data))
-	
-	return mergedResult, nil
+
+	ci.connected = false
+
+	ci.logger.Info("Disconnected from Cognee")
+	return nil
 }
 
-// SearchMemory searches memory using Cognee
-func (ci *CogneeIntegration) SearchMemory(ctx context.Context, query *SearchQuery) (*SearchResult, error) {
-	if !ci.initialized {
-		return nil, fmt.Errorf("cognee integration not initialized")
-	}
-	
-	start := time.Now()
-	defer func() {
-		ci.metrics.TotalOperations++
-		ci.metrics.LastOperation = time.Now()
-		
-		if err := recover(); err != nil {
-			ci.metrics.FailedOperations++
-			ci.logger.Error("Memory search panic", "error", err)
-		}
-		
-		latency := time.Since(start)
-		ci.performance["search"] = latency
-		ci.metrics.AverageLatency = time.Duration(
-			(ci.metrics.AverageLatency + latency) / 2,
-		)
-	}()
-	
-	ci.logger.Debug("Searching memory", "query", query.Query)
-	
-	// Determine provider and model from context
-	provider, model := ci.getProviderFromContext(ctx)
-	
-	// Search in Cognee
-	cogneeResult, err := ci.searchInCognee(ctx, query, provider, model)
-	if err != nil {
-		ci.metrics.FailedOperations++
-		ci.metrics.ErrorTypes["cognee_search"]++
-		return nil, fmt.Errorf("failed to search in Cognee: %w", err)
-	}
-	
-	// Search in memory store
-	memoryResult, err := ci.searchInMemoryStore(query, provider, model)
-	if err != nil {
-		ci.logger.Warn("Failed to search in memory store", "error", err)
-		memoryResult = &SearchResult{Results: []*SearchResultItem{}}
-	}
-	
-	// Merge results
-	mergedResult := ci.mergeSearchResults(cogneeResult, memoryResult, query)
-	
-	ci.metrics.SuccessfulOperations++
-	ci.logger.Debug("Memory search completed successfully", "count", len(mergedResult.Results))
-	
-	return mergedResult, nil
+// IsConnected returns connection status
+func (ci *CogneeIntegration) IsConnected() bool {
+	return ci.connected
 }
 
-// GetContext gets conversation context for a provider
-func (ci *CogneeIntegration) GetContext(ctx context.Context, provider, model, sessionID string) (*ConversationContext, error) {
-	if !ci.initialized {
-		return nil, fmt.Errorf("cognee integration not initialized")
-	}
-	
-	return ci.contextManager.GetContext(provider, model, sessionID)
+// IsInitialized returns initialization status
+func (ci *CogneeIntegration) IsInitialized() bool {
+	return ci.initialized
 }
 
-// UpdateContext updates conversation context
-func (ci *CogneeIntegration) UpdateContext(ctx context.Context, context *ConversationContext) error {
-	if !ci.initialized {
-		return fmt.Errorf("cognee integration not initialized")
-	}
-	
-	return ci.contextManager.UpdateContext(context)
-}
-
-// GetProviderMemory gets memory for a specific provider
-func (ci *CogneeIntegration) GetProviderMemory(ctx context.Context, provider string) ([]*MemoryData, error) {
-	if !ci.initialized {
-		return nil, fmt.Errorf("cognee integration not initialized")
-	}
-	
-	query := &MemoryQuery{
-		Sources: []string{provider},
-		Limit:   1000,
-		SortBy:  "timestamp",
-		SortOrder: "desc",
-	}
-	
-	result, err := ci.RetrieveMemory(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-	
-	return result.Data, nil
+// SupportsFeature checks if integration supports a feature
+func (ci *CogneeIntegration) SupportsFeature(feature string) bool {
+	supported, exists := ci.features[feature]
+	return exists && supported
 }
 
 // GetMetrics returns integration metrics
-func (ci *CogneeIntegration) GetMetrics() *CogneeMetrics {
-	ci.mu.RLock()
-	defer ci.mu.RUnlock()
-	
-	// Update resource usage
-	ci.updateResourceUsage()
-	
-	// Return copy
-	metricsCopy := *ci.metrics
-	if metricsCopy.ProviderUsage == nil {
-		metricsCopy.ProviderUsage = make(map[string]int64)
-	}
-	if metricsCopy.ErrorTypes == nil {
-		metricsCopy.ErrorTypes = make(map[string]int64)
-	}
-	if metricsCopy.Performance == nil {
-		metricsCopy.Performance = make(map[string]*ProviderPerformance)
-	}
-	
-	return &metricsCopy
+func (ci *CogneeIntegration) GetMetrics() *CogneeIntegrationMetrics {
+	metrics := *ci.metrics
+	metrics.AverageResponseTime = ci.calculateAverageResponseTime()
+	return &metrics
 }
 
-// GetHealth returns health status
-func (ci *CogneeIntegration) GetHealth(ctx context.Context) *HealthStatus {
-	ci.mu.Lock()
-	defer ci.mu.Unlock()
-	
-	// Update health status
-	ci.healthStatus.LastCheck = time.Now()
-	ci.healthStatus.Metrics = ci.calculateHealthMetrics()
-	
-	// Check dependencies
-	ci.healthStatus.Dependencies = ci.checkDependencies(ctx)
-	
-	// Determine overall status
-	if ci.metrics.FailedOperations > ci.metrics.SuccessfulOperations {
-		ci.healthStatus.Status = "unhealthy"
-	} else if ci.metrics.FailedOperations > 0 {
-		ci.healthStatus.Status = "degraded"
-	} else {
-		ci.healthStatus.Status = "healthy"
+// AddKnowledge adds knowledge from provider to Cognee
+func (ci *CogneeIntegration) AddKnowledge(ctx context.Context, data interface{},
+	metadata map[string]interface{}) ([]string, error) {
+
+	if !ci.connected {
+		return nil, fmt.Errorf("not connected to Cognee")
 	}
-	
-	return ci.healthStatus
+
+	if !ci.config.AutoKnowledge {
+		return nil, fmt.Errorf("auto knowledge is disabled")
+	}
+
+	startTime := time.Now()
+	defer func() {
+		ci.metrics.LastActivity = time.Now()
+	}()
+
+	ci.logger.Debug("Adding knowledge to Cognee", "provider", ci.providerName)
+
+	// Enhance metadata with provider information
+	enhancedMetadata := ci.enhanceMetadata(metadata)
+
+	// Add knowledge to Cognee
+	nodeIDs, err := ci.cogneeManager.AddKnowledge(ctx, ci.providerName,
+		ci.providerInstance.GetModelName(), data, enhancedMetadata)
+	if err != nil {
+		ci.metrics.Errors++
+		return nil, fmt.Errorf("failed to add knowledge: %w", err)
+	}
+
+	// Update metrics
+	ci.metrics.KnowledgeNodes += int64(len(nodeIDs))
+
+	// Update provider-specific metrics
+	ci.updateProviderMetrics("add_knowledge", time.Since(startTime))
+
+	ci.logger.Debug("Knowledge added successfully", "nodes", len(nodeIDs))
+	return nodeIDs, nil
 }
 
-// Optimize optimizes the integration for better performance
-func (ci *CogneeIntegration) Optimize(ctx context.Context) error {
-	if !ci.initialized {
-		return fmt.Errorf("cognee integration not initialized")
+// SearchKnowledge searches knowledge using Cognee
+func (ci *CogneeIntegration) SearchKnowledge(ctx context.Context, query string,
+	filters map[string]interface{}, limit int) ([]map[string]interface{}, error) {
+
+	if !ci.connected {
+		return nil, fmt.Errorf("not connected to Cognee")
 	}
-	
-	ci.logger.Info("Optimizing Cognee integration...")
-	
-	// Optimize Cognee
-	if ci.cogneeManager != nil {
-		if err := ci.cogneeManager.Optimize(ctx); err != nil {
-			ci.logger.Warn("Failed to optimize Cognee", "error", err)
+
+	if !ci.config.SemanticSearch {
+		return nil, fmt.Errorf("semantic search is disabled")
+	}
+
+	startTime := time.Now()
+	defer func() {
+		ci.metrics.LastActivity = time.Now()
+	}()
+
+	ci.logger.Debug("Searching knowledge", "provider", ci.providerName, "query", query)
+
+	// Enhance filters with provider information
+	enhancedFilters := ci.enhanceFilters(filters)
+
+	// Check cache first
+	cacheKey := ci.generateCacheKey(query, enhancedFilters, limit)
+	if ci.config.CacheResults {
+		if result, err := ci.getCachedResult(cacheKey); err == nil {
+			ci.metrics.CacheHits++
+			ci.metrics.SearchResponses++
+			return result, nil
 		}
 	}
-	
-	// Optimize memory store
-	if err := ci.optimizeMemoryStore(); err != nil {
-		ci.logger.Warn("Failed to optimize memory store", "error", err)
+
+	// Search knowledge
+	results, err := ci.cogneeManager.SearchKnowledge(ctx, query, enhancedFilters, limit)
+	if err != nil {
+		ci.metrics.Errors++
+		ci.metrics.CacheMisses++
+		return nil, fmt.Errorf("failed to search knowledge: %w", err)
 	}
-	
-	// Optimize context manager
-	if err := ci.contextManager.Optimize(); err != nil {
-		ci.logger.Warn("Failed to optimize context manager", "error", err)
+
+	// Cache results
+	if ci.config.CacheResults {
+		ci.setCachedResult(cacheKey, results)
 	}
-	
-	ci.logger.Info("Cognee integration optimization completed")
-	return nil
+
+	// Update metrics
+	ci.metrics.SearchQueries++
+	ci.metrics.SearchResponses++
+	ci.metrics.CacheMisses++
+
+	// Update provider-specific metrics
+	ci.updateProviderMetrics("search", time.Since(startTime))
+
+	ci.logger.Debug("Search completed", "results", len(results))
+	return results, nil
 }
 
-// Shutdown shuts down the Cognee integration
-func (ci *CogneeIntegration) Shutdown(ctx context.Context) error {
-	ci.mu.Lock()
-	defer ci.mu.Unlock()
-	
-	if !ci.initialized {
-		return nil
+// GetInsights gets insights from Cognee
+func (ci *CogneeIntegration) GetInsights(ctx context.Context, analysisType string,
+	parameters map[string]interface{}) (map[string]interface{}, error) {
+
+	if !ci.connected {
+		return nil, fmt.Errorf("not connected to Cognee")
 	}
-	
-	ci.logger.Info("Shutting down Cognee Integration...")
-	
-	// Stop background tasks
-	if err := ci.stopBackgroundTasks(ctx); err != nil {
-		ci.logger.Warn("Failed to stop background tasks", "error", err)
+
+	if !ci.config.GraphAnalytics {
+		return nil, fmt.Errorf("graph analytics is disabled")
 	}
-	
-	// Shutdown Cognee
-	if ci.cogneeManager != nil {
-		if err := ci.cogneeManager.Shutdown(ctx); err != nil {
-			ci.logger.Warn("Failed to shutdown Cognee manager", "error", err)
-		}
+
+	startTime := time.Now()
+	defer func() {
+		ci.metrics.LastActivity = time.Now()
+	}()
+
+	ci.logger.Debug("Getting insights", "provider", ci.providerName, "type", analysisType)
+
+	// Enhance parameters with provider information
+	enhancedParameters := ci.enhanceParameters(parameters)
+
+	// Get insights
+	insights, err := ci.cogneeManager.GetInsights(ctx, analysisType, enhancedParameters)
+	if err != nil {
+		ci.metrics.Errors++
+		return nil, fmt.Errorf("failed to get insights: %w", err)
 	}
-	
-	// Clear data
-	ci.providerAdapters = make(map[string]*ProviderAdapter)
-	ci.performance = make(map[string]time.Duration)
-	
-	ci.initialized = false
-	ci.logger.Info("Cognee Integration shut down successfully")
-	
-	return nil
+
+	// Update metrics
+	ci.metrics.AnalyticsRequests++
+
+	// Update provider-specific metrics
+	ci.updateProviderMetrics("analytics", time.Since(startTime))
+
+	ci.logger.Debug("Insights retrieved successfully")
+	return insights, nil
 }
 
 // Private helper methods
 
-func (ci *CogneeIntegration) createProviderAdapters() error {
-	// Create adapters for all supported providers
-	adapters := map[string]*ProviderAdapter{
-		"openai": {
-			Provider:      "openai",
-			MaxTokens:    4096,
-			MaxContext:   8192,
-			SupportedTypes: []string{"conversation", "knowledge", "document"},
-			Capabilities:  []string{"embedding", "completion", "memory"},
-		},
-		"anthropic": {
-			Provider:      "anthropic",
-			MaxTokens:    4096,
-			MaxContext:   100000,
-			SupportedTypes: []string{"conversation", "knowledge"},
-			Capabilities:  []string{"completion", "memory"},
-		},
-		"google": {
-			Provider:      "google",
-			MaxTokens:    4096,
-			MaxContext:   32768,
-			SupportedTypes: []string{"conversation", "knowledge", "document"},
-			Capabilities:  []string{"embedding", "completion", "memory"},
-		},
-		"cohere": {
-			Provider:      "cohere",
-			MaxTokens:    4096,
-			MaxContext:   8192,
-			SupportedTypes: []string{"conversation", "knowledge"},
-			Capabilities:  []string{"embedding", "completion", "memory"},
-		},
-		"replicate": {
-			Provider:      "replicate",
-			MaxTokens:    2048,
-			MaxContext:   4096,
-			SupportedTypes: []string{"conversation", "image", "document"},
-			Capabilities:  []string{"completion", "image", "memory"},
-		},
-		"huggingface": {
-			Provider:      "huggingface",
-			MaxTokens:    4096,
-			MaxContext:   8192,
-			SupportedTypes: []string{"conversation", "knowledge", "document"},
-			Capabilities:  []string{"embedding", "completion", "memory"},
-		},
-		"vllm": {
-			Provider:      "vllm",
-			MaxTokens:    4096,
-			MaxContext:   8192,
-			SupportedTypes: []string{"conversation", "knowledge", "document"},
-			Capabilities:  []string{"embedding", "completion", "memory"},
-		},
+func (ci *CogneeIntegration) configureForProvider() error {
+	switch ci.providerInstance.GetType() {
+	case provider.ProviderTypeVLLM:
+		return ci.configureForVLLM()
+	case provider.ProviderTypeLocalAI:
+		return ci.configureForLocalAI()
+	case provider.ProviderTypeOllama:
+		return ci.configureForOllama()
+	case provider.ProviderTypeLlamaCpp:
+		return ci.configureForLlamaCpp()
+	case provider.ProviderTypeMLX:
+		return ci.configureForMLX()
+	default:
+		return ci.configureForGeneric()
 	}
-	
-	ci.providerAdapters = adapters
-	ci.logger.Info("Created provider adapters", "count", len(adapters))
-	
+}
+
+func (ci *CogneeIntegration) configureForVLLM() error {
+	// VLLM-specific configuration
+	ci.config.IntegrationType = "vllm_knowledge_graph"
+	ci.features["gpu_acceleration"] = true
+	ci.features["batch_processing"] = true
+	ci.features["tensor_parallel"] = true
+
+	// VLLM-specific optimizations
+	ci.config.Optimization["vllm_batch_size"] = 8
+	ci.config.Optimization["vllm_max_length"] = 4096
+	ci.config.Optimization["vllm_tensor_parallel"] = true
+
 	return nil
 }
 
-func (ci *CogneeIntegration) getProviderFromContext(ctx context.Context) (string, string) {
-	// Extract provider and model from context
-	if provider := ctx.Value("provider"); provider != nil {
-		if providerStr, ok := provider.(string); ok {
-			if model := ctx.Value("model"); model != nil {
-				if modelStr, ok := model.(string); ok {
-					return providerStr, modelStr
-				}
+func (ci *CogneeIntegration) configureForLocalAI() error {
+	// LocalAI-specific configuration
+	ci.config.IntegrationType = "localai_semantic_search"
+	ci.features["openai_compatible"] = true
+	ci.features["multimodal"] = true
+	ci.features["vision"] = true
+
+	// LocalAI-specific optimizations
+	ci.config.Optimization["localai_threads"] = 4
+	ci.config.Optimization["localai_context_size"] = 2048
+	ci.config.Optimization["localai_gpu_layers"] = 30
+
+	return nil
+}
+
+func (ci *CogneeIntegration) configureForOllama() error {
+	// Ollama-specific configuration
+	ci.config.IntegrationType = "ollama_knowledge_nodes"
+	ci.features["model_management"] = true
+	ci.features["cli_integration"] = true
+	ci.features["distributed"] = true
+
+	// Ollama-specific optimizations
+	ci.config.Optimization["ollama_num_gpu"] = 99
+	ci.config.Optimization["ollama_num_ctx"] = 4096
+	ci.config.Optimization["ollama_num_batch"] = 512
+
+	return nil
+}
+
+func (ci *CogneeIntegration) configureForLlamaCpp() error {
+	// Llama.cpp-specific configuration
+	ci.config.IntegrationType = "llamacpp_graph_edges"
+	ci.features["gguf_support"] = true
+	ci.features["quantization"] = true
+	ci.features["cpu_optimization"] = true
+
+	// Llama.cpp-specific optimizations
+	ci.config.Optimization["llamacpp_n_gpu_layers"] = 30
+	ci.config.Optimization["llamacpp_ctx_size"] = 2048
+	ci.config.Optimization["llamacpp_batch_size"] = 512
+
+	return nil
+}
+
+func (ci *CogneeIntegration) configureForMLX() error {
+	// MLX-specific configuration
+	ci.config.IntegrationType = "mlx_apple_optimized"
+	ci.features["metal_acceleration"] = true
+	ci.features["unified_memory"] = true
+	ci.features["apple_silicon"] = true
+
+	// MLX-specific optimizations
+	ci.config.Optimization["mlx_batch_size"] = 16
+	ci.config.Optimization["mlx_max_seq_len"] = 2048
+	ci.config.Optimization["mlx_use_mps"] = true
+
+	return nil
+}
+
+func (ci *CogneeIntegration) configureForGeneric() error {
+	// Generic configuration
+	ci.config.IntegrationType = "generic_knowledge_integration"
+	ci.features["basic_integration"] = true
+
+	// Generic optimizations
+	ci.config.Optimization["generic_workers"] = 2
+	ci.config.Optimization["generic_timeout"] = 30
+
+	return nil
+}
+
+func (ci *CogneeIntegration) applyHostOptimization() error {
+	// Get hardware profile
+	hwProfile := ci.providerInstance.GetHardwareProfile()
+	if hwProfile == nil {
+		return fmt.Errorf("hardware profile not available")
+	}
+
+	// Apply CPU optimizations
+	if hwProfile.CPU.Cores <= 2 {
+		ci.config.Optimization["workers"] = 2
+		ci.config.Optimization["batch_size"] = 4
+	} else if hwProfile.CPU.Cores <= 4 {
+		ci.config.Optimization["workers"] = 4
+		ci.config.Optimization["batch_size"] = 8
+	} else {
+		ci.config.Optimization["workers"] = hwProfile.CPU.Cores
+		ci.config.Optimization["batch_size"] = 16
+	}
+
+	// Apply GPU optimizations
+	if len(hwProfile.GPUs) > 0 {
+		ci.features["gpu_acceleration"] = true
+		for _, gpu := range hwProfile.GPUs {
+			switch gpu.Type {
+			case hardware.GPUTypeNVIDIA:
+				ci.config.Optimization["cuda_optimization"] = true
+			case hardware.GPUTypeApple:
+				ci.config.Optimization["metal_optimization"] = true
+			case hardware.GPUTypeAMD:
+				ci.config.Optimization["rocm_optimization"] = true
 			}
-			return providerStr, ""
 		}
 	}
-	
-	return "", ""
-}
 
-func (ci *CogneeIntegration) storeInCognee(ctx context.Context, data *MemoryData, provider, model string) error {
-	// Convert memory data to Cognee format
-	cogneeData := &cognee.MemoryItem{
-		ID:          data.ID,
-		Content:     data.Content,
-		Type:        string(data.Type),
-		Provider:    provider,
-		Model:       model,
-		Metadata:    data.Metadata,
-		Timestamp:   data.Timestamp,
-		Tags:        data.Tags,
-		Source:      data.Source,
-		Importance:  data.Importance,
+	// Apply memory optimizations
+	if hwProfile.Memory.TotalGB <= 4 {
+		ci.config.MaxKnowledgeNodes = 1000
+		ci.config.SearchTimeout = 10 * time.Second
+	} else if hwProfile.Memory.TotalGB <= 8 {
+		ci.config.MaxKnowledgeNodes = 5000
+		ci.config.SearchTimeout = 20 * time.Second
+	} else {
+		ci.config.MaxKnowledgeNodes = 10000
+		ci.config.SearchTimeout = 30 * time.Second
 	}
-	
-	// Store in Cognee
-	if err := ci.cogneeManager.StoreMemory(ctx, cogneeData); err != nil {
-		return fmt.Errorf("Cognee store failed: %w", err)
-	}
-	
+
 	return nil
 }
 
-func (ci *CogneeIntegration) retrieveFromCognee(ctx context.Context, query *MemoryQuery, provider, model string) (*MemoryResult, error) {
-	// Convert query to Cognee format
-	cogneeQuery := &cognee.Query{
-		Types:       convertMemoryTypes(query.Types),
-		Providers:   []string{provider},
-		Models:      []string{model},
-		TimeRange:    query.TimeRange,
-		Limit:        query.Limit,
-		Offset:       query.Offset,
-		SortBy:       query.SortBy,
-		SortOrder:    query.SortOrder,
-		Metadata:     query.Metadata,
-	}
-	
-	// Retrieve from Cognee
-	cogneeResult, err := ci.cogneeManager.RetrieveMemory(ctx, cogneeQuery)
-	if err != nil {
-		return nil, fmt.Errorf("Cognee retrieve failed: %w", err)
-	}
-	
-	// Convert result back to memory format
-	result := &MemoryResult{
-		Data:    convertCognneeToMemory(cogneeResult.Data),
-		Total:   cogneeResult.Total,
-		HasMore: cogneeResult.HasMore,
-		Query:   query,
-		Duration: cogneeResult.Duration,
-		Metadata: cogneeResult.Metadata,
-	}
-	
-	return result, nil
-}
-
-func (ci *CogneeIntegration) searchInCognee(ctx context.Context, query *SearchQuery, provider, model string) (*SearchResult, error) {
-	// Convert query to Cognee format
-	cogneeQuery := &cognee.SearchQuery{
-		Query:     query.Query,
-		Types:     convertMemoryTypes(convertSearchTypes(query.Types)),
-		Threshold: query.Threshold,
-		K:         query.K,
-		Providers: []string{provider},
-		Models:    []string{model},
-		TimeRange: query.TimeRange,
-		Metadata:  query.Metadata,
-		IncludeText: query.IncludeText,
-	}
-	
-	// Search in Cognee
-	cogneeResult, err := ci.cogneeManager.SearchMemory(ctx, cogneeQuery)
-	if err != nil {
-		return nil, fmt.Errorf("Cognee search failed: %w", err)
-	}
-	
-	// Convert result back to search format
-	result := &SearchResult{
-		Results:    convertCognneeToSearch(cogneeResult.Results),
-		Total:      cogneeResult.Total,
-		Query:      query,
-		Duration:   cogneeResult.Duration,
-		Confidence: cogneeResult.Confidence,
-		Metadata:   cogneeResult.Metadata,
-	}
-	
-	return result, nil
-}
-
-func (ci *CogneeIntegration) storeInMemoryStore(data *MemoryData, provider, model string) error {
-	entry := &MemoryEntry{
-		ID:          data.ID,
-		Type:        string(data.Type),
-		Content:     data.Content,
-		Provider:    provider,
-		Model:       model,
-		SessionID:   getSessionIDFromData(data),
-		Timestamp:   data.Timestamp,
-		AccessCount: 0,
-		LastAccess:  time.Now(),
-		Tags:        data.Tags,
-		Metadata:    data.Metadata,
-	}
-	
-	return ci.memoryStore.Store(entry)
-}
-
-func (ci *CogneeIntegration) retrieveFromMemoryStore(query *MemoryQuery, provider, model string) (*MemoryResult, error) {
-	entries, err := ci.memoryStore.Retrieve(query, provider, model)
-	if err != nil {
-		return nil, err
-	}
-	
-	return &MemoryResult{
-		Data: convertEntriesToMemory(entries),
-	}, nil
-}
-
-func (ci *CogneeIntegration) searchInMemoryStore(query *SearchQuery, provider, model string) (*SearchResult, error) {
-	entries, err := ci.memoryStore.Search(query, provider, model)
-	if err != nil {
-		return nil, err
-	}
-	
-	return &SearchResult{
-		Results: convertEntriesToSearch(entries),
-	}, nil
-}
-
-func (ci *CogneeIntegration) mergeResults(cognee, memory *MemoryResult, query *MemoryQuery) *MemoryResult {
-	// Simple merge - combine results and remove duplicates
-	seenIDs := make(map[string]bool)
-	merged := make([]*MemoryData, 0)
-	
-	// Add Cognee results
-	for _, data := range cognee.Data {
-		if !seenIDs[data.ID] {
-			merged = append(merged, data)
-			seenIDs[data.ID] = true
-		}
-	}
-	
-	// Add memory store results
-	for _, data := range memory.Data {
-		if !seenIDs[data.ID] {
-			merged = append(merged, data)
-			seenIDs[data.ID] = true
-		}
-	}
-	
-	return &MemoryResult{
-		Data:     merged,
-		Total:    len(merged),
-		Query:    query,
-		Metadata: map[string]interface{}{
-			"cognee_count":   len(cognee.Data),
-			"memory_count":   len(memory.Data),
-			"merged_count":   len(merged),
-			"sources":       []string{"cognee", "memory_store"},
-		},
-	}
-}
-
-func (ci *CogneeIntegration) mergeSearchResults(cognee, memory *SearchResult, query *SearchQuery) *SearchResult {
-	// Simple merge - combine results and remove duplicates
-	seenIDs := make(map[string]bool)
-	merged := make([]*SearchResultItem, 0)
-	
-	// Add Cognee results
-	for _, item := range cognee.Results {
-		if !seenIDs[item.Data.ID] {
-			merged = append(merged, item)
-			seenIDs[item.Data.ID] = true
-		}
-	}
-	
-	// Add memory store results
-	for _, item := range memory.Results {
-		if !seenIDs[item.Data.ID] {
-			merged = append(merged, item)
-			seenIDs[item.Data.ID] = true
-		}
-	}
-	
-	return &SearchResult{
-		Results:    merged,
-		Total:      len(merged),
-		Query:      query,
-		Metadata: map[string]interface{}{
-			"cognee_count":   len(cognee.Results),
-			"memory_count":   len(memory.Results),
-			"merged_count":   len(merged),
-			"sources":       []string{"cognee", "memory_store"},
-		},
-	}
-}
-
-func (ci *CogneeIntegration) updateContext(ctx context.Context, data *MemoryData, provider, model string) error {
-	sessionID := getSessionIDFromData(data)
-	
-	// Get or create context
-	context, err := ci.contextManager.GetContext(provider, model, sessionID)
-	if err != nil {
-		// Create new context
-		context = &ConversationContext{
-			ID:             generateContextID(provider, model, sessionID),
-			Provider:       provider,
-			Model:          model,
-			SessionID:      sessionID,
-			Memory:         make(map[string]interface{}),
-			Knowledge:      make([]*KnowledgeItem, 0),
-			Documents:      make([]*DocumentItem, 0),
-			LastUpdated:    time.Now(),
-			Expiration:     time.Now().Add(24 * time.Hour),
-		}
-	}
-	
-	// Update context with new data
-	switch data.Type {
-	case MemoryTypeConversation:
-		context.Memory["last_conversation"] = data.Content
-	case MemoryTypeKnowledge:
-		knowledge := &KnowledgeItem{
-			ID:         data.ID,
-			Content:    data.Content,
-			Type:       "cognee_knowledge",
-			Source:     data.Source,
-			Tags:       data.Tags,
-			Metadata:   data.Metadata,
-			CreatedAt:  data.Timestamp,
-			AccessCount: 0,
-		}
-		context.Knowledge = append(context.Knowledge, knowledge)
-	case MemoryTypeDocument:
-		document := &DocumentItem{
-			ID:         data.ID,
-			Title:      getTitleFromData(data),
-			Content:    data.Content,
-			Tags:       data.Tags,
-			Metadata:   data.Metadata,
-			CreatedAt:  data.Timestamp,
-			ModifiedAt: data.Timestamp,
-			AccessCount: 0,
-			Relevance:  calculateRelevance(data),
-		}
-		context.Documents = append(context.Documents, document)
-	}
-	
-	context.LastUpdated = time.Now()
-	
-	return ci.contextManager.UpdateContext(context)
-}
-
-func (ci *CogneeIntegration) optimizeQuery(ctx context.Context, query *MemoryQuery, provider, model string) (*MemoryQuery, error) {
-	// Apply performance optimization
-	if ci.perfOptimizer != nil {
-		optimized, err := ci.perfOptimizer.OptimizeQuery(ctx, query, provider, model)
-		if err != nil {
-			ci.logger.Warn("Performance optimizer failed", "error", err)
-		} else {
-			return optimized, nil
-		}
-	}
-	
-	return query, nil
-}
-
-func (ci *CogneeIntegration) startBackgroundTasks(ctx context.Context) error {
-	// Start context cleanup
-	go ci.contextCleanupTask(ctx)
-	
-	// Start metrics collection
-	go ci.metricsCollectionTask(ctx)
-	
-	// Start health monitoring
-	go ci.healthMonitoringTask(ctx)
-	
-	return nil
-}
-
-func (ci *CogneeIntegration) stopBackgroundTasks(ctx context.Context) error {
-	// Background tasks will stop when context is cancelled
-	return nil
-}
-
-func (ci *CogneeIntegration) contextCleanupTask(ctx context.Context) {
-	ticker := time.NewTicker(time.Hour)
+func (ci *CogneeIntegration) waitForCognee(ctx context.Context) error {
+	// Wait for Cognee to be ready
+	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
-	
+
+	timeout := time.After(60 * time.Second)
+
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return ctx.Err()
+		case <-timeout:
+			return fmt.Errorf("timeout waiting for Cognee")
 		case <-ticker.C:
-			if err := ci.contextManager.Cleanup(); err != nil {
-				ci.logger.Warn("Context cleanup failed", "error", err)
+			if ci.cogneeManager.IsRunning() {
+				return nil
 			}
 		}
 	}
 }
 
-func (ci *CogneeIntegration) metricsCollectionTask(ctx context.Context) {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-	
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			ci.updateResourceUsage()
+func (ci *CogneeIntegration) testConnection(ctx context.Context) error {
+	// Test connection to Cognee
+	health := ci.cogneeManager.GetHealth()
+	if health == nil || health.Status != "healthy" {
+		return fmt.Errorf("Cognee not healthy: %v", health)
+	}
+
+	return nil
+}
+
+func (ci *CogneeIntegration) initializeProviderFeatures(ctx context.Context) error {
+	// Initialize provider-specific features
+
+	// Auto-knowledge initialization
+	if ci.config.AutoKnowledge {
+		if err := ci.initializeAutoKnowledge(ctx); err != nil {
+			ci.logger.Warn("Failed to initialize auto-knowledge", "error", err)
 		}
 	}
-}
 
-func (ci *CogneeIntegration) healthMonitoringTask(ctx context.Context) {
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-	
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			ci.GetHealth(ctx)
+	// Semantic search initialization
+	if ci.config.SemanticSearch {
+		if err := ci.initializeSemanticSearch(ctx); err != nil {
+			ci.logger.Warn("Failed to initialize semantic search", "error", err)
 		}
 	}
-}
 
-func (ci *CogneeIntegration) updateResourceUsage() {
-	// Get resource usage from hardware profile
-	if ci.hwProfile != nil {
-		cpuUsage := ci.hwProfile.GetCPUUsage()
-		memoryUsage := ci.hwProfile.GetMemoryUsage()
-		gpuUsage := ci.hwProfile.GetGPUUsage()
-		
-		ci.metrics.ResourceUsage = &ResourceUsage{
-			CPUUsage:    cpuUsage,
-			MemoryUsage:  memoryUsage,
-			GPUUsage:     gpuUsage,
-			Timestamp:    time.Now(),
+	// Analytics initialization
+	if ci.config.GraphAnalytics {
+		if err := ci.initializeAnalytics(ctx); err != nil {
+			ci.logger.Warn("Failed to initialize analytics", "error", err)
 		}
 	}
+
+	return nil
 }
 
-func (ci *CogneeIntegration) calculateHealthMetrics() map[string]float64 {
-	metrics := make(map[string]float64)
-	
-	if ci.metrics.TotalOperations > 0 {
-		metrics["success_rate"] = float64(ci.metrics.SuccessfulOperations) / float64(ci.metrics.TotalOperations)
-		metrics["error_rate"] = float64(ci.metrics.FailedOperations) / float64(ci.metrics.TotalOperations)
+func (ci *CogneeIntegration) cleanupProviderFeatures(ctx context.Context) error {
+	// Cleanup provider-specific resources
+
+	// Clear cached results
+	ci.clearCache()
+
+	// Cancel background tasks
+	// (implementation would handle this)
+
+	return nil
+}
+
+func (ci *CogneeIntegration) enhanceMetadata(metadata map[string]interface{}) map[string]interface{} {
+	if metadata == nil {
+		metadata = make(map[string]interface{})
 	}
-	
-	metrics["memory_entries"] = float64(ci.metrics.MemoryEntries)
-	metrics["provider_count"] = float64(len(ci.providerAdapters))
-	
-	return metrics
-}
 
-func (ci *CogneeIntegration) checkDependencies(ctx context.Context) map[string]string {
-	dependencies := make(map[string]string)
-	
-	// Check Cognee
-	if ci.cogneeManager != nil {
-		health := ci.cogneeManager.GetHealth(ctx)
-		if health != nil {
-			dependencies["cognee"] = health.Status
-		} else {
-			dependencies["cognee"] = "unknown"
+	// Add provider information
+	metadata["provider"] = ci.providerName
+	metadata["provider_type"] = ci.providerInstance.GetType().String()
+	metadata["model"] = ci.providerInstance.GetModelName()
+	metadata["integration_type"] = ci.config.IntegrationType
+	metadata["timestamp"] = time.Now().Unix()
+
+	// Add features
+	features := make([]string, 0, len(ci.features))
+	for feature, enabled := range ci.features {
+		if enabled {
+			features = append(features, feature)
 		}
 	}
-	
-	// Check provider manager
-	if ci.providerManager != nil {
-		if ci.providerManager.IsHealthy() {
-			dependencies["provider_manager"] = "healthy"
-		} else {
-			dependencies["provider_manager"] = "unhealthy"
-		}
+	metadata["features"] = features
+
+	// Add optimization settings
+	metadata["optimization"] = ci.config.Optimization
+
+	return metadata
+}
+
+func (ci *CogneeIntegration) enhanceFilters(filters map[string]interface{}) map[string]interface{} {
+	if filters == nil {
+		filters = make(map[string]interface{})
 	}
-	
-	return dependencies
+
+	// Add provider filters
+	filters["provider"] = ci.providerName
+	filters["integration_type"] = ci.config.IntegrationType
+
+	return filters
 }
 
-// Utility functions
-
-func convertMemoryTypes(types []MemoryType) []string {
-	result := make([]string, len(types))
-	for i, t := range types {
-		result[i] = string(t)
+func (ci *CogneeIntegration) enhanceParameters(parameters map[string]interface{}) map[string]interface{} {
+	if parameters == nil {
+		parameters = make(map[string]interface{})
 	}
-	return result
+
+	// Add provider context
+	parameters["provider"] = ci.providerName
+	parameters["provider_type"] = ci.providerInstance.GetType().String()
+	parameters["integration_config"] = ci.config
+
+	return parameters
 }
 
-func convertSearchTypes(types []MemoryType) []string {
-	return convertMemoryTypes(types)
+func (ci *CogneeIntegration) generateCacheKey(query string, filters map[string]interface{}, limit int) string {
+	// Generate cache key based on query, filters, and limit
+	filterJSON, _ := json.Marshal(filters)
+	return fmt.Sprintf("%s:%s:%d:%s", ci.providerName, query, limit, string(filterJSON))
 }
 
-func convertCognneeToMemory(cogneeData []*cognee.MemoryItem) []*MemoryData {
-	result := make([]*MemoryData, len(cogneeData))
-	for i, item := range cogneeData {
-		result[i] = &MemoryData{
-			ID:         item.ID,
-			Content:    item.Content,
-			Type:       MemoryType(item.Type),
-			Metadata:   item.Metadata,
-			Timestamp:  item.Timestamp,
-			Tags:       item.Tags,
-			Source:     item.Source,
-			Importance: item.Importance,
-		}
-	}
-	return result
+func (ci *CogneeIntegration) getCachedResult(cacheKey string) ([]map[string]interface{}, error) {
+	// Implementation would use actual cache
+	// For now, return cache miss
+	return nil, fmt.Errorf("cache miss")
 }
 
-func convertCognneeToSearch(cogneeResults []*cognee.SearchResultItem) []*SearchResultItem {
-	result := make([]*SearchResultItem, len(cogneeResults))
-	for i, item := range cogneeResults {
-		result[i] = &SearchResultItem{
-			Data:        &MemoryData{
-				ID:        item.Data.ID,
-				Content:   item.Data.Content,
-				Type:      MemoryType(item.Data.Type),
-				Metadata:  item.Data.Metadata,
-				Timestamp: item.Data.Timestamp,
-				Tags:      item.Data.Tags,
-				Source:    item.Data.Source,
-			},
-			Score:       item.Score,
-			Distance:    item.Distance,
-			Explanation: item.Explanation,
-		}
-	}
-	return result
+func (ci *CogneeIntegration) setCachedResult(cacheKey string, results []map[string]interface{}) {
+	// Implementation would store in actual cache
+	// For now, do nothing
 }
 
-func convertEntriesToMemory(entries []*MemoryEntry) []*MemoryData {
-	result := make([]*MemoryData, len(entries))
-	for i, entry := range entries {
-		result[i] = &MemoryData{
-			ID:        entry.ID,
-			Content:   entry.Content,
-			Type:      MemoryType(entry.Type),
-			Metadata:  entry.Metadata,
-			Timestamp: entry.Timestamp,
-			Tags:      entry.Tags,
-			Source:    entry.Provider,
-		}
-	}
-	return result
+func (ci *CogneeIntegration) clearCache() {
+	// Clear all cached results
+	// Implementation would clear actual cache
 }
 
-func convertEntriesToSearch(entries []*MemoryEntry) []*SearchResultItem {
-	result := make([]*SearchResultItem, len(entries))
-	for i, entry := range entries {
-		result[i] = &SearchResultItem{
-			Data: &MemoryData{
-				ID:        entry.ID,
-				Content:   entry.Content,
-				Type:      MemoryType(entry.Type),
-				Metadata:  entry.Metadata,
-				Timestamp: entry.Timestamp,
-				Tags:      entry.Tags,
-				Source:    entry.Provider,
-			},
-			Score: 1.0, // Default score for memory store entries
-		}
-	}
-	return result
+func (ci *CogneeIntegration) calculateAverageResponseTime() time.Duration {
+	// Calculate average response time based on metrics
+	// Implementation would use actual metrics
+	return 100 * time.Millisecond
 }
 
-func getSessionIDFromData(data *MemoryData) string {
-	if data.Metadata != nil {
-		if sessionID, exists := data.Metadata["session_id"]; exists {
-			if sessionIDStr, ok := sessionID.(string); ok {
-				return sessionIDStr
-			}
-		}
-	}
-	return "default"
+func (ci *CogneeIntegration) updateProviderMetrics(operation string, duration time.Duration) {
+	// Update provider-specific metrics
+	// Implementation would update actual metrics
 }
 
-func getTitleFromData(data *MemoryData) string {
-	if data.Metadata != nil {
-		if title, exists := data.Metadata["title"]; exists {
-			if titleStr, ok := title.(string); ok {
-				return titleStr
-			}
-		}
-	}
-	return "Untitled"
+func (ci *CogneeIntegration) initializeAutoKnowledge(ctx context.Context) error {
+	// Initialize auto-knowledge features
+	ci.logger.Debug("Initializing auto-knowledge")
+
+	// Setup automatic knowledge extraction
+	// Implementation would set up background tasks
+
+	return nil
 }
 
-func calculateRelevance(data *MemoryData) float64 {
-	// Simple relevance calculation based on importance and recency
-	relevance := data.Importance
-	
-	// Add recency factor
-	recencyHours := time.Since(data.Timestamp).Hours()
-	recencyFactor := 1.0 / (1.0 + recencyHours/24.0) // Decay over days
-	
-	return relevance * recencyFactor
+func (ci *CogneeIntegration) initializeSemanticSearch(ctx context.Context) error {
+	// Initialize semantic search features
+	ci.logger.Debug("Initializing semantic search")
+
+	// Setup semantic search capabilities
+	// Implementation would configure search engines
+
+	return nil
 }
 
-func generateContextID(provider, model, sessionID string) string {
-	return fmt.Sprintf("ctx_%s_%s_%s_%d", provider, model, sessionID, time.Now().Unix())
+func (ci *CogneeIntegration) initializeAnalytics(ctx context.Context) error {
+	// Initialize analytics features
+	ci.logger.Debug("Initializing analytics")
+
+	// Setup analytics and insights
+	// Implementation would configure analytics engines
+
+	return nil
+}
+
+// Stub logger implementation
+type stubLogger struct{}
+
+func (l *stubLogger) Debug(msg string, args ...interface{}) {
+	fmt.Printf("[DEBUG] "+msg+"\n", args...)
+}
+
+func (l *stubLogger) Info(msg string, args ...interface{}) {
+	fmt.Printf("[INFO] "+msg+"\n", args...)
+}
+
+func (l *stubLogger) Warn(msg string, args ...interface{}) {
+	fmt.Printf("[WARN] "+msg+"\n", args...)
+}
+
+func (l *stubLogger) Error(msg string, args ...interface{}) {
+	fmt.Printf("[ERROR] "+msg+"\n", args...)
 }

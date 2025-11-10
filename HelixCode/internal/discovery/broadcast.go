@@ -30,10 +30,10 @@ var (
 
 // BroadcastMessage represents a service announcement message
 type BroadcastMessage struct {
-	Type        string                 `json:"type"`        // "announce", "query", "response"
-	ServiceInfo ServiceInfo            `json:"service"`     // Service information
-	Timestamp   time.Time              `json:"timestamp"`   // Message timestamp
-	Metadata    map[string]interface{} `json:"metadata"`    // Additional metadata
+	Type        string                 `json:"type"`      // "announce", "query", "response"
+	ServiceInfo ServiceInfo            `json:"service"`   // Service information
+	Timestamp   time.Time              `json:"timestamp"` // Message timestamp
+	Metadata    map[string]interface{} `json:"metadata"`  // Additional metadata
 }
 
 // BroadcastConfig configures the broadcast service
@@ -73,7 +73,7 @@ type BroadcastService struct {
 	mu      sync.RWMutex
 
 	// Services discovered via broadcast
-	discovered map[string]*ServiceInfo
+	discovered  map[string]*ServiceInfo
 	discoveryMu sync.RWMutex
 
 	// Local service to announce

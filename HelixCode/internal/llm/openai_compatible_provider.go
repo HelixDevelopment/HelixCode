@@ -17,47 +17,47 @@ import (
 // OpenAICompatibleProvider implements the Provider interface for OpenAI-compatible local services
 // This includes VLLM, Text Generation WebUI, LM Studio, LocalAI, FastChat, Jan AI, and many others
 type OpenAICompatibleProvider struct {
-	name         string
-	config       OpenAICompatibleConfig
-	httpClient   *http.Client
-	models       []ModelInfo
-	lastHealth   *ProviderHealth
-	isRunning    bool
+	name       string
+	config     OpenAICompatibleConfig
+	httpClient *http.Client
+	models     []ModelInfo
+	lastHealth *ProviderHealth
+	isRunning  bool
 }
 
 // OpenAICompatibleConfig holds configuration for OpenAI-compatible providers
 type OpenAICompatibleConfig struct {
-	BaseURL         string            `json:"base_url"`
-	APIKey          string            `json:"api_key"`
-	DefaultModel    string            `json:"default_model"`
-	Timeout         time.Duration     `json:"timeout"`
-	MaxRetries      int               `json:"max_retries"`
-	Headers         map[string]string `json:"headers"`
-	StreamingSupport bool             `json:"streaming_support"`
-	ModelEndpoint   string            `json:"model_endpoint"`
-	ChatEndpoint    string            `json:"chat_endpoint"`
+	BaseURL          string            `json:"base_url"`
+	APIKey           string            `json:"api_key"`
+	DefaultModel     string            `json:"default_model"`
+	Timeout          time.Duration     `json:"timeout"`
+	MaxRetries       int               `json:"max_retries"`
+	Headers          map[string]string `json:"headers"`
+	StreamingSupport bool              `json:"streaming_support"`
+	ModelEndpoint    string            `json:"model_endpoint"`
+	ChatEndpoint     string            `json:"chat_endpoint"`
 }
 
 // OpenAICompatibleRequest represents an OpenAI-compatible API request
 type OpenAICompatibleRequest struct {
-	Model       string                 `json:"model"`
-	Messages    []Message              `json:"messages"`
-	MaxTokens   int                    `json:"max_tokens,omitempty"`
-	Temperature float64                `json:"temperature,omitempty"`
-	TopP        float64                `json:"top_p,omitempty"`
-	Stream      bool                   `json:"stream,omitempty"`
-	Tools       []Tool                 `json:"tools,omitempty"`
-	ToolChoice  interface{}            `json:"tool_choice,omitempty"`
+	Model       string      `json:"model"`
+	Messages    []Message   `json:"messages"`
+	MaxTokens   int         `json:"max_tokens,omitempty"`
+	Temperature float64     `json:"temperature,omitempty"`
+	TopP        float64     `json:"top_p,omitempty"`
+	Stream      bool        `json:"stream,omitempty"`
+	Tools       []Tool      `json:"tools,omitempty"`
+	ToolChoice  interface{} `json:"tool_choice,omitempty"`
 }
 
 // OpenAICompatibleResponse represents an OpenAI-compatible API response
 type OpenAICompatibleResponse struct {
-	ID      string                     `json:"id"`
-	Object  string                     `json:"object"`
-	Created int64                      `json:"created"`
-	Model   string                     `json:"model"`
-	Choices []OpenAICompatibleChoice   `json:"choices"`
-	Usage   OpenAICompatibleUsage      `json:"usage"`
+	ID      string                   `json:"id"`
+	Object  string                   `json:"object"`
+	Created int64                    `json:"created"`
+	Model   string                   `json:"model"`
+	Choices []OpenAICompatibleChoice `json:"choices"`
+	Usage   OpenAICompatibleUsage    `json:"usage"`
 }
 
 // OpenAICompatibleChoice represents a choice in the response
@@ -70,15 +70,15 @@ type OpenAICompatibleChoice struct {
 
 // OpenAICompatibleMessage represents a message in the response
 type OpenAICompatibleMessage struct {
-	Role      string    `json:"role"`
-	Content   string    `json:"content"`
+	Role      string     `json:"role"`
+	Content   string     `json:"content"`
 	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
 }
 
 // OpenAICompatibleDelta represents a delta in streaming response
 type OpenAICompatibleDelta struct {
-	Role      string    `json:"role,omitempty"`
-	Content   string    `json:"content,omitempty"`
+	Role      string     `json:"role,omitempty"`
+	Content   string     `json:"content,omitempty"`
 	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
 }
 
@@ -296,7 +296,7 @@ func (p *OpenAICompatibleProvider) GetHealth(ctx context.Context) (*ProviderHeal
 	var modelsResponse struct {
 		Data []OpenAICompatibleModel `json:"data"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&modelsResponse); err != nil {
 		p.updateHealth("degraded", latency, p.lastHealth.ErrorCount)
 		return p.lastHealth, nil // Still consider it available
@@ -505,11 +505,11 @@ func (p *OpenAICompatibleProvider) makeStreamingRequest(ctx context.Context, req
 			}
 
 			var streamResponse struct {
-				ID      string                     `json:"id"`
-				Object  string                     `json:"object"`
-				Created int64                      `json:"created"`
-				Model   string                     `json:"model"`
-				Choices []OpenAICompatibleChoice   `json:"choices"`
+				ID      string                   `json:"id"`
+				Object  string                   `json:"object"`
+				Created int64                    `json:"created"`
+				Model   string                   `json:"model"`
+				Choices []OpenAICompatibleChoice `json:"choices"`
 			}
 
 			if err := json.Unmarshal([]byte(data), &streamResponse); err != nil {
@@ -599,7 +599,7 @@ func (p *OpenAICompatibleProvider) updateHealth(status string, latency time.Dura
 
 func (p *OpenAICompatibleProvider) inferContextSize(modelName string) int {
 	modelName = strings.ToLower(modelName)
-	
+
 	// Common context sizes based on model names
 	if strings.Contains(modelName, "32k") || strings.Contains(modelName, "32k") {
 		return 32768
@@ -619,7 +619,7 @@ func (p *OpenAICompatibleProvider) inferContextSize(modelName string) int {
 	if strings.Contains(modelName, "llama") {
 		return 4096
 	}
-	
+
 	return 4096 // Default
 }
 
@@ -630,12 +630,12 @@ func (p *OpenAICompatibleProvider) inferMaxTokens(modelName string) int {
 
 func (p *OpenAICompatibleProvider) supportsTools(modelName string) bool {
 	modelName = strings.ToLower(modelName)
-	
+
 	// Most modern models support tools
 	return strings.Contains(modelName, "gpt-4") ||
-		   strings.Contains(modelName, "claude-3") ||
-		   strings.Contains(modelName, "llama-3") ||
-		   strings.Contains(modelName, "mistral")
+		strings.Contains(modelName, "claude-3") ||
+		strings.Contains(modelName, "llama-3") ||
+		strings.Contains(modelName, "mistral")
 }
 
 func (p *OpenAICompatibleProvider) supportsVision() bool {
@@ -646,15 +646,15 @@ func (p *OpenAICompatibleProvider) supportsVision() bool {
 func (p *OpenAICompatibleProvider) supportsVisionModel(modelName string) bool {
 	modelName = strings.ToLower(modelName)
 	return strings.Contains(modelName, "vision") ||
-		   strings.Contains(modelName, "multimodal") ||
-		   strings.Contains(modelName, "clip")
+		strings.Contains(modelName, "multimodal") ||
+		strings.Contains(modelName, "clip")
 }
 
 // readSSELine reads a line from Server-Sent Events stream
 func readSSELine(r io.Reader) (string, error) {
 	var line []byte
 	buf := make([]byte, 1)
-	
+
 	for {
 		n, err := r.Read(buf)
 		if err != nil {
@@ -663,15 +663,15 @@ func readSSELine(r io.Reader) (string, error) {
 		if n == 0 {
 			continue
 		}
-		
+
 		if buf[0] == '\n' {
 			break
 		}
-		
+
 		if buf[0] != '\r' {
 			line = append(line, buf[0])
 		}
 	}
-	
+
 	return string(line), nil
 }

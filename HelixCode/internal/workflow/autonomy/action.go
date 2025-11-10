@@ -15,15 +15,15 @@ type Action struct {
 type ActionType string
 
 const (
-	ActionLoadContext   ActionType = "load_context"
-	ActionApplyChange   ActionType = "apply_change"
-	ActionExecuteCmd    ActionType = "execute_command"
-	ActionDebugRetry    ActionType = "debug_retry"
-	ActionFileDelete    ActionType = "file_delete"
-	ActionBulkEdit      ActionType = "bulk_edit"
-	ActionNetworkCall   ActionType = "network_call"
-	ActionSystemChange  ActionType = "system_change"
-	ActionIteration     ActionType = "iteration"
+	ActionLoadContext  ActionType = "load_context"
+	ActionApplyChange  ActionType = "apply_change"
+	ActionExecuteCmd   ActionType = "execute_command"
+	ActionDebugRetry   ActionType = "debug_retry"
+	ActionFileDelete   ActionType = "file_delete"
+	ActionBulkEdit     ActionType = "bulk_edit"
+	ActionNetworkCall  ActionType = "network_call"
+	ActionSystemChange ActionType = "system_change"
+	ActionIteration    ActionType = "iteration"
 )
 
 // RiskLevel categorizes action risk
@@ -139,6 +139,6 @@ func (a *Action) IsBulk(threshold int) bool {
 // IsDestructive returns true if the action is potentially destructive
 func (a *Action) IsDestructive() bool {
 	return a.Type == ActionFileDelete ||
-		   a.Type == ActionSystemChange ||
-		   (a.Risk == RiskCritical)
+		a.Type == ActionSystemChange ||
+		(a.Risk == RiskCritical)
 }

@@ -33,12 +33,12 @@ type Capabilities struct {
 
 // ModelMetadata contains additional model information
 type ModelMetadata struct {
-	Version      string
-	Released     time.Time
-	Deprecated   bool
+	Version       string
+	Released      time.Time
+	Deprecated    bool
 	ReplacementID string
-	Pricing      *Pricing
-	RateLimits   *RateLimits
+	Pricing       *Pricing
+	RateLimits    *RateLimits
 }
 
 // Pricing contains model pricing information

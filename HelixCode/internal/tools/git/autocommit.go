@@ -97,10 +97,10 @@ type MessageOptions struct {
 
 // CommitContext provides additional context
 type CommitContext struct {
-	IssueRef      string
-	PreviousMsg   string
-	BranchName    string
-	ChangedFiles  []string
+	IssueRef     string
+	PreviousMsg  string
+	BranchName   string
+	ChangedFiles []string
 }
 
 // AmendOptions configures amend behavior

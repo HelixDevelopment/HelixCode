@@ -45,9 +45,9 @@ func TestDefaultDiscoveryConfig(t *testing.T) {
 
 func TestDiscoveryConfig_Validate(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		modifyConfig func(*DiscoveryConfig)
-		expectError bool
+		expectError  bool
 	}{
 		{
 			name: "valid config",

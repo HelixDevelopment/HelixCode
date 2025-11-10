@@ -50,18 +50,18 @@ type HarmonyApp struct {
 
 // HarmonyIntegration handles Harmony OS-specific native features
 type HarmonyIntegration struct {
-	nativeServices     map[string]interface{}
-	systemAPI          *HarmonySystemAPI
-	distributedEngine  *HarmonyDistributedEngine
-	harmonyContext     context.Context
+	nativeServices    map[string]interface{}
+	systemAPI         *HarmonySystemAPI
+	distributedEngine *HarmonyDistributedEngine
+	harmonyContext    context.Context
 }
 
 // HarmonySystemAPI provides access to Harmony OS system services
 type HarmonySystemAPI struct {
-	deviceInfo     map[string]string
-	capabilities   []string
-	systemVersion  string
-	kernelVersion  string
+	deviceInfo    map[string]string
+	capabilities  []string
+	systemVersion string
+	kernelVersion string
 }
 
 // HarmonyDistributedEngine manages distributed task scheduling across Harmony OS devices
@@ -114,7 +114,7 @@ type HarmonyServiceCoordinator struct {
 
 // ServiceCoordinator manages service lifecycle
 type ServiceCoordinator struct {
-	activeServices []string
+	activeServices  []string
 	failoverEnabled bool
 }
 
@@ -177,10 +177,10 @@ func (app *HarmonyApp) initializeHarmonyComponents() error {
 		nativeServices: make(map[string]interface{}),
 		systemAPI: &HarmonySystemAPI{
 			deviceInfo: map[string]string{
-				"platform":   "HarmonyOS",
-				"version":    "4.0",
-				"device":     "HelixCode Device",
-				"ecosystem":  "Harmony",
+				"platform":  "HarmonyOS",
+				"version":   "4.0",
+				"device":    "HelixCode Device",
+				"ecosystem": "Harmony",
 			},
 			capabilities: []string{
 				"distributed_computing",
@@ -264,9 +264,9 @@ func (app *HarmonyApp) updateSystemMetrics() {
 	app.systemMonitor.memoryUsage = 3200.0 // MB
 	app.systemMonitor.gpuUsage = 25.0
 	app.systemMonitor.networkTraffic = 1024000 // bytes
-	app.systemMonitor.diskIO = 512000         // bytes
+	app.systemMonitor.diskIO = 512000          // bytes
 	app.systemMonitor.temperature = 42.5       // Celsius
-	app.systemMonitor.powerUsage = 8.5        // Watts
+	app.systemMonitor.powerUsage = 8.5         // Watts
 }
 
 // SetupUI creates and configures the user interface
@@ -295,11 +295,11 @@ func (app *HarmonyApp) SetupUI() {
 
 	// Create main layout
 	mainContent := container.NewBorder(
-		nil,                 // top
-		app.statusBar,       // bottom
-		nil,                 // left
-		nil,                 // right
-		app.tabs,            // center
+		nil,           // top
+		app.statusBar, // bottom
+		nil,           // left
+		nil,           // right
+		app.tabs,      // center
 	)
 
 	app.mainWindow.SetContent(mainContent)

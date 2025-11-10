@@ -17,39 +17,39 @@ import (
 // KoboldAIProvider implements the Provider interface for KoboldAI
 // KoboldAI has a custom API format that differs from OpenAI
 type KoboldAIProvider struct {
-	config       KoboldAIConfig
-	httpClient   *http.Client
-	models       []ModelInfo
-	lastHealth   *ProviderHealth
-	isRunning    bool
+	config     KoboldAIConfig
+	httpClient *http.Client
+	models     []ModelInfo
+	lastHealth *ProviderHealth
+	isRunning  bool
 }
 
 // KoboldAIConfig holds configuration for KoboldAI
 type KoboldAIConfig struct {
-	BaseURL         string            `json:"base_url"`
-	APIKey          string            `json:"api_key"`
-	DefaultModel    string            `json:"default_model"`
-	Timeout         time.Duration     `json:"timeout"`
-	MaxRetries      int               `json:"max_retries"`
-	Headers         map[string]string `json:"headers"`
-	StreamingSupport bool             `json:"streaming_support"`
+	BaseURL          string            `json:"base_url"`
+	APIKey           string            `json:"api_key"`
+	DefaultModel     string            `json:"default_model"`
+	Timeout          time.Duration     `json:"timeout"`
+	MaxRetries       int               `json:"max_retries"`
+	Headers          map[string]string `json:"headers"`
+	StreamingSupport bool              `json:"streaming_support"`
 }
 
 // KoboldAIRequest represents a request to the KoboldAI API
 type KoboldAIRequest struct {
-	Prompt     string                 `json:"prompt"`
-	MaxLength  int                    `json:"max_length,omitempty"`
-	Temperature float64               `json:"temperature,omitempty"`
-	TopP       float64                `json:"top_p,omitempty"`
-	TopK       int                    `json:"top_k,omitempty"`
-	RepPen     float64                `json:"rep_pen,omitempty"`
-	RepPenRange int                   `json:"rep_pen_range,omitempty"`
-	StopSequences []string            `json:"stop_sequence,omitempty"`
-	Stream     bool                   `json:"stream,omitempty"`
-	UseStory   bool                   `json:"use_story,omitempty"`
-	UseMemory  bool                   `json:"use_memory,omitempty"`
-	UseAuthorsNote bool               `json:"use_authors_note,omitempty"`
-	UseWorldInfo    bool               `json:"use_world_info,omitempty"`
+	Prompt         string   `json:"prompt"`
+	MaxLength      int      `json:"max_length,omitempty"`
+	Temperature    float64  `json:"temperature,omitempty"`
+	TopP           float64  `json:"top_p,omitempty"`
+	TopK           int      `json:"top_k,omitempty"`
+	RepPen         float64  `json:"rep_pen,omitempty"`
+	RepPenRange    int      `json:"rep_pen_range,omitempty"`
+	StopSequences  []string `json:"stop_sequence,omitempty"`
+	Stream         bool     `json:"stream,omitempty"`
+	UseStory       bool     `json:"use_story,omitempty"`
+	UseMemory      bool     `json:"use_memory,omitempty"`
+	UseAuthorsNote bool     `json:"use_authors_note,omitempty"`
+	UseWorldInfo   bool     `json:"use_world_info,omitempty"`
 }
 
 // KoboldAIResponse represents a response from the KoboldAI API
@@ -60,8 +60,8 @@ type KoboldAIResponse struct {
 
 // KoboldAIResult represents a result in the response
 type KoboldAIResult struct {
-	Text      string `json:"text"`
-	Generated bool   `json:"generated"`
+	Text      string    `json:"text"`
+	Generated bool      `json:"generated"`
 	Logits    []float64 `json:"logits,omitempty"`
 }
 
@@ -73,10 +73,10 @@ type KoboldAIStreamResponse struct {
 
 // KoboldAIModel represents a KoboldAI model
 type KoboldAIModel struct {
-	Name      string `json:"name"`
-	Filename  string `json:"filename"`
-	Size      string `json:"size"`
-	Modified  string `json:"modified"`
+	Name     string `json:"name"`
+	Filename string `json:"filename"`
+	Size     string `json:"size"`
+	Modified string `json:"modified"`
 }
 
 // NewKoboldAIProvider creates a new KoboldAI provider
@@ -333,7 +333,7 @@ func (p *KoboldAIProvider) discoverModels() error {
 
 func (p *KoboldAIProvider) convertMessagesToPrompt(messages []Message) string {
 	var prompt strings.Builder
-	
+
 	for _, msg := range messages {
 		switch msg.Role {
 		case "system":
@@ -344,7 +344,7 @@ func (p *KoboldAIProvider) convertMessagesToPrompt(messages []Message) string {
 			prompt.WriteString(fmt.Sprintf("Assistant: %s\n\n", msg.Content))
 		}
 	}
-	
+
 	prompt.WriteString("Assistant: ")
 	return prompt.String()
 }
@@ -362,7 +362,7 @@ func (p *KoboldAIProvider) convertFromKoboldAIResponse(response *KoboldAIRespons
 	if len(response.Results) > 0 {
 		result := response.Results[0]
 		llmResponse.Content = result.Text
-		
+
 		// Estimate token usage (KoboldAI doesn't provide exact counts)
 		promptTokens := 100 // Rough estimate
 		completionTokens := len(strings.Split(result.Text, " "))

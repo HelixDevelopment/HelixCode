@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/ssh"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/ssh"
 )
 
 // dummyPublicKey implements ssh.PublicKey for testing
@@ -20,8 +20,8 @@ type dummyPublicKey struct {
 	data    []byte
 }
 
-func (dp *dummyPublicKey) Type() string                { return dp.keyType }
-func (dp *dummyPublicKey) Marshal() []byte              { return dp.data }
+func (dp *dummyPublicKey) Type() string    { return dp.keyType }
+func (dp *dummyPublicKey) Marshal() []byte { return dp.data }
 func (dp *dummyPublicKey) Verify(data []byte, sig *ssh.Signature) error {
 	return fmt.Errorf("dummy key - not verifiable")
 }
@@ -29,15 +29,15 @@ func (dp *dummyPublicKey) Verify(data []byte, sig *ssh.Signature) error {
 // TestSSHSecurity_HostKeyVerification tests secure host key verification
 func TestSSHSecurity_HostKeyVerification(t *testing.T) {
 	tests := []struct {
-		name       string
+		name        string
 		expectError bool
-		knownHosts map[string][]ssh.PublicKey
+		knownHosts  map[string][]ssh.PublicKey
 		testHost    string
 		testKey     ssh.PublicKey
 		strictMode  bool
 	}{
 		{
-			name:       "Known host with correct key",
+			name:        "Known host with correct key",
 			expectError: false,
 			knownHosts: map[string][]ssh.PublicKey{
 				"testhost": {&dummyPublicKey{keyType: "ssh-rsa", data: []byte("known-key")}},
@@ -47,7 +47,7 @@ func TestSSHSecurity_HostKeyVerification(t *testing.T) {
 			strictMode: true,
 		},
 		{
-			name:       "Unknown host in strict mode",
+			name:        "Unknown host in strict mode",
 			expectError: true,
 			knownHosts: map[string][]ssh.PublicKey{
 				"otherhost": {&dummyPublicKey{keyType: "ssh-rsa", data: []byte("other-key")}},
@@ -57,7 +57,7 @@ func TestSSHSecurity_HostKeyVerification(t *testing.T) {
 			strictMode: true,
 		},
 		{
-			name:       "Known host with mismatched key",
+			name:        "Known host with mismatched key",
 			expectError: true,
 			knownHosts: map[string][]ssh.PublicKey{
 				"testhost": {&dummyPublicKey{keyType: "ssh-rsa", data: []byte("known-key")}},
@@ -67,12 +67,12 @@ func TestSSHSecurity_HostKeyVerification(t *testing.T) {
 			strictMode: true,
 		},
 		{
-			name:       "Unknown host in permissive mode",
+			name:        "Unknown host in permissive mode",
 			expectError: false,
-			knownHosts: map[string][]ssh.PublicKey{},
-			testHost:   "unknownhost",
-			testKey:    &dummyPublicKey{keyType: "ssh-rsa", data: []byte("unknown-key")},
-			strictMode: false,
+			knownHosts:  map[string][]ssh.PublicKey{},
+			testHost:    "unknownhost",
+			testKey:     &dummyPublicKey{keyType: "ssh-rsa", data: []byte("unknown-key")},
+			strictMode:  false,
 		},
 	}
 
@@ -151,11 +151,11 @@ func TestSSHSecurity_Integration(t *testing.T) {
 
 	pool := NewSSHWorkerPool(true)
 	workerConfig := SSHWorkerConfig{
-		Host:                    "localhost",
-		Port:                    2222,
-		Username:                "testuser",
-		KeyPath:                 filepath.Join(os.TempDir(), "test_key"),
-		StrictHostKeyChecking:    true,
+		Host:                  "localhost",
+		Port:                  2222,
+		Username:              "testuser",
+		KeyPath:               filepath.Join(os.TempDir(), "test_key"),
+		StrictHostKeyChecking: true,
 	}
 
 	worker := &SSHWorker{

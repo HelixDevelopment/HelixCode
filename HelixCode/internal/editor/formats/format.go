@@ -9,14 +9,14 @@ import (
 type FormatType string
 
 const (
-	FormatTypeWhole        FormatType = "whole"         // Replace entire file
-	FormatTypeDiff         FormatType = "diff"          // Standard unified diff
-	FormatTypeUDiff        FormatType = "udiff"         // Git-style unified diff
+	FormatTypeWhole         FormatType = "whole"          // Replace entire file
+	FormatTypeDiff          FormatType = "diff"           // Standard unified diff
+	FormatTypeUDiff         FormatType = "udiff"          // Git-style unified diff
 	FormatTypeSearchReplace FormatType = "search-replace" // Regex search/replace
-	FormatTypeEditor       FormatType = "editor"        // Line-based editing
-	FormatTypeArchitect    FormatType = "architect"     // High-level structural changes
-	FormatTypeAsk          FormatType = "ask"           // Question/confirmation mode
-	FormatTypeLineNumber   FormatType = "line-number"   // Direct line number editing
+	FormatTypeEditor        FormatType = "editor"         // Line-based editing
+	FormatTypeArchitect     FormatType = "architect"      // High-level structural changes
+	FormatTypeAsk           FormatType = "ask"            // Question/confirmation mode
+	FormatTypeLineNumber    FormatType = "line-number"    // Direct line number editing
 )
 
 // EditFormat represents an interface for different edit formats
@@ -48,15 +48,15 @@ type EditFormat interface {
 
 // FileEdit represents a single file edit operation
 type FileEdit struct {
-	FilePath    string         // Path to the file being edited
-	Operation   EditOperation  // Type of operation (create, update, delete)
-	OldContent  string         // Original content (for validation)
-	NewContent  string         // New content
-	LineNumber  int            // Starting line number (for line-based edits)
-	LineCount   int            // Number of lines affected
-	SearchPattern string       // Search pattern (for search/replace)
-	ReplaceWith   string       // Replacement text (for search/replace)
-	Metadata    map[string]interface{} // Additional metadata
+	FilePath      string                 // Path to the file being edited
+	Operation     EditOperation          // Type of operation (create, update, delete)
+	OldContent    string                 // Original content (for validation)
+	NewContent    string                 // New content
+	LineNumber    int                    // Starting line number (for line-based edits)
+	LineCount     int                    // Number of lines affected
+	SearchPattern string                 // Search pattern (for search/replace)
+	ReplaceWith   string                 // Replacement text (for search/replace)
+	Metadata      map[string]interface{} // Additional metadata
 }
 
 // EditOperation represents the type of edit operation
@@ -71,8 +71,8 @@ const (
 
 // ParseResult represents the result of parsing edit content
 type ParseResult struct {
-	Edits    []*FileEdit        // Parsed edits
-	Warnings []string           // Non-fatal warnings
+	Edits    []*FileEdit            // Parsed edits
+	Warnings []string               // Non-fatal warnings
 	Metadata map[string]interface{} // Additional metadata
 }
 

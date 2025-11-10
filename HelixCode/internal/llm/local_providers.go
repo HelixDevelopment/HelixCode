@@ -9,15 +9,15 @@ import (
 // NewVLLMProvider creates a new VLLM provider
 func NewVLLMProvider(config ProviderConfigEntry) (Provider, error) {
 	vllmConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:8000"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "llama-2-7b-chat-hf"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:8000"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "llama-2-7b-chat-hf"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("vllm", vllmConfig)
@@ -26,15 +26,15 @@ func NewVLLMProvider(config ProviderConfigEntry) (Provider, error) {
 // NewLocalAIProvider creates a new LocalAI provider
 func NewLocalAIProvider(config ProviderConfigEntry) (Provider, error) {
 	localAIConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:8080"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "gpt-3.5-turbo"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:8080"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "gpt-3.5-turbo"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("localai", localAIConfig)
@@ -43,15 +43,15 @@ func NewLocalAIProvider(config ProviderConfigEntry) (Provider, error) {
 // NewFastChatProvider creates a new FastChat provider
 func NewFastChatProvider(config ProviderConfigEntry) (Provider, error) {
 	fastChatConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:7860"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "vicuna-13b-v1.5"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:7860"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "vicuna-13b-v1.5"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("fastchat", fastChatConfig)
@@ -60,15 +60,15 @@ func NewFastChatProvider(config ProviderConfigEntry) (Provider, error) {
 // NewTextGenProvider creates a new Text Generation WebUI provider
 func NewTextGenProvider(config ProviderConfigEntry) (Provider, error) {
 	textGenConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:5000"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "llama-2-7b-chat-hf"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:5000"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "llama-2-7b-chat-hf"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("textgen", textGenConfig)
@@ -77,15 +77,15 @@ func NewTextGenProvider(config ProviderConfigEntry) (Provider, error) {
 // NewLMStudioProvider creates a new LM Studio provider
 func NewLMStudioProvider(config ProviderConfigEntry) (Provider, error) {
 	lmStudioConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:1234"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "local-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:1234"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "local-model"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("lmstudio", lmStudioConfig)
@@ -94,15 +94,15 @@ func NewLMStudioProvider(config ProviderConfigEntry) (Provider, error) {
 // NewJanProvider creates a new Jan AI provider
 func NewJanProvider(config ProviderConfigEntry) (Provider, error) {
 	janConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:1337"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "jan-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:1337"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "jan-model"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("jan", janConfig)
@@ -111,15 +111,15 @@ func NewJanProvider(config ProviderConfigEntry) (Provider, error) {
 // NewGPT4AllProvider creates a new GPT4All provider
 func NewGPT4AllProvider(config ProviderConfigEntry) (Provider, error) {
 	gpt4AllConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:4891"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "gpt4all-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:4891"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "gpt4all-model"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", false), // GPT4All might not support streaming
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("gpt4all", gpt4AllConfig)
@@ -128,15 +128,15 @@ func NewGPT4AllProvider(config ProviderConfigEntry) (Provider, error) {
 // NewTabbyAPIProvider creates a new TabbyAPI provider
 func NewTabbyAPIProvider(config ProviderConfigEntry) (Provider, error) {
 	tabbyAPIConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:5000"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "tabby-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:5000"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "tabby-model"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("tabbyapi", tabbyAPIConfig)
@@ -145,15 +145,15 @@ func NewTabbyAPIProvider(config ProviderConfigEntry) (Provider, error) {
 // NewMLXProvider creates a new MLX LLM provider
 func NewMLXProvider(config ProviderConfigEntry) (Provider, error) {
 	mlxConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:8080"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "mlx-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:8080"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "mlx-model"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("mlx", mlxConfig)
@@ -162,15 +162,15 @@ func NewMLXProvider(config ProviderConfigEntry) (Provider, error) {
 // NewMistralRSProvider creates a new Mistral RS provider
 func NewMistralRSProvider(config ProviderConfigEntry) (Provider, error) {
 	mistralRSConfig := OpenAICompatibleConfig{
-		BaseURL:         getEndpoint(config.Endpoint, "http://localhost:8080"),
-		APIKey:          config.APIKey,
-		DefaultModel:    getFirstModel(config.Models, "mistral-model"),
-		Timeout:         getTimeout(config.Parameters, 30*time.Second),
-		MaxRetries:      getIntParam(config.Parameters, "max_retries", 3),
-		Headers:         getStringMapParam(config.Parameters, "headers"),
+		BaseURL:          getEndpoint(config.Endpoint, "http://localhost:8080"),
+		APIKey:           config.APIKey,
+		DefaultModel:     getFirstModel(config.Models, "mistral-model"),
+		Timeout:          getTimeout(config.Parameters, 30*time.Second),
+		MaxRetries:       getIntParam(config.Parameters, "max_retries", 3),
+		Headers:          getStringMapParam(config.Parameters, "headers"),
 		StreamingSupport: getBoolParam(config.Parameters, "streaming_support", true),
-		ModelEndpoint:   "/v1/models",
-		ChatEndpoint:    "/v1/chat/completions",
+		ModelEndpoint:    "/v1/models",
+		ChatEndpoint:     "/v1/chat/completions",
 	}
 
 	return NewOpenAICompatibleProvider("mistralrs", mistralRSConfig)

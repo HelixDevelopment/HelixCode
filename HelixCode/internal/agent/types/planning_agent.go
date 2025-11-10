@@ -75,9 +75,9 @@ func (a *PlanningAgent) Execute(ctx context.Context, t *task.Task) (*task.Result
 
 	// Set result
 	output := map[string]interface{}{
-		"plan":         plan,
-		"subtasks":     subtasks,
-		"total_tasks":  len(subtasks),
+		"plan":               plan,
+		"subtasks":           subtasks,
+		"total_tasks":        len(subtasks),
 		"estimated_duration": a.estimateDuration(subtasks),
 	}
 

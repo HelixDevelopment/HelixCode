@@ -41,13 +41,13 @@ func (t ConsoleMessageType) String() string {
 
 // ConsoleMessage represents a console message
 type ConsoleMessage struct {
-	Type      ConsoleMessageType
-	Text      string
-	URL       string
-	Line      int
-	Column    int
-	Timestamp time.Time
-	Args      []interface{}
+	Type       ConsoleMessageType
+	Text       string
+	URL        string
+	Line       int
+	Column     int
+	Timestamp  time.Time
+	Args       []interface{}
 	StackTrace string
 }
 

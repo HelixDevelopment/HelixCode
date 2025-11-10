@@ -170,13 +170,13 @@ type CacheSavings struct {
 
 // CacheMetrics tracks overall caching performance
 type CacheMetrics struct {
-	TotalRequests          int     `json:"total_requests"`
-	RequestsWithCache      int     `json:"requests_with_cache"`
-	CacheHitRate           float64 `json:"cache_hit_rate"`
-	TotalTokensCached      int     `json:"total_tokens_cached"`
-	TotalTokensRead        int     `json:"total_tokens_read"`
-	TotalSavings           float64 `json:"total_savings"`
-	AverageSavingsPercent  float64 `json:"average_savings_percent"`
+	TotalRequests         int     `json:"total_requests"`
+	RequestsWithCache     int     `json:"requests_with_cache"`
+	CacheHitRate          float64 `json:"cache_hit_rate"`
+	TotalTokensCached     int     `json:"total_tokens_cached"`
+	TotalTokensRead       int     `json:"total_tokens_read"`
+	TotalSavings          float64 `json:"total_savings"`
+	AverageSavingsPercent float64 `json:"average_savings_percent"`
 }
 
 // UpdateMetrics updates cache metrics with new stats

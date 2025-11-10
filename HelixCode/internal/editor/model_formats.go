@@ -7,19 +7,19 @@ import (
 // ModelFormatPreferences maps model names to their preferred edit formats
 var ModelFormatPreferences = map[string]EditFormat{
 	// OpenAI models
-	"gpt-4o":         EditFormatDiff,
-	"gpt-4-turbo":    EditFormatDiff,
-	"gpt-4":          EditFormatDiff,
-	"gpt-3.5-turbo":  EditFormatSearchReplace,
-	"o1-preview":     EditFormatWhole,
-	"o1-mini":        EditFormatWhole,
+	"gpt-4o":        EditFormatDiff,
+	"gpt-4-turbo":   EditFormatDiff,
+	"gpt-4":         EditFormatDiff,
+	"gpt-3.5-turbo": EditFormatSearchReplace,
+	"o1-preview":    EditFormatWhole,
+	"o1-mini":       EditFormatWhole,
 
 	// Anthropic Claude models
-	"claude-3-opus":    EditFormatSearchReplace,
-	"claude-3-sonnet":  EditFormatSearchReplace,
-	"claude-3-haiku":   EditFormatSearchReplace,
+	"claude-3-opus":     EditFormatSearchReplace,
+	"claude-3-sonnet":   EditFormatSearchReplace,
+	"claude-3-haiku":    EditFormatSearchReplace,
 	"claude-3.5-sonnet": EditFormatSearchReplace,
-	"claude-sonnet-4":  EditFormatSearchReplace,
+	"claude-sonnet-4":   EditFormatSearchReplace,
 
 	// Google Gemini models
 	"gemini-pro":       EditFormatWhole,
@@ -28,53 +28,53 @@ var ModelFormatPreferences = map[string]EditFormat{
 	"gemini-1.5-flash": EditFormatSearchReplace,
 
 	// Meta Llama models
-	"llama-2-7b":       EditFormatWhole,
-	"llama-2-13b":      EditFormatWhole,
-	"llama-2-70b":      EditFormatDiff,
-	"llama-3-8b":       EditFormatWhole,
-	"llama-3-70b":      EditFormatDiff,
-	"llama-3.1-8b":     EditFormatSearchReplace,
-	"llama-3.1-70b":    EditFormatDiff,
-	"llama-3.1-405b":   EditFormatDiff,
+	"llama-2-7b":     EditFormatWhole,
+	"llama-2-13b":    EditFormatWhole,
+	"llama-2-70b":    EditFormatDiff,
+	"llama-3-8b":     EditFormatWhole,
+	"llama-3-70b":    EditFormatDiff,
+	"llama-3.1-8b":   EditFormatSearchReplace,
+	"llama-3.1-70b":  EditFormatDiff,
+	"llama-3.1-405b": EditFormatDiff,
 
 	// Code-specific models
-	"codellama-7b":     EditFormatWhole,
-	"codellama-13b":    EditFormatSearchReplace,
-	"codellama-34b":    EditFormatWhole,
-	"codellama-70b":    EditFormatDiff,
-	"deepseek-coder":   EditFormatDiff,
-	"starcoder":        EditFormatWhole,
-	"wizardcoder":      EditFormatSearchReplace,
+	"codellama-7b":   EditFormatWhole,
+	"codellama-13b":  EditFormatSearchReplace,
+	"codellama-34b":  EditFormatWhole,
+	"codellama-70b":  EditFormatDiff,
+	"deepseek-coder": EditFormatDiff,
+	"starcoder":      EditFormatWhole,
+	"wizardcoder":    EditFormatSearchReplace,
 
 	// Mistral models
-	"mistral-7b":       EditFormatWhole,
-	"mistral-8x7b":     EditFormatSearchReplace,
-	"mistral-large":    EditFormatDiff,
-	"mixtral-8x7b":     EditFormatSearchReplace,
-	"mixtral-8x22b":    EditFormatDiff,
+	"mistral-7b":    EditFormatWhole,
+	"mistral-8x7b":  EditFormatSearchReplace,
+	"mistral-large": EditFormatDiff,
+	"mixtral-8x7b":  EditFormatSearchReplace,
+	"mixtral-8x22b": EditFormatDiff,
 
 	// Qwen models
-	"qwen-72b":         EditFormatDiff,
-	"qwen-14b":         EditFormatSearchReplace,
-	"qwen-7b":          EditFormatWhole,
-	"qwen2-72b":        EditFormatDiff,
-	"qwen2.5-72b":      EditFormatDiff,
-	"qwen-coder":       EditFormatSearchReplace,
+	"qwen-72b":    EditFormatDiff,
+	"qwen-14b":    EditFormatSearchReplace,
+	"qwen-7b":     EditFormatWhole,
+	"qwen2-72b":   EditFormatDiff,
+	"qwen2.5-72b": EditFormatDiff,
+	"qwen-coder":  EditFormatSearchReplace,
 
 	// xAI Grok models
-	"grok-1":           EditFormatDiff,
-	"grok-2":           EditFormatDiff,
+	"grok-1": EditFormatDiff,
+	"grok-2": EditFormatDiff,
 
 	// Microsoft/GitHub models
-	"phi-2":            EditFormatWhole,
-	"phi-3":            EditFormatSearchReplace,
-	"copilot":          EditFormatSearchReplace,
+	"phi-2":   EditFormatWhole,
+	"phi-3":   EditFormatSearchReplace,
+	"copilot": EditFormatSearchReplace,
 
 	// Other notable models
-	"command-r":        EditFormatSearchReplace,
-	"command-r-plus":   EditFormatDiff,
-	"solar-10.7b":      EditFormatSearchReplace,
-	"yi-34b":           EditFormatDiff,
+	"command-r":      EditFormatSearchReplace,
+	"command-r-plus": EditFormatDiff,
+	"solar-10.7b":    EditFormatSearchReplace,
+	"yi-34b":         EditFormatDiff,
 }
 
 // ModelCapability represents the editing capabilities of a model

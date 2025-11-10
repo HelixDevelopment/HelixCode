@@ -23,15 +23,15 @@ type Chain struct {
 func NewChain(name string) *Chain {
 	now := time.Now()
 	return &Chain{
-		ID:          generateChainID(name),
-		Name:        name,
-		Focuses:     make([]*Focus, 0),
-		CurrentIdx:  -1,
-		MaxSize:     0, // Unlimited by default
-		Context:     make(map[string]interface{}),
-		CreatedAt:   now,
-		UpdatedAt:   now,
-		Metadata:    make(map[string]string),
+		ID:         generateChainID(name),
+		Name:       name,
+		Focuses:    make([]*Focus, 0),
+		CurrentIdx: -1,
+		MaxSize:    0, // Unlimited by default
+		Context:    make(map[string]interface{}),
+		CreatedAt:  now,
+		UpdatedAt:  now,
+		Metadata:   make(map[string]string),
 	}
 }
 

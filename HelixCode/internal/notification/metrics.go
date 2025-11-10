@@ -8,10 +8,10 @@ import (
 // Metrics tracks notification system metrics
 type Metrics struct {
 	// Notification counts
-	TotalSent       int64
-	TotalFailed     int64
-	TotalRetries    int64
-	TotalQueued     int64
+	TotalSent        int64
+	TotalFailed      int64
+	TotalRetries     int64
+	TotalQueued      int64
 	TotalRateLimited int64
 
 	// Channel-specific metrics
@@ -33,20 +33,20 @@ type Metrics struct {
 
 // ChannelMetrics tracks metrics for a specific channel
 type ChannelMetrics struct {
-	Sent         int64
-	Failed       int64
-	Retries      int64
-	RateLimited  int64
-	AvgTime      time.Duration
-	TotalTime    time.Duration
-	TimeCount    int64
-	mutex        sync.Mutex
+	Sent        int64
+	Failed      int64
+	Retries     int64
+	RateLimited int64
+	AvgTime     time.Duration
+	TotalTime   time.Duration
+	TimeCount   int64
+	mutex       sync.Mutex
 }
 
 // NewMetrics creates a new metrics tracker
 func NewMetrics() *Metrics {
 	return &Metrics{
-		ChannelMetrics: make(map[string]*ChannelMetrics),
+		ChannelMetrics:  make(map[string]*ChannelMetrics),
 		MinResponseTime: time.Hour, // Start with high value
 	}
 }

@@ -97,9 +97,9 @@ func DefaultLaunchOptions() *LaunchOptions {
 
 // browserContext holds the chromedp context for a browser
 type browserContext struct {
-	ctx        context.Context
-	cancel     context.CancelFunc
-	allocCtx   context.Context
+	ctx         context.Context
+	cancel      context.CancelFunc
+	allocCtx    context.Context
 	allocCancel context.CancelFunc
 }
 

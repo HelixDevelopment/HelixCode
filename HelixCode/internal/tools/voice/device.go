@@ -10,13 +10,13 @@ import (
 
 // AudioDevice represents an audio input device
 type AudioDevice struct {
-	ID          string   // System device ID
-	Name        string   // Human-readable name
-	IsDefault   bool     // Whether this is the system default
-	SampleRates []int    // Supported sample rates
-	Channels    int      // Number of channels
-	IsAvailable bool     // Current availability status
-	Driver      string   // Audio driver (CoreAudio, ALSA, etc.)
+	ID          string // System device ID
+	Name        string // Human-readable name
+	IsDefault   bool   // Whether this is the system default
+	SampleRates []int  // Supported sample rates
+	Channels    int    // Number of channels
+	IsAvailable bool   // Current availability status
+	Driver      string // Audio driver (CoreAudio, ALSA, etc.)
 }
 
 // DeviceManager handles audio device enumeration and selection

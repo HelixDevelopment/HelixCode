@@ -9,14 +9,14 @@ import (
 
 // Executor executes hooks for events
 type Executor struct {
-	maxConcurrent int                   // Maximum concurrent async executions
-	semaphore     chan struct{}         // Semaphore for controlling concurrency
-	wg            sync.WaitGroup        // Wait group for async executions
-	results       []*ExecutionResult    // Results of recent executions
-	resultsMu     sync.RWMutex          // Mutex for results
-	maxResults    int                   // Maximum results to keep
-	onComplete    []ResultCallback      // Callbacks on completion
-	onError       []ResultCallback      // Callbacks on error
+	maxConcurrent int                // Maximum concurrent async executions
+	semaphore     chan struct{}      // Semaphore for controlling concurrency
+	wg            sync.WaitGroup     // Wait group for async executions
+	results       []*ExecutionResult // Results of recent executions
+	resultsMu     sync.RWMutex       // Mutex for results
+	maxResults    int                // Maximum results to keep
+	onComplete    []ResultCallback   // Callbacks on completion
+	onError       []ResultCallback   // Callbacks on error
 }
 
 // ResultCallback is called when a hook execution completes
@@ -315,10 +315,10 @@ func (e *Executor) SetMaxResults(max int) {
 
 // ExecutorStatistics contains execution statistics
 type ExecutorStatistics struct {
-	TotalExecutions int                   // Total number of executions
-	ByStatus        map[HookStatus]int    // Count by status
-	AverageDuration time.Duration         // Average execution duration
-	SuccessRate     float64               // Success rate (0.0 - 1.0)
+	TotalExecutions int                // Total number of executions
+	ByStatus        map[HookStatus]int // Count by status
+	AverageDuration time.Duration      // Average execution duration
+	SuccessRate     float64            // Success rate (0.0 - 1.0)
 }
 
 // String returns a string representation of the statistics

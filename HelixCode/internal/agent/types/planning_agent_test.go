@@ -14,8 +14,8 @@ import (
 
 // MockLLMProvider is a simple mock for testing
 type MockLLMProvider struct {
-	models         []llm.ModelInfo
-	generateFunc   func(ctx context.Context, request *llm.LLMRequest) (*llm.LLMResponse, error)
+	models       []llm.ModelInfo
+	generateFunc func(ctx context.Context, request *llm.LLMRequest) (*llm.LLMResponse, error)
 }
 
 func (m *MockLLMProvider) GetType() llm.ProviderType {
@@ -318,6 +318,7 @@ func TestEstimateDurationEdgeCases(t *testing.T) {
 		assert.Equal(t, expected, result)
 	})
 }
+
 // TestPlanningAgentExecuteSuccess tests successful plan generation and execution
 func TestPlanningAgentExecuteSuccess(t *testing.T) {
 	config := &agent.AgentConfig{
@@ -390,7 +391,7 @@ Subtasks:
 	assert.Contains(t, result.Output, "subtasks")
 	assert.Contains(t, result.Output, "total_tasks")
 	assert.Contains(t, result.Output, "estimated_duration")
-	
+
 	subtasks := result.Output["subtasks"].([]*task.Task)
 	assert.Len(t, subtasks, 2)
 	assert.Equal(t, "Setup project structure", subtasks[0].Title)

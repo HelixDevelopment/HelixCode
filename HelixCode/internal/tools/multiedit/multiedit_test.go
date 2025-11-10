@@ -524,8 +524,8 @@ func TestPreviewFormatter_Format(t *testing.T) {
 	result := &PreviewResult{
 		TransactionID: "test-tx",
 		Summary: &PreviewSummary{
-			TotalFiles:   2,
-			FilesCreated: 1,
+			TotalFiles:    2,
+			FilesCreated:  1,
 			FilesModified: 1,
 		},
 		Files: []*FilePreview{

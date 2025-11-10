@@ -9,17 +9,17 @@ import (
 
 	"dev.helix.code/internal/llm"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // Mock provider for unit testing
 type MockProvider struct {
 	mock.Mock
-	name        string
+	name         string
 	providerType string
-	running     bool
-	models      []llm.ModelInfo
+	running      bool
+	models       []llm.ModelInfo
 }
 
 func (m *MockProvider) GetType() string {
@@ -86,11 +86,11 @@ func TestLocalLLMManager_Initialize(t *testing.T) {
 	manager := llm.NewLocalLLMManager(testDir)
 
 	ctx := context.Background()
-	
+
 	// Test successful initialization
 	err := manager.Initialize(ctx)
 	assert.NoError(t, err)
-	
+
 	// Verify directories were created
 	assert.DirExists(t, filepath.Join(testDir, "bin"))
 	assert.DirExists(t, filepath.Join(testDir, "config"))
@@ -155,7 +155,7 @@ func TestLocalLLMManager_GetProviderStatus(t *testing.T) {
 	// Test getting status
 	status := manager.GetProviderStatus(ctx)
 	assert.NotNil(t, status)
-	
+
 	// Should contain all provider definitions
 	providers := []string{"vllm", "localai", "fastchat", "textgen", "lmstudio"}
 	for _, provider := range providers {
@@ -393,7 +393,7 @@ func TestCrossProviderRegistry(t *testing.T) {
 	query := llm.ModelCompatibilityQuery{
 		ModelID:        "llama-3-8b-instruct",
 		SourceFormat:   "hf",
-		TargetProvider:  "vllm",
+		TargetProvider: "vllm",
 	}
 
 	result, err := registry.CheckCompatibility(query)
@@ -426,9 +426,9 @@ func TestModelDiscovery(t *testing.T) {
 
 	// Test getting recommendations
 	req := &llm.RecommendationRequest{
-		TaskTypes:         []string{"code_generation"},
-		QualityPreference: "high",
-		PrivacyLevel:      "local",
+		TaskTypes:          []string{"code_generation"},
+		QualityPreference:  "high",
+		PrivacyLevel:       "local",
 		MaxRecommendations: 5,
 	}
 
@@ -443,14 +443,14 @@ func TestModelDiscovery(t *testing.T) {
 func TestLocalLLMManager_EdgeCases(t *testing.T) {
 	// Test with nil context
 	manager := llm.NewLocalLLMManager("")
-	
+
 	// Should handle nil context gracefully (panics are acceptable)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Logf("Expected panic with nil context: %v", r)
 		}
 	}()
-	
+
 	ctx := context.Background()
 	err := manager.Initialize(ctx)
 	assert.NoError(t, err)
@@ -458,7 +458,7 @@ func TestLocalLLMManager_EdgeCases(t *testing.T) {
 	// Test with canceled context
 	ctx, cancel := context.WithCancel(ctx)
 	cancel()
-	
+
 	err = manager.StartProvider(ctx, "vllm")
 	// Should return context canceled error
 	if err != nil {
@@ -481,11 +481,11 @@ func TestLocalLLMManager_ConcurrentAccess(t *testing.T) {
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
 			defer func() { done <- true }()
-			
+
 			// Perform operations concurrently
 			status := manager.GetProviderStatus(ctx)
 			assert.NotNil(t, status)
-			
+
 			running := manager.GetRunningProviders(ctx)
 			assert.NotNil(t, running)
 		}()
@@ -516,8 +516,8 @@ func TestLocalLLMManager_ResourceLimits(t *testing.T) {
 	err = manager.StartProvider(ctx, "vllm")
 	// Should return timeout error
 	if err != nil {
-		assert.Contains(t, err.Error(), "deadline exceeded") || 
-				assert.Contains(t, err.Error(), "timeout")
+		assert.Contains(t, err.Error(), "deadline exceeded") ||
+			assert.Contains(t, err.Error(), "timeout")
 	}
 }
 
@@ -544,7 +544,7 @@ func TestLocalLLMManager_Performance(t *testing.T) {
 	avgDuration := duration / iterations
 
 	// Should complete within reasonable time (less than 10ms per iteration)
-	assert.Less(t, avgDuration, 10*time.Millisecond, 
+	assert.Less(t, avgDuration, 10*time.Millisecond,
 		"Status retrieval should be fast")
 	t.Logf("Average status retrieval time: %v", avgDuration)
 }

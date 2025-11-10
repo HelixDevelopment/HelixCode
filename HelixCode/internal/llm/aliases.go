@@ -17,11 +17,11 @@ type ModelAlias struct {
 
 // AliasManager manages model aliases
 type AliasManager struct {
-	aliases          map[string]*ModelAlias // alias -> ModelAlias
-	fuzzyThreshold   float64
-	mu               sync.RWMutex
-	providerAliases  map[string][]string // provider -> list of aliases
-	caseInsensitive  bool
+	aliases         map[string]*ModelAlias // alias -> ModelAlias
+	fuzzyThreshold  float64
+	mu              sync.RWMutex
+	providerAliases map[string][]string // provider -> list of aliases
+	caseInsensitive bool
 }
 
 // NewAliasManager creates a new alias manager
