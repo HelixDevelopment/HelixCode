@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -14,11 +13,11 @@ import (
 // TestNewOpenAICompatibleProvider tests the creation of OpenAI-compatible providers
 func TestNewOpenAICompatibleProvider(t *testing.T) {
 	config := OpenAICompatibleConfig{
-		BaseURL:         "http://localhost:8000",
-		APIKey:          "test-key",
-		DefaultModel:    "test-model",
-		Timeout:         30 * time.Second,
-		MaxRetries:      3,
+		BaseURL:          "http://localhost:8000",
+		APIKey:           "test-key",
+		DefaultModel:     "test-model",
+		Timeout:          30 * time.Second,
+		MaxRetries:       3,
 		StreamingSupport: true,
 	}
 
@@ -52,11 +51,11 @@ func TestOpenAICompatibleProviderConfigDefaults(t *testing.T) {
 
 	provider, err := NewOpenAICompatibleProvider("test", config)
 	require.NoError(t, err)
-	
+
 	// Should set default endpoints
 	assert.Equal(t, "/v1/models", config.ModelEndpoint)
 	assert.Equal(t, "/v1/chat/completions", config.ChatEndpoint)
-	
+
 	provider.Close()
 }
 
@@ -91,7 +90,7 @@ func TestProviderTypeMapping(t *testing.T) {
 			provider, err := NewOpenAICompatibleProvider(tt.name, config)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, provider.GetType())
-			
+
 			provider.Close()
 		})
 	}
@@ -100,7 +99,7 @@ func TestProviderTypeMapping(t *testing.T) {
 // TestContextSizeInference tests context size inference from model names
 func TestContextSizeInference(t *testing.T) {
 	tests := []struct {
-		modelName     string
+		modelName    string
 		expectedSize int
 	}{
 		{"llama-2-7b-32k", 32768},
@@ -134,7 +133,7 @@ func TestContextSizeInference(t *testing.T) {
 func TestVisionModelDetection(t *testing.T) {
 	tests := []struct {
 		modelName string
-		expected bool
+		expected  bool
 	}{
 		{"gpt-4-vision-preview", true},
 		{"claude-3-vision", true},
@@ -168,7 +167,7 @@ func TestVisionModelDetection(t *testing.T) {
 func TestToolSupportDetection(t *testing.T) {
 	tests := []struct {
 		modelName string
-		expected bool
+		expected  bool
 	}{
 		{"gpt-4-turbo", true},
 		{"gpt-4", true},
@@ -201,10 +200,10 @@ func TestToolSupportDetection(t *testing.T) {
 // TestGetModelName tests model name resolution
 func TestGetModelName(t *testing.T) {
 	tests := []struct {
-		requestedModel    string
-		defaultModel     string
-		availableModels   []ModelInfo
-		expectedResult   string
+		requestedModel  string
+		defaultModel    string
+		availableModels []ModelInfo
+		expectedResult  string
 	}{
 		{"", "default-model", []ModelInfo{}, "default-model"},
 		{"", "", []ModelInfo{{Name: "first-model"}}, "first-model"},
@@ -222,13 +221,13 @@ func TestGetModelName(t *testing.T) {
 
 			provider, err := NewOpenAICompatibleProvider("test", config)
 			require.NoError(t, err)
-			
+
 			// Set models manually for testing
 			provider.models = tt.availableModels
-			
+
 			result := provider.getModelName(tt.requestedModel)
 			assert.Equal(t, tt.expectedResult, result)
-			
+
 			provider.Close()
 		})
 	}
@@ -251,16 +250,16 @@ func TestAPIURLGeneration(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			config := OpenAICompatibleConfig{
-				BaseURL:   tt.baseURL,
-				Timeout:   30 * time.Second,
+				BaseURL: tt.baseURL,
+				Timeout: 30 * time.Second,
 			}
 
 			provider, err := NewOpenAICompatibleProvider(tt.name, config)
 			require.NoError(t, err)
-			
+
 			result := provider.getAPIURL(tt.endpoint)
 			assert.Equal(t, tt.expectedResult, result)
-			
+
 			provider.Close()
 		})
 	}
@@ -355,7 +354,7 @@ func TestConvertFromOpenAIResponse(t *testing.T) {
 						{
 							ID:   "tool-call-id",
 							Type: "function",
-							Function: ToolCallFunction{
+							Function: ToolCallFunc{
 								Name:      "test_function",
 								Arguments: map[string]interface{}{"arg1": "value1"},
 							},
@@ -388,11 +387,11 @@ func TestConvertFromOpenAIResponse(t *testing.T) {
 // TestKoboldAIProviderCreation tests KoboldAI provider creation
 func TestKoboldAIProviderCreation(t *testing.T) {
 	config := KoboldAIConfig{
-		BaseURL:         "http://localhost:5001",
-		APIKey:          "test-key",
-		DefaultModel:    "kobold-model",
-		Timeout:         30 * time.Second,
-		MaxRetries:      3,
+		BaseURL:          "http://localhost:5001",
+		APIKey:           "test-key",
+		DefaultModel:     "kobold-model",
+		Timeout:          30 * time.Second,
+		MaxRetries:       3,
 		StreamingSupport: true,
 	}
 
@@ -435,7 +434,7 @@ func TestKoboldAIMessageConversion(t *testing.T) {
 	}
 
 	prompt := provider.convertMessagesToPrompt(messages)
-	
+
 	expected := `System: You are a helpful assistant
 
 User: Hello
@@ -445,6 +444,6 @@ Assistant: Hi there!
 User: How are you?
 
 Assistant: `
-	
+
 	assert.Equal(t, expected, prompt)
 }

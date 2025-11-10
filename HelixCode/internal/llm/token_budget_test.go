@@ -675,13 +675,13 @@ func TestGetBudgetStatus_WithUsage(t *testing.T) {
 
 func TestGetBudgetStatus_PercentageCalculations(t *testing.T) {
 	tests := []struct {
-		name                  string
-		maxTokens             int
-		usedTokens            int
-		maxCost               float64
-		usedCost              float64
-		expectedTokenPercent  float64
-		expectedCostPercent   float64
+		name                 string
+		maxTokens            int
+		usedTokens           int
+		maxCost              float64
+		usedCost             float64
+		expectedTokenPercent float64
+		expectedCostPercent  float64
 	}{
 		{"0% usage", 10000, 0, 10.0, 0.0, 0.0, 0.0},
 		{"25% usage", 10000, 2500, 10.0, 2.5, 25.0, 25.0},
@@ -859,9 +859,9 @@ func TestCleanupOldSessions_MixedAges(t *testing.T) {
 
 func TestCleanupOldSessions_VariousThresholds(t *testing.T) {
 	tests := []struct {
-		name      string
-		maxAge    time.Duration
-		sessionAge time.Duration
+		name        string
+		maxAge      time.Duration
+		sessionAge  time.Duration
 		shouldClean bool
 	}{
 		{"1 hour threshold - 30 min old", time.Hour, 30 * time.Minute, false},
@@ -962,9 +962,9 @@ func TestEstimateTokens_WithTools(t *testing.T) {
 			{Role: "user", Content: "Use the calculator tool"},
 		},
 		Tools: []Tool{
-			{Type: "function", Function: FunctionDefinition{Name: "calculator"}},
-			{Type: "function", Function: FunctionDefinition{Name: "search"}},
-			{Type: "function", Function: FunctionDefinition{Name: "file_reader"}},
+			{Type: "function", Function: ToolFunction{Name: "calculator"}},
+			{Type: "function", Function: ToolFunction{Name: "search"}},
+			{Type: "function", Function: ToolFunction{Name: "file_reader"}},
 		},
 	}
 
@@ -978,11 +978,11 @@ func TestEstimateTokens_WithTools(t *testing.T) {
 
 func TestEstimateCost(t *testing.T) {
 	tests := []struct {
-		name             string
-		model            string
-		estimatedTokens  int
-		costPerKTokens   float64
-		expectedCost     float64
+		name            string
+		model           string
+		estimatedTokens int
+		costPerKTokens  float64
+		expectedCost    float64
 	}{
 		{"small request", "gpt-4", 1000, 0.03, 0.03},
 		{"medium request", "gpt-4", 5000, 0.03, 0.15},
@@ -1353,7 +1353,6 @@ func createTestRequest() *LLMRequest {
 		Messages:    []Message{{Role: "user", Content: "Test message"}},
 		MaxTokens:   4096,
 		Temperature: 0.7,
-		CreatedAt:   time.Now(),
 	}
 }
 

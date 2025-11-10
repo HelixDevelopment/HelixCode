@@ -17,8 +17,8 @@ import (
 
 // Mock Bedrock client for testing
 type mockBedrockClient struct {
-	invokeModelFunc              func(ctx context.Context, params *bedrockruntime.InvokeModelInput, optFns ...func(*bedrockruntime.Options)) (*bedrockruntime.InvokeModelOutput, error)
-	invokeModelWithStreamFunc    func(ctx context.Context, params *bedrockruntime.InvokeModelWithResponseStreamInput, optFns ...func(*bedrockruntime.Options)) (*bedrockruntime.InvokeModelWithResponseStreamOutput, error)
+	invokeModelFunc           func(ctx context.Context, params *bedrockruntime.InvokeModelInput, optFns ...func(*bedrockruntime.Options)) (*bedrockruntime.InvokeModelOutput, error)
+	invokeModelWithStreamFunc func(ctx context.Context, params *bedrockruntime.InvokeModelWithResponseStreamInput, optFns ...func(*bedrockruntime.Options)) (*bedrockruntime.InvokeModelWithResponseStreamOutput, error)
 }
 
 func (m *mockBedrockClient) InvokeModel(ctx context.Context, params *bedrockruntime.InvokeModelInput, optFns ...func(*bedrockruntime.Options)) (*bedrockruntime.InvokeModelOutput, error) {
@@ -46,12 +46,12 @@ func TestNewBedrockProvider(t *testing.T) {
 		{
 			name: "valid config with explicit credentials",
 			config: ProviderConfigEntry{
-				Type:    ProviderTypeBedrock,
+				Type:    "bedrock",
 				Enabled: true,
 				Parameters: map[string]interface{}{
-					"region":                  "us-east-1",
-					"aws_access_key_id":       "test-key",
-					"aws_secret_access_key":   "test-secret",
+					"region":                "us-east-1",
+					"aws_access_key_id":     "test-key",
+					"aws_secret_access_key": "test-secret",
 				},
 			},
 			expectError: false,
@@ -59,7 +59,7 @@ func TestNewBedrockProvider(t *testing.T) {
 		{
 			name: "valid config with IAM role (env vars)",
 			config: ProviderConfigEntry{
-				Type:    ProviderTypeBedrock,
+				Type:    "bedrock",
 				Enabled: true,
 				Parameters: map[string]interface{}{
 					"region": "us-west-2",
@@ -73,7 +73,7 @@ func TestNewBedrockProvider(t *testing.T) {
 		{
 			name: "default region",
 			config: ProviderConfigEntry{
-				Type:    ProviderTypeBedrock,
+				Type:    "bedrock",
 				Enabled: true,
 			},
 			expectError: false,
@@ -81,12 +81,12 @@ func TestNewBedrockProvider(t *testing.T) {
 		{
 			name: "cross-region inference enabled",
 			config: ProviderConfigEntry{
-				Type:    ProviderTypeBedrock,
+				Type:    "bedrock",
 				Enabled: true,
 				Parameters: map[string]interface{}{
-					"region":                  "us-east-1",
-					"cross_region_inference":  true,
-					"inference_profile_arn":   "arn:aws:bedrock:us-east-1:123456789012:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+					"region":                 "us-east-1",
+					"cross_region_inference": true,
+					"inference_profile_arn":  "arn:aws:bedrock:us-east-1:123456789012:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
 				},
 			},
 			expectError: false,
@@ -119,7 +119,7 @@ func TestNewBedrockProvider(t *testing.T) {
 				// May fail without AWS credentials, which is OK for this test
 				if err == nil {
 					assert.NotNil(t, provider)
-					assert.Equal(t, ProviderTypeBedrock, provider.GetType())
+					assert.Equal(t, "bedrock", provider.GetType())
 					assert.Equal(t, "AWS Bedrock", provider.GetName())
 				}
 			}
@@ -129,7 +129,7 @@ func TestNewBedrockProvider(t *testing.T) {
 
 func TestBedrockProvider_GetType(t *testing.T) {
 	provider := &BedrockProvider{}
-	assert.Equal(t, ProviderTypeBedrock, provider.GetType())
+	assert.Equal(t, "bedrock", provider.GetType())
 }
 
 func TestBedrockProvider_GetName(t *testing.T) {
@@ -149,7 +149,7 @@ func TestBedrockProvider_GetModels(t *testing.T) {
 	modelNames := make(map[string]bool)
 	for _, model := range models {
 		modelNames[model.Name] = true
-		assert.Equal(t, ProviderTypeBedrock, model.Provider)
+		assert.Equal(t, "bedrock", model.Provider)
 		assert.Greater(t, model.ContextSize, 0)
 		assert.NotEmpty(t, model.Description)
 	}
@@ -532,7 +532,7 @@ func TestBedrockProvider_GenerateWithTools(t *testing.T) {
 		Tools: []Tool{
 			{
 				Type: "function",
-				Function: FunctionDefinition{
+				Function: ToolFunction{
 					Name:        "get_weather",
 					Description: "Get the current weather",
 					Parameters: map[string]interface{}{
@@ -793,7 +793,7 @@ func TestBedrockProvider_ConvertTools(t *testing.T) {
 	tools := []Tool{
 		{
 			Type: "function",
-			Function: FunctionDefinition{
+			Function: ToolFunction{
 				Name:        "get_weather",
 				Description: "Get weather data",
 				Parameters: map[string]interface{}{
@@ -894,7 +894,7 @@ func TestBedrockProvider_Integration(t *testing.T) {
 
 	// This test requires valid AWS credentials
 	config := ProviderConfigEntry{
-		Type:    ProviderTypeBedrock,
+		Type:    "bedrock",
 		Enabled: true,
 		Parameters: map[string]interface{}{
 			"region": "us-east-1",

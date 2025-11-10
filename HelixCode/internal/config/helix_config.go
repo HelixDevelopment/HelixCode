@@ -1613,6 +1613,56 @@ type CrossPlatformConfig struct {
 	PlatformOptimizations bool `json:"platform_optimizations"`
 }
 
+// VectorProviderConfig represents vector database provider configuration
+type VectorProviderConfig struct {
+	Enabled bool `json:"enabled"`
+
+	// Provider settings
+	DefaultProvider string        `json:"default_provider"`
+	ProviderTimeout time.Duration `json:"provider_timeout"`
+
+	// Connection settings
+	MaxConnections int  `json:"max_connections"`
+	ConnectionPool bool `json:"connection_pool"`
+
+	// Performance settings
+	BatchSize    int           `json:"batch_size"`
+	CacheEnabled bool          `json:"cache_enabled"`
+	CacheTTL     time.Duration `json:"cache_ttl"`
+
+	// Security
+	EncryptionEnabled bool `json:"encryption_enabled"`
+	APIKeyRotation    bool `json:"api_key_rotation"`
+
+	// Monitoring
+	MetricsEnabled      bool          `json:"metrics_enabled"`
+	HealthCheckInterval time.Duration `json:"health_check_interval"`
+
+	// Fallback
+	FallbackEnabled   bool     `json:"fallback_enabled"`
+	FallbackProviders []string `json:"fallback_providers"`
+}
+
+// DefaultVectorProviderConfig returns a default vector provider configuration
+func DefaultVectorProviderConfig() *VectorProviderConfig {
+	return &VectorProviderConfig{
+		Enabled:             true,
+		DefaultProvider:     "chroma",
+		ProviderTimeout:     30 * time.Second,
+		MaxConnections:      10,
+		ConnectionPool:      true,
+		BatchSize:           100,
+		CacheEnabled:        true,
+		CacheTTL:            300 * time.Second, // 5 minutes
+		EncryptionEnabled:   false,
+		APIKeyRotation:      false,
+		MetricsEnabled:      true,
+		HealthCheckInterval: 60 * time.Second, // 1 minute
+		FallbackEnabled:     true,
+		FallbackProviders:   []string{"pinecone", "weaviate"},
+	}
+}
+
 // getDefaultConfig returns a default configuration
 func (m *HelixConfigManager) getDefaultConfig() *HelixConfig {
 	now := time.Now()

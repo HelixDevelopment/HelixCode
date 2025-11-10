@@ -100,6 +100,12 @@ type ProviderConfigEntry struct {
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
+type FunctionDefinition struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Parameters  map[string]interface{} `json:"parameters"`
+}
+
 type ProviderHealth struct {
 	Status     string        `json:"status"`
 	LastCheck  time.Time     `json:"last_check"`

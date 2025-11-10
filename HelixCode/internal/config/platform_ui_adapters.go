@@ -171,32 +171,27 @@ func NewDesktopUIAdapter() *DesktopUIAdapter {
 
 // RenderConfigForm renders configuration form for desktop
 func (a *DesktopUIAdapter) RenderConfigForm(configUI *ConfigUI) (interface{}, error) {
-	// form := configUI.GetConfigForm()
-	_ = configUI // TODO: Use configUI
+	form := configUI.GetConfigForm()
 
 	// Transform form for desktop rendering
-	// TODO: Define DesktopConfigForm type
-	// desktopForm := DesktopConfigForm{
-	// 	ID:            form.ID,
-	// 	Title:         form.Title,
-	// 	Description:   form.Description,
-	// 	Type:          "native_window",
-	// 	Modal:         true,
-	// 	Resizable:     true,
-	// 	MinWidth:      800,
-	// 	MinHeight:     600,
-	// 	DefaultWidth:  1200,
-	// 	DefaultHeight: 800,
-	// 	CenterScreen:  true,
-	// 	Layout:        "tabs",
-	// 	Sections:      a.transformSections(form.Sections),
-	// 	Actions:       a.transformActions(form.Actions),
-	// 	Theme:         "system",
-	// 	Features:      append(a.GetPlatformFeatures(), "native_controls"),
-	// }
+	desktopForm := DesktopConfigForm{
+		ID:            form.ID,
+		Title:         form.Title,
+		Description:   form.Description,
+		Type:          "native_window",
+		Modal:         true,
+		Resizable:     true,
+		MinWidth:      800,
+		MinHeight:     600,
+		DefaultWidth:  1200,
+		DefaultHeight: 800,
+		CenterScreen:  true,
+		Layout:        "tabs",
+		Sections:      a.transformSections(form.Sections),
+		Actions:       a.transformActions(form.Actions),
+	}
 
-	// return desktopForm, nil
-	return nil, fmt.Errorf("desktop form rendering not implemented")
+	return desktopForm, nil
 }
 
 // ShowConfigDialog shows configuration dialog on desktop
@@ -316,18 +311,15 @@ func (a *DesktopUIAdapter) transformActions(actions []ConfigAction) []DesktopCon
 
 	for i, action := range actions {
 		desktopActions[i] = DesktopConfigAction{
-			ID:           action.ID,
-			Label:        action.Label,
-			Description:  action.Description,
-			Type:         a.getDesktopActionType(action.Type),
-			Icon:         action.Icon,
-			Shortcut:     action.Shortcut,
-			Default:      action.ID == "save",
-			Cancel:       action.ID == "reset",
-			Confirmation: action.Confirmation,
-			Position:     a.getDesktopActionPosition(action.ID),
-			Width:        100,
-			Height:       32,
+			ID:       action.ID,
+			Label:    action.Label,
+			Type:     a.getDesktopActionType(action.Type),
+			Icon:     action.Icon,
+			Shortcut: action.Shortcut,
+			Default:  action.ID == "save",
+			Cancel:   action.ID == "reset",
+			Disabled: action.Disabled,
+			Position: a.getDesktopActionPosition(action.ID),
 		}
 	}
 
@@ -408,6 +400,24 @@ func (a *DesktopUIAdapter) getDesktopActionPosition(actionID string) string {
 
 // applyFieldChange applies a field value change to the configuration
 
+// DesktopConfigForm represents desktop configuration form
+type DesktopConfigForm struct {
+	ID            string                 ` + targetTab + `
+	Title         string                 ` + targetTab + `
+	Description   string                 ` + targetTab + `
+	Type          string                 ` + targetTab + `
+	Layout        string                 ` + targetTab + `
+	Modal         bool                   ` + targetTab + `
+	Resizable     bool                   ` + targetTab + `
+	MinWidth      int                    ` + targetTab + `
+	MinHeight     int                    ` + targetTab + `
+	DefaultWidth  int                    ` + targetTab + `
+	DefaultHeight int                    ` + targetTab + `
+	CenterScreen  bool                   ` + targetTab + `
+	Sections      []DesktopConfigSection ` + targetTab + `
+	Actions       []DesktopConfigAction  ` + targetTab + `
+}
+
 // DesktopConfigSection represents desktop configuration section
 type DesktopConfigSection struct {
 	ID          string                    ` + targetTab + `
@@ -454,18 +464,15 @@ type DesktopConfigFieldGroup struct {
 
 // DesktopConfigAction represents desktop action button
 type DesktopConfigAction struct {
-	ID           string             ` + targetTab + `
-	Label        string             ` + targetTab + `
-	Description  string             ` + targetTab + `
-	Type         string             ` + targetTab + `
-	Icon         string             ` + targetTab + `
-	Shortcut     string             ` + targetTab + `
-	Default      bool               ` + targetTab + `
-	Cancel       bool               ` + targetTab + `
-	Confirmation ActionConfirmation ` + targetTab + `
-	Position     string             ` + targetTab + `
-	Width        int                ` + targetTab + `
-	Height       int                ` + targetTab + `
+	ID       string ` + targetTab + `
+	Label    string ` + targetTab + `
+	Type     string ` + targetTab + `
+	Icon     string ` + targetTab + `
+	Shortcut string ` + targetTab + `
+	Default  bool   ` + targetTab + `
+	Cancel   bool   ` + targetTab + `
+	Disabled bool   ` + targetTab + `
+	Position string ` + targetTab + `
 }
 
 // DesktopMargins represents margins
@@ -676,6 +683,7 @@ type WebConfigField struct {
 	Class       string        ` + targetTab + `
 	Options     []FieldOption ` + targetTab + `
 	Disabled    bool          ` + targetTab + `
+	Visible     bool          ` + targetTab + `
 }
 
 // WebConfigAction represents web action button
@@ -724,6 +732,7 @@ type MobileConfigField struct {
 	Placeholder string        ` + targetTab + `
 	Keyboard    string        ` + targetTab + `
 	Options     []FieldOption ` + targetTab + `
+	Disabled    bool          ` + targetTab + `
 }
 
 // MobileConfigAction represents mobile action button
@@ -814,6 +823,7 @@ func (a *WebUIAdapter) transformWebFields(fields []ConfigField) []WebConfigField
 			Class:       "form-control",
 			Options:     field.UI.Options,
 			Disabled:    false,
+			Visible:     true,
 		}
 	}
 	return webFields
@@ -1015,6 +1025,7 @@ func (a *MobileUIAdapter) transformMobileFields(fields []ConfigField) []MobileCo
 			Placeholder: field.UI.Placeholder,
 			Keyboard:    a.getMobileKeyboardType(field.Type),
 			Options:     field.UI.Options,
+			Disabled:    false,
 		}
 	}
 	return mobileFields

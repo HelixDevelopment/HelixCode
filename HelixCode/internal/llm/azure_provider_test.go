@@ -35,7 +35,7 @@ func (m *mockTokenCredential) GetToken(ctx context.Context, options policy.Token
 // Test 1: Provider initialization with API key
 func TestAzureProvider_NewWithAPIKey(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-api-key",
 		Parameters: map[string]interface{}{
 			"endpoint":    "https://test.openai.azure.com",
@@ -55,11 +55,11 @@ func TestAzureProvider_NewWithAPIKey(t *testing.T) {
 // Test 2: Provider initialization with Entra ID
 func TestAzureProvider_NewWithEntraID(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type: ProviderTypeAzure,
+		Type: "azure",
 		Parameters: map[string]interface{}{
-			"endpoint":      "https://test.openai.azure.com",
-			"api_version":   "2025-04-01-preview",
-			"use_entra_id":  true,
+			"endpoint":     "https://test.openai.azure.com",
+			"api_version":  "2025-04-01-preview",
+			"use_entra_id": true,
 		},
 	}
 
@@ -76,8 +76,8 @@ func TestAzureProvider_NewWithEntraID(t *testing.T) {
 // Test 3: Provider initialization without endpoint
 func TestAzureProvider_NewWithoutEndpoint(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
-		APIKey: "test-key",
+		Type:       "azure",
+		APIKey:     "test-key",
 		Parameters: map[string]interface{}{},
 	}
 
@@ -89,12 +89,12 @@ func TestAzureProvider_NewWithoutEndpoint(t *testing.T) {
 // Test 4: Deployment mapping - explicit mapping
 func TestAzureProvider_DeploymentMapping_Explicit(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
-			"endpoint":    "https://test.openai.azure.com",
+			"endpoint": "https://test.openai.azure.com",
 			"deployment_map": map[string]string{
-				"gpt-4-turbo": "my-gpt4-deployment",
+				"gpt-4-turbo":  "my-gpt4-deployment",
 				"gpt-35-turbo": "my-gpt35-deployment",
 			},
 		},
@@ -110,7 +110,7 @@ func TestAzureProvider_DeploymentMapping_Explicit(t *testing.T) {
 // Test 5: Deployment mapping - fallback to model name
 func TestAzureProvider_DeploymentMapping_Fallback(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": "https://test.openai.azure.com",
@@ -128,10 +128,10 @@ func TestAzureProvider_DeploymentMapping_Fallback(t *testing.T) {
 // Test 6: Deployment mapping from JSON string
 func TestAzureProvider_DeploymentMapping_JSON(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
-			"endpoint": "https://test.openai.azure.com",
+			"endpoint":       "https://test.openai.azure.com",
 			"deployment_map": `{"gpt-4-turbo":"my-deployment"}`,
 		},
 	}
@@ -181,7 +181,7 @@ func TestAzureProvider_Generate_APIKey(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint":    mockServer.URL,
@@ -193,9 +193,9 @@ func TestAzureProvider_Generate_APIKey(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &LLMRequest{
-		ID:       uuid.New(),
-		Model:    "gpt-4-turbo",
-		Messages: []Message{{Role: "user", Content: "Hello"}},
+		ID:        uuid.New(),
+		Model:     "gpt-4-turbo",
+		Messages:  []Message{{Role: "user", Content: "Hello"}},
 		MaxTokens: 100,
 	}
 
@@ -228,7 +228,7 @@ func TestAzureProvider_Generate_ContentFilter(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -270,7 +270,7 @@ func TestAzureProvider_Generate_RateLimit(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -312,7 +312,7 @@ func TestAzureProvider_Generate_DeploymentNotFound(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -402,7 +402,7 @@ func TestAzureProvider_GenerateStream(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -477,7 +477,7 @@ func (c *countingCredential) GetToken(ctx context.Context, options policy.TokenR
 // Test 13: Provider type and name
 func TestAzureProvider_TypeAndName(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": "https://test.openai.azure.com",
@@ -487,14 +487,14 @@ func TestAzureProvider_TypeAndName(t *testing.T) {
 	provider, err := NewAzureProvider(config)
 	require.NoError(t, err)
 
-	assert.Equal(t, ProviderTypeAzure, provider.GetType())
+	assert.Equal(t, "azure", provider.GetType())
 	assert.Equal(t, "Azure OpenAI", provider.GetName())
 }
 
 // Test 14: Models and capabilities
 func TestAzureProvider_ModelsAndCapabilities(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": "https://test.openai.azure.com",
@@ -513,7 +513,7 @@ func TestAzureProvider_ModelsAndCapabilities(t *testing.T) {
 	for _, model := range models {
 		if model.Name == "gpt-4-turbo" {
 			foundGPT4 = true
-			assert.Equal(t, ProviderTypeAzure, model.Provider)
+			assert.Equal(t, "azure", model.Provider)
 			assert.True(t, model.SupportsTools)
 		}
 		if model.Name == "gpt-35-turbo" {
@@ -532,7 +532,7 @@ func TestAzureProvider_ModelsAndCapabilities(t *testing.T) {
 // Test 15: IsAvailable
 func TestAzureProvider_IsAvailable(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": "https://test.openai.azure.com",
@@ -580,7 +580,7 @@ func TestAzureProvider_GetHealth_Success(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -606,7 +606,7 @@ func TestAzureProvider_GetHealth_Failure(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -625,7 +625,7 @@ func TestAzureProvider_GetHealth_Failure(t *testing.T) {
 // Test 18: Close provider
 func TestAzureProvider_Close(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": "https://test.openai.azure.com",
@@ -676,7 +676,7 @@ func TestAzureProvider_WithTools(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,
@@ -693,7 +693,7 @@ func TestAzureProvider_WithTools(t *testing.T) {
 		Tools: []Tool{
 			{
 				Type: "function",
-				Function: FunctionDefinition{
+				Function: ToolFunction{
 					Name:        "get_weather",
 					Description: "Get the current weather",
 					Parameters: map[string]interface{}{
@@ -752,7 +752,7 @@ func TestAzureProvider_DefaultMaxTokens(t *testing.T) {
 	defer mockServer.Close()
 
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAzure,
+		Type:   "azure",
 		APIKey: "test-key",
 		Parameters: map[string]interface{}{
 			"endpoint": mockServer.URL,

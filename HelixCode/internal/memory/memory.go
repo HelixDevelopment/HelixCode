@@ -1089,6 +1089,119 @@ func NewOptimizationRecommendation(recType, description, priority string, impact
 }
 
 // ============================================================================
+// LLM Model Types (For AI Memory Providers)
+// ============================================================================
+
+// Model represents an AI model in memory systems
+type Model struct {
+	ID        string            `json:"id"`
+	Name      string            `json:"name"`
+	Type      string            `json:"type"`
+	Version   string            `json:"version"`
+	Provider  string            `json:"provider"`
+	Status    string            `json:"status"`
+	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt time.Time         `json:"updated_at"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+}
+
+// NewModel creates a new model
+func NewModel(name, modelType, provider string) *Model {
+	return &Model{
+		ID:        generateModelID(),
+		Name:      name,
+		Type:      modelType,
+		Provider:  provider,
+		Status:    "active",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Metadata:  make(map[string]string),
+	}
+}
+
+// Embedding represents a vector embedding
+type Embedding struct {
+	ID        string            `json:"id"`
+	ModelID   string            `json:"model_id"`
+	Text      string            `json:"text"`
+	Vector    []float64         `json:"vector"`
+	CreatedAt time.Time         `json:"created_at"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+}
+
+// NewEmbedding creates a new embedding
+func NewEmbedding(modelID, text string, vector []float64) *Embedding {
+	return &Embedding{
+		ID:        generateEmbeddingID(),
+		ModelID:   modelID,
+		Text:      text,
+		Vector:    vector,
+		CreatedAt: time.Now(),
+		Metadata:  make(map[string]string),
+	}
+}
+
+// ModelPerformance represents model performance metrics
+type ModelPerformance struct {
+	ID              string            `json:"id"`
+	ModelID         string            `json:"model_id"`
+	ResponseTime    time.Duration     `json:"response_time"`
+	TokensPerSecond float64           `json:"tokens_per_second"`
+	MemoryUsage     int64             `json:"memory_usage"`
+	Accuracy        float64           `json:"accuracy"`
+	Timestamp       time.Time         `json:"timestamp"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
+}
+
+// NewModelPerformance creates new model performance data
+func NewModelPerformance(modelID string, responseTime time.Duration, tokensPerSecond float64, memoryUsage int64, accuracy float64) *ModelPerformance {
+	return &ModelPerformance{
+		ID:              generateModelPerformanceID(),
+		ModelID:         modelID,
+		ResponseTime:    responseTime,
+		TokensPerSecond: tokensPerSecond,
+		MemoryUsage:     memoryUsage,
+		Accuracy:        accuracy,
+		Timestamp:       time.Now(),
+		Metadata:        make(map[string]string),
+	}
+}
+
+// GenerationOptions represents options for text generation
+type GenerationOptions struct {
+	MaxTokens        int                `json:"max_tokens"`
+	Temperature      float64            `json:"temperature"`
+	TopP             float64            `json:"top_p"`
+	FrequencyPenalty float64            `json:"frequency_penalty"`
+	PresencePenalty  float64            `json:"presence_penalty"`
+	Stop             []string           `json:"stop"`
+	Stream           bool               `json:"stream"`
+	Callback         func(string) error `json:"-"`
+}
+
+// PersonalityMessage represents a message with personality traits
+type PersonalityMessage struct {
+	ID          string             `json:"id"`
+	Personality *Personality       `json:"personality"`
+	Content     string             `json:"content"`
+	Timestamp   time.Time          `json:"timestamp"`
+	Traits      map[string]float64 `json:"traits"`
+	Metadata    map[string]string  `json:"metadata,omitempty"`
+}
+
+// NewPersonalityMessage creates a new personality message
+func NewPersonalityMessage(personality *Personality, content string) *PersonalityMessage {
+	return &PersonalityMessage{
+		ID:          generatePersonalityMessageID(),
+		Personality: personality,
+		Content:     content,
+		Timestamp:   time.Now(),
+		Traits:      make(map[string]float64),
+		Metadata:    make(map[string]string),
+	}
+}
+
+// ============================================================================
 // Vector Database Types (Shared across providers)
 // ============================================================================
 
@@ -1468,6 +1581,10 @@ var (
 	retrievalQueryCounter      uint64
 	systemInfoCounter          uint64
 	optimizationRecCounter     uint64
+	modelCounter               uint64
+	embeddingCounter           uint64
+	modelPerformanceCounter    uint64
+	personalityMessageCounter  uint64
 )
 
 func generateAvatarID() string {
@@ -1593,4 +1710,24 @@ func generateOptimizationRecommendationID() string {
 func generateCharacterID() string {
 	count := atomic.AddUint64(&characterCounter, 1)
 	return fmt.Sprintf("char-%d-%d", time.Now().UnixNano(), count)
+}
+
+func generateModelID() string {
+	count := atomic.AddUint64(&modelCounter, 1)
+	return fmt.Sprintf("model-%d-%d", time.Now().UnixNano(), count)
+}
+
+func generateEmbeddingID() string {
+	count := atomic.AddUint64(&embeddingCounter, 1)
+	return fmt.Sprintf("emb-%d-%d", time.Now().UnixNano(), count)
+}
+
+func generateModelPerformanceID() string {
+	count := atomic.AddUint64(&modelPerformanceCounter, 1)
+	return fmt.Sprintf("perf-%d-%d", time.Now().UnixNano(), count)
+}
+
+func generatePersonalityMessageID() string {
+	count := atomic.AddUint64(&personalityMessageCounter, 1)
+	return fmt.Sprintf("pers-msg-%d-%d", time.Now().UnixNano(), count)
 }

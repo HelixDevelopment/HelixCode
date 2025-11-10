@@ -134,10 +134,10 @@ func TestCacheStrategyNoneDisabled(t *testing.T) {
 // TestCacheStrategySystem tests system-only caching strategy
 func TestCacheStrategySystem(t *testing.T) {
 	tests := []struct {
-		name          string
-		messages      []Message
-		tools         []Tool
-		expectCached  []int // indices of messages that should be cached
+		name         string
+		messages     []Message
+		tools        []Tool
+		expectCached []int // indices of messages that should be cached
 	}{
 		{
 			name: "system message cached",
@@ -203,10 +203,10 @@ func TestCacheStrategySystem(t *testing.T) {
 // TestCacheStrategyTools tests system + tools caching strategy
 func TestCacheStrategyTools(t *testing.T) {
 	tests := []struct {
-		name          string
-		messages      []Message
-		tools         []Tool
-		expectCached  []int
+		name         string
+		messages     []Message
+		tools        []Tool
+		expectCached []int
 	}{
 		{
 			name: "system cached with tools",
@@ -215,7 +215,7 @@ func TestCacheStrategyTools(t *testing.T) {
 				{Role: "user", Content: "Hello"},
 			},
 			tools: []Tool{
-				{Type: "function", Function: FunctionDefinition{Name: "test"}},
+				{Type: "function", Function: ToolFunction{Name: "test"}},
 			},
 			expectCached: []int{0},
 		},
@@ -271,9 +271,9 @@ func TestCacheStrategyTools(t *testing.T) {
 // TestCacheStrategyContext tests system + context caching strategy
 func TestCacheStrategyContext(t *testing.T) {
 	tests := []struct {
-		name          string
-		messages      []Message
-		expectCached  []int
+		name         string
+		messages     []Message
+		expectCached []int
 	}{
 		{
 			name: "system and recent user messages cached",
@@ -349,9 +349,9 @@ func TestCacheStrategyContext(t *testing.T) {
 // TestCacheStrategyAggressive tests aggressive caching strategy
 func TestCacheStrategyAggressive(t *testing.T) {
 	tests := []struct {
-		name          string
-		messages      []Message
-		expectCached  []int
+		name         string
+		messages     []Message
+		expectCached []int
 	}{
 		{
 			name: "system and all user messages cached",
@@ -414,14 +414,14 @@ func TestCacheStrategyAggressive(t *testing.T) {
 // TestCalculateCacheSavings tests cache savings calculations
 func TestCalculateCacheSavings(t *testing.T) {
 	tests := []struct {
-		name              string
-		stats             CacheStats
-		inputCostPer1K    float64
-		cacheCostPer1K    float64
-		wantSavings       float64
+		name               string
+		stats              CacheStats
+		inputCostPer1K     float64
+		cacheCostPer1K     float64
+		wantSavings        float64
 		wantSavingsPercent float64
-		wantTokensCached  int
-		wantTokensRead    int
+		wantTokensCached   int
+		wantTokensRead     int
 	}{
 		{
 			name: "basic cache savings",
@@ -553,9 +553,9 @@ func TestCalculateCacheSavingsEdgeCases(t *testing.T) {
 // TestCacheMetricsUpdateMetrics tests updating cache metrics
 func TestCacheMetricsUpdateMetrics(t *testing.T) {
 	tests := []struct {
-		name                   string
-		initialMetrics         CacheMetrics
-		updates                []struct {
+		name           string
+		initialMetrics CacheMetrics
+		updates        []struct {
 			stats   CacheStats
 			savings CacheSavings
 		}
@@ -793,7 +793,7 @@ func TestIntegrationFullCachingWorkflow(t *testing.T) {
 	tools := []Tool{
 		{
 			Type: "function",
-			Function: FunctionDefinition{
+			Function: ToolFunction{
 				Name:        "search",
 				Description: "Search for information",
 			},
@@ -858,7 +858,7 @@ func TestIntegrationRealMessageSequence(t *testing.T) {
 			name:     "tools strategy with tools",
 			strategy: CacheStrategyTools,
 			tools: []Tool{
-				{Type: "function", Function: FunctionDefinition{Name: "lint"}},
+				{Type: "function", Function: ToolFunction{Name: "lint"}},
 			},
 			expectCachedIdxs: []int{0},
 		},
@@ -932,7 +932,7 @@ func TestIntegrationToolCachingScenarios(t *testing.T) {
 		{
 			name: "single tool with tools strategy",
 			tools: []Tool{
-				{Type: "function", Function: FunctionDefinition{Name: "search"}},
+				{Type: "function", Function: ToolFunction{Name: "search"}},
 			},
 			strategy:     CacheStrategyTools,
 			expectCached: true,
@@ -940,9 +940,9 @@ func TestIntegrationToolCachingScenarios(t *testing.T) {
 		{
 			name: "multiple tools with tools strategy",
 			tools: []Tool{
-				{Type: "function", Function: FunctionDefinition{Name: "search"}},
-				{Type: "function", Function: FunctionDefinition{Name: "calculate"}},
-				{Type: "function", Function: FunctionDefinition{Name: "translate"}},
+				{Type: "function", Function: ToolFunction{Name: "search"}},
+				{Type: "function", Function: ToolFunction{Name: "calculate"}},
+				{Type: "function", Function: ToolFunction{Name: "translate"}},
 			},
 			strategy:     CacheStrategyTools,
 			expectCached: true,
@@ -1033,7 +1033,7 @@ func BenchmarkApplyCacheControl(b *testing.B) {
 	}
 
 	tools := []Tool{
-		{Type: "function", Function: FunctionDefinition{Name: "test"}},
+		{Type: "function", Function: ToolFunction{Name: "test"}},
 	}
 
 	config := DefaultCacheConfig()

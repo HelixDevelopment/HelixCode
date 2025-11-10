@@ -25,7 +25,7 @@ func TestNewAnthropicProvider(t *testing.T) {
 		{
 			name: "valid config with API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeAnthropic,
+				Type:     "anthropic",
 				Endpoint: "https://api.anthropic.com/v1/messages",
 				APIKey:   "test-key",
 			},
@@ -34,7 +34,7 @@ func TestNewAnthropicProvider(t *testing.T) {
 		{
 			name: "valid config with env API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeAnthropic,
+				Type:     "anthropic",
 				Endpoint: "https://api.anthropic.com/v1/messages",
 			},
 			envKey:      "sk-ant-test-key",
@@ -43,7 +43,7 @@ func TestNewAnthropicProvider(t *testing.T) {
 		{
 			name: "missing API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeAnthropic,
+				Type:     "anthropic",
 				Endpoint: "https://api.anthropic.com/v1/messages",
 			},
 			expectError: true,
@@ -52,7 +52,7 @@ func TestNewAnthropicProvider(t *testing.T) {
 		{
 			name: "default endpoint",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeAnthropic,
+				Type:   "anthropic",
 				APIKey: "test-key",
 			},
 			expectError: false,
@@ -80,7 +80,7 @@ func TestNewAnthropicProvider(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, provider)
-				assert.Equal(t, ProviderTypeAnthropic, provider.GetType())
+				assert.Equal(t, "anthropic", provider.GetType())
 				assert.Equal(t, "Anthropic", provider.GetName())
 			}
 		})
@@ -89,18 +89,18 @@ func TestNewAnthropicProvider(t *testing.T) {
 
 func TestAnthropicProvider_GetType(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAnthropic,
+		Type:   "anthropic",
 		APIKey: "test-key",
 	}
 	provider, err := NewAnthropicProvider(config)
 	require.NoError(t, err)
 
-	assert.Equal(t, ProviderTypeAnthropic, provider.GetType())
+	assert.Equal(t, "anthropic", provider.GetType())
 }
 
 func TestAnthropicProvider_GetName(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAnthropic,
+		Type:   "anthropic",
 		APIKey: "test-key",
 	}
 	provider, err := NewAnthropicProvider(config)
@@ -111,7 +111,7 @@ func TestAnthropicProvider_GetName(t *testing.T) {
 
 func TestAnthropicProvider_GetModels(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAnthropic,
+		Type:   "anthropic",
 		APIKey: "test-key",
 	}
 	provider, err := NewAnthropicProvider(config)
@@ -124,7 +124,7 @@ func TestAnthropicProvider_GetModels(t *testing.T) {
 	modelNames := make(map[string]bool)
 	for _, model := range models {
 		modelNames[model.Name] = true
-		assert.Equal(t, ProviderTypeAnthropic, model.Provider)
+		assert.Equal(t, "anthropic", model.Provider)
 		assert.Greater(t, model.ContextSize, 0)
 		assert.NotEmpty(t, model.Description)
 	}
@@ -138,7 +138,7 @@ func TestAnthropicProvider_GetModels(t *testing.T) {
 
 func TestAnthropicProvider_GetCapabilities(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAnthropic,
+		Type:   "anthropic",
 		APIKey: "test-key",
 	}
 	provider, err := NewAnthropicProvider(config)
@@ -170,7 +170,7 @@ func TestAnthropicProvider_IsAvailable(t *testing.T) {
 		{
 			name: "available with API key",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeAnthropic,
+				Type:   "anthropic",
 				APIKey: "test-key",
 			},
 			available: true,
@@ -229,7 +229,7 @@ func TestAnthropicProvider_Generate(t *testing.T) {
 
 	// Create provider with mock endpoint
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeAnthropic,
+		Type:     "anthropic",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -302,7 +302,7 @@ func TestAnthropicProvider_GenerateWithTools(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeAnthropic,
+		Type:     "anthropic",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -320,7 +320,7 @@ func TestAnthropicProvider_GenerateWithTools(t *testing.T) {
 		Tools: []Tool{
 			{
 				Type: "function",
-				Function: FunctionDefinition{
+				Function: ToolFunction{
 					Name:        "get_weather",
 					Description: "Get the current weather",
 					Parameters: map[string]interface{}{
@@ -345,8 +345,7 @@ func TestAnthropicProvider_GenerateWithTools(t *testing.T) {
 	assert.Equal(t, "get_weather", response.ToolCalls[0].Function.Name)
 
 	// Verify caching metadata
-	metadata, ok := response.ProviderMetadata.(map[string]interface{})
-	assert.True(t, ok)
+	metadata := response.ProviderMetadata
 	assert.Equal(t, 100, metadata["cache_creation_tokens"])
 	assert.Equal(t, 0, metadata["cache_read_tokens"])
 }
@@ -387,7 +386,7 @@ func TestAnthropicProvider_ExtendedThinking(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeAnthropic,
+		Type:     "anthropic",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -454,7 +453,7 @@ func TestAnthropicProvider_PromptCaching(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeAnthropic,
+		Type:     "anthropic",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -478,18 +477,17 @@ func TestAnthropicProvider_PromptCaching(t *testing.T) {
 	assert.NotNil(t, response)
 
 	// Verify cache metadata
-	metadata, ok := response.ProviderMetadata.(map[string]interface{})
-	assert.True(t, ok)
+	metadata := response.ProviderMetadata
 	assert.Equal(t, 200, metadata["cache_creation_tokens"])
 	assert.Equal(t, 300, metadata["cache_read_tokens"])
 }
 
 func TestAnthropicProvider_ErrorHandling(t *testing.T) {
 	tests := []struct {
-		name           string
-		statusCode     int
-		responseBody   string
-		expectedError  string
+		name          string
+		statusCode    int
+		responseBody  string
+		expectedError string
 	}{
 		{
 			name:       "API error 400",
@@ -538,7 +536,7 @@ func TestAnthropicProvider_ErrorHandling(t *testing.T) {
 			defer server.Close()
 
 			config := ProviderConfigEntry{
-				Type:     ProviderTypeAnthropic,
+				Type:     "anthropic",
 				Endpoint: server.URL,
 				APIKey:   "test-key",
 			}
@@ -583,7 +581,7 @@ func TestAnthropicProvider_GetHealth(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeAnthropic,
+		Type:     "anthropic",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -600,7 +598,7 @@ func TestAnthropicProvider_GetHealth(t *testing.T) {
 
 func TestAnthropicProvider_Close(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeAnthropic,
+		Type:   "anthropic",
 		APIKey: "test-key",
 	}
 	provider, err := NewAnthropicProvider(config)

@@ -565,9 +565,9 @@ func TestMergeReasoningConfigs_OverrideValues(t *testing.T) {
 	base.ThinkingBudget = 1000
 
 	override := &ReasoningConfig{
-		Enabled:        true,
-		ThinkingTags:   "custom_tag",
-		ThinkingBudget: 5000,
+		Enabled:         true,
+		ThinkingTags:    "custom_tag",
+		ThinkingBudget:  5000,
 		ReasoningEffort: "high",
 	}
 
@@ -697,12 +697,4 @@ func TestReasoningWorkflow_MultipleModels(t *testing.T) {
 			assert.Greater(t, totalCost, 0.0)
 		})
 	}
-}
-
-// Helper function
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

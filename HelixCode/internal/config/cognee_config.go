@@ -17,6 +17,12 @@ type CogneeConfig struct {
 	Host      string `json:"host" yaml:"host"`
 	Port      int    `json:"port" yaml:"port"`
 
+	// Mode
+	Mode string `json:"mode" yaml:"mode"`
+
+	// Remote API Configuration
+	RemoteAPI *CogneeRemoteAPIConfig `json:"remote_api,omitempty" yaml:"remote_api,omitempty"`
+
 	// Dynamic Configuration
 	DynamicConfig bool `json:"dynamic_config" yaml:"dynamic_config"`
 
@@ -45,6 +51,13 @@ type CogneeConfig struct {
 
 	// Monitoring Configuration
 	Monitoring *CogneeMonitoringConfig `json:"monitoring,omitempty" yaml:"monitoring,omitempty"`
+}
+
+// CogneeRemoteAPIConfig contains remote API configuration
+type CogneeRemoteAPIConfig struct {
+	ServiceEndpoint string        `json:"service_endpoint" yaml:"service_endpoint"`
+	APIKey          string        `json:"api_key" yaml:"api_key"`
+	Timeout         time.Duration `json:"timeout" yaml:"timeout"`
 }
 
 // CogneeOptimizationConfig contains optimization settings
@@ -124,10 +137,16 @@ type CogneeMonitoringConfig struct {
 // DefaultCogneeConfig returns default Cognee configuration
 func DefaultCogneeConfig() *CogneeConfig {
 	return &CogneeConfig{
-		Enabled:       true,
-		AutoStart:     true,
-		Host:          "localhost",
-		Port:          8000,
+		Enabled:   true,
+		AutoStart: true,
+		Host:      "localhost",
+		Port:      8000,
+		Mode:      "local",
+		RemoteAPI: &CogneeRemoteAPIConfig{
+			ServiceEndpoint: "https://api.cognee.ai",
+			APIKey:          "",
+			Timeout:         30 * time.Second,
+		},
 		DynamicConfig: true,
 		Source:        "https://github.com/cognee-ai/cognee.git",
 		Branch:        "main",
@@ -238,6 +257,14 @@ func (config *CogneeConfig) applyDefaults() CogneeConfig {
 	defaults := DefaultCogneeConfig()
 
 	// Apply defaults for missing fields
+	if config.Mode == "" {
+		config.Mode = defaults.Mode
+	}
+
+	if config.RemoteAPI == nil {
+		config.RemoteAPI = defaults.RemoteAPI
+	}
+
 	if config.Optimization == nil {
 		config.Optimization = defaults.Optimization
 	}
@@ -278,6 +305,22 @@ func (config *CogneeConfig) Validate() error {
 
 	if config.Host == "" {
 		return fmt.Errorf("host cannot be empty")
+	}
+
+	// Validate mode
+	if config.Mode == "" {
+		config.Mode = "local"
+	}
+
+	// Validate remote API settings
+	if config.RemoteAPI != nil {
+		if config.RemoteAPI.ServiceEndpoint == "" {
+			config.RemoteAPI.ServiceEndpoint = "https://api.cognee.ai"
+		}
+
+		if config.RemoteAPI.Timeout <= 0 {
+			config.RemoteAPI.Timeout = 30 * time.Second
+		}
 	}
 
 	// Validate optimization settings
@@ -370,6 +413,7 @@ enabled: %t
 auto_start: %t
 host: %s
 port: %d
+mode: %s
 dynamic_config: %t
 
 # Repository Settings
@@ -393,6 +437,12 @@ features:
   graph_analytics: %t
   advanced_insights: %t
   auto_optimization: %t
+
+# Remote API Settings
+remote_api:
+  service_endpoint: %s
+  api_key: %s
+  timeout: %s
 
 # API Settings
 api:
@@ -442,6 +492,7 @@ providers:`,
 		config.AutoStart,
 		config.Host,
 		config.Port,
+		config.Mode,
 		config.DynamicConfig,
 		config.Source,
 		config.Branch,
@@ -457,6 +508,9 @@ providers:`,
 		config.Features.GraphAnalytics,
 		config.Features.AdvancedInsights,
 		config.Features.AutoOptimization,
+		config.RemoteAPI.ServiceEndpoint,
+		config.RemoteAPI.APIKey,
+		config.RemoteAPI.Timeout,
 		config.API.Enabled,
 		config.API.Host,
 		config.API.Port,
@@ -542,6 +596,17 @@ func (config *CogneeConfig) Merge(other *CogneeConfig) {
 		config.Port = other.Port
 	}
 
+	if other.Mode != "" {
+		config.Mode = other.Mode
+	}
+
+	if other.RemoteAPI != nil {
+		if config.RemoteAPI == nil {
+			config.RemoteAPI = &CogneeRemoteAPIConfig{}
+		}
+		mergeRemoteAPIConfig(config.RemoteAPI, other.RemoteAPI)
+	}
+
 	if other.Source != "" {
 		config.Source = other.Source
 	}
@@ -607,6 +672,18 @@ func (config *CogneeConfig) Merge(other *CogneeConfig) {
 }
 
 // Helper functions for merging
+
+func mergeRemoteAPIConfig(base, other *CogneeRemoteAPIConfig) {
+	if other.ServiceEndpoint != "" {
+		base.ServiceEndpoint = other.ServiceEndpoint
+	}
+	if other.APIKey != "" {
+		base.APIKey = other.APIKey
+	}
+	if other.Timeout > 0 {
+		base.Timeout = other.Timeout
+	}
+}
 
 func mergeOptimizationConfig(base, other *CogneeOptimizationConfig) {
 	if other.HostAware {

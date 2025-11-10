@@ -26,7 +26,7 @@ func TestNewGroqProvider(t *testing.T) {
 		{
 			name: "valid config with API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGroq,
+				Type:     "groq",
 				Endpoint: "https://api.groq.com",
 				APIKey:   "gsk_test_key",
 			},
@@ -35,7 +35,7 @@ func TestNewGroqProvider(t *testing.T) {
 		{
 			name: "valid config with env API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGroq,
+				Type:     "groq",
 				Endpoint: "https://api.groq.com",
 			},
 			envKey:      "gsk_test_env_key",
@@ -44,7 +44,7 @@ func TestNewGroqProvider(t *testing.T) {
 		{
 			name: "missing API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGroq,
+				Type:     "groq",
 				Endpoint: "https://api.groq.com",
 			},
 			expectError: true,
@@ -53,7 +53,7 @@ func TestNewGroqProvider(t *testing.T) {
 		{
 			name: "default endpoint",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeGroq,
+				Type:   "groq",
 				APIKey: "gsk_test_key",
 			},
 			expectError: false,
@@ -81,7 +81,7 @@ func TestNewGroqProvider(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, provider)
-				assert.Equal(t, ProviderTypeGroq, provider.GetType())
+				assert.Equal(t, "groq", provider.GetType())
 				assert.Equal(t, "Groq", provider.GetName())
 				assert.NotNil(t, provider.latencyMetrics)
 			}
@@ -91,18 +91,18 @@ func TestNewGroqProvider(t *testing.T) {
 
 func TestGroqProvider_GetType(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
 	require.NoError(t, err)
 
-	assert.Equal(t, ProviderTypeGroq, provider.GetType())
+	assert.Equal(t, "groq", provider.GetType())
 }
 
 func TestGroqProvider_GetName(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
@@ -113,7 +113,7 @@ func TestGroqProvider_GetName(t *testing.T) {
 
 func TestGroqProvider_GetModels(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
@@ -127,7 +127,7 @@ func TestGroqProvider_GetModels(t *testing.T) {
 	modelNames := make(map[string]bool)
 	for _, model := range models {
 		modelNames[model.Name] = true
-		assert.Equal(t, ProviderTypeGroq, model.Provider)
+		assert.Equal(t, "groq", model.Provider)
 		assert.Greater(t, model.ContextSize, 0)
 		assert.NotEmpty(t, model.Description)
 	}
@@ -143,7 +143,7 @@ func TestGroqProvider_GetModels(t *testing.T) {
 
 func TestGroqProvider_GetCapabilities(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
@@ -177,7 +177,7 @@ func TestGroqProvider_IsAvailable(t *testing.T) {
 		{
 			name: "available with API key",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeGroq,
+				Type:   "groq",
 				APIKey: "gsk_test_key",
 			},
 			available: true,
@@ -254,7 +254,7 @@ func TestGroqProvider_Generate(t *testing.T) {
 
 	// Create provider with mock endpoint
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGroq,
+		Type:     "groq",
 		Endpoint: server.URL,
 		APIKey:   "gsk_test_key",
 	}
@@ -314,7 +314,7 @@ func TestGroqProvider_GenerateStream(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGroq,
+		Type:     "groq",
 		Endpoint: server.URL,
 		APIKey:   "gsk_test_key",
 	}
@@ -360,11 +360,10 @@ func TestGroqProvider_GenerateStream(t *testing.T) {
 	lastResponse := responses[len(responses)-1]
 	assert.Equal(t, "stop", lastResponse.FinishReason)
 
-	if metadata, ok := lastResponse.ProviderMetadata.(map[string]interface{}); ok {
-		assert.NotNil(t, metadata["first_token_latency_ms"])
-		assert.NotNil(t, metadata["total_latency_ms"])
-		assert.NotNil(t, metadata["tokens_per_second"])
-	}
+	metadata := lastResponse.ProviderMetadata
+	assert.NotNil(t, metadata["first_token_latency_ms"])
+	assert.NotNil(t, metadata["total_latency_ms"])
+	assert.NotNil(t, metadata["tokens_per_second"])
 }
 
 func TestGroqProvider_LatencyTracking(t *testing.T) {
@@ -388,7 +387,7 @@ func TestGroqProvider_LatencyTracking(t *testing.T) {
 
 func TestGroqProvider_LatencyMetricsRetrieval(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
@@ -498,7 +497,7 @@ func TestGroqProvider_ErrorHandling(t *testing.T) {
 			defer server.Close()
 
 			config := ProviderConfigEntry{
-				Type:     ProviderTypeGroq,
+				Type:     "groq",
 				Endpoint: server.URL,
 				APIKey:   "gsk_test_key",
 			}
@@ -564,7 +563,7 @@ func TestGroqProvider_GetHealth(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGroq,
+		Type:     "groq",
 		Endpoint: server.URL,
 		APIKey:   "gsk_test_key",
 	}
@@ -588,7 +587,7 @@ func TestGroqProvider_HealthCheckFailure(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGroq,
+		Type:     "groq",
 		Endpoint: server.URL,
 		APIKey:   "gsk_test_key",
 	}
@@ -604,7 +603,7 @@ func TestGroqProvider_HealthCheckFailure(t *testing.T) {
 
 func TestGroqProvider_Close(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
@@ -616,7 +615,7 @@ func TestGroqProvider_Close(t *testing.T) {
 
 func TestGroqProvider_ModelContextSizes(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)
@@ -664,7 +663,7 @@ func TestGroqProvider_PercentileCalculations(t *testing.T) {
 
 func TestGroqProvider_HTTP2Support(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGroq,
+		Type:   "groq",
 		APIKey: "gsk_test_key",
 	}
 	provider, err := NewGroqProvider(config)

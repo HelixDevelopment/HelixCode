@@ -736,8 +736,8 @@ func (p *CharacterAIProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *CharacterAIProvider) GetType() ProviderType {
-	return ProviderTypeCharacterAI
+func (p *CharacterAIProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeCharacterAI
 }
 
 // GetCapabilities returns provider capabilities

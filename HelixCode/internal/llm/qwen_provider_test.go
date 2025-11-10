@@ -22,7 +22,7 @@ func TestNewQwenProvider(t *testing.T) {
 		{
 			name: "valid config",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeQwen,
+				Type:     "qwen",
 				Endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1",
 				APIKey:   "test-key",
 			},
@@ -31,7 +31,7 @@ func TestNewQwenProvider(t *testing.T) {
 		{
 			name: "missing API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeQwen,
+				Type:     "qwen",
 				Endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1",
 			},
 			expectError: false, // Now supports OAuth2 fallback
@@ -39,7 +39,7 @@ func TestNewQwenProvider(t *testing.T) {
 		{
 			name: "default endpoint",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeQwen,
+				Type:   "qwen",
 				APIKey: "test-key",
 			},
 			expectError: false,
@@ -57,7 +57,7 @@ func TestNewQwenProvider(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, provider)
-				assert.Equal(t, ProviderTypeQwen, provider.GetType())
+				assert.Equal(t, "qwen", provider.GetType())
 				assert.Equal(t, "Qwen", provider.GetName())
 			}
 		})
@@ -66,18 +66,18 @@ func TestNewQwenProvider(t *testing.T) {
 
 func TestQwenProvider_GetType(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeQwen,
+		Type:   "qwen",
 		APIKey: "test-key",
 	}
 	provider, err := NewQwenProvider(config)
 	require.NoError(t, err)
 
-	assert.Equal(t, ProviderTypeQwen, provider.GetType())
+	assert.Equal(t, "qwen", provider.GetType())
 }
 
 func TestQwenProvider_GetName(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeQwen,
+		Type:   "qwen",
 		APIKey: "test-key",
 	}
 	provider, err := NewQwenProvider(config)
@@ -88,7 +88,7 @@ func TestQwenProvider_GetName(t *testing.T) {
 
 func TestQwenProvider_GetModels(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeQwen,
+		Type:   "qwen",
 		APIKey: "test-key",
 	}
 	provider, err := NewQwenProvider(config)
@@ -101,7 +101,7 @@ func TestQwenProvider_GetModels(t *testing.T) {
 	modelNames := make(map[string]bool)
 	for _, model := range models {
 		modelNames[model.Name] = true
-		assert.Equal(t, ProviderTypeQwen, model.Provider)
+		assert.Equal(t, "qwen", model.Provider)
 		assert.NotEmpty(t, model.Capabilities)
 		assert.Greater(t, model.ContextSize, 0)
 		assert.Greater(t, model.MaxTokens, 0)
@@ -123,7 +123,7 @@ func TestQwenProvider_GetModels(t *testing.T) {
 
 func TestQwenProvider_GetCapabilities(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeQwen,
+		Type:   "qwen",
 		APIKey: "test-key",
 	}
 	provider, err := NewQwenProvider(config)
@@ -158,7 +158,7 @@ func TestQwenProvider_IsAvailable(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeQwen,
+		Type:     "qwen",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -209,7 +209,7 @@ func TestQwenProvider_GetHealth(t *testing.T) {
 			defer server.Close()
 
 			config := ProviderConfigEntry{
-				Type:     ProviderTypeQwen,
+				Type:     "qwen",
 				Endpoint: server.URL,
 				APIKey:   "test-key",
 			}
@@ -264,7 +264,7 @@ func TestQwenProvider_Generate(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeQwen,
+		Type:     "qwen",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -272,15 +272,13 @@ func TestQwenProvider_Generate(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &LLMRequest{
-		ID:           uuid.New(),
-		ProviderType: ProviderTypeQwen,
-		Model:        "qwen3-coder-plus",
+		ID:    uuid.New(),
+		Model: "qwen3-coder-plus",
 		Messages: []Message{
 			{Role: "user", Content: "Hello"},
 		},
 		MaxTokens:   100,
 		Temperature: 0.7,
-		CreatedAt:   time.Now(),
 	}
 
 	ctx := context.Background()
@@ -323,7 +321,7 @@ func TestQwenProvider_GenerateStream(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeQwen,
+		Type:     "qwen",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -331,16 +329,14 @@ func TestQwenProvider_GenerateStream(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &LLMRequest{
-		ID:           uuid.New(),
-		ProviderType: ProviderTypeQwen,
-		Model:        "qwen3-coder-plus",
+		ID:    uuid.New(),
+		Model: "qwen3-coder-plus",
 		Messages: []Message{
 			{Role: "user", Content: "Hello"},
 		},
 		MaxTokens:   100,
 		Temperature: 0.7,
 		Stream:      true,
-		CreatedAt:   time.Now(),
 	}
 
 	ctx := context.Background()
@@ -381,7 +377,7 @@ done:
 
 func TestQwenProvider_Close(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeQwen,
+		Type:   "qwen",
 		APIKey: "test-key",
 	}
 	provider, err := NewQwenProvider(config)
@@ -405,7 +401,7 @@ func TestQwenProvider_ErrorHandling(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeQwen,
+		Type:     "qwen",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -413,15 +409,13 @@ func TestQwenProvider_ErrorHandling(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &LLMRequest{
-		ID:           uuid.New(),
-		ProviderType: ProviderTypeQwen,
-		Model:        "invalid-model",
+		ID:    uuid.New(),
+		Model: "invalid-model",
 		Messages: []Message{
 			{Role: "user", Content: "Hello"},
 		},
 		MaxTokens:   100,
 		Temperature: 0.7,
-		CreatedAt:   time.Now(),
 	}
 
 	ctx := context.Background()

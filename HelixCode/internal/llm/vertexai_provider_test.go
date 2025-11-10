@@ -43,7 +43,7 @@ func TestNewVertexAIProvider(t *testing.T) {
 		{
 			name: "valid config with credentials file",
 			config: ProviderConfigEntry{
-				Type: ProviderTypeVertexAI,
+				Type: "vertexai",
 				Parameters: map[string]interface{}{
 					"project_id": "test-project",
 					"location":   "us-central1",
@@ -55,7 +55,7 @@ func TestNewVertexAIProvider(t *testing.T) {
 		{
 			name: "valid config with env vars",
 			config: ProviderConfigEntry{
-				Type:       ProviderTypeVertexAI,
+				Type:       "vertexai",
 				Parameters: map[string]interface{}{},
 			},
 			envVars: map[string]string{
@@ -68,7 +68,7 @@ func TestNewVertexAIProvider(t *testing.T) {
 		{
 			name: "missing project ID and credentials",
 			config: ProviderConfigEntry{
-				Type: ProviderTypeVertexAI,
+				Type: "vertexai",
 				Parameters: map[string]interface{}{
 					"location": "us-central1",
 				},
@@ -80,7 +80,7 @@ func TestNewVertexAIProvider(t *testing.T) {
 		{
 			name: "default location",
 			config: ProviderConfigEntry{
-				Type: ProviderTypeVertexAI,
+				Type: "vertexai",
 				Parameters: map[string]interface{}{
 					"project_id": "test-project",
 				},
@@ -136,7 +136,7 @@ func TestNewVertexAIProvider(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, provider)
-				assert.Equal(t, ProviderTypeVertexAI, provider.GetType())
+				assert.Equal(t, "vertexai", provider.GetType())
 				assert.Equal(t, "Vertex AI", provider.GetName())
 				assert.NotEmpty(t, provider.projectID)
 			}
@@ -146,7 +146,7 @@ func TestNewVertexAIProvider(t *testing.T) {
 
 func TestVertexAIProvider_GetType(t *testing.T) {
 	provider := createMockVertexAIProvider(t)
-	assert.Equal(t, ProviderTypeVertexAI, provider.GetType())
+	assert.Equal(t, "vertexai", provider.GetType())
 }
 
 func TestVertexAIProvider_GetName(t *testing.T) {
@@ -164,7 +164,7 @@ func TestVertexAIProvider_GetModels(t *testing.T) {
 	modelNames := make(map[string]bool)
 	for _, model := range models {
 		modelNames[model.Name] = true
-		assert.Equal(t, ProviderTypeVertexAI, model.Provider)
+		assert.Equal(t, "vertexai", model.Provider)
 		assert.Greater(t, model.ContextSize, 0)
 		assert.NotEmpty(t, model.Description)
 	}
@@ -444,7 +444,7 @@ func TestVertexAIProvider_GenerateWithTools(t *testing.T) {
 		Tools: []Tool{
 			{
 				Type: "function",
-				Function: FunctionDefinition{
+				Function: ToolFunction{
 					Name:        "get_weather",
 					Description: "Get the current weather",
 					Parameters: map[string]interface{}{
@@ -814,7 +814,7 @@ func TestTokenProvider_ExpiredToken(t *testing.T) {
 func createMockVertexAIProvider(t *testing.T) *VertexAIProvider {
 	return &VertexAIProvider{
 		config: ProviderConfigEntry{
-			Type: ProviderTypeVertexAI,
+			Type: "vertexai",
 		},
 		credentials: &google.Credentials{
 			ProjectID: "test-project",

@@ -26,7 +26,7 @@ func TestNewGeminiProvider(t *testing.T) {
 		{
 			name: "valid config with API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGemini,
+				Type:     "gemini",
 				Endpoint: "https://generativelanguage.googleapis.com/v1beta",
 				APIKey:   "test-key",
 			},
@@ -35,7 +35,7 @@ func TestNewGeminiProvider(t *testing.T) {
 		{
 			name: "valid config with GEMINI_API_KEY env",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGemini,
+				Type:     "gemini",
 				Endpoint: "https://generativelanguage.googleapis.com/v1beta",
 			},
 			envKey:      "gemini-test-key",
@@ -44,7 +44,7 @@ func TestNewGeminiProvider(t *testing.T) {
 		{
 			name: "valid config with GOOGLE_API_KEY env",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGemini,
+				Type:     "gemini",
 				Endpoint: "https://generativelanguage.googleapis.com/v1beta",
 			},
 			googleKey:   "google-test-key",
@@ -53,7 +53,7 @@ func TestNewGeminiProvider(t *testing.T) {
 		{
 			name: "missing API key",
 			config: ProviderConfigEntry{
-				Type:     ProviderTypeGemini,
+				Type:     "gemini",
 				Endpoint: "https://generativelanguage.googleapis.com/v1beta",
 			},
 			expectError: true,
@@ -62,7 +62,7 @@ func TestNewGeminiProvider(t *testing.T) {
 		{
 			name: "default endpoint",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeGemini,
+				Type:   "gemini",
 				APIKey: "test-key",
 			},
 			expectError: false,
@@ -96,7 +96,7 @@ func TestNewGeminiProvider(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, provider)
-				assert.Equal(t, ProviderTypeGemini, provider.GetType())
+				assert.Equal(t, "gemini", provider.GetType())
 				assert.Equal(t, "Gemini", provider.GetName())
 			}
 		})
@@ -105,18 +105,18 @@ func TestNewGeminiProvider(t *testing.T) {
 
 func TestGeminiProvider_GetType(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
 	require.NoError(t, err)
 
-	assert.Equal(t, ProviderTypeGemini, provider.GetType())
+	assert.Equal(t, "gemini", provider.GetType())
 }
 
 func TestGeminiProvider_GetName(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
@@ -127,7 +127,7 @@ func TestGeminiProvider_GetName(t *testing.T) {
 
 func TestGeminiProvider_GetModels(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
@@ -140,7 +140,7 @@ func TestGeminiProvider_GetModels(t *testing.T) {
 	modelNames := make(map[string]bool)
 	for _, model := range models {
 		modelNames[model.Name] = true
-		assert.Equal(t, ProviderTypeGemini, model.Provider)
+		assert.Equal(t, "gemini", model.Provider)
 		assert.Greater(t, model.ContextSize, 0)
 		assert.NotEmpty(t, model.Description)
 	}
@@ -162,7 +162,7 @@ func TestGeminiProvider_GetModels(t *testing.T) {
 
 func TestGeminiProvider_GetCapabilities(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
@@ -194,7 +194,7 @@ func TestGeminiProvider_IsAvailable(t *testing.T) {
 		{
 			name: "available with API key",
 			config: ProviderConfigEntry{
-				Type:   ProviderTypeGemini,
+				Type:   "gemini",
 				APIKey: "test-key",
 			},
 			available: true,
@@ -256,7 +256,7 @@ func TestGeminiProvider_Generate(t *testing.T) {
 
 	// Create provider with mock endpoint
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGemini,
+		Type:     "gemini",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -319,7 +319,7 @@ func TestGeminiProvider_GenerateWithSystemInstruction(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGemini,
+		Type:     "gemini",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -386,7 +386,7 @@ func TestGeminiProvider_GenerateWithTools(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGemini,
+		Type:     "gemini",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -404,7 +404,7 @@ func TestGeminiProvider_GenerateWithTools(t *testing.T) {
 		Tools: []Tool{
 			{
 				Type: "function",
-				Function: FunctionDefinition{
+				Function: ToolFunction{
 					Name:        "get_weather",
 					Description: "Get the current weather",
 					Parameters: map[string]interface{}{
@@ -464,7 +464,7 @@ func TestGeminiProvider_SafetySettings(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGemini,
+		Type:     "gemini",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -547,7 +547,7 @@ func TestGeminiProvider_ErrorHandling(t *testing.T) {
 			defer server.Close()
 
 			config := ProviderConfigEntry{
-				Type:     ProviderTypeGemini,
+				Type:     "gemini",
 				Endpoint: server.URL,
 				APIKey:   "test-key",
 			}
@@ -591,7 +591,7 @@ func TestGeminiProvider_GetHealth(t *testing.T) {
 	defer server.Close()
 
 	config := ProviderConfigEntry{
-		Type:     ProviderTypeGemini,
+		Type:     "gemini",
 		Endpoint: server.URL,
 		APIKey:   "test-key",
 	}
@@ -608,7 +608,7 @@ func TestGeminiProvider_GetHealth(t *testing.T) {
 
 func TestGeminiProvider_Close(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
@@ -620,7 +620,7 @@ func TestGeminiProvider_Close(t *testing.T) {
 
 func TestGeminiProvider_MessageConversion(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
@@ -648,7 +648,7 @@ func TestGeminiProvider_MessageConversion(t *testing.T) {
 
 func TestGeminiProvider_MassiveContext(t *testing.T) {
 	config := ProviderConfigEntry{
-		Type:   ProviderTypeGemini,
+		Type:   "gemini",
 		APIKey: "test-key",
 	}
 	provider, err := NewGeminiProvider(config)
