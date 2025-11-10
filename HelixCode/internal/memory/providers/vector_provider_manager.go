@@ -3,7 +3,6 @@ package providers
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -77,7 +76,7 @@ type VectorProvider interface {
 
 	// Metadata
 	GetName() string
-	GetType() VectorProviderType
+	GetType() memory.ProviderType
 	GetCapabilities() []string
 	GetConfiguration() interface{}
 	IsCloud() bool
@@ -176,18 +175,10 @@ type IndexInfo struct {
 	UpdatedAt time.Time              `json:"updated_at"`
 }
 
-// VectorProviderType represents the type of vector provider
-type VectorProviderType string
+// VectorProviderType represents the type of vector provider (deprecated, use memory.ProviderType)
+type VectorProviderType = memory.ProviderType
 
-const (
-	VectorProviderTypeChromaDB VectorProviderType = "chromadb"
-	VectorProviderTypePinecone VectorProviderType = "pinecone"
-	VectorProviderTypeFAISS    VectorProviderType = "faiss"
-	VectorProviderTypeQdrant   VectorProviderType = "qdrant"
-	VectorProviderTypeMilvus   VectorProviderType = "milvus"
-	VectorProviderTypeWeaviate VectorProviderType = "weaviate"
-	VectorProviderTypeRedis    VectorProviderType = "redis"
-)
+// Use memory.ProviderType constants instead
 
 // ProviderHealth represents provider health status
 type ProviderHealth struct {
@@ -248,6 +239,17 @@ type CostInfo struct {
 	BillingPeriod string  `json:"billing_period"`
 	FreeTierUsed  bool    `json:"free_tier_used"`
 	FreeTierLimit float64 `json:"free_tier_limit"`
+}
+
+// HealthStatus represents detailed health status for providers
+type HealthStatus struct {
+	Status       string                 `json:"status"`
+	Message      string                 `json:"message,omitempty"`
+	LastCheck    time.Time              `json:"last_check"`
+	ResponseTime time.Duration          `json:"response_time"`
+	Metrics      map[string]float64     `json:"metrics,omitempty"`
+	Dependencies map[string]string      `json:"dependencies,omitempty"`
+	Details      map[string]interface{} `json:"details,omitempty"`
 }
 
 // FallbackAttempt represents a fallback operation attempt
@@ -612,20 +614,20 @@ func (vpm *VectorProviderManager) initializeProvider(ctx context.Context, name s
 	var provider VectorProvider
 	var err error
 
-	switch config.Type {
-	case "chromadb":
+	switch memory.ProviderType(config.Type) {
+	case memory.ProviderChroma:
 		provider, err = vpm.createChromaDBProvider(config)
-	case "pinecone":
+	case memory.ProviderPinecone:
 		provider, err = vpm.createPineconeProvider(config)
-	case "faiss":
+	case memory.ProviderFAISS:
 		provider, err = vpm.createFAISSProvider(config)
-	case "qdrant":
+	case memory.ProviderQdrant:
 		provider, err = vpm.createQdrantProvider(config)
-	case "milvus":
+	case memory.ProviderMilvus:
 		provider, err = vpm.createMilvusProvider(config)
-	case "weaviate":
+	case memory.ProviderWeaviate:
 		provider, err = vpm.createWeaviateProvider(config)
-	case "redis":
+	case memory.ProviderRedis:
 		provider, err = vpm.createRedisProvider(config)
 	default:
 		return fmt.Errorf("unsupported vector provider type: %s", config.Type)
