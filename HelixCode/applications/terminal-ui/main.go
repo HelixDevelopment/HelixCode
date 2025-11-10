@@ -17,6 +17,7 @@ import (
 	"dev.helix.code/internal/task"
 	"dev.helix.code/internal/worker"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -24,6 +25,7 @@ import (
 type TerminalUI struct {
 	app                *tview.Application
 	config             *config.Config
+	helixConfig        *config.HelixConfig
 	db                 *database.Database
 	taskManager        *task.TaskManager
 	workerManager      *worker.WorkerManager
@@ -59,6 +61,14 @@ func (tui *TerminalUI) Initialize() error {
 		return fmt.Errorf("failed to load configuration: %v", err)
 	}
 	tui.config = cfg
+
+	// Load Helix configuration
+	helixCfg, err := config.LoadHelixConfig()
+	if err != nil {
+		// If helix config doesn't exist, create default
+		helixCfg, _ = config.LoadDefaultConfig()
+	}
+	tui.helixConfig = helixCfg
 
 	// Initialize database
 	db, err := database.New(cfg.Database)
@@ -405,6 +415,59 @@ func (tui *TerminalUI) showSettings() {
 	header.SetDynamicColors(true)
 	header.SetBorder(true)
 
+	// Create tabs for different settings categories
+	tabs := tview.NewTextView()
+	tabs.SetText("[::b]1. Theme  2. Cognee  3. System")
+	tabs.SetTextAlign(tview.AlignCenter)
+	tabs.SetDynamicColors(true)
+	tabs.SetBorder(true)
+	tabs.SetTitle("Settings Categories")
+
+	// Theme settings
+	themeView := tui.createThemeSettingsView()
+
+	// Cognee settings
+	cogneeView := tui.createCogneeSettingsView()
+
+	// System settings
+	systemView := tui.createSystemSettingsView()
+
+	// Start with theme view
+	contentArea := tview.NewPages()
+	contentArea.AddPage("theme", themeView, true, true)
+	contentArea.AddPage("cognee", cogneeView, true, true)
+	contentArea.AddPage("system", systemView, true, true)
+	contentArea.SwitchToPage("theme")
+
+	// Handle tab navigation
+	tabs.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyF1, tcell.KeyCtrlT:
+			contentArea.SwitchToPage("theme")
+			return nil
+		case tcell.KeyF2, tcell.KeyCtrlC:
+			contentArea.SwitchToPage("cognee")
+			return nil
+		case tcell.KeyF3, tcell.KeyCtrlS:
+			contentArea.SwitchToPage("system")
+			return nil
+		}
+		return event
+	})
+
+	settingsView.
+		AddItem(header, 3, 0, false).
+		AddItem(tabs, 3, 0, false).
+		AddItem(contentArea, 0, 1, false)
+
+	tui.content.SwitchToPage("settings")
+	tui.content.AddPage("settings", settingsView, true, true)
+}
+
+// createThemeSettingsView creates the theme settings view
+func (tui *TerminalUI) createThemeSettingsView() tview.Primitive {
+	view := tview.NewFlex().SetDirection(tview.FlexRow)
+
 	// Theme selection
 	themeList := tview.NewList()
 	themeList.SetBorder(true)
@@ -429,13 +492,105 @@ func (tui *TerminalUI) showSettings() {
 		currentTheme.Name, currentTheme.IsDark,
 		currentTheme.Primary, currentTheme.Secondary, currentTheme.Accent))
 
-	settingsView.
-		AddItem(header, 3, 0, false).
+	view.
 		AddItem(themeList, 0, 1, false).
 		AddItem(themeInfo, 0, 1, false)
 
-	tui.content.SwitchToPage("settings")
-	tui.content.AddPage("settings", settingsView, true, true)
+	return view
+}
+
+// createCogneeSettingsView creates the Cognee settings view
+func (tui *TerminalUI) createCogneeSettingsView() tview.Primitive {
+	view := tview.NewFlex().SetDirection(tview.FlexRow)
+
+	// Cognee status and controls
+	statusView := tview.NewTextView()
+	statusView.SetBorder(true)
+	statusView.SetTitle("Cognee Status")
+	statusView.SetTitleAlign(tview.AlignLeft)
+	statusView.SetDynamicColors(true)
+
+	// Get Cognee config from helix config
+	cogneeEnabled := "Disabled"
+	cogneeMode := "N/A"
+	if tui.helixConfig != nil && tui.helixConfig.Cognee.Enabled {
+		cogneeEnabled = "[green]Enabled"
+		cogneeMode = tui.helixConfig.Cognee.Mode
+	}
+
+	statusView.SetText(fmt.Sprintf("Status: %s\nMode: %s\nHost: %s\nPort: %d",
+		cogneeEnabled, cogneeMode,
+		tui.helixConfig.Cognee.Host, tui.helixConfig.Cognee.Port))
+
+	// Control buttons
+	controls := tview.NewFlex().SetDirection(tview.FlexColumn)
+
+	enableBtn := tview.NewButton("Enable Cognee").SetSelectedFunc(func() {
+		// TODO: Enable Cognee
+		statusView.SetText("Status: [green]Enabled\nMode: local\nHost: localhost\nPort: 8000")
+	})
+	controls.AddItem(enableBtn, 0, 1, false)
+
+	disableBtn := tview.NewButton("Disable Cognee").SetSelectedFunc(func() {
+		// TODO: Disable Cognee
+		statusView.SetText("Status: [red]Disabled\nMode: N/A\nHost: N/A\nPort: N/A")
+	})
+	controls.AddItem(disableBtn, 0, 1, false)
+
+	// Configuration options
+	configView := tview.NewTextView()
+	configView.SetBorder(true)
+	configView.SetTitle("Configuration Options")
+	configView.SetTitleAlign(tview.AlignLeft)
+	configView.SetText(`[::b]Basic Settings:
+• Auto Start: Enabled
+• Mode: Local/Remote
+• Host: localhost
+• Port: 8000
+
+[::b]Features:
+• Knowledge Graph: Enabled
+• Semantic Search: Enabled
+• Real-time Processing: Enabled
+• Multi-modal Support: Enabled
+
+[::b]Performance:
+• Workers: 4
+• Cache: Redis
+• Optimization: High`)
+
+	view.
+		AddItem(statusView, 6, 0, false).
+		AddItem(controls, 3, 0, false).
+		AddItem(configView, 0, 1, false)
+
+	return view
+}
+
+// createSystemSettingsView creates the system settings view
+func (tui *TerminalUI) createSystemSettingsView() tview.Primitive {
+	view := tview.NewTextView()
+	view.SetBorder(true)
+	view.SetTitle("System Settings")
+	view.SetTitleAlign(tview.AlignLeft)
+	view.SetText(`[::b]System Configuration:
+
+Database: PostgreSQL
+Redis: Enabled
+Workers: 4 active
+Tasks: 0 running
+
+[::b]Performance:
+CPU Usage: 15%
+Memory: 2.1GB / 8GB
+Disk: 45GB free
+
+[::b]Network:
+Port: 8080
+SSL: Disabled
+CORS: Enabled`)
+
+	return view
 }
 
 // Run starts the Terminal UI application

@@ -10,6 +10,7 @@ A distributed, AI-powered software development platform with multi-platform supp
 - **Distributed Computing**: Worker nodes for parallel task execution
 - **AI Integration**: LLM-powered code generation and reasoning with multiple free providers
 - **Free AI Models**: Access to XAI (Grok), OpenRouter, GitHub Copilot, and Qwen without API keys
+- **Cognee.ai Memory Integration**: Advanced memory management with knowledge graphs, semantic search, and real-time processing
 - **Real-time Collaboration**: MCP protocol for tool execution
 - **Authentication & Security**: JWT-based auth with session management
 - **Task Management**: Checkpoint-based work preservation

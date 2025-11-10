@@ -39,6 +39,31 @@ services:
     volumes:
       - redis-test-data:/data
 
+  # Cognee.ai for memory testing
+  cognee-test:
+    image: cognee/cognee:latest
+    container_name: helixcode-cognee-test
+    environment:
+      - COGNEE_API_KEY=test_cognee_key_123
+      - COGNEE_MODE=local
+      - COGNEE_REDIS_URL=redis://:test_redis_password_123@redis-test:6379
+      - COGNEE_POSTGRES_URL=postgresql://helix_test:test_password_secure_123@postgres-test:5432/helix_test
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - helix-test
+
 networks:
   helix-test:
     driver: bridge

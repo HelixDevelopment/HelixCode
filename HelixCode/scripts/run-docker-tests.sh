@@ -113,6 +113,13 @@ check_service_health() {
         print_warning "Redis health check failed"
     fi
 
+    # Check Cognee
+    if curl -f http://localhost:8001/health &> /dev/null; then
+        print_success "Cognee is healthy"
+    else
+        print_warning "Cognee health check failed"
+    fi
+
     # Check HelixCode server
     if curl -f http://localhost:8080/health &> /dev/null; then
         print_success "HelixCode server is healthy"

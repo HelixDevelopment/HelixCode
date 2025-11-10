@@ -2,9 +2,7 @@ package integration
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -21,16 +19,16 @@ import (
 // Integration tests for real local LLM providers
 
 const (
-	testTimeout       = 60 * time.Second
+	testTimeout      = 60 * time.Second
 	healthCheckDelay = 2 * time.Second
 	maxRetries       = 5
 )
 
-// Test configuration
-type TestConfig struct {
+// ProviderProviderTestConfig holds provider test configuration
+type ProviderTestConfig struct {
 	BaseDir          string
 	ModelDownloadDir string
-	SkipExpensive   bool
+	SkipExpensive    bool
 }
 
 // Provider test data
@@ -49,14 +47,14 @@ func TestRealProviderIntegration(t *testing.T) {
 		t.Skip("Skipping integration tests in short mode")
 	}
 
-	config := &TestConfig{
+	config := &ProviderTestConfig{
 		BaseDir:          t.TempDir(),
-		ModelDownloadDir:  filepath.Join(t.TempDir(), "models"),
+		ModelDownloadDir: filepath.Join(t.TempDir(), "models"),
 		SkipExpensive:    os.Getenv("SKIP_EXPENSIVE_TESTS") == "true",
 	}
 
 	providers := getTestProviders()
-	
+
 	for _, provider := range providers {
 		if !isProviderAvailable(provider) {
 			t.Logf("Skipping %s - not available on this system", provider.Name)
@@ -74,9 +72,9 @@ func TestModelSharingAcrossProviders(t *testing.T) {
 		t.Skip("Skipping integration tests in short mode")
 	}
 
-	config := &TestConfig{
+	config := &ProviderTestConfig{
 		BaseDir:          t.TempDir(),
-		ModelDownloadDir:  filepath.Join(t.TempDir(), "models"),
+		ModelDownloadDir: filepath.Join(t.TempDir(), "models"),
 		SkipExpensive:    os.Getenv("SKIP_EXPENSIVE_TESTS") == "true",
 	}
 
@@ -114,9 +112,9 @@ func TestProviderFailover(t *testing.T) {
 		t.Skip("Skipping integration tests in short mode")
 	}
 
-	config := &TestConfig{
+	config := &ProviderTestConfig{
 		BaseDir:          t.TempDir(),
-		ModelDownloadDir:  filepath.Join(t.TempDir(), "models"),
+		ModelDownloadDir: filepath.Join(t.TempDir(), "models"),
 		SkipExpensive:    os.Getenv("SKIP_EXPENSIVE_TESTS") == "true",
 	}
 
@@ -175,9 +173,9 @@ func TestPerformanceBenchmarks(t *testing.T) {
 		t.Skip("Skipping benchmark tests")
 	}
 
-	config := &TestConfig{
+	config := &ProviderTestConfig{
 		BaseDir:          t.TempDir(),
-		ModelDownloadDir:  filepath.Join(t.TempDir(), "models"),
+		ModelDownloadDir: filepath.Join(t.TempDir(), "models"),
 		SkipExpensive:    false,
 	}
 
@@ -212,9 +210,9 @@ func TestLoadBalancing(t *testing.T) {
 		t.Skip("Skipping load balancing test")
 	}
 
-	config := &TestConfig{
+	config := &ProviderTestConfig{
 		BaseDir:          t.TempDir(),
-		ModelDownloadDir:  filepath.Join(t.TempDir(), "models"),
+		ModelDownloadDir: filepath.Join(t.TempDir(), "models"),
 		SkipExpensive:    os.Getenv("SKIP_EXPENSIVE_TESTS") == "true",
 	}
 
@@ -257,9 +255,9 @@ func TestModelConversion(t *testing.T) {
 		t.Skip("Skipping model conversion test")
 	}
 
-	config := &TestConfig{
+	config := &ProviderTestConfig{
 		BaseDir:          t.TempDir(),
-		ModelDownloadDir:  filepath.Join(t.TempDir(), "models"),
+		ModelDownloadDir: filepath.Join(t.TempDir(), "models"),
 		SkipExpensive:    false,
 	}
 
@@ -269,12 +267,12 @@ func TestModelConversion(t *testing.T) {
 
 	// Test conversion to GGUF
 	converter := llm.NewModelConverter(config.BaseDir)
-	
+
 	conversionConfig := llm.ConversionConfig{
 		SourcePath:   modelPath,
-		SourceFormat:  llm.FormatHF,
-		TargetFormat:  llm.FormatGGUF,
-		Timeout:       300, // 5 minutes
+		SourceFormat: llm.FormatHF,
+		TargetFormat: llm.FormatGGUF,
+		Timeout:      300, // 5 minutes
 		Quantization: &llm.QuantizationConfig{
 			Method: "q4_k_m",
 		},
@@ -292,7 +290,7 @@ func TestModelConversion(t *testing.T) {
 	require.NotEmpty(t, job.ID, "Job should have ID")
 
 	// Monitor conversion progress
-	var finalStatus *llm.ConversionStatus
+	var finalStatus *llm.ConversionJob
 	require.Eventually(t, func() bool {
 		status, err := converter.GetConversionStatus(job.ID)
 		require.NoError(t, err)
@@ -380,7 +378,7 @@ func isProviderAvailable(provider ProviderTest) bool {
 	}
 }
 
-func getAvailableProviders(t *testing.T, config *TestConfig) []ProviderTest {
+func getAvailableProviders(t *testing.T, config *ProviderTestConfig) []ProviderTest {
 	var providers []ProviderTest
 	testProviders := getTestProviders()
 
@@ -395,10 +393,10 @@ func getAvailableProviders(t *testing.T, config *TestConfig) []ProviderTest {
 
 func startProvider(ctx context.Context, provider ProviderTest) (*exec.Cmd, error) {
 	cmd := exec.CommandContext(ctx, provider.Command, provider.Args...)
-	
+
 	// Set up environment
 	cmd.Env = os.Environ()
-	
+
 	// Start the command
 	err := cmd.Start()
 	if err != nil {
@@ -415,10 +413,10 @@ func stopProvider(cmd *exec.Cmd) {
 
 	// Try graceful shutdown first
 	cmd.Process.Signal(os.Interrupt)
-	
+
 	// Wait a bit for graceful shutdown
 	time.Sleep(5 * time.Second)
-	
+
 	// Force kill if still running
 	if !cmd.ProcessState.Exited() {
 		cmd.Process.Kill()
@@ -428,7 +426,7 @@ func stopProvider(cmd *exec.Cmd) {
 
 func isProviderHealthy(healthURL string) bool {
 	client := &http.Client{Timeout: 5 * time.Second}
-	
+
 	resp, err := client.Get(healthURL)
 	if err != nil {
 		return false
@@ -438,7 +436,7 @@ func isProviderHealthy(healthURL string) bool {
 	return resp.StatusCode == http.StatusOK
 }
 
-func downloadTestModel(t *testing.T, config *TestConfig, modelID string) string {
+func downloadTestModel(t *testing.T, config *ProviderTestConfig, modelID string) string {
 	// Create download manager
 	downloadManager := llm.NewModelDownloadManager(config.ModelDownloadDir)
 
@@ -454,7 +452,7 @@ func downloadTestModel(t *testing.T, config *TestConfig, modelID string) string 
 		ModelID:       modelID,
 		Format:        model.AvailableFormats[0],
 		TargetPath:    filepath.Join(config.ModelDownloadDir, modelID+"."+string(model.AvailableFormats[0])),
-		ForceDownload:  true,
+		ForceDownload: true,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
@@ -476,24 +474,24 @@ func downloadTestModel(t *testing.T, config *TestConfig, modelID string) string 
 	return req.TargetPath
 }
 
-func createTestModel(config *TestConfig, modelID string) *llm.DownloadableModelInfo {
+func createTestModel(config *ProviderTestConfig, modelID string) *llm.DownloadableModelInfo {
 	return &llm.DownloadableModelInfo{
-		ID:              modelID,
-		Name:            fmt.Sprintf("Test Model %s", modelID),
-		Description:     "Test model for integration testing",
+		ID:               modelID,
+		Name:             fmt.Sprintf("Test Model %s", modelID),
+		Description:      "Test model for integration testing",
 		AvailableFormats: []llm.ModelFormat{llm.FormatGGUF},
-		DefaultFormat:   llm.FormatGGUF,
-		ModelSize:       "8B",
-		ContextSize:     8192,
+		DefaultFormat:    llm.FormatGGUF,
+		ModelSize:        "8B",
+		ContextSize:      8192,
 		Requirements: llm.ModelRequirements{
-			MinRAM:        "8GB",
-			CPUOnly:       true,
+			MinRAM:  "8GB",
+			CPUOnly: true,
 		},
 		Tags: []string{"test", "integration"},
 	}
 }
 
-func testProviderLifecycle(t *testing.T, config *TestConfig, provider ProviderTest) {
+func testProviderLifecycle(t *testing.T, config *ProviderTestConfig, provider ProviderTest) {
 	t.Logf("Testing provider lifecycle for %s", provider.Name)
 
 	ctx, cancel := context.WithTimeout(context.Background(), testTimeout)
@@ -529,7 +527,7 @@ func testModelLoading(t *testing.T, provider ProviderTest) {
 func testProviderAPI(t *testing.T, provider ProviderTest) {
 	// Test basic API functionality
 	apiURL := strings.Replace(provider.HealthURL, "/health", "/v1/models", 1)
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get(apiURL)
 	if err != nil {
@@ -545,13 +543,13 @@ func testProviderAPI(t *testing.T, provider ProviderTest) {
 	}
 }
 
-func testCrossProviderModelAccess(t *testing.T, config *TestConfig, primary, backup ProviderTest, modelPath string) {
+func testCrossProviderModelAccess(t *testing.T, config *ProviderTestConfig, primary, backup ProviderTest, modelPath string) {
 	// Test that model can be accessed from backup provider
 	// This depends on provider-specific implementation
 	t.Logf("Testing cross-provider access from %s to %s", primary.Name, backup.Name)
 }
 
-func testFailoverFunctionality(t *testing.T, config *TestConfig, backup ProviderTest) {
+func testFailoverFunctionality(t *testing.T, config *ProviderTestConfig, backup ProviderTest) {
 	// Test that backup provider handles requests correctly
 	t.Logf("Testing failover functionality with %s", backup.Name)
 }
@@ -572,9 +570,9 @@ func runPerformanceBenchmarks(t *testing.T, provider ProviderTest) {
 func testInferenceSpeed(t *testing.T, provider ProviderTest) {
 	// Benchmark inference time
 	start := time.Now()
-	
+
 	// Make a test request (implementation depends on provider API)
-	
+
 	duration := time.Since(start)
 	t.Logf("Inference time for %s: %v", provider.Name, duration)
 }
@@ -618,7 +616,7 @@ func testLoadBalancing(t *testing.T, providers []ProviderTest) {
 func testConvertedModel(t *testing.T, modelPath string) {
 	// Test that converted model loads and works correctly
 	t.Logf("Testing converted model: %s", modelPath)
-	
+
 	// Check file size
 	info, err := os.Stat(modelPath)
 	require.NoError(t, err)

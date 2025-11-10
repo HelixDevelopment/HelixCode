@@ -726,6 +726,70 @@ if result.SwitchPerformed {
 }
 ```
 
+### 6.4 Cognee Memory Integration ⭐ NEW
+
+**Persistent AI memory system with graph-based knowledge management.**
+
+**Features**:
+- Long-term conversation memory
+- Knowledge graph construction
+- Semantic search and retrieval
+- Cross-provider memory sharing
+- Automatic context management
+- Performance optimization
+
+**Configuration**:
+```json
+{
+  "cognee": {
+    "enabled": true,
+    "mode": "local",
+    "remote_api": {
+      "service_endpoint": "https://api.cognee.ai",
+      "api_key": "your-cognee-key"
+    }
+  },
+  "providers": {
+    "openai": {
+      "cognee_enabled": true
+    },
+    "anthropic": {
+      "cognee_enabled": true
+    }
+  }
+}
+```
+
+**CLI Usage**:
+```bash
+# Enable Cognee for a provider
+helix-config set providers.openai.cognee_enabled true
+
+# Configure Cognee settings
+helix-config set cognee.enabled true
+helix-config set cognee.mode local
+
+# Check Cognee status
+helix-config get cognee
+```
+
+**API Usage**:
+```go
+import "dev.helix.code/internal/memory"
+
+// Initialize Cognee
+cognee := memory.NewCogneeIntegration(&config.Cognee, logger)
+err := cognee.Initialize(ctx, &config.Cognee)
+
+// Store memory
+memItem := memory.NewMemoryItem("id", "content", "type", 1.0, time.Now())
+err = cognee.StoreMemory(ctx, memItem)
+
+// Retrieve memory
+query := memory.NewRetrievalQuery("search term", "type", 10)
+results, err := cognee.RetrieveMemory(ctx, query)
+```
+
 ---
 
 ## 7. Development Modes

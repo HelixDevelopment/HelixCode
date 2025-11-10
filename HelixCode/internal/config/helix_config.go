@@ -28,7 +28,8 @@ type HelixConfig struct {
 	Tasks   TasksConfig   `json:"tasks"`
 
 	// AI/LLM Configuration
-	LLM LLMConfig `json:"llm"`
+	LLM    LLMConfig    `json:"llm"`
+	Cognee CogneeConfig `json:"cognee"`
 
 	// Tools & Features
 	Tools     ToolsConfig     `json:"tools"`
@@ -352,6 +353,9 @@ type LLMProviderConfig struct {
 	SupportsTools     bool     `json:"supports_tools"`
 	SupportsCaching   bool     `json:"supports_caching"`
 	Capabilities      []string `json:"capabilities"`
+
+	// Cognee Integration
+	CogneeEnabled bool `json:"cognee_enabled"` // Enable Cognee.ai memory for this provider
 
 	// Custom parameters
 	Parameters map[string]interface{} `json:"parameters"`
@@ -1832,7 +1836,49 @@ func (m *HelixConfigManager) getDefaultConfig() *HelixConfig {
 			MaxTokens:       4096,
 			Temperature:     0.7,
 			TopP:            0.9,
-			Providers:       make(map[string]LLMProviderConfig),
+			Providers: map[string]LLMProviderConfig{
+				"openai": {
+					Type:              "openai",
+					Enabled:           true,
+					CogneeEnabled:     true,
+					Timeout:           30 * time.Second,
+					MaxRetries:        3,
+					RetryDelay:        1 * time.Second,
+					RateLimitEnabled:  true,
+					RateLimitRPM:      60,
+					SupportsStreaming: true,
+					SupportsVision:    true,
+					SupportsTools:     true,
+					Capabilities:      []string{"chat", "completion", "embedding"},
+				},
+				"anthropic": {
+					Type:              "anthropic",
+					Enabled:           true,
+					CogneeEnabled:     true,
+					Timeout:           30 * time.Second,
+					MaxRetries:        3,
+					RetryDelay:        1 * time.Second,
+					RateLimitEnabled:  true,
+					RateLimitRPM:      60,
+					SupportsStreaming: true,
+					SupportsTools:     true,
+					Capabilities:      []string{"chat", "completion"},
+				},
+				"google": {
+					Type:              "google",
+					Enabled:           true,
+					CogneeEnabled:     true,
+					Timeout:           30 * time.Second,
+					MaxRetries:        3,
+					RetryDelay:        1 * time.Second,
+					RateLimitEnabled:  true,
+					RateLimitRPM:      60,
+					SupportsStreaming: true,
+					SupportsVision:    true,
+					SupportsTools:     true,
+					Capabilities:      []string{"chat", "completion", "embedding"},
+				},
+			},
 			ModelSelection: ModelSelectionConfig{
 				Strategy:           "performance",
 				FallbackEnabled:    true,
@@ -1889,6 +1935,8 @@ func (m *HelixConfigManager) getDefaultConfig() *HelixConfig {
 				MonthlyTokenLimit:       3000000,
 			},
 		},
+
+		Cognee: *DefaultCogneeConfig(),
 
 		Tools: ToolsConfig{
 			FileSystem: FileSystemToolsConfig{

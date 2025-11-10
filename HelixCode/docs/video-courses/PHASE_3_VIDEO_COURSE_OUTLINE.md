@@ -49,13 +49,21 @@
 - Token tracking
 - Demo: Building conversation history
 
-#### Video 3.2: Advanced Memory Features (15 min)
+#### Video 3.2: Cognee.ai Memory Integration (12 min)
+- Introduction to Cognee.ai
+- Knowledge graphs and semantic search
+- Real-time memory processing
+- Multi-modal support
+- Configuration and setup
+- Demo: Cognee-powered memory features
+
+#### Video 3.3: Advanced Memory Features (13 min)
 - Search and filtering
 - Message limits and trimming
 - Conversation statistics
 - Export/import conversations
 - Best practices for memory management
-- Demo: Managing long conversations
+- Demo: Managing long conversations with Cognee
 
 ### Module 4: State Persistence (20 minutes)
 

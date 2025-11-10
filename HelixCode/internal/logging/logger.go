@@ -67,6 +67,11 @@ func DefaultLogger() *Logger {
 	return NewLogger(INFO)
 }
 
+// NewTestLogger creates a new logger instance for testing
+func NewTestLogger(name string) *Logger {
+	return NewLoggerWithName(name)
+}
+
 // Debug logs a debug message
 func (l *Logger) Debug(format string, args ...interface{}) {
 	if l.level <= DEBUG {

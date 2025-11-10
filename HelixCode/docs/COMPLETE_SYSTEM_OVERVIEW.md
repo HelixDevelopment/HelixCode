@@ -11,6 +11,7 @@
 
 ### 🚀 Enterprise Features
 - **11 Local LLM Providers** automatically managed
+- **Cognee.ai Memory Integration** with knowledge graphs and semantic search
 - **Production-Grade Reliability** with auto-recovery
 - **Intelligent Load Balancing** across providers
 - **Real-Time Health Monitoring** with alerts
@@ -365,6 +366,55 @@ cd helixcode
 # • Offline operation
 # • Automatic sync
 ```
+
+### Cognee Memory Integration Architecture
+```mermaid
+graph TB
+    subgraph HelixCode["HelixCode Platform"]
+        LLM[🤖 LLM Providers<br/>OpenAI, Anthropic, Google, etc.]
+        CogneeIntegration[🧠 Cognee Integration<br/>Memory Manager]
+        Config[⚙️ Configuration<br/>Per-Provider Settings]
+    end
+
+    subgraph Cognee["Cognee.ai Memory System"]
+        API[🌐 REST API<br/>Memory Operations]
+        GraphDB[(📊 Graph Database<br/>Knowledge Graph)]
+        VectorDB[(🔍 Vector Database<br/>Semantic Search)]
+        Cache[⚡ Redis Cache<br/>Fast Retrieval]
+    end
+
+    subgraph DataFlow["Data Flow"]
+        Store[💾 Store Memory<br/>Conversations & Knowledge]
+        Retrieve[🔍 Retrieve Context<br/>Semantic Search]
+        Search[🎯 Search Knowledge<br/>Graph Queries]
+        Optimize[⚡ Optimize Performance<br/>Caching & Indexing]
+    end
+
+    LLM --> CogneeIntegration
+    CogneeIntegration --> API
+    Config --> CogneeIntegration
+
+    API --> GraphDB
+    API --> VectorDB
+    API --> Cache
+
+    Store --> API
+    Retrieve --> API
+    Search --> API
+    Optimize --> Cache
+
+    style HelixCode fill:#e1f5fe
+    style Cognee fill:#f3e5f5
+    style DataFlow fill:#e8f5e8
+```
+
+**Cognee Integration Features**:
+- **Persistent Memory**: Long-term conversation and knowledge storage
+- **Graph-Based Knowledge**: Connected knowledge representation
+- **Semantic Search**: Meaning-based information retrieval
+- **Cross-Provider Sharing**: Memory accessible across all LLM providers
+- **Performance Optimization**: Intelligent caching and indexing
+- **Real-Time Processing**: Live memory updates and context management
 
 ---
 

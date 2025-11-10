@@ -8,6 +8,7 @@ import (
 
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // VectorProviderManager manages vector database providers with seamless switching

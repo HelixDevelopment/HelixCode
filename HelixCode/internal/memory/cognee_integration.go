@@ -13,7 +13,7 @@ import (
 // CogneeIntegration provides integration with Cognee.ai for LLM memory management
 type CogneeIntegration struct {
 	config    *config.CogneeConfig
-	logger    logging.Logger
+	logger    *logging.Logger
 	client    *CogneeClient
 	isRunning bool
 	mu        sync.RWMutex
@@ -26,11 +26,11 @@ type CogneeClient struct {
 	baseURL string
 	apiKey  string
 	timeout time.Duration
-	logger  logging.Logger
+	logger  *logging.Logger
 }
 
 // NewCogneeIntegration creates a new Cognee integration instance
-func NewCogneeIntegration(config *config.CogneeConfig, logger logging.Logger) *CogneeIntegration {
+func NewCogneeIntegration(config *config.CogneeConfig, logger *logging.Logger) *CogneeIntegration {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &CogneeIntegration{
@@ -60,7 +60,7 @@ func (ci *CogneeIntegration) Initialize(ctx context.Context, config *config.Cogn
 	}
 
 	ci.isRunning = true
-	ci.logger.Info("Cognee integration initialized", "mode", ci.config.Mode, "endpoint", ci.client.baseURL)
+	ci.logger.Info("Cognee integration initialized with mode=%s, endpoint=%s", ci.config.Mode, ci.client.baseURL)
 
 	return nil
 }
@@ -91,7 +91,7 @@ func (ci *CogneeIntegration) StoreMemory(ctx context.Context, memory *MemoryItem
 	}
 
 	// Implementation would call Cognee API to store memory
-	ci.logger.Debug("Storing memory in Cognee", "id", memory.ID, "type", memory.Type)
+	ci.logger.Debug("Storing memory in Cognee id=%s, type=%s", memory.ID, memory.Type)
 
 	// Placeholder for actual Cognee API call
 	return nil
@@ -106,7 +106,7 @@ func (ci *CogneeIntegration) RetrieveMemory(ctx context.Context, query *Retrieva
 		return nil, fmt.Errorf("Cognee integration not initialized")
 	}
 
-	ci.logger.Debug("Retrieving memory from Cognee", "query", query.Query, "limit", query.Limit)
+	ci.logger.Debug("Retrieving memory from Cognee query=%s, limit=%d", query.Query, query.Limit)
 
 	// Placeholder for actual Cognee API call
 	result := &RetrievalResult{
@@ -129,7 +129,7 @@ func (ci *CogneeIntegration) GetContext(ctx context.Context, provider, model, se
 		return nil, fmt.Errorf("Cognee integration not initialized")
 	}
 
-	ci.logger.Debug("Getting context from Cognee", "provider", provider, "model", model, "session", session)
+	ci.logger.Debug("Getting context from Cognee provider=%s, model=%s, session=%s", provider, model, session)
 
 	// Placeholder for actual Cognee API call
 	conversation := NewConversation(fmt.Sprintf("Context for %s/%s", provider, model))
@@ -185,7 +185,7 @@ func (ci *CogneeIntegration) ApplyOptimizations(ctx context.Context, recommendat
 		return fmt.Errorf("Cognee integration not initialized")
 	}
 
-	ci.logger.Info("Applying optimizations", "count", len(recommendations))
+	ci.logger.Info("Applying optimizations count=%d", len(recommendations))
 
 	// Placeholder for actual optimization application
 	return nil
