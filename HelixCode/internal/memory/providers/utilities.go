@@ -202,12 +202,12 @@ func convertMemoryCollectionConfigToProvider(mcc *memory.CollectionConfig) *Coll
 		return nil
 	}
 	return &CollectionConfig{
-		Name:      mcc.Name,
-		Dimension: mcc.Dimension,
-		Metric:    mcc.Metric,
-		Replicas:  mcc.Replicas,
-		Shards:    mcc.Shards,
-		Metadata:  mcc.Properties, // Map Properties to Metadata
+		Name:       mcc.Name,
+		Dimension:  mcc.Dimension,
+		Metric:     mcc.Metric,
+		Replicas:   mcc.Replicas,
+		Shards:     mcc.Shards,
+		Properties: mcc.Properties, // Map Properties to Properties
 	}
 }
 
@@ -251,10 +251,10 @@ func convertMemoryIndexConfigToProvider(mic *memory.IndexConfig) *IndexConfig {
 		return nil
 	}
 	return &IndexConfig{
-		Name:     mic.Name,
-		Type:     mic.Type,
-		Options:  mic.Parameters, // Map Parameters to Options
-		Metadata: make(map[string]interface{}),
+		Name:       mic.Name,
+		Type:       mic.Type,
+		Parameters: mic.Parameters, // Map Parameters to Parameters
+		Metric:     mic.Metric,
 	}
 }
 

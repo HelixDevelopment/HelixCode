@@ -825,7 +825,7 @@ func (p *CharacterAIProvider) Health(ctx context.Context) (*HealthStatus, error)
 		Status:       status,
 		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:      metrics,
+		Metrics:      map[string]interface{}{"characters": metrics["characters"], "conversations": metrics["conversations"]},
 		Dependencies: map[string]string{
 			"character_ai_api": "required",
 		},
@@ -884,7 +884,7 @@ func (p *CharacterAIProvider) GetCostInfo() *CostInfo {
 		TotalCost:     cost,
 		Currency:      "USD",
 		BillingPeriod: "monthly",
-		FreeTierUsed:  characters > 10, // Free tier for first 10 characters
+		FreeTierUsed:  float64(characters), // Free tier for first 10 characters
 		FreeTierLimit: 10.0,
 	}
 }

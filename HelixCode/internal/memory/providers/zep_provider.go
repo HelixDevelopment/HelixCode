@@ -365,7 +365,7 @@ func (p *ZepProvider) GetCostInfo() *CostInfo {
 		StorageCost:   0.0,
 		TotalCost:     0.0,
 		BillingPeriod: "monthly",
-		FreeTierUsed:  false,
+		FreeTierUsed:  0.0,
 		FreeTierLimit: 0.0,
 	}
 }

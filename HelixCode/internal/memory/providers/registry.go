@@ -53,10 +53,10 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	// Register all built-in providers
 	// r.providers[memory.ProviderTypePinecone] = func(config map[string]interface{}) (VectorProvider, error) { return NewPineconeProvider(config) }
 	// r.providers[memory.ProviderTypeMilvus] = func(config map[string]interface{}) (VectorProvider, error) { return NewMilvusProvider(config) }
-	r.providers[memory.ProviderTypeWeaviate] = func(config map[string]interface{}) (VectorProvider, error) { return NewWeaviateProvider(config) }
+	// r.providers[memory.ProviderTypeWeaviate] = func(config map[string]interface{}) (VectorProvider, error) { return NewWeaviateProvider(config) }
 	// r.providers[memory.ProviderTypeQdrant] = func(config map[string]interface{}) (VectorProvider, error) { return NewQdrantProvider(config) }
 	// r.providers[memory.ProviderTypeRedis] = func(config map[string]interface{}) (VectorProvider, error) { return NewRedisProvider(config) }
-	r.providers[memory.ProviderTypeChroma] = func(config map[string]interface{}) (VectorProvider, error) { return NewChromaDBProvider(config) }
+	// r.providers[memory.ProviderTypeChroma] = func(config map[string]interface{}) (VectorProvider, error) { return NewChromaDBProvider(config) }
 
 	// r.providers[memory.ProviderTypeOpenAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewOpenAIProvider(config) }
 	// r.providers[memory.ProviderTypeAnthropic] = func(config map[string]interface{}) (VectorProvider, error) { return NewAnthropicProvider(config) }
@@ -64,7 +64,7 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	// r.providers[memory.ProviderTypeHuggingFace] = func(config map[string]interface{}) (VectorProvider, error) { return NewHuggingFaceProvider(config) }
 	// r.providers[memory.ProviderTypeMistral] = func(config map[string]interface{}) (VectorProvider, error) { return NewMistralProvider(config) }
 	// r.providers[memory.ProviderTypeGemini] = func(config map[string]interface{}) (VectorProvider, error) { return NewGeminiProvider(config) }
-	// r.providers[memory.ProviderTypeGemma] = func(config map[string]interface{}) (VectorProvider, error) { return NewGemmaProvider(config) }
+	// 	// r.providers[memory.ProviderTypeGemma] = func(config map[string]interface{}) (VectorProvider, error) { return NewGemmaProvider(config) }
 	// r.providers[memory.ProviderTypeLlamaIndex] = func(config map[string]interface{}) (VectorProvider, error) { return NewLlamaIndexProvider(config) }
 
 	// r.providers[memory.ProviderTypeVertexAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewVertexAIProvider(config) }

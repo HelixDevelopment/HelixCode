@@ -630,7 +630,7 @@ func (p *FAISSProvider) Health(ctx context.Context) (*HealthStatus, error) {
 		Status:       status,
 		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:      metrics,
+		Metrics:      map[string]interface{}{"vectors": metrics["vectors"], "collections": metrics["collections"]},
 		Dependencies: map[string]string{
 			"storage": "local_disk",
 		},
@@ -681,7 +681,7 @@ func (p *FAISSProvider) GetCostInfo() *CostInfo {
 		TotalCost:     0.0,
 		Currency:      "USD",
 		BillingPeriod: "N/A",
-		FreeTierUsed:  false,
+		FreeTierUsed:  0.0,
 		FreeTierLimit: 0.0,
 	}
 }
