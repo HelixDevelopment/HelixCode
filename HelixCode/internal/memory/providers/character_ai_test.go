@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"dev.helix.code/internal/memory"
 	"testing"
 )
 
@@ -15,8 +14,8 @@ func TestCharacterAIProvider_GetType(t *testing.T) {
 		t.Fatalf("Failed to create provider: %v", err)
 	}
 
-	if provider.GetType() != memory.ProviderTypeCharacterAI {
-		t.Errorf("Expected ProviderTypeCharacterAI, got %v", provider.GetType())
+	if provider.GetType() != string(ProviderTypeCharacterAI) {
+		t.Errorf("Expected %s, got %v", ProviderTypeCharacterAI, provider.GetType())
 	}
 }
 

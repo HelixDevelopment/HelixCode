@@ -3,8 +3,42 @@ package providers
 import (
 	"context"
 	"time"
+)
 
-	"dev.helix.code/internal/memory"
+// ProviderType represents the type of vector provider
+type ProviderType string
+
+// Provider type constants
+const (
+	ProviderTypePinecone    ProviderType = "pinecone"
+	ProviderTypeMilvus      ProviderType = "milvus"
+	ProviderTypeWeaviate    ProviderType = "weaviate"
+	ProviderTypeQdrant      ProviderType = "qdrant"
+	ProviderTypeRedis       ProviderType = "redis"
+	ProviderTypeChroma      ProviderType = "chroma"
+	ProviderTypeOpenAI      ProviderType = "openai"
+	ProviderTypeAnthropic   ProviderType = "anthropic"
+	ProviderTypeCohere      ProviderType = "cohere"
+	ProviderTypeHuggingFace ProviderType = "huggingface"
+	ProviderTypeMistral     ProviderType = "mistral"
+	ProviderTypeGemini      ProviderType = "gemini"
+	ProviderTypeVertexAI    ProviderType = "vertexai"
+	ProviderTypeClickHouse  ProviderType = "clickhouse"
+	ProviderTypeSupabase    ProviderType = "supabase"
+	ProviderTypeDeepLake    ProviderType = "deeplake"
+	ProviderTypeFAISS       ProviderType = "faiss"
+	ProviderTypeLlamaIndex  ProviderType = "llamaindex"
+	ProviderTypeMemGPT      ProviderType = "memgpt"
+	ProviderTypeCrewAI      ProviderType = "crewai"
+	ProviderTypeCharacterAI ProviderType = "characterai"
+	ProviderTypeReplika     ProviderType = "replika"
+	ProviderTypeAgnostic    ProviderType = "agnostic"
+	ProviderTypeAnima       ProviderType = "anima"
+	ProviderTypeGemma       ProviderType = "gemma"
+	ProviderTypeMem0        ProviderType = "mem0"
+	ProviderTypeZep         ProviderType = "zep"
+	ProviderTypeMemonto     ProviderType = "memonto"
+	ProviderTypeBaseAI      ProviderType = "baseai"
 )
 
 // VectorProvider defines interface for vector database providers
@@ -51,7 +85,7 @@ type VectorProvider interface {
 
 	// Metadata
 	GetName() string
-	GetType() memory.ProviderType
+	GetType() string
 	GetCapabilities() []string
 	GetConfiguration() interface{}
 	IsCloud() bool
@@ -175,8 +209,8 @@ type ProviderStats struct {
 // CostInfo represents cost information for a provider
 type CostInfo struct {
 	Currency      string             `json:"currency"`
-	ComputeCost   float64            `json:"compute_cost"`  // ReadCost mapped to ComputeCost
-	TransferCost  float64            `json:"transfer_cost"` // WriteCost mapped to TransferCost
+	ComputeCost   float64            `json:"compute_cost"`
+	TransferCost  float64            `json:"transfer_cost"`
 	StorageCost   float64            `json:"storage_cost"`
 	TotalCost     float64            `json:"total_cost"`
 	BillingPeriod string             `json:"billing_period"`

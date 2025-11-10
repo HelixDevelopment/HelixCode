@@ -15,13 +15,13 @@ type ProviderFactory struct {
 
 // FactoryConfig contains factory configuration
 type FactoryConfig struct {
-	DefaultTimeout     int64                               `json:"default_timeout"`
-	EnableValidation   bool                                `json:"enable_validation"`
-	EnableAutoConfig   bool                                `json:"enable_auto_config"`
-	PreferredProviders []memory.ProviderType               `json:"preferred_providers"`
-	CustomConfigs      map[memory.ProviderType]interface{} `json:"custom_configs"`
-	HealthCheckOnInit  bool                                `json:"health_check_on_init"`
-	FailFastOnErrors   bool                                `json:"fail_fast_on_errors"`
+	DefaultTimeout     int64                        `json:"default_timeout"`
+	EnableValidation   bool                         `json:"enable_validation"`
+	EnableAutoConfig   bool                         `json:"enable_auto_config"`
+	PreferredProviders []ProviderType               `json:"preferred_providers"`
+	CustomConfigs      map[ProviderType]interface{} `json:"custom_configs"`
+	HealthCheckOnInit  bool                         `json:"health_check_on_init"`
+	FailFastOnErrors   bool                         `json:"fail_fast_on_errors"`
 }
 
 // NewProviderFactory creates a new provider factory
@@ -43,7 +43,7 @@ func NewProviderFactory(config *FactoryConfig) *ProviderFactory {
 }
 
 // CreateProvider creates a provider with enhanced error handling and validation
-func (f *ProviderFactory) CreateProvider(providerType memory.ProviderType, config map[string]interface{}) (VectorProvider, error) {
+func (f *ProviderFactory) CreateProvider(providerType ProviderType, config map[string]interface{}) (VectorProvider, error) {
 	// Validate provider type exists
 	if err := f.validateProviderType(providerType); err != nil {
 		return nil, fmt.Errorf("provider validation failed: %w", err)
@@ -74,13 +74,13 @@ func (f *ProviderFactory) CreateProvider(providerType memory.ProviderType, confi
 }
 
 // CreateProviderWithDefaults creates a provider with default configuration
-func (f *ProviderFactory) CreateProviderWithDefaults(providerType memory.ProviderType) (VectorProvider, error) {
+func (f *ProviderFactory) CreateProviderWithDefaults(providerType ProviderType) (VectorProvider, error) {
 	defaults := f.getDefaultConfiguration(providerType)
 	return f.CreateProvider(providerType, defaults)
 }
 
 // CreateProviderChain creates a chain of providers for fallback scenarios
-func (f *ProviderFactory) CreateProviderChain(providerTypes []memory.ProviderType, configs []map[string]interface{}) (*ProviderChain, error) {
+func (f *ProviderFactory) CreateProviderChain(providerTypes []ProviderType, configs []map[string]interface{}) (*ProviderChain, error) {
 	if len(providerTypes) != len(configs) {
 		return nil, fmt.Errorf("provider types and configs length mismatch")
 	}
@@ -120,7 +120,7 @@ func (f *ProviderFactory) CreateHybridProvider(config *HybridProviderConfig) (*H
 }
 
 // validateProviderType validates that a provider type exists and is supported
-func (f *ProviderFactory) validateProviderType(providerType memory.ProviderType) error {
+func (f *ProviderFactory) validateProviderType(providerType ProviderType) error {
 	_, err := f.registry.GetProviderFactory(providerType)
 	if err != nil {
 		return fmt.Errorf("unknown provider type: %s", providerType)
@@ -130,12 +130,12 @@ func (f *ProviderFactory) validateProviderType(providerType memory.ProviderType)
 }
 
 // validateConfiguration validates provider configuration
-func (f *ProviderFactory) validateConfiguration(providerType memory.ProviderType, config map[string]interface{}) error {
+func (f *ProviderFactory) validateConfiguration(providerType ProviderType, config map[string]interface{}) error {
 	return f.registry.ValidateProviderConfig(providerType, config)
 }
 
 // applyAutoConfiguration applies automatic configuration based on provider type
-func (f *ProviderFactory) applyAutoConfiguration(providerType memory.ProviderType, config map[string]interface{}) map[string]interface{} {
+func (f *ProviderFactory) applyAutoConfiguration(providerType ProviderType, config map[string]interface{}) map[string]interface{} {
 	// Start with defaults
 	defaults := f.getDefaultConfiguration(providerType)
 
@@ -161,7 +161,7 @@ func (f *ProviderFactory) applyAutoConfiguration(providerType memory.ProviderTyp
 }
 
 // getDefaultConfiguration gets default configuration for a provider type
-func (f *ProviderFactory) getDefaultConfiguration(providerType memory.ProviderType) map[string]interface{} {
+func (f *ProviderFactory) getDefaultConfiguration(providerType ProviderType) map[string]interface{} {
 	return f.registry.GetDefaultConfig(providerType)
 }
 
@@ -454,8 +454,8 @@ func (pc *ProviderChain) GetName() string {
 	return "provider_chain"
 }
 
-func (pc *ProviderChain) GetType() memory.ProviderType {
-	return memory.ProviderTypeAgnostic
+func (pc *ProviderChain) GetType() ProviderType {
+	return ProviderTypeAgnostic
 }
 
 func (pc *ProviderChain) GetCapabilities() []string {
@@ -515,7 +515,7 @@ type HybridProviderConfig struct {
 
 // ProviderRef contains reference to a provider
 type ProviderRef struct {
-	Type   memory.ProviderType    `json:"type"`
+	Type   ProviderType           `json:"type"`
 	Config map[string]interface{} `json:"config"`
 }
 

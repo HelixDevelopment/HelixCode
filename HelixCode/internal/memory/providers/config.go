@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"dev.helix.code/internal/logging"
-	"dev.helix.code/internal/memory"
 )
 
 // ConfigManager manages provider configurations
@@ -31,7 +30,7 @@ type ProviderConfig struct {
 // SingleProviderConfig contains configuration for a single provider
 type SingleProviderConfig struct {
 	Name      string                 `json:"name"`
-	Type      memory.ProviderType    `json:"type"`
+	Type      ProviderType           `json:"type"`
 	Enabled   bool                   `json:"enabled"`
 	Config    map[string]interface{} `json:"config"`
 	Priority  int                    `json:"priority"`
@@ -219,7 +218,7 @@ func (cm *ConfigManager) createDefaultConfig() error {
 		DefaultProvider: "pinecone",
 		Providers: map[string]*SingleProviderConfig{
 			"pinecone": {
-				Type:     memory.ProviderTypePinecone,
+				Type:     ProviderTypePinecone,
 				Enabled:  true,
 				Priority: 1,
 				Tags:     []string{"production", "primary"},
@@ -621,7 +620,7 @@ func (cm *ConfigManager) MergeConfigs(base, override *ProviderConfig) *ProviderC
 }
 
 // CreateProviderTemplate creates a configuration template for a provider type
-func (cm *ConfigManager) CreateProviderTemplate(providerType memory.ProviderType) (*SingleProviderConfig, error) {
+func (cm *ConfigManager) CreateProviderTemplate(providerType ProviderType) (*SingleProviderConfig, error) {
 	registry := GetRegistry()
 	defaultConfig := registry.GetDefaultConfig(providerType)
 

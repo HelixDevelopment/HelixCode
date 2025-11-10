@@ -58,7 +58,7 @@ func NewZepProvider(config map[string]interface{}) (*ZepProvider, error) {
 
 // GetType returns the provider type
 func (p *ZepProvider) GetType() string {
-	return string(memory.ProviderTypeZep)
+	return string(ProviderTypeZep)
 }
 
 // GetName returns the provider name

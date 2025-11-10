@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"dev.helix.code/internal/logging"
-	"dev.helix.code/internal/memory"
 )
 
 // FAISSProvider implements VectorProvider for FAISS
@@ -643,8 +642,8 @@ func (p *FAISSProvider) GetName() string {
 }
 
 // GetType returns the provider type
-func (p *FAISSProvider) GetType() memory.ProviderType {
-	return memory.ProviderTypeFAISS
+func (p *FAISSProvider) GetType() string {
+	return string(ProviderTypeFAISS)
 }
 
 // GetCapabilities returns provider capabilities
