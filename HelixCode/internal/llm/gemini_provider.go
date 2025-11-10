@@ -26,17 +26,17 @@ type GeminiProvider struct {
 
 // Gemini API structures
 type geminiRequest struct {
-	Contents         []geminiContent       `json:"contents"`
-	SystemInstruction *geminiContent       `json:"systemInstruction,omitempty"`
-	Tools            []geminiTool          `json:"tools,omitempty"`
-	ToolConfig       *geminiToolConfig     `json:"toolConfig,omitempty"`
-	SafetySettings   []geminiSafetySetting `json:"safetySettings,omitempty"`
-	GenerationConfig *geminiGenConfig      `json:"generationConfig,omitempty"`
+	Contents          []geminiContent       `json:"contents"`
+	SystemInstruction *geminiContent        `json:"systemInstruction,omitempty"`
+	Tools             []geminiTool          `json:"tools,omitempty"`
+	ToolConfig        *geminiToolConfig     `json:"toolConfig,omitempty"`
+	SafetySettings    []geminiSafetySetting `json:"safetySettings,omitempty"`
+	GenerationConfig  *geminiGenConfig      `json:"generationConfig,omitempty"`
 }
 
 type geminiContent struct {
-	Role  string        `json:"role,omitempty"` // "user" or "model"
-	Parts []geminiPart  `json:"parts"`
+	Role  string       `json:"role,omitempty"` // "user" or "model"
+	Parts []geminiPart `json:"parts"`
 }
 
 type geminiPart interface{}
@@ -104,16 +104,16 @@ type geminiGenConfig struct {
 }
 
 type geminiResponse struct {
-	Candidates     []geminiCandidate   `json:"candidates"`
-	UsageMetadata  *geminiUsageMetadata `json:"usageMetadata,omitempty"`
+	Candidates     []geminiCandidate     `json:"candidates"`
+	UsageMetadata  *geminiUsageMetadata  `json:"usageMetadata,omitempty"`
 	PromptFeedback *geminiPromptFeedback `json:"promptFeedback,omitempty"`
 }
 
 type geminiCandidate struct {
 	Content       geminiContent        `json:"content"`
-	FinishReason  string              `json:"finishReason"`
+	FinishReason  string               `json:"finishReason"`
 	SafetyRatings []geminiSafetyRating `json:"safetyRatings,omitempty"`
-	Index         int                 `json:"index"`
+	Index         int                  `json:"index"`
 }
 
 type geminiSafetyRating struct {
@@ -122,14 +122,14 @@ type geminiSafetyRating struct {
 }
 
 type geminiPromptFeedback struct {
-	BlockReason   string              `json:"blockReason,omitempty"`
+	BlockReason   string               `json:"blockReason,omitempty"`
 	SafetyRatings []geminiSafetyRating `json:"safetyRatings,omitempty"`
 }
 
 type geminiUsageMetadata struct {
-	PromptTokenCount     int `json:"promptTokenCount"`
-	CandidatesTokenCount int `json:"candidatesTokenCount"`
-	TotalTokenCount      int `json:"totalTokenCount"`
+	PromptTokenCount        int `json:"promptTokenCount"`
+	CandidatesTokenCount    int `json:"candidatesTokenCount"`
+	TotalTokenCount         int `json:"totalTokenCount"`
 	CachedContentTokenCount int `json:"cachedContentTokenCount,omitempty"`
 }
 
@@ -380,7 +380,7 @@ func (gp *GeminiProvider) Generate(ctx context.Context, request *LLMRequest) (*L
 				response.ToolCalls = append(response.ToolCalls, ToolCall{
 					ID:   uuid.New().String(),
 					Type: "function",
-					Function: ToolCallFunction{
+					Function: ToolCallFunc{
 						Name:      name,
 						Arguments: args,
 					},

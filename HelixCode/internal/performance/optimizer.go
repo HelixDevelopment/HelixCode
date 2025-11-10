@@ -5,11 +5,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
-	"errors"
 )
 
 // PerformanceOptimizer provides comprehensive production performance optimization
@@ -23,79 +23,79 @@ type PerformanceOptimizer struct {
 
 // PerformanceConfig defines performance optimization configuration
 type PerformanceConfig struct {
-	CPUOptimization         bool   `json:"cpu_optimization"`
-	MemoryOptimization      bool   `json:"memory_optimization"`
-	GarbageCollection       bool   `json:"garbage_collection"`
-	ConcurrencyOptimization bool   `json:"concurrency_optimization"`
-	CacheOptimization       bool   `json:"cache_optimization"`
-	NetworkOptimization     bool   `json:"network_optimization"`
-	DatabaseOptimization    bool   `json:"database_optimization"`
-	WorkerOptimization      bool   `json:"worker_optimization"`
-	LLMOptimization        bool   `json:"llm_optimization"`
-	TargetThroughput       int    `json:"target_throughput"`
-	TargetLatency          string  `json:"target_latency"`
-	TargetCPUUtilization   float64 `json:"target_cpu_utilization"`
-	TargetMemoryUsage      int64   `json:"target_memory_usage"`
-	MaxResponseTime        string  `json:"max_response_time"`
-	MinCacheHitRate       float64 `json:"min_cache_hit_rate"`
-	MaxErrorRate          float64 `json:"max_error_rate"`
+	CPUOptimization         bool    `json:"cpu_optimization"`
+	MemoryOptimization      bool    `json:"memory_optimization"`
+	GarbageCollection       bool    `json:"garbage_collection"`
+	ConcurrencyOptimization bool    `json:"concurrency_optimization"`
+	CacheOptimization       bool    `json:"cache_optimization"`
+	NetworkOptimization     bool    `json:"network_optimization"`
+	DatabaseOptimization    bool    `json:"database_optimization"`
+	WorkerOptimization      bool    `json:"worker_optimization"`
+	LLMOptimization         bool    `json:"llm_optimization"`
+	TargetThroughput        int     `json:"target_throughput"`
+	TargetLatency           string  `json:"target_latency"`
+	TargetCPUUtilization    float64 `json:"target_cpu_utilization"`
+	TargetMemoryUsage       int64   `json:"target_memory_usage"`
+	MaxResponseTime         string  `json:"max_response_time"`
+	MinCacheHitRate         float64 `json:"min_cache_hit_rate"`
+	MaxErrorRate            float64 `json:"max_error_rate"`
 }
 
 // PerformanceMetrics tracks comprehensive performance metrics
 type PerformanceMetrics struct {
-	Timestamp            time.Time     `json:"timestamp"`
-	CPUUtilization      float64       `json:"cpu_utilization"`
-	MemoryUsage         int64         `json:"memory_usage_bytes"`
-	GCStats             GCStats       `json:"gc_stats"`
-	Throughput          int           `json:"throughput_per_second"`
-	AverageLatency       time.Duration `json:"average_latency"`
-	P95Latency          time.Duration `json:"p95_latency"`
-	P99Latency          time.Duration `json:"p99_latency"`
-	CacheHitRate        float64       `json:"cache_hit_rate"`
-	ErrorRate           float64       `json:"error_rate"`
-	WorkerUtilization   []float64     `json:"worker_utilization"`
-	LLMResponseTime     time.Duration `json:"llm_response_time"`
-	DatabaseQueryTime    time.Duration `json:"database_query_time"`
-	NetworkLatency       time.Duration `json:"network_latency"`
+	Timestamp         time.Time     `json:"timestamp"`
+	CPUUtilization    float64       `json:"cpu_utilization"`
+	MemoryUsage       int64         `json:"memory_usage_bytes"`
+	GCStats           GCStats       `json:"gc_stats"`
+	Throughput        int           `json:"throughput_per_second"`
+	AverageLatency    time.Duration `json:"average_latency"`
+	P95Latency        time.Duration `json:"p95_latency"`
+	P99Latency        time.Duration `json:"p99_latency"`
+	CacheHitRate      float64       `json:"cache_hit_rate"`
+	ErrorRate         float64       `json:"error_rate"`
+	WorkerUtilization []float64     `json:"worker_utilization"`
+	LLMResponseTime   time.Duration `json:"llm_response_time"`
+	DatabaseQueryTime time.Duration `json:"database_query_time"`
+	NetworkLatency    time.Duration `json:"network_latency"`
 }
 
 // GCStats tracks garbage collection performance
 type GCStats struct {
-	NumGC        uint32    `json:"num_gc"`
+	NumGC        uint32        `json:"num_gc"`
 	TotalGC      time.Duration `json:"total_gc"`
-	PauseTotalNs uint64    `json:"pause_total_ns"`
-	PauseNs      [256]uint64 `json:"pause_ns"`
-	HeapAlloc    uint64    `json:"heap_alloc_bytes"`
-	HeapSys      uint64    `json:"heap_sys_bytes"`
-	HeapIdle     uint64    `json:"heap_idle_bytes"`
-	HeapInuse    uint64    `json:"heap_inuse_bytes"`
-	StackInuse   uint64    `json:"stack_inuse_bytes"`
+	PauseTotalNs uint64        `json:"pause_total_ns"`
+	PauseNs      [256]uint64   `json:"pause_ns"`
+	HeapAlloc    uint64        `json:"heap_alloc_bytes"`
+	HeapSys      uint64        `json:"heap_sys_bytes"`
+	HeapIdle     uint64        `json:"heap_idle_bytes"`
+	HeapInuse    uint64        `json:"heap_inuse_bytes"`
+	StackInuse   uint64        `json:"stack_inuse_bytes"`
 }
 
 // Optimization represents a performance optimization
 type Optimization struct {
-	Name         string        `json:"name"`
-	Type         OptType       `json:"type"`
-	Description  string        `json:"description"`
-	Priority     int           `json:"priority"`
-	Enabled      bool          `json:"enabled"`
-	Config       interface{}   `json:"config"`
-	Results      *OptResult    `json:"results,omitempty"`
+	Name        string      `json:"name"`
+	Type        OptType     `json:"type"`
+	Description string      `json:"description"`
+	Priority    int         `json:"priority"`
+	Enabled     bool        `json:"enabled"`
+	Config      interface{} `json:"config"`
+	Results     *OptResult  `json:"results,omitempty"`
 }
 
 // OptType defines the type of optimization
 type OptType string
 
 const (
-	CPUOpt          OptType = "cpu"
-	MemoryOpt       OptType = "memory"
-	GCOpt          OptType = "garbage_collection"
-	ConcurrencyOpt  OptType = "concurrency"
-	CacheOpt        OptType = "cache"
-	NetworkOpt      OptType = "network"
-	DatabaseOpt     OptType = "database"
-	WorkerOpt       OptType = "worker"
-	LLMOpt          OptType = "llm"
+	CPUOpt           OptType = "cpu"
+	MemoryOpt        OptType = "memory"
+	GCOpt            OptType = "garbage_collection"
+	ConcurrencyOpt   OptType = "concurrency"
+	CacheOpt         OptType = "cache"
+	NetworkOpt       OptType = "network"
+	DatabaseOpt      OptType = "database"
+	WorkerOpt        OptType = "worker"
+	LLMOpt           OptType = "llm"
 	ComprehensiveOpt OptType = "comprehensive"
 )
 
@@ -107,7 +107,7 @@ type OptResult struct {
 	BeforeValue   float64   `json:"before_value"`
 	AfterValue    float64   `json:"after_value"`
 	MetricsChange string    `json:"metrics_change"`
-	ErrorMessage string    `json:"error_message,omitempty"`
+	ErrorMessage  string    `json:"error_message,omitempty"`
 }
 
 // NewPerformanceOptimizer creates a new performance optimizer
@@ -120,7 +120,7 @@ func NewPerformanceOptimizer(config PerformanceConfig) (*PerformanceOptimizer, e
 
 	// Initialize performance optimizations
 	if err := opt.initializeOptimizations(); err != nil {
-		return nil, errors.Wrap(err, "failed to initialize optimizations")
+		return nil, fmt.Errorf("failed to initialize optimizations: %w", err)
 	}
 
 	return opt, nil
@@ -183,7 +183,7 @@ func (po *PerformanceOptimizer) initializeOptimizations() error {
 				"GOMAXPROCS":      runtime.NumCPU(),
 				"GCPercent":       100,
 				"MaxMemory":       po.config.TargetMemoryUsage,
-				"TargetPauseTime":  "10ms",
+				"TargetPauseTime": "10ms",
 			},
 		}
 
@@ -227,9 +227,9 @@ func (po *PerformanceOptimizer) initializeOptimizations() error {
 			Priority:    1,
 			Enabled:     true,
 			Config: map[string]interface{}{
-				"lru_cache_size":       10000,
+				"lru_cache_size":        10000,
 				"redis_cache_size":      100000,
-				"cache_ttl":            "1h",
+				"cache_ttl":             "1h",
 				"cache_hit_rate_target": 0.95,
 			},
 		}
@@ -255,7 +255,7 @@ func (po *PerformanceOptimizer) initializeOptimizations() error {
 			Config: map[string]interface{}{
 				"max_connections": 100,
 				"connection_ttl":  "5m",
-				"keep_alive":     true,
+				"keep_alive":      true,
 			},
 		}
 
@@ -278,9 +278,9 @@ func (po *PerformanceOptimizer) initializeOptimizations() error {
 			Priority:    1,
 			Enabled:     true,
 			Config: map[string]interface{}{
-				"max_connections":     50,
-				"min_connections":     5,
-				"connection_lifetime": "1h",
+				"max_connections":      50,
+				"min_connections":      5,
+				"connection_lifetime":  "1h",
 				"max_idle_connections": 10,
 			},
 		}
@@ -329,8 +329,8 @@ func (po *PerformanceOptimizer) initializeOptimizations() error {
 			Priority:    1,
 			Enabled:     true,
 			Config: map[string]interface{}{
-				"batch_size":    10,
-				"batch_timeout": "100ms",
+				"batch_size":     10,
+				"batch_timeout":  "100ms",
 				"max_batch_size": 50,
 			},
 		}
@@ -342,8 +342,8 @@ func (po *PerformanceOptimizer) initializeOptimizations() error {
 			Priority:    2,
 			Enabled:     true,
 			Config: map[string]interface{}{
-				"cache_ttl":     "24h",
-				"cache_size":    10000,
+				"cache_ttl":      "24h",
+				"cache_size":     10000,
 				"cache_strategy": "lru",
 			},
 		}
@@ -367,11 +367,11 @@ func (po *PerformanceOptimizer) StartProductionOptimization(ctx context.Context)
 	log.Printf("   Target Memory Usage: %d MB", po.config.TargetMemoryUsage/(1024*1024))
 
 	startTime := time.Now()
-	
+
 	// Collect baseline metrics
 	baseline, err := po.collectMetrics()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to collect baseline metrics")
+		return nil, fmt.Errorf("failed to collect baseline metrics: %w", err)
 	}
 
 	log.Printf("📊 Baseline Metrics Collected:")
@@ -400,7 +400,7 @@ func (po *PerformanceOptimizer) StartProductionOptimization(ctx context.Context)
 
 	for _, optType := range optimizationOrder {
 		typeOptimizations := po.getOptimizationsByType(optType)
-		
+
 		if len(typeOptimizations) == 0 {
 			continue
 		}
@@ -445,7 +445,7 @@ func (po *PerformanceOptimizer) StartProductionOptimization(ctx context.Context)
 	// Collect post-optimization metrics
 	postMetrics, err := po.collectMetrics()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to collect post-optimization metrics")
+		return nil, fmt.Errorf("failed to collect post-optimization metrics: %w", err)
 	}
 
 	// Calculate overall improvements
@@ -453,15 +453,15 @@ func (po *PerformanceOptimizer) StartProductionOptimization(ctx context.Context)
 	duration := endTime.Sub(startTime)
 
 	overallResult := &OptimizationResult{
-		StartTime:      startTime,
-		EndTime:        endTime,
-		Duration:       duration,
-		TotalApplied:   applied,
-		Successful:     successful,
-		Failed:         failed,
-		Baseline:       baseline,
+		StartTime:        startTime,
+		EndTime:          endTime,
+		Duration:         duration,
+		TotalApplied:     applied,
+		Successful:       successful,
+		Failed:           failed,
+		Baseline:         baseline,
 		PostOptimization: postMetrics,
-		Optimizations: po.optimizations,
+		Optimizations:    po.optimizations,
 	}
 
 	// Calculate overall improvements
@@ -474,8 +474,8 @@ func (po *PerformanceOptimizer) StartProductionOptimization(ctx context.Context)
 		ThroughputImprovement: throughputImprovement,
 		LatencyImprovement:    latencyImprovement,
 		MemoryImprovement:     memoryImprovement,
-		CPUImprovement:       cpuImprovement,
-		OverallScore:         (throughputImprovement + latencyImprovement + memoryImprovement + cpuImprovement) / 4,
+		CPUImprovement:        cpuImprovement,
+		OverallScore:          (throughputImprovement + latencyImprovement + memoryImprovement + cpuImprovement) / 4,
 	}
 
 	log.Printf("\n📊 Production Optimization Complete:")
@@ -500,12 +500,10 @@ func (po *PerformanceOptimizer) StartProductionOptimization(ctx context.Context)
 
 // applyOptimization applies a single optimization
 func (po *PerformanceOptimizer) applyOptimization(ctx context.Context, opt *Optimization) (*OptResult, error) {
-	startTime := time.Now()
-
 	// Get baseline metric for this optimization type
 	beforeValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get baseline metric")
+		return nil, fmt.Errorf("failed to get baseline metric: %w", err)
 	}
 
 	// Apply optimization based on type
@@ -543,7 +541,7 @@ func (po *PerformanceOptimizer) applyCPUOptimization(ctx context.Context, opt *O
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue)
@@ -554,7 +552,7 @@ func (po *PerformanceOptimizer) applyCPUOptimization(ctx context.Context, opt *O
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "CPU utilization optimized",
+		MetricsChange: "CPU utilization optimized",
 	}, nil
 }
 
@@ -567,7 +565,7 @@ func (po *PerformanceOptimizer) applyMemoryOptimization(ctx context.Context, opt
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue) * -1 // Memory improvement is negative
@@ -578,7 +576,7 @@ func (po *PerformanceOptimizer) applyMemoryOptimization(ctx context.Context, opt
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Memory usage optimized",
+		MetricsChange: "Memory usage optimized",
 	}, nil
 }
 
@@ -594,7 +592,7 @@ func (po *PerformanceOptimizer) applyGCOptimization(ctx context.Context, opt *Op
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue) * -1 // GC improvement is negative
@@ -605,7 +603,7 @@ func (po *PerformanceOptimizer) applyGCOptimization(ctx context.Context, opt *Op
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Garbage collection optimized",
+		MetricsChange: "Garbage collection optimized",
 	}, nil
 }
 
@@ -618,7 +616,7 @@ func (po *PerformanceOptimizer) applyConcurrencyOptimization(ctx context.Context
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue)
@@ -629,7 +627,7 @@ func (po *PerformanceOptimizer) applyConcurrencyOptimization(ctx context.Context
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Concurrency optimized",
+		MetricsChange: "Concurrency optimized",
 	}, nil
 }
 
@@ -642,7 +640,7 @@ func (po *PerformanceOptimizer) applyCacheOptimization(ctx context.Context, opt 
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue)
@@ -653,7 +651,7 @@ func (po *PerformanceOptimizer) applyCacheOptimization(ctx context.Context, opt 
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Cache performance optimized",
+		MetricsChange: "Cache performance optimized",
 	}, nil
 }
 
@@ -666,7 +664,7 @@ func (po *PerformanceOptimizer) applyNetworkOptimization(ctx context.Context, op
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue) * -1 // Network improvement is negative
@@ -677,7 +675,7 @@ func (po *PerformanceOptimizer) applyNetworkOptimization(ctx context.Context, op
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Network performance optimized",
+		MetricsChange: "Network performance optimized",
 	}, nil
 }
 
@@ -690,7 +688,7 @@ func (po *PerformanceOptimizer) applyDatabaseOptimization(ctx context.Context, o
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue) * -1 // Database improvement is negative
@@ -701,7 +699,7 @@ func (po *PerformanceOptimizer) applyDatabaseOptimization(ctx context.Context, o
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Database performance optimized",
+		MetricsChange: "Database performance optimized",
 	}, nil
 }
 
@@ -714,7 +712,7 @@ func (po *PerformanceOptimizer) applyWorkerOptimization(ctx context.Context, opt
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue)
@@ -725,7 +723,7 @@ func (po *PerformanceOptimizer) applyWorkerOptimization(ctx context.Context, opt
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "Worker performance optimized",
+		MetricsChange: "Worker performance optimized",
 	}, nil
 }
 
@@ -738,7 +736,7 @@ func (po *PerformanceOptimizer) applyLLMOptimization(ctx context.Context, opt *O
 	// Get post-optimization metric
 	afterValue, err := po.getOptimizationMetric(opt.Type)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get post-optimization metric")
+		return nil, fmt.Errorf("failed to get post-optimization metric: %w", err)
 	}
 
 	improvement := calculateImprovement(beforeValue, afterValue) * -1 // LLM improvement is negative
@@ -749,7 +747,7 @@ func (po *PerformanceOptimizer) applyLLMOptimization(ctx context.Context, opt *O
 		Improvement:   improvement,
 		BeforeValue:   beforeValue,
 		AfterValue:    afterValue,
-		MetricsChange:  "LLM performance optimized",
+		MetricsChange: "LLM performance optimized",
 	}, nil
 }
 
@@ -769,29 +767,29 @@ func (po *PerformanceOptimizer) collectMetrics() (*PerformanceMetrics, error) {
 	runtime.ReadMemStats(&m)
 
 	return &PerformanceMetrics{
-		Timestamp:       time.Now(),
-		CPUUtilization:  simulateCPUUsage(),
-		MemoryUsage:     int64(m.HeapAlloc),
+		Timestamp:      time.Now(),
+		CPUUtilization: simulateCPUUsage(),
+		MemoryUsage:    int64(m.HeapAlloc),
 		GCStats: GCStats{
-			NumGC:       m.NumGC,
-			TotalGC:     time.Duration(m.PauseTotalNs) * time.Nanosecond,
+			NumGC:        m.NumGC,
+			TotalGC:      time.Duration(m.PauseTotalNs) * time.Nanosecond,
 			PauseTotalNs: m.PauseTotalNs,
-			HeapAlloc:   m.HeapAlloc,
-			HeapSys:     m.HeapSys,
-			HeapIdle:    m.HeapIdle,
-			HeapInuse:   m.HeapInuse,
-			StackInuse:  m.StackInuse,
+			HeapAlloc:    m.HeapAlloc,
+			HeapSys:      m.HeapSys,
+			HeapIdle:     m.HeapIdle,
+			HeapInuse:    m.HeapInuse,
+			StackInuse:   m.StackInuse,
 		},
-		Throughput:       simulateThroughput(),
+		Throughput:        simulateThroughput(),
 		AverageLatency:    simulateLatency(),
-		P95Latency:       simulateP95Latency(),
-		P99Latency:       simulateP99Latency(),
-		CacheHitRate:     simulateCacheHitRate(),
-		ErrorRate:        simulateErrorRate(),
+		P95Latency:        simulateP95Latency(),
+		P99Latency:        simulateP99Latency(),
+		CacheHitRate:      simulateCacheHitRate(),
+		ErrorRate:         simulateErrorRate(),
 		WorkerUtilization: simulateWorkerUtilization(),
-		LLMResponseTime:  simulateLLMResponseTime(),
+		LLMResponseTime:   simulateLLMResponseTime(),
 		DatabaseQueryTime: simulateDatabaseQueryTime(),
-		NetworkLatency:   simulateNetworkLatency(),
+		NetworkLatency:    simulateNetworkLatency(),
 	}, nil
 }
 
@@ -827,29 +825,29 @@ func (po *PerformanceOptimizer) getOptimizationMetric(optType OptType) (float64,
 
 // Supporting types and calculations
 type OptimizationResult struct {
-	StartTime          time.Time     `json:"start_time"`
-	EndTime            time.Time     `json:"end_time"`
-	Duration           time.Duration `json:"duration"`
-	TotalApplied       int           `json:"total_applied"`
-	Successful         int           `json:"successful"`
-	Failed             int           `json:"failed"`
-	Baseline           *PerformanceMetrics `json:"baseline"`
-	PostOptimization   *PerformanceMetrics `json:"post_optimization"`
+	StartTime          time.Time               `json:"start_time"`
+	EndTime            time.Time               `json:"end_time"`
+	Duration           time.Duration           `json:"duration"`
+	TotalApplied       int                     `json:"total_applied"`
+	Successful         int                     `json:"successful"`
+	Failed             int                     `json:"failed"`
+	Baseline           *PerformanceMetrics     `json:"baseline"`
+	PostOptimization   *PerformanceMetrics     `json:"post_optimization"`
 	Optimizations      map[string]Optimization `json:"optimizations"`
-	OverallImprovement  *OverallImprovement `json:"overall_improvement"`
+	OverallImprovement *OverallImprovement     `json:"overall_improvement"`
 }
 
 type OverallImprovement struct {
 	ThroughputImprovement float64 `json:"throughput_improvement_percent"`
 	LatencyImprovement    float64 `json:"latency_improvement_percent"`
 	MemoryImprovement     float64 `json:"memory_improvement_percent"`
-	CPUImprovement       float64 `json:"cpu_improvement_percent"`
-	OverallScore         float64 `json:"overall_improvement_score"`
+	CPUImprovement        float64 `json:"cpu_improvement_percent"`
+	OverallScore          float64 `json:"overall_improvement_score"`
 }
 
 // Simulation functions for demonstration
 func simulateCPUUsage() float64 {
-	return 45.5 + (float64(time.Now().UnixNano()%100) / 100) * 10
+	return 45.5 + (float64(time.Now().UnixNano()%100)/100)*10
 }
 
 func simulateThroughput() int {
@@ -869,17 +867,17 @@ func simulateP99Latency() time.Duration {
 }
 
 func simulateCacheHitRate() float64 {
-	return 0.85 + (float64(time.Now().UnixNano()%100) / 100) * 0.1
+	return 0.85 + (float64(time.Now().UnixNano()%100)/100)*0.1
 }
 
 func simulateErrorRate() float64 {
-	return 0.01 + (float64(time.Now().UnixNano()%100) / 100) * 0.005
+	return 0.01 + (float64(time.Now().UnixNano()%100)/100)*0.005
 }
 
 func simulateWorkerUtilization() []float64 {
 	utilization := make([]float64, 10)
 	for i := range utilization {
-		utilization[i] = 60.0 + (float64(time.Now().UnixNano()%100) / 100) * 20
+		utilization[i] = 60.0 + (float64(time.Now().UnixNano()%100)/100)*20
 	}
 	return utilization
 }
@@ -1102,7 +1100,7 @@ func (po *PerformanceOptimizer) generateKeyAchievements(result *OptimizationResu
 	}
 
 	resultStr := ""
-	for i, achievement := range achievements {
+	for _, achievement := range achievements {
 		resultStr += fmt.Sprintf("- %s\n", achievement)
 	}
 	return resultStr

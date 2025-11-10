@@ -31,13 +31,13 @@ type TOCEntry struct {
 
 // HTMLTemplate holds the data for HTML generation
 type HTMLTemplate struct {
-	Title       string
-	Content     string
-	TOC         []TOCEntry
-	Timestamp   string
-	Version     string
-	CSSInline   bool
-	JSInline    bool
+	Title     string
+	Content   string
+	TOC       []TOCEntry
+	Timestamp string
+	Version   string
+	CSSInline bool
+	JSInline  bool
 }
 
 const (

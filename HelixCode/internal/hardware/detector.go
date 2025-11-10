@@ -17,29 +17,6 @@ type HardwareInfo struct {
 	Platform PlatformInfo `json:"platform"`
 }
 
-// CPUInfo contains CPU-specific information
-type CPUInfo struct {
-	Architecture string `json:"architecture"`
-	Vendor       string `json:"vendor"`
-	Model        string `json:"model"`
-	Cores        int    `json:"cores"`
-	Threads      int    `json:"threads"`
-}
-
-// GPUInfo contains GPU-specific information
-type GPUInfo struct {
-	Vendor        string `json:"vendor"`
-	Model         string `json:"model"`
-	VRAM          string `json:"vram"`
-	SupportsCUDA  bool   `json:"supports_cuda"`
-	SupportsMetal bool   `json:"supports_metal"`
-}
-
-// MemoryInfo contains memory information
-type MemoryInfo struct {
-	TotalRAM string `json:"total_ram"`
-}
-
 // PlatformInfo contains platform-specific information
 type PlatformInfo struct {
 	OS           string `json:"os"`

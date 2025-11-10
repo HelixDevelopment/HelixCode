@@ -1,4 +1,4 @@
-package provider
+package cognee
 
 import (
 	"context"
@@ -8,16 +8,16 @@ import (
 	"strings"
 	"time"
 
-	// "dev.helix.code/internal/cognee" // Temporarily commented to break import cycle
 	"dev.helix.code/internal/hardware"
+	"dev.helix.code/internal/provider"
 	"github.com/google/uuid"
 )
 
 // CogneeIntegration handles provider integration with Cognee
 type CogneeIntegration struct {
 	providerName     string
-	providerInstance Provider
-	cogneeManager    *cognee.CogneeManager
+	providerInstance provider.Provider
+	cogneeManager    *CogneeManager
 	config           *CogneeIntegrationConfig
 	logger           Logger
 	initialized      bool
@@ -67,9 +67,17 @@ type CogneeIntegrationMetrics struct {
 	StartTime           time.Time     `json:"start_time"`
 }
 
+// Logger interface for logging
+type Logger interface {
+	Debug(msg string, args ...interface{})
+	Info(msg string, args ...interface{})
+	Warn(msg string, args ...interface{})
+	Error(msg string, args ...interface{})
+}
+
 // NewCogneeIntegration creates a new Cognee integration
-func NewCogneeIntegration(providerName string, provider Provider,
-	cogneeManager *cognee.CogneeManager, config *CogneeIntegrationConfig) *CogneeIntegration {
+func NewCogneeIntegration(providerName string, provider provider.Provider,
+	cogneeManager *CogneeManager, config *CogneeIntegrationConfig) *CogneeIntegration {
 
 	// Default configuration
 	if config == nil {
@@ -91,8 +99,8 @@ func NewCogneeIntegration(providerName string, provider Provider,
 		}
 	}
 
-	// Create logger
-	logger := NewLogger(fmt.Sprintf("cognee_integration_%s", providerName))
+	// Create logger (stub for now)
+	logger := &stubLogger{}
 
 	// Initialize features
 	features := make(map[string]bool)
@@ -243,8 +251,6 @@ func (ci *CogneeIntegration) GetMetrics() *CogneeIntegrationMetrics {
 	return &metrics
 }
 
-// Knowledge Integration Methods
-
 // AddKnowledge adds knowledge from provider to Cognee
 func (ci *CogneeIntegration) AddKnowledge(ctx context.Context, data interface{},
 	metadata map[string]interface{}) ([]string, error) {
@@ -381,76 +387,19 @@ func (ci *CogneeIntegration) GetInsights(ctx context.Context, analysisType strin
 	return insights, nil
 }
 
-// Provider-specific integration methods
-
-// ProcessProviderData processes data from provider and adds to knowledge graph
-func (ci *CogneeIntegration) ProcessProviderData(ctx context.Context,
-	dataType string, data interface{}) error {
-
-	if !ci.connected {
-		return fmt.Errorf("not connected to Cognee")
-	}
-
-	ci.logger.Debug("Processing provider data", "type", dataType)
-
-	// Process data based on provider type
-	switch ci.providerInstance.GetType() {
-	case ProviderTypeVLLM:
-		return ci.processVLLMData(ctx, dataType, data)
-	case ProviderTypeLocalAI:
-		return ci.processLocalAIData(ctx, dataType, data)
-	case ProviderTypeOllama:
-		return ci.processOllamaData(ctx, dataType, data)
-	case ProviderTypeLlamaCpp:
-		return ci.processLlamaCppData(ctx, dataType, data)
-	case ProviderTypeMLX:
-		return ci.processMLXData(ctx, dataType, data)
-	default:
-		return ci.processGenericData(ctx, dataType, data)
-	}
-}
-
-// OptimizeForModel optimizes integration for specific model
-func (ci *CogneeIntegration) OptimizeForModel(ctx context.Context,
-	modelName string) error {
-
-	if !ci.config.HostAware {
-		return nil
-	}
-
-	ci.logger.Debug("Optimizing for model", "model", modelName)
-
-	// Get model information
-	modelInfo := ci.providerInstance.GetModelInfo(modelName)
-	if modelInfo == nil {
-		return fmt.Errorf("model %s not found", modelName)
-	}
-
-	// Apply model-specific optimizations
-	optimizations := ci.generateModelOptimizations(modelInfo)
-
-	// Apply optimizations
-	if err := ci.applyOptimizations(ctx, optimizations); err != nil {
-		return fmt.Errorf("failed to apply optimizations: %w", err)
-	}
-
-	ci.logger.Debug("Model optimizations applied", "optimizations", len(optimizations))
-	return nil
-}
-
 // Private helper methods
 
 func (ci *CogneeIntegration) configureForProvider() error {
 	switch ci.providerInstance.GetType() {
-	case ProviderTypeVLLM:
+	case provider.ProviderTypeVLLM:
 		return ci.configureForVLLM()
-	case ProviderTypeLocalAI:
+	case provider.ProviderTypeLocalAI:
 		return ci.configureForLocalAI()
-	case ProviderTypeOllama:
+	case provider.ProviderTypeOllama:
 		return ci.configureForOllama()
-	case ProviderTypeLlamaCpp:
+	case provider.ProviderTypeLlamaCpp:
 		return ci.configureForLlamaCpp()
-	case ProviderTypeMLX:
+	case provider.ProviderTypeMLX:
 		return ci.configureForMLX()
 	default:
 		return ci.configureForGeneric()
@@ -748,117 +697,6 @@ func (ci *CogneeIntegration) updateProviderMetrics(operation string, duration ti
 	// Implementation would update actual metrics
 }
 
-func (ci *CogneeIntegration) generateModelOptimizations(modelInfo *ModelInfo) map[string]interface{} {
-	optimizations := make(map[string]interface{})
-
-	// Generate optimizations based on model characteristics
-	if modelInfo.MaxTokens > 4096 {
-		optimizations["max_context"] = 4096
-		optimizations["chunking"] = true
-	}
-
-	if modelInfo.Quantization != "" {
-		optimizations["quantization_aware"] = true
-		optimizations["precision"] = modelInfo.Quantization
-	}
-
-	if modelInfo.SizeGB > 10 {
-		optimizations["memory_efficient"] = true
-		optimizations["batch_reduction"] = true
-	}
-
-	return optimizations
-}
-
-func (ci *CogneeIntegration) applyOptimizations(ctx context.Context, optimizations map[string]interface{}) error {
-	// Apply optimizations to integration
-	ci.config.Optimization = optimizations
-
-	// Reconfigure integration if needed
-	if ci.connected {
-		// Apply optimizations to running integration
-	}
-
-	return nil
-}
-
-// Provider-specific data processing
-
-func (ci *CogneeIntegration) processVLLMData(ctx context.Context, dataType string, data interface{}) error {
-	// VLLM-specific data processing
-	ci.logger.Debug("Processing VLLM data", "type", dataType)
-
-	// Process data and add to knowledge graph
-	_, err := ci.AddKnowledge(ctx, data, map[string]interface{}{
-		"data_type": dataType,
-		"processor": "vllm",
-	})
-
-	return err
-}
-
-func (ci *CogneeIntegration) processLocalAIData(ctx context.Context, dataType string, data interface{}) error {
-	// LocalAI-specific data processing
-	ci.logger.Debug("Processing LocalAI data", "type", dataType)
-
-	_, err := ci.AddKnowledge(ctx, data, map[string]interface{}{
-		"data_type": dataType,
-		"processor": "localai",
-	})
-
-	return err
-}
-
-func (ci *CogneeIntegration) processOllamaData(ctx context.Context, dataType string, data interface{}) error {
-	// Ollama-specific data processing
-	ci.logger.Debug("Processing Ollama data", "type", dataType)
-
-	_, err := ci.AddKnowledge(ctx, data, map[string]interface{}{
-		"data_type": dataType,
-		"processor": "ollama",
-	})
-
-	return err
-}
-
-func (ci *CogneeIntegration) processLlamaCppData(ctx context.Context, dataType string, data interface{}) error {
-	// Llama.cpp-specific data processing
-	ci.logger.Debug("Processing Llama.cpp data", "type", dataType)
-
-	_, err := ci.AddKnowledge(ctx, data, map[string]interface{}{
-		"data_type": dataType,
-		"processor": "llamacpp",
-	})
-
-	return err
-}
-
-func (ci *CogneeIntegration) processMLXData(ctx context.Context, dataType string, data interface{}) error {
-	// MLX-specific data processing
-	ci.logger.Debug("Processing MLX data", "type", dataType)
-
-	_, err := ci.AddKnowledge(ctx, data, map[string]interface{}{
-		"data_type": dataType,
-		"processor": "mlx",
-	})
-
-	return err
-}
-
-func (ci *CogneeIntegration) processGenericData(ctx context.Context, dataType string, data interface{}) error {
-	// Generic data processing
-	ci.logger.Debug("Processing generic data", "type", dataType)
-
-	_, err := ci.AddKnowledge(ctx, data, map[string]interface{}{
-		"data_type": dataType,
-		"processor": "generic",
-	})
-
-	return err
-}
-
-// Feature initialization methods
-
 func (ci *CogneeIntegration) initializeAutoKnowledge(ctx context.Context) error {
 	// Initialize auto-knowledge features
 	ci.logger.Debug("Initializing auto-knowledge")
@@ -887,4 +725,23 @@ func (ci *CogneeIntegration) initializeAnalytics(ctx context.Context) error {
 	// Implementation would configure analytics engines
 
 	return nil
+}
+
+// Stub logger implementation
+type stubLogger struct{}
+
+func (l *stubLogger) Debug(msg string, args ...interface{}) {
+	fmt.Printf("[DEBUG] "+msg+"\n", args...)
+}
+
+func (l *stubLogger) Info(msg string, args ...interface{}) {
+	fmt.Printf("[INFO] "+msg+"\n", args...)
+}
+
+func (l *stubLogger) Warn(msg string, args ...interface{}) {
+	fmt.Printf("[WARN] "+msg+"\n", args...)
+}
+
+func (l *stubLogger) Error(msg string, args ...interface{}) {
+	fmt.Printf("[ERROR] "+msg+"\n", args...)
 }

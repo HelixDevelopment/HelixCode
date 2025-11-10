@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/helixcode/helixcode/internal/memory"
-	"github.com/helixcode/helixcode/internal/persistence"
-	"github.com/helixcode/helixcode/internal/session"
-	"github.com/helixcode/helixcode/internal/template"
+	"dev.helix.code/internal/memory"
+	"dev.helix.code/internal/persistence"
+	"dev.helix.code/internal/session"
+	"dev.helix.code/internal/template"
 )
 
 func main() {

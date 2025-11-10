@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/helixcode/cmd"
+	"dev.helix.code/cmd"
 )
 
 func main() {

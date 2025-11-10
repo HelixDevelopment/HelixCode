@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/helixcode/internal/llm"
+	"dev.helix.code/internal/llm"
 )
 
 // mainCmd represents the main command that starts everything
@@ -47,7 +47,7 @@ All 11+ local LLM providers are automatically:
 func init() {
 	rootCmd.AddCommand(mainCmd)
 	rootCmd.AddCommand(autoCmd)
-	
+
 	// Add flags for main command
 	mainCmd.Flags().Bool("auto", true, "Enable full automation")
 	mainCmd.Flags().Bool("monitor", true, "Enable health monitoring")
@@ -203,8 +203,8 @@ func showProviderStatus(manager *llm.AutoLLMManager) {
 		statusIcon := getStatusIcon(provider.Status)
 		healthIcon := getHealthIcon(provider.Health.IsHealthy)
 		port := provider.DefaultPort
-		
-		fmt.Printf("%s %-12s %s %s Port: %d\n", 
+
+		fmt.Printf("%s %-12s %s %s Port: %d\n",
 			statusIcon, name, healthIcon, port)
 	}
 	fmt.Println()
@@ -219,14 +219,14 @@ func showRunningEndpoints(manager *llm.AutoLLMManager) {
 
 func showAutomationStatus(manager *llm.AutoLLMManager) {
 	status := manager.GetStatus()
-	
+
 	fmt.Println("🤖 Automation Status:")
 	fmt.Println("─" * 50)
-	
+
 	installedCount := 0
 	runningCount := 0
 	healthyCount := 0
-	
+
 	for _, provider := range status {
 		if provider.Status == "installed" || provider.Status == "running" {
 			installedCount++
@@ -238,7 +238,7 @@ func showAutomationStatus(manager *llm.AutoLLMManager) {
 			healthyCount++
 		}
 	}
-	
+
 	fmt.Printf("📦 Providers Installed: %d/11\n", installedCount)
 	fmt.Printf("🚀 Providers Running:   %d/11\n", runningCount)
 	fmt.Printf("🟢 Providers Healthy:  %d/11\n", healthyCount)
@@ -251,10 +251,10 @@ func showAutomationStatus(manager *llm.AutoLLMManager) {
 func runBackgroundProcesses(manager *llm.AutoLLMManager) {
 	// This would run various background processes
 	// For demo purposes, just show periodic status updates
-	
+
 	ticker := time.NewTicker(2 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -266,7 +266,7 @@ func runBackgroundProcesses(manager *llm.AutoLLMManager) {
 					running++
 				}
 			}
-			
+
 			fmt.Printf("\r🤖 Automation Status: %d/11 providers running | Optimizing performance...", running)
 		}
 	}

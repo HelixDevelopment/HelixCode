@@ -5,9 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"math"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -18,9 +20,9 @@ import (
 
 // EnvVarTransformer substitutes environment variables
 type EnvVarTransformer struct {
-	Prefix     string // Environment variable prefix, e.g., "HELIX_"
-	Default    string // Default value if environment variable not found
-	Required    bool   // Whether the environment variable is required
+	Prefix   string // Environment variable prefix, e.g., "HELIX_"
+	Default  string // Default value if environment variable not found
+	Required bool   // Whether the environment variable is required
 }
 
 func (t *EnvVarTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -147,10 +149,10 @@ func (t *PathTransformer) GetDescription() string {
 
 // URLTransformer validates and normalizes URLs
 type URLTransformer struct {
-	DefaultScheme string // Default scheme if not provided
-	ForceHTTPS     bool   // Force HTTPS scheme
-	NormalizePath  bool   // Normalize URL path
-	AddTrailingSlash bool // Add trailing slash to path
+	DefaultScheme    string // Default scheme if not provided
+	ForceHTTPS       bool   // Force HTTPS scheme
+	NormalizePath    bool   // Normalize URL path
+	AddTrailingSlash bool   // Add trailing slash to path
 }
 
 func (t *URLTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -262,9 +264,9 @@ func (t *DurationTransformer) GetDescription() string {
 
 // BooleanTransformer converts various boolean representations
 type BooleanTransformer struct {
-	TrueValues  []string // Values that represent true
-	FalseValues []string // Values that represent false
-	CaseSensitive bool  // Whether string matching is case sensitive
+	TrueValues    []string // Values that represent true
+	FalseValues   []string // Values that represent false
+	CaseSensitive bool     // Whether string matching is case sensitive
 }
 
 func (t *BooleanTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -325,8 +327,8 @@ func (t *BooleanTransformer) GetDescription() string {
 
 // TemplateTransformer applies template substitution
 type TemplateTransformer struct {
-	Variables map[string]interface{} // Template variables
-	Delimiters []string              // Template delimiters [left, right]
+	Variables  map[string]interface{} // Template variables
+	Delimiters []string               // Template delimiters [left, right]
 }
 
 func (t *TemplateTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -349,19 +351,19 @@ func (t *TemplateTransformer) Transform(value interface{}, context *TransformCon
 
 	// Merge variables
 	variables := make(map[string]interface{})
-	
+
 	// Add context variables
 	if context.Environment != nil {
 		for k, v := range context.Environment {
 			variables[k] = v
 		}
 	}
-	
+
 	// Add transformer variables
 	for k, v := range t.Variables {
 		variables[k] = v
 	}
-	
+
 	// Add special variables
 	variables["timestamp"] = time.Now().Format(time.RFC3339)
 	variables["property"] = context.Property
@@ -387,9 +389,9 @@ func (t *TemplateTransformer) GetDescription() string {
 
 // HashTransformer generates hash values
 type HashTransformer struct {
-	Algorithm  string // Hash algorithm: md5, sha256
-	Format     string // Output format: hex, base64
-	Salt       string // Optional salt for hashing
+	Algorithm string // Hash algorithm: md5, sha256
+	Format    string // Output format: hex, base64
+	Salt      string // Optional salt for hashing
 }
 
 func (t *HashTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -440,9 +442,9 @@ func (t *HashTransformer) GetDescription() string {
 
 // Base64Transformer encodes/decodes base64 values
 type Base64Transformer struct {
-	Encode bool   // Whether to encode (true) or decode (false)
-	URLSafe bool   // Whether to use URL-safe encoding
-	Padding bool   // Whether to include padding
+	Encode  bool // Whether to encode (true) or decode (false)
+	URLSafe bool // Whether to use URL-safe encoding
+	Padding bool // Whether to include padding
 }
 
 func (t *Base64Transformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -463,7 +465,7 @@ func (t *Base64Transformer) Transform(value interface{}, context *TransformConte
 		} else {
 			str = base64.StdEncoding.EncodeToString(data)
 		}
-		
+
 		if !t.Padding {
 			str = strings.TrimRight(str, "=")
 		}
@@ -471,7 +473,7 @@ func (t *Base64Transformer) Transform(value interface{}, context *TransformConte
 		// Decode from base64
 		var data []byte
 		var err error
-		
+
 		if t.URLSafe {
 			// Add padding if missing
 			if len(str)%4 != 0 {
@@ -481,11 +483,11 @@ func (t *Base64Transformer) Transform(value interface{}, context *TransformConte
 		} else {
 			data, err = base64.StdEncoding.DecodeString(str)
 		}
-		
+
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode base64: %w", err)
 		}
-		
+
 		str = string(data)
 	}
 
@@ -502,9 +504,9 @@ func (t *Base64Transformer) GetDescription() string {
 
 // RegexTransformer applies regex substitution
 type RegexTransformer struct {
-	Pattern    string // Regular expression pattern
+	Pattern     string // Regular expression pattern
 	Replacement string // Replacement string
-	Flags      string // Regex flags (i, m, s, etc.)
+	Flags       string // Regex flags (i, m, s, etc.)
 }
 
 func (t *RegexTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -517,19 +519,19 @@ func (t *RegexTransformer) Transform(value interface{}, context *TransformContex
 		return value, nil
 	}
 
-	// Compile regex with flags
-	flags := 0
+	// Build regex pattern with flags
+	pattern := t.Pattern
 	if strings.Contains(t.Flags, "i") {
-		flags |= regexp.IGNORECASE
+		pattern = "(?i:" + pattern + ")"
 	}
 	if strings.Contains(t.Flags, "m") {
-		flags |= regexp.MULTILINE
+		pattern = "(?m:" + pattern + ")"
 	}
 	if strings.Contains(t.Flags, "s") {
-		flags |= regexp.DOTALL
+		pattern = "(?s:" + pattern + ")"
 	}
 
-	re, err := regexp.Compile(t.Pattern)
+	re, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regex pattern: %w", err)
 	}
@@ -551,8 +553,8 @@ func (t *RegexTransformer) GetDescription() string {
 type SplitTransformer struct {
 	Separator string // Separator for splitting
 	Trim      bool   // Trim whitespace from parts
-	Filter     bool   // Filter out empty parts
-	Limit      int    // Maximum number of splits
+	Filter    bool   // Filter out empty parts
+	Limit     int    // Maximum number of splits
 }
 
 func (t *SplitTransformer) Transform(value interface{}, context *TransformContext) (interface{}, error) {
@@ -582,11 +584,11 @@ func (t *SplitTransformer) Transform(value interface{}, context *TransformContex
 		if t.Trim {
 			part = strings.TrimSpace(part)
 		}
-		
+
 		if t.Filter && part == "" {
 			continue
 		}
-		
+
 		result = append(result, part)
 	}
 
@@ -637,7 +639,7 @@ func (t *JoinTransformer) GetDescription() string {
 
 // NumericTransformer performs numeric operations
 type NumericTransformer struct {
-	Operation string // Operation: add, subtract, multiply, divide, pow
+	Operation string  // Operation: add, subtract, multiply, divide, pow
 	Value     float64 // Value to use in operation
 	Round     int     // Decimal places to round to
 }
@@ -734,8 +736,8 @@ func (t *NumericTransformer) GetDescription() string {
 // NewEnvVarTransformer creates an environment variable transformer
 func NewEnvVarTransformer(prefix, defaultValue string, required bool) *EnvVarTransformer {
 	return &EnvVarTransformer{
-		Prefix:  prefix,
-		Default: defaultValue,
+		Prefix:   prefix,
+		Default:  defaultValue,
 		Required: required,
 	}
 }
@@ -743,21 +745,21 @@ func NewEnvVarTransformer(prefix, defaultValue string, required bool) *EnvVarTra
 // NewPathTransformer creates a path transformer
 func NewPathTransformer(basePath string, expandUser, expandEnv, absolutize, normalize, createMissing bool) *PathTransformer {
 	return &PathTransformer{
-		BasePath:       basePath,
-		ExpandUser:     expandUser,
-		ExpandEnv:      expandEnv,
+		BasePath:      basePath,
+		ExpandUser:    expandUser,
+		ExpandEnv:     expandEnv,
 		Absolutize:    absolutize,
-		Normalize:      normalize,
-		CreateMissing:  createMissing,
+		Normalize:     normalize,
+		CreateMissing: createMissing,
 	}
 }
 
 // NewURLTransformer creates a URL transformer
 func NewURLTransformer(defaultScheme string, forceHTTPS, normalizePath, addTrailingSlash bool) *URLTransformer {
 	return &URLTransformer{
-		DefaultScheme:   defaultScheme,
-		ForceHTTPS:      forceHTTPS,
-		NormalizePath:   normalizePath,
+		DefaultScheme:    defaultScheme,
+		ForceHTTPS:       forceHTTPS,
+		NormalizePath:    normalizePath,
 		AddTrailingSlash: addTrailingSlash,
 	}
 }
@@ -773,8 +775,8 @@ func NewDurationTransformer(defaultUnit string, allowZero bool) *DurationTransfo
 // NewBooleanTransformer creates a boolean transformer
 func NewBooleanTransformer(trueValues, falseValues []string, caseSensitive bool) *BooleanTransformer {
 	return &BooleanTransformer{
-		TrueValues:   trueValues,
-		FalseValues:  falseValues,
+		TrueValues:    trueValues,
+		FalseValues:   falseValues,
 		CaseSensitive: caseSensitive,
 	}
 }
@@ -782,7 +784,7 @@ func NewBooleanTransformer(trueValues, falseValues []string, caseSensitive bool)
 // NewTemplateTransformer creates a template transformer
 func NewTemplateTransformer(variables map[string]interface{}, delimiters []string) *TemplateTransformer {
 	return &TemplateTransformer{
-		Variables: variables,
+		Variables:  variables,
 		Delimiters: delimiters,
 	}
 }
@@ -800,7 +802,7 @@ func NewHashTransformer(algorithm, format, salt string) *HashTransformer {
 func NewBase64Transformer(encode, urlSafe, padding bool) *Base64Transformer {
 	return &Base64Transformer{
 		Encode:  encode,
-		URLSafe:  urlSafe,
+		URLSafe: urlSafe,
 		Padding: padding,
 	}
 }
@@ -808,9 +810,9 @@ func NewBase64Transformer(encode, urlSafe, padding bool) *Base64Transformer {
 // NewRegexTransformer creates a regex transformer
 func NewRegexTransformer(pattern, replacement, flags string) *RegexTransformer {
 	return &RegexTransformer{
-		Pattern:    pattern,
+		Pattern:     pattern,
 		Replacement: replacement,
-		Flags:      flags,
+		Flags:       flags,
 	}
 }
 
@@ -839,6 +841,3 @@ func NewNumericTransformer(operation string, value float64, round int) *NumericT
 		Round:     round,
 	}
 }
-
-// Import required for math operations
-import "math"

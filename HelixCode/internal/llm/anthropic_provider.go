@@ -41,22 +41,22 @@ type anthropicRequest struct {
 }
 
 type anthropicMessage struct {
-	Role    string                  `json:"role"`
-	Content interface{}             `json:"content"` // string or []anthropicContentBlock
+	Role    string      `json:"role"`
+	Content interface{} `json:"content"` // string or []anthropicContentBlock
 }
 
 // Prompt caching support - based on OpenCode and Codename Goose implementations
 type anthropicContentBlock struct {
-	Type         string                   `json:"type"` // "text", "image", "tool_use", "tool_result"
-	Text         string                   `json:"text,omitempty"`
-	Source       *anthropicImageSource    `json:"source,omitempty"`
-	CacheControl *anthropicCacheControl   `json:"cache_control,omitempty"` // For caching specific blocks
-	ToolUseID    string                   `json:"tool_use_id,omitempty"`
-	ID           string                   `json:"id,omitempty"`
-	Name         string                   `json:"name,omitempty"`
-	Input        map[string]interface{}   `json:"input,omitempty"`
-	Content      interface{}              `json:"content,omitempty"` // For tool results
-	IsError      bool                     `json:"is_error,omitempty"`
+	Type         string                 `json:"type"` // "text", "image", "tool_use", "tool_result"
+	Text         string                 `json:"text,omitempty"`
+	Source       *anthropicImageSource  `json:"source,omitempty"`
+	CacheControl *anthropicCacheControl `json:"cache_control,omitempty"` // For caching specific blocks
+	ToolUseID    string                 `json:"tool_use_id,omitempty"`
+	ID           string                 `json:"id,omitempty"`
+	Name         string                 `json:"name,omitempty"`
+	Input        map[string]interface{} `json:"input,omitempty"`
+	Content      interface{}            `json:"content,omitempty"` // For tool results
+	IsError      bool                   `json:"is_error,omitempty"`
 }
 
 type anthropicSystemBlock struct {
@@ -85,44 +85,44 @@ type anthropicTool struct {
 
 // Extended thinking configuration - automatic based on prompt content
 type anthropicThinkingConfig struct {
-	Type          string `json:"type"`           // "enabled"
-	Budget        int    `json:"budget,omitempty"` // Token budget for thinking
+	Type   string `json:"type"`             // "enabled"
+	Budget int    `json:"budget,omitempty"` // Token budget for thinking
 }
 
 type anthropicResponse struct {
-	ID           string                    `json:"id"`
-	Type         string                    `json:"type"` // "message"
-	Role         string                    `json:"role"`
-	Content      []anthropicContentBlock   `json:"content"`
-	Model        string                    `json:"model"`
-	StopReason   string                    `json:"stop_reason"`
-	StopSequence string                    `json:"stop_sequence,omitempty"`
-	Usage        anthropicUsage            `json:"usage"`
+	ID           string                  `json:"id"`
+	Type         string                  `json:"type"` // "message"
+	Role         string                  `json:"role"`
+	Content      []anthropicContentBlock `json:"content"`
+	Model        string                  `json:"model"`
+	StopReason   string                  `json:"stop_reason"`
+	StopSequence string                  `json:"stop_sequence,omitempty"`
+	Usage        anthropicUsage          `json:"usage"`
 }
 
 type anthropicUsage struct {
-	InputTokens            int `json:"input_tokens"`
-	OutputTokens           int `json:"output_tokens"`
-	CacheCreationTokens    int `json:"cache_creation_input_tokens,omitempty"`
-	CacheReadTokens        int `json:"cache_read_input_tokens,omitempty"`
+	InputTokens         int `json:"input_tokens"`
+	OutputTokens        int `json:"output_tokens"`
+	CacheCreationTokens int `json:"cache_creation_input_tokens,omitempty"`
+	CacheReadTokens     int `json:"cache_read_input_tokens,omitempty"`
 }
 
 // Streaming event types
 type anthropicStreamEvent struct {
-	Type         string                  `json:"type"`
-	Message      *anthropicResponse      `json:"message,omitempty"`
-	Index        int                     `json:"index,omitempty"`
-	ContentBlock *anthropicContentBlock  `json:"content_block,omitempty"`
-	Delta        *anthropicDelta         `json:"delta,omitempty"`
-	Usage        *anthropicUsage         `json:"usage,omitempty"`
+	Type         string                 `json:"type"`
+	Message      *anthropicResponse     `json:"message,omitempty"`
+	Index        int                    `json:"index,omitempty"`
+	ContentBlock *anthropicContentBlock `json:"content_block,omitempty"`
+	Delta        *anthropicDelta        `json:"delta,omitempty"`
+	Usage        *anthropicUsage        `json:"usage,omitempty"`
 }
 
 type anthropicDelta struct {
-	Type         string                 `json:"type"`
-	Text         string                 `json:"text,omitempty"`
-	PartialJSON  string                 `json:"partial_json,omitempty"`
-	StopReason   string                 `json:"stop_reason,omitempty"`
-	StopSequence string                 `json:"stop_sequence,omitempty"`
+	Type         string `json:"type"`
+	Text         string `json:"text,omitempty"`
+	PartialJSON  string `json:"partial_json,omitempty"`
+	StopReason   string `json:"stop_reason,omitempty"`
+	StopSequence string `json:"stop_sequence,omitempty"`
 }
 
 type anthropicError struct {
@@ -358,7 +358,7 @@ func (ap *AnthropicProvider) Generate(ctx context.Context, request *LLMRequest) 
 			response.ToolCalls = append(response.ToolCalls, ToolCall{
 				ID:   block.ID,
 				Type: "function",
-				Function: ToolCallFunction{
+				Function: ToolCallFunc{
 					Name:      block.Name,
 					Arguments: block.Input,
 				},
@@ -674,7 +674,7 @@ func (ap *AnthropicProvider) parseStreamingResponse(body io.Reader, ch chan<- LL
 				currentToolCalls = append(currentToolCalls, ToolCall{
 					ID:   event.ContentBlock.ID,
 					Type: "function",
-					Function: ToolCallFunction{
+					Function: ToolCallFunc{
 						Name:      event.ContentBlock.Name,
 						Arguments: make(map[string]interface{}),
 					},

@@ -4,9 +4,10 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
-	"github.com/helixcode/helixcode/internal/session"
+	"dev.helix.code/internal/session"
 )
 
 func main() {
@@ -15,10 +16,16 @@ func main() {
 	mgr := session.NewManager()
 
 	// Working on multiple features
-	authSess := mgr.Create("implement-auth", session.ModeBuilding, "api")
+	authSess, err := mgr.Create("project1", "implement-auth", "api", session.ModeBuilding)
+	if err != nil {
+		log.Fatal(err)
+	}
 	authSess.AddTag("auth")
 
-	paymentSess := mgr.Create("implement-payments", session.ModeBuilding, "api")
+	paymentSess, err := mgr.Create("project1", "implement-payments", "api", session.ModeBuilding)
+	if err != nil {
+		log.Fatal(err)
+	}
 	paymentSess.AddTag("payments")
 
 	// Start auth work

@@ -16,13 +16,13 @@ import (
 // ConfigurationValidator provides comprehensive validation for configuration
 type ConfigurationValidator struct {
 	rules       map[string][]ValidationRule
-	schema      *ConfigurationSchema
+	schema      *AdvancedConfigurationSchema
 	strictMode  bool
 	customRules map[string]func(interface{}) error
 }
 
-// ConfigurationSchema represents the configuration structure schema
-type ConfigurationSchema struct {
+// AdvancedConfigurationSchema represents the configuration structure schema
+type AdvancedConfigurationSchema struct {
 	Version     string                     `json:"version"`
 	Properties  map[string]*SchemaProperty `json:"properties"`
 	Required    []string                   `json:"required"`
@@ -1029,11 +1029,6 @@ func (v *ConfigurationValidator) initializeDefaultRules() {
 		return nil
 	})
 }
-
-// Helper functions for creating pointers
-func intPtr(i int) *int             { return &i }
-func float64Ptr(f float64) *float64 { return &f }
-func boolPtr(b bool) *bool          { return &b }
 
 // NewConfigurationMigrator creates a new configuration migrator
 func NewConfigurationMigrator(currentVersion string) *ConfigurationMigrator {

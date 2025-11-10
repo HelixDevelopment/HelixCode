@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,15 +10,81 @@ import (
 
 // Missing types for command line interface
 
+// ModelCapability represents the capabilities of an LLM model
+type ModelCapability string
+
+// Model capability constants
+const (
+	CapabilityTextGeneration ModelCapability = "text_generation"
+	CapabilityCodeGeneration ModelCapability = "code_generation"
+	CapabilityCodeAnalysis   ModelCapability = "code_analysis"
+	CapabilityPlanning       ModelCapability = "planning"
+	CapabilityDebugging      ModelCapability = "debugging"
+	CapabilityRefactoring    ModelCapability = "refactoring"
+	CapabilityTesting        ModelCapability = "testing"
+	CapabilityVision         ModelCapability = "vision"
+	CapabilityReasoning      ModelCapability = "reasoning"
+	CapabilityAnalysis       ModelCapability = "analysis"
+	CapabilityWriting        ModelCapability = "writing"
+	CapabilityDocumentation  ModelCapability = "documentation"
+)
+
+// ProviderType represents the type of LLM provider
+type ProviderType string
+
+// Provider type constants
+const (
+	ProviderTypeOpenAI      ProviderType = "openai"
+	ProviderTypeAnthropic   ProviderType = "anthropic"
+	ProviderTypeGemini      ProviderType = "gemini"
+	ProviderTypeVertexAI    ProviderType = "vertexai"
+	ProviderTypeAzure       ProviderType = "azure"
+	ProviderTypeBedrock     ProviderType = "bedrock"
+	ProviderTypeGroq        ProviderType = "groq"
+	ProviderTypeQwen        ProviderType = "qwen"
+	ProviderTypeCopilot     ProviderType = "copilot"
+	ProviderTypeOpenRouter  ProviderType = "openrouter"
+	ProviderTypeXAI         ProviderType = "xai"
+	ProviderTypeOllama      ProviderType = "ollama"
+	ProviderTypeLocal       ProviderType = "local"
+	ProviderTypeLlamaCpp    ProviderType = "llamacpp"
+	ProviderTypeVLLM        ProviderType = "vllm"
+	ProviderTypeLocalAI     ProviderType = "localai"
+	ProviderTypeFastChat    ProviderType = "fastchat"
+	ProviderTypeTextGen     ProviderType = "textgen"
+	ProviderTypeLMStudio    ProviderType = "lmstudio"
+	ProviderTypeJan         ProviderType = "jan"
+	ProviderTypeKoboldAI    ProviderType = "koboldai"
+	ProviderTypeGPT4All     ProviderType = "gpt4all"
+	ProviderTypeTabbyAPI    ProviderType = "tabbyapi"
+	ProviderTypeMLX         ProviderType = "mlx"
+	ProviderTypeMistralRS   ProviderType = "mistralrs"
+	ProviderTypeMemGPT      ProviderType = "memgpt"
+	ProviderTypeCrewAI      ProviderType = "crewai"
+	ProviderTypeCharacterAI ProviderType = "characterai"
+	ProviderTypeReplika     ProviderType = "replika"
+	ProviderTypeAnima       ProviderType = "anima"
+	ProviderTypeGemma       ProviderType = "gemma"
+	ProviderTypeLlamaIndex  ProviderType = "llamaindex"
+	ProviderTypeCohere      ProviderType = "cohere"
+	ProviderTypeHuggingFace ProviderType = "huggingface"
+	ProviderTypeMistral     ProviderType = "mistral"
+	ProviderTypeClickHouse  ProviderType = "clickhouse"
+	ProviderTypeSupabase    ProviderType = "supabase"
+	ProviderTypeDeepLake    ProviderType = "deeplake"
+	ProviderTypeChroma      ProviderType = "chroma"
+	ProviderTypeAgnostic    ProviderType = "agnostic"
+)
+
 type ModelInfo struct {
 	ID             string            `json:"id"`
 	Name           string            `json:"name"`
-	Provider       string            `json:"provider"`
-	ContextSize    int              `json:"context_size"`
-	MaxTokens      int              `json:"max_tokens"`
+	Provider       ProviderType      `json:"provider"`
+	ContextSize    int               `json:"context_size"`
+	MaxTokens      int               `json:"max_tokens"`
 	Capabilities   []ModelCapability `json:"capabilities"`
-	SupportsTools  bool             `json:"supports_tools"`
-	SupportsVision bool             `json:"supports_vision"`
+	SupportsTools  bool              `json:"supports_tools"`
+	SupportsVision bool              `json:"supports_vision"`
 	Description    string            `json:"description"`
 }
 
@@ -31,21 +98,22 @@ type ProviderConfigEntry struct {
 }
 
 type ProviderHealth struct {
-	Status      string    `json:"status"`
-	LastCheck   time.Time `json:"last_check"`
-	Latency     time.Duration `json:"latency"`
-	ModelCount  int       `json:"model_count"`
-	ErrorCount  int       `json:"error_count"`
-	Message     string    `json:"message"`
+	Status     string        `json:"status"`
+	LastCheck  time.Time     `json:"last_check"`
+	Latency    time.Duration `json:"latency"`
+	ModelCount int           `json:"model_count"`
+	ErrorCount int           `json:"error_count"`
+	Message    string        `json:"message"`
 }
 
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
+	Name    string `json:"name,omitempty"`
 }
 
 type Tool struct {
-	Type     string        `json:"type"`
+	Type     string       `json:"type"`
 	Function ToolFunction `json:"function"`
 }
 
@@ -69,12 +137,12 @@ type ToolCallFunc struct {
 type LLMRequest struct {
 	ID               uuid.UUID              `json:"id"`
 	Model            string                 `json:"model"`
-	Messages         []Message               `json:"messages"`
+	Messages         []Message              `json:"messages"`
 	MaxTokens        int                    `json:"max_tokens"`
-	Temperature      float64                 `json:"temperature"`
-	TopP             float64                 `json:"top_p"`
-	Stream           bool                    `json:"stream"`
-	Tools            []Tool                  `json:"tools"`
+	Temperature      float64                `json:"temperature"`
+	TopP             float64                `json:"top_p"`
+	Stream           bool                   `json:"stream"`
+	Tools            []Tool                 `json:"tools"`
 	ToolChoice       interface{}            `json:"tool_choice"`
 	Stop             []string               `json:"stop"`
 	ThinkingBudget   int                    `json:"thinking_budget"`
@@ -101,27 +169,18 @@ type Usage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 
-type CacheConfig struct {
-	Enabled  bool          `json:"enabled"`
-	Strategy CacheStrategy `json:"strategy"`
-	TTL      time.Duration `json:"ttl"`
-}
-
-type CacheStrategy string
-
-type ReasoningConfig struct {
-	Enabled         bool          `json:"enabled"`
-	MaxDepth        int           `json:"max_depth"`
-	ThinkingBudget  int           `json:"thinking_budget"`
-	ModelType       ReasoningModel `json:"model_type"`
-	Timeout         time.Duration `json:"timeout"`
-}
-
-type ReasoningModel string
+// Common errors
+var (
+	ErrModelNotFound       = fmt.Errorf("model not found")
+	ErrInvalidRequest      = fmt.Errorf("invalid request")
+	ErrRateLimited         = fmt.Errorf("rate limited")
+	ErrContextTooLong      = fmt.Errorf("context too long")
+	ErrProviderUnavailable = fmt.Errorf("provider unavailable")
+)
 
 // Provider interface
 type Provider interface {
-	GetType() string
+	GetType() ProviderType
 	GetName() string
 	GetModels() []ModelInfo
 	GetCapabilities() []ModelCapability

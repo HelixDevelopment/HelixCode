@@ -27,14 +27,14 @@ type bedrockClientInterface interface {
 
 // BedrockProvider implements the Provider interface for AWS Bedrock
 type BedrockProvider struct {
-	config                ProviderConfigEntry
-	awsConfig             aws.Config
-	bedrockClient         bedrockClientInterface
-	models                []ModelInfo
-	region                string
-	crossRegionInference  bool
-	inferenceProfileArn   string
-	lastHealth            *ProviderHealth
+	config               ProviderConfigEntry
+	awsConfig            aws.Config
+	bedrockClient        bedrockClientInterface
+	models               []ModelInfo
+	region               string
+	crossRegionInference bool
+	inferenceProfileArn  string
+	lastHealth           *ProviderHealth
 }
 
 // Model family types for request/response transformation
@@ -50,14 +50,14 @@ const (
 
 // Claude request/response structures (Anthropic format via Bedrock)
 type bedrockClaudeRequest struct {
-	Messages      []anthropicMessage       `json:"messages"`
-	System        interface{}              `json:"system,omitempty"`
-	MaxTokens     int                      `json:"max_tokens"`
-	Temperature   float64                  `json:"temperature,omitempty"`
-	TopP          float64                  `json:"top_p,omitempty"`
-	Tools         []anthropicTool          `json:"tools,omitempty"`
-	ToolChoice    interface{}              `json:"tool_choice,omitempty"`
-	StopSequences []string                 `json:"stop_sequences,omitempty"`
+	Messages      []anthropicMessage `json:"messages"`
+	System        interface{}        `json:"system,omitempty"`
+	MaxTokens     int                `json:"max_tokens"`
+	Temperature   float64            `json:"temperature,omitempty"`
+	TopP          float64            `json:"top_p,omitempty"`
+	Tools         []anthropicTool    `json:"tools,omitempty"`
+	ToolChoice    interface{}        `json:"tool_choice,omitempty"`
+	StopSequences []string           `json:"stop_sequences,omitempty"`
 }
 
 type bedrockClaudeResponse struct {
@@ -73,7 +73,7 @@ type bedrockClaudeResponse struct {
 
 // Titan request/response structures
 type bedrockTitanRequest struct {
-	InputText       string                    `json:"inputText"`
+	InputText            string              `json:"inputText"`
 	TextGenerationConfig *titanTextGenConfig `json:"textGenerationConfig,omitempty"`
 }
 
@@ -85,8 +85,8 @@ type titanTextGenConfig struct {
 }
 
 type bedrockTitanResponse struct {
-	InputTextTokenCount int                   `json:"inputTextTokenCount"`
-	Results             []titanResult         `json:"results"`
+	InputTextTokenCount int           `json:"inputTextTokenCount"`
+	Results             []titanResult `json:"results"`
 }
 
 type titanResult struct {
@@ -97,26 +97,26 @@ type titanResult struct {
 
 // AI21 Jurassic request/response structures
 type bedrockJurassicRequest struct {
-	Prompt      string   `json:"prompt"`
-	MaxTokens   int      `json:"maxTokens"`
-	Temperature float64  `json:"temperature,omitempty"`
-	TopP        float64  `json:"topP,omitempty"`
+	Prompt        string   `json:"prompt"`
+	MaxTokens     int      `json:"maxTokens"`
+	Temperature   float64  `json:"temperature,omitempty"`
+	TopP          float64  `json:"topP,omitempty"`
 	StopSequences []string `json:"stopSequences,omitempty"`
 }
 
 type bedrockJurassicResponse struct {
-	ID          string              `json:"id"`
-	Prompt      jurassicPrompt      `json:"prompt"`
+	ID          string               `json:"id"`
+	Prompt      jurassicPrompt       `json:"prompt"`
 	Completions []jurassicCompletion `json:"completions"`
 }
 
 type jurassicPrompt struct {
-	Text   string `json:"text"`
+	Text   string        `json:"text"`
 	Tokens []interface{} `json:"tokens"`
 }
 
 type jurassicCompletion struct {
-	Data         jurassicData `json:"data"`
+	Data         jurassicData         `json:"data"`
 	FinishReason jurassicFinishReason `json:"finishReason"`
 }
 
@@ -131,13 +131,13 @@ type jurassicFinishReason struct {
 
 // Cohere Command request/response structures
 type bedrockCommandRequest struct {
-	Message       string                  `json:"message"`
-	ChatHistory   []cohereMessage         `json:"chat_history,omitempty"`
-	Temperature   float64                 `json:"temperature,omitempty"`
-	P             float64                 `json:"p,omitempty"`
-	MaxTokens     int                     `json:"max_tokens,omitempty"`
-	StopSequences []string                `json:"stop_sequences,omitempty"`
-	Tools         []cohereTool            `json:"tools,omitempty"`
+	Message       string          `json:"message"`
+	ChatHistory   []cohereMessage `json:"chat_history,omitempty"`
+	Temperature   float64         `json:"temperature,omitempty"`
+	P             float64         `json:"p,omitempty"`
+	MaxTokens     int             `json:"max_tokens,omitempty"`
+	StopSequences []string        `json:"stop_sequences,omitempty"`
+	Tools         []cohereTool    `json:"tools,omitempty"`
 }
 
 type cohereMessage struct {
@@ -152,13 +152,13 @@ type cohereTool struct {
 }
 
 type bedrockCommandResponse struct {
-	ResponseID   string                 `json:"response_id"`
-	Text         string                 `json:"text"`
-	GenerationID string                 `json:"generation_id"`
-	ChatHistory  []cohereMessage        `json:"chat_history"`
-	FinishReason string                 `json:"finish_reason"`
-	Meta         cohereMetaData         `json:"meta"`
-	ToolCalls    []cohereToolCall       `json:"tool_calls,omitempty"`
+	ResponseID   string           `json:"response_id"`
+	Text         string           `json:"text"`
+	GenerationID string           `json:"generation_id"`
+	ChatHistory  []cohereMessage  `json:"chat_history"`
+	FinishReason string           `json:"finish_reason"`
+	Meta         cohereMetaData   `json:"meta"`
+	ToolCalls    []cohereToolCall `json:"tool_calls,omitempty"`
 }
 
 type cohereMetaData struct {
@@ -185,19 +185,19 @@ type bedrockLlamaRequest struct {
 }
 
 type bedrockLlamaResponse struct {
-	Generation         string `json:"generation"`
-	PromptTokenCount   int    `json:"prompt_token_count"`
-	GenerationTokenCount int  `json:"generation_token_count"`
-	StopReason         string `json:"stop_reason"`
+	Generation           string `json:"generation"`
+	PromptTokenCount     int    `json:"prompt_token_count"`
+	GenerationTokenCount int    `json:"generation_token_count"`
+	StopReason           string `json:"stop_reason"`
 }
 
 // Streaming chunk structures
 type bedrockStreamChunk struct {
-	Delta        string `json:"delta,omitempty"`
-	Text         string `json:"text,omitempty"`
-	StopReason   string `json:"stop_reason,omitempty"`
-	OutputText   string `json:"outputText,omitempty"` // Titan
-	Type         string `json:"type,omitempty"`        // Claude
+	Delta        string                 `json:"delta,omitempty"`
+	Text         string                 `json:"text,omitempty"`
+	StopReason   string                 `json:"stop_reason,omitempty"`
+	OutputText   string                 `json:"outputText,omitempty"`    // Titan
+	Type         string                 `json:"type,omitempty"`          // Claude
 	ContentBlock *anthropicContentBlock `json:"content_block,omitempty"` // Claude
 }
 
@@ -783,7 +783,7 @@ func (bp *BedrockProvider) parseClaudeResponse(body []byte, requestID uuid.UUID,
 			response.ToolCalls = append(response.ToolCalls, ToolCall{
 				ID:   block.ID,
 				Type: "function",
-				Function: ToolCallFunction{
+				Function: ToolCallFunc{
 					Name:      block.Name,
 					Arguments: block.Input,
 				},
@@ -879,7 +879,7 @@ func (bp *BedrockProvider) parseCommandResponse(body []byte, requestID uuid.UUID
 		response.ToolCalls = append(response.ToolCalls, ToolCall{
 			ID:   uuid.New().String(),
 			Type: "function",
-			Function: ToolCallFunction{
+			Function: ToolCallFunc{
 				Name:      toolCall.Name,
 				Arguments: toolCall.Parameters,
 			},
