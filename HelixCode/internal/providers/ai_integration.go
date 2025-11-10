@@ -383,16 +383,12 @@ func (ai *AIIntegration) GenerateEmbeddingWithProvider(ctx context.Context, prov
 
 	start := time.Now()
 	defer func() {
-		ai.logger.Debug("Embedding generation completed",
-			"provider", providerName,
-			"duration", time.Since(start))
+		ai.logger.Debug("Embedding generation completed: provider=%s, duration=%v", providerName, time.Since(start))
 	}()
 
 	embedding, err := provider.GenerateEmbedding(ctx, text)
 	if err != nil {
-		ai.logger.Error("Embedding generation failed",
-			"provider", providerName,
-			"error", err)
+		ai.logger.Error("Embedding generation failed: provider=%s, error=%v", providerName, err)
 		return nil, err
 	}
 
@@ -412,8 +408,7 @@ func (ai *AIIntegration) GenerateEmbeddingWithProvider(ctx context.Context, prov
 		}
 
 		if err := ai.vector.StoreVector(ctx, vectorData); err != nil {
-			ai.logger.Warn("Failed to store embedding in vector database",
-				"error", err)
+			ai.logger.Warn("Failed to store embedding in vector database: %v", err)
 		}
 	}
 
@@ -437,16 +432,12 @@ func (ai *AIIntegration) ClassifyTextWithProvider(ctx context.Context, providerN
 
 	start := time.Now()
 	defer func() {
-		ai.logger.Debug("Text classification completed",
-			"provider", providerName,
-			"duration", time.Since(start))
+		ai.logger.Debug("Text classification completed: provider=%s, duration=%v", providerName, time.Since(start))
 	}()
 
 	result, err := provider.ClassifyText(ctx, text, categories)
 	if err != nil {
-		ai.logger.Error("Text classification failed",
-			"provider", providerName,
-			"error", err)
+		ai.logger.Error("Text classification failed: provider=%s, error=%v", providerName, err)
 		return nil, err
 	}
 
@@ -470,16 +461,12 @@ func (ai *AIIntegration) ExtractEntitiesWithProvider(ctx context.Context, provid
 
 	start := time.Now()
 	defer func() {
-		ai.logger.Debug("Entity extraction completed",
-			"provider", providerName,
-			"duration", time.Since(start))
+		ai.logger.Debug("Entity extraction completed: provider=%s, duration=%v", providerName, time.Since(start))
 	}()
 
 	entities, err := provider.ExtractEntities(ctx, text)
 	if err != nil {
-		ai.logger.Error("Entity extraction failed",
-			"provider", providerName,
-			"error", err)
+		ai.logger.Error("Entity extraction failed: provider=%s, error=%v", providerName, err)
 		return nil, err
 	}
 
@@ -613,28 +600,28 @@ func (ai *AIIntegration) Stop(ctx context.Context) error {
 	// Stop vector integration
 	if ai.vector != nil {
 		if err := ai.vector.Stop(ctx); err != nil {
-			ai.logger.Warn("Failed to stop vector integration", "error", err)
+			ai.logger.Warn("Failed to stop vector integration: %v", err)
 		}
 	}
 
 	// Stop memory integration
 	if ai.memory != nil {
 		if err := ai.memory.Stop(ctx); err != nil {
-			ai.logger.Warn("Failed to stop memory integration", "error", err)
+			ai.logger.Warn("Failed to stop memory integration: %v", err)
 		}
 	}
 
 	// Stop conversation manager
 	if ai.conversationMgr != nil {
 		if err := ai.conversationMgr.Stop(ctx); err != nil {
-			ai.logger.Warn("Failed to stop conversation manager", "error", err)
+			ai.logger.Warn("Failed to stop conversation manager: %v", err)
 		}
 	}
 
 	// Stop personality manager
 	if ai.personalityMgr != nil {
 		if err := ai.personalityMgr.Stop(ctx); err != nil {
-			ai.logger.Warn("Failed to stop personality manager", "error", err)
+			ai.logger.Warn("Failed to stop personality manager: %v", err)
 		}
 	}
 
@@ -729,7 +716,7 @@ func NewConversationManager(ai *AIIntegration, config *AIConfig) *ConversationMa
 	compressionCoordinator, err := compressioniface.NewCoordinatorFactory(nil, compressionConfig)
 	if err != nil {
 		// Log error but don't fail initialization
-		ai.logger.Warn("Failed to initialize compression coordinator", "error", err)
+		ai.logger.Warn("Failed to initialize compression coordinator: %v", err)
 		compressionCoordinator = nil
 	}
 

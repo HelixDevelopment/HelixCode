@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"dev.helix.code/internal/config"
+	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/memory/providers"
@@ -340,8 +340,7 @@ func (m *MockVectorProvider) CreateIndex(ctx context.Context, collection string,
 	m.indices[indexName] = &memory.IndexInfo{
 		Name:      config.Name,
 		Type:      config.Type,
-		Dimension: config.Dimension,
-		Metric:    config.Metric,
+		Status:    "active",
 		CreatedAt: time.Now(),
 	}
 
@@ -888,12 +887,51 @@ func (m *MockVectorProviderManager) GetProviderHealth(ctx context.Context) (map[
 }
 
 // GetProviderPerformance mocks getting provider performance
-func (m *MockVectorProviderManager) GetProviderPerformance() map[string]providers.ProviderPerformance {
+func (m *MockVectorProviderManager) GetProviderPerformance() map[string]llm.ProviderPerformance {
 	args := m.Called()
 	if perf := args.Get(0); perf != nil {
-		return perf.(map[string]providers.ProviderPerformance)
+		return perf.(map[string]llm.ProviderPerformance)
 	}
-	return make(map[string]providers.ProviderPerformance)
+	return make(map[string]llm.ProviderPerformance)
+}
+
+// APIKeyConfig represents API key configuration
+type APIKeyConfig struct {
+	PrimaryKeys []string `json:"primary_keys"`
+}
+
+// MemoryData represents memory data
+type MemoryData struct {
+	ID        string                 `json:"id"`
+	Content   string                 `json:"content"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	Type      string                 `json:"type"`
+	CreatedAt time.Time              `json:"created_at"`
+}
+
+// ConversationMessage represents a conversation message
+type ConversationMessage struct {
+	ID        string    `json:"id"`
+	Role      string    `json:"role"`
+	Content   string    `json:"content"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+// MemoryType represents memory type
+type MemoryType string
+
+// SearchResult represents search result
+type SearchResult struct {
+	Data  []*MemoryData `json:"data"`
+	Score float64       `json:"score"`
+}
+
+// ConversationSummary represents conversation summary
+type ConversationSummary struct {
+	ID           string    `json:"id"`
+	Summary      string    `json:"summary"`
+	CreatedAt    time.Time `json:"created_at"`
+	MessageCount int       `json:"message_count"`
 }
 
 // MockAPIKeyManager mocks the APIKeyManager
@@ -901,13 +939,13 @@ type MockAPIKeyManager struct {
 	mock.Mock
 	mu sync.Mutex
 
-	keys map[string]config.APIKeyConfig
+	keys map[string]APIKeyConfig
 }
 
 // NewMockAPIKeyManager creates a new mock API key manager
 func NewMockAPIKeyManager(t interface{}) *MockAPIKeyManager {
 	return &MockAPIKeyManager{
-		keys: make(map[string]config.APIKeyConfig),
+		keys: make(map[string]APIKeyConfig),
 	}
 }
 
@@ -925,7 +963,7 @@ func (m *MockAPIKeyManager) SetAPIKey(provider, key string) error {
 	args := m.Called(provider, key)
 	if args.Error(0) == nil {
 		m.mu.Lock()
-		m.keys[provider] = config.APIKeyConfig{
+		m.keys[provider] = APIKeyConfig{
 			PrimaryKeys: []string{key},
 		}
 		m.mu.Unlock()
