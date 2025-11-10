@@ -6,44 +6,44 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // MilvusProvider implements VectorProvider for Milvus
 type MilvusProvider struct {
-	config       *MilvusConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       MilvusClient
-	collections  map[string]*memory.CollectionConfig
-	stats        *ProviderStats
+	config      *MilvusConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	client      MilvusClient
+	collections map[string]*memory.CollectionConfig
+	stats       *ProviderStats
 }
 
 // MilvusConfig contains Milvus provider configuration
 type MilvusConfig struct {
-	Host               string            `json:"host"`
-	Port               int               `json:"port"`
-	Username           string            `json:"username"`
-	Password           string            `json:"password"`
-	Database           string            `json:"database"`
-	Timeout            time.Duration     `json:"timeout"`
-	MaxRetries         int               `json:"max_retries"`
-	MinRetryBackoff    time.Duration     `json:"min_retry_backoff"`
-	MaxRetryBackoff    time.Duration     `json:"max_retry_backoff"`
-	BatchSize          int               `json:"batch_size"`
-	ParallelSearch     bool              `json:"parallel_search"`
-	SearchTimeout      time.Duration     `json:"search_timeout"`
-	IndexType         string            `json:"index_type"`
-	MetricType        string            `json:"metric_type"`
-	ConsistencyLevel  string            `json:"consistency_level"`
-	GPUEnabled        bool              `json:"gpu_enabled"`
-	GPUMemory         int64             `json:"gpu_memory"`
-	CacheEnabled       bool              `json:"cache_enabled"`
-	CacheSize         int64             `json:"cache_size"`
+	Host             string        `json:"host"`
+	Port             int           `json:"port"`
+	Username         string        `json:"username"`
+	Password         string        `json:"password"`
+	Database         string        `json:"database"`
+	Timeout          time.Duration `json:"timeout"`
+	MaxRetries       int           `json:"max_retries"`
+	MinRetryBackoff  time.Duration `json:"min_retry_backoff"`
+	MaxRetryBackoff  time.Duration `json:"max_retry_backoff"`
+	BatchSize        int           `json:"batch_size"`
+	ParallelSearch   bool          `json:"parallel_search"`
+	SearchTimeout    time.Duration `json:"search_timeout"`
+	IndexType        string        `json:"index_type"`
+	MetricType       string        `json:"metric_type"`
+	ConsistencyLevel string        `json:"consistency_level"`
+	GPUEnabled       bool          `json:"gpu_enabled"`
+	GPUMemory        int64         `json:"gpu_memory"`
+	CacheEnabled     bool          `json:"cache_enabled"`
+	CacheSize        int64         `json:"cache_size"`
 }
 
 // MilvusClient represents Milvus client interface
@@ -67,25 +67,25 @@ type MilvusClient interface {
 // NewMilvusProvider creates a new Milvus provider
 func NewMilvusProvider(config map[string]interface{}) (VectorProvider, error) {
 	milvusConfig := &MilvusConfig{
-		Host:              "localhost",
-		Port:              19530,
-		Username:          "",
-		Password:          "",
-		Database:          "default",
-		Timeout:           30 * time.Second,
-		MaxRetries:        3,
-		MinRetryBackoff:    500 * time.Millisecond,
-		MaxRetryBackoff:    30 * time.Second,
-		BatchSize:         1000,
-		ParallelSearch:     true,
-		SearchTimeout:      10 * time.Second,
-		IndexType:         "IVF_FLAT",
-		MetricType:        "L2",
-		ConsistencyLevel:  "Strong",
-		GPUEnabled:        false,
-		GPUMemory:         2048,
-		CacheEnabled:       true,
-		CacheSize:         1024,
+		Host:             "localhost",
+		Port:             19530,
+		Username:         "",
+		Password:         "",
+		Database:         "default",
+		Timeout:          30 * time.Second,
+		MaxRetries:       3,
+		MinRetryBackoff:  500 * time.Millisecond,
+		MaxRetryBackoff:  30 * time.Second,
+		BatchSize:        1000,
+		ParallelSearch:   true,
+		SearchTimeout:    10 * time.Second,
+		IndexType:        "IVF_FLAT",
+		MetricType:       "L2",
+		ConsistencyLevel: "Strong",
+		GPUEnabled:       false,
+		GPUMemory:        2048,
+		CacheEnabled:     true,
+		CacheSize:        1024,
 	}
 
 	// Parse configuration
@@ -101,10 +101,10 @@ func NewMilvusProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -286,10 +286,10 @@ func (p *MilvusProvider) Search(ctx context.Context, query *memory.VectorQuery) 
 	// Check if collection exists
 	if _, exists := p.collections[collection]; !exists {
 		return &memory.VectorSearchResult{
-			Results:  []*memory.VectorSearchResultItem{},
-			Total:    0,
-			Query:    query,
-			Duration: time.Since(start),
+			Results:   []*memory.VectorSearchResultItem{},
+			Total:     0,
+			Query:     query,
+			Duration:  time.Since(start),
 			Namespace: query.Namespace,
 		}, nil
 	}
@@ -321,10 +321,10 @@ func (p *MilvusProvider) FindSimilar(ctx context.Context, embedding []float64, k
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     p.config.MetricType,
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  p.config.MetricType,
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -586,7 +586,7 @@ func (p *MilvusProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -691,17 +691,17 @@ func (p *MilvusProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
-		"gpu_enabled":     boolToFloat64(p.config.GPUEnabled),
-		"cache_enabled":    boolToFloat64(p.config.CacheEnabled),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
+		"gpu_enabled":       boolToFloat64(p.config.GPUEnabled),
+		"cache_enabled":     boolToFloat64(p.config.CacheEnabled),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"milvus_server": "required",
 		},
@@ -754,7 +754,7 @@ func (p *MilvusProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     0.0,
 		Currency:      "USD",
-		BillingPeriod:  "N/A",
+		BillingPeriod: "N/A",
 		FreeTierUsed:  false,
 		FreeTierLimit: 0.0,
 	}
@@ -814,11 +814,11 @@ func (p *MilvusProvider) loadCollections(ctx context.Context) error {
 
 func (p *MilvusProvider) createCollection(ctx context.Context, collection string, dimension int) error {
 	config := &memory.CollectionConfig{
-		Name:       collection,
-		Dimension:  dimension,
-		Metric:     p.config.MetricType,
-		Shards:     1,
-		Replicas:   1,
+		Name:      collection,
+		Dimension: dimension,
+		Metric:    p.config.MetricType,
+		Shards:    1,
+		Replicas:  1,
 	}
 
 	if err := p.client.CreateCollection(ctx, collection, config); err != nil {
@@ -845,27 +845,18 @@ func (p *MilvusProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
 	}
-}
-
-// Utility functions
-
-func boolToFloat64(b bool) float64 {
-	if b {
-		return 1.0
-	}
-	return 0.0
 }
 
 // MilvusGRPCClient is a mock gRPC client for Milvus
@@ -930,10 +921,10 @@ func (c *MilvusGRPCClient) Search(ctx context.Context, collection string, query 
 			ID:       fmt.Sprintf("result_%d", i),
 			Vector:   make([]float64, 1536),
 			Score:    1.0 - float64(i)*0.1,
-			Distance:  float64(i) * 0.1,
+			Distance: float64(i) * 0.1,
 			Metadata: map[string]interface{}{
 				"collection": collection,
-				"index":     i,
+				"index":      i,
 			},
 		})
 	}

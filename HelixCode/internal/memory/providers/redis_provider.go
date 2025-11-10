@@ -8,43 +8,43 @@ import (
 
 	"github.com/go-redis/redis/v8"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // RedisProvider implements VectorProvider for Redis Stack
 type RedisProvider struct {
-	config       *RedisConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       redis.Cmdable
-	collections  map[string]*memory.CollectionConfig
-	stats        *ProviderStats
+	config      *RedisConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	client      redis.Cmdable
+	collections map[string]*memory.CollectionConfig
+	stats       *ProviderStats
 }
 
 // RedisConfig contains Redis provider configuration
 type RedisConfig struct {
-	Host               string            `json:"host"`
-	Port               int               `json:"port"`
-	Password           string            `json:"password"`
-	Database           int               `json:"database"`
-	Username           string            `json:"username"`
-	MaxConnections     int               `json:"max_connections"`
-	PoolTimeout        time.Duration     `json:"pool_timeout"`
-	IdleTimeout        time.Duration     `json:"idle_timeout"`
-	IdleCheckFrequency time.Duration     `json:"idle_check_frequency"`
-	MaxRetries         int               `json:"max_retries"`
-	MinRetryBackoff    time.Duration     `json:"min_retry_backoff"`
-	MaxRetryBackoff    time.Duration     `json:"max_retry_backoff"`
-	EnableSearch       bool              `json:"enable_search"`
-	EnableJSON        bool              `json:"enable_json"`
-	EnableTimeseries  bool              `json:"enable_timeseries"`
-	Compression       bool              `json:"compression"`
-	BatchSize         int               `json:"batch_size"`
-	SyncInterval      time.Duration     `json:"sync_interval"`
+	Host               string        `json:"host"`
+	Port               int           `json:"port"`
+	Password           string        `json:"password"`
+	Database           int           `json:"database"`
+	Username           string        `json:"username"`
+	MaxConnections     int           `json:"max_connections"`
+	PoolTimeout        time.Duration `json:"pool_timeout"`
+	IdleTimeout        time.Duration `json:"idle_timeout"`
+	IdleCheckFrequency time.Duration `json:"idle_check_frequency"`
+	MaxRetries         int           `json:"max_retries"`
+	MinRetryBackoff    time.Duration `json:"min_retry_backoff"`
+	MaxRetryBackoff    time.Duration `json:"max_retry_backoff"`
+	EnableSearch       bool          `json:"enable_search"`
+	EnableJSON         bool          `json:"enable_json"`
+	EnableTimeseries   bool          `json:"enable_timeseries"`
+	Compression        bool          `json:"compression"`
+	BatchSize          int           `json:"batch_size"`
+	SyncInterval       time.Duration `json:"sync_interval"`
 }
 
 // NewRedisProvider creates a new Redis provider
@@ -63,11 +63,11 @@ func NewRedisProvider(config map[string]interface{}) (VectorProvider, error) {
 		MinRetryBackoff:    8 * time.Millisecond,
 		MaxRetryBackoff:    512 * time.Millisecond,
 		EnableSearch:       true,
-		EnableJSON:        true,
-		EnableTimeseries:  true,
-		Compression:       true,
-		BatchSize:         1000,
-		SyncInterval:      30 * time.Second,
+		EnableJSON:         true,
+		EnableTimeseries:   true,
+		Compression:        true,
+		BatchSize:          1000,
+		SyncInterval:       30 * time.Second,
 	}
 
 	// Parse configuration
@@ -83,10 +83,10 @@ func NewRedisProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -283,10 +283,10 @@ func (p *RedisProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "cosine",
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "cosine",
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -491,11 +491,11 @@ func (p *RedisProvider) CreateIndex(ctx context.Context, collection string, conf
 	// Create search index
 	indexKey := fmt.Sprintf("idx:%s:%s", collection, config.Name)
 	indexDefinition := map[string]interface{}{
-		"name":        config.Name,
-		"type":        config.Type,
-		"dimension":   config.Dimension,
-		"metric":      config.Metric,
-		"created_at":  time.Now(),
+		"name":       config.Name,
+		"type":       config.Type,
+		"dimension":  config.Dimension,
+		"metric":     config.Metric,
+		"created_at": time.Now(),
 	}
 
 	if err := p.client.HSet(ctx, indexKey, indexDefinition).Err(); err != nil {
@@ -718,7 +718,7 @@ func (p *RedisProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -811,8 +811,8 @@ func (p *RedisProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
 	}
 
 	// Get Redis info
@@ -822,10 +822,10 @@ func (p *RedisProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"redis_server": "required",
 		},
@@ -878,7 +878,7 @@ func (p *RedisProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     0.0,
 		Currency:      "USD",
-		BillingPeriod:  "N/A",
+		BillingPeriod: "N/A",
 		FreeTierUsed:  false,
 		FreeTierLimit: 0.0,
 	}
@@ -964,8 +964,8 @@ func (p *RedisProvider) retrieveVector(ctx context.Context, id string) (*memory.
 		if len(data) > 0 {
 			// Parse vector data
 			vector := &memory.VectorData{
-				ID:       data["id"],
-				Metadata: make(map[string]interface{}),
+				ID:         data["id"],
+				Metadata:   make(map[string]interface{}),
 				Collection: collection,
 			}
 
@@ -1013,10 +1013,10 @@ func (p *RedisProvider) rediSearch(ctx context.Context, query *memory.VectorQuer
 			ID:       fmt.Sprintf("result_%d", i),
 			Vector:   make([]float64, 1536), // Mock
 			Score:    1.0 - float64(i)*0.1,
-			Distance:  float64(i) * 0.1,
+			Distance: float64(i) * 0.1,
 			Metadata: map[string]interface{}{
 				"collection": query.Collection,
-				"index":     i,
+				"index":      i,
 			},
 		})
 	}
@@ -1132,14 +1132,14 @@ func (p *RedisProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
@@ -1169,34 +1169,4 @@ func parseTime(s string) time.Time {
 func parseTimestamp(s string) (time.Time, error) {
 	// In real implementation, parse timestamp string
 	return time.Now(), nil
-}
-
-func calculateCosineSimilarity(a, b []float64) float64 {
-	if len(a) != len(b) {
-		return 0.0
-	}
-
-	var dotProduct, normA, normB float64
-	for i := 0; i < len(a); i++ {
-		dotProduct += a[i] * b[i]
-		normA += a[i] * a[i]
-		normB += b[i] * b[i]
-	}
-
-	if normA == 0 || normB == 0 {
-		return 0.0
-	}
-
-	return dotProduct / (sqrt(normA) * sqrt(normB))
-}
-
-func sqrt(x float64) float64 {
-	if x == 0 {
-		return 0
-	}
-	z := x
-	for i := 0; i < 10; i++ {
-		z = (z + x/z) / 2
-	}
-	return z
 }

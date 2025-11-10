@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"sync"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // ProviderRegistry manages provider registration and creation
 type ProviderRegistry struct {
-	mu           sync.RWMutex
-	providers    map[ProviderType]ProviderFactory
-	logger       logging.Logger
-	initialized  bool
+	mu          sync.RWMutex
+	providers   map[ProviderType]ProviderFactoryFunc
+	logger      logging.Logger
+	initialized bool
 }
 
-// ProviderFactory creates a provider instance
-type ProviderFactory func(config map[string]interface{}) (VectorProvider, error)
+// ProviderFactoryFunc creates a provider instance
+type ProviderFactoryFunc func(config map[string]interface{}) (VectorProvider, error)
 
 var (
 	// Global registry instance
@@ -91,7 +91,7 @@ func (r *ProviderRegistry) registerBuiltInProviders() {
 }
 
 // RegisterProvider registers a new provider factory
-func (r *ProviderRegistry) RegisterProvider(providerType ProviderType, factory ProviderFactory) error {
+func (r *ProviderRegistry) RegisterProvider(providerType ProviderType, factory ProviderFactoryFunc) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -138,7 +138,7 @@ func (r *ProviderRegistry) CreateProvider(providerType ProviderType, config map[
 }
 
 // GetProviderFactory gets the factory for a provider type
-func (r *ProviderRegistry) GetProviderFactory(providerType ProviderType) (ProviderFactory, error) {
+func (r *ProviderRegistry) GetProviderFactory(providerType ProviderType) (ProviderFactoryFunc, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -206,12 +206,12 @@ func (r *ProviderRegistry) GetProviderInfoMap() map[ProviderType]*ProviderInfo {
 
 // ProviderInfo contains information about a provider
 type ProviderInfo struct {
-	Type          ProviderType              `json:"type"`
-	Name          string                    `json:"name"`
-	Capabilities  []string                  `json:"capabilities"`
-	IsCloud       bool                      `json:"is_cloud"`
-	Configuration interface{}               `json:"configuration"`
-	CostInfo      *memory.CostInfo         `json:"cost_info,omitempty"`
+	Type          ProviderType     `json:"type"`
+	Name          string           `json:"name"`
+	Capabilities  []string         `json:"capabilities"`
+	IsCloud       bool             `json:"is_cloud"`
+	Configuration interface{}      `json:"configuration"`
+	CostInfo      *memory.CostInfo `json:"cost_info,omitempty"`
 }
 
 // ValidateProviderConfig validates a provider configuration
@@ -263,12 +263,12 @@ func (r *ProviderRegistry) GetCompatibleProviders(requirements *ProviderRequirem
 
 // ProviderRequirements defines requirements for provider selection
 type ProviderRequirements struct {
-	Capabilities  []string      `json:"capabilities"`
-	IsCloud       *bool          `json:"is_cloud,omitempty"`
-	MaxCost       float64        `json:"max_cost,omitempty"`
-	MinPerformance float64        `json:"min_performance,omitempty"`
-	SupportedMetrics []string     `json:"supported_metrics,omitempty"`
-	Tags          []string        `json:"tags,omitempty"`
+	Capabilities     []string `json:"capabilities"`
+	IsCloud          *bool    `json:"is_cloud,omitempty"`
+	MaxCost          float64  `json:"max_cost,omitempty"`
+	MinPerformance   float64  `json:"min_performance,omitempty"`
+	SupportedMetrics []string `json:"supported_metrics,omitempty"`
+	Tags             []string `json:"tags,omitempty"`
 }
 
 // isCompatible checks if a provider meets the requirements
@@ -324,36 +324,36 @@ func (r *ProviderRegistry) GetDefaultConfig(providerType ProviderType) map[strin
 	case ProviderTypePinecone:
 		return map[string]interface{}{
 			"environment": "us-west1-gcp",
-			"index_name": "vectors",
-			"dimension":  1536,
-			"metric":     "cosine",
+			"index_name":  "vectors",
+			"dimension":   1536,
+			"metric":      "cosine",
 		}
 	case ProviderTypeMilvus:
 		return map[string]interface{}{
-			"host": "localhost",
-			"port": 19530,
-			"database": "default",
-			"index_type": "IVF_FLAT",
+			"host":        "localhost",
+			"port":        19530,
+			"database":    "default",
+			"index_type":  "IVF_FLAT",
 			"metric_type": "L2",
 		}
 	case ProviderTypeOpenAI:
 		return map[string]interface{}{
-			"model": "text-embedding-3-small",
-			"timeout": 30,
+			"model":       "text-embedding-3-small",
+			"timeout":     30,
 			"max_retries": 3,
 		}
 	case ProviderTypeAnthropic:
 		return map[string]interface{}{
-			"model": "claude-3-haiku-20240307",
-			"timeout": 30,
+			"model":       "claude-3-haiku-20240307",
+			"timeout":     30,
 			"max_retries": 3,
 		}
 	case ProviderTypeRedis:
 		return map[string]interface{}{
-			"addr": "localhost:6379",
-			"db": 0,
+			"addr":          "localhost:6379",
+			"db":            0,
 			"enable_search": true,
-			"compression": true,
+			"compression":   true,
 		}
 	case ProviderTypeChroma:
 		return map[string]interface{}{
@@ -363,118 +363,118 @@ func (r *ProviderRegistry) GetDefaultConfig(providerType ProviderType) map[strin
 		}
 	case ProviderTypeQdrant:
 		return map[string]interface{}{
-			"host": "localhost",
-			"port": 6333,
-			"api_key": "",
+			"host":       "localhost",
+			"port":       6333,
+			"api_key":    "",
 			"collection": "vectors",
 		}
 	case ProviderTypeWeaviate:
 		return map[string]interface{}{
-			"url": "http://localhost:8080",
-			"api_key": "",
+			"url":        "http://localhost:8080",
+			"api_key":    "",
 			"batch_size": 100,
 		}
 	case ProviderTypeMemGPT:
 		return map[string]interface{}{
-			"base_url": "https://api.memgpt.ai",
-			"model": "memgpt-1.0",
+			"base_url":   "https://api.memgpt.ai",
+			"model":      "memgpt-1.0",
 			"max_tokens": 4096,
 		}
 	case ProviderTypeCrewAI:
 		return map[string]interface{}{
-			"base_url": "https://api.crewai.ai",
-			"max_agents": 10,
+			"base_url":           "https://api.crewai.ai",
+			"max_agents":         10,
 			"parallel_execution": true,
 		}
 	case ProviderTypeCharacterAI:
 		return map[string]interface{}{
-			"base_url": "https://api.character.ai",
-			"max_characters": 1000,
+			"base_url":            "https://api.character.ai",
+			"max_characters":      1000,
 			"relationship_memory": true,
 		}
 	case ProviderTypeReplika:
 		return map[string]interface{}{
-			"base_url": "https://api.replika.ai",
+			"base_url":          "https://api.replika.ai",
 			"max_personalities": 1000,
-			"emotional_memory": true,
+			"emotional_memory":  true,
 		}
 	case ProviderTypeAnima:
 		return map[string]interface{}{
-			"base_url": "https://api.anima.ai",
-			"max_avatars": 1000,
+			"base_url":           "https://api.anima.ai",
+			"max_avatars":        1000,
 			"emotional_tracking": true,
 		}
 	case ProviderTypeGemma:
 		return map[string]interface{}{
-			"base_url": "https://api.gemma.ai",
-			"model": "gemma-7b",
+			"base_url":            "https://api.gemma.ai",
+			"model":               "gemma-7b",
 			"embedding_dimension": 4096,
-			"gpu_enabled": true,
+			"gpu_enabled":         true,
 		}
 	case ProviderTypeLlamaIndex:
 		return map[string]interface{}{
 			"storage_type": "local",
-			"persist_dir": "./llama_index",
-			"chunk_size": 1024,
+			"persist_dir":  "./llama_index",
+			"chunk_size":   1024,
 		}
 	case ProviderTypeCohere:
 		return map[string]interface{}{
-			"model": "embed-english-v3.0",
-			"timeout": 30,
+			"model":       "embed-english-v3.0",
+			"timeout":     30,
 			"max_retries": 3,
 		}
 	case ProviderTypeHuggingFace:
 		return map[string]interface{}{
-			"model": "sentence-transformers/all-MiniLM-L6-v2",
-			"task": "feature-extraction",
+			"model":   "sentence-transformers/all-MiniLM-L6-v2",
+			"task":    "feature-extraction",
 			"timeout": 30,
 		}
 	case ProviderTypeMistral:
 		return map[string]interface{}{
-			"model": "mistral-embed",
-			"timeout": 30,
+			"model":       "mistral-embed",
+			"timeout":     30,
 			"max_retries": 3,
 		}
 	case ProviderTypeGemini:
 		return map[string]interface{}{
-			"model": "text-embedding-004",
-			"timeout": 30,
+			"model":       "text-embedding-004",
+			"timeout":     30,
 			"max_retries": 3,
 		}
 	case ProviderTypeVertexAI:
 		return map[string]interface{}{
 			"project_id": "",
-			"location": "us-central1",
+			"location":   "us-central1",
 			"index_name": "vectors",
 		}
 	case ProviderTypeClickHouse:
 		return map[string]interface{}{
-			"host": "localhost",
-			"port": 9000,
+			"host":     "localhost",
+			"port":     9000,
 			"database": "vectors",
-			"table": "embeddings",
+			"table":    "embeddings",
 		}
 	case ProviderTypeSupabase:
 		return map[string]interface{}{
-			"url": "",
-			"key": "",
+			"url":   "",
+			"key":   "",
 			"table": "vectors",
 		}
 	case ProviderTypeDeepLake:
 		return map[string]interface{}{
-			"path": "./deeplake",
+			"path":               "./deeplake",
 			"embedding_function": "text-embedding-ada-002",
 		}
 	case ProviderTypeFAISS:
 		return map[string]interface{}{
 			"index_type": "IVF",
-			"dimension": 1536,
-			"nlist": 100,
-			"metric": "cosine",
+			"dimension":  1536,
+			"nlist":      100,
+			"metric":     "cosine",
 		}
 	case ProviderTypeAgnostic:
 		return map[string]interface{}{
-			"storage_type": "memory",
+			"storage_type":       "memory",
 			"enable_persistence": false,
 		}
 	default:
@@ -506,52 +506,52 @@ func (r *ProviderRegistry) GetProviderStatistics() *RegistryStatistics {
 	}
 
 	return &RegistryStatistics{
-		TotalProviders:     len(r.providers),
-		CloudProviders:     cloudProviders,
-		LocalProviders:     localProviders,
-		ProvidersByType:   providersByType,
-		Initialized:        r.initialized,
+		TotalProviders:  len(r.providers),
+		CloudProviders:  cloudProviders,
+		LocalProviders:  localProviders,
+		ProvidersByType: providersByType,
+		Initialized:     r.initialized,
 	}
 }
 
 // RegistryStatistics contains statistics about the provider registry
 type RegistryStatistics struct {
-	TotalProviders     int               `json:"total_providers"`
-	CloudProviders     int               `json:"cloud_providers"`
-	LocalProviders     int               `json:"local_providers"`
-	ProvidersByType   map[string]int     `json:"providers_by_type"`
-	Initialized        bool              `json:"initialized"`
+	TotalProviders  int            `json:"total_providers"`
+	CloudProviders  int            `json:"cloud_providers"`
+	LocalProviders  int            `json:"local_providers"`
+	ProvidersByType map[string]int `json:"providers_by_type"`
+	Initialized     bool           `json:"initialized"`
 }
 
 // getProviderCategory returns the category of a provider type
 func (r *ProviderRegistry) getProviderCategory(providerType ProviderType) string {
 	switch {
 	case providerType == ProviderTypePinecone ||
-		 providerType == ProviderTypeMilvus ||
-		 providerType == ProviderTypeWeaviate ||
-		 providerType == ProviderTypeQdrant ||
-		 providerType == ProviderTypeRedis ||
-		 providerType == ProviderTypeChroma ||
-		 providerType == ProviderTypeFAISS ||
-		 providerType == ProviderTypeDeepLake ||
-		 providerType == ProviderTypeClickHouse ||
-		 providerType == ProviderTypeSupabase ||
-		 providerType == ProviderTypeVertexAI:
+		providerType == ProviderTypeMilvus ||
+		providerType == ProviderTypeWeaviate ||
+		providerType == ProviderTypeQdrant ||
+		providerType == ProviderTypeRedis ||
+		providerType == ProviderTypeChroma ||
+		providerType == ProviderTypeFAISS ||
+		providerType == ProviderTypeDeepLake ||
+		providerType == ProviderTypeClickHouse ||
+		providerType == ProviderTypeSupabase ||
+		providerType == ProviderTypeVertexAI:
 		return "vector_database"
 	case providerType == ProviderTypeOpenAI ||
-		 providerType == ProviderTypeAnthropic ||
-		 providerType == ProviderTypeCohere ||
-		 providerType == ProviderTypeHuggingFace ||
-		 providerType == ProviderTypeMistral ||
-		 providerType == ProviderTypeGemini ||
-		 providerType == ProviderTypeGemma ||
-		 providerType == ProviderTypeLlamaIndex:
+		providerType == ProviderTypeAnthropic ||
+		providerType == ProviderTypeCohere ||
+		providerType == ProviderTypeHuggingFace ||
+		providerType == ProviderTypeMistral ||
+		providerType == ProviderTypeGemini ||
+		providerType == ProviderTypeGemma ||
+		providerType == ProviderTypeLlamaIndex:
 		return "language_model"
 	case providerType == ProviderTypeMemGPT ||
-		 providerType == ProviderTypeCrewAI ||
-		 providerType == ProviderTypeCharacterAI ||
-		 providerType == ProviderTypeReplika ||
-		 providerType == ProviderTypeAnima:
+		providerType == ProviderTypeCrewAI ||
+		providerType == ProviderTypeCharacterAI ||
+		providerType == ProviderTypeReplika ||
+		providerType == ProviderTypeAnima:
 		return "ai_memory"
 	case providerType == ProviderTypeAgnostic:
 		return "utility"

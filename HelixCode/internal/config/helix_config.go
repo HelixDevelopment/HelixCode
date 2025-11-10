@@ -162,6 +162,7 @@ type AuthConfig struct {
 
 	// Session settings
 	SessionTimeout int  `json:"session_timeout"` // minutes
+	SessionExpiry  int  `json:"session_expiry"`  // seconds
 	RememberMe     bool `json:"remember_me"`
 
 	// Security settings
@@ -1706,6 +1707,7 @@ func (m *HelixConfigManager) getDefaultConfig() *HelixConfig {
 			TokenExpiry:        86400,  // 24 hours
 			RefreshTokenExpiry: 604800, // 7 days
 			SessionTimeout:     30,     // minutes
+			SessionExpiry:      604800, // 7 days
 			RememberMe:         true,
 			BcryptCost:         12,
 			Require2FA:         false,

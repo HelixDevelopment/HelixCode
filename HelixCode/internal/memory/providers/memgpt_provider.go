@@ -6,45 +6,45 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // MemGPTProvider implements VectorProvider for MemGPT
 type MemGPTProvider struct {
-	config       *MemGPTConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       MemGPTClient
+	config        *MemGPTConfig
+	logger        logging.Logger
+	mu            sync.RWMutex
+	initialized   bool
+	started       bool
+	client        MemGPTClient
 	memoryBlocks  map[string]*memory.MemoryBlock
 	workingMemory map[string]*memory.WorkingMemory
 	conversations map[string]*memory.ConversationSession
-	stats        *ProviderStats
+	stats         *ProviderStats
 }
 
 // MemGPTConfig contains MemGPT provider configuration
 type MemGPTConfig struct {
-	APIKey           string            `json:"api_key"`
-	BaseURL          string            `json:"base_url"`
-	Model            string            `json:"model"`
-	MaxTokens        int               `json:"max_tokens"`
-	Temperature      float64           `json:"temperature"`
-	Timeout          time.Duration     `json:"timeout"`
-	MaxRetries       int               `json:"max_retries"`
-	BatchSize        int               `json:"batch_size"`
-	MemoryBlockSize  int               `json:"memory_block_size"`
-	WorkingMemorySize int              `json:"working_memory_size"`
-	MaxMemoryBlocks  int               `json:"max_memory_blocks"`
-	CompressionType string            `json:"compression_type"`
-	EnableCaching    bool              `json:"enable_caching"`
-	CacheSize        int               `json:"cache_size"`
-	CacheTTL         time.Duration     `json:"cache_ttl"`
-	SyncInterval     time.Duration     `json:"sync_interval"`
-	Personality      string            `json:"personality"`
-	Goal             string            `json:"goal"`
+	APIKey            string        `json:"api_key"`
+	BaseURL           string        `json:"base_url"`
+	Model             string        `json:"model"`
+	MaxTokens         int           `json:"max_tokens"`
+	Temperature       float64       `json:"temperature"`
+	Timeout           time.Duration `json:"timeout"`
+	MaxRetries        int           `json:"max_retries"`
+	BatchSize         int           `json:"batch_size"`
+	MemoryBlockSize   int           `json:"memory_block_size"`
+	WorkingMemorySize int           `json:"working_memory_size"`
+	MaxMemoryBlocks   int           `json:"max_memory_blocks"`
+	CompressionType   string        `json:"compression_type"`
+	EnableCaching     bool          `json:"enable_caching"`
+	CacheSize         int           `json:"cache_size"`
+	CacheTTL          time.Duration `json:"cache_ttl"`
+	SyncInterval      time.Duration `json:"sync_interval"`
+	Personality       string        `json:"personality"`
+	Goal              string        `json:"goal"`
 }
 
 // MemGPTClient represents MemGPT client interface
@@ -104,10 +104,10 @@ func NewMemGPTProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -360,15 +360,15 @@ func (p *MemGPTProvider) CreateCollection(ctx context.Context, name string, conf
 	}
 
 	session := &memory.ConversationSession{
-		SessionID:      name,
-		Personality:    p.config.Personality,
-		Goal:           p.config.Goal,
-		Model:          p.config.Model,
-		MaxTokens:      p.config.MaxTokens,
-		Temperature:    p.config.Temperature,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-		Messages:       []*memory.Message{},
+		SessionID:   name,
+		Personality: p.config.Personality,
+		Goal:        p.config.Goal,
+		Model:       p.config.Model,
+		MaxTokens:   p.config.MaxTokens,
+		Temperature: p.config.Temperature,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Messages:    []*memory.Message{},
 	}
 
 	if err := p.client.CreateConversationSession(ctx, session); err != nil {
@@ -434,7 +434,7 @@ func (p *MemGPTProvider) ListCollections(ctx context.Context) ([]*memory.Collect
 
 	for _, session := range p.conversations {
 		vectorCount := int64(p.getSessionMemoryCount(session.SessionID))
-		
+
 		collections = append(collections, &memory.CollectionInfo{
 			Name:        session.SessionID,
 			Description: fmt.Sprintf("MemGPT session for %s", session.Personality),
@@ -461,7 +461,7 @@ func (p *MemGPTProvider) GetCollection(ctx context.Context, name string) (*memor
 	}
 
 	vectorCount := int64(p.getSessionMemoryCount(name))
-	
+
 	return &memory.CollectionInfo{
 		Name:        name,
 		Description: fmt.Sprintf("MemGPT session for %s", session.Personality),
@@ -657,7 +657,7 @@ func (p *MemGPTProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -733,17 +733,17 @@ func (p *MemGPTProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
-		"memory_blocks":    float64(len(p.memoryBlocks)),
-		"working_memories": float64(len(p.workingMemory)),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
+		"memory_blocks":     float64(len(p.memoryBlocks)),
+		"working_memories":  float64(len(p.workingMemory)),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"memgpt_api": "required",
 		},
@@ -802,7 +802,7 @@ func (p *MemGPTProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     computeCost,
 		Currency:      "USD",
-		BillingPeriod:  "monthly",
+		BillingPeriod: "monthly",
 		FreeTierUsed:  vectors > 10000, // Free tier for first 10K vectors
 		FreeTierLimit: 10000.0,
 	}
@@ -855,55 +855,18 @@ func (p *MemGPTProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
 	}
-}
-
-// Utility functions
-
-func vectorToString(vector *memory.VectorData) string {
-	// Convert vector data to string for memory storage
-	return fmt.Sprintf("Vector ID: %s, Size: %d", vector.ID, len(vector.Vector))
-}
-
-func calculateSimilarity(a, b []float64) float64 {
-	if len(a) != len(b) {
-		return 0.0
-	}
-
-	var dotProduct, normA, normB float64
-	for i := 0; i < len(a); i++ {
-		dotProduct += a[i] * b[i]
-		normA += a[i] * a[i]
-		normB += b[i] * b[i]
-	}
-
-	if normA == 0 || normB == 0 {
-		return 0.0
-	}
-
-	return dotProduct / (sqrt(normA) * sqrt(normB))
-}
-
-func sqrt(x float64) float64 {
-	if x == 0 {
-		return 0
-	}
-	z := x
-	for i := 0; i < 10; i++ {
-		z = (z + x/z) / 2
-	}
-	return z
 }
 
 // MemGPTHTTPClient is a mock HTTP client for MemGPT
@@ -933,7 +896,7 @@ func (c *MemGPTHTTPClient) GetMemoryBlock(ctx context.Context, blockID string) (
 		SessionID: "default",
 		Content:   "Mock memory block content",
 		Embedding: make([]float64, 1536),
-		Metadata:  map[string]interface{}{
+		Metadata: map[string]interface{}{
 			"source": "memgpt_client",
 		},
 		CreatedAt: time.Now(),
@@ -1005,15 +968,15 @@ func (c *MemGPTHTTPClient) CreateConversationSession(ctx context.Context, sessio
 func (c *MemGPTHTTPClient) GetConversationSession(ctx context.Context, sessionID string) (*memory.ConversationSession, error) {
 	// Mock implementation
 	return &memory.ConversationSession{
-		SessionID:      sessionID,
-		Personality:    c.config.Personality,
-		Goal:           c.config.Goal,
-		Model:          c.config.Model,
-		MaxTokens:      c.config.MaxTokens,
-		Temperature:    c.config.Temperature,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
-		Messages:       []*memory.Message{},
+		SessionID:   sessionID,
+		Personality: c.config.Personality,
+		Goal:        c.config.Goal,
+		Model:       c.config.Model,
+		MaxTokens:   c.config.MaxTokens,
+		Temperature: c.config.Temperature,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Messages:    []*memory.Message{},
 	}, nil
 }
 
@@ -1046,12 +1009,12 @@ func (c *MemGPTHTTPClient) ProcessMemory(ctx context.Context, sessionID string) 
 	// Mock implementation
 	c.logger.Info("Processing memory", "session", sessionID)
 	return &memory.ProcessingResult{
-		SessionID:  sessionID,
-		Processed:  true,
-		BlocksProcessed: 10,
+		SessionID:        sessionID,
+		Processed:        true,
+		BlocksProcessed:  10,
 		BlocksCompressed: 5,
-		ProcessingTime: 1.5 * time.Second,
-		Timestamp: time.Now(),
+		ProcessingTime:   1.5 * time.Second,
+		Timestamp:        time.Now(),
 	}, nil
 }
 

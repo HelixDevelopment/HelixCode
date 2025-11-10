@@ -6,43 +6,43 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // AnimaProvider implements VectorProvider for Anima
 type AnimaProvider struct {
-	config       *AnimaConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       AnimaClient
-	avatars      map[string]*memory.Avatar
-	activities   map[string]*memory.Activity
-	stats        *ProviderStats
+	config      *AnimaConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	client      AnimaClient
+	avatars     map[string]*memory.Avatar
+	activities  map[string]*memory.Activity
+	stats       *ProviderStats
 }
 
 // AnimaConfig contains Anima provider configuration
 type AnimaConfig struct {
-	APIKey              string            `json:"api_key"`
-	BaseURL             string            `json:"base_url"`
-	Timeout             time.Duration     `json:"timeout"`
-	MaxRetries          int               `json:"max_retries"`
-	BatchSize           int               `json:"batch_size"`
-	MaxAvatars          int               `json:"max_avatars"`
-	MaxActivities       int               `json:"max_activities"`
-	EmotionalTracking   bool              `json:"emotional_tracking"`
-	MoodAnalysis        bool              `json:"mood_analysis"`
-	ActivityLearning    bool              `json:"activity_learning"`
-	RelationshipMemory  bool              `json:"relationship_memory"`
-	LongTermMemory      bool              `json:"long_term_memory"`
-	CompressionType     string            `json:"compression_type"`
-	EnableCaching       bool              `json:"enable_caching"`
-	CacheSize           int               `json:"cache_size"`
-	CacheTTL           time.Duration     `json:"cache_ttl"`
-	SyncInterval        time.Duration     `json:"sync_interval"`
+	APIKey             string        `json:"api_key"`
+	BaseURL            string        `json:"base_url"`
+	Timeout            time.Duration `json:"timeout"`
+	MaxRetries         int           `json:"max_retries"`
+	BatchSize          int           `json:"batch_size"`
+	MaxAvatars         int           `json:"max_avatars"`
+	MaxActivities      int           `json:"max_activities"`
+	EmotionalTracking  bool          `json:"emotional_tracking"`
+	MoodAnalysis       bool          `json:"mood_analysis"`
+	ActivityLearning   bool          `json:"activity_learning"`
+	RelationshipMemory bool          `json:"relationship_memory"`
+	LongTermMemory     bool          `json:"long_term_memory"`
+	CompressionType    string        `json:"compression_type"`
+	EnableCaching      bool          `json:"enable_caching"`
+	CacheSize          int           `json:"cache_size"`
+	CacheTTL           time.Duration `json:"cache_ttl"`
+	SyncInterval       time.Duration `json:"sync_interval"`
 }
 
 // AnimaClient represents Anima client interface
@@ -93,18 +93,18 @@ func NewAnimaProvider(config map[string]interface{}) (VectorProvider, error) {
 	}
 
 	return &AnimaProvider{
-		config:      animaConfig,
-		logger:      logging.NewLogger("anima_provider"),
-		avatars:     make(map[string]*memory.Avatar),
-		activities:  make(map[string]*memory.Activity),
+		config:     animaConfig,
+		logger:     logging.NewLogger("anima_provider"),
+		avatars:    make(map[string]*memory.Avatar),
+		activities: make(map[string]*memory.Activity),
 		stats: &ProviderStats{
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -333,10 +333,10 @@ func (p *AnimaProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "activity_match",
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "activity_match",
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -370,19 +370,19 @@ func (p *AnimaProvider) CreateCollection(ctx context.Context, name string, confi
 
 	// Create an avatar as a collection
 	avatar := &memory.Avatar{
-		ID:            name,
-		Name:          name,
-		Description:   config.Description,
-		Personality:   map[string]interface{}{},
-		Appearance:    map[string]interface{}{},
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-		IsActive:      true,
+		ID:          name,
+		Name:        name,
+		Description: config.Description,
+		Personality: map[string]interface{}{},
+		Appearance:  map[string]interface{}{},
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		IsActive:    true,
 		EmotionalState: &memory.EmotionalState{
-			Mood:        "neutral",
-			Energy:      0.5,
+			Mood:         "neutral",
+			Energy:       0.5,
 			Satisfaction: 0.5,
-			Engagement:  0.5,
+			Engagement:   0.5,
 		},
 	}
 
@@ -431,7 +431,7 @@ func (p *AnimaProvider) ListCollections(ctx context.Context) ([]*memory.Collecti
 
 	for _, avatar := range avatars {
 		activityCount := int64(p.getAvatarActivityCount(avatar.ID))
-		
+
 		collections = append(collections, &memory.CollectionInfo{
 			Name:        avatar.ID,
 			Description: avatar.Description,
@@ -622,7 +622,7 @@ func (p *AnimaProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -706,8 +706,8 @@ func (p *AnimaProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	metrics := map[string]float64{
-		"total_vectors":      float64(p.stats.TotalVectors),
-		"total_collections":  float64(p.stats.TotalCollections),
+		"total_vectors":     float64(p.stats.TotalVectors),
+		"total_collections": float64(p.stats.TotalCollections),
 		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
 		"uptime_seconds":    p.stats.Uptime.Seconds(),
 		"total_avatars":     float64(len(p.avatars)),
@@ -715,10 +715,10 @@ func (p *AnimaProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"anima_api": "required",
 		},
@@ -775,7 +775,7 @@ func (p *AnimaProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     cost,
 		Currency:      "USD",
-		BillingPeriod:  "monthly",
+		BillingPeriod: "monthly",
 		FreeTierUsed:  avatars > 5, // Free tier for first 5 avatars
 		FreeTierLimit: 5.0,
 	}
@@ -842,19 +842,19 @@ func (p *AnimaProvider) vectorToAvatar(vector *memory.VectorData) (*memory.Avata
 	}
 
 	return &memory.Avatar{
-		ID:            avatarID,
-		Name:          avatarName,
-		Description:   "",
-		Personality:    personality,
-		Appearance:    map[string]interface{}{},
-		CreatedAt:     vector.Timestamp,
-		UpdatedAt:     time.Now(),
-		IsActive:      true,
+		ID:          avatarID,
+		Name:        avatarName,
+		Description: "",
+		Personality: personality,
+		Appearance:  map[string]interface{}{},
+		CreatedAt:   vector.Timestamp,
+		UpdatedAt:   time.Now(),
+		IsActive:    true,
 		EmotionalState: &memory.EmotionalState{
-			Mood:        "neutral",
-			Energy:      0.5,
+			Mood:         "neutral",
+			Energy:       0.5,
 			Satisfaction: 0.5,
-			Engagement:  0.5,
+			Engagement:   0.5,
 		},
 	}, nil
 }
@@ -880,13 +880,13 @@ func (p *AnimaProvider) vectorToActivity(vector *memory.VectorData) (*memory.Act
 
 func (p *AnimaProvider) avatarToVector(avatar *memory.Avatar) *memory.VectorData {
 	return &memory.VectorData{
-		ID:       avatar.ID,
-		Vector:   make([]float64, 1536), // Mock embedding
+		ID:     avatar.ID,
+		Vector: make([]float64, 1536), // Mock embedding
 		Metadata: map[string]interface{}{
 			"avatar_id":   avatar.ID,
 			"avatar_name": avatar.Name,
-			"description":  avatar.Description,
-			"personality":  avatar.Personality,
+			"description": avatar.Description,
+			"personality": avatar.Personality,
 			"type":        "avatar",
 		},
 		Collection: avatar.ID,
@@ -896,8 +896,8 @@ func (p *AnimaProvider) avatarToVector(avatar *memory.Avatar) *memory.VectorData
 
 func (p *AnimaProvider) activityToVector(activity *memory.Activity) *memory.VectorData {
 	return &memory.VectorData{
-		ID:       activity.ID,
-		Vector:   make([]float64, 1536), // Mock embedding
+		ID:     activity.ID,
+		Vector: make([]float64, 1536), // Mock embedding
 		Metadata: map[string]interface{}{
 			"avatar_id":     activity.AvatarID,
 			"activity_type": activity.Type,
@@ -938,14 +938,14 @@ func (p *AnimaProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
@@ -953,10 +953,6 @@ func (p *AnimaProvider) updateStats(duration time.Duration) {
 }
 
 // Utility functions
-
-func vectorToString(vector *memory.VectorData) string {
-	return fmt.Sprintf("Vector ID: %s, Size: %d", vector.ID, len(vector.Vector))
-}
 
 // AnimaHTTPClient is a mock HTTP client for Anima
 type AnimaHTTPClient struct {
@@ -1062,12 +1058,12 @@ func (c *AnimaHTTPClient) ListActivities(ctx context.Context, avatarID string) (
 func (c *AnimaHTTPClient) GetEmotionalState(ctx context.Context, avatarID string) (*memory.EmotionalState, error) {
 	// Mock implementation
 	return &memory.EmotionalState{
-		AvatarID:    avatarID,
-		Mood:        "happy",
-		Energy:      0.8,
+		AvatarID:     avatarID,
+		Mood:         "happy",
+		Energy:       0.8,
 		Satisfaction: 0.7,
-		Engagement:  0.9,
-		LastUpdated: time.Now(),
+		Engagement:   0.9,
+		LastUpdated:  time.Now(),
 	}, nil
 }
 

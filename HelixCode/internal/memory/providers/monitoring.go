@@ -8,41 +8,24 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // MonitoringSystem provides comprehensive monitoring for provider ecosystem
 type MonitoringSystem struct {
-	mu                sync.RWMutex
-	registry          *ProviderRegistry
-	manager           *ProviderManager
-	logger            logging.Logger
-	config            *MonitoringConfig
-	metrics           *MetricsCollector
-	alerts           *AlertManager
-	dashboard         *DashboardServer
-	healthChecker     *HealthChecker
+	mu                 sync.RWMutex
+	registry           *ProviderRegistry
+	manager            *ProviderManager
+	logger             logging.Logger
+	config             *MonitoringConfig
+	metrics            *MetricsCollector
+	alerts             *AlertManager
+	dashboard          *DashboardServer
+	healthChecker      *HealthChecker
 	performanceTracker *PerformanceTracker
-	costTracker       *CostTracker
-	started           bool
-}
-
-// MonitoringConfig contains monitoring system configuration
-type MonitoringConfig struct {
-	Enabled           bool          `json:"enabled"`
-	MetricsInterval   time.Duration `json:"metrics_interval"`
-	HealthInterval    time.Duration `json:"health_interval"`
-	AlertingEnabled  bool          `json:"alerting_enabled"`
-	DashboardEnabled  bool          `json:"dashboard_enabled"`
-	ProfilingEnabled  bool          `json:"profiling_enabled"`
-	TracingEnabled    bool          `json:"tracing_enabled"`
-	MetricsEndpoint  string        `json:"metrics_endpoint"`
-	HealthEndpoint   string        `json:"health_endpoint"`
-	DashboardPort    int           `json:"dashboard_port"`
-	LogLevel         string        `json:"log_level"`
-	StorageType      string        `json:"storage_type"`
-	StorageConfig    interface{}   `json:"storage_config"`
+	costTracker        *CostTracker
+	started            bool
 }
 
 // NewMonitoringSystem creates a new monitoring system
@@ -53,9 +36,9 @@ func NewMonitoringSystem(config *MonitoringConfig, registry *ProviderRegistry, m
 			MetricsInterval:  30 * time.Second,
 			HealthInterval:   60 * time.Second,
 			AlertingEnabled:  true,
-			DashboardEnabled:  true,
-			ProfilingEnabled:  false,
-			TracingEnabled:    false,
+			DashboardEnabled: true,
+			ProfilingEnabled: false,
+			TracingEnabled:   false,
 			MetricsEndpoint:  "/metrics",
 			HealthEndpoint:   "/health",
 			DashboardPort:    8080,
@@ -65,16 +48,16 @@ func NewMonitoringSystem(config *MonitoringConfig, registry *ProviderRegistry, m
 	}
 
 	system := &MonitoringSystem{
-		registry: registry,
-		manager:  manager,
-		logger:    logging.NewLogger("monitoring_system"),
-		config:    config,
-		metrics:   NewMetricsCollector(config.StorageType, config.StorageConfig),
-		alerts:    NewAlertManager(config),
-		dashboard:  NewDashboardServer(config.DashboardPort),
-		healthChecker: NewHealthChecker(config.HealthInterval, registry, manager),
+		registry:           registry,
+		manager:            manager,
+		logger:             logging.NewLogger("monitoring_system"),
+		config:             config,
+		metrics:            NewMetricsCollector(config.StorageType, config.StorageConfig),
+		alerts:             NewAlertManager(config),
+		dashboard:          NewDashboardServer(config.DashboardPort),
+		healthChecker:      NewHealthChecker(config.HealthInterval, registry, manager),
 		performanceTracker: NewPerformanceTracker(config),
-		costTracker: NewCostTracker(config),
+		costTracker:        NewCostTracker(config),
 	}
 
 	return system
@@ -290,12 +273,12 @@ func (ms *MonitoringSystem) checkProviderAlerts(providerName string, stats *memo
 		errorRate := float64(stats.FailedOperations) / float64(stats.TotalOperations)
 		if errorRate > 0.05 { // 5% error rate threshold
 			ms.alerts.TriggerAlert(&Alert{
-				Type:        AlertTypeError,
-				Severity:    AlertSeverityWarning,
-				Source:      providerName,
-				Message:     fmt.Sprintf("High error rate: %.2f%%", errorRate*100),
-				Timestamp:   time.Now(),
-				Metadata:    map[string]interface{}{"error_rate": errorRate},
+				Type:      AlertTypeError,
+				Severity:  AlertSeverityWarning,
+				Source:    providerName,
+				Message:   fmt.Sprintf("High error rate: %.2f%%", errorRate*100),
+				Timestamp: time.Now(),
+				Metadata:  map[string]interface{}{"error_rate": errorRate},
 			})
 		}
 	}
@@ -306,12 +289,12 @@ func (ms *MonitoringSystem) checkManagerAlerts(stats *ManagerStats) {
 	// Check failed providers
 	if stats.FailedProviders > 0 {
 		ms.alerts.TriggerAlert(&Alert{
-			Type:        AlertTypeAvailability,
-			Severity:    AlertSeverityCritical,
-			Source:      "manager",
-			Message:     fmt.Sprintf("%d providers failed", stats.FailedProviders),
-			Timestamp:   time.Now(),
-			Metadata:    map[string]interface{}{"failed_providers": stats.FailedProviders},
+			Type:      AlertTypeAvailability,
+			Severity:  AlertSeverityCritical,
+			Source:    "manager",
+			Message:   fmt.Sprintf("%d providers failed", stats.FailedProviders),
+			Timestamp: time.Now(),
+			Metadata:  map[string]interface{}{"failed_providers": stats.FailedProviders},
 		})
 	}
 }
@@ -321,12 +304,12 @@ func (ms *MonitoringSystem) checkSystemAlerts(metrics *SystemMetrics) {
 	// Check memory usage
 	if metrics.MemoryUsage > 0.9 { // 90% memory usage
 		ms.alerts.TriggerAlert(&Alert{
-			Type:        AlertTypeResource,
-			Severity:    AlertSeverityCritical,
-			Source:      "system",
-			Message:     fmt.Sprintf("High memory usage: %.2f%%", metrics.MemoryUsage*100),
-			Timestamp:   time.Now(),
-			Metadata:    map[string]interface{}{"memory_usage": metrics.MemoryUsage},
+			Type:      AlertTypeResource,
+			Severity:  AlertSeverityCritical,
+			Source:    "system",
+			Message:   fmt.Sprintf("High memory usage: %.2f%%", metrics.MemoryUsage*100),
+			Timestamp: time.Now(),
+			Metadata:  map[string]interface{}{"memory_usage": metrics.MemoryUsage},
 		})
 	}
 }
@@ -369,27 +352,27 @@ func (ms *MonitoringSystem) getNumGC() uint32 {
 
 // SystemMetrics contains system-level metrics
 type SystemMetrics struct {
-	Timestamp      time.Time `json:"timestamp"`
+	Timestamp      time.Time     `json:"timestamp"`
 	Uptime         time.Duration `json:"uptime"`
-	MemoryUsage    float64 `json:"memory_usage"`
-	CPUUsage       float64 `json:"cpu_usage"`
-	GoroutineCount int    `json:"goroutine_count"`
-	HeapSize       int64  `json:"heap_size"`
-	NumGC          uint32  `json:"num_gc"`
+	MemoryUsage    float64       `json:"memory_usage"`
+	CPUUsage       float64       `json:"cpu_usage"`
+	GoroutineCount int           `json:"goroutine_count"`
+	HeapSize       int64         `json:"heap_size"`
+	NumGC          uint32        `json:"num_gc"`
 }
 
 // MetricsCollector collects and stores metrics
 type MetricsCollector struct {
-	mu       sync.RWMutex
-	storage  MetricsStorage
-	logger   logging.Logger
-	started  bool
+	mu      sync.RWMutex
+	storage MetricsStorage
+	logger  logging.Logger
+	started bool
 }
 
 // NewMetricsCollector creates a new metrics collector
 func NewMetricsCollector(storageType string, storageConfig interface{}) *MetricsCollector {
 	storage := NewMemoryMetricsStorage() // TODO: Support different storage types
-	
+
 	return &MetricsCollector{
 		storage: storage,
 		logger:  logging.NewLogger("metrics_collector"),
@@ -464,10 +447,10 @@ type MetricsStorage interface {
 
 // MemoryMetricsStorage implements in-memory metrics storage
 type MemoryMetricsStorage struct {
-	mu             sync.RWMutex
-	providerStats  []timeSeriesProviderStats
-	managerStats   []timeSeriesManagerStats
-	systemStats    []timeSeriesSystemStats
+	mu            sync.RWMutex
+	providerStats []timeSeriesProviderStats
+	managerStats  []timeSeriesManagerStats
+	systemStats   []timeSeriesSystemStats
 }
 
 // timeSeriesProviderStats contains timestamped provider stats
@@ -619,7 +602,7 @@ type AlertType string
 
 const (
 	AlertTypeError        AlertType = "error"
-	AlertTypePerformance AlertType = "performance"
+	AlertTypePerformance  AlertType = "performance"
 	AlertTypeCost         AlertType = "cost"
 	AlertTypeAvailability AlertType = "availability"
 	AlertTypeResource     AlertType = "resource"
@@ -634,25 +617,25 @@ const (
 )
 
 type Alert struct {
-	ID        string                 `json:"id"`
-	Type      AlertType              `json:"type"`
-	Severity  AlertSeverity          `json:"severity"`
-	Source    string                 `json:"source"`
-	Message   string                 `json:"message"`
-	Timestamp time.Time              `json:"timestamp"`
-	Metadata  map[string]interface{} `json:"metadata"`
-	Resolved  bool                   `json:"resolved"`
+	ID         string                 `json:"id"`
+	Type       AlertType              `json:"type"`
+	Severity   AlertSeverity          `json:"severity"`
+	Source     string                 `json:"source"`
+	Message    string                 `json:"message"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	Resolved   bool                   `json:"resolved"`
 	ResolvedAt *time.Time             `json:"resolved_at,omitempty"`
 }
 
 // AlertManager manages alerts
 type AlertManager struct {
 	mu       sync.RWMutex
-	config    *MonitoringConfig
-	alerts    []*Alert
-	channels  []AlertChannel
-	logger    logging.Logger
-	started   bool
+	config   *MonitoringConfig
+	alerts   []*Alert
+	channels []AlertChannel
+	logger   logging.Logger
+	started  bool
 }
 
 // AlertChannel defines interface for alert channels
@@ -771,10 +754,14 @@ type CostTracker struct{}
 type DashboardServer struct{}
 
 func (hc *HealthChecker) Start(ctx context.Context) error { return nil }
-func (hc *HealthChecker) Stop(ctx context.Context) error { return nil }
-func (pt *PerformanceTracker) Start(ctx context.Context, registry *ProviderRegistry, manager *ProviderManager) error { return nil }
+func (hc *HealthChecker) Stop(ctx context.Context) error  { return nil }
+func (pt *PerformanceTracker) Start(ctx context.Context, registry *ProviderRegistry, manager *ProviderManager) error {
+	return nil
+}
 func (pt *PerformanceTracker) Stop(ctx context.Context) error { return nil }
-func (ct *CostTracker) Start(ctx context.Context, registry *ProviderRegistry, manager *ProviderManager) error { return nil }
-func (ct *CostTracker) Stop(ctx context.Context) error { return nil }
+func (ct *CostTracker) Start(ctx context.Context, registry *ProviderRegistry, manager *ProviderManager) error {
+	return nil
+}
+func (ct *CostTracker) Stop(ctx context.Context) error                                { return nil }
 func (ds *DashboardServer) Start(ctx context.Context, system *MonitoringSystem) error { return nil }
-func (ds *DashboardServer) Stop(ctx context.Context) error { return nil }
+func (ds *DashboardServer) Stop(ctx context.Context) error                            { return nil }

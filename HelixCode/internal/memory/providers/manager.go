@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // ProviderManager manages multiple vector providers
@@ -23,26 +23,17 @@ type ProviderManager struct {
 // ManagerConfig contains manager configuration
 type ManagerConfig struct {
 	Providers             []ProviderConfig `json:"providers"`
-	DefaultProvider       string          `json:"default_provider"`
-	LoadBalancing         LoadBalanceType `json:"load_balancing"`
-	FailoverEnabled       bool            `json:"failover_enabled"`
-	FailoverTimeout      time.Duration   `json:"failover_timeout"`
-	RetryAttempts         int             `json:"retry_attempts"`
-	RetryBackoff          time.Duration   `json:"retry_backoff"`
-	HealthCheckInterval   time.Duration   `json:"health_check_interval"`
-	PerformanceMonitoring bool            `json:"performance_monitoring"`
-	CostTracking         bool            `json:"cost_tracking"`
-	BackupEnabled        bool            `json:"backup_enabled"`
-	BackupInterval       time.Duration   `json:"backup_interval"`
-}
-
-// ProviderConfig contains configuration for a single provider
-type ProviderConfig struct {
-	Name     string                 `json:"name"`
-	Type     ProviderType           `json:"type"`
-	Config   map[string]interface{} `json:"config"`
-	Priority int                    `json:"priority"`
-	Enabled  bool                   `json:"enabled"`
+	DefaultProvider       string           `json:"default_provider"`
+	LoadBalancing         LoadBalanceType  `json:"load_balancing"`
+	FailoverEnabled       bool             `json:"failover_enabled"`
+	FailoverTimeout       time.Duration    `json:"failover_timeout"`
+	RetryAttempts         int              `json:"retry_attempts"`
+	RetryBackoff          time.Duration    `json:"retry_backoff"`
+	HealthCheckInterval   time.Duration    `json:"health_check_interval"`
+	PerformanceMonitoring bool             `json:"performance_monitoring"`
+	CostTracking          bool             `json:"cost_tracking"`
+	BackupEnabled         bool             `json:"backup_enabled"`
+	BackupInterval        time.Duration    `json:"backup_interval"`
 }
 
 // LoadBalanceType defines load balancing strategy
@@ -50,41 +41,24 @@ type LoadBalanceType string
 
 const (
 	LoadBalanceRoundRobin LoadBalanceType = "round_robin"
-	LoadBalanceLeastUsed LoadBalanceType = "least_used"
-	LoadBalanceWeighted  LoadBalanceType = "weighted"
-	LoadBalanceSticky    LoadBalanceType = "sticky"
+	LoadBalanceLeastUsed  LoadBalanceType = "least_used"
+	LoadBalanceWeighted   LoadBalanceType = "weighted"
+	LoadBalanceSticky     LoadBalanceType = "sticky"
 )
 
 // ManagerStats contains manager statistics
 type ManagerStats struct {
 	TotalProviders       int                       `json:"total_providers"`
-	ActiveProviders     int                       `json:"active_providers"`
-	FailedProviders     int                       `json:"failed_providers"`
-	TotalOperations     int64                     `json:"total_operations"`
+	ActiveProviders      int                       `json:"active_providers"`
+	FailedProviders      int                       `json:"failed_providers"`
+	TotalOperations      int64                     `json:"total_operations"`
 	SuccessfulOperations int64                     `json:"successful_operations"`
-	FailedOperations    int64                     `json:"failed_operations"`
-	AverageLatency      time.Duration             `json:"average_latency"`
-	TotalCost           float64                   `json:"total_cost"`
-	ProviderStats       map[string]*ProviderStats `json:"provider_stats"`
-	LastHealthCheck     time.Time                 `json:"last_health_check"`
-	Uptime              time.Duration             `json:"uptime"`
-}
-
-// ProviderStats contains statistics for a single provider
-type ProviderStats struct {
-	Name                string        `json:"name"`
-	Type                ProviderType  `json:"type"`
-	Status              string        `json:"status"`
-	Operations          int64         `json:"operations"`
-	Successes           int64         `json:"successes"`
-	Failures            int64         `json:"failures"`
-	AverageLatency      time.Duration `json:"average_latency"`
-	Cost                float64       `json:"cost"`
-	LastOperation       time.Time     `json:"last_operation"`
-	LastSuccess         time.Time     `json:"last_success"`
-	LastFailure         time.Time     `json:"last_failure"`
-	HealthCheckCount    int64         `json:"health_check_count"`
-	HealthCheckSuccesses int64        `json:"health_check_successes"`
+	FailedOperations     int64                     `json:"failed_operations"`
+	AverageLatency       time.Duration             `json:"average_latency"`
+	TotalCost            float64                   `json:"total_cost"`
+	ProviderStats        map[string]*ProviderStats `json:"provider_stats"`
+	LastHealthCheck      time.Time                 `json:"last_health_check"`
+	Uptime               time.Duration             `json:"uptime"`
 }
 
 // NewProviderManager creates a new provider manager
@@ -145,8 +119,8 @@ func (m *ProviderManager) initializeProviders() error {
 
 		m.providers[providerConfig.Name] = provider
 		m.stats.ProviderStats[providerConfig.Name] = &ProviderStats{
-			Name: providerConfig.Name,
-			Type: providerConfig.Type,
+			Name:   providerConfig.Name,
+			Type:   providerConfig.Type,
 			Status: "active",
 		}
 
@@ -387,8 +361,8 @@ func (m *ProviderManager) Health(ctx context.Context) (map[string]*HealthStatus,
 				"provider", name,
 				"error", err)
 			result[name] = &HealthStatus{
-				Status: "unhealthy",
-				LastCheck: time.Now(),
+				Status:       "unhealthy",
+				LastCheck:    time.Now(),
 				ResponseTime: 0,
 			}
 		} else {

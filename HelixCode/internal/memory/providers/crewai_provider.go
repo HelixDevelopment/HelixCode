@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // CrewAIProvider implements VectorProvider for CrewAI
@@ -27,20 +27,20 @@ type CrewAIProvider struct {
 
 // CrewAIConfig contains CrewAI provider configuration
 type CrewAIConfig struct {
-	APIKey              string            `json:"api_key"`
-	BaseURL             string            `json:"base_url"`
-	MaxAgents           int               `json:"max_agents"`
-	MaxTasksPerAgent    int               `json:"max_tasks_per_agent"`
-	TaskTimeout         time.Duration     `json:"task_timeout"`
-	AgentTimeout       time.Duration     `json:"agent_timeout"`
-	MemorySyncInterval time.Duration     `json:"memory_sync_interval"`
-	SharedMemorySize    int64             `json:"shared_memory_size"`
-	EnableLogging       bool              `json:"enable_logging"`
-	LogLevel            string            `json:"log_level"`
-	ParallelExecution   bool              `json:"parallel_execution"`
-	TaskPrioritization  bool              `json:"task_prioritization"`
-	AutoRetry          bool              `json:"auto_retry"`
-	MaxRetries         int               `json:"max_retries"`
+	APIKey             string        `json:"api_key"`
+	BaseURL            string        `json:"base_url"`
+	MaxAgents          int           `json:"max_agents"`
+	MaxTasksPerAgent   int           `json:"max_tasks_per_agent"`
+	TaskTimeout        time.Duration `json:"task_timeout"`
+	AgentTimeout       time.Duration `json:"agent_timeout"`
+	MemorySyncInterval time.Duration `json:"memory_sync_interval"`
+	SharedMemorySize   int64         `json:"shared_memory_size"`
+	EnableLogging      bool          `json:"enable_logging"`
+	LogLevel           string        `json:"log_level"`
+	ParallelExecution  bool          `json:"parallel_execution"`
+	TaskPrioritization bool          `json:"task_prioritization"`
+	AutoRetry          bool          `json:"auto_retry"`
+	MaxRetries         int           `json:"max_retries"`
 }
 
 // CrewAIClient represents CrewAI client interface
@@ -66,19 +66,19 @@ type CrewAIClient interface {
 // NewCrewAIProvider creates a new CrewAI provider
 func NewCrewAIProvider(config map[string]interface{}) (VectorProvider, error) {
 	crewAIConfig := &CrewAIConfig{
-		BaseURL:             "https://api.crewai.ai",
-		MaxAgents:           10,
-		MaxTasksPerAgent:    50,
-		TaskTimeout:         30 * time.Minute,
-		AgentTimeout:        60 * time.Minute,
-		MemorySyncInterval:  5 * time.Minute,
-		SharedMemorySize:    1000000, // 1MB
-		EnableLogging:       true,
-		LogLevel:            "INFO",
-		ParallelExecution:   true,
-		TaskPrioritization:  true,
-		AutoRetry:           true,
-		MaxRetries:          3,
+		BaseURL:            "https://api.crewai.ai",
+		MaxAgents:          10,
+		MaxTasksPerAgent:   50,
+		TaskTimeout:        30 * time.Minute,
+		AgentTimeout:       60 * time.Minute,
+		MemorySyncInterval: 5 * time.Minute,
+		SharedMemorySize:   1000000, // 1MB
+		EnableLogging:      true,
+		LogLevel:           "INFO",
+		ParallelExecution:  true,
+		TaskPrioritization: true,
+		AutoRetry:          true,
+		MaxRetries:         3,
 	}
 
 	// Parse configuration
@@ -96,10 +96,10 @@ func NewCrewAIProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -379,17 +379,17 @@ func (p *CrewAIProvider) CreateCollection(ctx context.Context, name string, conf
 	}
 
 	crew := &memory.Crew{
-		ID:                name,
-		Name:              config.Description,
-		Description:       config.Description,
-		MaxAgents:         p.config.MaxAgents,
-		MaxTasksPerAgent:  p.config.MaxTasksPerAgent,
-		ParallelExecution: p.config.ParallelExecution,
+		ID:                 name,
+		Name:               config.Description,
+		Description:        config.Description,
+		MaxAgents:          p.config.MaxAgents,
+		MaxTasksPerAgent:   p.config.MaxTasksPerAgent,
+		ParallelExecution:  p.config.ParallelExecution,
 		TaskPrioritization: p.config.TaskPrioritization,
-		Status:            "active",
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
-		Agents:            []*memory.Agent{},
+		Status:             "active",
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
+		Agents:             []*memory.Agent{},
 	}
 
 	if err := p.client.CreateCrew(ctx, crew); err != nil {
@@ -401,11 +401,11 @@ func (p *CrewAIProvider) CreateCollection(ctx context.Context, name string, conf
 
 	// Initialize shared memory for the crew
 	sharedMemory := &memory.SharedMemory{
-		ID:           name + "_shared",
-		CrewID:       name,
-		Data:         make(map[string]interface{}),
-		LastUpdated:  time.Now(),
-		Version:      1,
+		ID:          name + "_shared",
+		CrewID:      name,
+		Data:        make(map[string]interface{}),
+		LastUpdated: time.Now(),
+		Version:     1,
 	}
 
 	if err := p.client.UpdateSharedMemory(ctx, sharedMemory); err != nil {
@@ -695,7 +695,7 @@ func (p *CrewAIProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -787,18 +787,18 @@ func (p *CrewAIProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
-		"total_crews":      float64(len(p.crews)),
-		"total_tasks":      float64(len(p.tasks)),
-		"shared_memories":  float64(len(p.sharedMemory)),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
+		"total_crews":       float64(len(p.crews)),
+		"total_tasks":       float64(len(p.tasks)),
+		"shared_memories":   float64(len(p.sharedMemory)),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"crewai_api": "required",
 		},
@@ -858,7 +858,7 @@ func (p *CrewAIProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     computeCost,
 		Currency:      "USD",
-		BillingPeriod:  "monthly",
+		BillingPeriod: "monthly",
 		FreeTierUsed:  tasks > 100, // Free tier for first 100 tasks
 		FreeTierLimit: 100.0,
 	}
@@ -954,54 +954,18 @@ func (p *CrewAIProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
 	}
-}
-
-// Utility functions
-
-func vectorToString(vector *memory.VectorData) string {
-	return fmt.Sprintf("Vector ID: %s, Size: %d", vector.ID, len(vector.Vector))
-}
-
-func calculateSimilarity(a, b []float64) float64 {
-	if len(a) != len(b) {
-		return 0.0
-	}
-
-	var dotProduct, normA, normB float64
-	for i := 0; i < len(a); i++ {
-		dotProduct += a[i] * b[i]
-		normA += a[i] * a[i]
-		normB += b[i] * b[i]
-	}
-
-	if normA == 0 || normB == 0 {
-		return 0.0
-	}
-
-	return dotProduct / (sqrt(normA) * sqrt(normB))
-}
-
-func sqrt(x float64) float64 {
-	if x == 0 {
-		return 0
-	}
-	z := x
-	for i := 0; i < 10; i++ {
-		z = (z + x/z) / 2
-	}
-	return z
 }
 
 // CrewAIHTTPClient is a mock HTTP client for CrewAI
@@ -1136,15 +1100,15 @@ func (c *CrewAIHTTPClient) UpdateSharedMemory(ctx context.Context, memory *memor
 func (c *CrewAIHTTPClient) GetCrewPerformance(ctx context.Context, crewID string) (*memory.CrewPerformance, error) {
 	// Mock implementation
 	return &memory.CrewPerformance{
-		CrewID:                 crewID,
-		TasksCompleted:          100,
-		TasksFailed:             5,
-		AverageCompletionTime:   5.5 * time.Minute,
-		SuccessRate:             0.95,
-		AgentUtilization:        0.75,
-		TotalProcessingTime:     10 * time.Hour,
-		PerformanceScore:        9.2,
-		LastUpdated:             time.Now(),
+		CrewID:                crewID,
+		TasksCompleted:        100,
+		TasksFailed:           5,
+		AverageCompletionTime: 5.5 * time.Minute,
+		SuccessRate:           0.95,
+		AgentUtilization:      0.75,
+		TotalProcessingTime:   10 * time.Hour,
+		PerformanceScore:      9.2,
+		LastUpdated:           time.Now(),
 	}, nil
 }
 

@@ -589,17 +589,6 @@ func (vpm *VectorProviderManager) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// ProviderInfo represents information about a provider
-type ProviderInfo struct {
-	Name         string    `json:"name"`
-	Type         string    `json:"type"`
-	Capabilities []string  `json:"capabilities"`
-	IsCloud      bool      `json:"is_cloud"`
-	IsActive     bool      `json:"is_active"`
-	IsHealthy    bool      `json:"is_healthy"`
-	CostInfo     *CostInfo `json:"cost_info,omitempty"`
-}
-
 // Private helper methods
 
 func (vpm *VectorProviderManager) getProvider(ctx context.Context) (VectorProvider, error) {

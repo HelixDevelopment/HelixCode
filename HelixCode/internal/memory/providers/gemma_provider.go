@@ -6,45 +6,45 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // GemmaProvider implements VectorProvider for Gemma
 type GemmaProvider struct {
-	config       *GemmaConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       GemmaClient
-	models       map[string]*memory.Model
-	embeddings   map[string]*memory.Embedding
-	stats        *ProviderStats
+	config      *GemmaConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	client      GemmaClient
+	models      map[string]*memory.Model
+	embeddings  map[string]*memory.Embedding
+	stats       *ProviderStats
 }
 
 // GemmaConfig contains Gemma provider configuration
 type GemmaConfig struct {
-	APIKey              string            `json:"api_key"`
-	BaseURL             string            `json:"base_url"`
-	Model               string            `json:"model"`
-	Timeout             time.Duration     `json:"timeout"`
-	MaxRetries          int               `json:"max_retries"`
-	BatchSize           int               `json:"batch_size"`
-	MaxModels           int               `json:"max_models"`
-	MaxEmbeddings       int               `json:"max_embeddings"`
-	EmbeddingDimension  int               `json:"embedding_dimension"`
-	GPUEnabled          bool              `json:"gpu_enabled"`
-	CPUOptimization     bool              `json:"cpu_optimization"`
-	ModelCaching        bool              `json:"model_caching"`
-	EmbeddingCaching    bool              `json:"embedding_caching"`
-	Quantization        bool              `json:"quantization"`
-	CompressionType     string            `json:"compression_type"`
-	EnableCaching       bool              `json:"enable_caching"`
-	CacheSize           int               `json:"cache_size"`
-	CacheTTL           time.Duration     `json:"cache_ttl"`
-	SyncInterval        time.Duration     `json:"sync_interval"`
+	APIKey             string        `json:"api_key"`
+	BaseURL            string        `json:"base_url"`
+	Model              string        `json:"model"`
+	Timeout            time.Duration `json:"timeout"`
+	MaxRetries         int           `json:"max_retries"`
+	BatchSize          int           `json:"batch_size"`
+	MaxModels          int           `json:"max_models"`
+	MaxEmbeddings      int           `json:"max_embeddings"`
+	EmbeddingDimension int           `json:"embedding_dimension"`
+	GPUEnabled         bool          `json:"gpu_enabled"`
+	CPUOptimization    bool          `json:"cpu_optimization"`
+	ModelCaching       bool          `json:"model_caching"`
+	EmbeddingCaching   bool          `json:"embedding_caching"`
+	Quantization       bool          `json:"quantization"`
+	CompressionType    string        `json:"compression_type"`
+	EnableCaching      bool          `json:"enable_caching"`
+	CacheSize          int           `json:"cache_size"`
+	CacheTTL           time.Duration `json:"cache_ttl"`
+	SyncInterval       time.Duration `json:"sync_interval"`
 }
 
 // GemmaClient represents Gemma client interface
@@ -69,24 +69,24 @@ type GemmaClient interface {
 // NewGemmaProvider creates a new Gemma provider
 func NewGemmaProvider(config map[string]interface{}) (VectorProvider, error) {
 	gemmaConfig := &GemmaConfig{
-		BaseURL:             "https://api.gemma.ai",
-		Model:               "gemma-7b",
-		Timeout:             30 * time.Second,
-		MaxRetries:          3,
-		BatchSize:           100,
-		MaxModels:           100,
-		MaxEmbeddings:       10000,
-		EmbeddingDimension:  4096,
-		GPUEnabled:          true,
-		CPUOptimization:     true,
-		ModelCaching:        true,
-		EmbeddingCaching:    true,
-		Quantization:        false,
-		CompressionType:     "gzip",
-		EnableCaching:       true,
-		CacheSize:           1000,
-		CacheTTL:            5 * time.Minute,
-		SyncInterval:        30 * time.Second,
+		BaseURL:            "https://api.gemma.ai",
+		Model:              "gemma-7b",
+		Timeout:            30 * time.Second,
+		MaxRetries:         3,
+		BatchSize:          100,
+		MaxModels:          100,
+		MaxEmbeddings:      10000,
+		EmbeddingDimension: 4096,
+		GPUEnabled:         true,
+		CPUOptimization:    true,
+		ModelCaching:       true,
+		EmbeddingCaching:   true,
+		Quantization:       false,
+		CompressionType:    "gzip",
+		EnableCaching:      true,
+		CacheSize:          1000,
+		CacheTTL:           5 * time.Minute,
+		SyncInterval:       30 * time.Second,
 	}
 
 	// Parse configuration
@@ -95,18 +95,18 @@ func NewGemmaProvider(config map[string]interface{}) (VectorProvider, error) {
 	}
 
 	return &GemmaProvider{
-		config:      gemmaConfig,
-		logger:      logging.NewLogger("gemma_provider"),
-		models:      make(map[string]*memory.Model),
-		embeddings:  make(map[string]*memory.Embedding),
+		config:     gemmaConfig,
+		logger:     logging.NewLogger("gemma_provider"),
+		models:     make(map[string]*memory.Model),
+		embeddings: make(map[string]*memory.Embedding),
 		stats: &ProviderStats{
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -321,10 +321,10 @@ func (p *GemmaProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "cosine",
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "cosine",
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -358,20 +358,20 @@ func (p *GemmaProvider) CreateCollection(ctx context.Context, name string, confi
 
 	// Create a model as a collection
 	model := &memory.Model{
-		ID:                name,
-		Name:              name,
-		Type:              config.Metric,
-		Description:       config.Description,
-		Version:           "1.0",
-		Architecture:      "transformer",
-		Parameters:        fmt.Sprintf("%d", config.Dimension * config.Dimension),
-		CreatedAt:         time.Now(),
-		UpdatedAt:         time.Now(),
-		IsActive:          true,
-		CPUOptimization:   p.config.CPUOptimization,
-		GPUEnabled:        p.config.GPUEnabled,
-		Quantization:      p.config.Quantization,
-		Caching:           p.config.ModelCaching,
+		ID:              name,
+		Name:            name,
+		Type:            config.Metric,
+		Description:     config.Description,
+		Version:         "1.0",
+		Architecture:    "transformer",
+		Parameters:      fmt.Sprintf("%d", config.Dimension*config.Dimension),
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+		IsActive:        true,
+		CPUOptimization: p.config.CPUOptimization,
+		GPUEnabled:      p.config.GPUEnabled,
+		Quantization:    p.config.Quantization,
+		Caching:         p.config.ModelCaching,
 	}
 
 	if err := p.client.CreateModel(ctx, model); err != nil {
@@ -419,14 +419,14 @@ func (p *GemmaProvider) ListCollections(ctx context.Context) ([]*memory.Collecti
 
 	for _, model := range models {
 		embeddingCount := int64(p.getModelEmbeddingCount(model.ID))
-		
+
 		collections = append(collections, &memory.CollectionInfo{
 			Name:        model.ID,
 			Description: model.Description,
 			Dimension:   p.config.EmbeddingDimension,
 			Metric:      model.Type,
 			VectorCount: embeddingCount,
-			Size:        embeddingCount * int64(p.config.EmbeddingDimension * 8), // Approximate
+			Size:        embeddingCount * int64(p.config.EmbeddingDimension*8), // Approximate
 			CreatedAt:   model.CreatedAt,
 			UpdatedAt:   model.UpdatedAt,
 		})
@@ -453,7 +453,7 @@ func (p *GemmaProvider) GetCollection(ctx context.Context, name string) (*memory
 		Dimension:   p.config.EmbeddingDimension,
 		Metric:      model.Type,
 		VectorCount: embeddingCount,
-		Size:        embeddingCount * int64(p.config.EmbeddingDimension * 8),
+		Size:        embeddingCount * int64(p.config.EmbeddingDimension*8),
 		CreatedAt:   model.CreatedAt,
 		UpdatedAt:   model.UpdatedAt,
 	}, nil
@@ -610,7 +610,7 @@ func (p *GemmaProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -689,8 +689,8 @@ func (p *GemmaProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	metrics := map[string]float64{
-		"total_vectors":      float64(p.stats.TotalVectors),
-		"total_collections":  float64(p.stats.TotalCollections),
+		"total_vectors":     float64(p.stats.TotalVectors),
+		"total_collections": float64(p.stats.TotalCollections),
 		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
 		"uptime_seconds":    p.stats.Uptime.Seconds(),
 		"total_models":      float64(len(p.models)),
@@ -700,10 +700,10 @@ func (p *GemmaProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"gemma_api": "required",
 		},
@@ -763,7 +763,7 @@ func (p *GemmaProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     computeCost,
 		Currency:      "USD",
-		BillingPeriod:  "monthly",
+		BillingPeriod: "monthly",
 		FreeTierUsed:  requests > 1000, // Free tier for first 1000 requests
 		FreeTierLimit: 1000.0,
 	}
@@ -820,11 +820,11 @@ func (p *GemmaProvider) vectorToEmbedding(vector *memory.VectorData) (*memory.Em
 	}
 
 	return &memory.Embedding{
-		ID:       vector.ID,
-		ModelID:  modelID,
-		Text:     "",
-		Values:   vector.Vector,
-		Metadata: vector.Metadata,
+		ID:        vector.ID,
+		ModelID:   modelID,
+		Text:      "",
+		Values:    vector.Vector,
+		Metadata:  vector.Metadata,
 		CreatedAt: vector.Timestamp,
 		UpdatedAt: time.Now(),
 	}, nil
@@ -869,57 +869,18 @@ func (p *GemmaProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
 	}
-}
-
-// Utility functions
-
-func boolToFloat64(b bool) float64 {
-	if b {
-		return 1.0
-	}
-	return 0.0
-}
-
-func calculateCosineSimilarity(a, b []float64) float64 {
-	if len(a) != len(b) {
-		return 0.0
-	}
-
-	var dotProduct, normA, normB float64
-	for i := 0; i < len(a); i++ {
-		dotProduct += a[i] * b[i]
-		normA += a[i] * a[i]
-		normB += b[i] * b[i]
-	}
-
-	if normA == 0 || normB == 0 {
-		return 0.0
-	}
-
-	return dotProduct / (sqrt(normA) * sqrt(normB))
-}
-
-func sqrt(x float64) float64 {
-	if x == 0 {
-		return 0
-	}
-	z := x
-	for i := 0; i < 10; i++ {
-		z = (z + x/z) / 2
-	}
-	return z
 }
 
 // GemmaHTTPClient is a mock HTTP client for Gemma
@@ -997,11 +958,11 @@ func (c *GemmaHTTPClient) CreateEmbedding(ctx context.Context, embedding *memory
 func (c *GemmaHTTPClient) GetEmbedding(ctx context.Context, embeddingID string) (*memory.Embedding, error) {
 	// Mock implementation
 	return &memory.Embedding{
-		ID:       embeddingID,
-		ModelID:  "model1",
-		Text:     "",
-		Values:   make([]float64, c.config.EmbeddingDimension),
-		Metadata: map[string]interface{}{"source": "mock"},
+		ID:        embeddingID,
+		ModelID:   "model1",
+		Text:      "",
+		Values:    make([]float64, c.config.EmbeddingDimension),
+		Metadata:  map[string]interface{}{"source": "mock"},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}, nil
@@ -1022,11 +983,11 @@ func (c *GemmaHTTPClient) ListEmbeddings(ctx context.Context, modelID string) ([
 	var embeddings []*memory.Embedding
 	for i := 0; i < 10; i++ {
 		embeddings = append(embeddings, &memory.Embedding{
-			ID:       fmt.Sprintf("embedding_%s_%d", modelID, i),
-			ModelID:  modelID,
-			Text:     "",
-			Values:   make([]float64, c.config.EmbeddingDimension),
-			Metadata: map[string]interface{}{"index": i},
+			ID:        fmt.Sprintf("embedding_%s_%d", modelID, i),
+			ModelID:   modelID,
+			Text:      "",
+			Values:    make([]float64, c.config.EmbeddingDimension),
+			Metadata:  map[string]interface{}{"index": i},
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		})
@@ -1042,15 +1003,15 @@ func (c *GemmaHTTPClient) GenerateText(ctx context.Context, modelID, prompt stri
 func (c *GemmaHTTPClient) GetModelPerformance(ctx context.Context, modelID string) (*memory.ModelPerformance, error) {
 	// Mock implementation
 	return &memory.ModelPerformance{
-		ModelID:          modelID,
-		Latency:          100 * time.Millisecond,
-		Throughput:       1000.0,
-		CPUUtilization:   0.75,
-		GPUUtilization:   0.8,
-		MemoryUsage:      0.6,
-		ErrorRate:        0.001,
+		ModelID:           modelID,
+		Latency:           100 * time.Millisecond,
+		Throughput:        1000.0,
+		CPUUtilization:    0.75,
+		GPUUtilization:    0.8,
+		MemoryUsage:       0.6,
+		ErrorRate:         0.001,
 		RequestsPerSecond: 100.0,
-		LastUpdated:      time.Now(),
+		LastUpdated:       time.Now(),
 	}, nil
 }
 

@@ -8,37 +8,37 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // FAISSProvider implements VectorProvider for FAISS
 type FAISSProvider struct {
-	config       *FAISSConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	indices      map[string]*FAISSIndex
-	collections  map[string]*memory.CollectionConfig
-	stats        *ProviderStats
+	config      *FAISSConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	indices     map[string]*FAISSIndex
+	collections map[string]*memory.CollectionConfig
+	stats       *ProviderStats
 }
 
 // FAISSConfig contains FAISS provider configuration
 type FAISSConfig struct {
-	IndexPath       string            `json:"index_path"`
-	IndexType      string            `json:"index_type"`
-	Dimension      int               `json:"dimension"`
-	Metric         string            `json:"metric"`
-	NList          int               `json:"nlist"`
-	NProbe         int               `json:"nprobe"`
-	MemoryIndex    bool              `json:"memory_index"`
-	GPUDevice      int               `json:"gpu_device"`
-	StoragePath    string            `json:"storage_path"`
-	Compression    bool              `json:"compression"`
-	BatchSize      int               `json:"batch_size"`
-	MaxConnections int               `json:"max_connections"`
+	IndexPath      string `json:"index_path"`
+	IndexType      string `json:"index_type"`
+	Dimension      int    `json:"dimension"`
+	Metric         string `json:"metric"`
+	NList          int    `json:"nlist"`
+	NProbe         int    `json:"nprobe"`
+	MemoryIndex    bool   `json:"memory_index"`
+	GPUDevice      int    `json:"gpu_device"`
+	StoragePath    string `json:"storage_path"`
+	Compression    bool   `json:"compression"`
+	BatchSize      int    `json:"batch_size"`
+	MaxConnections int    `json:"max_connections"`
 }
 
 // FAISSIndex represents a FAISS index
@@ -54,7 +54,7 @@ type FAISSIndex struct {
 // NewFAISSProvider creates a new FAISS provider
 func NewFAISSProvider(config map[string]interface{}) (VectorProvider, error) {
 	faissConfig := &FAISSConfig{
-		IndexPath:       "./data/faiss/index",
+		IndexPath:      "./data/faiss/index",
 		IndexType:      "ivf_flat",
 		Dimension:      1536,
 		Metric:         "cosine",
@@ -62,7 +62,7 @@ func NewFAISSProvider(config map[string]interface{}) (VectorProvider, error) {
 		NProbe:         10,
 		MemoryIndex:    true,
 		GPUDevice:      0,
-		StoragePath:     "./data/faiss",
+		StoragePath:    "./data/faiss",
 		Compression:    true,
 		BatchSize:      1000,
 		MaxConnections: 100,
@@ -82,10 +82,10 @@ func NewFAISSProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -272,10 +272,10 @@ func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     p.config.Metric,
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  p.config.Metric,
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -350,7 +350,7 @@ func (p *FAISSProvider) ListCollections(ctx context.Context) ([]*memory.Collecti
 			Metric:      config.Metric,
 			VectorCount: vectorCount,
 			Size:        vectorCount * int64(config.Dimension) * 8, // Approximate
-			CreatedAt:   time.Now(), // FAISS doesn't store creation time
+			CreatedAt:   time.Now(),                                // FAISS doesn't store creation time
 			UpdatedAt:   time.Now(),
 		})
 	}
@@ -495,7 +495,7 @@ func (p *FAISSProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -529,7 +529,7 @@ func (p *FAISSProvider) Backup(ctx context.Context, path string) error {
 	for name, index := range p.indices {
 		src := index.indexPath
 		dst := filepath.Join(backupPath, name)
-		
+
 		if err := copyDirectory(src, dst); err != nil {
 			return fmt.Errorf("failed to backup index %s: %w", name, err)
 		}
@@ -570,15 +570,15 @@ func (p *FAISSProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"storage": "local_disk",
 		},
@@ -628,7 +628,7 @@ func (p *FAISSProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     0.0,
 		Currency:      "USD",
-		BillingPeriod:  "N/A",
+		BillingPeriod: "N/A",
 		FreeTierUsed:  false,
 		FreeTierLimit: 0.0,
 	}
@@ -721,14 +721,14 @@ func (p *FAISSProvider) initializeGPU(ctx context.Context) error {
 
 func (p *FAISSProvider) updateStats(duration time.Duration) {
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
@@ -908,38 +908,6 @@ func (idx *FAISSIndex) save() error {
 func (idx *FAISSIndex) load() error {
 	// Mock implementation - would load FAISS index from disk
 	return nil
-}
-
-// Utility functions
-
-func calculateCosineSimilarity(a, b []float64) float64 {
-	if len(a) != len(b) {
-		return 0.0
-	}
-
-	var dotProduct, normA, normB float64
-	for i := 0; i < len(a); i++ {
-		dotProduct += a[i] * b[i]
-		normA += a[i] * a[i]
-		normB += b[i] * b[i]
-	}
-
-	if normA == 0 || normB == 0 {
-		return 0.0
-	}
-
-	return dotProduct / (sqrt(normA) * sqrt(normB))
-}
-
-func sqrt(x float64) float64 {
-	if x == 0 {
-		return 0
-	}
-	z := x
-	for i := 0; i < 10; i++ {
-		z = (z + x/z) / 2
-	}
-	return z
 }
 
 func copyDirectory(src, dst string) error {
