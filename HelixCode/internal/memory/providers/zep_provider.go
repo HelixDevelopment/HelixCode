@@ -102,7 +102,7 @@ func (p *ZepProvider) Store(ctx context.Context, data []*memory.VectorData) erro
 			UserID: p.userID,
 		})
 		if err != nil {
-			p.logger.Warn("Failed to create user", "error", err)
+			p.logger.Warn("Failed to create user: %v", err)
 		}
 	}
 

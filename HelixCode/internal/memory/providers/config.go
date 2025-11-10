@@ -173,9 +173,7 @@ func (cm *ConfigManager) LoadConfig() error {
 	}
 
 	cm.config = config
-	cm.logger.Info("Configuration loaded successfully",
-		"providers", len(config.Providers),
-		"default_provider", config.DefaultProvider)
+	cm.logger.Info("Configuration loaded successfully providers=%d default_provider=%s", len(config.Providers), config.DefaultProvider)
 
 	return nil
 }
@@ -208,7 +206,7 @@ func (cm *ConfigManager) SaveConfig() error {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
-	cm.logger.Info("Configuration saved successfully", "path", cm.configPath)
+	cm.logger.Info("Configuration saved successfully path=%s", cm.configPath)
 	return nil
 }
 

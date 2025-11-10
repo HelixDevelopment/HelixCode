@@ -97,11 +97,7 @@ func (p *FAISSProvider) Initialize(ctx context.Context, config interface{}) erro
 		return nil
 	}
 
-	p.logger.Info("Initializing FAISS provider",
-		"index_type", p.config.IndexType,
-		"dimension", p.config.Dimension,
-		"metric", p.config.Metric,
-		"memory_index", p.config.MemoryIndex)
+	p.logger.Info("Initializing FAISS provider index_type=%s dimension=%d metric=%s memory_index=%t", p.config.IndexType, p.config.Dimension, p.config.Metric, p.config.MemoryIndex)
 
 	// Create storage directory
 	if err := os.MkdirAll(p.config.StoragePath, 0755); err != nil {
@@ -110,7 +106,7 @@ func (p *FAISSProvider) Initialize(ctx context.Context, config interface{}) erro
 
 	// Load existing indices
 	if err := p.loadExistingIndices(ctx); err != nil {
-		p.logger.Warn("Failed to load existing indices", "error", err)
+		p.logger.Warn("Failed to load existing indices: %v", err)
 	}
 
 	p.initialized = true
@@ -136,7 +132,7 @@ func (p *FAISSProvider) Start(ctx context.Context) error {
 	// Start GPU if available and requested
 	if p.config.MemoryIndex && p.config.GPUDevice >= 0 {
 		if err := p.initializeGPU(ctx); err != nil {
-			p.logger.Warn("Failed to initialize GPU, falling back to CPU", "error", err)
+			p.logger.Warn("Failed to initialize GPU, falling back to CPU: %v", err)
 		}
 	}
 
@@ -239,7 +235,7 @@ func (p *FAISSProvider) Delete(ctx context.Context, ids []string) error {
 		// Find and remove from all indices
 		for name, index := range p.indices {
 			if index.removeVector(id) {
-				p.logger.Info("Vector deleted", "id", id, "collection", name)
+				p.logger.Info("Vector deleted id=%s collection=%s", id, name)
 				break
 			}
 		}
@@ -364,7 +360,7 @@ func (p *FAISSProvider) CreateCollection(ctx context.Context, name string, confi
 	p.collections[name] = config
 	p.stats.TotalCollections++
 
-	p.logger.Info("Collection created", "name", name, "dimension", config.Dimension)
+	p.logger.Info("Collection created name=%s dimension=%d", name, config.Dimension)
 	return nil
 }
 
@@ -381,7 +377,7 @@ func (p *FAISSProvider) DeleteCollection(ctx context.Context, name string) error
 	delete(p.indices, name)
 	p.stats.TotalCollections--
 
-	p.logger.Info("Collection deleted", "name", name)
+	p.logger.Info("Collection deleted name=%s", name)
 	return nil
 }
 
@@ -557,7 +553,7 @@ func (p *FAISSProvider) Optimize(ctx context.Context) error {
 
 	for _, index := range p.indices {
 		if err := index.optimize(); err != nil {
-			p.logger.Warn("Failed to optimize index", "name", index.name, "error", err)
+			p.logger.Warn("Failed to optimize index name=%s: %v", index.name, err)
 		}
 	}
 
@@ -586,7 +582,7 @@ func (p *FAISSProvider) Backup(ctx context.Context, path string) error {
 		}
 	}
 
-	p.logger.Info("FAISS backup completed", "path", backupPath)
+	p.logger.Info("FAISS backup completed path=%s", backupPath)
 	return nil
 }
 
@@ -599,7 +595,7 @@ func (p *FAISSProvider) Restore(ctx context.Context, path string) error {
 		return fmt.Errorf("failed to restore from backup: %w", err)
 	}
 
-	p.logger.Info("FAISS restore completed", "path", path)
+	p.logger.Info("FAISS restore completed path=%s", path)
 	return nil
 }
 
@@ -697,7 +693,7 @@ func (p *FAISSProvider) Stop(ctx context.Context) error {
 	// Save all indices
 	for name, index := range p.indices {
 		if err := index.save(); err != nil {
-			p.logger.Warn("Failed to save index", "name", name, "error", err)
+			p.logger.Warn("Failed to save index name=%s: %v", name, err)
 		}
 	}
 
@@ -730,7 +726,7 @@ func (p *FAISSProvider) loadExistingIndicesFromPath(ctx context.Context, storage
 			}
 
 			if err := index.load(); err != nil {
-				p.logger.Warn("Failed to load index", "name", entry.Name(), "error", err)
+				p.logger.Warn("Failed to load index name=%s: %v", entry.Name(), err)
 				continue
 			}
 

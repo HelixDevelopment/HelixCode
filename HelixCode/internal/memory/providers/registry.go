@@ -90,8 +90,7 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	// r.providers[ProviderTypeBaseAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewBaseAIProvider(config) }
 
 	r.initialized = true
-	r.logger.Info("Provider registry initialized",
-		"total_providers", len(r.providers))
+	r.logger.Info("Provider registry initialized total_providers=%d", len(r.providers))
 
 	return nil
 }
@@ -106,7 +105,7 @@ func (r *ProviderRegistry) RegisterProvider(providerType ProviderType, factory P
 	}
 
 	r.providers[providerType] = factory
-	r.logger.Info("Provider registered", "type", providerType)
+	r.logger.Info("Provider registered type=%s", providerType)
 	return nil
 }
 
@@ -120,7 +119,7 @@ func (r *ProviderRegistry) UnregisterProvider(providerType ProviderType) error {
 	}
 
 	delete(r.providers, providerType)
-	r.logger.Info("Provider unregistered", "type", providerType)
+	r.logger.Info("Provider unregistered type=%s", providerType)
 	return nil
 }
 
@@ -139,7 +138,7 @@ func (r *ProviderRegistry) CreateProvider(providerType ProviderType, config map[
 		return nil, fmt.Errorf("failed to create provider %s: %w", providerType, err)
 	}
 
-	r.logger.Info("Provider created", "type", providerType)
+	r.logger.Info("Provider created type=%s", providerType)
 	return provider, nil
 }
 

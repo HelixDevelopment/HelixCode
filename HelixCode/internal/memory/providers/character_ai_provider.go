@@ -125,11 +125,8 @@ func (p *CharacterAIProvider) Initialize(ctx context.Context, config interface{}
 		return nil
 	}
 
-	p.logger.Info("Initializing Character.AI provider",
-		"base_url", p.config.BaseURL,
-		"max_characters", p.config.MaxCharacters,
-		"relationship_memory", p.config.RelationshipMemory,
-		"emotional_memory", p.config.EmotionalMemory)
+	p.logger.Info("Initializing Character.AI provider with base_url=%s, max_characters=%d, relationship_memory=%t, emotional_memory=%t",
+		p.config.BaseURL, p.config.MaxCharacters, p.config.RelationshipMemory, p.config.EmotionalMemory)
 
 	// Create Character.AI client
 	client, err := NewCharacterAIHTTPClient(p.config)
@@ -146,7 +143,7 @@ func (p *CharacterAIProvider) Initialize(ctx context.Context, config interface{}
 
 	// Load existing characters
 	if err := p.loadCharacters(ctx); err != nil {
-		p.logger.Warn("Failed to load characters", "error", err)
+		p.logger.Warn("Failed to load characters: %v", err)
 	}
 
 	p.initialized = true
@@ -209,9 +206,7 @@ func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*VectorData) 
 		character, err := p.vectorToCharacter(memVector)
 		if err == nil {
 			if err := p.client.CreateCharacter(ctx, character); err != nil {
-				p.logger.Error("Failed to create character",
-					"id", character.ID,
-					"error", err)
+				p.logger.Error("Failed to create character id=%s: %v", character.ID, err)
 				return fmt.Errorf("failed to store vector: %w", err)
 			}
 			p.characters[character.ID] = character
@@ -219,16 +214,12 @@ func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*VectorData) 
 			// Store as conversation data
 			conversation, err := p.vectorToConversation(memVector)
 			if err != nil {
-				p.logger.Error("Failed to convert vector to Character.AI format",
-					"id", vector.ID,
-					"error", err)
+				p.logger.Error("Failed to convert vector to Character.AI format id=%s: %v", vector.ID, err)
 				return fmt.Errorf("failed to store vector: %w", err)
 			}
 
 			if err := p.client.CreateConversation(ctx, conversation); err != nil {
-				p.logger.Error("Failed to create conversation",
-					"id", conversation.ID,
-					"error", err)
+				p.logger.Error("Failed to create conversation id=%s: %v", conversation.ID, err)
 				return fmt.Errorf("failed to store vector: %w", err)
 			}
 			p.conversations[conversation.ID] = conversation
@@ -269,25 +260,19 @@ func (p *CharacterAIProvider) Update(ctx context.Context, id string, vector *Vec
 	character, err := p.vectorToCharacter(memVector)
 	if err == nil {
 		if err := p.client.UpdateCharacter(ctx, character); err != nil {
-			p.logger.Error("Failed to update character",
-				"id", character.ID,
-				"error", err)
+			p.logger.Error("Failed to update character id=%s: %v", character.ID, err)
 			return fmt.Errorf("failed to update vector: %w", err)
 		}
 		p.characters[character.ID] = character
 	} else {
 		conversation, err := p.vectorToConversation(memVector)
 		if err != nil {
-			p.logger.Error("Failed to convert vector to Character.AI format",
-				"id", vector.ID,
-				"error", err)
+			p.logger.Error("Failed to convert vector to Character.AI format id=%s: %v", vector.ID, err)
 			return fmt.Errorf("failed to update vector: %w", err)
 		}
 
 		if err := p.client.UpdateConversation(ctx, conversation); err != nil {
-			p.logger.Error("Failed to update conversation",
-				"id", conversation.ID,
-				"error", err)
+			p.logger.Error("Failed to update conversation id=%s: %v", conversation.ID, err)
 			return fmt.Errorf("failed to update vector: %w", err)
 		}
 		p.conversations[conversation.ID] = conversation
@@ -342,9 +327,7 @@ func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*Ve
 			}
 			vectors = append(vectors, vector)
 		} else {
-			p.logger.Warn("Failed to retrieve vector",
-				"id", id,
-				"error", err)
+			p.logger.Warn("Failed to retrieve vector id=%s: %v", id, err)
 		}
 	}
 
@@ -373,7 +356,7 @@ func (p *CharacterAIProvider) Search(ctx context.Context, query *VectorQuery) (*
 	// Search characters
 	characters, err := p.client.ListCharacters(ctx)
 	if err != nil {
-		p.logger.Warn("Failed to list characters", "error", err)
+		p.logger.Warn("Failed to list characters: %v", err)
 	} else {
 		for _, character := range characters {
 			if len(results) >= query.TopK {
@@ -525,7 +508,7 @@ func (p *CharacterAIProvider) CreateCollection(ctx context.Context, name string,
 	p.characters[name] = character
 	p.stats.TotalCollections++
 
-	p.logger.Info("Collection created", "name", name, "description", config.Description)
+	p.logger.Info("Collection created name=%s description=%s", name, config.Description)
 	return nil
 }
 
@@ -545,7 +528,7 @@ func (p *CharacterAIProvider) DeleteCollection(ctx context.Context, name string)
 	delete(p.characters, name)
 	p.stats.TotalCollections--
 
-	p.logger.Info("Collection deleted", "name", name)
+	p.logger.Info("Collection deleted name=%s", name)
 	return nil
 }
 
@@ -613,7 +596,7 @@ func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string
 	}
 
 	// Character.AI handles indexing internally
-	p.logger.Info("Index creation not required for Character.AI", "collection", collection)
+	p.logger.Info("Index creation not required for Character.AI collection=%s", collection)
 	return nil
 }
 
@@ -712,9 +695,7 @@ func (p *CharacterAIProvider) DeleteMetadata(ctx context.Context, ids []string, 
 			character.UpdatedAt = time.Now()
 
 			if err := p.client.UpdateCharacter(ctx, character); err != nil {
-				p.logger.Warn("Failed to update character",
-					"id", id,
-					"error", err)
+				p.logger.Warn("Failed to update character id=%s: %v", id, err)
 			} else {
 				p.characters[id] = character
 			}
@@ -751,7 +732,7 @@ func (p *CharacterAIProvider) Optimize(ctx context.Context) error {
 	// - Memory consolidation
 
 	for characterID := range p.characters {
-		p.logger.Info("Optimizing character", "id", characterID)
+		p.logger.Info("Optimizing character id=%s", characterID)
 	}
 
 	p.stats.LastOperation = time.Now()
@@ -766,15 +747,15 @@ func (p *CharacterAIProvider) Backup(ctx context.Context, path string) error {
 
 	// Export all characters and conversations
 	for characterID := range p.characters {
-		p.logger.Info("Exporting character", "id", characterID)
+		p.logger.Info("Exporting character id=%s", characterID)
 	}
 
 	for conversationID := range p.conversations {
-		p.logger.Info("Exporting conversation", "id", conversationID)
+		p.logger.Info("Exporting conversation id=%s", conversationID)
 	}
 
 	p.stats.LastOperation = time.Now()
-	p.logger.Info("Character.AI backup completed", "path", path)
+	p.logger.Info("Character.AI backup completed path=%s", path)
 	return nil
 }
 
@@ -783,7 +764,7 @@ func (p *CharacterAIProvider) Restore(ctx context.Context, path string) error {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	p.logger.Info("Restoring Character.AI from backup", "path", path)
+	p.logger.Info("Restoring Character.AI from backup path=%s", path)
 
 	p.stats.LastOperation = time.Now()
 	p.logger.Info("Character.AI restore completed")
@@ -1087,7 +1068,7 @@ func NewCharacterAIHTTPClient(config *CharacterAIConfig) (CharacterAIClient, err
 
 // Mock implementation of CharacterAIClient interface
 func (c *CharacterAIHTTPClient) CreateCharacter(ctx context.Context, character *memory.Character) error {
-	c.logger.Info("Creating character", "id", character.ID, "name", character.Name)
+	c.logger.Info("Creating character id=%s name=%s", character.ID, character.Name)
 	return nil
 }
 
@@ -1119,12 +1100,12 @@ func (c *CharacterAIHTTPClient) GetCharacter(ctx context.Context, characterID st
 }
 
 func (c *CharacterAIHTTPClient) UpdateCharacter(ctx context.Context, character *memory.Character) error {
-	c.logger.Info("Updating character", "id", character.ID)
+	c.logger.Info("Updating character id=%s", character.ID)
 	return nil
 }
 
 func (c *CharacterAIHTTPClient) DeleteCharacter(ctx context.Context, characterID string) error {
-	c.logger.Info("Deleting character", "id", characterID)
+	c.logger.Info("Deleting character id=%s", characterID)
 	return nil
 }
 
@@ -1163,7 +1144,7 @@ func (c *CharacterAIHTTPClient) ListCharacters(ctx context.Context) ([]*memory.C
 }
 
 func (c *CharacterAIHTTPClient) CreateConversation(ctx context.Context, conversation *memory.Conversation) error {
-	c.logger.Info("Creating conversation", "id", conversation.ID, "character_id", conversation.CharacterID)
+	c.logger.Info("Creating conversation id=%s character_id=%s", conversation.ID, conversation.CharacterID)
 	return nil
 }
 
@@ -1188,12 +1169,12 @@ func (c *CharacterAIHTTPClient) GetConversation(ctx context.Context, conversatio
 }
 
 func (c *CharacterAIHTTPClient) UpdateConversation(ctx context.Context, conversation *memory.Conversation) error {
-	c.logger.Info("Updating conversation", "id", conversation.ID)
+	c.logger.Info("Updating conversation id=%s", conversation.ID)
 	return nil
 }
 
 func (c *CharacterAIHTTPClient) DeleteConversation(ctx context.Context, conversationID string) error {
-	c.logger.Info("Deleting conversation", "id", conversationID)
+	c.logger.Info("Deleting conversation id=%s", conversationID)
 	return nil
 }
 
@@ -1220,7 +1201,7 @@ func (c *CharacterAIHTTPClient) ListConversations(ctx context.Context, character
 }
 
 func (c *CharacterAIHTTPClient) SendMessage(ctx context.Context, message *memory.CharacterMessage) (*memory.CharacterMessage, error) {
-	c.logger.Info("Sending message", "session_id", message.SessionID, "type", message.Type)
+	c.logger.Info("Sending message session_id=%s type=%s", message.SessionID, message.Type)
 	return &memory.CharacterMessage{
 		ID:        "message1",
 		SessionID: message.SessionID,
@@ -1254,7 +1235,7 @@ func (c *CharacterAIHTTPClient) GetMessages(ctx context.Context, conversationID 
 }
 
 func (c *CharacterAIHTTPClient) UpdatePersonality(ctx context.Context, characterID string, traits map[string]interface{}) error {
-	c.logger.Info("Updating personality", "character_id", characterID)
+	c.logger.Info("Updating personality character_id=%s", characterID)
 	return nil
 }
 
@@ -1273,7 +1254,7 @@ func (c *CharacterAIHTTPClient) GetRelationship(ctx context.Context, characterID
 }
 
 func (c *CharacterAIHTTPClient) UpdateRelationship(ctx context.Context, characterID, userID string, data *memory.RelationshipData) error {
-	c.logger.Info("Updating relationship", "character_id", characterID, "user_id", userID)
+	c.logger.Info("Updating relationship character_id=%s user_id=%s", characterID, userID)
 	return nil
 }
 
@@ -1290,7 +1271,7 @@ func (c *CharacterAIHTTPClient) GetEmotionalState(ctx context.Context, character
 }
 
 func (c *CharacterAIHTTPClient) UpdateEmotionalState(ctx context.Context, characterID string, state *memory.EmotionalState) error {
-	c.logger.Info("Updating emotional state", "character_id", characterID)
+	c.logger.Info("Updating emotional state character_id=%s", characterID)
 	return nil
 }
 
