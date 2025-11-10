@@ -368,9 +368,9 @@ func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float
 		return nil, err
 	}
 
-	var results []*memory.VectorSimilarityResult
+	var results []*VectorSimilarityResult
 	for _, item := range searchResult.Results {
-		results = append(results, &memory.VectorSimilarityResult{
+		results = append(results, &VectorSimilarityResult{
 			ID:       item.ID,
 			Vector:   item.Vector,
 			Metadata: item.Metadata,
@@ -383,8 +383,21 @@ func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float
 	return results, nil
 }
 
+// BatchFindSimilar finds similar vectors for multiple queries
+func (p *CharacterAIProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	results := make([][]*VectorSimilarityResult, len(queries))
+	for i, query := range queries {
+		similar, err := p.FindSimilar(ctx, query, k, nil)
+		if err != nil {
+			return nil, err
+		}
+		results[i] = similar
+	}
+	return results, nil
+}
+
 // CreateCollection creates a new collection (character or conversation space)
-func (p *CharacterAIProvider) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
+func (p *CharacterAIProvider) CreateCollection(ctx context.Context, name string, config *CollectionConfig) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
