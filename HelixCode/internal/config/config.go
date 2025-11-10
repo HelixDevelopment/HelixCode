@@ -12,14 +12,47 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	Server   ServerConfig    `mapstructure:"server"`
-	Database database.Config `mapstructure:"database"`
-	Redis    RedisConfig     `mapstructure:"redis"`
-	Auth     AuthConfig      `mapstructure:"auth"`
-	Workers  WorkersConfig   `mapstructure:"workers"`
-	Tasks    TasksConfig     `mapstructure:"tasks"`
-	LLM      LLMConfig       `mapstructure:"llm"`
-	Logging  LoggingConfig   `mapstructure:"logging"`
+	Server    ServerConfig    `mapstructure:"server"`
+	Database  database.Config `mapstructure:"database"`
+	Redis     RedisConfig     `mapstructure:"redis"`
+	Auth      AuthConfig      `mapstructure:"auth"`
+	Workers   WorkersConfig   `mapstructure:"workers"`
+	Tasks     TasksConfig     `mapstructure:"tasks"`
+	LLM       LLMConfig       `mapstructure:"llm"`
+	Providers ProvidersConfig `mapstructure:"providers"`
+	Logging   LoggingConfig   `mapstructure:"logging"`
+}
+
+// ProvidersConfig represents provider configurations
+type ProvidersConfig struct {
+	Mem0    Mem0Config    `mapstructure:"mem0"`
+	Zep     ZepConfig     `mapstructure:"zep"`
+	Memonto MemontoConfig `mapstructure:"memonto"`
+	BaseAI  BaseAIConfig  `mapstructure:"baseai"`
+}
+
+// Mem0Config represents Mem0 provider configuration
+type Mem0Config struct {
+	APIKey  string `mapstructure:"api_key"`
+	BaseURL string `mapstructure:"base_url"`
+}
+
+// ZepConfig represents Zep provider configuration
+type ZepConfig struct {
+	APIKey  string `mapstructure:"api_key"`
+	BaseURL string `mapstructure:"base_url"`
+}
+
+// MemontoConfig represents Memonto provider configuration
+type MemontoConfig struct {
+	APIKey  string `mapstructure:"api_key"`
+	BaseURL string `mapstructure:"base_url"`
+}
+
+// BaseAIConfig represents BaseAI provider configuration
+type BaseAIConfig struct {
+	APIKey  string `mapstructure:"api_key"`
+	BaseURL string `mapstructure:"base_url"`
 }
 
 // LoggingConfig represents logging configuration

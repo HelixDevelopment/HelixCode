@@ -182,7 +182,7 @@ func (p *CharacterAIProvider) Start(ctx context.Context) error {
 }
 
 // Store stores vectors in Character.AI (as character data or conversations)
-func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*memory.VectorData) error {
+func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*VectorData) error {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -197,8 +197,17 @@ func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*memory.Vecto
 
 	// Convert vectors to Character.AI format
 	for _, vector := range vectors {
+		// Convert VectorData to memory.VectorData
+		memVector := &memory.VectorData{
+			ID:         vector.ID,
+			Vector:     vector.Vector,
+			Metadata:   vector.Metadata,
+			Collection: vector.Collection,
+			Timestamp:  vector.Timestamp,
+		}
+
 		// Try to store as character data
-		character, err := p.vectorToCharacter(vector)
+		character, err := p.vectorToCharacter(memVector)
 		if err == nil {
 			if err := p.client.CreateCharacter(ctx, character); err != nil {
 				p.logger.Error("Failed to create character",
@@ -209,7 +218,7 @@ func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*memory.Vecto
 			p.characters[character.ID] = character
 		} else {
 			// Store as conversation data
-			conversation, err := p.vectorToConversation(vector)
+			conversation, err := p.vectorToConversation(memVector)
 			if err != nil {
 				p.logger.Error("Failed to convert vector to Character.AI format",
 					"id", vector.ID,
@@ -234,8 +243,63 @@ func (p *CharacterAIProvider) Store(ctx context.Context, vectors []*memory.Vecto
 	return nil
 }
 
+// Update updates a vector in Character.AI
+func (p *CharacterAIProvider) Update(ctx context.Context, id string, vector *VectorData) error {
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	if !p.started {
+		return fmt.Errorf("provider not started")
+	}
+
+	// Convert VectorData to memory.VectorData
+	memVector := &memory.VectorData{
+		ID:         vector.ID,
+		Vector:     vector.Vector,
+		Metadata:   vector.Metadata,
+		Collection: vector.Collection,
+		Timestamp:  vector.Timestamp,
+	}
+
+	// Convert vector to Character.AI format and update
+	character, err := p.vectorToCharacter(memVector)
+	if err == nil {
+		if err := p.client.UpdateCharacter(ctx, character); err != nil {
+			p.logger.Error("Failed to update character",
+				"id", character.ID,
+				"error", err)
+			return fmt.Errorf("failed to update vector: %w", err)
+		}
+		p.characters[character.ID] = character
+	} else {
+		conversation, err := p.vectorToConversation(memVector)
+		if err != nil {
+			p.logger.Error("Failed to convert vector to Character.AI format",
+				"id", vector.ID,
+				"error", err)
+			return fmt.Errorf("failed to update vector: %w", err)
+		}
+
+		if err := p.client.UpdateConversation(ctx, conversation); err != nil {
+			p.logger.Error("Failed to update conversation",
+				"id", conversation.ID,
+				"error", err)
+			return fmt.Errorf("failed to update vector: %w", err)
+		}
+		p.conversations[conversation.ID] = conversation
+	}
+
+	p.stats.LastOperation = time.Now()
+	return nil
+}
+
 // Retrieve retrieves vectors by ID from Character.AI
-func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
+func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*VectorData, error) {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -248,13 +312,20 @@ func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*me
 		return nil, fmt.Errorf("provider not started")
 	}
 
-	var vectors []*memory.VectorData
+	var vectors []*VectorData
 
 	for _, id := range ids {
 		// Try to get as character
 		character, err := p.client.GetCharacter(ctx, id)
 		if err == nil {
-			vector := p.characterToVector(character)
+			memVector := p.characterToVector(character)
+			vector := &VectorData{
+				ID:         memVector.ID,
+				Vector:     memVector.Vector,
+				Metadata:   memVector.Metadata,
+				Collection: memVector.Collection,
+				Timestamp:  memVector.Timestamp,
+			}
 			vectors = append(vectors, vector)
 			continue
 		}
@@ -262,7 +333,14 @@ func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*me
 		// Try to get as conversation
 		conversation, err := p.client.GetConversation(ctx, id)
 		if err == nil {
-			vector := p.conversationToVector(conversation)
+			memVector := p.conversationToVector(conversation)
+			vector := &VectorData{
+				ID:         memVector.ID,
+				Vector:     memVector.Vector,
+				Metadata:   memVector.Metadata,
+				Collection: memVector.Collection,
+				Timestamp:  memVector.Timestamp,
+			}
 			vectors = append(vectors, vector)
 		} else {
 			p.logger.Warn("Failed to retrieve vector",
@@ -276,7 +354,7 @@ func (p *CharacterAIProvider) Retrieve(ctx context.Context, ids []string) ([]*me
 }
 
 // Search performs vector similarity search in Character.AI
-func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
+func (p *CharacterAIProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))
@@ -291,7 +369,7 @@ func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQu
 
 	// Character.AI uses personality matching rather than pure vector search
 	// This is a simplified implementation
-	var results []*memory.VectorSearchResultItem
+	var results []*VectorSearchResultItem
 
 	// Search characters
 	characters, err := p.client.ListCharacters(ctx)
@@ -307,7 +385,7 @@ func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQu
 			score := p.calculatePersonalityMatch(query.Vector, character)
 			if score >= query.Threshold {
 				vector := p.characterToVector(character)
-				results = append(results, &memory.VectorSearchResultItem{
+				results = append(results, &VectorSearchResultItem{
 					ID:       character.ID,
 					Vector:   vector.Vector,
 					Metadata: vector.Metadata,
@@ -328,7 +406,7 @@ func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQu
 			score := p.calculateConversationMatch(query.Vector, conversation)
 			if score >= query.Threshold {
 				vector := p.conversationToVector(conversation)
-				results = append(results, &memory.VectorSearchResultItem{
+				results = append(results, &VectorSearchResultItem{
 					ID:       conversation.ID,
 					Vector:   vector.Vector,
 					Metadata: vector.Metadata,
@@ -340,7 +418,7 @@ func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQu
 	}
 
 	p.stats.LastOperation = time.Now()
-	return &memory.VectorSearchResult{
+	return &VectorSearchResult{
 		Results:   results,
 		Total:     len(results),
 		Query:     query,
@@ -363,14 +441,14 @@ func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float
 		return nil, fmt.Errorf("provider not started")
 	}
 
-	query := &memory.VectorQuery{
-		Vector:  embedding,
-		TopK:    k,
-		Filters: filters,
-		Metric:  "cosine",
+	vectorQuery := &VectorQuery{
+		Vector:    embedding,
+		TopK:      k,
+		Filters:   filters,
+		Threshold: 0.0, // Default threshold
 	}
 
-	searchResult, err := p.Search(ctx, query)
+	searchResult, err := p.Search(ctx, vectorQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -403,10 +481,16 @@ func (p *CharacterAIProvider) BatchFindSimilar(ctx context.Context, queries [][]
 	return results, nil
 }
 
-// CreateIndex creates an index for a collection
-func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
+// Delete deletes vectors by IDs
+func (p *CharacterAIProvider) Delete(ctx context.Context, ids []string) error {
 	// Stub implementation
-	return fmt.Errorf("CreateIndex not implemented for CharacterAI provider")
+	return fmt.Errorf("Delete not implemented for CharacterAI provider")
+}
+
+// DeleteIndex deletes an index
+func (p *CharacterAIProvider) DeleteIndex(ctx context.Context, collection string, indexName string) error {
+	// Stub implementation
+	return fmt.Errorf("DeleteIndex not implemented for CharacterAI provider")
 }
 
 // CreateCollection creates a new collection (character or conversation space)
@@ -465,7 +549,7 @@ func (p *CharacterAIProvider) DeleteCollection(ctx context.Context, name string)
 }
 
 // ListCollections lists all collections
-func (p *CharacterAIProvider) ListCollections(ctx context.Context) ([]*memory.CollectionInfo, error) {
+func (p *CharacterAIProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -474,18 +558,18 @@ func (p *CharacterAIProvider) ListCollections(ctx context.Context) ([]*memory.Co
 		return nil, fmt.Errorf("failed to list collections: %w", err)
 	}
 
-	var collections []*memory.CollectionInfo
+	var collections []*CollectionInfo
 
 	for _, character := range characters {
 		vectorCount := int64(p.getCharacterMessageCount(character.ID))
 
-		collections = append(collections, &memory.CollectionInfo{
+		collections = append(collections, &CollectionInfo{
 			Name:        character.ID,
-			Description: character.Description,
 			Dimension:   1536, // Default embedding size
 			Metric:      "personality_match",
+			Size:        vectorCount * 1536 * 8,
 			VectorCount: vectorCount,
-			Size:        vectorCount * 1536 * 8, // Approximate
+			Metadata:    map[string]interface{}{"description": character.Description},
 			CreatedAt:   character.CreatedAt,
 			UpdatedAt:   character.UpdatedAt,
 		})
@@ -495,7 +579,7 @@ func (p *CharacterAIProvider) ListCollections(ctx context.Context) ([]*memory.Co
 }
 
 // GetCollection gets collection information
-func (p *CharacterAIProvider) GetCollection(ctx context.Context, name string) (*memory.CollectionInfo, error) {
+func (p *CharacterAIProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -506,20 +590,20 @@ func (p *CharacterAIProvider) GetCollection(ctx context.Context, name string) (*
 
 	vectorCount := int64(p.getCharacterMessageCount(character.ID))
 
-	return &memory.CollectionInfo{
+	return &CollectionInfo{
 		Name:        character.ID,
-		Description: character.Description,
 		Dimension:   1536,
 		Metric:      "personality_match",
-		VectorCount: vectorCount,
 		Size:        vectorCount * 1536 * 8,
+		VectorCount: vectorCount,
+		Metadata:    map[string]interface{}{"description": character.Description},
 		CreatedAt:   character.CreatedAt,
 		UpdatedAt:   character.UpdatedAt,
 	}, nil
 }
 
 // CreateIndex creates an index (character optimization)
-func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
+func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -532,21 +616,8 @@ func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string
 	return nil
 }
 
-// DeleteIndex deletes an index
-func (p *CharacterAIProvider) DeleteIndex(ctx context.Context, collection string) error {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-
-	if _, exists := p.characters[collection]; !exists {
-		return fmt.Errorf("collection %s not found", collection)
-	}
-
-	p.logger.Info("Index deletion not required for Character.AI", "collection", collection)
-	return nil
-}
-
 // ListIndexes lists indexes in a collection
-func (p *CharacterAIProvider) ListIndexes(ctx context.Context, collection string) ([]*memory.IndexInfo, error) {
+func (p *CharacterAIProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -554,7 +625,7 @@ func (p *CharacterAIProvider) ListIndexes(ctx context.Context, collection string
 		return nil, fmt.Errorf("collection %s not found", collection)
 	}
 
-	return []*memory.IndexInfo{}, nil
+	return []*IndexInfo{}, nil
 }
 
 // AddMetadata adds metadata to vectors

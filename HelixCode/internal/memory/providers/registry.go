@@ -36,8 +36,8 @@ func GetRegistry() *ProviderRegistry {
 // NewProviderRegistry creates a new provider registry
 func NewProviderRegistry() *ProviderRegistry {
 	registry := &ProviderRegistry{
-		providers: make(map[memory.ProviderType]ProviderFactory),
-		logger:    logging.NewLogger("provider_registry"),
+		providers: make(map[memory.ProviderType]ProviderFactoryFunc),
+		logger:    logging.NewLoggerWithName("provider_registry"),
 	}
 
 	// Register all built-in providers
@@ -327,14 +327,14 @@ func (r *ProviderRegistry) GetDefaultConfig(providerType memory.ProviderType) ma
 	defer r.mu.RUnlock()
 
 	switch providerType {
-	case ProviderTypePinecone:
+	case memory.ProviderTypePinecone:
 		return map[string]interface{}{
 			"environment": "us-west1-gcp",
 			"index_name":  "vectors",
 			"dimension":   1536,
 			"metric":      "cosine",
 		}
-	case memory.ProviderMilvus:
+	case memory.ProviderTypeMilvus:
 		return map[string]interface{}{
 			"host":        "localhost",
 			"port":        19530,
@@ -342,143 +342,143 @@ func (r *ProviderRegistry) GetDefaultConfig(providerType memory.ProviderType) ma
 			"index_type":  "IVF_FLAT",
 			"metric_type": "L2",
 		}
-	case memory.ProviderOpenAI:
+	case memory.ProviderTypeOpenAI:
 		return map[string]interface{}{
 			"model":       "text-embedding-3-small",
 			"timeout":     30,
 			"max_retries": 3,
 		}
-	case memory.ProviderAnthropic:
+	case memory.ProviderTypeAnthropic:
 		return map[string]interface{}{
 			"model":       "claude-3-haiku-20240307",
 			"timeout":     30,
 			"max_retries": 3,
 		}
-	case memory.ProviderRedis:
+	case memory.ProviderTypeRedis:
 		return map[string]interface{}{
 			"addr":          "localhost:6379",
 			"db":            0,
 			"enable_search": true,
 			"compression":   true,
 		}
-	case memory.ProviderChroma:
+	case memory.ProviderTypeChroma:
 		return map[string]interface{}{
 			"host": "localhost",
 			"port": 8000,
 			"path": "./chroma_db",
 		}
-	case memory.ProviderQdrant:
+	case memory.ProviderTypeQdrant:
 		return map[string]interface{}{
 			"host":       "localhost",
 			"port":       6333,
 			"api_key":    "",
 			"collection": "vectors",
 		}
-	case memory.ProviderWeaviate:
+	case memory.ProviderTypeWeaviate:
 		return map[string]interface{}{
 			"url":        "http://localhost:8080",
 			"api_key":    "",
 			"batch_size": 100,
 		}
-	case memory.ProviderMemGPT:
+	case memory.ProviderTypeMemGPT:
 		return map[string]interface{}{
 			"base_url":   "https://api.memgpt.ai",
 			"model":      "memgpt-1.0",
 			"max_tokens": 4096,
 		}
-	case memory.ProviderCrewAI:
+	case memory.ProviderTypeCrewAI:
 		return map[string]interface{}{
 			"base_url":           "https://api.crewai.ai",
 			"max_agents":         10,
 			"parallel_execution": true,
 		}
-	case memory.ProviderCharacterAI:
+	case memory.ProviderTypeCharacterAI:
 		return map[string]interface{}{
 			"base_url":            "https://api.character.ai",
 			"max_characters":      1000,
 			"relationship_memory": true,
 		}
-	case memory.ProviderReplika:
+	case memory.ProviderTypeReplika:
 		return map[string]interface{}{
 			"base_url":          "https://api.replika.ai",
 			"max_personalities": 1000,
 			"emotional_memory":  true,
 		}
-	case memory.ProviderAnima:
+	case memory.ProviderTypeAnima:
 		return map[string]interface{}{
 			"base_url":           "https://api.anima.ai",
 			"max_avatars":        1000,
 			"emotional_tracking": true,
 		}
-	case memory.ProviderGemma:
+	case memory.ProviderTypeGemma:
 		return map[string]interface{}{
 			"base_url":            "https://api.gemma.ai",
 			"model":               "gemma-7b",
 			"embedding_dimension": 4096,
 			"gpu_enabled":         true,
 		}
-	case memory.ProviderLlamaIndex:
+	case memory.ProviderTypeLlamaIndex:
 		return map[string]interface{}{
 			"storage_type": "local",
 			"persist_dir":  "./llama_index",
 			"chunk_size":   1024,
 		}
-	case memory.ProviderCohere:
+	case memory.ProviderTypeCohere:
 		return map[string]interface{}{
 			"model":       "embed-english-v3.0",
 			"timeout":     30,
 			"max_retries": 3,
 		}
-	case memory.ProviderHuggingFace:
+	case memory.ProviderTypeHuggingFace:
 		return map[string]interface{}{
 			"model":   "sentence-transformers/all-MiniLM-L6-v2",
 			"task":    "feature-extraction",
 			"timeout": 30,
 		}
-	case memory.ProviderMistral:
+	case memory.ProviderTypeMistral:
 		return map[string]interface{}{
 			"model":       "mistral-embed",
 			"timeout":     30,
 			"max_retries": 3,
 		}
-	case memory.ProviderGemini:
+	case memory.ProviderTypeGemini:
 		return map[string]interface{}{
 			"model":       "text-embedding-004",
 			"timeout":     30,
 			"max_retries": 3,
 		}
-	case memory.ProviderVertexAI:
+	case memory.ProviderTypeVertexAI:
 		return map[string]interface{}{
 			"project_id": "",
 			"location":   "us-central1",
 			"index_name": "vectors",
 		}
-	case memory.ProviderClickHouse:
+	case memory.ProviderTypeClickHouse:
 		return map[string]interface{}{
 			"host":     "localhost",
 			"port":     9000,
 			"database": "vectors",
 			"table":    "embeddings",
 		}
-	case memory.ProviderSupabase:
+	case memory.ProviderTypeSupabase:
 		return map[string]interface{}{
 			"url":   "",
 			"key":   "",
 			"table": "vectors",
 		}
-	case memory.ProviderDeepLake:
+	case memory.ProviderTypeDeepLake:
 		return map[string]interface{}{
 			"path":               "./deeplake",
 			"embedding_function": "text-embedding-ada-002",
 		}
-	case memory.ProviderFAISS:
+	case memory.ProviderTypeFAISS:
 		return map[string]interface{}{
 			"index_type": "IVF",
 			"dimension":  1536,
 			"nlist":      100,
 			"metric":     "cosine",
 		}
-	case memory.ProviderAgnostic:
+	case memory.ProviderTypeAgnostic:
 		return map[string]interface{}{
 			"storage_type":       "memory",
 			"enable_persistence": false,
@@ -532,25 +532,25 @@ type RegistryStatistics struct {
 // getProviderCategory returns the category of a provider type
 func (r *ProviderRegistry) getProviderCategory(providerType memory.ProviderType) string {
 	switch {
-	case providerType == ProviderTypePinecone ||
-		providerType == ProviderTypeMilvus ||
-		providerType == ProviderTypeWeaviate ||
-		providerType == ProviderTypeQdrant ||
-		providerType == ProviderTypeRedis ||
-		providerType == ProviderTypeChroma ||
-		providerType == ProviderTypeFAISS ||
-		providerType == ProviderTypeDeepLake ||
-		providerType == ProviderTypeClickHouse ||
-		providerType == ProviderTypeSupabase ||
-		providerType == ProviderTypeVertexAI:
+	case providerType == memory.ProviderTypePinecone ||
+		providerType == memory.ProviderTypeMilvus ||
+		providerType == memory.ProviderTypeWeaviate ||
+		providerType == memory.ProviderTypeQdrant ||
+		providerType == memory.ProviderTypeRedis ||
+		providerType == memory.ProviderTypeChroma ||
+		providerType == memory.ProviderTypeFAISS ||
+		providerType == memory.ProviderTypeDeepLake ||
+		providerType == memory.ProviderTypeClickHouse ||
+		providerType == memory.ProviderTypeSupabase ||
+		providerType == memory.ProviderTypeVertexAI:
 		return "vector_database"
-	case providerType == memory.ProviderMemGPT ||
-		providerType == memory.ProviderCrewAI ||
-		providerType == memory.ProviderCharacterAI ||
-		providerType == memory.ProviderReplika ||
-		providerType == memory.ProviderAnima:
+	case providerType == memory.ProviderTypeMemGPT ||
+		providerType == memory.ProviderTypeCrewAI ||
+		providerType == memory.ProviderTypeCharacterAI ||
+		providerType == memory.ProviderTypeReplika ||
+		providerType == memory.ProviderTypeAnima:
 		return "ai_memory"
-	case providerType == ProviderTypeAgnostic:
+	case providerType == memory.ProviderTypeAgnostic:
 		return "utility"
 	default:
 		return "unknown"
