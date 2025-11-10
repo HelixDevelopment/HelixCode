@@ -120,14 +120,27 @@ HelixCode/
 
 ### Installation
 
-1. **Clone the repository**:
+1. **Clone the repository and setup environment**:
    ```bash
    git clone https://github.com/your-org/helixcode.git
    cd helixcode
+   ./setup.sh
    ```
 
-2. **Build the application**:
+   This will:
+   - Initialize all git submodules
+   - Install system dependencies
+   - Build the HelixCode application
+
+2. **Manual setup (alternative)**:
    ```bash
+   # Initialize submodules
+   ./scripts/init-submodules.sh
+
+   # Install dependencies (Ubuntu/Debian)
+   ./install_missing_libs.sh
+
+   # Build the application
    cd HelixCode
    make build
    ```
