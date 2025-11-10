@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // ChromaDBProvider implements VectorProvider interface for ChromaDB
@@ -13,7 +14,7 @@ import (
 // This is a stub implementation that returns errors.
 type ChromaDBProvider struct {
 	config      *ChromaDBConfig
-	logger      logging.Logger
+	logger      *logging.Logger
 	initialized bool
 	started     bool
 	stats       *ProviderStats
@@ -35,17 +36,6 @@ type ChromaDBConfig struct {
 	Dimension   int           `json:"dimension"`
 }
 
-// ProviderStats represents provider statistics
-type ProviderStats struct {
-	TotalVectors     int64         `json:"total_vectors"`
-	TotalCollections int64         `json:"total_collections"`
-	TotalSize        int64         `json:"total_size"`
-	AverageLatency   time.Duration `json:"average_latency"`
-	LastOperation    time.Time     `json:"last_operation"`
-	ErrorCount       int64         `json:"error_count"`
-	Uptime           time.Duration `json:"uptime"`
-}
-
 // NewChromaDBProvider creates a new ChromaDB provider
 func NewChromaDBProvider(config interface{}) (VectorProvider, error) {
 	chromadbConfig, err := parseChromaDBConfig(config)
@@ -53,7 +43,7 @@ func NewChromaDBProvider(config interface{}) (VectorProvider, error) {
 		return nil, fmt.Errorf("failed to parse ChromaDB config: %w", err)
 	}
 
-	logger := logging.NewLogger("chromadb_provider")
+	logger := logging.NewLoggerWithName("chromadb_provider")
 
 	return &ChromaDBProvider{
 		config: chromadbConfig,
@@ -119,9 +109,84 @@ func (p *ChromaDBProvider) Optimize(ctx context.Context) error {
 func (p *ChromaDBProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	return &HealthStatus{
 		Status:    "unhealthy",
+		Message:   "ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client",
 		LastCheck: time.Now(),
-		Error:     "ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client",
 	}, nil
+}
+
+// Update updates a vector
+func (p *ChromaDBProvider) Update(ctx context.Context, id string, vector *VectorData) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// Delete deletes vectors by IDs
+func (p *ChromaDBProvider) Delete(ctx context.Context, ids []string) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// BatchFindSimilar finds similar vectors for multiple queries
+func (p *ChromaDBProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	return nil, fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// DeleteCollection deletes a collection
+func (p *ChromaDBProvider) DeleteCollection(ctx context.Context, name string) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// ListCollections lists all collections
+func (p *ChromaDBProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
+	return nil, fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// GetCollection gets collection information
+func (p *ChromaDBProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
+	return nil, fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// CreateIndex creates an index
+func (p *ChromaDBProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// DeleteIndex deletes an index
+func (p *ChromaDBProvider) DeleteIndex(ctx context.Context, collection, name string) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// ListIndexes lists indexes for a collection
+func (p *ChromaDBProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
+	return nil, fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// AddMetadata adds metadata to a vector
+func (p *ChromaDBProvider) AddMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// UpdateMetadata updates metadata for a vector
+func (p *ChromaDBProvider) UpdateMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// GetMetadata gets metadata for vectors
+func (p *ChromaDBProvider) GetMetadata(ctx context.Context, ids []string) (map[string]map[string]interface{}, error) {
+	return nil, fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// DeleteMetadata deletes metadata from vectors
+func (p *ChromaDBProvider) DeleteMetadata(ctx context.Context, ids []string, keys []string) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// Backup creates a backup
+func (p *ChromaDBProvider) Backup(ctx context.Context, path string) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
+}
+
+// Restore restores from a backup
+func (p *ChromaDBProvider) Restore(ctx context.Context, path string) error {
+	return fmt.Errorf("ChromaDB provider is not supported: ChromaDB is Python-based and has no official Go client")
 }
 
 // GetName returns provider name
@@ -130,8 +195,8 @@ func (p *ChromaDBProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *ChromaDBProvider) GetType() ProviderType {
-	return ProviderTypeChromaDB
+func (p *ChromaDBProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeChroma
 }
 
 // GetCapabilities returns provider capabilities

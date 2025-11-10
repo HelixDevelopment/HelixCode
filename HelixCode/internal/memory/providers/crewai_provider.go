@@ -811,8 +811,8 @@ func (p *CrewAIProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *CrewAIProvider) GetType() ProviderType {
-	return ProviderTypeCrewAI
+func (p *CrewAIProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeCrewAI
 }
 
 // GetCapabilities returns provider capabilities

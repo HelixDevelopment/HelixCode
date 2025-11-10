@@ -1230,6 +1230,7 @@ func NewVectorData(id string, vector []float64, metadata map[string]interface{},
 // VectorQuery represents a vector search query
 type VectorQuery struct {
 	Vector        []float64              `json:"vector"`
+	Text          string                 `json:"text,omitempty"`
 	Collection    string                 `json:"collection"`
 	Namespace     string                 `json:"namespace,omitempty"`
 	TopK          int                    `json:"top_k"`
@@ -1549,6 +1550,10 @@ const (
 	ProviderTypeReplika     ProviderType = "replika"
 	ProviderTypeAnima       ProviderType = "anima"
 	ProviderTypeGemma       ProviderType = "gemma"
+	ProviderTypeMem0        ProviderType = "mem0"
+	ProviderTypeZep         ProviderType = "zep"
+	ProviderTypeMemonto     ProviderType = "memonto"
+	ProviderTypeBaseAI      ProviderType = "baseai"
 	ProviderTypeAgnostic    ProviderType = "agnostic"
 )
 

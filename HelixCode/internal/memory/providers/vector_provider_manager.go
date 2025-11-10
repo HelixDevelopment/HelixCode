@@ -242,6 +242,17 @@ type CostInfo struct {
 	FreeTierLimit float64 `json:"free_tier_limit"`
 }
 
+// ProviderStats represents provider statistics
+type ProviderStats struct {
+	TotalVectors     int64         `json:"total_vectors"`
+	TotalCollections int64         `json:"total_collections"`
+	TotalSize        int64         `json:"total_size"`
+	AverageLatency   time.Duration `json:"average_latency"`
+	LastOperation    time.Time     `json:"last_operation"`
+	ErrorCount       int64         `json:"error_count"`
+	Uptime           time.Duration `json:"uptime"`
+}
+
 // HealthStatus represents detailed health status for providers
 type HealthStatus struct {
 	Status       string                 `json:"status"`
