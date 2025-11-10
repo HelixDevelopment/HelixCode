@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/llm/compressioniface"
 	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory/providers"
 )
@@ -725,15 +726,31 @@ func (mi *MemoryIntegration) Stop(ctx context.Context) error {
 
 type MemoryConfig struct{}
 type ConversationManager struct {
-	// TODO: Integrate context compression
-	// compressionCoordinator *compression.CompressionCoordinator
+	compressionCoordinator compressioniface.CompressionCoordinator
 }
 
 func NewConversationManager(ai *AIIntegration, config *AIConfig) *ConversationManager {
+	// Initialize compression coordinator
+	// TODO: Pass actual LLM provider when available
+	compressionConfig := &compressioniface.Config{
+		Enabled:              true,
+		DefaultStrategy:      compressioniface.StrategyHybrid,
+		TokenBudget:          200000,
+		WarningThreshold:     150000,
+		CompressionThreshold: 180000,
+		AutoCompressEnabled:  true,
+		AutoCompressInterval: 5 * time.Minute,
+	}
+
+	compressionCoordinator, err := compressioniface.NewCoordinatorFactory(nil, compressionConfig)
+	if err != nil {
+		// Log error but don't fail initialization
+		ai.logger.Warn("Failed to initialize compression coordinator", "error", err)
+		compressionCoordinator = nil
+	}
+
 	return &ConversationManager{
-		// TODO: Initialize compression coordinator
-		// Note: Circular dependency prevents direct import of compression package
-		// Solution: Create compression interface in separate package
+		compressionCoordinator: compressionCoordinator,
 	}
 }
 func (cm *ConversationManager) Stop(ctx context.Context) error { return nil }

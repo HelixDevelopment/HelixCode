@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"dev.helix.code/internal/llm"
+	"dev.helix.code/internal/llm/compressioniface"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -401,13 +402,15 @@ func TestCompressionCoordinator_ShouldCompress(t *testing.T) {
 
 	// Small conversation - should not compress
 	smallConv := createTestConversation(10)
-	should, reason := coordinator.ShouldCompress(smallConv)
+	ifaceSmallConv := ConvertToInterfaceConversation(smallConv)
+	should, reason := coordinator.ShouldCompress(ifaceSmallConv)
 	assert.False(t, should)
 	assert.Empty(t, reason)
 
 	// Large conversation - should compress
 	largeConv := createLargeConversation(100, 50)
-	should, reason = coordinator.ShouldCompress(largeConv)
+	ifaceLargeConv := ConvertToInterfaceConversation(largeConv)
+	should, reason = coordinator.ShouldCompress(ifaceLargeConv)
 	assert.True(t, should)
 	assert.NotEmpty(t, reason)
 }
@@ -427,8 +430,9 @@ func TestCompressionCoordinator_Compress(t *testing.T) {
 	)
 
 	conv := createTestConversation(30)
+	ifaceConv := ConvertToInterfaceConversation(conv)
 
-	result, err := coordinator.Compress(context.Background(), conv)
+	result, err := coordinator.Compress(context.Background(), ifaceConv)
 	require.NoError(t, err)
 
 	assert.NotNil(t, result)
@@ -447,8 +451,9 @@ func TestCompressionCoordinator_EstimateCompression(t *testing.T) {
 	coordinator := NewCompressionCoordinator(mockProvider)
 
 	conv := createTestConversation(30)
+	ifaceConv := ConvertToInterfaceConversation(conv)
 
-	estimate, err := coordinator.EstimateCompression(conv)
+	estimate, err := coordinator.EstimateCompression(ifaceConv)
 	require.NoError(t, err)
 
 	assert.Greater(t, estimate.TokensSaved, 0)
@@ -586,14 +591,15 @@ func TestCompression_PreserveSystemMessages(t *testing.T) {
 	// Add system message at the start
 	systemMsg := createTestMessage("sys-0", RoleSystem, "You are a helpful assistant")
 	conv.Messages = append([]*Message{systemMsg}, conv.Messages...)
+	ifaceConv := ConvertToInterfaceConversation(conv)
 
-	result, err := coordinator.Compress(context.Background(), conv)
+	result, err := coordinator.Compress(context.Background(), ifaceConv)
 	require.NoError(t, err)
 
 	// Verify system message is retained
 	hasSystem := false
 	for _, msg := range result.Compressed.Messages {
-		if msg.Role == RoleSystem {
+		if msg.Role == compressioniface.RoleSystem {
 			hasSystem = true
 			assert.Equal(t, "You are a helpful assistant", msg.Content)
 			break
@@ -614,7 +620,8 @@ func TestCompressionCoordinator_Stats(t *testing.T) {
 	// Perform compressions with large conversations to ensure compression happens
 	for i := 0; i < 3; i++ {
 		conv := createTestConversation(50) // Use 50 messages to exceed window size of 20
-		_, err := coordinator.Compress(context.Background(), conv)
+		ifaceConv := ConvertToInterfaceConversation(conv)
+		_, err := coordinator.Compress(context.Background(), ifaceConv)
 		require.NoError(t, err)
 	}
 
@@ -652,9 +659,10 @@ func BenchmarkCompressionCoordinator_Compress(b *testing.B) {
 	mockProvider := &MockLLMProvider{}
 	coordinator := NewCompressionCoordinator(mockProvider)
 	conv := createTestConversation(50)
+	ifaceConv := ConvertToInterfaceConversation(conv)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = coordinator.Compress(context.Background(), conv)
+		_, _ = coordinator.Compress(context.Background(), ifaceConv)
 	}
 }
