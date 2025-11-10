@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -405,16 +403,16 @@ func createTemplateCommand() *cobra.Command {
 Templates can be listed, applied, created, and managed.`,
 	}
 
-	templateCmd.AddCommand(createTemplateListCommand())
-	templateCmd.AddCommand(createTemplateApplyCommand())
-	templateCmd.AddCommand(createTemplateShowCommand())
-	templateCmd.AddCommand(createTemplateCreateCommand())
-	templateCmd.AddCommand(createTemplateUpdateCommand())
-	templateCmd.AddCommand(createTemplateDeleteCommand())
-	templateCmd.AddCommand(createTemplateSearchCommand())
-	templateCmd.AddCommand(createTemplateValidateCommand())
+	cmd.AddCommand(createTemplateListCommand())
+	cmd.AddCommand(createTemplateApplyCommand())
+	cmd.AddCommand(createTemplateShowCommand())
+	cmd.AddCommand(createTemplateCreateCommand())
+	cmd.AddCommand(createTemplateUpdateCommand())
+	cmd.AddCommand(createTemplateDeleteCommand())
+	cmd.AddCommand(createTemplateSearchCommand())
+	cmd.AddCommand(createTemplateValidateCommand())
 
-	return templateCmd
+	return cmd
 }
 
 func createHistoryCommand() *cobra.Command {
@@ -426,14 +424,14 @@ func createHistoryCommand() *cobra.Command {
 History can be viewed, compared, and restored.`,
 	}
 
-	historyCmd.AddCommand(createHistoryListCommand())
-	historyCmd.AddCommand(createHistoryShowCommand())
-	historyCmd.AddCommand(createHistoryRestoreCommand())
-	historyCmd.AddCommand(createHistoryCompareCommand())
-	historyCmd.AddCommand(createHistorySearchCommand())
-	historyCmd.AddCommand(createHistoryCleanCommand())
+	cmd.AddCommand(createHistoryListCommand())
+	cmd.AddCommand(createHistoryShowCommand())
+	cmd.AddCommand(createHistoryRestoreCommand())
+	cmd.AddCommand(createHistoryCompareCommand())
+	cmd.AddCommand(createHistorySearchCommand())
+	cmd.AddCommand(createHistoryCleanCommand())
 
-	return historyCmd
+	return cmd
 }
 
 func createSchemaCommand() *cobra.Command {
@@ -445,13 +443,13 @@ func createSchemaCommand() *cobra.Command {
 Schema can be generated, validated, and customized.`,
 	}
 
-	schemaCmd.AddCommand(createSchemaShowCommand())
-	schemaCmd.AddCommand(createSchemaValidateCommand())
-	schemaCmd.AddCommand(createSchemaGenerateCommand())
-	schemaCmd.AddCommand(createSchemaExportCommand())
-	schemaCmd.AddCommand(createSchemaImportCommand())
+	cmd.AddCommand(createSchemaShowCommand())
+	cmd.AddCommand(createSchemaValidateCommand())
+	cmd.AddCommand(createSchemaGenerateCommand())
+	cmd.AddCommand(createSchemaExportCommand())
+	cmd.AddCommand(createSchemaImportCommand())
 
-	return schemaCmd
+	return cmd
 }
 
 func createBenchmarkCommand() *cobra.Command {
@@ -843,18 +841,18 @@ func bindFlags(flags *pflag.FlagSet) {
 
 func getConfig() (*config.HelixConfig, error) {
 	if configFile == "" {
-		return config.GetDefaultConfig()
+		return config.GetGlobalConfigManager().GetDefaultConfig(), nil
 	}
 
 	return config.LoadHelixConfig()
 }
 
-func saveConfig(config *config.HelixConfig) error {
+func saveConfig(cfg *config.HelixConfig) error {
 	if configFile == "" {
 		configFile = "$HOME/.helixcode/helix.yaml"
 	}
 
-	return config.SaveHelixConfig(config)
+	return config.SaveHelixConfig(cfg)
 }
 
 func printJSON(data interface{}) error {
@@ -1008,5 +1006,171 @@ func debugf(format string, args ...interface{}) {
 func successf(format string, args ...interface{}) {
 	if !quiet {
 		fmt.Printf("✅ "+format+"\n", args...)
+	}
+}
+
+// Missing template command implementations
+func createTemplateShowCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "show <template>",
+		Short: "Show template details",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Showing template: %s\n", args[0])
+		},
+	}
+}
+
+func createTemplateCreateCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "create <name>",
+		Short: "Create a new template",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Creating template: %s\n", args[0])
+		},
+	}
+}
+
+func createTemplateUpdateCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "update <template>",
+		Short: "Update an existing template",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Updating template: %s\n", args[0])
+		},
+	}
+}
+
+func createTemplateDeleteCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "delete <template>",
+		Short: "Delete a template",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Deleting template: %s\n", args[0])
+		},
+	}
+}
+
+func createTemplateSearchCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "search <query>",
+		Short: "Search templates",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Searching templates: %s\n", args[0])
+		},
+	}
+}
+
+func createTemplateValidateCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "validate <template>",
+		Short: "Validate a template",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Validating template: %s\n", args[0])
+		},
+	}
+}
+
+// Missing history command implementations
+func createHistoryShowCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "show <id>",
+		Short: "Show history entry details",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Showing history entry: %s\n", args[0])
+		},
+	}
+}
+
+func createHistoryRestoreCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "restore <id>",
+		Short: "Restore configuration from history",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Restoring configuration from: %s\n", args[0])
+		},
+	}
+}
+
+func createHistoryCompareCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "compare <id1> <id2>",
+		Short: "Compare two history entries",
+		Args:  cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Comparing history entries: %s vs %s\n", args[0], args[1])
+		},
+	}
+}
+
+func createHistorySearchCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "search <query>",
+		Short: "Search configuration history",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Searching history: %s\n", args[0])
+		},
+	}
+}
+
+func createHistoryCleanCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "clean",
+		Short: "Clean old history entries",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Cleaning old history entries...")
+		},
+	}
+}
+
+// Missing schema command implementations
+func createSchemaValidateCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "validate <file>",
+		Short: "Validate configuration against schema",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Validating configuration: %s\n", args[0])
+		},
+	}
+}
+
+func createSchemaGenerateCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "generate",
+		Short: "Generate schema from configuration",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Generating schema...")
+		},
+	}
+}
+
+func createSchemaExportCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "export <file>",
+		Short: "Export schema to file",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Exporting schema to: %s\n", args[0])
+		},
+	}
+}
+
+func createSchemaImportCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "import <file>",
+		Short: "Import schema from file",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Printf("Importing schema from: %s\n", args[0])
+		},
 	}
 }

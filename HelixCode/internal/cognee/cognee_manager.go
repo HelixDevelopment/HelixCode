@@ -22,9 +22,9 @@ import (
 // CogneeManager manages Cognee.ai integration with HelixCode
 type CogneeManager struct {
 	// Configuration
-	config    *CogneeConfig
-	hwProfile *hardware.Profile
-	logger    logging.Logger
+	config *CogneeConfig
+	// hwProfile *hardware.Profile // TODO: Implement hardware profiling
+	logger logging.Logger
 
 	// Cognee process
 	cogneeProcess *os.Process

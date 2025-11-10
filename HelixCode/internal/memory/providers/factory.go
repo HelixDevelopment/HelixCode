@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"fmt"
 
 	"dev.helix.code/internal/memory"
@@ -14,24 +15,24 @@ type ProviderFactory struct {
 
 // FactoryConfig contains factory configuration
 type FactoryConfig struct {
-	DefaultTimeout       int64                      `json:"default_timeout"`
-	EnableValidation     bool                        `json:"enable_validation"`
-	EnableAutoConfig     bool                        `json:"enable_auto_config"`
-	PreferredProviders   []ProviderType             `json:"preferred_providers"`
-	CustomConfigs        map[ProviderType]interface{} `json:"custom_configs"`
-	HealthCheckOnInit    bool                        `json:"health_check_on_init"`
-	FailFastOnErrors    bool                        `json:"fail_fast_on_errors"`
+	DefaultTimeout     int64                        `json:"default_timeout"`
+	EnableValidation   bool                         `json:"enable_validation"`
+	EnableAutoConfig   bool                         `json:"enable_auto_config"`
+	PreferredProviders []ProviderType               `json:"preferred_providers"`
+	CustomConfigs      map[ProviderType]interface{} `json:"custom_configs"`
+	HealthCheckOnInit  bool                         `json:"health_check_on_init"`
+	FailFastOnErrors   bool                         `json:"fail_fast_on_errors"`
 }
 
 // NewProviderFactory creates a new provider factory
 func NewProviderFactory(config *FactoryConfig) *ProviderFactory {
 	if config == nil {
 		config = &FactoryConfig{
-			DefaultTimeout:     30,
-			EnableValidation:   true,
-			EnableAutoConfig:    true,
-			HealthCheckOnInit:   true,
-			FailFastOnErrors:   true,
+			DefaultTimeout:    30,
+			EnableValidation:  true,
+			EnableAutoConfig:  true,
+			HealthCheckOnInit: true,
+			FailFastOnErrors:  true,
 		}
 	}
 
@@ -142,7 +143,7 @@ func (f *ProviderFactory) validateConfiguration(providerType ProviderType, confi
 func (f *ProviderFactory) applyAutoConfiguration(providerType ProviderType, config map[string]interface{}) map[string]interface{} {
 	// Start with defaults
 	defaults := f.getDefaultConfiguration(providerType)
-	
+
 	// Merge with provided config
 	result := make(map[string]interface{})
 	for k, v := range defaults {
@@ -461,7 +462,7 @@ func (pc *ProviderChain) GetCapabilities() []string {
 			capabilities[cap] = true
 		}
 	}
-	
+
 	var result []string
 	for cap := range capabilities {
 		result = append(result, cap)
@@ -504,13 +505,13 @@ func (pc *ProviderChain) Stop(ctx context.Context) error {
 
 // HybridProviderConfig contains configuration for hybrid provider
 type HybridProviderConfig struct {
-	Strategy  HybridStrategy           `json:"strategy"`
+	Strategy  HybridStrategy         `json:"strategy"`
 	Providers map[string]ProviderRef `json:"providers"`
 }
 
 // ProviderRef contains reference to a provider
 type ProviderRef struct {
-	Type   ProviderType               `json:"type"`
+	Type   ProviderType           `json:"type"`
 	Config map[string]interface{} `json:"config"`
 }
 
@@ -518,15 +519,15 @@ type ProviderRef struct {
 type HybridStrategy string
 
 const (
-	HybridStrategyRoundRobin HybridStrategy = "round_robin"
-	HybridStrategyLoadBalance HybridStrategy = "load_balance"
+	HybridStrategyRoundRobin     HybridStrategy = "round_robin"
+	HybridStrategyLoadBalance    HybridStrategy = "load_balance"
 	HybridStrategyOperationBased HybridStrategy = "operation_based"
 )
 
 // HybridProvider routes operations to different providers based on strategy
 type HybridProvider struct {
-	strategy  HybridStrategy
-	providers map[string]VectorProvider
+	strategy   HybridStrategy
+	providers  map[string]VectorProvider
 	roundRobin int
 }
 
@@ -539,6 +540,3 @@ func NewHybridProvider(strategy HybridStrategy, providers map[string]VectorProvi
 }
 
 // TODO: Implement HybridProvider methods based on strategy
-
-// Add missing import for context
-import "context"
