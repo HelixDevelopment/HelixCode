@@ -1,8 +1,12 @@
 package providers
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"sync"
 	"time"
 
@@ -13,6 +17,7 @@ import (
 type WeaviateProvider struct {
 	config      *WeaviateConfig
 	logger      *logging.Logger
+	httpClient  *http.Client
 	mu          sync.RWMutex
 	initialized bool
 	started     bool
@@ -43,6 +48,31 @@ func NewWeaviateProvider(config map[string]interface{}) (VectorProvider, error) 
 	}, nil
 }
 
+// testConnection tests the connection to Weaviate
+func (p *WeaviateProvider) testConnection(ctx context.Context) error {
+	url := fmt.Sprintf("%s/v1/meta", p.config.URL)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	if p.config.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.config.APIKey)
+	}
+
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Weaviate meta failed with status: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 // Initialize initializes the Weaviate provider
 func (p *WeaviateProvider) Initialize(ctx context.Context, config interface{}) error {
 	p.mu.Lock()
@@ -50,7 +80,15 @@ func (p *WeaviateProvider) Initialize(ctx context.Context, config interface{}) e
 
 	p.logger.Info("Initializing Weaviate provider url=%s class=%s", p.config.URL, p.config.Class)
 
-	// TODO: Implement actual Weaviate connection and schema setup
+	// Initialize HTTP client
+	p.httpClient = &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	// Test connection to Weaviate
+	if err := p.testConnection(ctx); err != nil {
+		return fmt.Errorf("failed to connect to Weaviate: %w", err)
+	}
 
 	p.initialized = true
 	p.logger.Info("Weaviate provider initialized successfully")
@@ -135,9 +173,163 @@ func (p *WeaviateProvider) Store(ctx context.Context, vectors []*VectorData) err
 		return fmt.Errorf("provider not started")
 	}
 
+	if len(vectors) == 0 {
+		return nil
+	}
+
 	p.logger.Info("Storing %d vectors in Weaviate", len(vectors))
 
-	// TODO: Implement actual vector storage in Weaviate
+	// Ensure class exists
+	if err := p.ensureClass(ctx, vectors[0]); err != nil {
+		return err
+	}
+
+	// Store vectors in batches
+	batchSize := p.config.BatchSize
+	for i := 0; i < len(vectors); i += batchSize {
+		end := i + batchSize
+		if end > len(vectors) {
+			end = len(vectors)
+		}
+
+		batch := vectors[i:end]
+		if err := p.storeBatch(ctx, batch); err != nil {
+			return fmt.Errorf("failed to store batch %d-%d: %w", i, end, err)
+		}
+	}
+
+	return nil
+}
+
+// ensureClass ensures the Weaviate class exists
+func (p *WeaviateProvider) ensureClass(ctx context.Context, sampleVector *VectorData) error {
+	// Check if class exists
+	url := fmt.Sprintf("%s/v1/schema/classes/%s", p.config.URL, p.config.Class)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	if p.config.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.config.APIKey)
+	}
+
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		// Class exists
+		return nil
+	}
+
+	if resp.StatusCode != http.StatusNotFound {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to check class existence: %s", string(body))
+	}
+
+	// Create class
+	classDef := map[string]interface{}{
+		"class": p.config.Class,
+		"properties": []map[string]interface{}{
+			{
+				"name":        "id",
+				"dataType":    []string{"string"},
+				"description": "Unique identifier",
+			},
+			{
+				"name":        "timestamp",
+				"dataType":    []string{"date"},
+				"description": "Creation timestamp",
+			},
+		},
+		"vectorizer": "none", // We'll provide vectors manually
+		"vectorIndexConfig": map[string]interface{}{
+			"distance": "cosine",
+		},
+	}
+
+	jsonData, err := json.Marshal(classDef)
+	if err != nil {
+		return err
+	}
+
+	url = fmt.Sprintf("%s/v1/schema/classes", p.config.URL)
+	req, err = http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	if p.config.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.config.APIKey)
+	}
+
+	resp, err = p.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to create class: %s", string(body))
+	}
+
+	return nil
+}
+
+// storeBatch stores a batch of vectors
+func (p *WeaviateProvider) storeBatch(ctx context.Context, vectors []*VectorData) error {
+	objects := make([]map[string]interface{}, len(vectors))
+
+	for i, v := range vectors {
+		properties := make(map[string]interface{})
+		for k, val := range v.Metadata {
+			properties[k] = val
+		}
+		properties["id"] = v.ID
+		properties["timestamp"] = v.Timestamp.Format(time.RFC3339)
+
+		objects[i] = map[string]interface{}{
+			"class":      p.config.Class,
+			"properties": properties,
+			"vector":     v.Vector,
+		}
+	}
+
+	data := map[string]interface{}{
+		"objects": objects,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("%s/v1/objects", p.config.URL)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	if p.config.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.config.APIKey)
+	}
+
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Weaviate batch store failed with status %d: %s", resp.StatusCode, string(body))
+	}
 
 	return nil
 }
@@ -201,13 +393,109 @@ func (p *WeaviateProvider) Search(ctx context.Context, query *VectorQuery) (*Vec
 
 	p.logger.Info("Searching vectors in Weaviate with top_k=%d", query.TopK)
 
-	// TODO: Implement actual vector search
+	// Build GraphQL query
+	graphqlQuery := fmt.Sprintf(`
+	{
+	  Get {
+		%s(
+		  nearVector: {vector: %s}
+		  limit: %d
+		) {
+		  id
+		  _additional {
+			distance
+		  }
+		}
+	  }
+	}`, p.config.Class, vectorToGraphQLString(query.Vector), query.TopK)
+
+	data := map[string]interface{}{
+		"query": graphqlQuery,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("%s/v1/graphql", p.config.URL)
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	if p.config.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.config.APIKey)
+	}
+
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Weaviate GraphQL query failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse response
+	var gqlResp struct {
+		Data struct {
+			Get map[string][]struct {
+				ID         string `json:"id"`
+				Additional struct {
+					Distance float64 `json:"distance"`
+				} `json:"_additional"`
+			} `json:"Get"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &gqlResp); err != nil {
+		return nil, err
+	}
+
+	results := []*VectorSearchResultItem{}
+	if objects, ok := gqlResp.Data.Get[p.config.Class]; ok {
+		for _, obj := range objects {
+			item := &VectorSearchResultItem{
+				ID:       obj.ID,
+				Distance: obj.Additional.Distance,
+				Score:    1.0 - obj.Additional.Distance, // Convert distance to similarity
+				Metadata: make(map[string]interface{}),
+			}
+			results = append(results, item)
+		}
+	}
 
 	return &VectorSearchResult{
-		Results: []*VectorSearchResultItem{},
-		Total:   0,
+		Results: results,
+		Total:   len(results),
 		Query:   query,
 	}, nil
+}
+
+// vectorToGraphQLString converts a vector to GraphQL string format
+func vectorToGraphQLString(vec []float64) string {
+	if len(vec) == 0 {
+		return "[]"
+	}
+
+	result := "["
+	for i, v := range vec {
+		if i > 0 {
+			result += ","
+		}
+		result += fmt.Sprintf("%.6f", v)
+	}
+	result += "]"
+	return result
 }
 
 // FindSimilar finds similar vectors

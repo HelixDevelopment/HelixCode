@@ -25,6 +25,7 @@ type SSHWorkerPool struct {
 	autoInstall bool
 	hostKeys    *HostKeyManager
 	isolation   *WorkerIsolationManager
+	consensus   *ConsensusManager
 }
 
 // SSHWorker represents an SSH-accessible worker node
@@ -201,6 +202,25 @@ func NewSSHWorkerPool(autoInstall bool) *SSHWorkerPool {
 		autoInstall: autoInstall,
 		hostKeys:    NewHostKeyManager(""),
 		isolation:   NewWorkerIsolationManager(),
+	}
+
+	// Initialize consensus manager
+	nodeID := uuid.New().String()
+	pool.consensus = NewConsensusManager(ConsensusConfig{
+		NodeID: nodeID,
+		Peers:  []string{}, // Will be populated when workers are added
+		OnLeaderElected: func(leaderID string) {
+			log.Printf("Consensus: Node %s elected as leader", leaderID)
+		},
+		OnStateChanged: func(state NodeState) {
+			log.Printf("Consensus: Node %s state changed to %v", nodeID, state)
+		},
+	})
+
+	// Start consensus protocol
+	ctx := context.Background()
+	if err := pool.consensus.Start(ctx); err != nil {
+		log.Printf("Warning: Failed to start consensus: %v", err)
 	}
 
 	// Load known hosts
