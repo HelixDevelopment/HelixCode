@@ -4,6 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -567,4 +571,149 @@ func TestHealthMonitor_MultipleServices(t *testing.T) {
 	// All results should be stored
 	allResults := hm.GetAllResults()
 	assert.Len(t, allResults, 3)
+}
+
+func TestHealthMonitor_CheckHTTP_Success(t *testing.T) {
+	// Create a test HTTP server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/health" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("OK"))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	// Parse server address to get host and port
+	serverURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+	host := serverURL.Hostname()
+	port, err := strconv.Atoi(serverURL.Port())
+	require.NoError(t, err)
+
+	// Create health monitor
+	config := DefaultHealthMonitorConfig()
+	config.CheckTimeout = 2 * time.Second
+	hm := NewHealthMonitor(config, nil)
+
+	// Create service info
+	serviceInfo := &ServiceInfo{
+		Name:     "http-service",
+		Host:     host,
+		Port:     port,
+		Protocol: "http",
+	}
+
+	// Test checkHTTP directly
+	err = hm.checkHTTP(serviceInfo)
+	assert.NoError(t, err)
+}
+
+func TestHealthMonitor_CheckHTTP_Failure(t *testing.T) {
+	// Create health monitor
+	config := DefaultHealthMonitorConfig()
+	config.CheckTimeout = 1 * time.Second
+	hm := NewHealthMonitor(config, nil)
+
+	t.Run("HTTP_StatusNotOK", func(t *testing.T) {
+		// Create a server that returns non-200 status
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}))
+		defer server.Close()
+
+		serverURL, err := url.Parse(server.URL)
+		require.NoError(t, err)
+		host := serverURL.Hostname()
+		port, err := strconv.Atoi(serverURL.Port())
+		require.NoError(t, err)
+
+		serviceInfo := &ServiceInfo{
+			Name: "failing-service",
+			Host: host,
+			Port: port,
+		}
+
+		err = hm.checkHTTP(serviceInfo)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "health check failed")
+	})
+
+	t.Run("HTTP_ConnectionRefused", func(t *testing.T) {
+		// Use a port that's not listening
+		serviceInfo := &ServiceInfo{
+			Name: "unreachable-service",
+			Host: "127.0.0.1",
+			Port: 59999, // Unlikely to be in use
+		}
+
+		err := hm.checkHTTP(serviceInfo)
+		assert.Error(t, err)
+	})
+
+	t.Run("HTTP_Timeout", func(t *testing.T) {
+		// Create a server that delays response
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(3 * time.Second) // Longer than health check timeout
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		serverURL, err := url.Parse(server.URL)
+		require.NoError(t, err)
+		host := serverURL.Hostname()
+		port, err := strconv.Atoi(serverURL.Port())
+		require.NoError(t, err)
+
+		serviceInfo := &ServiceInfo{
+			Name: "slow-service",
+			Host: host,
+			Port: port,
+		}
+
+		err = hm.checkHTTP(serviceInfo)
+		assert.Error(t, err)
+	})
+}
+
+func TestHealthMonitor_CheckService_HTTPStrategy(t *testing.T) {
+	// Create a test HTTP server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/health" {
+			w.WriteHeader(http.StatusOK)
+		}
+	}))
+	defer server.Close()
+
+	serverURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+	host := serverURL.Hostname()
+	port, err := strconv.Atoi(serverURL.Port())
+	require.NoError(t, err)
+
+	// Create registry and register service
+	registry := NewServiceRegistry(DefaultRegistryConfig())
+	serviceInfo := ServiceInfo{
+		Name:     "http-service",
+		Host:     host,
+		Port:     port,
+		Protocol: "http",
+		Healthy:  true,
+	}
+	err = registry.Register(serviceInfo)
+	require.NoError(t, err)
+
+	// Create health monitor
+	config := DefaultHealthMonitorConfig()
+	hm := NewHealthMonitor(config, registry)
+
+	// Set HTTP strategy for this service
+	hm.SetServiceStrategy("http-service", "http")
+
+	// Check service health (will use HTTP strategy)
+	result, err := hm.CheckServiceHealth("http-service")
+	require.NoError(t, err)
+	assert.True(t, result.Healthy)
+	assert.Equal(t, "http-service", result.ServiceName)
 }

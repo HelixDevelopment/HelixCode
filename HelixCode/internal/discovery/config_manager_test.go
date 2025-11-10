@@ -419,3 +419,179 @@ func TestConfigManager_ConcurrentAccess(t *testing.T) {
 	// Should not panic or deadlock
 	assert.NotNil(t, cm.GetConfig())
 }
+
+func TestConfigManager_RegisterComponents(t *testing.T) {
+	config := DefaultDiscoveryConfig()
+	cm, err := NewConfigManager(config)
+	require.NoError(t, err)
+
+	// Create mock components
+	registry := NewServiceRegistry(DefaultRegistryConfig())
+	allocator := NewPortAllocator(DefaultPortAllocatorConfig())
+	broadcast := NewBroadcastService(DefaultBroadcastConfig())
+	client := NewDiscoveryClient(DefaultDiscoveryClientConfig(registry, allocator))
+
+	// Register components
+	cm.RegisterComponents(registry, allocator, broadcast, client)
+
+	// Verify components are registered (internal fields, can't check directly)
+	// But we can verify it doesn't panic and accepts nil values
+	cm.RegisterComponents(nil, nil, nil, nil)
+
+	// Test multiple registrations
+	cm.RegisterComponents(registry, allocator, broadcast, client)
+	cm.RegisterComponents(registry, nil, broadcast, nil)
+}
+
+func TestDiscoveryConfig_Validate_ComprehensiveErrors(t *testing.T) {
+	tests := []struct {
+		name         string
+		modifyConfig func(*DiscoveryConfig)
+		expectError  bool
+		errorMsg     string
+	}{
+		{
+			name: "Negative MaxServices",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.MaxServices = -1
+			},
+			expectError: true,
+			errorMsg:    "max services",
+		},
+		{
+			name: "Negative DefaultTTL",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.DefaultTTL = -1 * time.Second
+			},
+			expectError: true,
+			errorMsg:    "default TTL",
+		},
+		{
+			name: "Invalid PortRange Start greater than End",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.PortRanges["test"] = PortRange{Start: 9000, End: 8000}
+			},
+			expectError: true,
+			errorMsg:    "port range",
+		},
+		{
+			name: "Invalid PortRange Start zero",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.PortRanges["test"] = PortRange{Start: 0, End: 200}
+			},
+			expectError: true,
+			errorMsg:    "port range start",
+		},
+		{
+			name: "Invalid PortRange End too high",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.PortRanges["test"] = PortRange{Start: 50000, End: 70000}
+			},
+			expectError: true,
+			errorMsg:    "port range end",
+		},
+		{
+			name: "Invalid CleanupInterval",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.CleanupInterval = -1 * time.Second
+			},
+			expectError: true,
+			errorMsg:    "cleanup interval",
+		},
+		{
+			name: "Invalid BroadcastTTL negative",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.BroadcastTTL = -1
+			},
+			expectError: true,
+			errorMsg:    "broadcast TTL",
+		},
+		{
+			name: "Invalid BroadcastTTL too high",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.BroadcastTTL = 300
+			},
+			expectError: true,
+			errorMsg:    "broadcast TTL",
+		},
+		{
+			name: "Valid config with all fields",
+			modifyConfig: func(c *DiscoveryConfig) {
+				c.MaxServices = 5000
+				c.DefaultTTL = 60 * time.Second
+				c.EnableHealthChecks = true
+				c.BroadcastEnabled = true
+				c.AllowEphemeral = true
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := DefaultDiscoveryConfig()
+			tt.modifyConfig(&config)
+
+			err := config.Validate()
+			if tt.expectError {
+				if assert.Error(t, err, "Expected an error for test case: %s", tt.name) {
+					if tt.errorMsg != "" {
+						assert.Contains(t, err.Error(), tt.errorMsg, "Error message should contain expected text")
+					}
+				}
+			} else {
+				assert.NoError(t, err, "Expected no error for test case: %s", tt.name)
+			}
+		})
+	}
+}
+
+func TestConfigManager_UpdatePartial_ComprehensiveCases(t *testing.T) {
+	config := DefaultDiscoveryConfig()
+	cm, err := NewConfigManager(config)
+	require.NoError(t, err)
+
+	t.Run("UpdatePartial_MultipleFields", func(t *testing.T) {
+		err := cm.UpdatePartial(func(c *DiscoveryConfig) {
+			c.MaxServices = 2000
+			c.DefaultTTL = 45 * time.Second
+			c.EnableHealthChecks = false
+		})
+
+		assert.NoError(t, err)
+		updatedConfig := cm.GetConfig()
+		assert.Equal(t, 2000, updatedConfig.MaxServices)
+		assert.Equal(t, 45*time.Second, updatedConfig.DefaultTTL)
+		assert.False(t, updatedConfig.EnableHealthChecks)
+	})
+
+	t.Run("UpdatePartial_InvalidChanges", func(t *testing.T) {
+		err := cm.UpdatePartial(func(c *DiscoveryConfig) {
+			c.MaxServices = -100 // Invalid
+		})
+
+		assert.Error(t, err)
+	})
+
+	t.Run("UpdatePartial_PortRangesUpdate", func(t *testing.T) {
+		err := cm.UpdatePartial(func(c *DiscoveryConfig) {
+			c.PortRanges["custom"] = PortRange{Start: 10000, End: 11000}
+		})
+
+		assert.NoError(t, err)
+		portRange, exists := cm.GetPortRange("custom")
+		assert.True(t, exists)
+		assert.Equal(t, 10000, portRange.Start)
+		assert.Equal(t, 11000, portRange.End)
+	})
+
+	t.Run("UpdatePartial_ReservedPorts", func(t *testing.T) {
+		err := cm.UpdatePartial(func(c *DiscoveryConfig) {
+			c.ReservedPorts = append(c.ReservedPorts, 15000)
+		})
+
+		assert.NoError(t, err)
+		reservedPorts := cm.GetReservedPorts()
+		assert.Contains(t, reservedPorts, 15000)
+	})
+}
