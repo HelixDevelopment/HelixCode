@@ -10,23 +10,26 @@ import (
 	"time"
 
 	"dev.helix.code/internal/llm"
+	"github.com/spf13/cobra"
 )
 
 // Advanced discovery and analytics command implementations
 
 func runDiscover(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+	_ = ctx // TODO: Use context for cancellation
+
 	// Initialize model discovery engine
 	discoveryEngine := llm.NewModelDiscoveryEngine(getLocalLLMBaseDir())
-	
+	_ = discoveryEngine // TODO: Implement discovery logic
+
 	fmt.Println("🔍 Discovering models...")
 	fmt.Printf("Source: %s\n", discoverSource)
 	if discoverFilter != "" {
 		fmt.Printf("Filter: %s\n", discoverFilter)
 	}
 	fmt.Println()
-	
+
 	// Get all available models (simplified for discover)
 	// In a real implementation, this would fetch from external sources
 	models := []*llm.ModelInfo{
@@ -36,7 +39,7 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 			Format:       llm.FormatGGUF,
 			Size:         4700000000,
 			ContextSize:  8192,
-			Provider:     llm.ProviderLocalLLM,
+			Provider:     "local",
 			Capabilities: []llm.ModelCapability{llm.CapabilityCodeGeneration, llm.CapabilityReasoning},
 		},
 		{
@@ -45,7 +48,7 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 			Format:       llm.FormatGGUF,
 			Size:         4100000000,
 			ContextSize:  32768,
-			Provider:     llm.ProviderLocalLLM,
+			Provider:     "local",
 			Capabilities: []llm.ModelCapability{llm.CapabilityCodeGeneration, llm.CapabilityAnalysis},
 		},
 		{
@@ -54,40 +57,40 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 			Format:       llm.FormatGGUF,
 			Size:         3800000000,
 			ContextSize:  16384,
-			Provider:     llm.ProviderLocalLLM,
+			Provider:     "local",
 			Capabilities: []llm.ModelCapability{llm.CapabilityCodeGeneration, llm.CapabilityDebugging},
 		},
 	}
-	
+
 	// Apply filter if specified
 	if discoverFilter != "" {
 		filter := strings.ToLower(discoverFilter)
 		filtered := []*llm.ModelInfo{}
 		for _, model := range models {
 			if strings.Contains(strings.ToLower(model.ID), filter) ||
-			   strings.Contains(strings.ToLower(model.Name), filter) {
+				strings.Contains(strings.ToLower(model.Name), filter) {
 				filtered = append(filtered, model)
 			}
 		}
 		models = filtered
 	}
-	
+
 	if len(models) == 0 {
 		fmt.Printf("❌ No models found matching filter: %s\n", discoverFilter)
 		return nil
 	}
-	
+
 	// Display models in table format
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tNAME\tSIZE\tFORMAT\tCONTEXT\tCAPABILITIES")
 	fmt.Fprintln(w, "--\t----\t----\t------\t-------\t------------")
-	
+
 	for _, model := range models {
 		capabilities := make([]string, len(model.Capabilities))
 		for i, cap := range model.Capabilities {
 			capabilities[i] = strings.TrimPrefix(strings.ToLower(string(cap)), "capability_")
 		}
-		
+
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%s\n",
 			model.ID,
 			model.Name,
@@ -96,43 +99,43 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 			model.ContextSize,
 			strings.Join(capabilities, ","))
 	}
-	
+
 	w.Flush()
-	
+
 	fmt.Printf("\n📊 Found %d models\n", len(models))
 	fmt.Println("💡 Use 'helix local-llm recommend' to get personalized recommendations")
-	
+
 	return nil
 }
 
 func runRecommend(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Initialize model discovery engine
 	discoveryEngine := llm.NewModelDiscoveryEngine(getLocalLLMBaseDir())
-	
+
 	// Build recommendation request
 	req := &llm.RecommendationRequest{
-		TaskTypes:         recommendTaskTypes,
+		TaskTypes:          recommendTaskTypes,
 		QualityPreference:  recommendQualityPreference,
-		PrivacyLevel:      recommendPrivacyLevel,
+		PrivacyLevel:       recommendPrivacyLevel,
 		MaxRecommendations: 10,
 	}
-	
+
 	if recommendMaxMemory > 0 {
 		req.Constraints = map[string]interface{}{
 			"max_memory_mb": float64(recommendMaxMemory),
 		}
 	}
-	
+
 	if recommendBudgetLimit > 0 {
 		req.BudgetLimit = recommendBudgetLimit
 	}
-	
+
 	if len(recommendProviders) > 0 {
 		req.IncludeProviders = recommendProviders
 	}
-	
+
 	fmt.Println("🧠 Getting personalized model recommendations...")
 	if len(req.TaskTypes) > 0 {
 		fmt.Printf("Tasks: %s\n", strings.Join(req.TaskTypes, ", "))
@@ -146,27 +149,27 @@ func runRecommend(cmd *cobra.Command, args []string) error {
 		fmt.Printf("Budget: $%.4f per 1M tokens\n", recommendBudgetLimit)
 	}
 	fmt.Println()
-	
+
 	// Get recommendations
 	resp, err := discoveryEngine.GetRecommendations(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to get recommendations: %w", err)
 	}
-	
+
 	if len(resp.Recommendations) == 0 {
 		fmt.Println("❌ No suitable models found for your requirements")
 		fmt.Println("💡 Try adjusting your constraints or preferences")
 		return nil
 	}
-	
+
 	// Display recommendations
-	fmt.Printf("🎯 Found %d recommendations (search time: %v)\n\n", 
+	fmt.Printf("🎯 Found %d recommendations (search time: %v)\n\n",
 		len(resp.Recommendations), resp.SearchTime)
-	
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "RANK\tMODEL\tSCORE\tPERFORMANCE\tHARDWARE\tREASONS")
 	fmt.Fprintln(w, "----\t-----\t-----\t-----------\t--------\t-------")
-	
+
 	for i, rec := range resp.Recommendations {
 		var reasons []string
 		if len(rec.Reasons) > 2 {
@@ -174,7 +177,7 @@ func runRecommend(cmd *cobra.Command, args []string) error {
 		} else {
 			reasons = rec.Reasons
 		}
-		
+
 		var performance, hardware string
 		if rec.EstimatedPerformance != nil {
 			performance = fmt.Sprintf("%.1f TPS", rec.EstimatedPerformance.TokensPerSecond)
@@ -182,7 +185,7 @@ func runRecommend(cmd *cobra.Command, args []string) error {
 		if rec.HardwareFit != nil {
 			hardware = fmt.Sprintf("%.1f%%", rec.HardwareFit.OverallFit*100)
 		}
-		
+
 		fmt.Fprintf(w, "%d\t%s\t%.2f\t%s\t%s\t%s\n",
 			i+1,
 			rec.Model.Name,
@@ -191,9 +194,9 @@ func runRecommend(cmd *cobra.Command, args []string) error {
 			hardware,
 			strings.Join(reasons, "; "))
 	}
-	
+
 	w.Flush()
-	
+
 	// Show insights if available
 	if resp.Insights != nil {
 		fmt.Println("\n💡 Insights:")
@@ -204,30 +207,30 @@ func runRecommend(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  • %s\n", reasoning)
 		}
 	}
-	
+
 	fmt.Printf("\n📊 Relevance Score: %.2f\n", resp.RelevanceScore)
 	fmt.Println("💡 Use 'helix local-llm download-all <model-id>' to download and share model")
-	
+
 	return nil
 }
 
 func runAnalytics(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Initialize usage analytics
 	analytics := llm.NewUsageAnalytics(getLocalLLMBaseDir())
-	
+
 	// Parse time range
 	timeRange := parseTimeRange(analyticsTimeRange)
-	
+
 	fmt.Printf("📊 Generating analytics report for %v\n\n", timeRange)
-	
+
 	// Generate usage report
 	report, err := analytics.GenerateUsageReport(ctx, timeRange)
 	if err != nil {
 		return fmt.Errorf("failed to generate analytics: %w", err)
 	}
-	
+
 	// Display summary
 	fmt.Println("📈 Executive Summary:")
 	fmt.Printf("  Total Models: %d\n", report.Summary.TotalModels)
@@ -236,7 +239,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Success Rate: %.1f%%\n", report.Summary.OverallSuccessRate*100)
 	fmt.Printf("  User Satisfaction: %.1f/5.0\n", report.Summary.AverageSatisfaction)
 	fmt.Println()
-	
+
 	// Display top models
 	fmt.Println("🏆 Top Models:")
 	for i, model := range report.TopModels[:min(5, len(report.TopModels))] {
@@ -244,7 +247,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 			i+1, model.ModelID, model.TotalRequests, model.UserSatisfaction)
 	}
 	fmt.Println()
-	
+
 	// Display performance analysis
 	fmt.Println("⚡ Performance Analysis:")
 	fmt.Printf("  Average TPS: %.1f\n", report.PerformanceAnalysis.AverageTPS)
@@ -252,7 +255,7 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  %s: %.1f TPS\n", provider, tps)
 	}
 	fmt.Println()
-	
+
 	// Display recommendations
 	if len(report.Recommendations) > 0 {
 		fmt.Println("💡 Recommendations:")
@@ -260,28 +263,28 @@ func runAnalytics(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  • %s\n", rec)
 		}
 	}
-	
+
 	return nil
 }
 
 func runReport(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Initialize usage analytics
 	analytics := llm.NewUsageAnalytics(getLocalLLMBaseDir())
-	
+
 	// Parse time range
 	timeRange := parseTimeRange(analyticsTimeRange)
-	
-	fmt.Printf("📋 Generating comprehensive report (%s format) for %v\n\n", 
+
+	fmt.Printf("📋 Generating comprehensive report (%s format) for %v\n\n",
 		reportFormat, timeRange)
-	
+
 	// Generate usage report
 	report, err := analytics.GenerateUsageReport(ctx, timeRange)
 	if err != nil {
 		return fmt.Errorf("failed to generate report: %w", err)
 	}
-	
+
 	// Output based on format
 	switch reportFormat {
 	case "json":
@@ -293,27 +296,28 @@ func runReport(cmd *cobra.Command, args []string) error {
 	default: // table
 		outputTableReport(report)
 	}
-	
+
 	return nil
 }
 
 func runInsights(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Initialize model discovery engine and analytics
 	discoveryEngine := llm.NewModelDiscoveryEngine(getLocalLLMBaseDir())
+	_ = discoveryEngine // TODO: Use for insights generation
 	analytics := llm.NewUsageAnalytics(getLocalLLMBaseDir())
-	
+
 	fmt.Println("🧠 Generating AI-powered insights...")
 	fmt.Printf("Insights Type: %s\n\n", insightsType)
-	
+
 	// Generate usage report for insights
 	timeRange := parseTimeRange("7d")
 	report, err := analytics.GenerateUsageReport(ctx, timeRange)
 	if err != nil {
 		return fmt.Errorf("failed to generate report: %w", err)
 	}
-	
+
 	// Generate insights based on type
 	switch insightsType {
 	case "performance":
@@ -327,7 +331,7 @@ func runInsights(cmd *cobra.Command, args []string) error {
 		generateUsageInsights(report)
 		generateModelInsights(report)
 	}
-	
+
 	return nil
 }
 
@@ -336,7 +340,7 @@ func runInsights(cmd *cobra.Command, args []string) error {
 func parseTimeRange(timeRange string) llm.TimeRange {
 	var start, end time.Time
 	now := time.Now()
-	
+
 	switch timeRange {
 	case "1d":
 		start = now.Add(-24 * time.Hour)
@@ -354,7 +358,7 @@ func parseTimeRange(timeRange string) llm.TimeRange {
 		start = now.Add(-7 * 24 * time.Hour)
 		end = now
 	}
-	
+
 	return llm.TimeRange{
 		Start: start,
 		End:   end,
@@ -386,7 +390,7 @@ func outputCSVReport(report *llm.UsageReport) {
 
 func generatePerformanceInsights(report *llm.UsageReport) {
 	fmt.Println("⚡ Performance Insights:")
-	
+
 	// Bottleneck analysis
 	if report.PerformanceAnalysis.BottleneckAnalysis != nil {
 		bottlenecks := []string{}
@@ -399,7 +403,7 @@ func generatePerformanceInsights(report *llm.UsageReport) {
 		if report.PerformanceAnalysis.BottleneckAnalysis.CPUBottleneck {
 			bottlenecks = append(bottlenecks, "CPU")
 		}
-		
+
 		if len(bottlenecks) > 0 {
 			fmt.Printf("  🎯 Identified Bottlenecks: %s\n", strings.Join(bottlenecks, ", "))
 			for _, rec := range report.PerformanceAnalysis.BottleneckAnalysis.Recommendations {
@@ -407,21 +411,21 @@ func generatePerformanceInsights(report *llm.UsageReport) {
 			}
 		}
 	}
-	
+
 	// Optimization impact
 	if report.PerformanceAnalysis.OptimizationImpact != nil {
-		fmt.Printf("  📈 Optimization Success Rate: %.1f%%\n", 
+		fmt.Printf("  📈 Optimization Success Rate: %.1f%%\n",
 			report.PerformanceAnalysis.OptimizationImpact.SuccessfulRate*100)
-		fmt.Printf("  🚀 Average Performance Improvement: %.1f%%\n", 
+		fmt.Printf("  🚀 Average Performance Improvement: %.1f%%\n",
 			report.PerformanceAnalysis.OptimizationImpact.AverageImprovement)
 	}
-	
+
 	fmt.Println()
 }
 
 func generateUsageInsights(report *llm.UsageReport) {
 	fmt.Println("📊 Usage Insights:")
-	
+
 	// User segments
 	if report.UserAnalysis.UserSegments != nil {
 		fmt.Println("  👥 User Segments:")
@@ -429,7 +433,7 @@ func generateUsageInsights(report *llm.UsageReport) {
 			fmt.Printf("    • %s: %d users\n", segment, count)
 		}
 	}
-	
+
 	// Behavioral trends
 	if len(report.UserAnalysis.BehavioralTrends) > 0 {
 		fmt.Println("  📈 Behavioral Trends:")
@@ -437,7 +441,7 @@ func generateUsageInsights(report *llm.UsageReport) {
 			fmt.Printf("    • %s\n", trend)
 		}
 	}
-	
+
 	// Retention insights
 	if report.UserAnalysis.UserRetention != nil {
 		fmt.Printf("  🔄 User Retention: Daily %.1f%%, Weekly %.1f%%, Monthly %.1f%%\n",
@@ -446,13 +450,13 @@ func generateUsageInsights(report *llm.UsageReport) {
 			report.UserAnalysis.UserRetention.MonthlyRetention*100)
 		fmt.Printf("  📉 Churn Rate: %.1f%%\n", report.UserAnalysis.UserRetention.ChurnRate*100)
 	}
-	
+
 	fmt.Println()
 }
 
 func generateModelInsights(report *llm.UsageReport) {
 	fmt.Println("🏆 Model Insights:")
-	
+
 	// Trending models
 	if len(report.Summary.TrendingModels) > 0 {
 		fmt.Println("  📈 Trending Models:")
@@ -460,7 +464,7 @@ func generateModelInsights(report *llm.UsageReport) {
 			fmt.Printf("    • %s\n", model)
 		}
 	}
-	
+
 	// Top performing models
 	if len(report.TopModels) > 0 {
 		fmt.Println("  🏆 Top Performing Models:")
@@ -468,15 +472,15 @@ func generateModelInsights(report *llm.UsageReport) {
 			fmt.Printf("    %d. %s (%.1f%% satisfaction)\n", i+1, model.ModelID, model.UserSatisfaction)
 		}
 	}
-	
+
 	// Task analysis
 	if report.TaskAnalysis != nil {
 		fmt.Println("  🎯 Task Performance:")
 		for task, analysis := range report.TaskAnalysis {
-			fmt.Printf("    • %s: %.1f%% success, %.1f ms average latency\n", 
+			fmt.Printf("    • %s: %.1f%% success, %.1f ms average latency\n",
 				task, analysis.SuccessRate*100, analysis.AverageLatency)
 		}
 	}
-	
+
 	fmt.Println()
 }

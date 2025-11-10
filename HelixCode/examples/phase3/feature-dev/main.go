@@ -167,7 +167,7 @@ func main() {
 	// Show summary
 	fmt.Println("=== Feature Development Summary ===")
 	stats := sessionMgr.GetStatistics()
-	fmt.Printf("Total sessions: %d\n", stats.TotalSessions)
+	fmt.Printf("Total sessions: %d\n", stats.Total)
 	fmt.Printf("Completed sessions: %d\n", stats.ByStatus[session.StatusCompleted])
 	fmt.Printf("Total conversations: %d\n", len(memoryMgr.GetAll()))
 	fmt.Printf("Total messages: %d\n", memoryMgr.TotalMessages())

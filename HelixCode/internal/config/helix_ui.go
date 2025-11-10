@@ -3,9 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -91,7 +88,7 @@ type ConfigFieldGroup struct {
 
 // FieldValidation represents field validation rules
 type FieldValidation struct {
-	Rules       []ValidationRule       `json:"rules"`
+	Rules       []ValidationRuleConfig `json:"rules"`
 	CustomRules []string               `json:"custom_rules"`
 	Constraints map[string]interface{} `json:"constraints"`
 }
@@ -159,10 +156,10 @@ type ActionConfirmation struct {
 
 // ConfigValidation represents form validation
 type ConfigValidation struct {
-	Rules       []ValidationRule  `json:"rules"`
-	StrictMode  bool              `json:"strict_mode"`
-	RealTime    bool              `json:"real_time"`
-	CustomRules map[string]string `json:"custom_rules"`
+	Rules       []ValidationRuleConfig `json:"rules"`
+	StrictMode  bool                   `json:"strict_mode"`
+	RealTime    bool                   `json:"real_time"`
+	CustomRules map[string]string      `json:"custom_rules"`
 }
 
 // ConfigFormLayout represents form layout configuration
@@ -1382,9 +1379,6 @@ func (ui *ConfigUI) getLLMSection() ConfigSection {
 					},
 				},
 				UI: FieldUI{
-					Min:  0.0,
-					Max:  2.0,
-					Step: 0.1,
 					Icon: "🌡️",
 				},
 			},

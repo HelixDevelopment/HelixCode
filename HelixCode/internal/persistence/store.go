@@ -10,23 +10,25 @@ import (
 	"dev.helix.code/internal/focus"
 	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/session"
+	"dev.helix.code/internal/template"
 )
 
 // Store manages persistent storage of application state
 type Store struct {
-	basePath       string              // Base directory for storage
-	autoSaveEnabled bool                // Whether auto-save is enabled
-	autoSaveInterval time.Duration      // Auto-save interval
-	serializer     Serializer          // Serialization strategy
-	sessionMgr     *session.Manager    // Session manager reference
-	memoryMgr      *memory.Manager     // Memory manager reference
-	focusMgr       *focus.Manager      // Focus manager reference
-	mu             sync.RWMutex        // Thread-safety
-	stopAutoSave   chan struct{}       // Signal to stop auto-save
-	lastSaveTime   time.Time           // Last save timestamp
-	onSave         []SaveCallback      // Callbacks on save
-	onLoad         []LoadCallback      // Callbacks on load
-	onError        []ErrorCallback     // Callbacks on error
+	basePath         string            // Base directory for storage
+	autoSaveEnabled  bool              // Whether auto-save is enabled
+	autoSaveInterval time.Duration     // Auto-save interval
+	serializer       Serializer        // Serialization strategy
+	sessionMgr       *session.Manager  // Session manager reference
+	memoryMgr        *memory.Manager   // Memory manager reference
+	focusMgr         *focus.Manager    // Focus manager reference
+	templateMgr      *template.Manager // Template manager reference
+	mu               sync.RWMutex      // Thread-safety
+	stopAutoSave     chan struct{}     // Signal to stop auto-save
+	lastSaveTime     time.Time         // Last save timestamp
+	onSave           []SaveCallback    // Callbacks on save
+	onLoad           []LoadCallback    // Callbacks on load
+	onError          []ErrorCallback   // Callbacks on error
 }
 
 // SaveCallback is called after successful save
@@ -94,6 +96,13 @@ func (s *Store) SetFocusManager(mgr *focus.Manager) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.focusMgr = mgr
+}
+
+// SetTemplateManager sets the template manager reference
+func (s *Store) SetTemplateManager(mgr *template.Manager) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.templateMgr = mgr
 }
 
 // SetSerializer sets the serialization strategy
@@ -600,6 +609,16 @@ func (s *Store) OnLoad(callback LoadCallback) {
 // OnError registers an error callback
 func (s *Store) OnError(callback ErrorCallback) {
 	s.onError = append(s.onError, callback)
+}
+
+// Load loads all persistent data (backward compatibility method)
+func (s *Store) Load() error {
+	return s.LoadAll()
+}
+
+// Save saves all persistent data (backward compatibility method)
+func (s *Store) Save() error {
+	return s.SaveAll()
 }
 
 // triggerError triggers error callbacks

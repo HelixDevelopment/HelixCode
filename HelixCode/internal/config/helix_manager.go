@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // HelixConfigManager manages ~/.config/helix/helix.json configuration

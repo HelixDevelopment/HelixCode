@@ -6,12 +6,12 @@ import (
 	"log"
 	"time"
 
-	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/hardware"
+	"dev.helix.code/internal/llm"
 )
 
 // CrossProviderModelSharingDemo demonstrates the complete cross-provider model sharing functionality
-func main() {
+func demoCrossProviderSharing() {
 	fmt.Println("🚀 Cross-Provider Model Sharing Demo")
 	fmt.Println("=====================================")
 
@@ -75,8 +75,8 @@ func main() {
 
 	for _, provider := range providers {
 		query := llm.ModelCompatibilityQuery{
-			ModelID:       testModelID,
-			SourceFormat:  testFormat,
+			ModelID:        testModelID,
+			SourceFormat:   testFormat,
 			TargetProvider: provider,
 		}
 

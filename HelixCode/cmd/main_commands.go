@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"dev.helix.code/internal/llm"
+	"github.com/spf13/cobra"
 )
 
 // mainCmd represents the main command that starts everything
@@ -196,7 +198,7 @@ func runAutoMode(cmd *cobra.Command, args []string) {
 
 func showProviderStatus(manager *llm.AutoLLMManager) {
 	fmt.Println("📊 Provider Status:")
-	fmt.Println("─" * 50)
+	fmt.Println(strings.Repeat("─", 50))
 
 	status := manager.GetStatus()
 	for name, provider := range status {
@@ -221,7 +223,7 @@ func showAutomationStatus(manager *llm.AutoLLMManager) {
 	status := manager.GetStatus()
 
 	fmt.Println("🤖 Automation Status:")
-	fmt.Println("─" * 50)
+	fmt.Println(strings.Repeat("─", 50))
 
 	installedCount := 0
 	runningCount := 0
@@ -282,23 +284,6 @@ func startMonitoringDashboard(manager *llm.AutoLLMManager) {
 	// This would start the monitoring dashboard
 	// For demo purposes, just log
 	fmt.Println("📊 Monitoring dashboard started on http://localhost:8080/dashboard")
-}
-
-func getStatusIcon(status string) string {
-	switch status {
-	case "running":
-		return "🟢"
-	case "starting":
-		return "🟡"
-	case "stopped":
-		return "🔴"
-	case "installed":
-		return "🔵"
-	case "not_installed":
-		return "⚪"
-	default:
-		return "⚫"
-	}
 }
 
 func getHealthIcon(isHealthy bool) string {

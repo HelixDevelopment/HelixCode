@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ import (
 // ConfigurationManager manages configuration with advanced features
 type ConfigurationManager struct {
 	config           *HelixConfig
-	logger           logging.Logger
+	logger           *logging.Logger
 	mu               sync.RWMutex
 	configPath       string
 	backupPath       string
@@ -205,7 +206,7 @@ func NewConfigurationManager(options *ConfigurationOptions) (*ConfigurationManag
 		}
 	}
 
-	logger := logging.NewLogger("configuration_manager")
+	logger := logging.NewLoggerWithName("configuration_manager")
 
 	manager := &ConfigurationManager{
 		logger:           logger,
@@ -229,7 +230,7 @@ func NewConfigurationManager(options *ConfigurationOptions) (*ConfigurationManag
 	}
 
 	// Initialize with defaults
-	config := DefaultHelixConfig()
+	config := getDefaultConfig()
 	manager.config = config
 
 	return manager, nil

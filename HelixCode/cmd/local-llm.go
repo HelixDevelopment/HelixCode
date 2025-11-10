@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,7 +13,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"dev.helix.code/internal/hardware"
 	"dev.helix.code/internal/llm"
 	"github.com/spf13/cobra"
 )
@@ -370,10 +368,10 @@ func runLogs(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Log file: %s\n\n", logFile)
 
 	// Show last 50 lines of log
-	cmd := exec.Command("tail", "-50", logFile)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	tailCmd := exec.Command("tail", "-50", logFile)
+	tailCmd.Stdout = os.Stdout
+	tailCmd.Stderr = os.Stderr
+	return tailCmd.Run()
 }
 
 // Helper functions

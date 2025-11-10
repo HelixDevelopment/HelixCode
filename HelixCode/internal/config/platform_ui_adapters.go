@@ -1,14 +1,7 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 // PlatformUIAdapter represents the interface for platform-specific UI adapters
@@ -178,29 +171,32 @@ func NewDesktopUIAdapter() *DesktopUIAdapter {
 
 // RenderConfigForm renders configuration form for desktop
 func (a *DesktopUIAdapter) RenderConfigForm(configUI *ConfigUI) (interface{}, error) {
-	form := configUI.GetConfigForm()
+	// form := configUI.GetConfigForm()
+	_ = configUI // TODO: Use configUI
 
 	// Transform form for desktop rendering
-	desktopForm := DesktopConfigForm{
-		ID:            form.ID,
-		Title:         form.Title,
-		Description:   form.Description,
-		Type:          "native_window",
-		Modal:         true,
-		Resizable:     true,
-		MinWidth:      800,
-		MinHeight:     600,
-		DefaultWidth:  1200,
-		DefaultHeight: 800,
-		CenterScreen:  true,
-		Layout:        "tabs",
-		Sections:      a.transformSections(form.Sections),
-		Actions:       a.transformActions(form.Actions),
-		Theme:         "system",
-		Features:      append(a.GetPlatformFeatures(), "native_controls"),
-	}
+	// TODO: Define DesktopConfigForm type
+	// desktopForm := DesktopConfigForm{
+	// 	ID:            form.ID,
+	// 	Title:         form.Title,
+	// 	Description:   form.Description,
+	// 	Type:          "native_window",
+	// 	Modal:         true,
+	// 	Resizable:     true,
+	// 	MinWidth:      800,
+	// 	MinHeight:     600,
+	// 	DefaultWidth:  1200,
+	// 	DefaultHeight: 800,
+	// 	CenterScreen:  true,
+	// 	Layout:        "tabs",
+	// 	Sections:      a.transformSections(form.Sections),
+	// 	Actions:       a.transformActions(form.Actions),
+	// 	Theme:         "system",
+	// 	Features:      append(a.GetPlatformFeatures(), "native_controls"),
+	// }
 
-	return desktopForm, nil
+	// return desktopForm, nil
+	return nil, fmt.Errorf("desktop form rendering not implemented")
 }
 
 // ShowConfigDialog shows configuration dialog on desktop
@@ -949,7 +945,7 @@ func (a *WebUIAdapter) getWebJavaScript() string {
 					
 					// Activate selected tab
 					tab.classList.add('active');
-					this.form.querySelector(` + targetTab + `).classList.add('active');
+					this.form.querySelector('[data-panel="' + targetTab + '"]').classList.add('active');
 				});
 			});
 		}

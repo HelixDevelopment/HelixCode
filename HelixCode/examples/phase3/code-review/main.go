@@ -121,12 +121,16 @@ func main() {
 	fmt.Println("=== Review Summary ===")
 	fmt.Printf("Session: %s\n", sess.Name)
 	fmt.Printf("Duration: %v\n", sess.EndedAt.Sub(sess.StartedAt))
-	fmt.Printf("Issues found: %s\n", sess.GetMetadata("issues_found"))
-	fmt.Printf("Severity: %s\n", sess.GetMetadata("severity"))
+	if issues, ok := sess.GetMetadata("issues_found"); ok {
+		fmt.Printf("Issues found: %s\n", issues)
+	}
+	if severity, ok := sess.GetMetadata("severity"); ok {
+		fmt.Printf("Severity: %s\n", severity)
+	}
 	fmt.Printf("Messages in review: %d\n", len(conv.GetMessages()))
 
 	// Export review for documentation
 	fmt.Println("\nExporting review conversation...")
-	snapshot, _ := memoryMgr.ExportConversation(conv.ID)
+	snapshot, _ := memoryMgr.Export(conv.ID)
 	fmt.Printf("Exported conversation with %d messages\n", len(snapshot.Conversation.GetMessages()))
 }

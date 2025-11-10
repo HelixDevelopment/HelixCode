@@ -7,21 +7,22 @@ import (
 
 // Session represents a development session
 type Session struct {
-	ID            string                 `json:"id"`
-	ProjectID     string                 `json:"project_id"`
-	Name          string                 `json:"name"`
-	Description   string                 `json:"description"`
-	Mode          Mode                   `json:"mode"`
-	Status        Status                 `json:"status"`
-	FocusChainID  string                 `json:"focus_chain_id"`
-	Context       map[string]interface{} `json:"context"`
-	Metadata      map[string]string      `json:"metadata"`
-	Tags          []string               `json:"tags"`
-	CreatedAt     time.Time              `json:"created_at"`
-	UpdatedAt     time.Time              `json:"updated_at"`
-	StartedAt     time.Time              `json:"started_at,omitempty"`
-	CompletedAt   time.Time              `json:"completed_at,omitempty"`
-	Duration      time.Duration          `json:"duration"`
+	ID           string                 `json:"id"`
+	ProjectID    string                 `json:"project_id"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description"`
+	Mode         Mode                   `json:"mode"`
+	Status       Status                 `json:"status"`
+	FocusChainID string                 `json:"focus_chain_id"`
+	Context      map[string]interface{} `json:"context"`
+	Metadata     map[string]string      `json:"metadata"`
+	Tags         []string               `json:"tags"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
+	StartedAt    time.Time              `json:"started_at,omitempty"`
+	CompletedAt  time.Time              `json:"completed_at,omitempty"`
+	EndedAt      time.Time              `json:"ended_at,omitempty"`
+	Duration     time.Duration          `json:"duration"`
 }
 
 // Mode represents the session mode
@@ -141,21 +142,21 @@ func (s *Session) GetMetadata(key string) (string, bool) {
 // Clone creates a copy of the session
 func (s *Session) Clone() *Session {
 	clone := &Session{
-		ID:            s.ID,
-		ProjectID:     s.ProjectID,
-		Name:          s.Name,
-		Description:   s.Description,
-		Mode:          s.Mode,
-		Status:        s.Status,
-		FocusChainID:  s.FocusChainID,
-		Context:       make(map[string]interface{}),
-		Metadata:      make(map[string]string),
-		Tags:          make([]string, len(s.Tags)),
-		CreatedAt:     s.CreatedAt,
-		UpdatedAt:     s.UpdatedAt,
-		StartedAt:     s.StartedAt,
-		CompletedAt:   s.CompletedAt,
-		Duration:      s.Duration,
+		ID:           s.ID,
+		ProjectID:    s.ProjectID,
+		Name:         s.Name,
+		Description:  s.Description,
+		Mode:         s.Mode,
+		Status:       s.Status,
+		FocusChainID: s.FocusChainID,
+		Context:      make(map[string]interface{}),
+		Metadata:     make(map[string]string),
+		Tags:         make([]string, len(s.Tags)),
+		CreatedAt:    s.CreatedAt,
+		UpdatedAt:    s.UpdatedAt,
+		StartedAt:    s.StartedAt,
+		CompletedAt:  s.CompletedAt,
+		Duration:     s.Duration,
 	}
 
 	// Deep copy context

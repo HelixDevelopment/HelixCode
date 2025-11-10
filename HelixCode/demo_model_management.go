@@ -2,20 +2,19 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"time"
 
 	"dev.helix.code/internal/llm"
 )
 
-func main() {
+// demoModelManagement demonstrates advanced model management features
+func demoModelManagement() {
 	fmt.Println("🚀 HelixCode Advanced Model Management Demo")
 	fmt.Println("============================================")
-	
+
 	// Create model download manager
 	fmt.Println("\n📦 1. Initializing Model Download Manager...")
 	downloadManager := llm.NewModelDownloadManager("/tmp/helix-model-demo")
-	
+
 	// Show available models
 	fmt.Println("\n📋 2. Available Models in Registry:")
 	models := downloadManager.GetAvailableModels()
@@ -26,58 +25,58 @@ func main() {
 		fmt.Printf("      📁 Formats: %v\n", model.AvailableFormats)
 		fmt.Println()
 	}
-	
+
 	// Search for specific models
 	fmt.Println("🔍 3. Searching for 'code' models:")
 	codeModels := downloadManager.SearchModels("code")
 	for _, model := range codeModels {
 		fmt.Printf("   💻 %s - %s\n", model.Name, model.Description)
 	}
-	
+
 	// Test cross-provider compatibility
 	fmt.Println("\n🔄 4. Testing Cross-Provider Compatibility:")
 	registry := llm.NewCrossProviderRegistry("/tmp/helix-compat-demo")
-	
+
 	// Check compatibility of different formats
 	providers := []string{"vllm", "llamacpp", "ollama", "localai"}
 	for _, provider := range providers {
 		compatible, _ := registry.GetCompatibleFormats(provider)
 		fmt.Printf("   🤖 %s: %v\n", provider, compatible)
 	}
-	
+
 	// Test integrated model manager
 	fmt.Println("\n🎯 5. Testing Integrated Model Manager:")
 	integrated := llm.NewIntegratedModelManager("/tmp/helix-integrated-demo")
-	
+
 	// Find best model for different scenarios
 	scenarios := []struct {
-		name   string
-		req     llm.ModelSelectionCriteria
+		name string
+		req  llm.ModelSelectionCriteria
 	}{
 		{
 			name: "High Quality",
 			req: llm.ModelSelectionCriteria{
 				QualityPreference: "quality",
-				MaxTokens:       4096,
+				MaxTokens:         4096,
 			},
 		},
 		{
 			name: "Fast Response",
 			req: llm.ModelSelectionCriteria{
 				QualityPreference: "fast",
-				MaxTokens:       2048,
+				MaxTokens:         2048,
 			},
 		},
 		{
 			name: "Code Generation",
 			req: llm.ModelSelectionCriteria{
-				TaskType:         "code",
+				TaskType:          "code",
 				QualityPreference: "quality",
-				MaxTokens:       8192,
+				MaxTokens:         8192,
 			},
 		},
 	}
-	
+
 	for _, scenario := range scenarios {
 		fmt.Printf("   📊 %s:\n", scenario.name)
 		bestModel, err := integrated.FindBestModel(scenario.req)
@@ -88,11 +87,11 @@ func main() {
 			fmt.Printf("      📁 Format: %s\n", bestModel.Format)
 		}
 	}
-	
+
 	// Demonstrate model conversion validation
 	fmt.Println("\n🔄 6. Testing Model Conversion Validation:")
 	converter := llm.NewModelConverter("/tmp/helix-convert-demo")
-	
+
 	conversions := []struct {
 		from llm.ModelFormat
 		to   llm.ModelFormat
@@ -102,7 +101,7 @@ func main() {
 		{llm.FormatHF, llm.FormatAWQ},
 		{llm.FormatFP16, llm.FormatGGUF},
 	}
-	
+
 	for _, conv := range conversions {
 		fmt.Printf("   🔧 %s -> %s: ", conv.from, conv.to)
 		result, err := converter.ValidateConversion(conv.from, conv.to)
@@ -115,7 +114,7 @@ func main() {
 			}
 		}
 	}
-	
+
 	// Show conversion history (will be empty for new demo)
 	fmt.Println("\n📈 7. Conversion History:")
 	history, err := converter.GetConversionHistory()
@@ -128,7 +127,7 @@ func main() {
 			fmt.Printf("      ⏱️  Average time: %d minutes\n", history.AverageConversionTime)
 		}
 	}
-	
+
 	// Show provider information
 	fmt.Println("\n🤖 8. Provider Information:")
 	for _, provider := range providers {
@@ -142,7 +141,7 @@ func main() {
 			fmt.Printf("      📦 Port: %d\n", info.DefaultPort)
 		}
 	}
-	
+
 	fmt.Println("\n🎉 Demo completed successfully!")
 	fmt.Println("\n💡 Key Features Demonstrated:")
 	fmt.Println("   ✅ Model registry with 3+ popular models")
@@ -151,16 +150,16 @@ func main() {
 	fmt.Println("   ✅ Format conversion validation and recommendations")
 	fmt.Println("   ✅ Comprehensive provider information")
 	fmt.Println("   ✅ Integrated model management")
-	
+
 	fmt.Println("\n🚀 Next Steps:")
 	fmt.Println("   1. Use 'helix local-llm models download <model>' to get models")
 	fmt.Println("   2. Use 'helix local-llm models convert <path>' to convert formats")
 	fmt.Println("   3. Use 'helix local-llm start <provider>' to run providers")
 	fmt.Println("   4. Use 'helix local-llm monitor' to watch provider health")
-	
+
 	// Clean up demo files
 	fmt.Println("\n🧹 Cleaning up demo files...")
 	// In a real implementation, you might want to preserve some data
-	
+
 	fmt.Println("✅ Demo complete!")
 }
