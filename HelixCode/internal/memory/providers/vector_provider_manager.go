@@ -16,7 +16,7 @@ type VectorProviderManager struct {
 	providers map[string]VectorProvider
 	active    string
 	config    *config.VectorProviderConfig
-	logger    logging.Logger
+	logger    *logging.Logger
 	mu        sync.RWMutex
 
 	// Health monitoring
@@ -275,13 +275,13 @@ type FallbackAttempt struct {
 }
 
 // NewVectorProviderManager creates a new vector provider manager
-func NewVectorProviderManager(config *config.VectorProviderConfig, logger logging.Logger) *VectorProviderManager {
+func NewVectorProviderManager(config *config.VectorProviderConfig, logger *logging.Logger) *VectorProviderManager {
 	if config == nil {
 		config = config.DefaultVectorProviderConfig()
 	}
 
 	if logger == nil {
-		logger = logging.NewLogger("vector_provider_manager")
+		logger = logging.NewLoggerWithName("vector_provider_manager")
 	}
 
 	return &VectorProviderManager{

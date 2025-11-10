@@ -14,7 +14,7 @@ import (
 // ReplikaProvider implements VectorProvider for Replika
 type ReplikaProvider struct {
 	config        *ReplikaConfig
-	logger        logging.Logger
+	logger        *logging.Logger
 	mu            sync.RWMutex
 	initialized   bool
 	started       bool
@@ -94,7 +94,7 @@ func NewReplikaProvider(config map[string]interface{}) (VectorProvider, error) {
 
 	return &ReplikaProvider{
 		config:        replikaConfig,
-		logger:        logging.NewLogger("replika_provider"),
+		logger:        logging.NewLoggerWithName("replika_provider"),
 		personalities: make(map[string]*memory.Personality),
 		conversations: make(map[string]*memory.ConversationSession),
 		stats: &ProviderStats{
@@ -948,14 +948,14 @@ func (p *ReplikaProvider) updateStats(duration time.Duration) {
 // ReplikaHTTPClient is a mock HTTP client for Replika
 type ReplikaHTTPClient struct {
 	config *ReplikaConfig
-	logger logging.Logger
+	logger *logging.Logger
 }
 
 // NewReplikaHTTPClient creates a new Replika HTTP client
 func NewReplikaHTTPClient(config *ReplikaConfig) (ReplikaClient, error) {
 	return &ReplikaHTTPClient{
 		config: config,
-		logger: logging.NewLogger("replika_client"),
+		logger: logging.NewLoggerWithName("replika_client"),
 	}, nil
 }
 

@@ -12,7 +12,7 @@ import (
 type ProviderRegistry struct {
 	mu          sync.RWMutex
 	providers   map[memory.ProviderType]ProviderFactoryFunc
-	logger      logging.Logger
+	logger      *logging.Logger
 	initialized bool
 }
 
@@ -74,7 +74,7 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	r.providers[memory.ProviderTypeFAISS] = func(config map[string]interface{}) (VectorProvider, error) { return NewFAISSProvider(config) }
 
 	r.providers[memory.ProviderTypeMemGPT] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemGPTProvider(config) }
-	r.providers[memory.ProviderTypeCrewAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewCrewAIProvider(config) }
+	// r.providers[memory.ProviderTypeCrewAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewCrewAIProvider(config) }
 	r.providers[memory.ProviderTypeCharacterAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewCharacterAIProvider(config) }
 	r.providers[memory.ProviderTypeReplika] = func(config map[string]interface{}) (VectorProvider, error) { return NewReplikaProvider(config) }
 	r.providers[memory.ProviderTypeAnima] = func(config map[string]interface{}) (VectorProvider, error) { return NewAnimaProvider(config) }
@@ -84,10 +84,11 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	}
 
 	// Register new memory providers
-	r.providers[memory.ProviderTypeMem0] = func(config map[string]interface{}) (VectorProvider, error) { return NewMem0Provider(config) }
-	r.providers[memory.ProviderTypeZep] = func(config map[string]interface{}) (VectorProvider, error) { return NewZepProvider(config) }
-	r.providers[memory.ProviderTypeMemonto] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemontoProvider(config) }
-	r.providers[memory.ProviderTypeBaseAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewBaseAIProvider(config) }
+	// Note: Mem0, Zep, Memonto, BaseAI are memory providers, not vector providers
+	// r.providers[memory.ProviderTypeMem0] = func(config map[string]interface{}) (VectorProvider, error) { return NewMem0Provider(config) }
+	// r.providers[memory.ProviderTypeZep] = func(config map[string]interface{}) (VectorProvider, error) { return NewZepProvider(config) }
+	// r.providers[memory.ProviderTypeMemonto] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemontoProvider(config) }
+	// r.providers[memory.ProviderTypeBaseAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewBaseAIProvider(config) }
 
 	return nil
 

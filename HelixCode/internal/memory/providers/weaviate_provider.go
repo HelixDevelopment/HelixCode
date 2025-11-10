@@ -14,7 +14,7 @@ import (
 // WeaviateProvider implements VectorProvider for Weaviate
 type WeaviateProvider struct {
 	config      *WeaviateConfig
-	logger      logging.Logger
+	logger      *logging.Logger
 	mu          sync.RWMutex
 	initialized bool
 	started     bool
@@ -88,7 +88,7 @@ func NewWeaviateProvider(config map[string]interface{}) (VectorProvider, error) 
 
 	return &WeaviateProvider{
 		config:      weaviateConfig,
-		logger:      logging.NewLogger("weaviate_provider"),
+		logger:      logging.NewLoggerWithName("weaviate_provider"),
 		collections: make(map[string]*memory.CollectionConfig),
 		stats: &ProviderStats{
 			TotalVectors:     0,
@@ -783,14 +783,14 @@ func (p *WeaviateProvider) updateStats(duration time.Duration) {
 // WeaviateGraphQLClient is a mock GraphQL client for Weaviate
 type WeaviateGraphQLClient struct {
 	config *WeaviateConfig
-	logger logging.Logger
+	logger *logging.Logger
 }
 
 // NewWeaviateGraphQLClient creates a new Weaviate GraphQL client
 func NewWeaviateGraphQLClient(config *WeaviateConfig) (WeaviateClient, error) {
 	return &WeaviateGraphQLClient{
 		config: config,
-		logger: logging.NewLogger("weaviate_client"),
+		logger: logging.NewLoggerWithName("weaviate_client"),
 	}, nil
 }
 

@@ -121,14 +121,9 @@ func (f *ProviderFactory) CreateHybridProvider(config *HybridProviderConfig) (*H
 
 // validateProviderType validates that a provider type exists and is supported
 func (f *ProviderFactory) validateProviderType(providerType memory.ProviderType) error {
-	factory, err := f.registry.GetProviderFactory(providerType)
+	_, err := f.registry.GetProviderFactory(providerType)
 	if err != nil {
 		return fmt.Errorf("unknown provider type: %s", providerType)
-	}
-
-	// Additional validation if factory supports it
-	if validator, ok := factory.(ProviderValidator); ok {
-		return validator.Validate()
 	}
 
 	return nil
@@ -217,9 +212,10 @@ func (pc *ProviderChain) Start(ctx context.Context) error {
 
 // Store stores vectors using the current provider, with fallback
 func (pc *ProviderChain) Store(ctx context.Context, vectors []*memory.VectorData) error {
+	providerVectors := convertMemoryVectorDataSliceToProvider(vectors)
 	for i := pc.current; i < len(pc.providers); i++ {
 		provider := pc.providers[i]
-		err := provider.Store(ctx, vectors)
+		err := provider.Store(ctx, providerVectors)
 		if err == nil {
 			return nil
 		}
@@ -235,7 +231,7 @@ func (pc *ProviderChain) Retrieve(ctx context.Context, ids []string) ([]*memory.
 		provider := pc.providers[i]
 		result, err := provider.Retrieve(ctx, ids)
 		if err == nil {
-			return result, nil
+			return convertProviderVectorDataSliceToMemory(result), nil
 		}
 		// Try next provider
 		pc.current = i + 1
@@ -245,11 +241,12 @@ func (pc *ProviderChain) Retrieve(ctx context.Context, ids []string) ([]*memory.
 
 // Search performs search using the current provider, with fallback
 func (pc *ProviderChain) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
+	providerQuery := convertMemoryVectorQueryToProvider(query)
 	for i := pc.current; i < len(pc.providers); i++ {
 		provider := pc.providers[i]
-		result, err := provider.Search(ctx, query)
+		result, err := provider.Search(ctx, providerQuery)
 		if err == nil {
-			return result, nil
+			return convertProviderVectorSearchResultToMemory(result), nil
 		}
 		// Try next provider
 		pc.current = i + 1
@@ -263,7 +260,7 @@ func (pc *ProviderChain) FindSimilar(ctx context.Context, embedding []float64, k
 		provider := pc.providers[i]
 		result, err := provider.FindSimilar(ctx, embedding, k, filters)
 		if err == nil {
-			return result, nil
+			return convertProviderVectorSimilarityResultSliceToMemorySingle(result), nil
 		}
 		// Try next provider
 		pc.current = i + 1
@@ -273,9 +270,10 @@ func (pc *ProviderChain) FindSimilar(ctx context.Context, embedding []float64, k
 
 // Implement other required methods with fallback logic
 func (pc *ProviderChain) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
+	providerConfig := convertMemoryCollectionConfigToProvider(config)
 	for i := pc.current; i < len(pc.providers); i++ {
 		provider := pc.providers[i]
-		err := provider.CreateCollection(ctx, name, config)
+		err := provider.CreateCollection(ctx, name, providerConfig)
 		if err == nil {
 			return nil
 		}
@@ -301,7 +299,7 @@ func (pc *ProviderChain) ListCollections(ctx context.Context) ([]*memory.Collect
 		provider := pc.providers[i]
 		result, err := provider.ListCollections(ctx)
 		if err == nil {
-			return result, nil
+			return convertProviderCollectionInfoSliceToMemory(result), nil
 		}
 		pc.current = i + 1
 	}
@@ -313,7 +311,7 @@ func (pc *ProviderChain) GetCollection(ctx context.Context, name string) (*memor
 		provider := pc.providers[i]
 		result, err := provider.GetCollection(ctx, name)
 		if err == nil {
-			return result, nil
+			return convertProviderCollectionInfoToMemory(result), nil
 		}
 		pc.current = i + 1
 	}
@@ -321,9 +319,10 @@ func (pc *ProviderChain) GetCollection(ctx context.Context, name string) (*memor
 }
 
 func (pc *ProviderChain) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
+	providerConfig := convertMemoryIndexConfigToProvider(config)
 	for i := pc.current; i < len(pc.providers); i++ {
 		provider := pc.providers[i]
-		err := provider.CreateIndex(ctx, collection, config)
+		err := provider.CreateIndex(ctx, collection, providerConfig)
 		if err == nil {
 			return nil
 		}
@@ -332,10 +331,10 @@ func (pc *ProviderChain) CreateIndex(ctx context.Context, collection string, con
 	return fmt.Errorf("all providers in chain failed to create index")
 }
 
-func (pc *ProviderChain) DeleteIndex(ctx context.Context, collection string) error {
+func (pc *ProviderChain) DeleteIndex(ctx context.Context, collection, name string) error {
 	for i := pc.current; i < len(pc.providers); i++ {
 		provider := pc.providers[i]
-		err := provider.DeleteIndex(ctx, collection)
+		err := provider.DeleteIndex(ctx, collection, name)
 		if err == nil {
 			return nil
 		}
@@ -349,7 +348,7 @@ func (pc *ProviderChain) ListIndexes(ctx context.Context, collection string) ([]
 		provider := pc.providers[i]
 		result, err := provider.ListIndexes(ctx, collection)
 		if err == nil {
-			return result, nil
+			return convertProviderIndexInfoSliceToMemory(result), nil
 		}
 		pc.current = i + 1
 	}
@@ -407,7 +406,11 @@ func (pc *ProviderChain) DeleteMetadata(ctx context.Context, ids []string, keys 
 func (pc *ProviderChain) GetStats(ctx context.Context) (*memory.ProviderStats, error) {
 	// Return stats from current provider
 	if pc.current < len(pc.providers) {
-		return pc.providers[pc.current].GetStats(ctx)
+		stats, err := pc.providers[pc.current].GetStats(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return convertProviderStatsToMemory(stats), nil
 	}
 	return nil, fmt.Errorf("no active providers")
 }
@@ -452,7 +455,7 @@ func (pc *ProviderChain) GetName() string {
 }
 
 func (pc *ProviderChain) GetType() memory.ProviderType {
-	return memory.ProviderAgnostic
+	return memory.ProviderTypeAgnostic
 }
 
 func (pc *ProviderChain) GetCapabilities() []string {
@@ -489,7 +492,8 @@ func (pc *ProviderChain) IsCloud() bool {
 func (pc *ProviderChain) GetCostInfo() *memory.CostInfo {
 	// Return cost info from current provider
 	if pc.current < len(pc.providers) {
-		return pc.providers[pc.current].GetCostInfo()
+		costInfo := pc.providers[pc.current].GetCostInfo()
+		return convertProviderCostInfoToMemory(costInfo)
 	}
 	return nil
 }

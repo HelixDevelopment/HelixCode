@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
 )
@@ -64,7 +63,7 @@ type CharacterAIClient interface {
 	UpdateConversation(ctx context.Context, conversation *memory.Conversation) error
 	DeleteConversation(ctx context.Context, conversationID string) error
 	ListConversations(ctx context.Context, characterID string) ([]*memory.Conversation, error)
-	SendMessage(ctx context.Context, conversationID, message *memory.CharacterMessage) (*memory.CharacterMessage, error)
+	SendMessage(ctx context.Context, message *memory.CharacterMessage) (*memory.CharacterMessage, error)
 	GetMessages(ctx context.Context, conversationID string, limit int) ([]*memory.CharacterMessage, error)
 	UpdatePersonality(ctx context.Context, characterID string, traits map[string]interface{}) error
 	GetRelationship(ctx context.Context, characterID, userID string) (*memory.RelationshipData, error)
@@ -508,13 +507,15 @@ func (p *CharacterAIProvider) CreateCollection(ctx context.Context, name string,
 		Name:        name,
 		Description: config.Description,
 		Personality: map[string]interface{}{},
-		Traits:      []string{},
+		Traits:      map[string]interface{}{},
 		Appearance:  map[string]interface{}{},
 		Backstory:   "",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
 		IsPublic:    false,
 		IsActive:    true,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Status:      "active",
+		Metadata:    map[string]string{},
 	}
 
 	if err := p.client.CreateCharacter(ctx, character); err != nil {
@@ -680,7 +681,11 @@ func (p *CharacterAIProvider) GetMetadata(ctx context.Context, ids []string) (ma
 		} else {
 			// Try conversation
 			if conversation, err := p.client.GetConversation(ctx, id); err == nil {
-				result[id] = conversation.Metadata
+				metadata := make(map[string]interface{})
+				for k, v := range conversation.Metadata {
+					metadata[k] = v
+				}
+				result[id] = metadata
 			}
 		}
 	}
@@ -936,13 +941,15 @@ func (p *CharacterAIProvider) vectorToCharacter(vector *memory.VectorData) (*mem
 		Name:        characterName,
 		Description: "",
 		Personality: personality,
-		Traits:      []string{},
+		Traits:      map[string]interface{}{},
 		Appearance:  map[string]interface{}{},
 		Backstory:   "",
-		CreatedAt:   vector.Timestamp,
-		UpdatedAt:   time.Now(),
 		IsPublic:    false,
 		IsActive:    true,
+		CreatedAt:   vector.Timestamp,
+		UpdatedAt:   time.Now(),
+		Status:      "active",
+		Metadata:    map[string]string{},
 	}, nil
 }
 
@@ -958,16 +965,28 @@ func (p *CharacterAIProvider) vectorToConversation(vector *memory.VectorData) (*
 		return nil, fmt.Errorf("conversation requires character_id")
 	}
 
+	metadata := make(map[string]string)
+	for k, v := range vector.Metadata {
+		if str, ok := v.(string); ok {
+			metadata[k] = str
+		}
+	}
+
 	return &memory.Conversation{
-		ID:          conversationID,
-		CharacterID: characterID,
-		UserID:      "",
-		Messages:    []*memory.CharacterMessage{},
-		StartedAt:   vector.Timestamp,
-		UpdatedAt:   time.Now(),
-		IsActive:    true,
-		IsArchived:  false,
-		Metadata:    vector.Metadata,
+		ID:           conversationID,
+		Title:        "Conversation",
+		SessionID:    conversationID,
+		CharacterID:  characterID,
+		UserID:       "",
+		Messages:     []*memory.Message{},
+		CharMessages: []*memory.CharacterMessage{},
+		Metadata:     metadata,
+		CreatedAt:    vector.Timestamp,
+		UpdatedAt:    time.Now(),
+		Status:       "active",
+		Summary:      "",
+		TokenCount:   0,
+		MessageCount: 0,
 	}, nil
 }
 
@@ -1000,7 +1019,7 @@ func (p *CharacterAIProvider) conversationToVector(conversation *memory.Conversa
 			"type":            "conversation",
 		},
 		Collection: conversation.CharacterID,
-		Timestamp:  conversation.StartedAt,
+		Timestamp:  conversation.CreatedAt,
 	}
 }
 
@@ -1055,14 +1074,14 @@ func (p *CharacterAIProvider) updateStats(duration time.Duration) {
 // CharacterAIHTTPClient is a mock HTTP client for Character.AI
 type CharacterAIHTTPClient struct {
 	config *CharacterAIConfig
-	logger logging.Logger
+	logger *logging.Logger
 }
 
 // NewCharacterAIHTTPClient creates a new Character.AI HTTP client
 func NewCharacterAIHTTPClient(config *CharacterAIConfig) (CharacterAIClient, error) {
 	return &CharacterAIHTTPClient{
 		config: config,
-		logger: logging.NewLogger("character_ai_client"),
+		logger: logging.NewLoggerWithName("character_ai_client"),
 	}, nil
 }
 
@@ -1082,15 +1101,20 @@ func (c *CharacterAIHTTPClient) GetCharacter(ctx context.Context, characterID st
 			"friendly": true,
 			"outgoing": false,
 		},
-		Traits: []string{"friendly", "helpful"},
+		Traits: map[string]interface{}{
+			"friendly": true,
+			"helpful":  true,
+		},
 		Appearance: map[string]interface{}{
 			"height": "tall",
 		},
 		Backstory: "",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 		IsPublic:  false,
 		IsActive:  true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Status:    "active",
+		Metadata:  map[string]string{},
 	}, nil
 }
 
@@ -1107,8 +1131,34 @@ func (c *CharacterAIHTTPClient) DeleteCharacter(ctx context.Context, characterID
 func (c *CharacterAIHTTPClient) ListCharacters(ctx context.Context) ([]*memory.Character, error) {
 	// Mock implementation
 	return []*memory.Character{
-		{ID: "character1", Name: "Character 1", CreatedAt: time.Now()},
-		{ID: "character2", Name: "Character 2", CreatedAt: time.Now()},
+		{
+			ID:          "character1",
+			Name:        "Character 1",
+			Description: "Mock character 1",
+			Personality: map[string]interface{}{},
+			Traits:      map[string]interface{}{},
+			Appearance:  map[string]interface{}{},
+			IsPublic:    false,
+			IsActive:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Status:      "active",
+			Metadata:    map[string]string{},
+		},
+		{
+			ID:          "character2",
+			Name:        "Character 2",
+			Description: "Mock character 2",
+			Personality: map[string]interface{}{},
+			Traits:      map[string]interface{}{},
+			Appearance:  map[string]interface{}{},
+			IsPublic:    false,
+			IsActive:    true,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
+			Status:      "active",
+			Metadata:    map[string]string{},
+		},
 	}, nil
 }
 
@@ -1120,15 +1170,20 @@ func (c *CharacterAIHTTPClient) CreateConversation(ctx context.Context, conversa
 func (c *CharacterAIHTTPClient) GetConversation(ctx context.Context, conversationID string) (*memory.Conversation, error) {
 	// Mock implementation
 	return &memory.Conversation{
-		ID:          conversationID,
-		CharacterID: "character1",
-		UserID:      "user1",
-		Messages:    []*memory.CharacterMessage{},
-		StartedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		IsActive:    true,
-		IsArchived:  false,
-		Metadata:    map[string]interface{}{},
+		ID:           conversationID,
+		Title:        "Mock Conversation",
+		SessionID:    "session1",
+		CharacterID:  "character1",
+		UserID:       "user1",
+		Messages:     []*memory.Message{},
+		CharMessages: []*memory.CharacterMessage{},
+		Metadata:     map[string]string{},
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		Status:       "active",
+		Summary:      "",
+		TokenCount:   0,
+		MessageCount: 0,
 	}, nil
 }
 
@@ -1145,18 +1200,34 @@ func (c *CharacterAIHTTPClient) DeleteConversation(ctx context.Context, conversa
 func (c *CharacterAIHTTPClient) ListConversations(ctx context.Context, characterID string) ([]*memory.Conversation, error) {
 	// Mock implementation
 	return []*memory.Conversation{
-		{ID: "conversation1", CharacterID: characterID, StartedAt: time.Now()},
+		{
+			ID:           "conversation1",
+			Title:        "Mock Conversation",
+			SessionID:    "session1",
+			CharacterID:  characterID,
+			UserID:       "user1",
+			Messages:     []*memory.Message{},
+			CharMessages: []*memory.CharacterMessage{},
+			Metadata:     map[string]string{},
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+			Status:       "active",
+			Summary:      "",
+			TokenCount:   0,
+			MessageCount: 0,
+		},
 	}, nil
 }
 
-func (c *CharacterAIHTTPClient) SendMessage(ctx context.Context, conversationID string, message *memory.CharacterMessage) (*memory.CharacterMessage, error) {
-	c.logger.Info("Sending message", "conversation_id", conversationID, "role", message.Role)
+func (c *CharacterAIHTTPClient) SendMessage(ctx context.Context, message *memory.CharacterMessage) (*memory.CharacterMessage, error) {
+	c.logger.Info("Sending message", "session_id", message.SessionID, "type", message.Type)
 	return &memory.CharacterMessage{
-		ID:             "message1",
-		ConversationID: conversationID,
-		Role:           "character",
-		Content:        "Mock response",
-		Timestamp:      time.Now(),
+		ID:        "message1",
+		SessionID: message.SessionID,
+		SenderID:  "character1",
+		Content:   "Mock response",
+		Timestamp: time.Now(),
+		Type:      "character",
 	}, nil
 }
 
@@ -1165,11 +1236,18 @@ func (c *CharacterAIHTTPClient) GetMessages(ctx context.Context, conversationID 
 	var messages []*memory.CharacterMessage
 	for i := 0; i < limit; i++ {
 		messages = append(messages, &memory.CharacterMessage{
-			ID:             fmt.Sprintf("msg_%d", i),
-			ConversationID: conversationID,
-			Role:           []string{"user", "character"}[i%2],
-			Content:        fmt.Sprintf("Mock message %d", i),
-			Timestamp:      time.Now(),
+			ID:        fmt.Sprintf("msg_%d", i),
+			SessionID: conversationID,
+			SenderID:  fmt.Sprintf("sender_%d", i%2),
+			Content:   fmt.Sprintf("Mock message %d", i),
+			Timestamp: time.Now(),
+			Type: func() string {
+				if i%2 == 0 {
+					return "user"
+				} else {
+					return "character"
+				}
+			}(),
 		})
 	}
 	return messages, nil
@@ -1183,13 +1261,14 @@ func (c *CharacterAIHTTPClient) UpdatePersonality(ctx context.Context, character
 func (c *CharacterAIHTTPClient) GetRelationship(ctx context.Context, characterID, userID string) (*memory.RelationshipData, error) {
 	// Mock implementation
 	return &memory.RelationshipData{
+		ID:          "rel1",
 		CharacterID: characterID,
 		UserID:      userID,
+		Type:        "friend",
 		Strength:    0.8,
-		Trust:       0.7,
-		Liking:      0.9,
-		History:     []string{},
-		LastUpdated: time.Now(),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Metadata:    map[string]string{},
 	}, nil
 }
 
@@ -1201,12 +1280,12 @@ func (c *CharacterAIHTTPClient) UpdateRelationship(ctx context.Context, characte
 func (c *CharacterAIHTTPClient) GetEmotionalState(ctx context.Context, characterID string) (*memory.EmotionalState, error) {
 	// Mock implementation
 	return &memory.EmotionalState{
-		CharacterID:  characterID,
-		Mood:         "happy",
-		Energy:       0.8,
-		Satisfaction: 0.7,
-		Engagement:   0.9,
-		LastUpdated:  time.Now(),
+		ID:        "emo1",
+		AvatarID:  characterID,
+		Mood:      "happy",
+		Intensity: 0.8,
+		Timestamp: time.Now(),
+		Context:   "mock context",
 	}, nil
 }
 

@@ -21,7 +21,7 @@ type PineconeProvider struct {
 	index       *pinecone.Index
 	collections map[string]*PineconeCollection
 	config      *PineconeConfig
-	logger      logging.Logger
+	logger      *logging.Logger
 	initialized bool
 	started     bool
 	stats       *ProviderStats
@@ -65,7 +65,7 @@ func NewPineconeProvider(config interface{}) (VectorProvider, error) {
 		return nil, fmt.Errorf("failed to parse Pinecone config: %w", err)
 	}
 
-	logger := logging.NewLogger("pinecone_provider")
+	logger := logging.NewLoggerWithName("pinecone_provider")
 
 	return &PineconeProvider{
 		collections: make(map[string]*PineconeCollection),

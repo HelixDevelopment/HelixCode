@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
 )
@@ -15,7 +14,7 @@ import (
 type ConfigManager struct {
 	configPath string
 	config     *ProviderConfig
-	logger     logging.Logger
+	logger     *logging.Logger
 }
 
 // ProviderConfig contains all provider configurations
@@ -144,7 +143,7 @@ type PerformanceConfig struct {
 func NewConfigManager(configPath string) *ConfigManager {
 	return &ConfigManager{
 		configPath: configPath,
-		logger:     logging.NewLogger("config_manager"),
+		logger:     logging.NewLoggerWithName("config_manager"),
 	}
 }
 

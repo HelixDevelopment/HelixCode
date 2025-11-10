@@ -16,7 +16,7 @@ import (
 // RedisProvider implements VectorProvider for Redis Stack
 type RedisProvider struct {
 	config      *RedisConfig
-	logger      logging.Logger
+	logger      *logging.Logger
 	mu          sync.RWMutex
 	initialized bool
 	started     bool
@@ -77,7 +77,7 @@ func NewRedisProvider(config map[string]interface{}) (VectorProvider, error) {
 
 	return &RedisProvider{
 		config:      redisConfig,
-		logger:      logging.NewLogger("redis_provider"),
+		logger:      logging.NewLoggerWithName("redis_provider"),
 		collections: make(map[string]*memory.CollectionConfig),
 		stats: &ProviderStats{
 			TotalVectors:     0,

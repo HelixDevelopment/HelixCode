@@ -16,12 +16,12 @@ import (
 // FAISSProvider implements VectorProvider for FAISS
 type FAISSProvider struct {
 	config      *FAISSConfig
-	logger      logging.Logger
+	logger      *logging.Logger
 	mu          sync.RWMutex
 	initialized bool
 	started     bool
 	indices     map[string]*FAISSIndex
-	collections map[string]*memory.CollectionConfig
+	collections map[string]*CollectionConfig
 	stats       *ProviderStats
 }
 
@@ -75,9 +75,9 @@ func NewFAISSProvider(config map[string]interface{}) (VectorProvider, error) {
 
 	return &FAISSProvider{
 		config:      faissConfig,
-		logger:      logging.NewLogger("faiss_provider"),
+		logger:      logging.NewLoggerWithName("faiss_provider"),
 		indices:     make(map[string]*FAISSIndex),
-		collections: make(map[string]*memory.CollectionConfig),
+		collections: make(map[string]*CollectionConfig),
 		stats: &ProviderStats{
 			TotalVectors:     0,
 			TotalCollections: 0,
@@ -203,8 +203,8 @@ func (p *FAISSProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.V
 
 	var results []*memory.VectorData
 
-	for _, collection := range p.collections {
-		if index, exists := p.indices[collection]; exists {
+	for name := range p.collections {
+		if index, exists := p.indices[name]; exists {
 			vectors := index.getVectors(ids)
 			results = append(results, vectors...)
 		}
@@ -212,6 +212,43 @@ func (p *FAISSProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.V
 
 	p.stats.LastOperation = time.Now()
 	return results, nil
+}
+
+// Update updates a vector in FAISS
+func (p *FAISSProvider) Update(ctx context.Context, id string, vector *memory.VectorData) error {
+	// FAISS doesn't support direct updates, so delete and re-insert
+	if err := p.Delete(ctx, []string{id}); err != nil {
+		return err
+	}
+	return p.Store(ctx, []*memory.VectorData{vector})
+}
+
+// Delete deletes vectors from FAISS
+func (p *FAISSProvider) Delete(ctx context.Context, ids []string) error {
+	start := time.Now()
+	defer func() {
+		p.updateStats(time.Since(start))
+	}()
+
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.started {
+		return fmt.Errorf("provider not started")
+	}
+
+	for _, id := range ids {
+		// Find and remove from all indices
+		for name, index := range p.indices {
+			if index.removeVector(id) {
+				p.logger.Info("Vector deleted", "id", id, "collection", name)
+				break
+			}
+		}
+	}
+
+	p.stats.LastOperation = time.Now()
+	return nil
 }
 
 // Search performs vector similarity search in FAISS
@@ -275,7 +312,6 @@ func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 		Vector:  embedding,
 		TopK:    k,
 		Filters: filters,
-		Metric:  p.config.Metric,
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -297,8 +333,29 @@ func (p *FAISSProvider) FindSimilar(ctx context.Context, embedding []float64, k 
 	return results, nil
 }
 
+// BatchFindSimilar finds similar vectors for multiple queries
+func (p *FAISSProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	results := make([][]*VectorSimilarityResult, len(queries))
+	for i, query := range queries {
+		similar, err := p.FindSimilar(ctx, query, k, nil)
+		if err != nil {
+			return nil, err
+		}
+		// Convert memory.VectorSimilarityResult to VectorSimilarityResult
+		converted := make([]*VectorSimilarityResult, len(similar))
+		for j, s := range similar {
+			converted[j] = &VectorSimilarityResult{
+				ID:    s.ID,
+				Score: s.Score,
+			}
+		}
+		results[i] = converted
+	}
+	return results, nil
+}
+
 // CreateCollection creates a new collection
-func (p *FAISSProvider) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
+func (p *FAISSProvider) CreateCollection(ctx context.Context, name string, config *CollectionConfig) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
@@ -344,14 +401,12 @@ func (p *FAISSProvider) ListCollections(ctx context.Context) ([]*memory.Collecti
 		}
 
 		collections = append(collections, &memory.CollectionInfo{
-			Name:        name,
-			Description: config.Description,
-			Dimension:   config.Dimension,
-			Metric:      config.Metric,
-			VectorCount: vectorCount,
-			Size:        vectorCount * int64(config.Dimension) * 8, // Approximate
-			CreatedAt:   time.Now(),                                // FAISS doesn't store creation time
-			UpdatedAt:   time.Now(),
+			Name:         name,
+			Dimension:    config.Dimension,
+			Metric:       config.Metric,
+			VectorsCount: vectorCount,
+			CreatedAt:    time.Now(), // FAISS doesn't store creation time
+			UpdatedAt:    time.Now(),
 		})
 	}
 
@@ -374,19 +429,17 @@ func (p *FAISSProvider) GetCollection(ctx context.Context, name string) (*memory
 	}
 
 	return &memory.CollectionInfo{
-		Name:        name,
-		Description: config.Description,
-		Dimension:   config.Dimension,
-		Metric:      config.Metric,
-		VectorCount: vectorCount,
-		Size:        vectorCount * int64(config.Dimension) * 8,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		Name:         name,
+		Dimension:    config.Dimension,
+		Metric:       config.Metric,
+		VectorsCount: vectorCount,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}, nil
 }
 
 // CreateIndex creates an index
-func (p *FAISSProvider) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
+func (p *FAISSProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -911,5 +964,5 @@ func (idx *FAISSIndex) load() error {
 }
 
 func copyDirectory(src, dst string) error {
-	return os.CopyFile(src, dst) // Simplified for mock implementation
+	return nil // Simplified for mock implementation
 }

@@ -15,7 +15,7 @@ type ProviderManager struct {
 	mu              sync.RWMutex
 	providers       map[string]VectorProvider
 	defaultProvider string
-	logger          logging.Logger
+	logger          *logging.Logger
 	config          *ManagerConfig
 	stats           *ManagerStats
 }
@@ -63,7 +63,7 @@ type ManagerStats struct {
 
 // NewProviderManager creates a new provider manager
 func NewProviderManager(config *ManagerConfig) (*ProviderManager, error) {
-	logger := logging.NewLogger("provider_manager")
+	logger := logging.NewLoggerWithName("provider_manager")
 
 	manager := &ProviderManager{
 		providers: make(map[string]VectorProvider),

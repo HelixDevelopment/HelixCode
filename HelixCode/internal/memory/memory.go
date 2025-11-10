@@ -1548,13 +1548,13 @@ const (
 	ProviderTypeCrewAI      ProviderType = "crewai"
 	ProviderTypeCharacterAI ProviderType = "characterai"
 	ProviderTypeReplika     ProviderType = "replika"
+	ProviderTypeAgnostic    ProviderType = "agnostic"
 	ProviderTypeAnima       ProviderType = "anima"
 	ProviderTypeGemma       ProviderType = "gemma"
 	ProviderTypeMem0        ProviderType = "mem0"
 	ProviderTypeZep         ProviderType = "zep"
 	ProviderTypeMemonto     ProviderType = "memonto"
 	ProviderTypeBaseAI      ProviderType = "baseai"
-	ProviderTypeAgnostic    ProviderType = "agnostic"
 )
 
 // ============================================================================
