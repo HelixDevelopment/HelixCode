@@ -665,7 +665,7 @@ func (m *MockVectorProvider) Health(ctx context.Context) (*providers.HealthStatu
 		Status:       status,
 		LastCheck:    time.Now(),
 		ResponseTime: 10 * time.Millisecond,
-		Metrics:      make(map[string]float64),
+		Metrics:      make(map[string]interface{}),
 		Dependencies: make(map[string]string),
 	}, nil
 }
@@ -685,7 +685,7 @@ func (m *MockVectorProvider) GetType() providers.ProviderType {
 	if ptype := args.Get(0); ptype != nil {
 		return ptype.(providers.ProviderType)
 	}
-	return providers.ProviderTypeChromaDB
+	return providers.ProviderTypeChroma
 }
 
 // GetCapabilities mocks getting provider capabilities
@@ -737,7 +737,7 @@ func (m *MockVectorProvider) GetCostInfo() *providers.CostInfo {
 		TotalCost:     0.0,
 		Currency:      "USD",
 		BillingPeriod: "monthly",
-		FreeTierUsed:  false,
+		FreeTierUsed:  0.0,
 		FreeTierLimit: 0.0,
 	}
 }
@@ -834,7 +834,7 @@ func (m *MockVectorProviderManager) Store(ctx context.Context, vectors []*memory
 func (m *MockVectorProviderManager) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
 	args := m.Called(ctx, ids)
 	if result := args.Get(0); result != nil {
-		return result.([]*memory.VectorData)
+		return result.([]*memory.VectorData), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
@@ -843,7 +843,7 @@ func (m *MockVectorProviderManager) Retrieve(ctx context.Context, ids []string) 
 func (m *MockVectorProviderManager) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
 	args := m.Called(ctx, query)
 	if result := args.Get(0); result != nil {
-		return result.(*memory.VectorSearchResult)
+		return result.(*memory.VectorSearchResult), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
@@ -869,19 +869,19 @@ func (m *MockVectorProviderManager) SetActiveProvider(ctx context.Context, provi
 }
 
 // ListProviders mocks listing providers
-func (m *MockVectorProviderManager) ListProviders() map[string]providers.ProviderInfo {
+func (m *MockVectorProviderManager) ListProviders() map[string]interface{} {
 	args := m.Called()
 	if providers := args.Get(0); providers != nil {
-		return providers.(map[string]providers.ProviderInfo)
+		return providers.(map[string]interface{})
 	}
-	return make(map[string]providers.ProviderInfo)
+	return make(map[string]interface{})
 }
 
 // GetProviderHealth mocks getting provider health
 func (m *MockVectorProviderManager) GetProviderHealth(ctx context.Context) (map[string]*providers.HealthStatus, error) {
 	args := m.Called(ctx)
 	if health := args.Get(0); health != nil {
-		return health.(map[string]*providers.HealthStatus)
+		return health.(map[string]*providers.HealthStatus), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
@@ -953,7 +953,7 @@ func NewMockAPIKeyManager(t interface{}) *MockAPIKeyManager {
 func (m *MockAPIKeyManager) GetAPIKey(provider string) (string, error) {
 	args := m.Called(provider)
 	if key := args.Get(0); key != nil {
-		return key.(string)
+		return key.(string), args.Error(1)
 	}
 	return "", args.Error(1)
 }
@@ -1000,16 +1000,16 @@ func (m *MockMemoryManager) Shutdown(ctx context.Context) error {
 }
 
 // Store mocks storing memory data
-func (m *MockMemoryManager) Store(ctx context.Context, data *memory.MemoryData) error {
+func (m *MockMemoryManager) Store(ctx context.Context, data interface{}) error {
 	args := m.Called(ctx, data)
 	return args.Error(0)
 }
 
 // Retrieve mocks retrieving memory data
-func (m *MockMemoryManager) Retrieve(ctx context.Context, id string) (*memory.MemoryData, error) {
+func (m *MockMemoryManager) Retrieve(ctx context.Context, id string) (interface{}, error) {
 	args := m.Called(ctx, id)
 	if data := args.Get(0); data != nil {
-		return data.(*memory.MemoryData)
+		return data, nil
 	}
 	return nil, args.Error(1)
 }
@@ -1018,7 +1018,7 @@ func (m *MockMemoryManager) Retrieve(ctx context.Context, id string) (*memory.Me
 func (m *MockMemoryManager) Search(ctx context.Context, query *memory.SearchQuery) (*memory.SearchResult, error) {
 	args := m.Called(ctx, query)
 	if result := args.Get(0); result != nil {
-		return result.(*memory.SearchResult)
+		return result.(*memory.SearchResult), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
@@ -1034,7 +1034,7 @@ func NewMockConversationManager(t interface{}) *MockConversationManager {
 }
 
 // AddMessage mocks adding a message to conversation
-func (m *MockConversationManager) AddMessage(ctx context.Context, sessionID string, message *memory.ConversationMessage) error {
+func (m *MockConversationManager) AddMessage(ctx context.Context, sessionID string, message *memory.Message) error {
 	args := m.Called(ctx, sessionID, message)
 	return args.Error(0)
 }
@@ -1043,16 +1043,16 @@ func (m *MockConversationManager) AddMessage(ctx context.Context, sessionID stri
 func (m *MockConversationManager) GetSummary(ctx context.Context, sessionID string) (*memory.ConversationSummary, error) {
 	args := m.Called(ctx, sessionID)
 	if summary := args.Get(0); summary != nil {
-		return summary.(*memory.ConversationSummary)
+		return summary.(*memory.ConversationSummary), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
 
 // GetContextWindow mocks getting context window
-func (m *MockConversationManager) GetContextWindow(ctx context.Context, sessionID string, limit int) ([]*memory.ConversationMessage, error) {
+func (m *MockConversationManager) GetContextWindow(ctx context.Context, sessionID string, limit int) ([]*memory.Message, error) {
 	args := m.Called(ctx, sessionID, limit)
 	if messages := args.Get(0); messages != nil {
-		return messages.([]*memory.ConversationMessage)
+		return messages.([]*memory.Message), nil
 	}
 	return nil, args.Error(1)
 }
@@ -1063,7 +1063,7 @@ func (m *MockConversationManager) GetContextWindow(ctx context.Context, sessionI
 func CreateTestVector(id, collection string, size int) *memory.VectorData {
 	return &memory.VectorData{
 		ID:     id,
-		Vector: makeTestFloat64Slice(size),
+		Vector: createTestFloat64Slice(size),
 		Metadata: map[string]interface{}{
 			"test":    true,
 			"created": time.Now(),
@@ -1087,29 +1087,28 @@ func CreateTestVectors(count int, collection string, size int) []*memory.VectorD
 }
 
 // CreateTestMemory creates test memory data
-func CreateTestMemory(id, memType, content string) *memory.MemoryData {
-	return &memory.MemoryData{
-		ID:      id,
-		Type:    memory.MemoryType(memType),
-		Content: content,
-		Source:  "test",
-		Metadata: map[string]interface{}{
-			"test":    true,
-			"created": time.Now(),
+func CreateTestMemory(id, memType, content string) *memory.Message {
+	return &memory.Message{
+		ID:       id,
+		Role:     memory.Role(memType),
+		Content:  content,
+		Metadata: map[string]string{
+			"test":    "true",
+			"created": time.Now().String(),
 		},
 		Timestamp: time.Now(),
 	}
 }
 
 // CreateTestConversationMessage creates a test conversation message
-func CreateTestConversationMessage(id, role, content string) *memory.ConversationMessage {
-	return &memory.ConversationMessage{
+func CreateTestConversationMessage(id, role, content string) *memory.Message {
+	return &memory.Message{
 		ID:        id,
-		Role:      role,
+		Role:      memory.Role(role),
 		Content:   content,
 		Timestamp: time.Now(),
-		Metadata: map[string]interface{}{
-			"test": true,
+		Metadata: map[string]string{
+			"test": "true",
 		},
 	}
 }
@@ -1138,7 +1137,8 @@ type MockSuite struct {
 // SetupSuite sets up the test suite with mocks
 func (s *MockSuite) SetupSuite() {
 	s.ctx = context.Background()
-	s.logger = logging.NewTestLogger("mock_test")
+	logger := logging.NewTestLogger("mock_test")
+	s.logger = *logger
 	s.mockProvider = NewMockVectorProvider(s.T())
 	s.mockProviderManager = NewMockVectorProviderManager(s.T())
 	s.mockAPIKeyManager = NewMockAPIKeyManager(s.T())
