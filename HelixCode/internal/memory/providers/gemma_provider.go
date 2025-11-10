@@ -716,8 +716,8 @@ func (p *GemmaProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *GemmaProvider) GetType() ProviderType {
-	return ProviderTypeGemma
+func (p *GemmaProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeGemma
 }
 
 // GetCapabilities returns provider capabilities

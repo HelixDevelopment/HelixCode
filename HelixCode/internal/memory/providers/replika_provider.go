@@ -6,43 +6,43 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // ReplikaProvider implements VectorProvider for Replika
 type ReplikaProvider struct {
-	config       *ReplikaConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       ReplikaClient
+	config        *ReplikaConfig
+	logger        logging.Logger
+	mu            sync.RWMutex
+	initialized   bool
+	started       bool
+	client        ReplikaClient
 	personalities map[string]*memory.Personality
 	conversations map[string]*memory.ConversationSession
-	stats        *ProviderStats
+	stats         *ProviderStats
 }
 
 // ReplikaConfig contains Replika provider configuration
 type ReplikaConfig struct {
-	APIKey              string            `json:"api_key"`
-	BaseURL             string            `json:"base_url"`
-	Timeout             time.Duration     `json:"timeout"`
-	MaxRetries          int               `json:"max_retries"`
-	BatchSize           int               `json:"batch_size"`
-	MaxPersonalities    int               `json:"max_personalities"`
-	MaxConversations    int               `json:"max_conversations"`
-	PersonalityDepth    int               `json:"personality_depth"`
-	EmotionalMemory     bool              `json:"emotional_memory"`
-	LongTermMemory      bool              `json:"long_term_memory"`
-	EnableLearning      bool              `json:"enable_learning"`
-	RelationshipTracking bool             `json:"relationship_tracking"`
-	CompressionType     string            `json:"compression_type"`
-	EnableCaching       bool              `json:"enable_caching"`
-	CacheSize           int               `json:"cache_size"`
-	CacheTTL           time.Duration     `json:"cache_ttl"`
-	SyncInterval       time.Duration     `json:"sync_interval"`
+	APIKey               string        `json:"api_key"`
+	BaseURL              string        `json:"base_url"`
+	Timeout              time.Duration `json:"timeout"`
+	MaxRetries           int           `json:"max_retries"`
+	BatchSize            int           `json:"batch_size"`
+	MaxPersonalities     int           `json:"max_personalities"`
+	MaxConversations     int           `json:"max_conversations"`
+	PersonalityDepth     int           `json:"personality_depth"`
+	EmotionalMemory      bool          `json:"emotional_memory"`
+	LongTermMemory       bool          `json:"long_term_memory"`
+	EnableLearning       bool          `json:"enable_learning"`
+	RelationshipTracking bool          `json:"relationship_tracking"`
+	CompressionType      string        `json:"compression_type"`
+	EnableCaching        bool          `json:"enable_caching"`
+	CacheSize            int           `json:"cache_size"`
+	CacheTTL             time.Duration `json:"cache_ttl"`
+	SyncInterval         time.Duration `json:"sync_interval"`
 }
 
 // ReplikaClient represents Replika client interface
@@ -69,21 +69,21 @@ type ReplikaClient interface {
 // NewReplikaProvider creates a new Replika provider
 func NewReplikaProvider(config map[string]interface{}) (VectorProvider, error) {
 	replikaConfig := &ReplikaConfig{
-		BaseURL:               "https://api.replika.ai",
-		Timeout:               30 * time.Second,
-		MaxRetries:            3,
-		BatchSize:             100,
-		MaxPersonalities:       1000,
-		MaxConversations:      10000,
-		PersonalityDepth:      20,
-		EmotionalMemory:       true,
-		LongTermMemory:        true,
-		EnableLearning:        true,
-		RelationshipTracking:  true,
-		CompressionType:       "gzip",
-		EnableCaching:         true,
-		CacheSize:             1000,
-		CacheTTL:              5 * time.Minute,
+		BaseURL:              "https://api.replika.ai",
+		Timeout:              30 * time.Second,
+		MaxRetries:           3,
+		BatchSize:            100,
+		MaxPersonalities:     1000,
+		MaxConversations:     10000,
+		PersonalityDepth:     20,
+		EmotionalMemory:      true,
+		LongTermMemory:       true,
+		EnableLearning:       true,
+		RelationshipTracking: true,
+		CompressionType:      "gzip",
+		EnableCaching:        true,
+		CacheSize:            1000,
+		CacheTTL:             5 * time.Minute,
 		SyncInterval:         30 * time.Second,
 	}
 
@@ -101,10 +101,10 @@ func NewReplikaProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -333,10 +333,10 @@ func (p *ReplikaProvider) FindSimilar(ctx context.Context, embedding []float64, 
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "personality_match",
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "personality_match",
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -369,20 +369,20 @@ func (p *ReplikaProvider) CreateCollection(ctx context.Context, name string, con
 	}
 
 	personality := &memory.Personality{
-		ID:            name,
-		Name:          config.Description,
-		Description:   config.Description,
-		Traits:        map[string]interface{}{},
-		Personality:   map[string]interface{}{},
-		Appearance:    map[string]interface{}{},
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-		IsActive:      true,
+		ID:          name,
+		Name:        config.Description,
+		Description: config.Description,
+		Traits:      map[string]interface{}{},
+		Personality: map[string]interface{}{},
+		Appearance:  map[string]interface{}{},
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		IsActive:    true,
 		EmotionalState: &memory.EmotionalState{
-			Mood:        "neutral",
-			Energy:      0.5,
+			Mood:         "neutral",
+			Energy:       0.5,
 			Satisfaction: 0.5,
-			Engagement:  0.5,
+			Engagement:   0.5,
 		},
 	}
 
@@ -431,7 +431,7 @@ func (p *ReplikaProvider) ListCollections(ctx context.Context) ([]*memory.Collec
 
 	for _, personality := range personalities {
 		vectorCount := int64(p.getPersonalityConversationCount(personality.ID))
-		
+
 		collections = append(collections, &memory.CollectionInfo{
 			Name:        personality.ID,
 			Description: personality.Description,
@@ -624,7 +624,7 @@ func (p *ReplikaProvider) GetStats(ctx context.Context) (*ProviderStats, error) 
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -637,10 +637,10 @@ func (p *ReplikaProvider) Optimize(ctx context.Context) error {
 	for personalityID := range p.personalities {
 		// Update emotional state
 		if err := p.client.UpdateEmotionalState(ctx, personalityID, &memory.EmotionalState{
-			Mood:        "optimized",
-			Energy:      0.8,
+			Mood:         "optimized",
+			Energy:       0.8,
 			Satisfaction: 0.9,
-			Engagement:  0.8,
+			Engagement:   0.8,
 		}); err != nil {
 			p.logger.Warn("Failed to update emotional state",
 				"personality_id", personalityID,
@@ -707,8 +707,8 @@ func (p *ReplikaProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	metrics := map[string]float64{
-		"total_vectors":      float64(p.stats.TotalVectors),
-		"total_collections":  float64(p.stats.TotalCollections),
+		"total_vectors":     float64(p.stats.TotalVectors),
+		"total_collections": float64(p.stats.TotalCollections),
 		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
 		"uptime_seconds":    p.stats.Uptime.Seconds(),
 		"personalities":     float64(len(p.personalities)),
@@ -716,10 +716,10 @@ func (p *ReplikaProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"replika_api": "required",
 		},
@@ -732,8 +732,8 @@ func (p *ReplikaProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *ReplikaProvider) GetType() ProviderType {
-	return ProviderTypeReplika
+func (p *ReplikaProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeReplika
 }
 
 // GetCapabilities returns provider capabilities
@@ -776,7 +776,7 @@ func (p *ReplikaProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     cost,
 		Currency:      "USD",
-		BillingPeriod:  "monthly",
+		BillingPeriod: "monthly",
 		FreeTierUsed:  personalities > 5, // Free tier for first 5 personalities
 		FreeTierLimit: 5.0,
 	}
@@ -861,21 +861,21 @@ func (p *ReplikaProvider) vectorToConversationSession(vector *memory.VectorData)
 	}
 
 	return &memory.ConversationSession{
-		ID:           vector.ID,
+		ID:            vector.ID,
 		PersonalityID: personalityID,
-		UserID:       "",
-		Messages:     []*memory.PersonalityMessage{},
-		StartedAt:    vector.Timestamp,
-		UpdatedAt:    time.Now(),
-		IsActive:     true,
-		Metadata:     vector.Metadata,
+		UserID:        "",
+		Messages:      []*memory.PersonalityMessage{},
+		StartedAt:     vector.Timestamp,
+		UpdatedAt:     time.Now(),
+		IsActive:      true,
+		Metadata:      vector.Metadata,
 	}, nil
 }
 
 func (p *ReplikaProvider) personalityToVector(personality *memory.Personality) *memory.VectorData {
 	return &memory.VectorData{
-		ID:       personality.ID,
-		Vector:   make([]float64, 1536), // Mock embedding
+		ID:     personality.ID,
+		Vector: make([]float64, 1536), // Mock embedding
 		Metadata: map[string]interface{}{
 			"personality_id":   personality.ID,
 			"personality_name": personality.Name,
@@ -890,8 +890,8 @@ func (p *ReplikaProvider) personalityToVector(personality *memory.Personality) *
 
 func (p *ReplikaProvider) conversationSessionToVector(session *memory.ConversationSession) *memory.VectorData {
 	return &memory.VectorData{
-		ID:       session.ID,
-		Vector:   make([]float64, 1536), // Mock embedding
+		ID:     session.ID,
+		Vector: make([]float64, 1536), // Mock embedding
 		Metadata: map[string]interface{}{
 			"personality_id": session.PersonalityID,
 			"user_id":        session.UserID,
@@ -931,14 +931,14 @@ func (p *ReplikaProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
@@ -1006,14 +1006,14 @@ func (c *ReplikaHTTPClient) CreateConversationSession(ctx context.Context, sessi
 func (c *ReplikaHTTPClient) GetConversationSession(ctx context.Context, sessionID string) (*memory.ConversationSession, error) {
 	// Mock implementation
 	return &memory.ConversationSession{
-		ID:           sessionID,
+		ID:            sessionID,
 		PersonalityID: "personality1",
-		UserID:      "user1",
-		Messages:    []*memory.PersonalityMessage{},
-		StartedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		IsActive:    true,
-		Metadata:    map[string]interface{}{},
+		UserID:        "user1",
+		Messages:      []*memory.PersonalityMessage{},
+		StartedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+		IsActive:      true,
+		Metadata:      map[string]interface{}{},
 	}, nil
 }
 
@@ -1037,11 +1037,11 @@ func (c *ReplikaHTTPClient) ListConversations(ctx context.Context, personalityID
 func (c *ReplikaHTTPClient) SendMessage(ctx context.Context, sessionID string, message *memory.PersonalityMessage) (*memory.PersonalityMessage, error) {
 	c.logger.Info("Sending message", "session_id", sessionID, "role", message.Role)
 	return &memory.PersonalityMessage{
-		ID:            "message1",
-		SessionID:     sessionID,
-		Role:          "personality",
-		Content:       "Mock response",
-		Timestamp:     time.Now(),
+		ID:        "message1",
+		SessionID: sessionID,
+		Role:      "personality",
+		Content:   "Mock response",
+		Timestamp: time.Now(),
 	}, nil
 }
 
@@ -1064,11 +1064,11 @@ func (c *ReplikaHTTPClient) GetEmotionalState(ctx context.Context, personalityID
 	// Mock implementation
 	return &memory.EmotionalState{
 		PersonalityID: personalityID,
-		Mood:        "happy",
-		Energy:      0.8,
-		Satisfaction: 0.7,
-		Engagement:  0.9,
-		LastUpdated: time.Now(),
+		Mood:          "happy",
+		Energy:        0.8,
+		Satisfaction:  0.7,
+		Engagement:    0.9,
+		LastUpdated:   time.Now(),
 	}, nil
 }
 

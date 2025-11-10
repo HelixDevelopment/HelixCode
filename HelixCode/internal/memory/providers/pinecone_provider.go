@@ -12,6 +12,7 @@ import (
 	"github.com/pinecone-io/go-pinecone/pinecone"
 
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // PineconeProvider implements VectorProvider interface for Pinecone
@@ -479,8 +480,8 @@ func (p *PineconeProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *PineconeProvider) GetType() ProviderType {
-	return ProviderTypePinecone
+func (p *PineconeProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypePinecone
 }
 
 // GetCapabilities returns provider capabilities
@@ -780,7 +781,7 @@ func (p *PineconeProvider) convertFromPineconeMetadata(metadata map[string]inter
 	return result
 }
 
-func (p *PineconeProvider) convertFilters(filters map[string]interface{}) *pinecone.Filter {
+func (p *PineconeProvider) convertFilters(filters map[string]interface{}) interface{} {
 	if len(filters) == 0 {
 		return nil
 	}
@@ -800,16 +801,16 @@ func (p *PineconeProvider) convertFilters(filters map[string]interface{}) *pinec
 	if len(filterConditions) > 0 {
 		if len(filterConditions) == 1 {
 			for k, v := range filterConditions {
-				return &pinecone.Filter{
-					Key:   k,
-					Value: v,
+				return map[string]interface{}{
+					"key":   k,
+					"value": v,
 				}
 			}
 		} else {
 			// Multiple conditions - use AND
-			return &pinecone.Filter{
-				Key:   "$and",
-				Value: filterConditions,
+			return map[string]interface{}{
+				"key":   "$and",
+				"value": filterConditions,
 			}
 		}
 	}

@@ -42,8 +42,8 @@ func NewMemontoProvider(config map[string]interface{}) (*MemontoProvider, error)
 }
 
 // GetType returns the provider type
-func (p *MemontoProvider) GetType() memory.ProviderType {
-	return memory.ProviderTypeMemonto
+func (p *MemontoProvider) GetType() string {
+	return string(memory.ProviderTypeMemonto)
 }
 
 // GetName returns the provider name
@@ -139,7 +139,7 @@ func (p *MemontoProvider) Delete(ctx context.Context, ids []string) error {
 }
 
 // FindSimilar finds similar vectors in Memonto
-func (p *MemontoProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+func (p *MemontoProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	// Use recall with embedding context
 	query := fmt.Sprintf("embedding:%v", embedding)
 	result, err := p.callMemonto("recall", query)
@@ -147,7 +147,7 @@ func (p *MemontoProvider) FindSimilar(ctx context.Context, embedding []float64, 
 		return nil, err
 	}
 
-	return []*memory.VectorSimilarityResult{
+	return []*VectorSimilarityResult{
 		{
 			ID:       "memonto_similar",
 			Score:    1.0,
@@ -157,8 +157,8 @@ func (p *MemontoProvider) FindSimilar(ctx context.Context, embedding []float64, 
 }
 
 // BatchFindSimilar finds similar vectors for multiple queries in Memonto
-func (p *MemontoProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*memory.VectorSimilarityResult, error) {
-	results := make([][]*memory.VectorSimilarityResult, len(queries))
+func (p *MemontoProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	results := make([][]*VectorSimilarityResult, len(queries))
 	for i, query := range queries {
 		similar, err := p.FindSimilar(ctx, query, k, nil)
 		if err != nil {
@@ -317,10 +317,14 @@ func (p *MemontoProvider) Close() error {
 // GetCostInfo returns cost information for Memonto
 func (p *MemontoProvider) GetCostInfo() *CostInfo {
 	return &CostInfo{
-		Currency:    "USD",
-		ReadCost:    0.0,
-		WriteCost:   0.0,
-		StorageCost: 0.0,
+		Currency:      "USD",
+		ComputeCost:   0.0,
+		TransferCost:  0.0,
+		StorageCost:   0.0,
+		TotalCost:     0.0,
+		BillingPeriod: "monthly",
+		FreeTierUsed:  false,
+		FreeTierLimit: 0.0,
 	}
 }
 

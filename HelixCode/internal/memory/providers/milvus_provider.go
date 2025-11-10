@@ -714,8 +714,8 @@ func (p *MilvusProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *MilvusProvider) GetType() ProviderType {
-	return ProviderTypeMilvus
+func (p *MilvusProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeMilvus
 }
 
 // GetCapabilities returns provider capabilities

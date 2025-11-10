@@ -838,8 +838,8 @@ func (p *RedisProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *RedisProvider) GetType() ProviderType {
-	return ProviderTypeRedis
+func (p *RedisProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeRedis
 }
 
 // GetCapabilities returns provider capabilities

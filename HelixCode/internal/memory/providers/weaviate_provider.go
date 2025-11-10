@@ -6,40 +6,40 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // WeaviateProvider implements VectorProvider for Weaviate
 type WeaviateProvider struct {
-	config       *WeaviateConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       WeaviateClient
-	collections  map[string]*memory.CollectionConfig
-	stats        *ProviderStats
+	config      *WeaviateConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	client      WeaviateClient
+	collections map[string]*memory.CollectionConfig
+	stats       *ProviderStats
 }
 
 // WeaviateConfig contains Weaviate provider configuration
 type WeaviateConfig struct {
-	URL               string            `json:"url"`
-	APIKey            string            `json:"api_key"`
-	AuthType          string            `json:"auth_type"`
-	Username          string            `json:"username"`
-	Password          string            `json:"password"`
-	Timeout           time.Duration     `json:"timeout"`
-	MaxRetries        int               `json:"max_retries"`
-	BatchSize         int               `json:"batch_size"`
-	Compression       bool              `json:"compression"`
-	ParallelSearch    bool              `json:"parallel_search"`
-	SearchLimit       int               `json:"search_limit"`
-	IncrementalIndex  bool              `json:"incremental_index"`
-	CacheSize         int               `json:"cache_size"`
-	CacheTTL         time.Duration     `json:"cache_ttl"`
-	GraphQLBatchSize int               `json:"graphql_batch_size"`
+	URL              string        `json:"url"`
+	APIKey           string        `json:"api_key"`
+	AuthType         string        `json:"auth_type"`
+	Username         string        `json:"username"`
+	Password         string        `json:"password"`
+	Timeout          time.Duration `json:"timeout"`
+	MaxRetries       int           `json:"max_retries"`
+	BatchSize        int           `json:"batch_size"`
+	Compression      bool          `json:"compression"`
+	ParallelSearch   bool          `json:"parallel_search"`
+	SearchLimit      int           `json:"search_limit"`
+	IncrementalIndex bool          `json:"incremental_index"`
+	CacheSize        int           `json:"cache_size"`
+	CacheTTL         time.Duration `json:"cache_ttl"`
+	GraphQLBatchSize int           `json:"graphql_batch_size"`
 }
 
 // WeaviateClient represents Weaviate client interface
@@ -64,19 +64,19 @@ type WeaviateClient interface {
 // NewWeaviateProvider creates a new Weaviate provider
 func NewWeaviateProvider(config map[string]interface{}) (VectorProvider, error) {
 	weaviateConfig := &WeaviateConfig{
-		URL:               "http://localhost:8080",
-		APIKey:            "",
-		AuthType:          "none",
-		Username:          "",
-		Password:          "",
-		Timeout:           30 * time.Second,
-		MaxRetries:        3,
-		BatchSize:         1000,
-		Compression:       true,
-		ParallelSearch:    true,
-		SearchLimit:       10000,
-		IncrementalIndex:  true,
-		CacheSize:         1000,
+		URL:              "http://localhost:8080",
+		APIKey:           "",
+		AuthType:         "none",
+		Username:         "",
+		Password:         "",
+		Timeout:          30 * time.Second,
+		MaxRetries:       3,
+		BatchSize:        1000,
+		Compression:      true,
+		ParallelSearch:   true,
+		SearchLimit:      10000,
+		IncrementalIndex: true,
+		CacheSize:        1000,
 		CacheTTL:         5 * time.Minute,
 		GraphQLBatchSize: 100,
 	}
@@ -94,10 +94,10 @@ func NewWeaviateProvider(config map[string]interface{}) (VectorProvider, error) 
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -311,10 +311,10 @@ func (p *WeaviateProvider) FindSimilar(ctx context.Context, embedding []float64,
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "cosine",
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "cosine",
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -535,7 +535,7 @@ func (p *WeaviateProvider) GetStats(ctx context.Context) (*ProviderStats, error)
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -620,15 +620,15 @@ func (p *WeaviateProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"weaviate_server": "required",
 		},
@@ -641,8 +641,8 @@ func (p *WeaviateProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *WeaviateProvider) GetType() ProviderType {
-	return ProviderTypeWeaviate
+func (p *WeaviateProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeWeaviate
 }
 
 // GetCapabilities returns provider capabilities
@@ -680,7 +680,7 @@ func (p *WeaviateProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     0.0,
 		Currency:      "USD",
-		BillingPeriod:  "N/A",
+		BillingPeriod: "N/A",
 		FreeTierUsed:  false,
 		FreeTierLimit: 0.0,
 	}
@@ -731,9 +731,9 @@ func (p *WeaviateProvider) loadClasses(ctx context.Context) error {
 
 func (p *WeaviateProvider) createClass(ctx context.Context, className string, dimension int) error {
 	config := &memory.CollectionConfig{
-		Name:       className,
-		Dimension:  dimension,
-		Metric:     "cosine",
+		Name:      className,
+		Dimension: dimension,
+		Metric:    "cosine",
 	}
 
 	if err := p.client.CreateClass(ctx, className, config); err != nil {
@@ -766,14 +766,14 @@ func (p *WeaviateProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
@@ -837,8 +837,8 @@ func (c *WeaviateGraphQLClient) CreateObjects(ctx context.Context, className str
 func (c *WeaviateGraphQLClient) GetObject(ctx context.Context, className string, id string) (*memory.VectorData, error) {
 	// Mock implementation
 	return &memory.VectorData{
-		ID:       id,
-		Vector:   make([]float64, 1536),
+		ID:     id,
+		Vector: make([]float64, 1536),
 		Metadata: map[string]interface{}{
 			"class": className,
 		},
@@ -882,7 +882,7 @@ func (c *WeaviateGraphQLClient) Search(ctx context.Context, query *memory.Vector
 			ID:       fmt.Sprintf("result_%d", i),
 			Vector:   make([]float64, 1536),
 			Score:    1.0 - float64(i)*0.1,
-			Distance:  float64(i) * 0.1,
+			Distance: float64(i) * 0.1,
 			Metadata: map[string]interface{}{
 				"class": query.Collection,
 				"index": i,

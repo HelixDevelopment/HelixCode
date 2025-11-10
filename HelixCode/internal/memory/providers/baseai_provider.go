@@ -37,8 +37,8 @@ func NewBaseAIProvider(config map[string]interface{}) (*BaseAIProvider, error) {
 }
 
 // GetType returns the provider type
-func (p *BaseAIProvider) GetType() memory.ProviderType {
-	return memory.ProviderTypeBaseAI
+func (p *BaseAIProvider) GetType() string {
+	return string(memory.ProviderTypeBaseAI)
 }
 
 // GetName returns the provider name
@@ -112,17 +112,17 @@ func (p *BaseAIProvider) Delete(ctx context.Context, ids []string) error {
 }
 
 // FindSimilar finds similar vectors in BaseAI
-func (p *BaseAIProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+func (p *BaseAIProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	// Use BaseAI RAG for similarity
 	p.logger.Info("BaseAI FindSimilar called", "k", k)
-	return []*memory.VectorSimilarityResult{}, nil
+	return []*VectorSimilarityResult{}, nil
 }
 
 // BatchFindSimilar finds similar vectors for multiple queries in BaseAI
-func (p *BaseAIProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*memory.VectorSimilarityResult, error) {
-	results := make([][]*memory.VectorSimilarityResult, len(queries))
+func (p *BaseAIProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	results := make([][]*VectorSimilarityResult, len(queries))
 	for i := range queries {
-		results[i] = []*memory.VectorSimilarityResult{}
+		results[i] = []*VectorSimilarityResult{}
 	}
 	return results, nil
 }
@@ -274,9 +274,13 @@ func (p *BaseAIProvider) Close() error {
 // GetCostInfo returns cost information for BaseAI
 func (p *BaseAIProvider) GetCostInfo() *CostInfo {
 	return &CostInfo{
-		Currency:    "USD",
-		ReadCost:    0.0,
-		WriteCost:   0.0,
-		StorageCost: 0.0,
+		Currency:      "USD",
+		ComputeCost:   0.0,
+		TransferCost:  0.0,
+		StorageCost:   0.0,
+		TotalCost:     0.0,
+		BillingPeriod: "monthly",
+		FreeTierUsed:  false,
+		FreeTierLimit: 0.0,
 	}
 }

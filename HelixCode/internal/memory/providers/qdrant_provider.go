@@ -6,38 +6,38 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // QdrantProvider implements VectorProvider for Qdrant
 type QdrantProvider struct {
-	config       *QdrantConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       QdrantClient
-	collections  map[string]*memory.CollectionConfig
-	stats        *ProviderStats
+	config      *QdrantConfig
+	logger      logging.Logger
+	mu          sync.RWMutex
+	initialized bool
+	started     bool
+	client      QdrantClient
+	collections map[string]*memory.CollectionConfig
+	stats       *ProviderStats
 }
 
 // QdrantConfig contains Qdrant provider configuration
 type QdrantConfig struct {
-	Host           string            `json:"host"`
-	Port           int               `json:"port"`
-	APIKey         string            `json:"api_key"`
-	UseTLS         bool              `json:"use_tls"`
-	Timeout        time.Duration     `json:"timeout"`
-	MaxRetries     int               `json:"max_retries"`
-	BatchSize      int               `json:"batch_size"`
-	Compression    bool              `json:"compression"`
-	ParallelSearch bool              `json:"parallel_search"`
-	SearchTimeout  time.Duration     `json:"search_timeout"`
-	IndexType      string            `json:"index_type"`
-	ShardCount     int               `json:"shard_count"`
-	ReplicaCount   int               `json:"replica_count"`
+	Host           string        `json:"host"`
+	Port           int           `json:"port"`
+	APIKey         string        `json:"api_key"`
+	UseTLS         bool          `json:"use_tls"`
+	Timeout        time.Duration `json:"timeout"`
+	MaxRetries     int           `json:"max_retries"`
+	BatchSize      int           `json:"batch_size"`
+	Compression    bool          `json:"compression"`
+	ParallelSearch bool          `json:"parallel_search"`
+	SearchTimeout  time.Duration `json:"search_timeout"`
+	IndexType      string        `json:"index_type"`
+	ShardCount     int           `json:"shard_count"`
+	ReplicaCount   int           `json:"replica_count"`
 }
 
 // QdrantClient represents Qdrant client interface
@@ -86,10 +86,10 @@ func NewQdrantProvider(config map[string]interface{}) (VectorProvider, error) {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -269,10 +269,10 @@ func (p *QdrantProvider) Search(ctx context.Context, query *memory.VectorQuery) 
 	// Check if collection exists
 	if _, exists := p.collections[collection]; !exists {
 		return &memory.VectorSearchResult{
-			Results:  []*memory.VectorSearchResultItem{},
-			Total:    0,
-			Query:    query,
-			Duration: time.Since(start),
+			Results:   []*memory.VectorSearchResultItem{},
+			Total:     0,
+			Query:     query,
+			Duration:  time.Since(start),
 			Namespace: query.Namespace,
 		}, nil
 	}
@@ -304,10 +304,10 @@ func (p *QdrantProvider) FindSimilar(ctx context.Context, embedding []float64, k
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "cosine", // Qdrant default
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "cosine", // Qdrant default
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -524,7 +524,7 @@ func (p *QdrantProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -610,15 +610,15 @@ func (p *QdrantProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	metrics := map[string]float64{
 		"total_vectors":     float64(p.stats.TotalVectors),
 		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
+		"total_size_mb":     float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":    p.stats.Uptime.Seconds(),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"qdrant_server": "required",
 		},
@@ -631,8 +631,8 @@ func (p *QdrantProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *QdrantProvider) GetType() ProviderType {
-	return ProviderTypeQdrant
+func (p *QdrantProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeQdrant
 }
 
 // GetCapabilities returns provider capabilities
@@ -669,7 +669,7 @@ func (p *QdrantProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // Self-hosted, no direct cost
 		TotalCost:     0.0,
 		Currency:      "USD",
-		BillingPeriod:  "N/A",
+		BillingPeriod: "N/A",
 		FreeTierUsed:  false,
 		FreeTierLimit: 0.0,
 	}
@@ -720,11 +720,11 @@ func (p *QdrantProvider) loadCollections(ctx context.Context) error {
 
 func (p *QdrantProvider) createCollection(ctx context.Context, name string, dimension int) error {
 	config := &memory.CollectionConfig{
-		Name:       name,
-		Dimension:  dimension,
-		Metric:     "cosine",
-		Shards:     p.config.ShardCount,
-		Replicas:   p.config.ReplicaCount,
+		Name:      name,
+		Dimension: dimension,
+		Metric:    "cosine",
+		Shards:    p.config.ShardCount,
+		Replicas:  p.config.ReplicaCount,
 	}
 
 	if err := p.client.CreateCollection(ctx, name, config); err != nil {
@@ -757,7 +757,7 @@ func (p *QdrantProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
@@ -823,10 +823,10 @@ func (c *QdrantHTTPClient) SearchPoints(ctx context.Context, collection string, 
 			ID:       fmt.Sprintf("result_%d", i),
 			Vector:   make([]float64, 1536),
 			Score:    1.0 - float64(i)*0.1,
-			Distance:  float64(i) * 0.1,
+			Distance: float64(i) * 0.1,
 			Metadata: map[string]interface{}{
 				"collection": collection,
-				"index":     i,
+				"index":      i,
 			},
 		})
 	}
@@ -845,8 +845,8 @@ func (c *QdrantHTTPClient) GetPoints(ctx context.Context, collection string, ids
 	var vectors []*memory.VectorData
 	for _, id := range ids {
 		vectors = append(vectors, &memory.VectorData{
-			ID:       id,
-			Vector:   make([]float64, 1536),
+			ID:     id,
+			Vector: make([]float64, 1536),
 			Metadata: map[string]interface{}{
 				"collection": collection,
 			},

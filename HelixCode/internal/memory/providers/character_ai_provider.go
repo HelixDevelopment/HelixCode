@@ -343,7 +343,7 @@ func (p *CharacterAIProvider) Search(ctx context.Context, query *memory.VectorQu
 }
 
 // FindSimilar finds similar vectors
-func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	start := time.Now()
 	defer func() {
 		p.updateStats(time.Since(start))

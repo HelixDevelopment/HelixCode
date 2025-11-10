@@ -591,8 +591,8 @@ func (p *FAISSProvider) GetName() string {
 }
 
 // GetType returns the provider type
-func (p *FAISSProvider) GetType() ProviderType {
-	return ProviderTypeFAISS
+func (p *FAISSProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeFAISS
 }
 
 // GetCapabilities returns provider capabilities

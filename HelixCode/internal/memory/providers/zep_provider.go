@@ -57,8 +57,8 @@ func NewZepProvider(config map[string]interface{}) (*ZepProvider, error) {
 }
 
 // GetType returns the provider type
-func (p *ZepProvider) GetType() memory.ProviderType {
-	return memory.ProviderTypeZep
+func (p *ZepProvider) GetType() string {
+	return string(memory.ProviderTypeZep)
 }
 
 // GetName returns the provider name
@@ -205,7 +205,7 @@ func (p *ZepProvider) Delete(ctx context.Context, ids []string) error {
 }
 
 // FindSimilar finds similar vectors in Zep
-func (p *ZepProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+func (p *ZepProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	// Use graph search for similarity
 	searchResults, err := p.client.Graph.Search(ctx, &zep.GraphSearchQuery{
 		UserID: zep.String(p.userID),
@@ -215,9 +215,9 @@ func (p *ZepProvider) FindSimilar(ctx context.Context, embedding []float64, k in
 		return nil, fmt.Errorf("failed to search graph: %w", err)
 	}
 
-	results := []*memory.VectorSimilarityResult{}
+	results := []*VectorSimilarityResult{}
 	for _, edge := range searchResults.Edges {
-		results = append(results, &memory.VectorSimilarityResult{
+		results = append(results, &VectorSimilarityResult{
 			ID:       edge.UUID,
 			Score:    1.0,
 			Metadata: map[string]interface{}{"fact": edge.Fact},
@@ -231,8 +231,8 @@ func (p *ZepProvider) FindSimilar(ctx context.Context, embedding []float64, k in
 }
 
 // BatchFindSimilar finds similar vectors for multiple queries in Zep
-func (p *ZepProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*memory.VectorSimilarityResult, error) {
-	results := make([][]*memory.VectorSimilarityResult, len(queries))
+func (p *ZepProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	results := make([][]*VectorSimilarityResult, len(queries))
 	for i, query := range queries {
 		similar, err := p.FindSimilar(ctx, query, k, nil)
 		if err != nil {
@@ -359,10 +359,14 @@ func (p *ZepProvider) Stop(ctx context.Context) error {
 // GetCostInfo returns cost information for Zep
 func (p *ZepProvider) GetCostInfo() *CostInfo {
 	return &CostInfo{
-		Currency:    "USD",
-		ReadCost:    0.0,
-		WriteCost:   0.0,
-		StorageCost: 0.0,
+		Currency:      "USD",
+		ComputeCost:   0.0,
+		TransferCost:  0.0,
+		StorageCost:   0.0,
+		TotalCost:     0.0,
+		BillingPeriod: "monthly",
+		FreeTierUsed:  false,
+		FreeTierLimit: 0.0,
 	}
 }
 

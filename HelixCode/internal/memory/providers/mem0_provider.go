@@ -62,8 +62,8 @@ func NewMem0Provider(config map[string]interface{}) (*Mem0Provider, error) {
 }
 
 // GetType returns the provider type
-func (p *Mem0Provider) GetType() memory.ProviderType {
-	return memory.ProviderTypeMem0
+func (p *Mem0Provider) GetType() string {
+	return string(memory.ProviderTypeMem0)
 }
 
 // GetName returns the provider name
@@ -270,7 +270,7 @@ func (p *Mem0Provider) Update(ctx context.Context, id string, vector *memory.Vec
 }
 
 // FindSimilar finds similar vectors
-func (p *Mem0Provider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
+func (p *Mem0Provider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	// Use search with vector
 	query := &memory.VectorQuery{
 		Vector:  embedding,
@@ -282,9 +282,9 @@ func (p *Mem0Provider) FindSimilar(ctx context.Context, embedding []float64, k i
 		return nil, err
 	}
 
-	similar := make([]*memory.VectorSimilarityResult, len(result.Results))
+	similar := make([]*VectorSimilarityResult, len(result.Results))
 	for i, item := range result.Results {
-		similar[i] = &memory.VectorSimilarityResult{
+		similar[i] = &VectorSimilarityResult{
 			ID:       item.ID,
 			Score:    item.Score,
 			Distance: 1.0 - item.Score, // Convert score to distance
@@ -295,8 +295,8 @@ func (p *Mem0Provider) FindSimilar(ctx context.Context, embedding []float64, k i
 }
 
 // BatchFindSimilar performs batch similarity search
-func (p *Mem0Provider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*memory.VectorSimilarityResult, error) {
-	results := make([][]*memory.VectorSimilarityResult, len(queries))
+func (p *Mem0Provider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	results := make([][]*VectorSimilarityResult, len(queries))
 	for i, query := range queries {
 		similar, err := p.FindSimilar(ctx, query, k, nil)
 		if err != nil {
@@ -387,10 +387,14 @@ func (p *Mem0Provider) Stop(ctx context.Context) error {
 // GetCostInfo returns cost information
 func (p *Mem0Provider) GetCostInfo() *CostInfo {
 	return &CostInfo{
-		Currency:    "USD",
-		ReadCost:    0.0,
-		WriteCost:   0.0,
-		StorageCost: 0.0,
+		Currency:      "USD",
+		ComputeCost:   0.0,
+		TransferCost:  0.0,
+		StorageCost:   0.0,
+		TotalCost:     0.0,
+		BillingPeriod: "monthly",
+		FreeTierUsed:  false,
+		FreeTierLimit: 0.0,
 	}
 }
 

@@ -756,8 +756,8 @@ func (p *MemGPTProvider) GetName() string {
 }
 
 // GetType returns provider type
-func (p *MemGPTProvider) GetType() ProviderType {
-	return ProviderTypeMemGPT
+func (p *MemGPTProvider) GetType() memory.ProviderType {
+	return memory.ProviderTypeMemGPT
 }
 
 // GetCapabilities returns provider capabilities

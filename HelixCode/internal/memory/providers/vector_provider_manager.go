@@ -621,26 +621,34 @@ func (vpm *VectorProviderManager) getProvider(ctx context.Context) (VectorProvid
 	return provider, nil
 }
 
-func (vpm *VectorProviderManager) initializeProvider(ctx context.Context, name string, config *config.ProviderConfig) error {
+func (vpm *VectorProviderManager) initializeProvider(ctx context.Context, name string, config *SingleProviderConfig) error {
 	// Create provider based on type
 	var provider VectorProvider
 	var err error
 
 	switch memory.ProviderType(config.Type) {
-	case memory.ProviderChroma:
+	case memory.ProviderTypeChroma:
 		provider, err = vpm.createChromaDBProvider(config)
-	case memory.ProviderPinecone:
+	case memory.ProviderTypePinecone:
 		provider, err = vpm.createPineconeProvider(config)
-	case memory.ProviderFAISS:
+	case memory.ProviderTypeFAISS:
 		provider, err = vpm.createFAISSProvider(config)
-	case memory.ProviderQdrant:
+	case memory.ProviderTypeQdrant:
 		provider, err = vpm.createQdrantProvider(config)
-	case memory.ProviderMilvus:
+	case memory.ProviderTypeMilvus:
 		provider, err = vpm.createMilvusProvider(config)
-	case memory.ProviderWeaviate:
+	case memory.ProviderTypeWeaviate:
 		provider, err = vpm.createWeaviateProvider(config)
-	case memory.ProviderRedis:
+	case memory.ProviderTypeRedis:
 		provider, err = vpm.createRedisProvider(config)
+	case memory.ProviderTypeMem0:
+		provider, err = vpm.createMem0Provider(config)
+	case memory.ProviderTypeZep:
+		provider, err = vpm.createZepProvider(config)
+	case memory.ProviderTypeMemonto:
+		provider, err = vpm.createMemontoProvider(config)
+	case memory.ProviderTypeBaseAI:
+		provider, err = vpm.createBaseAIProvider(config)
 	default:
 		return fmt.Errorf("unsupported vector provider type: %s", config.Type)
 	}
@@ -776,32 +784,48 @@ func (vpm *VectorProviderManager) updateHealthStatus(ctx context.Context) {
 
 // Provider creation methods (to be implemented)
 
-func (vpm *VectorProviderManager) createChromaDBProvider(config *config.ProviderConfig) (VectorProvider, error) {
+func (vpm *VectorProviderManager) createChromaDBProvider(config *SingleProviderConfig) (VectorProvider, error) {
 	return nil, fmt.Errorf("ChromaDB provider not yet implemented")
 }
 
-func (vpm *VectorProviderManager) createPineconeProvider(config *config.ProviderConfig) (VectorProvider, error) {
-	return NewPineconeProvider(config)
+func (vpm *VectorProviderManager) createPineconeProvider(config *SingleProviderConfig) (VectorProvider, error) {
+	return NewPineconeProvider(config.Config)
 }
 
-func (vpm *VectorProviderManager) createFAISSProvider(config *config.ProviderConfig) (VectorProvider, error) {
+func (vpm *VectorProviderManager) createFAISSProvider(config *SingleProviderConfig) (VectorProvider, error) {
 	return nil, fmt.Errorf("FAISS provider not yet implemented")
 }
 
-func (vpm *VectorProviderManager) createQdrantProvider(config *config.ProviderConfig) (VectorProvider, error) {
+func (vpm *VectorProviderManager) createQdrantProvider(config *SingleProviderConfig) (VectorProvider, error) {
 	return nil, fmt.Errorf("Qdrant provider not yet implemented")
 }
 
-func (vpm *VectorProviderManager) createMilvusProvider(config *config.ProviderConfig) (VectorProvider, error) {
+func (vpm *VectorProviderManager) createMilvusProvider(config *SingleProviderConfig) (VectorProvider, error) {
 	return nil, fmt.Errorf("Milvus provider not yet implemented")
 }
 
-func (vpm *VectorProviderManager) createWeaviateProvider(config *config.ProviderConfig) (VectorProvider, error) {
+func (vpm *VectorProviderManager) createWeaviateProvider(config *SingleProviderConfig) (VectorProvider, error) {
 	return nil, fmt.Errorf("Weaviate provider not yet implemented")
 }
 
-func (vpm *VectorProviderManager) createRedisProvider(config *config.ProviderConfig) (VectorProvider, error) {
+func (vpm *VectorProviderManager) createRedisProvider(config *SingleProviderConfig) (VectorProvider, error) {
 	return nil, fmt.Errorf("Redis provider not yet implemented")
+}
+
+func (vpm *VectorProviderManager) createMem0Provider(config *SingleProviderConfig) (VectorProvider, error) {
+	return NewMem0Provider(config.Config)
+}
+
+func (vpm *VectorProviderManager) createZepProvider(config *SingleProviderConfig) (VectorProvider, error) {
+	return NewZepProvider(config.Config)
+}
+
+func (vpm *VectorProviderManager) createMemontoProvider(config *SingleProviderConfig) (VectorProvider, error) {
+	return NewMemontoProvider(config.Config)
+}
+
+func (vpm *VectorProviderManager) createBaseAIProvider(config *SingleProviderConfig) (VectorProvider, error) {
+	return NewBaseAIProvider(config.Config)
 }
 
 // Load balancer and fallback manager implementations (simplified)

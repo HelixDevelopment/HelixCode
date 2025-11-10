@@ -154,57 +154,57 @@ func (m *ProviderManager) initializeProviders() error {
 }
 
 // createProvider creates a provider instance
-func (m *ProviderManager) createProvider(providerType ProviderType, config map[string]interface{}) (VectorProvider, error) {
+func (m *ProviderManager) createProvider(providerType memory.ProviderType, config map[string]interface{}) (VectorProvider, error) {
 	switch providerType {
-	case ProviderTypePinecone:
+	case memory.ProviderTypePinecone:
 		return NewPineconeProvider(config)
-	case ProviderTypeMilvus:
+	case memory.ProviderTypeMilvus:
 		return NewMilvusProvider(config)
-	case ProviderTypeWeaviate:
+	case memory.ProviderTypeWeaviate:
 		return NewWeaviateProvider(config)
-	case ProviderTypeQdrant:
+	case memory.ProviderTypeQdrant:
 		return NewQdrantProvider(config)
-	case ProviderTypeRedis:
+	case memory.ProviderTypeRedis:
 		return NewRedisProvider(config)
-	case ProviderTypeChroma:
+	case memory.ProviderTypeChroma:
 		return NewChromaProvider(config)
-	case ProviderTypeOpenAI:
+	case memory.ProviderTypeOpenAI:
 		return NewOpenAIProvider(config)
-	case ProviderTypeAnthropic:
+	case memory.ProviderTypeAnthropic:
 		return NewAnthropicProvider(config)
-	case ProviderTypeCohere:
+	case memory.ProviderTypeCohere:
 		return NewCohereProvider(config)
-	case ProviderTypeHuggingFace:
+	case memory.ProviderTypeHuggingFace:
 		return NewHuggingFaceProvider(config)
-	case ProviderTypeMistral:
+	case memory.ProviderTypeMistral:
 		return NewMistralProvider(config)
-	case ProviderTypeGemini:
+	case memory.ProviderTypeGemini:
 		return NewGeminiProvider(config)
-	case ProviderTypeVertexAI:
+	case memory.ProviderTypeVertexAI:
 		return NewVertexAIProvider(config)
-	case ProviderTypeClickHouse:
+	case memory.ProviderTypeClickHouse:
 		return NewClickHouseProvider(config)
-	case ProviderTypeSupabase:
+	case memory.ProviderTypeSupabase:
 		return NewSupabaseProvider(config)
-	case ProviderTypeDeepLake:
+	case memory.ProviderTypeDeepLake:
 		return NewDeepLakeProvider(config)
-	case ProviderTypeFAISS:
+	case memory.ProviderTypeFAISS:
 		return NewFAISSProvider(config)
-	case ProviderTypeLlamaIndex:
+	case memory.ProviderTypeLlamaIndex:
 		return NewLlamaIndexProvider(config)
-	case ProviderTypeMemGPT:
+	case memory.ProviderTypeMemGPT:
 		return NewMemGPTProvider(config)
-	case ProviderTypeCrewAI:
+	case memory.ProviderTypeCrewAI:
 		return NewCrewAIProvider(config)
-	case ProviderTypeCharacterAI:
+	case memory.ProviderTypeCharacterAI:
 		return NewCharacterAIProvider(config)
-	case ProviderTypeReplika:
+	case memory.ProviderTypeReplika:
 		return NewReplikaProvider(config)
-	case ProviderTypeAnima:
+	case memory.ProviderTypeAnima:
 		return NewAnimaProvider(config)
-	case ProviderTypeGemma:
+	case memory.ProviderTypeGemma:
 		return NewGemmaProvider(config)
-	case ProviderTypeAgnostic:
+	case memory.ProviderTypeAgnostic:
 		return NewProviderAgnosticProvider(config)
 	default:
 		return nil, fmt.Errorf("unknown provider type: %s", providerType)
