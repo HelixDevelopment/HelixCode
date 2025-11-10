@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Debugging Workflow ===\n")
+	fmt.Println("=== Debugging Workflow ===")
 
 	sessionMgr := session.NewManager()
 	memoryMgr := memory.NewManager()

@@ -206,7 +206,7 @@ func showProviderStatus(manager *llm.AutoLLMManager) {
 		healthIcon := getHealthIcon(provider.Health.IsHealthy)
 		port := provider.DefaultPort
 
-		fmt.Printf("%s %-12s %s %s Port: %d\n",
+		fmt.Printf("%s %-12s %s Port: %d\n",
 			statusIcon, name, healthIcon, port)
 	}
 	fmt.Println()

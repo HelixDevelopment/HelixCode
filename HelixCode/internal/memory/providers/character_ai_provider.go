@@ -6,43 +6,43 @@ import (
 	"sync"
 	"time"
 
-	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // CharacterAIProvider implements VectorProvider for Character.AI
 type CharacterAIProvider struct {
-	config       *CharacterAIConfig
-	logger       logging.Logger
-	mu           sync.RWMutex
-	initialized  bool
-	started      bool
-	client       CharacterAIClient
-	characters   map[string]*memory.Character
+	config        *CharacterAIConfig
+	logger        logging.Logger
+	mu            sync.RWMutex
+	initialized   bool
+	started       bool
+	client        CharacterAIClient
+	characters    map[string]*memory.Character
 	conversations map[string]*memory.Conversation
-	stats        *ProviderStats
+	stats         *ProviderStats
 }
 
 // CharacterAIConfig contains Character.AI provider configuration
 type CharacterAIConfig struct {
-	APIKey              string            `json:"api_key"`
-	BaseURL             string            `json:"base_url"`
-	Timeout             time.Duration     `json:"timeout"`
-	MaxRetries          int               `json:"max_retries"`
-	BatchSize           int               `json:"batch_size"`
-	MaxCharacters       int               `json:"max_characters"`
-	MaxConversations    int               `json:"max_conversations"`
-	PersonalityDepth    int               `json:"personality_depth"`
-	RelationshipMemory  bool              `json:"relationship_memory"`
-	EmotionalMemory     bool              `json:"emotional_memory"`
-	LongTermMemory      bool              `json:"long_term_memory"`
-	EnableLearning      bool              `json:"enable_learning"`
-	CompressionType     string            `json:"compression_type"`
-	EnableCaching       bool              `json:"enable_caching"`
-	CacheSize           int               `json:"cache_size"`
-	CacheTTL           time.Duration     `json:"cache_ttl"`
-	SyncInterval        time.Duration     `json:"sync_interval"`
+	APIKey             string        `json:"api_key"`
+	BaseURL            string        `json:"base_url"`
+	Timeout            time.Duration `json:"timeout"`
+	MaxRetries         int           `json:"max_retries"`
+	BatchSize          int           `json:"batch_size"`
+	MaxCharacters      int           `json:"max_characters"`
+	MaxConversations   int           `json:"max_conversations"`
+	PersonalityDepth   int           `json:"personality_depth"`
+	RelationshipMemory bool          `json:"relationship_memory"`
+	EmotionalMemory    bool          `json:"emotional_memory"`
+	LongTermMemory     bool          `json:"long_term_memory"`
+	EnableLearning     bool          `json:"enable_learning"`
+	CompressionType    string        `json:"compression_type"`
+	EnableCaching      bool          `json:"enable_caching"`
+	CacheSize          int           `json:"cache_size"`
+	CacheTTL           time.Duration `json:"cache_ttl"`
+	SyncInterval       time.Duration `json:"sync_interval"`
 }
 
 // CharacterAIClient represents Character.AI client interface
@@ -84,7 +84,7 @@ func NewCharacterAIProvider(config map[string]interface{}) (VectorProvider, erro
 		CompressionType:    "gzip",
 		EnableCaching:      true,
 		CacheSize:          1000,
-		CacheTTL:          5 * time.Minute,
+		CacheTTL:           5 * time.Minute,
 		SyncInterval:       30 * time.Second,
 	}
 
@@ -102,10 +102,10 @@ func NewCharacterAIProvider(config map[string]interface{}) (VectorProvider, erro
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
-			Uptime:          0,
+			Uptime:           0,
 		},
 	}, nil
 }
@@ -357,10 +357,10 @@ func (p *CharacterAIProvider) FindSimilar(ctx context.Context, embedding []float
 	}
 
 	query := &memory.VectorQuery{
-		Vector:     embedding,
-		TopK:       k,
-		Filters:    filters,
-		Metric:     "cosine",
+		Vector:  embedding,
+		TopK:    k,
+		Filters: filters,
+		Metric:  "cosine",
 	}
 
 	searchResult, err := p.Search(ctx, query)
@@ -394,17 +394,17 @@ func (p *CharacterAIProvider) CreateCollection(ctx context.Context, name string,
 
 	// Create a character as a collection
 	character := &memory.Character{
-		ID:           name,
-		Name:         name,
-		Description:  config.Description,
-		Personality:  map[string]interface{}{},
-		Traits:       []string{},
-		Appearance:   map[string]interface{}{},
-		Backstory:    "",
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-		IsPublic:     false,
-		IsActive:     true,
+		ID:          name,
+		Name:        name,
+		Description: config.Description,
+		Personality: map[string]interface{}{},
+		Traits:      []string{},
+		Appearance:  map[string]interface{}{},
+		Backstory:   "",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		IsPublic:    false,
+		IsActive:    true,
 	}
 
 	if err := p.client.CreateCharacter(ctx, character); err != nil {
@@ -452,7 +452,7 @@ func (p *CharacterAIProvider) ListCollections(ctx context.Context) ([]*memory.Co
 
 	for _, character := range characters {
 		vectorCount := int64(p.getCharacterMessageCount(character.ID))
-		
+
 		collections = append(collections, &memory.CollectionInfo{
 			Name:        character.ID,
 			Description: character.Description,
@@ -634,7 +634,7 @@ func (p *CharacterAIProvider) GetStats(ctx context.Context) (*ProviderStats, err
 		AverageLatency:   p.stats.AverageLatency,
 		LastOperation:    p.stats.LastOperation,
 		ErrorCount:       p.stats.ErrorCount,
-		Uptime:          p.stats.Uptime,
+		Uptime:           p.stats.Uptime,
 	}, nil
 }
 
@@ -711,19 +711,19 @@ func (p *CharacterAIProvider) Health(ctx context.Context) (*HealthStatus, error)
 	}
 
 	metrics := map[string]float64{
-		"total_vectors":     float64(p.stats.TotalVectors),
-		"total_collections": float64(p.stats.TotalCollections),
-		"total_size_mb":    float64(p.stats.TotalSize) / (1024 * 1024),
-		"uptime_seconds":   p.stats.Uptime.Seconds(),
-		"total_characters":  float64(len(p.characters)),
+		"total_vectors":       float64(p.stats.TotalVectors),
+		"total_collections":   float64(p.stats.TotalCollections),
+		"total_size_mb":       float64(p.stats.TotalSize) / (1024 * 1024),
+		"uptime_seconds":      p.stats.Uptime.Seconds(),
+		"total_characters":    float64(len(p.characters)),
 		"total_conversations": float64(len(p.conversations)),
 	}
 
 	return &HealthStatus{
-		Status:      status,
-		LastCheck:   lastCheck,
+		Status:       status,
+		LastCheck:    lastCheck,
 		ResponseTime: responseTime,
-		Metrics:     metrics,
+		Metrics:      metrics,
 		Dependencies: map[string]string{
 			"character_ai_api": "required",
 		},
@@ -781,7 +781,7 @@ func (p *CharacterAIProvider) GetCostInfo() *CostInfo {
 		TransferCost:  0.0, // No data transfer costs
 		TotalCost:     cost,
 		Currency:      "USD",
-		BillingPeriod:  "monthly",
+		BillingPeriod: "monthly",
 		FreeTierUsed:  characters > 10, // Free tier for first 10 characters
 		FreeTierLimit: 10.0,
 	}
@@ -862,29 +862,29 @@ func (p *CharacterAIProvider) vectorToConversation(vector *memory.VectorData) (*
 	}
 
 	return &memory.Conversation{
-		ID:           conversationID,
-		CharacterID:  characterID,
-		UserID:       "",
-		Messages:     []*memory.CharacterMessage{},
-		StartedAt:    vector.Timestamp,
-		UpdatedAt:    time.Now(),
-		IsActive:     true,
-		IsArchived:   false,
-		Metadata:     vector.Metadata,
+		ID:          conversationID,
+		CharacterID: characterID,
+		UserID:      "",
+		Messages:    []*memory.CharacterMessage{},
+		StartedAt:   vector.Timestamp,
+		UpdatedAt:   time.Now(),
+		IsActive:    true,
+		IsArchived:  false,
+		Metadata:    vector.Metadata,
 	}, nil
 }
 
 func (p *CharacterAIProvider) characterToVector(character *memory.Character) *memory.VectorData {
 	// Convert character to vector format
 	return &memory.VectorData{
-		ID:       character.ID,
-		Vector:   make([]float64, 1536), // Mock embedding
+		ID:     character.ID,
+		Vector: make([]float64, 1536), // Mock embedding
 		Metadata: map[string]interface{}{
 			"character_id":   character.ID,
 			"character_name": character.Name,
 			"description":    character.Description,
 			"personality":    character.Personality,
-			"type":          "character",
+			"type":           "character",
 		},
 		Collection: character.ID,
 		Timestamp:  character.CreatedAt,
@@ -894,13 +894,13 @@ func (p *CharacterAIProvider) characterToVector(character *memory.Character) *me
 func (p *CharacterAIProvider) conversationToVector(conversation *memory.Conversation) *memory.VectorData {
 	// Convert conversation to vector format
 	return &memory.VectorData{
-		ID:       conversation.ID,
-		Vector:   make([]float64, 1536), // Mock embedding
+		ID:     conversation.ID,
+		Vector: make([]float64, 1536), // Mock embedding
 		Metadata: map[string]interface{}{
 			"conversation_id": conversation.ID,
-			"character_id":   conversation.CharacterID,
-			"user_id":        conversation.UserID,
-			"type":           "conversation",
+			"character_id":    conversation.CharacterID,
+			"user_id":         conversation.UserID,
+			"type":            "conversation",
 		},
 		Collection: conversation.CharacterID,
 		Timestamp:  conversation.StartedAt,
@@ -941,14 +941,14 @@ func (p *CharacterAIProvider) updateStats(duration time.Duration) {
 	defer p.mu.Unlock()
 
 	p.stats.LastOperation = time.Now()
-	
+
 	// Update average latency (simple moving average)
 	if p.stats.AverageLatency == 0 {
 		p.stats.AverageLatency = duration
 	} else {
 		p.stats.AverageLatency = (p.stats.AverageLatency + duration) / 2
 	}
-	
+
 	// Update uptime
 	if p.started {
 		p.stats.Uptime += duration
@@ -985,15 +985,15 @@ func (c *CharacterAIHTTPClient) GetCharacter(ctx context.Context, characterID st
 			"friendly": true,
 			"outgoing": false,
 		},
-		Traits:      []string{"friendly", "helpful"},
+		Traits: []string{"friendly", "helpful"},
 		Appearance: map[string]interface{}{
 			"height": "tall",
 		},
-		Backstory:   "",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		IsPublic:    false,
-		IsActive:    true,
+		Backstory: "",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		IsPublic:  false,
+		IsActive:  true,
 	}, nil
 }
 
@@ -1055,11 +1055,11 @@ func (c *CharacterAIHTTPClient) ListConversations(ctx context.Context, character
 func (c *CharacterAIHTTPClient) SendMessage(ctx context.Context, conversationID string, message *memory.CharacterMessage) (*memory.CharacterMessage, error) {
 	c.logger.Info("Sending message", "conversation_id", conversationID, "role", message.Role)
 	return &memory.CharacterMessage{
-		ID:          "message1",
+		ID:             "message1",
 		ConversationID: conversationID,
-		Role:        "character",
-		Content:     "Mock response",
-		Timestamp:   time.Now(),
+		Role:           "character",
+		Content:        "Mock response",
+		Timestamp:      time.Now(),
 	}, nil
 }
 
@@ -1068,11 +1068,11 @@ func (c *CharacterAIHTTPClient) GetMessages(ctx context.Context, conversationID 
 	var messages []*memory.CharacterMessage
 	for i := 0; i < limit; i++ {
 		messages = append(messages, &memory.CharacterMessage{
-			ID:            fmt.Sprintf("msg_%d", i),
+			ID:             fmt.Sprintf("msg_%d", i),
 			ConversationID: conversationID,
-			Role:          []string{"user", "character"}[i%2],
-			Content:       fmt.Sprintf("Mock message %d", i),
-			Timestamp:     time.Now(),
+			Role:           []string{"user", "character"}[i%2],
+			Content:        fmt.Sprintf("Mock message %d", i),
+			Timestamp:      time.Now(),
 		})
 	}
 	return messages, nil
@@ -1104,12 +1104,12 @@ func (c *CharacterAIHTTPClient) UpdateRelationship(ctx context.Context, characte
 func (c *CharacterAIHTTPClient) GetEmotionalState(ctx context.Context, characterID string) (*memory.EmotionalState, error) {
 	// Mock implementation
 	return &memory.EmotionalState{
-		CharacterID: characterID,
-		Mood:        "happy",
-		Energy:      0.8,
+		CharacterID:  characterID,
+		Mood:         "happy",
+		Energy:       0.8,
 		Satisfaction: 0.7,
-		Engagement:  0.9,
-		LastUpdated: time.Now(),
+		Engagement:   0.9,
+		LastUpdated:  time.Now(),
 	}, nil
 }
 

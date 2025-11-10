@@ -414,7 +414,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 	defer ticker.Stop()
 
 	fmt.Println("🔍 Starting Local LLM Provider Monitoring...")
-	fmt.Println("Press Ctrl+C to stop monitoring\n")
+	fmt.Println("Press Ctrl+C to stop monitoring")
 
 	for {
 		select {
@@ -438,7 +438,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 // runWatch starts the watch mode for real-time updates
 func runWatch(cmd *cobra.Command, args []string) error {
 	fmt.Println("👀 Starting watch mode for local LLM providers...")
-	fmt.Println("Changes will be displayed in real-time. Press Ctrl+C to stop.\n")
+	fmt.Println("Changes will be displayed in real-time. Press Ctrl+C to stop.")
 
 	// This would implement file system watching for provider changes
 	// For now, just call monitor
@@ -1306,7 +1306,7 @@ func runSyncModels(cmd *cobra.Command, args []string) error {
 			}
 
 			if result.ConversionRequired {
-				fmt.Printf("  🔄 %s: conversion required (%.0f min est.)\n", provider, result.EstimatedTime)
+				fmt.Printf("  🔄 %s: conversion required (%d min est.)\n", provider, result.EstimatedTime)
 				// Perform optimization/conversion
 				if err := manager.OptimizeModelForProvider(ctx, model.Path, provider); err != nil {
 					fmt.Printf("    ❌ Conversion failed: %v\n", err)

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Template Library Example ===\n")
+	fmt.Println("=== Template Library Example ===")
 
 	mgr := template.NewManager()
 	mgr.RegisterBuiltinTemplates()

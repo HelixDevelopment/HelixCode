@@ -3,9 +3,11 @@ package advanced_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,12 +25,12 @@ func TestConfigurationManagerAdvanced(t *testing.T) {
 		{
 			name: "Basic initialization",
 			options: &config.ConfigurationOptions{
-				ConfigPath:        "test_config.json",
-				AutoSave:          true,
-				AutoBackup:        true,
-				EnableEncryption:  false,
-				ValidationMode:    config.ValidationModeStrict,
-				TransformMode:     config.TransformModeLenient,
+				ConfigPath:       "test_config.json",
+				AutoSave:         true,
+				AutoBackup:       true,
+				EnableEncryption: false,
+				ValidationMode:   config.ValidationModeStrict,
+				TransformMode:    config.TransformModeLenient,
 			},
 			expectedError: false,
 			initialized:   true,
@@ -36,13 +38,13 @@ func TestConfigurationManagerAdvanced(t *testing.T) {
 		{
 			name: "With encryption",
 			options: &config.ConfigurationOptions{
-				ConfigPath:        "test_config.json",
-				AutoSave:          true,
-				AutoBackup:        true,
-				EnableEncryption:  true,
-				EncryptionKey:     "test-encryption-key-123",
-				ValidationMode:    config.ValidationModeStrict,
-				TransformMode:     config.TransformModeLenient,
+				ConfigPath:       "test_config.json",
+				AutoSave:         true,
+				AutoBackup:       true,
+				EnableEncryption: true,
+				EncryptionKey:    "test-encryption-key-123",
+				ValidationMode:   config.ValidationModeStrict,
+				TransformMode:    config.TransformModeLenient,
 			},
 			expectedError: false,
 			initialized:   true,
@@ -50,13 +52,13 @@ func TestConfigurationManagerAdvanced(t *testing.T) {
 		{
 			name: "With schema validation",
 			options: &config.ConfigurationOptions{
-				ConfigPath:        "test_config.json",
-				AutoSave:          true,
-				AutoBackup:        false,
-				EnableEncryption:  false,
-				SchemaPath:        "test_schema.json",
-				ValidationMode:    config.ValidationModeSchema,
-				TransformMode:     config.TransformModeSchema,
+				ConfigPath:       "test_config.json",
+				AutoSave:         true,
+				AutoBackup:       false,
+				EnableEncryption: false,
+				SchemaPath:       "test_schema.json",
+				ValidationMode:   config.ValidationModeSchema,
+				TransformMode:    config.TransformModeSchema,
 			},
 			expectedError: false,
 			initialized:   true,
@@ -64,16 +66,16 @@ func TestConfigurationManagerAdvanced(t *testing.T) {
 		{
 			name: "With monitoring",
 			options: &config.ConfigurationOptions{
-				ConfigPath:        "test_config.json",
-				AutoSave:          true,
-				AutoBackup:        true,
-				EnableEncryption:  false,
-				WatchInterval:     30 * time.Second,
-				MaxBackups:        5,
-				Compression:       true,
-				LogLevel:          "debug",
-				ValidationMode:    config.ValidationModeStrict,
-				TransformMode:     config.TransformModeLenient,
+				ConfigPath:       "test_config.json",
+				AutoSave:         true,
+				AutoBackup:       true,
+				EnableEncryption: false,
+				WatchInterval:    30 * time.Second,
+				MaxBackups:       5,
+				Compression:      true,
+				LogLevel:         "debug",
+				ValidationMode:   config.ValidationModeStrict,
+				TransformMode:    config.TransformModeLenient,
 			},
 			expectedError: false,
 			initialized:   true,
@@ -149,14 +151,14 @@ func TestConfigurationValidation(t *testing.T) {
 		name          string
 		updates       map[string]interface{}
 		shouldPass    bool
-		expectedError  string
+		expectedError string
 	}{
 		{
 			name: "Valid cognee port",
 			updates: map[string]interface{}{
 				"cognee.port": 8000,
 			},
-			shouldPass:   true,
+			shouldPass:    true,
 			expectedError: "",
 		},
 		{
@@ -164,7 +166,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.port": 70000,
 			},
-			shouldPass:   false,
+			shouldPass:    false,
 			expectedError: "port number must be between 0 and 65535",
 		},
 		{
@@ -172,7 +174,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"api_keys.openai.primary_keys": []string{"sk-test-key-123"},
 			},
-			shouldPass:   true,
+			shouldPass:    true,
 			expectedError: "",
 		},
 		{
@@ -180,7 +182,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"api_keys.openai.primary_keys": []string{"invalid-key-123"},
 			},
-			shouldPass:   false,
+			shouldPass:    false,
 			expectedError: "API key must start with prefix",
 		},
 		{
@@ -188,7 +190,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.remote_api.service_endpoint": "https://api.cognee.ai",
 			},
-			shouldPass:   true,
+			shouldPass:    true,
 			expectedError: "",
 		},
 		{
@@ -196,7 +198,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.remote_api.service_endpoint": "api.cognee.ai",
 			},
-			shouldPass:   false,
+			shouldPass:    false,
 			expectedError: "URL must include a scheme",
 		},
 		{
@@ -204,7 +206,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.remote_api.timeout": "30s",
 			},
-			shouldPass:   true,
+			shouldPass:    true,
 			expectedError: "",
 		},
 		{
@@ -212,7 +214,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.remote_api.timeout": "invalid-duration",
 			},
-			shouldPass:   false,
+			shouldPass:    false,
 			expectedError: "invalid time format",
 		},
 		{
@@ -220,7 +222,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.mode": "local",
 			},
-			shouldPass:   true,
+			shouldPass:    true,
 			expectedError: "",
 		},
 		{
@@ -228,7 +230,7 @@ func TestConfigurationValidation(t *testing.T) {
 			updates: map[string]interface{}{
 				"cognee.mode": "invalid-mode",
 			},
-			shouldPass:   false,
+			shouldPass:    false,
 			expectedError: "is not in allowed values",
 		},
 	}
@@ -237,7 +239,7 @@ func TestConfigurationValidation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// Apply updates
 			err := cm.UpdateConfig(test.updates)
-			
+
 			if test.shouldPass {
 				if err != nil {
 					t.Errorf("Expected validation to pass but got error: %v", err)
@@ -261,9 +263,9 @@ func TestConfigurationTransformations(t *testing.T) {
 	options := &config.ConfigurationOptions{
 		TransformMode: config.TransformModeCustom,
 		Environment: map[string]string{
-			"HELIX_API_KEY":  "sk-env-api-key-123",
-			"HELIX_HOST":      "localhost",
-			"HELIX_PORT":      "9000",
+			"HELIX_API_KEY": "sk-env-api-key-123",
+			"HELIX_HOST":    "localhost",
+			"HELIX_PORT":    "9000",
 		},
 	}
 
@@ -278,25 +280,25 @@ func TestConfigurationTransformations(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		property        string
-		value          interface{}
-		transformers    []config.Transformer
-		expectedValue  interface{}
+		name          string
+		property      string
+		value         interface{}
+		transformers  []config.Transformer
+		expectedValue interface{}
 	}{
 		{
-			name:    "Environment variable substitution",
+			name:     "Environment variable substitution",
 			property: "test.env_var",
-			value:   "${HELIX_API_KEY}",
+			value:    "${HELIX_API_KEY}",
 			transformers: []config.Transformer{
 				config.NewEnvVarTransformer("HELIX_", "", false),
 			},
 			expectedValue: "sk-env-api-key-123",
 		},
 		{
-			name:    "Path transformation",
+			name:     "Path transformation",
 			property: "test.path",
-			value:   "~/config",
+			value:    "~/config",
 			transformers: []config.Transformer{
 				config.NewPathTransformer("", true, true, true, false),
 			},
@@ -306,27 +308,27 @@ func TestConfigurationTransformations(t *testing.T) {
 			}(),
 		},
 		{
-			name:    "URL transformation",
+			name:     "URL transformation",
 			property: "test.url",
-			value:   "api.example.com",
+			value:    "api.example.com",
 			transformers: []config.Transformer{
 				config.NewURLTransformer("https", true, true, true),
 			},
 			expectedValue: "https://api.example.com/",
 		},
 		{
-			name:    "Duration transformation",
+			name:     "Duration transformation",
 			property: "test.duration",
-			value:   "30",
+			value:    "30",
 			transformers: []config.Transformer{
 				config.NewDurationTransformer("s", nil, nil, false),
 			},
 			expectedValue: 30 * time.Second,
 		},
 		{
-			name:    "Boolean transformation",
+			name:     "Boolean transformation",
 			property: "test.boolean",
-			value:   "true",
+			value:    "true",
 			transformers: []config.Transformer{
 				config.NewBooleanTransformer(
 					[]string{"true", "1", "yes"},
@@ -337,9 +339,9 @@ func TestConfigurationTransformations(t *testing.T) {
 			expectedValue: true,
 		},
 		{
-			name:    "Template transformation",
+			name:     "Template transformation",
 			property: "test.template",
-			value:   "Service at {{host}}:{{port}}",
+			value:    "Service at {{host}}:{{port}}",
 			transformers: []config.Transformer{
 				config.NewTemplateTransformer(map[string]interface{}{
 					"host": "localhost",
@@ -490,7 +492,7 @@ func TestConfigurationHooks(t *testing.T) {
 		name         string
 		hookType     string
 		hook         config.ConfigHook
-		expectedCall  bool
+		expectedCall bool
 	}{
 		{
 			name:     "Validation hook",
@@ -579,10 +581,10 @@ func TestConfigurationPersistence(t *testing.T) {
 
 	// Make configuration changes
 	updates := map[string]interface{}{
-		"cognee.enabled":      true,
-		"cognee.mode":         "hybrid",
-		"cognee.port":         8001,
-		"api_keys.openai.enabled": true,
+		"cognee.enabled":               true,
+		"cognee.mode":                  "hybrid",
+		"cognee.port":                  8001,
+		"api_keys.openai.enabled":      true,
 		"api_keys.openai.primary_keys": []string{"sk-test-key-456"},
 	}
 
@@ -654,10 +656,10 @@ func TestConfigurationImportExport(t *testing.T) {
 
 	// Set test configuration
 	updates := map[string]interface{}{
-		"cognee.enabled":    true,
-		"cognee.mode":       "local",
-		"cognee.host":       "localhost",
-		"cognee.port":       8002,
+		"cognee.enabled":               true,
+		"cognee.mode":                  "local",
+		"cognee.host":                  "localhost",
+		"cognee.port":                  8002,
 		"api_keys.openai.primary_keys": []string{"sk-export-test-789"},
 	}
 
@@ -804,7 +806,7 @@ func TestConfigurationConcurrentAccess(t *testing.T) {
 		t.Errorf("Too many concurrent access errors: %d (max allowed: %d)", errorCount, maxAllowedErrors)
 	}
 
-	t.Logf("Concurrent access test completed: %d goroutines, %d operations each, %d errors", 
+	t.Logf("Concurrent access test completed: %d goroutines, %d operations each, %d errors",
 		numGoroutines, numOperations, errorCount)
 }
 
@@ -823,9 +825,3 @@ func valuesEqual(a, b interface{}) bool {
 
 	return aStr == bStr
 }
-
-// Import required packages
-import (
-	"fmt"
-	"sync"
-)

@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Feature Development Workflow ===\n")
+	fmt.Println("=== Feature Development Workflow ===")
 
 	// Initialize
 	sessionMgr := session.NewManager()

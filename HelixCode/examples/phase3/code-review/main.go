@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Code Review Workflow ===\n")
+	fmt.Println("=== Code Review Workflow ===")
 
 	// Initialize managers
 	sessionMgr := session.NewManager()

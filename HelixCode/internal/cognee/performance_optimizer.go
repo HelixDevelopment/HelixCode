@@ -487,10 +487,8 @@ func (po *PerformanceOptimizer) Optimize(ctx context.Context) (*OptimizationResu
 	// Update last metrics
 	po.metrics.LastUpdate = time.Now()
 
-	po.logger.Info("Performance optimization completed",
-		"improvement", fmt.Sprintf("%.2f%%", improvement*100),
-		"duration", result.Duration,
-		"applied_opts", len(appliedOpts))
+	po.logger.Info("Performance optimization completed: improvement=%s, duration=%v, applied_opts=%d",
+		fmt.Sprintf("%.2f%%", improvement*100), result.Duration, len(appliedOpts))
 
 	return result, nil
 }
@@ -564,7 +562,7 @@ func (po *PerformanceOptimizer) applyNeuralSymbolicOptimization() (float64, []st
 	}
 	gain += 0.12 // 12% improvement
 
-	po.logger.Debug("Neural-symbolic optimization applied", "gain", gain)
+	po.logger.Debug("Neural-symbolic optimization applied: gain=%v", gain)
 	return gain, appliedOpts, changes
 }
 
@@ -605,7 +603,7 @@ func (po *PerformanceOptimizer) applyGraphCompressionOptimization() (float64, []
 	}
 	gain += 0.15 // 15% improvement
 
-	po.logger.Debug("Graph compression optimization applied", "gain", gain)
+	po.logger.Debug("Graph compression optimization applied: gain=%v", gain)
 	return gain, appliedOpts, changes
 }
 
@@ -646,7 +644,7 @@ func (po *PerformanceOptimizer) applyBatchProcessingOptimization() (float64, []s
 	}
 	gain += 0.18 // 18% improvement
 
-	po.logger.Debug("Batch processing optimization applied", "gain", gain)
+	po.logger.Debug("Batch processing optimization applied: gain=%v", gain)
 	return gain, appliedOpts, changes
 }
 
@@ -692,7 +690,7 @@ func (po *PerformanceOptimizer) applyParallelProcessingOptimization() (float64, 
 	}
 	gain += 0.20 // 20% improvement
 
-	po.logger.Debug("Parallel processing optimization applied", "gain", gain)
+	po.logger.Debug("Parallel processing optimization applied: gain=%v", gain)
 	return gain, appliedOpts, changes
 }
 
@@ -733,7 +731,7 @@ func (po *PerformanceOptimizer) applyMemoryOptimization() (float64, []string, ma
 	}
 	gain += 0.12 // 12% improvement
 
-	po.logger.Debug("Memory optimization applied", "gain", gain)
+	po.logger.Debug("Memory optimization applied: gain=%v", gain)
 	return gain, appliedOpts, changes
 }
 
@@ -753,7 +751,7 @@ func (po *PerformanceOptimizer) optimizationLoop(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if _, err := po.Optimize(ctx); err != nil {
-				po.logger.Error("Optimization failed", "error", err)
+				po.logger.Error("Optimization failed: %v", err)
 			}
 		}
 	}

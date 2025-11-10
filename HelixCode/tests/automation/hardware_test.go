@@ -35,13 +35,13 @@ type CPUInfo struct {
 }
 
 type GPUInfo struct {
-	Name       string
-	VRAM       int
-	Driver     string
-	CUDA       bool
-	Metal      bool
-	Vulkan     bool
-	Available  bool
+	Name      string
+	VRAM      int
+	Driver    string
+	CUDA      bool
+	Metal     bool
+	Vulkan    bool
+	Available bool
 }
 
 type MemoryInfo struct {
@@ -63,19 +63,19 @@ func TestHardwareDetection(t *testing.T) {
 	hwInfo, err := detectHardware()
 	require.NoError(t, err, "Hardware detection should work")
 
-	t.Logf("CPU: %s (%d cores, %d threads, %.2f GHz)", 
+	t.Logf("CPU: %s (%d cores, %d threads, %.2f GHz)",
 		hwInfo.CPUInfo.Model, hwInfo.CPUInfo.Cores, hwInfo.CPUInfo.Threads, hwInfo.CPUInfo.Frequency)
-	
+
 	if hwInfo.GPUInfo.Available {
-		t.Logf("GPU: %s (%d GB VRAM, CUDA: %t, Metal: %t)", 
+		t.Logf("GPU: %s (%d GB VRAM, CUDA: %t, Metal: %t)",
 			hwInfo.GPUInfo.Name, hwInfo.GPUInfo.VRAM, hwInfo.GPUInfo.CUDA, hwInfo.GPUInfo.Metal)
 	} else {
 		t.Log("GPU: Not available")
 	}
-	
-	t.Logf("Memory: %d GB total, %d GB available", 
+
+	t.Logf("Memory: %d GB total, %d GB available",
 		hwInfo.MemoryInfo.Total/1024/1024/1024, hwInfo.MemoryInfo.Available/1024/1024/1024)
-	
+
 	t.Logf("OS: %s %s (%s)", hwInfo.OSInfo.Name, hwInfo.OSInfo.Version, hwInfo.OSInfo.Arch)
 
 	// Verify hardware detection
@@ -94,7 +94,7 @@ func TestHardwareOptimizedProviders(t *testing.T) {
 
 	// Test hardware-optimized provider selection
 	optimalProviders := getOptimalProviders(hwInfo)
-	
+
 	t.Logf("🎯 Optimal providers for detected hardware:")
 	for _, provider := range optimalProviders {
 		t.Logf("  • %s: %s", provider.Name, provider.Reason)
@@ -120,7 +120,7 @@ func TestRealModelExecution(t *testing.T) {
 
 	// Select appropriate models based on hardware
 	models := selectModelsForHardware(hwInfo)
-	
+
 	if len(models) == 0 {
 		t.Skip("No suitable models for available hardware")
 		return
@@ -154,10 +154,11 @@ func TestPerformanceBenchmarks(t *testing.T) {
 	if provider == "" {
 		t.Skip("No suitable provider for benchmarking")
 		return
+	}
 
 	// Select benchmark model
 	model := selectBenchmarkModel(hwInfo)
-	
+
 	t.Logf("⚡ Running performance benchmarks:")
 	t.Logf("  Provider: %s", provider)
 	t.Logf("  Model: %s", model.Name)
@@ -165,7 +166,7 @@ func TestPerformanceBenchmarks(t *testing.T) {
 
 	// Run benchmarks
 	results := runBenchmarks(t, hwInfo, provider, model)
-	
+
 	// Analyze results
 	analyzeBenchmarkResults(t, hwInfo, results)
 }
@@ -372,8 +373,8 @@ func detectMemory() (MemoryInfo, error) {
 
 func detectOS() (OSInfo, error) {
 	info := OSInfo{
-		Name:    runtime.GOOS,
-		Arch:    runtime.GOARCH,
+		Name: runtime.GOOS,
+		Arch: runtime.GOARCH,
 	}
 
 	if runtime.GOOS == "linux" {
@@ -460,8 +461,8 @@ func getOptimalProviders(hwInfo *HardwareInfo) []OptimalProvider {
 // Model selection for hardware
 
 type TestModel struct {
-	Name            string
-	Description     string
+	Name           string
+	Description    string
 	SizeGB         float64
 	MinRAM         int64
 	MinVRAM        int64
@@ -475,8 +476,8 @@ func selectModelsForHardware(hwInfo *HardwareInfo) []TestModel {
 
 	allModels := []TestModel{
 		{
-			Name:            "phi-2",
-			Description:     "Small 2.7B model, good for testing",
+			Name:           "phi-2",
+			Description:    "Small 2.7B model, good for testing",
 			SizeGB:         5.2,
 			MinRAM:         8 * 1024 * 1024 * 1024,
 			MinVRAM:        0,
@@ -485,8 +486,8 @@ func selectModelsForHardware(hwInfo *HardwareInfo) []TestModel {
 			Providers:      []string{"ollama", "llamacpp", "vllm"},
 		},
 		{
-			Name:            "qwen1.5-1.8b",
-			Description:     "Small Chinese/English model",
+			Name:           "qwen1.5-1.8b",
+			Description:    "Small Chinese/English model",
 			SizeGB:         3.7,
 			MinRAM:         6 * 1024 * 1024 * 1024,
 			MinVRAM:        0,
@@ -495,8 +496,8 @@ func selectModelsForHardware(hwInfo *HardwareInfo) []TestModel {
 			Providers:      []string{"ollama", "llamacpp"},
 		},
 		{
-			Name:            "gemma-2b",
-			Description:     "Google's small 2B model",
+			Name:           "gemma-2b",
+			Description:    "Google's small 2B model",
 			SizeGB:         5.0,
 			MinRAM:         8 * 1024 * 1024 * 1024,
 			MinVRAM:        0,
@@ -505,8 +506,8 @@ func selectModelsForHardware(hwInfo *HardwareInfo) []TestModel {
 			Providers:      []string{"ollama", "llamacpp", "vllm"},
 		},
 		{
-			Name:            "llama-3-8b",
-			Description:     "Meta's 8B instruction model",
+			Name:           "llama-3-8b",
+			Description:    "Meta's 8B instruction model",
 			SizeGB:         16.0,
 			MinRAM:         16 * 1024 * 1024 * 1024,
 			MinVRAM:        8 * 1024 * 1024 * 1024,
@@ -515,8 +516,8 @@ func selectModelsForHardware(hwInfo *HardwareInfo) []TestModel {
 			Providers:      []string{"ollama", "llamacpp", "vllm", "mlx"},
 		},
 		{
-			Name:            "mistral-7b",
-			Description:     "Mistral's 7B model",
+			Name:           "mistral-7b",
+			Description:    "Mistral's 7B model",
 			SizeGB:         14.0,
 			MinRAM:         14 * 1024 * 1024 * 1024,
 			MinVRAM:        7 * 1024 * 1024 * 1024,
@@ -549,8 +550,8 @@ func (m TestModel) SkipOnCurrentHardware(hwInfo *HardwareInfo) bool {
 	}
 
 	// Skip if GPU VRAM insufficient
-	if m.MinVRAM > 0 && hwInfo.GPUInfo.Available && 
-	   int64(hwInfo.GPUInfo.VRAM*1024*1024*1024) < m.MinVRAM && !m.CPUOnly {
+	if m.MinVRAM > 0 && hwInfo.GPUInfo.Available &&
+		int64(hwInfo.GPUInfo.VRAM*1024*1024*1024) < m.MinVRAM && !m.CPUOnly {
 		return true
 	}
 
@@ -747,7 +748,7 @@ func testProviderCompatibility(t *testing.T, hwInfo *HardwareInfo) {
 	t.Log("Testing provider compatibility")
 
 	providers := []string{"ollama", "llamacpp", "vllm", "localai", "mlx"}
-	
+
 	for _, provider := range providers {
 		if isProviderInstalled(provider) {
 			compatibility := checkProviderCompatibility(provider, hwInfo)
@@ -796,7 +797,7 @@ func selectBenchmarkModel(hwInfo *HardwareInfo) TestModel {
 	if len(models) == 0 {
 		return TestModel{Name: "test-model"}
 	}
-	
+
 	// Select smallest model for benchmarking
 	return models[0]
 }
@@ -814,11 +815,11 @@ func downloadTestModel(t *testing.T, baseDir, modelName string) string {
 	// Create mock model file for testing
 	modelDir := filepath.Join(baseDir, "models", modelName)
 	os.MkdirAll(modelDir, 0755)
-	
+
 	modelFile := filepath.Join(modelDir, "model.gguf")
 	err := os.WriteFile(modelFile, []byte("mock model data for testing"), 0644)
 	require.NoError(t, err)
-	
+
 	return modelFile
 }
 
@@ -831,7 +832,7 @@ func testModelInference(t *testing.T, provider, modelName string, hwInfo *Hardwa
 
 func runInferenceWorkload(t *testing.T, provider string, model TestModel, duration time.Duration) {
 	t.Logf("Running inference workload for %s on %s for %v", model.Name, provider, duration)
-	
+
 	// This would implement actual workload generation
 	// For now, simulate with sleep
 	time.Sleep(duration)
@@ -853,7 +854,7 @@ func getMemoryUsage() (int64, error) {
 			}
 		}
 	}
-	
+
 	// Fallback to runtime memory
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
@@ -900,25 +901,25 @@ func checkProviderCompatibility(provider string, hwInfo *HardwareInfo) string {
 // Benchmark results type
 
 type BenchmarkResults struct {
-	Provider      string
-	Model         string
-	TokensPerSec  float64
-	Latency       time.Duration
-	MemoryUsage   int64
+	Provider       string
+	Model          string
+	TokensPerSec   float64
+	Latency        time.Duration
+	MemoryUsage    int64
 	GPUUtilization float64
 }
 
 func runBenchmarks(t *testing.T, hwInfo *HardwareInfo, provider, model TestModel) BenchmarkResults {
 	t.Logf("Running benchmarks for %s on %s", model.Name, provider)
-	
+
 	// This would implement actual benchmarking
 	// For now, return mock results
 	return BenchmarkResults{
-		Provider:      provider,
-		Model:         model.Name,
-		TokensPerSec:  25.5,
-		Latency:       150 * time.Millisecond,
-		MemoryUsage:   2048 * 1024 * 1024, // 2GB
+		Provider:       provider,
+		Model:          model.Name,
+		TokensPerSec:   25.5,
+		Latency:        150 * time.Millisecond,
+		MemoryUsage:    2048 * 1024 * 1024, // 2GB
 		GPUUtilization: 75.0,
 	}
 }
@@ -935,7 +936,7 @@ func analyzeBenchmarkResults(t *testing.T, hwInfo *HardwareInfo, results Benchma
 	if hwInfo.GPUInfo.Available {
 		expectedMin := 20.0 // Minimum expected for GPU
 		if results.TokensPerSec < expectedMin {
-			t.Logf("⚠️  Performance below expected minimum (%.1f < %.1f)", 
+			t.Logf("⚠️  Performance below expected minimum (%.1f < %.1f)",
 				results.TokensPerSec, expectedMin)
 		} else {
 			t.Logf("✅ Performance meets expectations")
@@ -943,7 +944,7 @@ func analyzeBenchmarkResults(t *testing.T, hwInfo *HardwareInfo, results Benchma
 	} else {
 		expectedMin := 5.0 // Minimum expected for CPU
 		if results.TokensPerSec < expectedMin {
-			t.Logf("⚠️  Performance below expected minimum (%.1f < %.1f)", 
+			t.Logf("⚠️  Performance below expected minimum (%.1f < %.1f)",
 				results.TokensPerSec, expectedMin)
 		} else {
 			t.Logf("✅ Performance meets CPU expectations")

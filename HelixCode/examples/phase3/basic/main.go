@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== HelixCode Phase 3 Basic Example ===\n")
+	fmt.Println("=== HelixCode Phase 3 Basic Example ===")
 
 	// Initialize all managers
 	sessionMgr := session.NewManager()

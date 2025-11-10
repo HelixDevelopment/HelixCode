@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== Multi-Session Workflow ===\n")
+	fmt.Println("=== Multi-Session Workflow ===")
 
 	mgr := session.NewManager()
 

@@ -1000,6 +1000,9 @@ PRODUCTION READINESS:
 		result.OverallImprovement.OverallScore,
 		po.formatOptimizationDetails(result.Optimizations),
 		po.generateRecommendations(result),
+		result.TotalApplied,
+		len(result.Optimizations),
+		result.OverallImprovement.OverallScore,
 		po.generateKeyAchievements(result),
 		po.evaluateProductionReadiness(result),
 	)

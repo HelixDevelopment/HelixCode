@@ -8,6 +8,7 @@ import (
 
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
 )
 
 // ConfigManager manages provider configurations
@@ -20,52 +21,52 @@ type ConfigManager struct {
 // ProviderConfig contains all provider configurations
 type ProviderConfig struct {
 	DefaultProvider string                           `json:"default_provider"`
-	Providers      map[string]*SingleProviderConfig   `json:"providers"`
-	Manager        *ManagerConfig                   `json:"manager"`
-	Backup         *BackupConfig                   `json:"backup"`
-	Monitoring     *MonitoringConfig               `json:"monitoring"`
-	Security       *SecurityConfig                 `json:"security"`
-	Performance    *PerformanceConfig              `json:"performance"`
+	Providers       map[string]*SingleProviderConfig `json:"providers"`
+	Manager         *ManagerConfig                   `json:"manager"`
+	Backup          *BackupConfig                    `json:"backup"`
+	Monitoring      *MonitoringConfig                `json:"monitoring"`
+	Security        *SecurityConfig                  `json:"security"`
+	Performance     *PerformanceConfig               `json:"performance"`
 }
 
 // SingleProviderConfig contains configuration for a single provider
 type SingleProviderConfig struct {
-	Type     ProviderType               `json:"type"`
-	Enabled  bool                      `json:"enabled"`
-	Config   map[string]interface{}     `json:"config"`
-	Priority int                        `json:"priority"`
-	Tags     []string                  `json:"tags"`
-	Resources *ResourceConfig           `json:"resources"`
-	Health   *HealthConfig             `json:"health"`
-	Backup   *ProviderBackupConfig      `json:"backup"`
+	Type      memory.ProviderType    `json:"type"`
+	Enabled   bool                   `json:"enabled"`
+	Config    map[string]interface{} `json:"config"`
+	Priority  int                    `json:"priority"`
+	Tags      []string               `json:"tags"`
+	Resources *ResourceConfig        `json:"resources"`
+	Health    *HealthConfig          `json:"health"`
+	Backup    *ProviderBackupConfig  `json:"backup"`
 }
 
 // ResourceConfig contains resource configuration
 type ResourceConfig struct {
-	MaxMemory     int64   `json:"max_memory"`
-	MaxCPU        float64  `json:"max_cpu"`
+	MaxMemory      int64   `json:"max_memory"`
+	MaxCPU         float64 `json:"max_cpu"`
 	MaxConnections int     `json:"max_connections"`
-	Timeout       int64    `json:"timeout"`
-	Retries       int      `json:"retries"`
+	Timeout        int64   `json:"timeout"`
+	Retries        int     `json:"retries"`
 }
 
 // HealthConfig contains health check configuration
 type HealthConfig struct {
-	Enabled           bool          `json:"enabled"`
-	Interval          int64         `json:"interval"`
-	Timeout           int64         `json:"timeout"`
-	FailureThreshold  int           `json:"failure_threshold"`
-	RetryAttempts     int           `json:"retry_attempts"`
+	Enabled          bool            `json:"enabled"`
+	Interval         int64           `json:"interval"`
+	Timeout          int64           `json:"timeout"`
+	FailureThreshold int             `json:"failure_threshold"`
+	RetryAttempts    int             `json:"retry_attempts"`
 	Alerting         *AlertingConfig `json:"alerting"`
 }
 
 // AlertingConfig contains alerting configuration
 type AlertingConfig struct {
-	Enabled     bool     `json:"enabled"`
-	Channels    []string `json:"channels"`
-	Conditions  []string `json:"conditions"`
-	Thresholds  map[string]float64 `json:"thresholds"`
-	Cooldown    int64    `json:"cooldown"`
+	Enabled    bool               `json:"enabled"`
+	Channels   []string           `json:"channels"`
+	Conditions []string           `json:"conditions"`
+	Thresholds map[string]float64 `json:"thresholds"`
+	Cooldown   int64              `json:"cooldown"`
 }
 
 // ProviderBackupConfig contains backup configuration for a provider
@@ -84,59 +85,59 @@ type BackupConfig struct {
 	Enabled          bool   `json:"enabled"`
 	DefaultSchedule  string `json:"default_schedule"`
 	DefaultRetention int    `json:"default_retention"`
-	CompressionType string `json:"compression_type"`
-	StorageLocation string `json:"storage_location"`
-	Encryption      bool   `json:"encryption"`
+	CompressionType  string `json:"compression_type"`
+	StorageLocation  string `json:"storage_location"`
+	Encryption       bool   `json:"encryption"`
 }
 
 // MonitoringConfig contains monitoring configuration
 type MonitoringConfig struct {
-	Enabled          bool          `json:"enabled"`
-	MetricsInterval   int64         `json:"metrics_interval"`
-	LogLevel         string        `json:"log_level"`
-	MetricsEndpoint  string        `json:"metrics_endpoint"`
-	TracingEnabled   bool          `json:"tracing_enabled"`
-	ProfilingEnabled bool          `json:"profiling_enabled"`
-	Alerting        *AlertingConfig `json:"alerting"`
+	Enabled          bool            `json:"enabled"`
+	MetricsInterval  int64           `json:"metrics_interval"`
+	LogLevel         string          `json:"log_level"`
+	MetricsEndpoint  string          `json:"metrics_endpoint"`
+	TracingEnabled   bool            `json:"tracing_enabled"`
+	ProfilingEnabled bool            `json:"profiling_enabled"`
+	Alerting         *AlertingConfig `json:"alerting"`
 }
 
 // SecurityConfig contains security configuration
 type SecurityConfig struct {
-	EncryptionEnabled bool     `json:"encryption_enabled"`
-	APIKeys          map[string]string `json:"api_keys"`
-	Certificates     map[string]string `json:"certificates"`
-	AllowedHosts    []string `json:"allowed_hosts"`
-	RateLimiting     *RateLimitConfig `json:"rate_limiting"`
-	Authentication   *AuthConfig `json:"authentication"`
+	EncryptionEnabled bool              `json:"encryption_enabled"`
+	APIKeys           map[string]string `json:"api_keys"`
+	Certificates      map[string]string `json:"certificates"`
+	AllowedHosts      []string          `json:"allowed_hosts"`
+	RateLimiting      *RateLimitConfig  `json:"rate_limiting"`
+	Authentication    *AuthConfig       `json:"authentication"`
 }
 
 // RateLimitConfig contains rate limiting configuration
 type RateLimitConfig struct {
-	Enabled   bool    `json:"enabled"`
-	Requests  int     `json:"requests"`
-	Window    int64   `json:"window"`
-	BurstSize int     `json:"burst_size"`
+	Enabled   bool  `json:"enabled"`
+	Requests  int   `json:"requests"`
+	Window    int64 `json:"window"`
+	BurstSize int   `json:"burst_size"`
 }
 
 // AuthConfig contains authentication configuration
 type AuthConfig struct {
-	Type         string            `json:"type"`
-	Providers    []string          `json:"providers"`
-	TokenExpiry  int64             `json:"token_expiry"`
-	RefreshEnabled bool           `json:"refresh_enabled"`
-	Scope        []string          `json:"scope"`
-	Claims       map[string]interface{} `json:"claims"`
+	Type           string                 `json:"type"`
+	Providers      []string               `json:"providers"`
+	TokenExpiry    int64                  `json:"token_expiry"`
+	RefreshEnabled bool                   `json:"refresh_enabled"`
+	Scope          []string               `json:"scope"`
+	Claims         map[string]interface{} `json:"claims"`
 }
 
 // PerformanceConfig contains performance configuration
 type PerformanceConfig struct {
-	CacheEnabled     bool `json:"cache_enabled"`
-	CacheSize        int  `json:"cache_size"`
-	CacheTTL        int64 `json:"cache_ttl"`
-	BatchSize        int  `json:"batch_size"`
-	MaxConcurrency  int  `json:"max_concurrency"`
-	Timeout          int64 `json:"timeout"`
-	RetryPolicy      string `json:"retry_policy"`
+	CacheEnabled   bool   `json:"cache_enabled"`
+	CacheSize      int    `json:"cache_size"`
+	CacheTTL       int64  `json:"cache_ttl"`
+	BatchSize      int    `json:"batch_size"`
+	MaxConcurrency int    `json:"max_concurrency"`
+	Timeout        int64  `json:"timeout"`
+	RetryPolicy    string `json:"retry_policy"`
 }
 
 // NewConfigManager creates a new config manager
@@ -218,22 +219,22 @@ func (cm *ConfigManager) createDefaultConfig() error {
 		DefaultProvider: "pinecone",
 		Providers: map[string]*SingleProviderConfig{
 			"pinecone": {
-				Type:     ProviderTypePinecone,
+				Type:     memory.ProviderTypePinecone,
 				Enabled:  true,
 				Priority: 1,
 				Tags:     []string{"production", "primary"},
 				Config: map[string]interface{}{
 					"environment": "us-west1-gcp",
-					"index_name": "vectors",
-					"dimension":  1536,
-					"metric":     "cosine",
+					"index_name":  "vectors",
+					"dimension":   1536,
+					"metric":      "cosine",
 				},
 				Resources: &ResourceConfig{
-					MaxMemory:     1024 * 1024 * 1024, // 1GB
-					MaxCPU:        0.8,
+					MaxMemory:      1024 * 1024 * 1024, // 1GB
+					MaxCPU:         0.8,
 					MaxConnections: 100,
-					Timeout:       30000,
-					Retries:       3,
+					Timeout:        30000,
+					Retries:        3,
 				},
 				Health: &HealthConfig{
 					Enabled:          true,
@@ -249,7 +250,7 @@ func (cm *ConfigManager) createDefaultConfig() error {
 							"latency_ms": 1000,
 							"error_rate": 0.05,
 						},
-						Cooldown:   300000,
+						Cooldown: 300000,
 					},
 				},
 				Backup: &ProviderBackupConfig{
@@ -264,29 +265,29 @@ func (cm *ConfigManager) createDefaultConfig() error {
 			},
 		},
 		Manager: &ManagerConfig{
-			Providers: []ProviderConfig{},
-			DefaultProvider: "pinecone",
-			LoadBalancing: LoadBalanceRoundRobin,
-			FailoverEnabled: true,
-			FailoverTimeout: 30000,
-			RetryAttempts: 3,
-			RetryBackoff: 1000,
-			HealthCheckInterval: 60000,
+			Providers:             []ProviderConfig{},
+			DefaultProvider:       "pinecone",
+			LoadBalancing:         LoadBalanceRoundRobin,
+			FailoverEnabled:       true,
+			FailoverTimeout:       30000,
+			RetryAttempts:         3,
+			RetryBackoff:          1000,
+			HealthCheckInterval:   60000,
 			PerformanceMonitoring: true,
-			CostTracking: true,
-			BackupEnabled: true,
-			BackupInterval: 86400000, // 24 hours
+			CostTracking:          true,
+			BackupEnabled:         true,
+			BackupInterval:        86400000, // 24 hours
 		},
 		Backup: &BackupConfig{
 			Enabled:          true,
 			DefaultSchedule:  "0 2 * * *",
 			DefaultRetention: 30,
-			CompressionType: "gzip",
-			StorageLocation: "/var/lib/helix/backups/",
-			Encryption:      true,
+			CompressionType:  "gzip",
+			StorageLocation:  "/var/lib/helix/backups/",
+			Encryption:       true,
 		},
 		Monitoring: &MonitoringConfig{
-			Enabled:         true,
+			Enabled:          true,
 			MetricsInterval:  60000,
 			LogLevel:         "INFO",
 			MetricsEndpoint:  "http://localhost:8080/metrics",
@@ -300,7 +301,7 @@ func (cm *ConfigManager) createDefaultConfig() error {
 					"latency_ms": 2000,
 					"error_rate": 0.1,
 				},
-				Cooldown:   600000,
+				Cooldown: 600000,
 			},
 		},
 		Security: &SecurityConfig{
@@ -318,22 +319,22 @@ func (cm *ConfigManager) createDefaultConfig() error {
 				BurstSize: 100,
 			},
 			Authentication: &AuthConfig{
-				Type:            "oauth2",
-				Providers:       []string{"github", "google"},
-				TokenExpiry:     3600,
-				RefreshEnabled:  true,
-				Scope:           []string{"read", "write"},
-				Claims:          map[string]interface{}{},
+				Type:           "oauth2",
+				Providers:      []string{"github", "google"},
+				TokenExpiry:    3600,
+				RefreshEnabled: true,
+				Scope:          []string{"read", "write"},
+				Claims:         map[string]interface{}{},
 			},
 		},
 		Performance: &PerformanceConfig{
-			CacheEnabled:    true,
-			CacheSize:       1000,
+			CacheEnabled:   true,
+			CacheSize:      1000,
 			CacheTTL:       300000,
-			BatchSize:       100,
+			BatchSize:      100,
 			MaxConcurrency: 10,
-			Timeout:         30000,
-			RetryPolicy:     "exponential_backoff",
+			Timeout:        30000,
+			RetryPolicy:    "exponential_backoff",
 		},
 	}
 
@@ -378,7 +379,7 @@ func (cm *ConfigManager) validateProviderConfig(name string, config *SingleProvi
 	// Validate provider type exists
 	registry := GetRegistry()
 	providers := registry.ListProviders()
-	
+
 	validType := false
 	for _, providerType := range providers {
 		if providerType == config.Type {
@@ -386,7 +387,7 @@ func (cm *ConfigManager) validateProviderConfig(name string, config *SingleProvi
 			break
 		}
 	}
-	
+
 	if !validType {
 		return fmt.Errorf("unknown provider type: %s", config.Type)
 	}
@@ -580,12 +581,12 @@ func (cm *ConfigManager) MergeConfigs(base, override *ProviderConfig) *ProviderC
 
 	result := &ProviderConfig{
 		DefaultProvider: override.DefaultProvider,
-		Providers:      make(map[string]*SingleProviderConfig),
-		Manager:        override.Manager,
-		Backup:         override.Backup,
-		Monitoring:     override.Monitoring,
-		Security:       override.Security,
-		Performance:    override.Performance,
+		Providers:       make(map[string]*SingleProviderConfig),
+		Manager:         override.Manager,
+		Backup:          override.Backup,
+		Monitoring:      override.Monitoring,
+		Security:        override.Security,
+		Performance:     override.Performance,
 	}
 
 	// Merge providers
@@ -620,7 +621,7 @@ func (cm *ConfigManager) MergeConfigs(base, override *ProviderConfig) *ProviderC
 }
 
 // CreateProviderTemplate creates a configuration template for a provider type
-func (cm *ConfigManager) CreateProviderTemplate(providerType ProviderType) (*SingleProviderConfig, error) {
+func (cm *ConfigManager) CreateProviderTemplate(providerType memory.ProviderType) (*SingleProviderConfig, error) {
 	registry := GetRegistry()
 	defaultConfig := registry.GetDefaultConfig(providerType)
 
@@ -631,18 +632,18 @@ func (cm *ConfigManager) CreateProviderTemplate(providerType ProviderType) (*Sin
 		Tags:     []string{},
 		Config:   defaultConfig,
 		Resources: &ResourceConfig{
-			MaxMemory:     512 * 1024 * 1024, // 512MB
-			MaxCPU:        0.5,
+			MaxMemory:      512 * 1024 * 1024, // 512MB
+			MaxCPU:         0.5,
 			MaxConnections: 50,
-			Timeout:       30000,
-			Retries:       3,
+			Timeout:        30000,
+			Retries:        3,
 		},
 		Health: &HealthConfig{
-			Enabled:         true,
-			Interval:        60000,
-			Timeout:         10000,
+			Enabled:          true,
+			Interval:         60000,
+			Timeout:          10000,
 			FailureThreshold: 3,
-			RetryAttempts:   3,
+			RetryAttempts:    3,
 		},
 		Backup: &ProviderBackupConfig{
 			Enabled:     false,

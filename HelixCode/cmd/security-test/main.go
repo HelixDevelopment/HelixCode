@@ -15,11 +15,11 @@ func main() {
 
 	ctx := context.Background()
 	_ = ctx // Use context to avoid unused variable error
-	
+
 	// Simulate comprehensive security testing
 	testSuite := []string{
 		"LLM Provider Security",
-		"SSH Connection Security", 
+		"SSH Connection Security",
 		"Database Security",
 		"Authentication Security",
 		"Input Validation Security",
@@ -39,33 +39,35 @@ func main() {
 
 	for i, testName := range testSuite {
 		log.Printf("\n🧪 Test %d/%d: %s", i+1, len(testSuite), testName)
-		
+
 		// Simulate test execution
 		time.Sleep(200 * time.Millisecond)
-		
+
 		// Simulate security scan
 		issues := simulateSecurityScan(testName)
 		critical := countCriticalIssues(issues)
-		
+
 		log.Printf("   🔍 Security Scan Results:")
 		log.Printf("   📋 Total Issues: %d", len(issues))
 		log.Printf("   🚨 Critical Issues: %d", critical)
-		
+
 		totalIssues += len(issues)
 		totalCritical += critical
-		
+
 		if critical > 0 {
 			failedTests = append(failedTests, testName)
 			log.Printf("   ❌ FAILED: Critical security issues found")
 		} else {
 			log.Printf("   ✅ PASSED: No critical security issues")
 		}
-		
+
 		// Show sample issues
 		if len(issues) > 0 {
 			log.Printf("   📝 Sample Issues:")
 			for j, issue := range issues {
-				if j >= 3 { break } // Show max 3 issues
+				if j >= 3 {
+					break
+				} // Show max 3 issues
 				log.Printf("      - [%s] %s", strings.ToUpper(issue.Severity), issue.Title)
 			}
 		}
@@ -76,7 +78,7 @@ func main() {
 
 	// Final evaluation
 	overallSuccess := totalCritical == 0
-	
+
 	log.Printf("\n========================================")
 	log.Printf("🎯 COMPREHENSIVE SECURITY TESTING COMPLETE")
 	log.Printf("========================================")
@@ -100,10 +102,10 @@ func main() {
 
 // Supporting structures and functions
 type SecurityIssue struct {
-	ID       string
-	Title    string
-	Severity string
-	Type     string
+	ID          string
+	Title       string
+	Severity    string
+	Type        string
 	Description string
 }
 
@@ -220,7 +222,7 @@ DETAILED FINDINGS:
 ========================================
 
 EXECUTIVE SUMMARY:
-This comprehensive security testing covered %d critical areas of the HelixCode platform.
+ 	This comprehensive security testing covered %d critical areas of the HelixCode platform.
 The zero tolerance policy was enforced throughout testing, with any critical security
 issues requiring immediate remediation before proceeding.
 
@@ -244,12 +246,13 @@ NEXT STEPS:
 		evaluateZeroToleranceDetailed(totalCritical),
 		evaluateProductionReadiness(len(failedTests), totalCritical),
 		generateDetailedFindings(testSuite, totalIssues),
+		len(testSuite),
 		generateNextSteps(totalIssues, totalCritical),
 	)
 
 	// Create reports directory
 	os.MkdirAll("reports/security/comprehensive", 0755)
-	
+
 	// Save comprehensive report
 	reportFile := "reports/security/comprehensive/security_testing_report.txt"
 	if err := os.WriteFile(reportFile, []byte(report), 0644); err != nil {
@@ -293,33 +296,33 @@ func evaluateSecurityPosture(totalIssues, totalCritical int) string {
 
 func generateRecommendations(totalIssues, totalCritical int) string {
 	var recs []string
-	
+
 	if totalCritical > 0 {
 		recs = append(recs, fmt.Sprintf("URGENT: Fix all %d critical security issues immediately", totalCritical))
 		recs = append(recs, "URGENT: Do not proceed to production until critical issues resolved")
 		recs = append(recs, "URGENT: Conduct emergency security review")
 	}
-	
+
 	if totalIssues > 50 {
 		recs = append(recs, "IMPORTANT: Plan comprehensive security sprint")
 		recs = append(recs, "IMPORTANT: Establish security development lifecycle")
 	}
-	
+
 	if totalIssues > 20 {
 		recs = append(recs, "MODERATE: Prioritize high and medium severity issues")
 		recs = append(recs, "MODERATE: Implement automated security testing")
 	}
-	
+
 	if totalIssues > 0 {
 		recs = append(recs, "GENERAL: Continue regular security monitoring")
 		recs = append(recs, "GENERAL: Maintain security awareness in development")
 	}
-	
+
 	if len(recs) == 0 {
 		recs = append(recs, "EXCELLENT: Maintain current security practices")
 		recs = append(recs, "EXCELLENT: Continue proactive security monitoring")
 	}
-	
+
 	result := ""
 	for i, rec := range recs {
 		result += fmt.Sprintf("%d. %s\n", i+1, rec)
@@ -331,7 +334,7 @@ func evaluateZeroToleranceDetailed(totalCritical int) string {
 	if totalCritical == 0 {
 		return "✅ ZERO TOLERANCE POLICY SATISFIED\n   No critical security violations detected\n   Platform meets enterprise security requirements\n   Approved for production deployment"
 	}
-	return fmt.Sprintf("❌ ZERO TOLERANCE POLICY VIOLATED\n   %d critical security violations detected\n   Production deployment BLOCKED\n   Immediate remediation required")
+	return fmt.Sprintf("❌ ZERO TOLERANCE POLICY VIOLATED\n   %d critical security violations detected\n   Production deployment BLOCKED\n   Immediate remediation required", totalCritical)
 }
 
 func evaluateProductionReadiness(failedTests, totalCritical int) string {
@@ -341,7 +344,7 @@ func evaluateProductionReadiness(failedTests, totalCritical int) string {
 	if totalCritical > 0 {
 		return "🚨 NOT READY - CRITICAL ISSUES\n   Critical security vulnerabilities present\n   Production deployment PROHIBITED\n   Security violations must be fixed"
 	}
-	return fmt.Sprintf("⚠️ CONDITIONAL READY\n   %d security tests failed\n   No critical issues but improvements needed\n   Address failed tests before production")
+	return fmt.Sprintf("⚠️ CONDITIONAL READY\n   %d security tests failed\n   No critical issues but improvements needed\n   Address failed tests before production", failedTests)
 }
 
 func generateDetailedFindings(testSuite []string, totalIssues int) string {

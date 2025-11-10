@@ -11,7 +11,7 @@ import (
 // ProviderRegistry manages provider registration and creation
 type ProviderRegistry struct {
 	mu          sync.RWMutex
-	providers   map[ProviderType]ProviderFactoryFunc
+	providers   map[memory.ProviderType]ProviderFactoryFunc
 	logger      logging.Logger
 	initialized bool
 }

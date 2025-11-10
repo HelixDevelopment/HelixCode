@@ -15,7 +15,7 @@ func main() {
 	// Simulate production optimization phases
 	optimizations := []string{
 		"CPU Optimization",
-		"Memory Optimization", 
+		"Memory Optimization",
 		"Garbage Collection Tuning",
 		"Concurrency Optimization",
 		"Cache Strategy Optimization",
@@ -27,12 +27,12 @@ func main() {
 	}
 
 	baselineMetrics := map[string]float64{
-		"CPU Utilization":      65.5,
-		"Memory Usage":         3.2, // GB
-		"Throughput":          1200, // ops/sec
-		"Average Latency":      85.0, // ms
-		"Cache Hit Rate":      0.78,
-		"Error Rate":          0.025,
+		"CPU Utilization": 65.5,
+		"Memory Usage":    3.2,  // GB
+		"Throughput":      1200, // ops/sec
+		"Average Latency": 85.0, // ms
+		"Cache Hit Rate":  0.78,
+		"Error Rate":      0.025,
 	}
 
 	log.Printf("📋 Baseline Performance Metrics:")
@@ -47,14 +47,14 @@ func main() {
 
 	for i, opt := range optimizations {
 		log.Printf("🔧 Applying Optimization %d/%d: %s", i+1, len(optimizations), opt)
-		
+
 		// Simulate optimization execution
 		time.Sleep(500 * time.Millisecond)
-		
+
 		// Generate random improvement between 5% and 25%
 		improvement := 5.0 + rand.Float64()*20.0
 		appliedCount++
-		
+
 		// Apply improvement to relevant metrics
 		switch opt {
 		case "CPU Optimization":
@@ -179,7 +179,7 @@ func main() {
 	log.Println("\n📈 PERFORMANCE IMPROVEMENTS:")
 	log.Printf("   CPU Utilization: %.1f%% (%.1f%% → %.1f%%)", cpuImprovement, 65.5, baselineMetrics["CPU Utilization"])
 	log.Printf("   Memory Usage: %.1f%% (%.1f GB → %.1f GB)", memoryImprovement, 3.2, baselineMetrics["Memory Usage"])
-	log.Printf("   Throughput: %.1f%% (%.0f → %.0f ops/sec)", throughputImprovement, 1200, baselineMetrics["Throughput"])
+	log.Printf("   Throughput: %.1f%% (%d → %.0f ops/sec)", throughputImprovement, 1200, baselineMetrics["Throughput"])
 	log.Printf("   Latency: %.1f%% (%.1f → %.1f ms)", latencyImprovement, 85.0, baselineMetrics["Average Latency"])
 	log.Printf("   Cache Hit Rate: %.1f%% (%.2f → %.2f)", cacheImprovement, 0.78, baselineMetrics["Cache Hit Rate"])
 	log.Printf("   Error Rate: %.1f%% (%.3f → %.3f)", errorImprovement, 0.025, baselineMetrics["Error Rate"])
@@ -212,7 +212,7 @@ func main() {
 	log.Printf("Production Ready: %t", productionReady)
 	log.Printf("Performance Score: %.1f%%", overallImprovement)
 	log.Printf("Optimization Quality: %s", evaluateOptimizationQuality(overallImprovement))
-	
+
 	if productionReady {
 		log.Println("🎉 EXCELLENT: HelixCode production-ready with optimized performance")
 		log.Println("🚀 Platform ready for production deployment")
@@ -241,7 +241,7 @@ Zero-Tolerance Security: MAINTAINED
 
 OPTIMIZATION EXECUTION SUMMARY:
 - Total Optimizations Applied: 10
-- Success Rate: 100%
+- Success Rate: 100%%
 - Production Ready: %t
 - Overall Performance Improvement: %.1f%%
 
@@ -332,12 +332,12 @@ SECURITY STATUS:
 		metrics["Average Latency"],
 		metrics["Cache Hit Rate"],
 		metrics["Error Rate"],
-		((65.5 - metrics["CPU Utilization"]) / 65.5) * 100,
-		((3.2 - metrics["Memory Usage"]) / 3.2) * 100,
-		((metrics["Throughput"] - 1200) / 1200) * 100,
-		((85.0 - metrics["Average Latency"]) / 85.0) * 100,
-		((metrics["Cache Hit Rate"] - 0.78) / 0.78) * 100,
-		((0.025 - metrics["Error Rate"]) / 0.025) * 100,
+		((65.5-metrics["CPU Utilization"])/65.5)*100,
+		((3.2-metrics["Memory Usage"])/3.2)*100,
+		((metrics["Throughput"]-1200)/1200)*100,
+		((85.0-metrics["Average Latency"])/85.0)*100,
+		((metrics["Cache Hit Rate"]-0.78)/0.78)*100,
+		((0.025-metrics["Error Rate"])/0.025)*100,
 		overallImprovement,
 		targetsMet,
 		totalTargets,
@@ -382,15 +382,15 @@ func formatOptimizationBreakdown(improvements map[string]float64) string {
 
 func evaluateProductionReadinessDetailed(productionReady bool, targetsMet, totalTargets int) string {
 	achievementRate := float64(targetsMet) / float64(totalTargets)
-	
+
 	if productionReady {
 		return fmt.Sprintf("✅ PRODUCTION READY\n   Targets Met: %d/%d (%.1f%%)\n   All critical targets achieved\n   System optimized for production", targetsMet, totalTargets, achievementRate*100)
 	}
-	
+
 	if achievementRate >= 0.7 {
 		return fmt.Sprintf("⚠️ CONDITIONAL READY\n   Targets Met: %d/%d (%.1f%%)\n   Most targets achieved\n   Consider deployment with monitoring", targetsMet, totalTargets, achievementRate*100)
 	}
-	
+
 	return fmt.Sprintf("❌ NOT READY\n   Targets Met: %d/%d (%.1f%%)\n   Critical targets not met\n   Additional optimization required", targetsMet, totalTargets, achievementRate*100)
 }
 
@@ -413,12 +413,12 @@ func evaluatePerformanceTier(score float64) string {
 func generateExecutiveSummary(overallImprovement float64, productionReady bool) string {
 	status := "optimization in progress"
 	action := "continue optimization efforts"
-	
+
 	if productionReady {
 		status = "optimization complete"
 		action = "proceed with production deployment"
 	}
-	
+
 	return fmt.Sprintf("This production optimization session achieved an overall performance improvement of %.1f%% through successful application of 10 comprehensive optimizations. The system %s with %.1f%% overall improvement. %s.", overallImprovement, status, overallImprovement, action)
 }
 
@@ -433,28 +433,28 @@ func generateNextStepsDetailed(productionReady bool, metrics map[string]float64)
 	if productionReady {
 		return "1. Deploy to production environment\n2. Implement comprehensive monitoring\n3. Schedule regular performance reviews\n4. Continue optimization efforts\n5. Maintain zero-tolerance security policy"
 	}
-	
+
 	var nextSteps []string
-	
+
 	if metrics["CPU Utilization"] > 70 {
 		nextSteps = append(nextSteps, "1. Apply additional CPU optimizations")
 	}
-	
+
 	if metrics["Memory Usage"] > 2 {
 		nextSteps = append(nextSteps, "2. Implement memory pool optimizations")
 	}
-	
+
 	if metrics["Throughput"] < 2000 {
 		nextSteps = append(nextSteps, "3. Optimize concurrency and scaling")
 	}
-	
+
 	if metrics["Average Latency"] > 50 {
 		nextSteps = append(nextSteps, "4. Enhance caching and database optimization")
 	}
-	
+
 	nextSteps = append(nextSteps, fmt.Sprintf("%d. Re-run performance optimization", len(nextSteps)+1))
 	nextSteps = append(nextSteps, fmt.Sprintf("%d. Validate all targets achieved", len(nextSteps)+1))
-	
+
 	result := ""
 	for _, step := range nextSteps {
 		result += step + "\n"
@@ -480,30 +480,30 @@ func evaluateOptimizationQuality(score float64) string {
 
 func generateKeyAchievements(metrics map[string]float64, improvements map[string]float64) string {
 	var achievements []string
-	
+
 	if metrics["Throughput"] >= 2000 {
 		achievements = append(achievements, fmt.Sprintf("Throughput target achieved: %.0f ops/sec", metrics["Throughput"]))
 	}
-	
+
 	if metrics["Average Latency"] <= 50 {
 		achievements = append(achievements, fmt.Sprintf("Latency target achieved: %.1f ms", metrics["Average Latency"]))
 	}
-	
+
 	if metrics["Cache Hit Rate"] >= 0.95 {
 		achievements = append(achievements, fmt.Sprintf("Cache hit rate target achieved: %.1f%%", metrics["Cache Hit Rate"]*100))
 	}
-	
+
 	for category, improvement := range improvements {
 		if improvement >= 20 {
 			achievements = append(achievements, fmt.Sprintf("Outstanding %s optimization: %.1f%%", category, improvement))
 		}
 	}
-	
+
 	if len(achievements) == 0 {
 		achievements = append(achievements, "Optimization completed successfully")
 		achievements = append(achievements, "Performance metrics improved")
 	}
-	
+
 	result := ""
 	for _, achievement := range achievements {
 		result += fmt.Sprintf("- %s\n", achievement)
@@ -513,28 +513,28 @@ func generateKeyAchievements(metrics map[string]float64, improvements map[string
 
 func generateBusinessImpact(metrics map[string]float64, improvements map[string]float64) string {
 	var impacts []string
-	
+
 	if metrics["Throughput"] >= 2000 {
 		impacts = append(impacts, "Increased throughput enables handling of 66%% more concurrent users")
 	}
-	
+
 	if metrics["Average Latency"] <= 50 {
 		impacts = append(impacts, "Reduced latency improves user experience by 41%%")
 	}
-	
+
 	if metrics["Cache Hit Rate"] >= 0.95 {
 		impacts = append(impacts, "Higher cache hit rate reduces infrastructure costs by 22%%")
 	}
-	
+
 	if metrics["Error Rate"] <= 0.01 {
 		impacts = append(impacts, "Lower error rate improves system reliability by 60%%")
 	}
-	
+
 	if len(impacts) == 0 {
 		impacts = append(impacts, "Performance improvements will enhance user experience")
 		impacts = append(impacts, "Optimized system will handle increased load")
 	}
-	
+
 	result := ""
 	for _, impact := range impacts {
 		result += fmt.Sprintf("- %s\n", impact)
@@ -546,11 +546,11 @@ func generateDeploymentRecommendation(productionReady bool, overallImprovement f
 	if productionReady {
 		return "🚀 APPROVED FOR PRODUCTION DEPLOYMENT\n   All performance targets achieved\n   System fully optimized and ready\n   Zero-tolerance security maintained\n   Enterprise-grade performance confirmed"
 	}
-	
+
 	if overallImprovement >= 15 {
 		return "⚠️ CONDITIONAL APPROVAL\n   Significant performance improvements achieved\n   Some targets require attention\n   Consider deployment with enhanced monitoring\n   Address remaining targets post-deployment"
 	}
-	
+
 	return "❌ DEPLOYMENT NOT APPROVED\n   Performance targets not met\n   Additional optimization required\n   Review and retry optimization\n   Re-evaluate after improvements"
 }
 

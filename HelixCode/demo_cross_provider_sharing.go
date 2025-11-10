@@ -89,7 +89,7 @@ func demoCrossProviderSharing() {
 		if result.IsCompatible {
 			status := "✅ Compatible"
 			if result.ConversionRequired {
-				status += fmt.Sprintf(" (conversion required: %.0f min)", result.EstimatedTime)
+				status += fmt.Sprintf(" (conversion required: %d min)", result.EstimatedTime)
 			}
 			fmt.Printf("   • %s: %s\n", provider, status)
 		} else {
