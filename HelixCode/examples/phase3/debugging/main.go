@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"dev.helix.code/internal/memory"
 	"dev.helix.code/internal/session"
@@ -19,14 +20,20 @@ func main() {
 	templateMgr.RegisterBuiltinTemplates()
 
 	// Create debugging session
-	sess := sessionMgr.Create("debug-memory-leak", session.ModeDebugging, "api-server")
+	sess, err := sessionMgr.Create("api-server", "debug-memory-leak", "Debugging session for memory leak", session.ModeDebugging)
+	if err != nil {
+		log.Fatalf("Failed to create session: %v", err)
+	}
 	sess.AddTag("bug")
 	sess.AddTag("memory")
 	sess.SetMetadata("issue_id", "JIRA-1234")
 	sess.SetMetadata("severity", "high")
 	sessionMgr.Start(sess.ID)
 
-	conv := memoryMgr.CreateConversation("Debug: Memory Leak")
+	conv, err := memoryMgr.CreateConversation("Debug: Memory Leak")
+	if err != nil {
+		log.Fatalf("Failed to create conversation: %v", err)
+	}
 	conv.SessionID = sess.ID
 
 	// Use Bug Fix template

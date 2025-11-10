@@ -77,15 +77,18 @@ const (
 )
 
 type ModelInfo struct {
-	ID             string            `json:"id"`
-	Name           string            `json:"name"`
-	Provider       ProviderType      `json:"provider"`
-	ContextSize    int               `json:"context_size"`
-	MaxTokens      int               `json:"max_tokens"`
-	Capabilities   []ModelCapability `json:"capabilities"`
-	SupportsTools  bool              `json:"supports_tools"`
-	SupportsVision bool              `json:"supports_vision"`
-	Description    string            `json:"description"`
+	ID             string                 `json:"id"`
+	Name           string                 `json:"name"`
+	Provider       ProviderType           `json:"provider"`
+	ContextSize    int                    `json:"context_size"`
+	MaxTokens      int                    `json:"max_tokens"`
+	Capabilities   []ModelCapability      `json:"capabilities"`
+	SupportsTools  bool                   `json:"supports_tools"`
+	SupportsVision bool                   `json:"supports_vision"`
+	Description    string                 `json:"description"`
+	Format         ModelFormat            `json:"format"`
+	Size           int64                  `json:"size"`
+	Metadata       map[string]interface{} `json:"metadata"`
 }
 
 type ProviderConfigEntry struct {

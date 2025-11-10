@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -16,53 +17,53 @@ import (
 
 // ConfigurationManager manages configuration with advanced features
 type ConfigurationManager struct {
-	config          *HelixConfig
-	logger          logging.Logger
-	mu              sync.RWMutex
-	configPath      string
-	backupPath      string
-	lastModified    time.Time
-	version         string
-	schemas         map[string]*ConfigurationSchema
-	validators      map[string][]ValidationRule
+	config           *HelixConfig
+	logger           logging.Logger
+	mu               sync.RWMutex
+	configPath       string
+	backupPath       string
+	lastModified     time.Time
+	version          string
+	schemas          map[string]*ConfigurationSchema
+	validators       map[string][]ValidationRule
 	transformers     map[string][]Transformer
-	watchers        map[string][]ConfigWatcher
-	hooks           map[string][]ConfigHook
-	encryptionKey   []byte
-	initialized     bool
-	autoSave        bool
-	autoBackup      bool
+	watchers         map[string][]ConfigFileWatcher
+	hooks            map[string][]ConfigHook
+	encryptionKey    []byte
+	initialized      bool
+	autoSave         bool
+	autoBackup       bool
 	enableEncryption bool
 }
 
 // ConfigurationSchema defines the structure and validation rules for configuration
 type ConfigurationSchema struct {
-	Version         string                    `json:"version"`
-	Properties      map[string]*PropertySchema `json:"properties"`
-	Required        []string                  `json:"required"`
-	AdditionalProperties bool                  `json:"additionalProperties"`
-	Description     string                    `json:"description"`
-	Examples        []interface{}            `json:"examples"`
+	Version              string                     `json:"version"`
+	Properties           map[string]*PropertySchema `json:"properties"`
+	Required             []string                   `json:"required"`
+	AdditionalProperties bool                       `json:"additionalProperties"`
+	Description          string                     `json:"description"`
+	Examples             []interface{}              `json:"examples"`
 }
 
 // PropertySchema defines individual property validation
 type PropertySchema struct {
-	Type             string                 `json:"type"`
-	Description      string                 `json:"description"`
-	Required         bool                   `json:"required"`
-	Default          interface{}            `json:"default"`
-	Enum             []interface{}          `json:"enum,omitempty"`
-	Minimum          *float64               `json:"minimum,omitempty"`
-	Maximum          *float64               `json:"maximum,omitempty"`
-	MinLength        *int                   `json:"minLength,omitempty"`
-	MaxLength        *int                   `json:"maxLength,omitempty"`
-	Pattern          string                 `json:"pattern,omitempty"`
-	Format           string                 `json:"format,omitempty"`
-	Items            *PropertySchema        `json:"items,omitempty"`
-	Properties       map[string]*PropertySchema `json:"properties,omitempty"`
-	ValidationRules  []string               `json:"validationRules,omitempty"`
-	Transformations   []string               `json:"transformations,omitempty"`
-	Sensitive        bool                   `json:"sensitive,omitempty"`
+	Type            string                     `json:"type"`
+	Description     string                     `json:"description"`
+	Required        bool                       `json:"required"`
+	Default         interface{}                `json:"default"`
+	Enum            []interface{}              `json:"enum,omitempty"`
+	Minimum         *float64                   `json:"minimum,omitempty"`
+	Maximum         *float64                   `json:"maximum,omitempty"`
+	MinLength       *int                       `json:"minLength,omitempty"`
+	MaxLength       *int                       `json:"maxLength,omitempty"`
+	Pattern         string                     `json:"pattern,omitempty"`
+	Format          string                     `json:"format,omitempty"`
+	Items           *PropertySchema            `json:"items,omitempty"`
+	Properties      map[string]*PropertySchema `json:"properties,omitempty"`
+	ValidationRules []string                   `json:"validationRules,omitempty"`
+	Transformations []string                   `json:"transformations,omitempty"`
+	Sensitive       bool                       `json:"sensitive,omitempty"`
 }
 
 // ValidationRule defines custom validation logic
@@ -81,14 +82,14 @@ type Transformer interface {
 
 // ValidationContext provides context for validation
 type ValidationContext struct {
-	Property     string
-	FullPath     string
-	Schema       *PropertySchema
-	Config       *HelixConfig
-	Environment  map[string]string
-	DateTime     time.Time
-	User         string
-	Session      string
+	Property    string
+	FullPath    string
+	Schema      *PropertySchema
+	Config      *HelixConfig
+	Environment map[string]string
+	DateTime    time.Time
+	User        string
+	Session     string
 }
 
 // TransformContext provides context for transformation
@@ -101,11 +102,11 @@ type TransformContext struct {
 	DateTime     time.Time
 	User         string
 	Session      string
-	Transformers  map[string]Transformer
+	Transformers map[string]Transformer
 }
 
-// ConfigWatcher defines configuration change notification
-type ConfigWatcher interface {
+// ConfigFileWatcher defines configuration file change notification
+type ConfigFileWatcher interface {
 	OnConfigChange(change *ConfigChange) error
 	GetName() string
 	GetWatchPaths() []string
@@ -124,17 +125,17 @@ type ConfigHook interface {
 
 // ConfigChange represents configuration changes
 type ConfigChange struct {
-	Type         ChangeType               `json:"type"`
-	Path         string                   `json:"path"`
-	Property     string                   `json:"property"`
-	OldValue     interface{}              `json:"oldValue,omitempty"`
-	NewValue     interface{}              `json:"newValue,omitempty"`
-	OldConfig    *HelixConfig             `json:"oldConfig,omitempty"`
-	NewConfig    *HelixConfig             `json:"newConfig,omitempty"`
-	Timestamp    time.Time                `json:"timestamp"`
-	User         string                   `json:"user,omitempty"`
-	Source       string                   `json:"source"`
-	Metadata     map[string]interface{}   `json:"metadata,omitempty"`
+	Type      ChangeType             `json:"type"`
+	Path      string                 `json:"path"`
+	Property  string                 `json:"property"`
+	OldValue  interface{}            `json:"oldValue,omitempty"`
+	NewValue  interface{}            `json:"newValue,omitempty"`
+	OldConfig *HelixConfig           `json:"oldConfig,omitempty"`
+	NewConfig *HelixConfig           `json:"newConfig,omitempty"`
+	Timestamp time.Time              `json:"timestamp"`
+	User      string                 `json:"user,omitempty"`
+	Source    string                 `json:"source"`
+	Metadata  map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ChangeType represents the type of configuration change
@@ -150,71 +151,71 @@ const (
 
 // ConfigurationOptions provides options for configuration manager
 type ConfigurationOptions struct {
-	ConfigPath        string                 `json:"configPath"`
-	BackupPath        string                 `json:"backupPath"`
-	AutoSave          bool                   `json:"autoSave"`
-	AutoBackup        bool                   `json:"autoBackup"`
-	EnableEncryption  bool                   `json:"enableEncryption"`
-	EncryptionKey     string                 `json:"encryptionKey,omitempty"`
-	SchemaPath        string                 `json:"schemaPath,omitempty"`
-	WatchInterval     time.Duration          `json:"watchInterval"`
-	MaxBackups        int                    `json:"maxBackups"`
-	Compression       bool                   `json:"compression"`
-	LogLevel          string                 `json:"logLevel"`
-	Environment       map[string]string      `json:"environment"`
-	ValidationMode    ValidationMode         `json:"validationMode"`
-	TransformMode     TransformMode          `json:"transformMode"`
-	Metadata          map[string]interface{} `json:"metadata,omitempty"`
+	ConfigPath       string                 `json:"configPath"`
+	BackupPath       string                 `json:"backupPath"`
+	AutoSave         bool                   `json:"autoSave"`
+	AutoBackup       bool                   `json:"autoBackup"`
+	EnableEncryption bool                   `json:"enableEncryption"`
+	EncryptionKey    string                 `json:"encryptionKey,omitempty"`
+	SchemaPath       string                 `json:"schemaPath,omitempty"`
+	WatchInterval    time.Duration          `json:"watchInterval"`
+	MaxBackups       int                    `json:"maxBackups"`
+	Compression      bool                   `json:"compression"`
+	LogLevel         string                 `json:"logLevel"`
+	Environment      map[string]string      `json:"environment"`
+	ValidationMode   ValidationMode         `json:"validationMode"`
+	TransformMode    TransformMode          `json:"transformMode"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ValidationMode defines validation behavior
 type ValidationMode string
 
 const (
-	ValidationModeStrict     ValidationMode = "strict"
-	ValidationModeLenient    ValidationMode = "lenient"
-	ValidationModeDisabled   ValidationMode = "disabled"
-	ValidationModeSchema     ValidationMode = "schema"
-	ValidationModeCustom     ValidationMode = "custom"
+	ValidationModeStrict   ValidationMode = "strict"
+	ValidationModeLenient  ValidationMode = "lenient"
+	ValidationModeDisabled ValidationMode = "disabled"
+	ValidationModeSchema   ValidationMode = "schema"
+	ValidationModeCustom   ValidationMode = "custom"
 )
 
 // TransformMode defines transformation behavior
 type TransformMode string
 
 const (
-	TransformModeStrict    TransformMode = "strict"
-	TransformModeLenient   TransformMode = "lenient"
-	TransformModeDisabled  TransformMode = "disabled"
-	TransformModeSchema    TransformMode = "schema"
-	TransformModeCustom    TransformMode = "custom"
+	TransformModeStrict   TransformMode = "strict"
+	TransformModeLenient  TransformMode = "lenient"
+	TransformModeDisabled TransformMode = "disabled"
+	TransformModeSchema   TransformMode = "schema"
+	TransformModeCustom   TransformMode = "custom"
 )
 
 // NewConfigurationManager creates a new configuration manager
 func NewConfigurationManager(options *ConfigurationOptions) (*ConfigurationManager, error) {
 	if options == nil {
 		options = &ConfigurationOptions{
-			AutoSave:          true,
-			AutoBackup:        true,
-			EnableEncryption:  false,
-			ValidationMode:    ValidationModeStrict,
-			TransformMode:     TransformModeLenient,
-			MaxBackups:        10,
-			Compression:       true,
-			LogLevel:          "info",
+			AutoSave:         true,
+			AutoBackup:       true,
+			EnableEncryption: false,
+			ValidationMode:   ValidationModeStrict,
+			TransformMode:    TransformModeLenient,
+			MaxBackups:       10,
+			Compression:      true,
+			LogLevel:         "info",
 		}
 	}
 
 	logger := logging.NewLogger("configuration_manager")
 
 	manager := &ConfigurationManager{
-		logger:            logger,
-		configPath:        options.ConfigPath,
-		backupPath:        options.BackupPath,
-		version:           "1.0.0",
+		logger:           logger,
+		configPath:       options.ConfigPath,
+		backupPath:       options.BackupPath,
+		version:          "1.0.0",
 		schemas:          make(map[string]*ConfigurationSchema),
 		validators:       make(map[string][]ValidationRule),
-		transformers:      make(map[string][]Transformer),
-		watchers:         make(map[string][]ConfigWatcher),
+		transformers:     make(map[string][]Transformer),
+		watchers:         make(map[string][]ConfigFileWatcher),
 		hooks:            make(map[string][]ConfigHook),
 		autoSave:         options.AutoSave,
 		autoBackup:       options.AutoBackup,
@@ -478,12 +479,12 @@ func (cm *ConfigurationManager) AddTransformer(property string, transformer Tran
 }
 
 // AddWatcher adds a configuration change watcher
-func (cm *ConfigurationManager) AddWatcher(property string, watcher ConfigWatcher) error {
+func (cm *ConfigurationManager) AddWatcher(property string, watcher ConfigFileWatcher) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
 	if cm.watchers[property] == nil {
-		cm.watchers[property] = make([]ConfigWatcher, 0)
+		cm.watchers[property] = make([]ConfigFileWatcher, 0)
 	}
 
 	cm.watchers[property] = append(cm.watchers[property], watcher)

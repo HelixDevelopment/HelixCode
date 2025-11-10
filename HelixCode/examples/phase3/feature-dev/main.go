@@ -21,7 +21,10 @@ func main() {
 	sessionMgr := session.NewManager()
 	memoryMgr := memory.NewManager()
 	templateMgr := template.NewManager()
-	store := persistence.NewStore("./data")
+	store, err := persistence.NewStore("./data")
+	if err != nil {
+		log.Fatalf("Failed to create store: %v", err)
+	}
 
 	store.SetSessionManager(sessionMgr)
 	store.SetMemoryManager(memoryMgr)
@@ -32,16 +35,23 @@ func main() {
 
 	// Phase 1: Planning
 	fmt.Println("📋 Phase 1: Planning")
-	planningSession := sessionMgr.Create(
-		"plan-user-auth",
-		session.ModePlanning,
+	planningSession, err := sessionMgr.Create(
 		"api-server",
+		"plan-user-auth",
+		"Planning session for user authentication",
+		session.ModePlanning,
 	)
+	if err != nil {
+		log.Fatalf("Failed to create planning session: %v", err)
+	}
 	planningSession.AddTag("authentication")
 	planningSession.AddTag("planning")
 	sessionMgr.Start(planningSession.ID)
 
-	planConv := memoryMgr.CreateConversation("Planning: User Authentication")
+	planConv, err := memoryMgr.CreateConversation("Planning: User Authentication")
+	if err != nil {
+		log.Fatalf("Failed to create planning conversation: %v", err)
+	}
 	planConv.SessionID = planningSession.ID
 
 	memoryMgr.AddMessage(planConv.ID, memory.NewUserMessage(
@@ -60,17 +70,24 @@ func main() {
 
 	// Phase 2: Implementation
 	fmt.Println("🔨 Phase 2: Implementation")
-	buildSession := sessionMgr.Create(
-		"implement-user-auth",
-		session.ModeBuilding,
+	buildSession, err := sessionMgr.Create(
 		"api-server",
+		"implement-user-auth",
+		"Implementation session for user authentication",
+		session.ModeBuilding,
 	)
+	if err != nil {
+		log.Fatalf("Failed to create build session: %v", err)
+	}
 	buildSession.AddTag("authentication")
 	buildSession.AddTag("implementation")
 	buildSession.SetMetadata("sprint", "23")
 	sessionMgr.Start(buildSession.ID)
 
-	buildConv := memoryMgr.CreateConversation("Implementation: User Auth")
+	buildConv, err := memoryMgr.CreateConversation("Implementation: User Auth")
+	if err != nil {
+		log.Fatalf("Failed to create build conversation: %v", err)
+	}
 	buildConv.SessionID = buildSession.ID
 
 	// Generate login handler from template
@@ -102,16 +119,23 @@ func main() {
 
 	// Phase 3: Testing
 	fmt.Println("🧪 Phase 3: Testing")
-	testSession := sessionMgr.Create(
-		"test-user-auth",
-		session.ModeTesting,
+	testSession, err := sessionMgr.Create(
 		"api-server",
+		"test-user-auth",
+		"Testing session for user authentication",
+		session.ModeTesting,
 	)
+	if err != nil {
+		log.Fatalf("Failed to create test session: %v", err)
+	}
 	testSession.AddTag("authentication")
 	testSession.AddTag("testing")
 	sessionMgr.Start(testSession.ID)
 
-	testConv := memoryMgr.CreateConversation("Testing: User Auth")
+	testConv, err := memoryMgr.CreateConversation("Testing: User Auth")
+	if err != nil {
+		log.Fatalf("Failed to create test conversation: %v", err)
+	}
 	testConv.SessionID = testSession.ID
 
 	// Generate test from template

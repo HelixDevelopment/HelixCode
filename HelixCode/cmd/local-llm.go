@@ -14,9 +14,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/spf13/cobra"
-	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/hardware"
+	"dev.helix.code/internal/llm"
+	"github.com/spf13/cobra"
 )
 
 // localLLMCmd represents the local-llm command
@@ -31,10 +31,21 @@ LLM providers with zero configuration required.`,
 }
 
 var (
-	localLLMDir      string
-	autoStart        bool
-	healthInterval   int
-	selectedProvider string
+	localLLMDir                string
+	autoStart                  bool
+	healthInterval             int
+	selectedProvider           string
+	recommendTaskTypes         []string
+	recommendQualityPreference string
+	recommendPrivacyLevel      string
+	recommendMaxMemory         int
+	recommendBudgetLimit       float64
+	recommendProviders         []string
+	analyticsTimeRange         string
+	reportFormat               string
+	insightsType               string
+	discoverSource             string
+	discoverFilter             string
 )
 
 func init() {
@@ -54,21 +65,21 @@ func init() {
 	localLLMCmd.AddCommand(cleanupCmd)
 	localLLMCmd.AddCommand(updateCmd)
 	localLLMCmd.AddCommand(logsCmd)
-	
+
 	// Model management commands
 	localLLMCmd.AddCommand(modelsCmd)
 	localLLMCmd.AddCommand(downloadModelCmd)
 	localLLMCmd.AddCommand(convertModelCmd)
 	localLLMCmd.AddCommand(listModelsCmd)
 	localLLMCmd.AddCommand(searchModelsCmd)
-	
+
 	// Cross-provider model sharing commands
 	localLLMCmd.AddCommand(shareModelCmd)
 	localLLMCmd.AddCommand(downloadAllCmd)
 	localLLMCmd.AddCommand(listSharedCmd)
 	localLLMCmd.AddCommand(optimizeModelCmd)
 	localLLMCmd.AddCommand(syncModelsCmd)
-	
+
 	// Advanced discovery and analytics commands
 	localLLMCmd.AddCommand(discoverCmd)
 	localLLMCmd.AddCommand(recommendCmd)
@@ -164,51 +175,51 @@ logs for all running providers will be displayed.`,
 
 func runInit(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	fmt.Println("🚀 Initializing Local LLM Provider Manager...")
-	
+
 	// Create manager instance
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	// Initialize (clone, build, configure)
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	fmt.Println("✅ Initialization complete!")
-	
+
 	// Auto-start if requested
 	if autoStart {
 		fmt.Println("\n🚀 Auto-starting all providers...")
 		if err := manager.StartAllProviders(ctx); err != nil {
 			return fmt.Errorf("failed to start providers: %w", err)
 		}
-		
+
 		// Wait a bit for providers to start
 		time.Sleep(5 * time.Second)
-		
+
 		// Show status
 		return runStatus(cmd, args)
 	}
-	
+
 	return nil
 }
 
 func runStart(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	// Ensure manager is initialized
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	if len(args) == 0 {
 		// Start all providers
 		fmt.Println("🚀 Starting all local LLM providers...")
 		return manager.StartAllProviders(ctx)
 	}
-	
+
 	// Start specific provider
 	providerName := args[0]
 	fmt.Printf("🚀 Starting provider: %s\n", providerName)
@@ -218,13 +229,13 @@ func runStart(cmd *cobra.Command, args []string) error {
 func runStop(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	if len(args) == 0 {
 		// Stop all providers
 		fmt.Println("🛑 Stopping all local LLM providers...")
 		return manager.StopAllProviders(ctx)
 	}
-	
+
 	// Stop specific provider
 	providerName := args[0]
 	fmt.Printf("🛑 Stopping provider: %s\n", providerName)
@@ -234,32 +245,32 @@ func runStop(cmd *cobra.Command, args []string) error {
 func runStatus(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	// Get provider status
 	status := manager.GetProviderStatus(ctx)
-	
+
 	if len(status) == 0 {
 		fmt.Println("❌ No local LLM providers found. Run 'helix local-llm init' to install providers.")
 		return nil
 	}
-	
+
 	// Display status in tabular format
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "PROVIDER\tSTATUS\tPORT\tLAST CHECK")
 	fmt.Fprintln(w, "--------\t------\t----\t-----------")
-	
+
 	for name, provider := range status {
 		statusIcon := getStatusIcon(provider.Status)
-		fmt.Fprintf(w, "%s\t%s%s\t%d\t%s\n", 
-			name, 
-			statusIcon, 
-			provider.Status, 
+		fmt.Fprintf(w, "%s\t%s%s\t%d\t%s\n",
+			name,
+			statusIcon,
+			provider.Status,
 			provider.DefaultPort,
 			provider.LastCheck.Format("15:04:05"))
 	}
-	
+
 	w.Flush()
-	
+
 	// Show running endpoints
 	running := manager.GetRunningProviders(ctx)
 	if len(running) > 0 {
@@ -268,7 +279,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			fmt.Printf("  • %s\n", endpoint)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -276,8 +287,8 @@ func runList(cmd *cobra.Command, args []string) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "PROVIDER\tDESCRIPTION\tPORT\tTYPE")
 	fmt.Fprintln(w, "--------\t-----------\t----\t----")
-	
-	providers := []struct{
+
+	providers := []struct {
 		name string
 		desc string
 		port int
@@ -295,11 +306,11 @@ func runList(cmd *cobra.Command, args []string) error {
 		{"mlx", "Apple Silicon optimized", 8080, "OpenAI-compatible"},
 		{"mistralrs", "Rust-based inference", 8080, "OpenAI-compatible"},
 	}
-	
+
 	for _, p := range providers {
 		fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", p.name, p.desc, p.port, p.typ)
 	}
-	
+
 	w.Flush()
 	return nil
 }
@@ -307,7 +318,7 @@ func runList(cmd *cobra.Command, args []string) error {
 func runCleanup(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	fmt.Println("🧹 Cleaning up local LLM providers...")
 	return manager.Cleanup(ctx)
 }
@@ -315,12 +326,12 @@ func runCleanup(cmd *cobra.Command, args []string) error {
 func runUpdate(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	// Ensure manager is initialized
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	if len(args) == 0 {
 		// Update all providers
 		fmt.Println("🔄 Updating all local LLM providers...")
@@ -338,7 +349,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		fmt.Printf("🔄 Updating provider: %s\n", providerName)
 		return manager.UpdateProvider(ctx, providerName)
 	}
-	
+
 	return nil
 }
 
@@ -350,14 +361,14 @@ func runLogs(cmd *cobra.Command, args []string) error {
 		fmt.Printf("📋 Log directory: %s\n", logsDir)
 		return nil
 	}
-	
+
 	providerName := args[0]
 	homeDir, _ := os.UserHomeDir()
 	logFile := fmt.Sprintf("%s/.helixcode/local-llm/logs/%s.log", homeDir, providerName)
-	
+
 	fmt.Printf("📋 Showing logs for %s:\n", providerName)
 	fmt.Printf("Log file: %s\n\n", logFile)
-	
+
 	// Show last 50 lines of log
 	cmd := exec.Command("tail", "-50", logFile)
 	cmd.Stdout = os.Stdout
@@ -388,25 +399,25 @@ func getStatusIcon(status string) string {
 func runMonitor(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	
+
 	manager := llm.NewLocalLLMManager(localLLMDir)
-	
+
 	// Handle interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	
+
 	// Initialize manager
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	// Start monitoring loop
 	ticker := time.NewTicker(time.Duration(healthInterval) * time.Second)
 	defer ticker.Stop()
-	
+
 	fmt.Println("🔍 Starting Local LLM Provider Monitoring...")
 	fmt.Println("Press Ctrl+C to stop monitoring\n")
-	
+
 	for {
 		select {
 		case <-sigChan:
@@ -418,7 +429,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 			// Clear screen and show status
 			clearScreen()
 			fmt.Printf("🔍 Local LLM Provider Status - %s\n\n", time.Now().Format("2006-01-02 15:04:05"))
-			
+
 			if err := runStatus(cmd, args); err != nil {
 				fmt.Printf("❌ Error getting status: %v\n", err)
 			}
@@ -430,7 +441,7 @@ func runMonitor(cmd *cobra.Command, args []string) error {
 func runWatch(cmd *cobra.Command, args []string) error {
 	fmt.Println("👀 Starting watch mode for local LLM providers...")
 	fmt.Println("Changes will be displayed in real-time. Press Ctrl+C to stop.\n")
-	
+
 	// This would implement file system watching for provider changes
 	// For now, just call monitor
 	return runMonitor(cmd, args)
@@ -514,17 +525,17 @@ Examples:
 
 // Model management flags
 var (
-	downloadFormat       string
-	downloadProvider     string
-	downloadTargetPath   string
-	forceDownload        bool
-	convertTargetFormat  string
-	convertQuantMethod   string
-	convertOptimizeFor   string
+	downloadFormat        string
+	downloadProvider      string
+	downloadTargetPath    string
+	forceDownload         bool
+	convertTargetFormat   string
+	convertQuantMethod    string
+	convertOptimizeFor    string
 	convertTargetHardware string
-	shareModelProvider   string
-	optimizeProvider     string
-	syncAllProviders    bool
+	shareModelProvider    string
+	optimizeProvider      string
+	syncAllProviders      bool
 )
 
 func init() {
@@ -533,73 +544,59 @@ func init() {
 	downloadModelCmd.Flags().StringVar(&downloadProvider, "provider", "", "Target provider for the model")
 	downloadModelCmd.Flags().StringVar(&downloadTargetPath, "output", "", "Custom output path for the model")
 	downloadModelCmd.Flags().BoolVar(&forceDownload, "force", false, "Force download even if model already exists")
-	
+
 	convertModelCmd.Flags().StringVar(&convertTargetFormat, "format", "", "Target format (required)")
 	convertModelCmd.Flags().StringVar(&convertQuantMethod, "quantize", "", "Quantization method (q4_0, q4_k_m, q8_0, etc.)")
 	convertModelCmd.Flags().StringVar(&convertOptimizeFor, "optimize", "", "Optimize for (cpu, gpu, mobile)")
 	convertModelCmd.Flags().StringVar(&convertTargetHardware, "hardware", "", "Target hardware (nvidia, amd, apple, intel)")
-	
+
 	convertModelCmd.MarkFlagRequired("format")
-	
+
 	// Cross-provider command flags
 	shareModelCmd.Flags().StringVar(&shareModelProvider, "provider", "", "Share with specific provider only (default: all compatible)")
 	optimizeModelCmd.Flags().StringVar(&optimizeProvider, "provider", "", "Target provider for optimization (required)")
 	syncModelsCmd.Flags().BoolVar(&syncAllProviders, "all", false, "Sync with all providers (default: compatible only)")
-	
+
 	optimizeModelCmd.MarkFlagRequired("provider")
-	
+
 	// Advanced command flags
 	discoverCmd.Flags().StringVar(&discoverSource, "source", "all", "Source for discovery (local, huggingface, all)")
 	discoverCmd.Flags().StringVar(&discoverFilter, "filter", "", "Filter models by name, capability, or size")
-	
+
 	recommendCmd.Flags().StringSliceVar(&recommendTaskTypes, "tasks", []string{}, "Task types (code_generation, planning, debugging, etc.)")
 	recommendCmd.Flags().StringVar(&recommendQualityPreference, "quality", "balanced", "Quality preference (fast, balanced, quality)")
 	recommendCmd.Flags().StringVar(&recommendPrivacyLevel, "privacy", "local", "Privacy level (local, hybrid, cloud)")
 	recommendCmd.Flags().IntVar(&recommendMaxMemory, "max-memory", 0, "Maximum memory in MB")
 	recommendCmd.Flags().Float64Var(&recommendBudgetLimit, "budget", 0, "Budget limit per million tokens")
 	recommendCmd.Flags().StringSliceVar(&recommendProviders, "providers", []string{}, "Include only specific providers")
-	
+
 	analyticsCmd.Flags().StringVar(&analyticsTimeRange, "time-range", "7d", "Time range for analytics (1d, 7d, 30d, all)")
 	reportCmd.Flags().StringVar(&reportFormat, "format", "table", "Report format (table, json, csv)")
 	insightsCmd.Flags().StringVar(&insightsType, "type", "all", "Insights type (performance, usage, models, all)")
-
-// Advanced discovery and analytics flags
-var (
-	recommendTaskTypes        []string
-	recommendQualityPreference string
-	recommendPrivacyLevel      string
-	recommendMaxMemory       int
-	recommendBudgetLimit      float64
-	recommendProviders       []string
-	analyticsTimeRange      string
-	reportFormat            string
-	insightsType            string
-	discoverSource          string
-	discoverFilter          string
-)
+}
 
 // Command implementations for model management
 
 func runDownloadModel(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	if len(args) == 0 {
 		return fmt.Errorf("model ID is required")
 	}
-	
+
 	modelID := args[0]
 	manager := llm.NewModelDownloadManager(getLocalLLMBaseDir())
-	
+
 	// Check if model exists
 	model, err := manager.GetModelByID(modelID)
 	if err != nil {
 		return fmt.Errorf("model not found: %w", err)
 	}
-	
+
 	fmt.Printf("📥 Downloading model: %s\n", model.Name)
 	fmt.Printf("📝 Description: %s\n", model.Description)
 	fmt.Printf("📊 Model size: %s, Context: %d tokens\n", model.ModelSize, model.ContextSize)
-	
+
 	// Get compatible formats
 	if downloadProvider == "" {
 		fmt.Println("⚠️  No provider specified, showing compatible formats for all providers:")
@@ -616,14 +613,14 @@ func runDownloadModel(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Printf("Available formats: %s\n", strings.Join(formatList, ", "))
 	}
-	
+
 	// Validate format compatibility
 	if downloadProvider != "" {
 		compatible, err := manager.GetCompatibleFormats(downloadProvider, modelID)
 		if err != nil {
 			return fmt.Errorf("failed to get compatible formats: %w", err)
 		}
-		
+
 		formatFound := false
 		for _, format := range compatible {
 			if string(format) == downloadFormat {
@@ -631,12 +628,12 @@ func runDownloadModel(cmd *cobra.Command, args []string) error {
 				break
 			}
 		}
-		
+
 		if !formatFound {
 			return fmt.Errorf("format %s is not compatible with provider %s", downloadFormat, downloadProvider)
 		}
 	}
-	
+
 	// Create download request
 	req := llm.ModelDownloadRequest{
 		ModelID:        modelID,
@@ -645,17 +642,17 @@ func runDownloadModel(cmd *cobra.Command, args []string) error {
 		TargetPath:     downloadTargetPath,
 		ForceDownload:  forceDownload,
 	}
-	
+
 	// Start download
 	progressChan, err := manager.DownloadModel(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to start download: %w", err)
 	}
-	
+
 	// Monitor progress
 	fmt.Println("\n🚀 Starting download...")
 	lastProgress := -1.0
-	
+
 	for progress := range progressChan {
 		if progress.Progress != lastProgress {
 			fmt.Printf("\r⏳ Progress: %.1f%%", progress.Progress*100)
@@ -667,58 +664,58 @@ func runDownloadModel(cmd *cobra.Command, args []string) error {
 			}
 			lastProgress = progress.Progress
 		}
-		
+
 		if progress.Error != "" {
 			fmt.Printf("\n❌ Error: %s\n", progress.Error)
 			return fmt.Errorf("download failed: %s", progress.Error)
 		}
 	}
-	
+
 	fmt.Println("\n✅ Download completed successfully!")
 	if downloadTargetPath != "" {
 		fmt.Printf("📁 Model saved to: %s\n", downloadTargetPath)
 	} else if downloadProvider != "" {
 		fmt.Printf("📁 Model saved to provider directory: %s\n", filepath.Join(getLocalLLMBaseDir(), downloadProvider, modelID))
 	}
-	
+
 	return nil
 }
 
 func runConvertModel(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	if len(args) == 0 {
 		return fmt.Errorf("input model path is required")
 	}
-	
+
 	inputPath := args[0]
-	
+
 	// Check if input file exists
 	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
 		return fmt.Errorf("input file does not exist: %s", inputPath)
 	}
-	
+
 	// Detect source format
 	sourceFormat, err := detectModelFormat(inputPath)
 	if err != nil {
 		return fmt.Errorf("failed to detect source format: %w", err)
 	}
-	
+
 	targetFormat := llm.ModelFormat(convertTargetFormat)
-	
+
 	fmt.Printf("🔄 Converting model: %s\n", inputPath)
 	fmt.Printf("📝 Source format: %s\n", sourceFormat)
 	fmt.Printf("🎯 Target format: %s\n", targetFormat)
-	
+
 	// Initialize converter
 	converter := llm.NewModelConverter(getLocalLLMBaseDir())
-	
+
 	// Validate conversion
 	result, err := converter.ValidateConversion(sourceFormat, targetFormat)
 	if err != nil {
 		return fmt.Errorf("conversion validation failed: %w", err)
 	}
-	
+
 	if !result.IsPossible {
 		fmt.Println("❌ Conversion is not possible")
 		for _, warning := range result.Warnings {
@@ -726,7 +723,7 @@ func runConvertModel(cmd *cobra.Command, args []string) error {
 		}
 		return fmt.Errorf("conversion not supported")
 	}
-	
+
 	// Show warnings and recommendations
 	for _, warning := range result.Warnings {
 		fmt.Printf("⚠️  %s\n", warning)
@@ -734,7 +731,7 @@ func runConvertModel(cmd *cobra.Command, args []string) error {
 	for _, recommendation := range result.Recommendations {
 		fmt.Printf("💡 %s\n", recommendation)
 	}
-	
+
 	// Prepare conversion config
 	config := llm.ConversionConfig{
 		SourcePath:   inputPath,
@@ -742,14 +739,14 @@ func runConvertModel(cmd *cobra.Command, args []string) error {
 		TargetFormat: targetFormat,
 		Timeout:      60, // 60 minutes default
 	}
-	
+
 	// Add quantization if specified
 	if convertQuantMethod != "" {
 		config.Quantization = &llm.QuantizationConfig{
 			Method: convertQuantMethod,
 		}
 	}
-	
+
 	// Add optimization if specified
 	if convertOptimizeFor != "" || convertTargetHardware != "" {
 		config.Optimization = &llm.OptimizationConfig{
@@ -757,21 +754,21 @@ func runConvertModel(cmd *cobra.Command, args []string) error {
 			TargetHardware: convertTargetHardware,
 		}
 	}
-	
+
 	// Start conversion
 	job, err := converter.ConvertModel(ctx, config)
 	if err != nil {
 		return fmt.Errorf("failed to start conversion: %w", err)
 	}
-	
+
 	fmt.Printf("🚀 Conversion started (Job ID: %s)\n", job.ID)
 	fmt.Printf("📁 Output will be saved to: %s\n", job.TargetPath)
 	fmt.Printf("📋 Logs available at: %s\n", job.LogPath)
-	
+
 	// Monitor conversion progress
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ticker.C:
@@ -780,10 +777,10 @@ func runConvertModel(cmd *cobra.Command, args []string) error {
 				fmt.Printf("❌ Failed to get status: %v\n", err)
 				break
 			}
-			
+
 			switch status.Status {
 			case llm.StatusRunning:
-				fmt.Printf("\r⏳ Progress: %.1f%% | Step: %s", 
+				fmt.Printf("\r⏳ Progress: %.1f%% | Step: %s",
 					status.Progress*100, status.CurrentStep)
 			case llm.StatusCompleted:
 				fmt.Printf("\n✅ Conversion completed successfully!\n")
@@ -810,27 +807,27 @@ func runConvertModel(cmd *cobra.Command, args []string) error {
 func runListModels(cmd *cobra.Command, args []string) error {
 	manager := llm.NewModelDownloadManager(getLocalLLMBaseDir())
 	models := manager.GetAvailableModels()
-	
+
 	if len(models) == 0 {
 		fmt.Println("❌ No models available in registry")
 		return nil
 	}
-	
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tNAME\tSIZE\tFORMATS\tCONTEXT\tTAGS")
 	fmt.Fprintln(w, "--\t----\t----\t-------\t-------\t----")
-	
+
 	for _, model := range models {
 		formats := make([]string, len(model.AvailableFormats))
 		for i, f := range model.AvailableFormats {
 			formats[i] = string(f)
 		}
-		
+
 		tags := strings.Join(model.Tags[:min(len(model.Tags), 3)], ", ")
 		if len(model.Tags) > 3 {
 			tags += "..."
 		}
-		
+
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%d\t%s\n",
 			model.ID,
 			truncateString(model.Name, 30),
@@ -839,13 +836,13 @@ func runListModels(cmd *cobra.Command, args []string) error {
 			model.ContextSize,
 			tags)
 	}
-	
+
 	w.Flush()
-	
+
 	fmt.Printf("\n📊 Total models: %d\n", len(models))
 	fmt.Println("💡 Use 'helix local-llm models search <query>' to find specific models")
 	fmt.Println("💡 Use 'helix local-llm models download <model-id>' to download a model")
-	
+
 	return nil
 }
 
@@ -853,28 +850,28 @@ func runSearchModels(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("search query is required")
 	}
-	
+
 	query := args[0]
 	manager := llm.NewModelDownloadManager(getLocalLLMBaseDir())
 	results := manager.SearchModels(query)
-	
+
 	if len(results) == 0 {
 		fmt.Printf("❌ No models found for query: %s\n", query)
 		return nil
 	}
-	
+
 	fmt.Printf("🔍 Search results for '%s' (%d models found):\n\n", query, len(results))
-	
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tNAME\tSIZE\tDESCRIPTION\tTAGS")
 	fmt.Fprintln(w, "--\t----\t----\t-----------\t----")
-	
+
 	for _, model := range results {
 		tags := strings.Join(model.Tags[:min(len(model.Tags), 2)], ", ")
 		if len(model.Tags) > 2 {
 			tags += "..."
 		}
-		
+
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			model.ID,
 			truncateString(model.Name, 25),
@@ -882,11 +879,11 @@ func runSearchModels(cmd *cobra.Command, args []string) error {
 			truncateString(model.Description, 40),
 			tags)
 	}
-	
+
 	w.Flush()
-	
+
 	fmt.Printf("\n💡 Use 'helix local-llm models download <model-id>' to download a model")
-	
+
 	return nil
 }
 
@@ -896,14 +893,14 @@ func getLocalLLMBaseDir() string {
 	if localLLMDir != "" {
 		return localLLMDir
 	}
-	
+
 	homeDir, _ := os.UserHomeDir()
 	return filepath.Join(homeDir, ".helixcode", "local-llm")
 }
 
 func detectModelFormat(path string) (llm.ModelFormat, error) {
 	ext := strings.ToLower(filepath.Ext(path))
-	
+
 	switch ext {
 	case ".gguf":
 		return llm.FormatGGUF, nil
@@ -1131,65 +1128,65 @@ Examples:
 
 func runShareModel(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	if len(args) == 0 {
 		return fmt.Errorf("model path is required")
 	}
-	
+
 	modelPath := args[0]
-	
+
 	// Check if model file exists
 	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
 		return fmt.Errorf("model file does not exist: %s", modelPath)
 	}
-	
+
 	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	modelName := filepath.Base(modelPath)
 	fmt.Printf("🔗 Sharing model: %s\n", modelName)
-	
+
 	if shareModelProvider != "" {
 		fmt.Printf("🎯 Target provider: %s\n", shareModelProvider)
 	}
-	
+
 	// Share model
 	if err := manager.ShareModelWithProviders(ctx, modelPath, modelName); err != nil {
 		return fmt.Errorf("failed to share model: %w", err)
 	}
-	
+
 	fmt.Println("✅ Model shared successfully!")
 	return nil
 }
 
 func runDownloadForAll(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	if len(args) == 0 {
 		return fmt.Errorf("model ID is required")
 	}
-	
+
 	modelID := args[0]
 	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	fmt.Printf("🌐 Downloading model for all providers: %s\n", modelID)
-	
+
 	// Determine source format (default to GGUF for broad compatibility)
 	sourceFormat := llm.ModelFormat(downloadFormat)
 	if sourceFormat == "" {
 		sourceFormat = llm.FormatGGUF
 	}
-	
+
 	// Download for all providers
 	if err := manager.DownloadModelForAllProviders(ctx, modelID, sourceFormat); err != nil {
 		return fmt.Errorf("failed to download for all providers: %w", err)
 	}
-	
+
 	fmt.Println("✅ Model downloaded and shared with all compatible providers!")
 	return nil
 }
@@ -1200,20 +1197,20 @@ func runListShared(cmd *cobra.Command, args []string) error {
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	shared, err := manager.GetSharedModels(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get shared models: %w", err)
 	}
-	
+
 	if len(shared) == 0 {
 		fmt.Println("❌ No shared models found")
 		fmt.Println("💡 Use 'helix local-llm share <model-path>' to share models across providers")
 		return nil
 	}
-	
+
 	fmt.Printf("🔗 Shared Models (%d providers):\n\n", len(shared))
-	
+
 	for provider, models := range shared {
 		fmt.Printf("📦 %s:\n", provider)
 		for _, model := range models {
@@ -1221,38 +1218,38 @@ func runListShared(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Println()
 	}
-	
+
 	return nil
 }
 
 func runOptimizeModel(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	if len(args) == 0 {
 		return fmt.Errorf("model path is required")
 	}
-	
+
 	modelPath := args[0]
-	
+
 	// Check if model file exists
 	if _, err := os.Stat(modelPath); os.IsNotExist(err) {
 		return fmt.Errorf("model file does not exist: %s", modelPath)
 	}
-	
+
 	manager := llm.NewLocalLLMManager(getLocalLLMBaseDir())
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	modelName := filepath.Base(modelPath)
 	fmt.Printf("⚡ Optimizing model: %s\n", modelName)
 	fmt.Printf("🎯 Target provider: %s\n", optimizeProvider)
-	
+
 	// Optimize model
 	if err := manager.OptimizeModelForProvider(ctx, modelPath, optimizeProvider); err != nil {
 		return fmt.Errorf("failed to optimize model: %w", err)
 	}
-	
+
 	fmt.Printf("✅ Model optimized and shared for %s!\n", optimizeProvider)
 	return nil
 }
@@ -1263,53 +1260,53 @@ func runSyncModels(cmd *cobra.Command, args []string) error {
 	if err := manager.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize manager: %w", err)
 	}
-	
+
 	fmt.Println("🔄 Synchronizing models across all providers...")
-	
+
 	// Get cross-provider registry
 	registry := llm.NewCrossProviderRegistry(filepath.Join(getLocalLLMBaseDir(), "registry"))
-	
+
 	// Get all downloaded models
 	downloadedModels := registry.GetDownloadedModels()
-	
+
 	if len(downloadedModels) == 0 {
 		fmt.Println("❌ No downloaded models found")
 		fmt.Println("💡 Use 'helix local-llm models download <model-id>' to download models first")
 		return nil
 	}
-	
+
 	fmt.Printf("📊 Found %d downloaded models\n", len(downloadedModels))
-	
+
 	// Process each model
 	syncedCount := 0
 	errorCount := 0
-	
+
 	for _, model := range downloadedModels {
 		fmt.Printf("🔗 Processing: %s (%s)\n", model.ModelID, model.Format)
-		
+
 		// Check if model needs optimization for any provider
 		providers := []string{"vllm", "llamacpp", "ollama", "localai", "fastchat", "textgen", "lmstudio", "jan", "koboldai", "gpt4all", "tabbyapi", "mlx", "mistralrs"}
-		
+
 		for _, provider := range providers {
 			// Check compatibility
 			query := llm.ModelCompatibilityQuery{
-				ModelID:       model.ModelID,
-				SourceFormat:  model.Format,
+				ModelID:        model.ModelID,
+				SourceFormat:   model.Format,
 				TargetProvider: provider,
 			}
-			
+
 			result, err := registry.CheckCompatibility(query)
 			if err != nil {
 				fmt.Printf("  ⚠️  %s: failed to check compatibility - %v\n", provider, err)
 				errorCount++
 				continue
 			}
-			
+
 			if !result.IsCompatible {
 				fmt.Printf("  ❌ %s: not compatible\n", provider)
 				continue
 			}
-			
+
 			if result.ConversionRequired {
 				fmt.Printf("  🔄 %s: conversion required (%.0f min est.)\n", provider, result.EstimatedTime)
 				// Perform optimization/conversion
@@ -1332,13 +1329,13 @@ func runSyncModels(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	fmt.Printf("\n📊 Sync completed: %d successful, %d errors\n", syncedCount, errorCount)
 	if errorCount == 0 {
 		fmt.Println("✅ All models synchronized successfully!")
 	} else {
 		fmt.Printf("⚠️  %d models failed to sync. Check logs for details.\n", errorCount)
 	}
-	
+
 	return nil
 }

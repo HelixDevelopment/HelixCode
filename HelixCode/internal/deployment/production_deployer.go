@@ -5,20 +5,19 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"dev.helix.code/internal/security"
 	"dev.helix.code/internal/monitoring"
+	"dev.helix.code/internal/security"
 )
 
 // ProductionDeployer orchestrates comprehensive production deployment
 type ProductionDeployer struct {
 	config          *DeploymentConfig
 	securityManager *security.SecurityManager
-	monitoring      *monitoring.SystemMonitor
+	monitoring      *monitoring.Monitor
 	status          *DeploymentStatus
 	mutex           sync.RWMutex
 	running         atomic.Bool
@@ -26,21 +25,22 @@ type ProductionDeployer struct {
 
 // DeploymentConfig defines comprehensive production deployment configuration
 type DeploymentConfig struct {
-	ProjectName         string            `json:"project_name"`
-	Environment         string            `json:"environment"`
-	DeploymentStrategy  DeployStrategy    `json:"deployment_strategy"`
-	SecurityGateEnabled bool              `json:"security_gate_enabled"`
-	PerformanceGateEnabled bool           `json:"performance_gate_enabled"`
-	AutoRollbackEnabled bool              `json:"auto_rollback_enabled"`
-	HealthCheckEnabled bool              `json:"health_check_enabled"`
-	MonitoringEnabled bool              `json:"monitoring_enabled"`
-	CanaryDuration    time.Duration     `json:"canary_duration"`
-	RollbackTimeout    time.Duration     `json:"rollback_timeout"`
-	HealthCheckTimeout time.Duration     `json:"health_check_timeout"`
-	MaxRetries         int               `json:"max_retries"`
-	TargetServers      []string          `json:"target_servers"`
-	Credentials        map[string]string `json:"credentials"`
-	Notifications      NotificationConfig `json:"notifications"`
+	ProjectName            string                `json:"project_name"`
+	Environment            string                `json:"environment"`
+	DeploymentStrategy     DeployStrategy        `json:"deployment_strategy"`
+	SecurityGateEnabled    bool                  `json:"security_gate_enabled"`
+	PerformanceGateEnabled bool                  `json:"performance_gate_enabled"`
+	PerformanceGateStatus  PerformanceGateStatus `json:"performance_gate_status"`
+	AutoRollbackEnabled    bool                  `json:"auto_rollback_enabled"`
+	HealthCheckEnabled     bool                  `json:"health_check_enabled"`
+	MonitoringEnabled      bool                  `json:"monitoring_enabled"`
+	CanaryDuration         time.Duration         `json:"canary_duration"`
+	RollbackTimeout        time.Duration         `json:"rollback_timeout"`
+	HealthCheckTimeout     time.Duration         `json:"health_check_timeout"`
+	MaxRetries             int                   `json:"max_retries"`
+	TargetServers          []string              `json:"target_servers"`
+	Credentials            map[string]string     `json:"credentials"`
+	Notifications          NotificationConfig    `json:"notifications"`
 }
 
 // DeployStrategy defines deployment strategy
@@ -57,84 +57,84 @@ const (
 // DeploymentStatus tracks comprehensive deployment status
 type DeploymentStatus struct {
 	DeploymentID       string                `json:"deployment_id"`
-	Status            DeploymentPhase        `json:"status"`
-	StartTime         time.Time             `json:"start_time"`
-	EndTime           time.Time             `json:"end_time"`
-	Duration          time.Duration         `json:"duration"`
-	CurrentPhase      string                `json:"current_phase"`
-	CompletedPhases   []string              `json:"completed_phases"`
-	FailedPhases      []string              `json:"failed_phases"`
-	ServersDeployed   []string              `json:"servers_deployed"`
+	Status             DeploymentPhase       `json:"status"`
+	StartTime          time.Time             `json:"start_time"`
+	EndTime            time.Time             `json:"end_time"`
+	Duration           time.Duration         `json:"duration"`
+	CurrentPhase       string                `json:"current_phase"`
+	CompletedPhases    []string              `json:"completed_phases"`
+	FailedPhases       []string              `json:"failed_phases"`
+	ServersDeployed    []string              `json:"servers_deployed"`
 	ServersRollback    []string              `json:"servers_rollback"`
 	SecurityGateStatus SecurityGateStatus    `json:"security_gate_status"`
-	PerformanceGate   PerformanceGateStatus  `json:"performance_gate_status"`
-	HealthStatus      HealthCheckStatus      `json:"health_status"`
-	RollbackTriggered bool                  `json:"rollback_triggered"`
-	RollbackReason    string                `json:"rollback_reason"`
-	Metrics           *DeploymentMetrics     `json:"metrics"`
-	Notifications     []NotificationEvent    `json:"notifications"`
+	PerformanceGate    PerformanceGateStatus `json:"performance_gate_status"`
+	HealthStatus       HealthCheckStatus     `json:"health_status"`
+	RollbackTriggered  bool                  `json:"rollback_triggered"`
+	RollbackReason     string                `json:"rollback_reason"`
+	Metrics            *DeploymentMetrics    `json:"metrics"`
+	Notifications      []NotificationEvent   `json:"notifications"`
 }
 
 // DeploymentPhase defines deployment phase
 type DeploymentPhase string
 
 const (
-	PhasePreparation     DeploymentPhase = "preparation"
-	PhaseSecurityCheck   DeploymentPhase = "security_check"
+	PhasePreparation      DeploymentPhase = "preparation"
+	PhaseSecurityCheck    DeploymentPhase = "security_check"
 	PhasePerformanceCheck DeploymentPhase = "performance_check"
-	PhaseDeployment      DeploymentPhase = "deployment"
-	PhaseHealthCheck     DeploymentPhase = "health_check"
-	PhaseValidation      DeploymentPhase = "validation"
-	PhaseMonitoring      DeploymentPhase = "monitoring"
-	PhaseCompletion      DeploymentPhase = "completion"
-	PhaseRollback        DeploymentPhase = "rollback"
-	PhaseFailed          DeploymentPhase = "failed"
-	PhaseSuccess         DeploymentPhase = "success"
+	PhaseDeployment       DeploymentPhase = "deployment"
+	PhaseHealthCheck      DeploymentPhase = "health_check"
+	PhaseValidation       DeploymentPhase = "validation"
+	PhaseMonitoring       DeploymentPhase = "monitoring"
+	PhaseCompletion       DeploymentPhase = "completion"
+	PhaseRollback         DeploymentPhase = "rollback"
+	PhaseFailed           DeploymentPhase = "failed"
+	PhaseSuccess          DeploymentPhase = "success"
 )
 
 // SecurityGateStatus tracks security gate status
 type SecurityGateStatus struct {
-	Enabled            bool      `json:"enabled"`
-	Status             string     `json:"status"`
-	CriticalIssues     int        `json:"critical_issues"`
-	HighIssues         int        `json:"high_issues"`
-	ZeroToleranceMet   bool       `json:"zero_tolerance_met"`
-	ScanResults        *security.FeatureScanResult `json:"scan_results,omitempty"`
-	LastCheckTime      time.Time  `json:"last_check_time"`
-	Passed             bool       `json:"passed"`
-	Reason             string     `json:"reason"`
+	Enabled          bool                        `json:"enabled"`
+	Status           string                      `json:"status"`
+	CriticalIssues   int                         `json:"critical_issues"`
+	HighIssues       int                         `json:"high_issues"`
+	ZeroToleranceMet bool                        `json:"zero_tolerance_met"`
+	ScanResults      *security.FeatureScanResult `json:"scan_results,omitempty"`
+	LastCheckTime    time.Time                   `json:"last_check_time"`
+	Passed           bool                        `json:"passed"`
+	Reason           string                      `json:"reason"`
 }
 
 // PerformanceGateStatus tracks performance gate status
 type PerformanceGateStatus struct {
-	Enabled           bool    `json:"enabled"`
-	Status            string   `json:"status"`
-	ThroughputTarget  int      `json:"throughput_target"`
-	LatencyTarget     string   `json:"latency_target"`
-	CPUTarget         float64  `json:"cpu_target"`
-	MemoryTarget      int64    `json:"memory_target"`
-	CurrentThroughput int      `json:"current_throughput"`
-	CurrentLatency    string   `json:"current_latency"`
-	CurrentCPU        float64  `json:"current_cpu"`
-	CurrentMemory     int64    `json:"current_memory"`
-	AllTargetsMet     bool     `json:"all_targets_met"`
+	Enabled           bool      `json:"enabled"`
+	Status            string    `json:"status"`
+	ThroughputTarget  int       `json:"throughput_target"`
+	LatencyTarget     string    `json:"latency_target"`
+	CPUTarget         float64   `json:"cpu_target"`
+	MemoryTarget      int64     `json:"memory_target"`
+	CurrentThroughput int       `json:"current_throughput"`
+	CurrentLatency    string    `json:"current_latency"`
+	CurrentCPU        float64   `json:"current_cpu"`
+	CurrentMemory     int64     `json:"current_memory"`
+	AllTargetsMet     bool      `json:"all_targets_met"`
 	LastCheckTime     time.Time `json:"last_check_time"`
-	Passed            bool     `json:"passed"`
-	Reason            string   `json:"reason"`
+	Passed            bool      `json:"passed"`
+	Reason            string    `json:"reason"`
 }
 
 // HealthCheckStatus tracks health check status
 type HealthCheckStatus struct {
-	Enabled         bool      `json:"enabled"`
-	Status          string     `json:"status"`
-	ServerCount     int        `json:"server_count"`
-	HealthyServers  int        `json:"healthy_servers"`
-	UnhealthyServers int       `json:"unhealthy_servers"`
-	ResponseTime    string     `json:"response_time"`
-	LastCheckTime   time.Time  `json:"last_check_time"`
-	Passed          bool       `json:"passed"`
-	Reason          string     `json:"reason"`
-	ServerDetails   []ServerHealth `json:"server_details,omitempty"`
+	Enabled          bool           `json:"enabled"`
+	Status           string         `json:"status"`
+	ServerCount      int            `json:"server_count"`
+	HealthyServers   int            `json:"healthy_servers"`
+	UnhealthyServers int            `json:"unhealthy_servers"`
+	ResponseTime     string         `json:"response_time"`
+	LastCheckTime    time.Time      `json:"last_check_time"`
+	Passed           bool           `json:"passed"`
+	Reason           string         `json:"reason"`
+	ServerDetails    []ServerHealth `json:"server_details,omitempty"`
 }
 
 // DeploymentMetrics tracks deployment metrics
@@ -152,31 +152,31 @@ type DeploymentMetrics struct {
 
 // NotificationConfig defines notification configuration
 type NotificationConfig struct {
-	SlackEnabled    bool   `json:"slack_enabled"`
-	EmailEnabled     bool   `json:"email_enabled"`
-	WebhookEnabled   bool   `json:"webhook_enabled"`
-	SlackWebhookURL  string `json:"slack_webhook_url"`
-	EmailRecipients  []string `json:"email_recipients"`
-	WebhookURL       string `json:"webhook_url"`
+	SlackEnabled    bool     `json:"slack_enabled"`
+	EmailEnabled    bool     `json:"email_enabled"`
+	WebhookEnabled  bool     `json:"webhook_enabled"`
+	SlackWebhookURL string   `json:"slack_webhook_url"`
+	EmailRecipients []string `json:"email_recipients"`
+	WebhookURL      string   `json:"webhook_url"`
 }
 
 // NotificationEvent tracks notification events
 type NotificationEvent struct {
-	Timestamp   time.Time `json:"timestamp"`
-	Type        string    `json:"type"`
-	Message     string    `json:"message"`
-	Recipient   string    `json:"recipient"`
-	Status      string    `json:"status"`
-	Error       string    `json:"error,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	Type      string    `json:"type"`
+	Message   string    `json:"message"`
+	Recipient string    `json:"recipient"`
+	Status    string    `json:"status"`
+	Error     string    `json:"error,omitempty"`
 }
 
 // ServerHealth tracks individual server health
 type ServerHealth struct {
-	Server      string    `json:"server"`
-	Status      string    `json:"status"`
+	Server       string        `json:"server"`
+	Status       string        `json:"status"`
 	ResponseTime time.Duration `json:"response_time"`
-	LastCheck   time.Time `json:"last_check"`
-	Error       string    `json:"error,omitempty"`
+	LastCheck    time.Time     `json:"last_check"`
+	Error        string        `json:"error,omitempty"`
 }
 
 // NewProductionDeployer creates a new production deployer
@@ -206,11 +206,7 @@ func NewProductionDeployer(config *DeploymentConfig) (*ProductionDeployer, error
 
 	// Initialize monitoring system
 	if config.MonitoringEnabled {
-		var err error
-		deployer.monitoring, err = monitoring.NewSystemMonitor()
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize monitoring: %v", err)
-		}
+		deployer.monitoring = monitoring.NewMonitor()
 	}
 
 	return deployer, nil
@@ -312,12 +308,7 @@ func (pd *ProductionDeployer) executePreparation(ctx context.Context) (bool, err
 		return false, err
 	}
 
-	// Initialize monitoring
-	if pd.config.MonitoringEnabled {
-		if err := pd.monitoring.StartMonitoring(ctx); err != nil {
-			log.Printf("⚠️ Failed to start monitoring: %v", err)
-		}
-	}
+	// Monitoring is initialized and ready to collect metrics
 
 	log.Printf("✅ Preparation completed successfully")
 	pd.addNotification("preparation_complete", "Deployment preparation completed successfully", "system")
@@ -359,10 +350,10 @@ func (pd *ProductionDeployer) executeSecurityCheck(ctx context.Context) (bool, e
 		log.Printf("   Critical Issues: %d", pd.status.SecurityGateStatus.CriticalIssues)
 		log.Printf("   High Issues: %d", pd.status.SecurityGateStatus.HighIssues)
 		log.Printf("   Zero Tolerance Met: %t", pd.status.SecurityGateStatus.ZeroToleranceMet)
-		
+
 		pd.status.SecurityGateStatus.Status = "failed"
 		pd.status.SecurityGateStatus.Reason = "Zero-tolerance security policy violation - critical issues present"
-		
+
 		pd.addNotification("security_gate_failed", fmt.Sprintf("Security gate failed: %d critical issues detected", pd.status.SecurityGateStatus.CriticalIssues), "security")
 		return false, fmt.Errorf("security gate failed - %d critical issues present", pd.status.SecurityGateStatus.CriticalIssues)
 	}
@@ -445,10 +436,10 @@ func (pd *ProductionDeployer) executePerformanceCheck(ctx context.Context) (bool
 		log.Printf("   Latency: %v/%s", perfMetrics.Latency, pd.config.PerformanceGateStatus.LatencyTarget)
 		log.Printf("   CPU: %.1f%%/%.1f%%", perfMetrics.CPUUtilization, pd.config.PerformanceGateStatus.CPUTarget)
 		log.Printf("   Memory: %d MB/%d MB", perfMetrics.MemoryUsage/(1024*1024), pd.config.PerformanceGateStatus.MemoryTarget/(1024*1024))
-		
+
 		pd.status.PerformanceGate.Status = "failed"
 		pd.status.PerformanceGate.Reason = fmt.Sprintf("Performance targets not met: %s", reasons[0])
-		
+
 		pd.addNotification("performance_gate_failed", fmt.Sprintf("Performance gate failed: %s", reasons[0]), "performance")
 		return false, fmt.Errorf("performance gate failed: %s", reasons[0])
 	}
@@ -556,7 +547,7 @@ func (pd *ProductionDeployer) executeProductionDeploy(ctx context.Context) (bool
 func (pd *ProductionDeployer) deployToServer(ctx context.Context, server string) bool {
 	// Simulate deployment process
 	time.Sleep(time.Duration(500+time.Duration(len(server)*50)) * time.Millisecond)
-	
+
 	// Simulate 90% success rate for production deployment
 	return len(server)%10 != 0 // 90% success rate
 }
@@ -591,8 +582,13 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 			Server:       server,
 			Status:       map[bool]string{true: "healthy", false: "unhealthy"}[healthy],
 			ResponseTime: responseTime,
-			LastCheck:   time.Now(),
-			Error:       func() string { if err != nil { return err.Error() }; return "" }(),
+			LastCheck:    time.Now(),
+			Error: func() string {
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			}(),
 		})
 	}
 
@@ -613,10 +609,10 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 		log.Printf("🚨 HEALTH CHECK FAILED")
 		log.Printf("   Healthy Servers: %d/%d (%.1f%%)", healthyServers, totalServers, float64(healthyServers)/float64(totalServers)*100)
 		log.Printf("   Required: >=90%% healthy servers")
-		
+
 		healthStatus.Status = "failed"
 		healthStatus.Reason = fmt.Sprintf("Insufficient healthy servers: %d/%d (%.1f%% < 90%%)", healthyServers, totalServers, float64(healthyServers)/float64(totalServers)*100)
-		
+
 		pd.addNotification("health_check_failed", fmt.Sprintf("Health check failed: only %d/%d servers healthy", healthyServers, totalServers), "health")
 		return false, fmt.Errorf("health check failed: insufficient healthy servers")
 	}
@@ -638,14 +634,14 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 func (pd *ProductionDeployer) checkServerHealth(server string) (bool, time.Duration, error) {
 	// Simulate health check with response time
 	responseTime := time.Duration(100+len(server)*20) * time.Millisecond
-	
+
 	// Simulate 95% health check success rate
 	healthy := len(server)%20 != 0 // 95% success rate
-	
+
 	if !healthy {
 		return false, responseTime, fmt.Errorf("server health check failed")
 	}
-	
+
 	return true, responseTime, nil
 }
 
@@ -686,7 +682,7 @@ func (pd *ProductionDeployer) executeMonitoring(ctx context.Context) (bool, erro
 		// Set up monitoring for deployed servers
 		for _, server := range pd.status.ServersDeployed {
 			log.Printf("   📈 Setting up monitoring for server: %s", server)
-			
+
 			// Simulate monitoring setup
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -723,58 +719,58 @@ func (pd *ProductionDeployer) checkPrerequisites() error {
 
 func (pd *ProductionDeployer) prepareEnvironment() error {
 	log.Printf("   🌍 Preparing deployment environment...")
-	
+
 	// Simulate environment preparation
 	time.Sleep(1 * time.Second)
-	
+
 	log.Printf("   ✅ Environment prepared")
 	return nil
 }
 
 func (pd *ProductionDeployer) validateTargetServers() error {
 	log.Printf("   🖥️  Validating %d target servers...", len(pd.config.TargetServers))
-	
+
 	for i, server := range pd.config.TargetServers {
 		log.Printf("      Validating server %d/%d: %s", i+1, len(pd.config.TargetServers), server)
 		// Simulate server validation
 		time.Sleep(200 * time.Millisecond)
 	}
-	
+
 	log.Printf("   ✅ All target servers validated")
 	return nil
 }
 
 func (pd *ProductionDeployer) runSecurityScan(ctx context.Context) (*security.FeatureScanResult, error) {
 	log.Printf("   🔍 Running comprehensive security scan...")
-	
+
 	// Simulate security scan
 	time.Sleep(2 * time.Second)
-	
+
 	// Return simulated scan result
 	return &security.FeatureScanResult{
-		FeatureName: "production_deployment",
-		Success:      true,
-		CanProceed:   true, // In real scenario, this would be false if security issues exist
-		SecurityScore: 95,
-		Issues:        make([]interface{}, 0), // No issues in this simulation
+		FeatureName:     "production_deployment",
+		Success:         true,
+		CanProceed:      true, // In real scenario, this would be false if security issues exist
+		SecurityScore:   95,
+		Issues:          make([]interface{}, 0), // No issues in this simulation
 		Recommendations: []string{"Production deployment security verified"},
-		ScanTime:      time.Since(time.Now().Add(-2 * time.Second)),
-		Timestamp:     time.Now(),
+		ScanTime:        time.Since(time.Now().Add(-2 * time.Second)),
+		Timestamp:       time.Now(),
 	}, nil
 }
 
 func (pd *ProductionDeployer) runPerformanceValidation(ctx context.Context) (*PerformanceMetrics, error) {
 	log.Printf("   📊 Running performance validation...")
-	
+
 	// Simulate performance validation
 	time.Sleep(1 * time.Second)
-	
+
 	// Return simulated performance metrics
 	return &PerformanceMetrics{
-		Throughput:      2500, // ops/sec
-		Latency:         45 * time.Millisecond,
-		CPUUtilization:  65.5, // %
-		MemoryUsage:     2.1 * 1024 * 1024 * 1024, // 2.1 GB
+		Throughput:     2500, // ops/sec
+		Latency:        45 * time.Millisecond,
+		CPUUtilization: 65.5,                   // %
+		MemoryUsage:    2 * 1024 * 1024 * 1024, // ~2 GB
 	}, nil
 }
 
@@ -857,10 +853,10 @@ func (pd *ProductionDeployer) triggerRollback(reason string) {
 	rollbackCount := 0
 	for _, server := range pd.status.ServersDeployed {
 		log.Printf("   🔄 Rolling back server: %s", server)
-		
+
 		// Simulate rollback
 		time.Sleep(300 * time.Millisecond)
-		
+
 		pd.status.ServersRollback = append(pd.status.ServersRollback, server)
 		rollbackCount++
 	}

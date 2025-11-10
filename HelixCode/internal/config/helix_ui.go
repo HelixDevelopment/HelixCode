@@ -97,7 +97,7 @@ type FieldValidation struct {
 }
 
 // ValidationRule represents a validation rule
-type ValidationRule struct {
+type ValidationRuleConfig struct {
 	Type      string      `json:"type"` // required, min, max, pattern, custom
 	Parameter interface{} `json:"parameter"`
 	Message   string      `json:"message"`
@@ -298,7 +298,7 @@ func (ui *ConfigUI) GetConfigForm() *ConfigForm {
 		Sections:    ui.getAllSections(),
 		Actions:     ui.getAllActions(),
 		Validation: ConfigValidation{
-			Rules: []ValidationRule{
+			Rules: []ValidationRuleConfig{
 				{
 					Type:      "custom",
 					Parameter: "validate_all",
@@ -429,7 +429,7 @@ func (ui *ConfigUI) getApplicationSection() ConfigSection {
 				Default:     "HelixCode",
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:     "required",
 							Message:  "Application name is required",
@@ -476,7 +476,7 @@ func (ui *ConfigUI) getApplicationSection() ConfigSection {
 				Default:     "1.0.0",
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:     "required",
 							Message:  "Version is required",
@@ -612,7 +612,7 @@ func (ui *ConfigUI) getDatabaseSection() ConfigSection {
 				Default:     5432,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -804,7 +804,7 @@ func (ui *ConfigUI) getRedisSection() ConfigSection {
 				Default:     6379,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -862,7 +862,7 @@ func (ui *ConfigUI) getRedisSection() ConfigSection {
 				Default:     0,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 0,
@@ -914,7 +914,7 @@ func (ui *ConfigUI) getAuthSection() ConfigSection {
 				Default:     "",
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:     "required",
 							Message:  "JWT secret is required",
@@ -942,7 +942,7 @@ func (ui *ConfigUI) getAuthSection() ConfigSection {
 				Default:     86400,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 300,
@@ -971,7 +971,7 @@ func (ui *ConfigUI) getAuthSection() ConfigSection {
 				Default:     30,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 5,
@@ -1028,7 +1028,7 @@ func (ui *ConfigUI) getServerSection() ConfigSection {
 				Default:     8080,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -1057,7 +1057,7 @@ func (ui *ConfigUI) getServerSection() ConfigSection {
 				Default:     30,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -1080,7 +1080,7 @@ func (ui *ConfigUI) getServerSection() ConfigSection {
 				Default:     30,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -1131,7 +1131,7 @@ func (ui *ConfigUI) getWorkersSection() ConfigSection {
 				Default:     10,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -1194,7 +1194,7 @@ func (ui *ConfigUI) getTasksSection() ConfigSection {
 				Default:     3,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 0,
@@ -1337,7 +1337,7 @@ func (ui *ConfigUI) getLLMSection() ConfigSection {
 				Default:     4096,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 1,
@@ -1366,7 +1366,7 @@ func (ui *ConfigUI) getLLMSection() ConfigSection {
 				Default:     0.7,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 0.0,
@@ -1613,7 +1613,7 @@ func (ui *ConfigUI) getUISection() ConfigSection {
 				Default:     14,
 				Required:    true,
 				Validation: FieldValidation{
-					Rules: []ValidationRule{
+					Rules: []ValidationRuleConfig{
 						{
 							Type:      "min",
 							Parameter: 8,

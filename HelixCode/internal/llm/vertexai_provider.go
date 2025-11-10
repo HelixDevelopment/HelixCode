@@ -42,12 +42,12 @@ type TokenProvider struct {
 
 // Vertex AI API structures for Gemini models
 type vertexRequest struct {
-	Contents         []vertexContent       `json:"contents"`
-	SystemInstruction *vertexContent       `json:"systemInstruction,omitempty"`
-	Tools            []vertexTool          `json:"tools,omitempty"`
-	ToolConfig       *vertexToolConfig     `json:"toolConfig,omitempty"`
-	SafetySettings   []vertexSafetySetting `json:"safetySettings,omitempty"`
-	GenerationConfig *vertexGenConfig      `json:"generationConfig,omitempty"`
+	Contents          []vertexContent       `json:"contents"`
+	SystemInstruction *vertexContent        `json:"systemInstruction,omitempty"`
+	Tools             []vertexTool          `json:"tools,omitempty"`
+	ToolConfig        *vertexToolConfig     `json:"toolConfig,omitempty"`
+	SafetySettings    []vertexSafetySetting `json:"safetySettings,omitempty"`
+	GenerationConfig  *vertexGenConfig      `json:"generationConfig,omitempty"`
 }
 
 type vertexContent struct {
@@ -89,16 +89,16 @@ type vertexGenConfig struct {
 }
 
 type vertexResponse struct {
-	Candidates     []vertexCandidate   `json:"candidates"`
-	UsageMetadata  *vertexUsageMetadata `json:"usageMetadata,omitempty"`
+	Candidates     []vertexCandidate     `json:"candidates"`
+	UsageMetadata  *vertexUsageMetadata  `json:"usageMetadata,omitempty"`
 	PromptFeedback *vertexPromptFeedback `json:"promptFeedback,omitempty"`
 }
 
 type vertexCandidate struct {
 	Content       vertexContent        `json:"content"`
-	FinishReason  string              `json:"finishReason"`
+	FinishReason  string               `json:"finishReason"`
 	SafetyRatings []vertexSafetyRating `json:"safetyRatings,omitempty"`
-	Index         int                 `json:"index"`
+	Index         int                  `json:"index"`
 }
 
 type vertexSafetyRating struct {
@@ -107,7 +107,7 @@ type vertexSafetyRating struct {
 }
 
 type vertexPromptFeedback struct {
-	BlockReason   string              `json:"blockReason,omitempty"`
+	BlockReason   string               `json:"blockReason,omitempty"`
 	SafetyRatings []vertexSafetyRating `json:"safetyRatings,omitempty"`
 }
 
@@ -119,13 +119,13 @@ type vertexUsageMetadata struct {
 
 // Anthropic/Claude structures for Model Garden
 type anthropicVertexRequest struct {
-	AnthropicVersion string                        `json:"anthropic_version"`
-	Messages         []anthropicVertexMessage      `json:"messages"`
-	MaxTokens        int                           `json:"max_tokens"`
-	Temperature      float64                       `json:"temperature,omitempty"`
-	TopP             float64                       `json:"top_p,omitempty"`
-	Stream           bool                          `json:"stream,omitempty"`
-	System           string                        `json:"system,omitempty"`
+	AnthropicVersion string                   `json:"anthropic_version"`
+	Messages         []anthropicVertexMessage `json:"messages"`
+	MaxTokens        int                      `json:"max_tokens"`
+	Temperature      float64                  `json:"temperature,omitempty"`
+	TopP             float64                  `json:"top_p,omitempty"`
+	Stream           bool                     `json:"stream,omitempty"`
+	System           string                   `json:"system,omitempty"`
 }
 
 type anthropicVertexMessage struct {
@@ -134,12 +134,12 @@ type anthropicVertexMessage struct {
 }
 
 type anthropicVertexResponse struct {
-	ID         string                     `json:"id"`
-	Type       string                     `json:"type"`
-	Role       string                     `json:"role"`
-	Content    []anthropicVertexContent   `json:"content"`
-	StopReason string                     `json:"stop_reason"`
-	Usage      anthropicVertexUsage       `json:"usage"`
+	ID         string                   `json:"id"`
+	Type       string                   `json:"type"`
+	Role       string                   `json:"role"`
+	Content    []anthropicVertexContent `json:"content"`
+	StopReason string                   `json:"stop_reason"`
+	Usage      anthropicVertexUsage     `json:"usage"`
 }
 
 type anthropicVertexContent struct {
@@ -557,7 +557,7 @@ func (vp *VertexAIProvider) generateGemini(ctx context.Context, request *LLMRequ
 				response.ToolCalls = append(response.ToolCalls, ToolCall{
 					ID:   uuid.New().String(),
 					Type: "function",
-					Function: ToolCallFunction{
+					Function: ToolCallFunc{
 						Name:      name,
 						Arguments: args,
 					},

@@ -22,7 +22,10 @@ func main() {
 	templateMgr := template.NewManager()
 
 	// Set up persistence
-	store := persistence.NewStore("./data")
+	store, err := persistence.NewStore("./data")
+	if err != nil {
+		log.Fatalf("Failed to create store: %v", err)
+	}
 	store.SetSessionManager(sessionMgr)
 	store.SetMemoryManager(memoryMgr)
 	store.SetTemplateManager(templateMgr)
@@ -43,11 +46,15 @@ func main() {
 	}
 
 	// Create a development session
-	sess := sessionMgr.Create(
-		"basic-example",
-		session.ModeBuilding,
+	sess, err := sessionMgr.Create(
 		"examples",
+		"basic-example",
+		"Basic HelixCode example session",
+		session.ModeBuilding,
 	)
+	if err != nil {
+		log.Fatalf("Failed to create session: %v", err)
+	}
 	sess.AddTag("tutorial")
 	sess.AddTag("phase3")
 
@@ -61,7 +68,10 @@ func main() {
 	fmt.Printf("Started session in %s mode\n\n", sess.Mode)
 
 	// Create a conversation
-	conv := memoryMgr.CreateConversation("Basic Example Discussion")
+	conv, err := memoryMgr.CreateConversation("Basic Example Discussion")
+	if err != nil {
+		log.Fatalf("Failed to create conversation: %v", err)
+	}
 	conv.SessionID = sess.ID
 
 	fmt.Printf("Created conversation: %s\n", conv.Title)

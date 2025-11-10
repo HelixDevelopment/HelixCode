@@ -415,16 +415,6 @@ func UpdateHelixConfig(updater func(*HelixConfig)) error {
 	return manager.UpdateConfig(updater)
 }
 
-// GetHelixConfigPath returns the standard configuration path
-func GetHelixConfigPath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		// Fallback to current directory
-		return "./helix.json"
-	}
-	return filepath.Join(home, ".config", "helix", "helix.json")
-}
-
 // IsHelixConfigPresent checks if the helix.json configuration file exists
 func IsHelixConfigPresent() bool {
 	_, err := os.Stat(GetHelixConfigPath())

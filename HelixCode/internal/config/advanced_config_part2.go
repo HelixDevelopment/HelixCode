@@ -118,78 +118,6 @@ func (t *ConfigurationTransformer) setValueAtPath(obj interface{}, path string, 
 	return nil
 }
 
-func (t *ConfigurationTransformer) convertValueForField(value interface{}, targetType reflect.Type) (interface{}, error) {
-	if value == nil {
-		return reflect.Zero(targetType).Interface(), nil
-	}
-
-	sourceType := reflect.TypeOf(value)
-
-	// If types match, return as-is
-	if sourceType == targetType {
-		return value, nil
-	}
-
-	// Handle pointer types
-	if targetType.Kind() == reflect.Ptr {
-		targetType = targetType.Elem()
-	}
-
-	// Convert based on target type
-	switch targetType.Kind() {
-	case reflect.String:
-		return fmt.Sprintf("%v", value), nil
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		if num, ok := t.getNumberValue(value); ok {
-			return t.convertToInt(num, targetType), nil
-		}
-		return fmt.Errorf("cannot convert %v to %v", value, targetType)
-	case reflect.Float32, reflect.Float64:
-		if num, ok := t.getNumberValue(value); ok {
-			return float64(num), nil
-		}
-		return fmt.Errorf("cannot convert %v to %v", value, targetType)
-	case reflect.Bool:
-		if str, ok := value.(string); ok {
-			return t.parseBool(str)
-		}
-		if b, ok := value.(bool); ok {
-			return b, nil
-		}
-		return fmt.Errorf("cannot convert %v to bool", value)
-	default:
-		// For complex types, use JSON marshaling
-		data, err := json.Marshal(value)
-		if err != nil {
-			return nil, err
-		}
-
-		target := reflect.New(targetType).Interface()
-		return target, json.Unmarshal(data, &target)
-	}
-}
-
-func (t *ConfigurationTransformer) convertToInt(value float64, targetType reflect.Type) interface{} {
-	switch targetType.Kind() {
-	case reflect.Int:
-		return int(value)
-	case reflect.Int8:
-		return int8(value)
-	case reflect.Int16:
-		return int16(value)
-	case reflect.Int32:
-		return int32(value)
-	case reflect.Int64:
-		return int64(value)
-	default:
-		return int(value)
-	}
-}
-
-func (t *ConfigurationTransformer) parseBool(s string) bool {
-	return strings.ToLower(s) == "true" || s == "1" || s == "yes" || s == "on"
-}
-
 func (t *ConfigurationTransformer) convertValue(value interface{}, parameters interface{}) (interface{}, error) {
 	// Implementation depends on specific conversion type
 	// This is a placeholder for more complex conversions
@@ -599,7 +527,7 @@ func (tm *ConfigurationTemplateManager) applyVariables(config *HelixConfig, temp
 }
 
 // applyVariableSubstitutions applies variable substitutions to configuration
-func (tm *ConfigurationTemplateManager) applyVariableSubstitutions(config *HelixConfig, variables map[string]interface{}) error {
+func (tm *ConfigurationTemplateManager) applyVariableSubstitutions(config interface{}, variables map[string]interface{}) error {
 	// In a real implementation, this would parse and replace template variables
 	// For now, use a simple string substitution approach
 
@@ -667,7 +595,7 @@ func (tm *ConfigurationTemplateManager) validateVariableValue(name string, value
 		}
 
 	case "number":
-		num, ok := t.getNumberValue(value)
+		num, ok := tm.getNumberValue(value)
 		if !ok {
 			return fmt.Errorf("variable '%s' must be a number", name)
 		}
@@ -717,15 +645,6 @@ func (tm *ConfigurationTemplateManager) validateTemplateVariables(template *Conf
 	}
 
 	return nil
-}
-
-// deepCopy creates a deep copy of an object
-func (tm *ConfigurationTemplateManager) deepCopy(src, dst interface{}) error {
-	data, err := json.Marshal(src)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, dst)
 }
 
 // getNumberValue gets numeric value from interface
@@ -824,6 +743,36 @@ func CreateDefaultTemplates() map[string]*ConfigurationTemplate {
 	}
 
 	return templates
+}
+
+// getDefaultConfig returns a default configuration
+func getDefaultConfig() *HelixConfig {
+	now := time.Now()
+
+	return &HelixConfig{
+		Version:     "1.0.0",
+		LastUpdated: now,
+		UpdatedBy:   "system",
+
+		Application: ApplicationConfig{
+			Name:        "HelixCode",
+			Description: "Distributed AI Development Platform",
+			Version:     "1.0.0",
+			Environment: "development",
+		},
+
+		Server: ServerConfig{
+			Port:         8080,
+			ReadTimeout:  30 * time.Second,
+			WriteTimeout: 30 * time.Second,
+			IdleTimeout:  60 * time.Second,
+		},
+
+		LLM: LLMConfig{
+			Temperature: 0.7,
+			MaxTokens:   4096,
+		},
+	}
 }
 
 // createDevelopmentTemplateConfig creates development template config

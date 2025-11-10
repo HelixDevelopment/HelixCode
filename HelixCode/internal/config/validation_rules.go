@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -13,6 +14,35 @@ import (
 )
 
 // Built-in validation rules implementation
+
+// CogneeMode represents Cognee operating mode
+type CogneeMode string
+
+const (
+	CogneeModeLocal  CogneeMode = "local"
+	CogneeModeRemote CogneeMode = "remote"
+	CogneeModeHybrid CogneeMode = "hybrid"
+	CogneeModeCloud  CogneeMode = "cloud"
+)
+
+// LoadBalancingStrategy represents load balancing strategy
+type LoadBalancingStrategy string
+
+const (
+	LoadBalancingRoundRobin LoadBalancingStrategy = "round_robin"
+	LoadBalancingLeastConn  LoadBalancingStrategy = "least_connections"
+	LoadBalancingRandom     LoadBalancingStrategy = "random"
+	LoadBalancingWeighted   LoadBalancingStrategy = "weighted"
+)
+
+// FallbackStrategy represents fallback strategy
+type FallbackStrategy string
+
+const (
+	FallbackStrategyFailover FallbackStrategy = "failover"
+	FallbackStrategyRetry    FallbackStrategy = "retry"
+	FallbackStrategyCircuit  FallbackStrategy = "circuit_breaker"
+)
 
 // LengthRule validates string length
 type LengthRule struct {
@@ -103,7 +133,7 @@ func (r *RangeRule) GetDescription() string {
 
 // RegexRule validates using regular expression
 type RegexRule struct {
-	Pattern string
+	Pattern  string
 	Compiled *regexp.Regexp
 }
 
@@ -319,10 +349,10 @@ func (r *EnumRule) GetDescription() string {
 
 // TimeRule validates time format
 type TimeRule struct {
-	Format     string // time format string
-	MinTime    *time.Time
-	MaxTime    *time.Time
-	AllowZero  bool // allow zero time
+	Format    string // time format string
+	MinTime   *time.Time
+	MaxTime   *time.Time
+	AllowZero bool // allow zero time
 }
 
 func (r *TimeRule) Validate(value interface{}, context *ValidationContext) error {
@@ -519,7 +549,7 @@ func (r *RequiredRule) GetDescription() string {
 
 // ConditionalRule validates based on conditions
 type ConditionalRule struct {
-	Condition string      // expression to evaluate
+	Condition string         // expression to evaluate
 	Rule      ValidationRule // rule to apply if condition is true
 	ElseRule  ValidationRule // rule to apply if condition is false
 }
@@ -574,9 +604,9 @@ func (r *CustomRule) GetDescription() string {
 
 // APIKeyRule validates API key format
 type APIKeyRule struct {
-	Prefix     string // expected prefix, e.g., "sk-"
-	MinLength  int
-	MaxLength  int
+	Prefix       string // expected prefix, e.g., "sk-"
+	MinLength    int
+	MaxLength    int
 	AllowedChars string // regex for allowed characters
 }
 

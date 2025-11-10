@@ -3,16 +3,9 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
 )
 
 // Fixed helper functions for advanced config
@@ -98,12 +91,12 @@ func (t *ConfigurationTransformer) convertValueForField(value interface{}, targe
 		if num, ok := t.getNumberValue(value); ok {
 			return t.convertToInt(num, targetType), nil
 		}
-		return fmt.Errorf("cannot convert %v to %v", value, targetType)
+		return nil, fmt.Errorf("cannot convert %v to %v", value, targetType)
 	case reflect.Float32, reflect.Float64:
 		if num, ok := t.getNumberValue(value); ok {
 			return float64(num), nil
 		}
-		return fmt.Errorf("cannot convert %v to %v", value, targetType)
+		return nil, fmt.Errorf("cannot convert %v to %v", value, targetType)
 	case reflect.Bool:
 		if str, ok := value.(string); ok {
 			return t.parseBool(str), nil
@@ -111,7 +104,7 @@ func (t *ConfigurationTransformer) convertValueForField(value interface{}, targe
 		if b, ok := value.(bool); ok {
 			return b, nil
 		}
-		return fmt.Errorf("cannot convert %v to bool", value)
+		return nil, fmt.Errorf("cannot convert %v to bool", value)
 	default:
 		// For complex types, use JSON marshaling
 		data, err := json.Marshal(value)

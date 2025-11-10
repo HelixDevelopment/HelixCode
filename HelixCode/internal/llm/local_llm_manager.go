@@ -47,156 +47,156 @@ type LocalLLMProvider struct {
 // Provider definitions
 var providerDefinitions = map[string]*LocalLLMProvider{
 	"vllm": {
-		Name:        "VLLM",
-		Repository:  "https://github.com/vllm-project/vllm.git",
-		Version:     "main",
-		Description: "High-throughput inference engine for LLMs",
-		DefaultPort: 8000,
+		Name:         "VLLM",
+		Repository:   "https://github.com/vllm-project/vllm.git",
+		Version:      "main",
+		Description:  "High-throughput inference engine for LLMs",
+		DefaultPort:  8000,
 		Dependencies: []string{"python3", "pip", "git"},
-		BuildScript: "python3 -m pip install -e .",
-		StartupCmd: []string{"python3", "-m", "vllm.entrypoints.api_server"},
+		BuildScript:  "python3 -m pip install -e .",
+		StartupCmd:   []string{"python3", "-m", "vllm.entrypoints.api_server"},
 		Environment: map[string]string{
 			"VLLM_HOST": "127.0.0.1",
 			"VLLM_PORT": "8000",
 		},
 	},
 	"localai": {
-		Name:        "LocalAI",
-		Repository:  "https://github.com/mudler/LocalAI.git",
-		Version:     "main",
-		Description: "Drop-in OpenAI replacement with extensive model support",
-		DefaultPort: 8080,
+		Name:         "LocalAI",
+		Repository:   "https://github.com/mudler/LocalAI.git",
+		Version:      "main",
+		Description:  "Drop-in OpenAI replacement with extensive model support",
+		DefaultPort:  8080,
 		Dependencies: []string{"git", "make"},
 		BuildScript:  "make build",
-		StartupCmd:  []string{"./local-ai"},
+		StartupCmd:   []string{"./local-ai"},
 		Environment: map[string]string{
-			"WEB_UI":        "true",
-			"GALLERIES":     "native",
-			"MODELS_PATH":   "./models",
-			"ADDRESS":       "127.0.0.1:8080",
+			"WEB_UI":      "true",
+			"GALLERIES":   "native",
+			"MODELS_PATH": "./models",
+			"ADDRESS":     "127.0.0.1:8080",
 		},
 	},
 	"fastchat": {
-		Name:        "FastChat",
-		Repository:  "https://github.com/lm-sys/FastChat.git",
-		Version:     "main",
-		Description: "Training and serving platform for large language models",
-		DefaultPort: 7860,
+		Name:         "FastChat",
+		Repository:   "https://github.com/lm-sys/FastChat.git",
+		Version:      "main",
+		Description:  "Training and serving platform for large language models",
+		DefaultPort:  7860,
 		Dependencies: []string{"python3", "pip", "git"},
-		BuildScript: "pip install -e .",
-		StartupCmd: []string{"python3", "-m", "fastchat.serve.cli"},
+		BuildScript:  "pip install -e .",
+		StartupCmd:   []string{"python3", "-m", "fastchat.serve.cli"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "7860",
 		},
 	},
 	"textgen": {
-		Name:        "Text Generation WebUI",
-		Repository:  "https://github.com/oobabooga/text-generation-webui.git",
-		Version:     "main",
-		Description: "Popular Gradio-based interface with extensive features",
-		DefaultPort: 5000,
+		Name:         "Text Generation WebUI",
+		Repository:   "https://github.com/oobabooga/text-generation-webui.git",
+		Version:      "main",
+		Description:  "Popular Gradio-based interface with extensive features",
+		DefaultPort:  5000,
 		Dependencies: []string{"git", "python3", "pip"},
-		BuildScript: "pip install -r requirements.txt",
-		StartupCmd: []string{"python3", "server.py"},
+		BuildScript:  "pip install -r requirements.txt",
+		StartupCmd:   []string{"python3", "server.py"},
 		Environment: map[string]string{
-			"LISTEN":     "127.0.0.1:5000",
-			"SHARE":       "false",
-			"PUBLIC":      "false",
+			"LISTEN": "127.0.0.1:5000",
+			"SHARE":  "false",
+			"PUBLIC": "false",
 		},
 	},
 	"lmstudio": {
-		Name:        "LM Studio",
-		Repository:  "https://github.com/lm-sys/FastChat.git", // LM Studio uses similar backend
-		Version:     "main",
-		Description: "User-friendly desktop application with built-in model management",
-		DefaultPort: 1234,
+		Name:         "LM Studio",
+		Repository:   "https://github.com/lm-sys/FastChat.git", // LM Studio uses similar backend
+		Version:      "main",
+		Description:  "User-friendly desktop application with built-in model management",
+		DefaultPort:  1234,
 		Dependencies: []string{"git", "python3", "pip"},
-		BuildScript: "pip install -e .",
-		StartupCmd: []string{"python3", "-m", "fastchat.serve.cli"},
+		BuildScript:  "pip install -e .",
+		StartupCmd:   []string{"python3", "-m", "fastchat.serve.cli"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "1234",
 		},
 	},
 	"jan": {
-		Name:        "Jan AI",
-		Repository:  "https://github.com/janhq/jan.git",
-		Version:     "main",
-		Description: "Open-source local AI assistant with RAG capabilities",
-		DefaultPort: 1337,
+		Name:         "Jan AI",
+		Repository:   "https://github.com/janhq/jan.git",
+		Version:      "main",
+		Description:  "Open-source local AI assistant with RAG capabilities",
+		DefaultPort:  1337,
 		Dependencies: []string{"git", "node", "npm"},
 		BuildScript:  "npm install && npm run build",
-		StartupCmd:  []string{"npm", "run", "start"},
+		StartupCmd:   []string{"npm", "run", "start"},
 		Environment: map[string]string{
 			"PORT": "1337",
 		},
 	},
 	"koboldai": {
-		Name:        "KoboldAI",
-		Repository:  "https://github.com/KoboldAI/KoboldAI-United.git",
-		Version:     "main",
-		Description: "Writing-focused interface with creative assistance",
-		DefaultPort: 5001,
+		Name:         "KoboldAI",
+		Repository:   "https://github.com/KoboldAI/KoboldAI-United.git",
+		Version:      "main",
+		Description:  "Writing-focused interface with creative assistance",
+		DefaultPort:  5001,
 		Dependencies: []string{"git", "python3", "pip"},
-		BuildScript: "pip install -r requirements.txt",
-		StartupCmd: []string{"python3", "server.py"},
+		BuildScript:  "pip install -r requirements.txt",
+		StartupCmd:   []string{"python3", "server.py"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "5001",
 		},
 	},
 	"gpt4all": {
-		Name:        "GPT4All",
-		Repository:  "https://github.com/nomic-ai/gpt4all.git",
-		Version:     "main",
-		Description: "CPU-focused inference for low-resource environments",
-		DefaultPort: 4891,
+		Name:         "GPT4All",
+		Repository:   "https://github.com/nomic-ai/gpt4all.git",
+		Version:      "main",
+		Description:  "CPU-focused inference for low-resource environments",
+		DefaultPort:  4891,
 		Dependencies: []string{"git", "cmake", "make"},
 		BuildScript:  "mkdir -p build && cd build && cmake .. && make -j$(nproc)",
-		StartupCmd:  []string{"./gpt4all-chat"},
+		StartupCmd:   []string{"./gpt4all-chat"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "4891",
 		},
 	},
 	"tabbyapi": {
-		Name:        "TabbyAPI",
-		Repository:  "https://github.com/theroyallab/tabbyAPI.git",
-		Version:     "main",
-		Description: "High-performance inference server with advanced quantization",
-		DefaultPort: 5000,
+		Name:         "TabbyAPI",
+		Repository:   "https://github.com/theroyallab/tabbyAPI.git",
+		Version:      "main",
+		Description:  "High-performance inference server with advanced quantization",
+		DefaultPort:  5000,
 		Dependencies: []string{"git", "python3", "pip"},
-		BuildScript: "pip install -r requirements.txt",
-		StartupCmd: []string{"python3", "main.py"},
+		BuildScript:  "pip install -r requirements.txt",
+		StartupCmd:   []string{"python3", "main.py"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "5000",
 		},
 	},
 	"mlx": {
-		Name:        "MLX LLM",
-		Repository:  "https://github.com/ml-explore/mlx-examples.git",
-		Version:     "main",
-		Description: "Apple Silicon optimized inference framework",
-		DefaultPort: 8080,
+		Name:         "MLX LLM",
+		Repository:   "https://github.com/ml-explore/mlx-examples.git",
+		Version:      "main",
+		Description:  "Apple Silicon optimized inference framework",
+		DefaultPort:  8080,
 		Dependencies: []string{"git", "python3", "pip"},
-		BuildScript: "cd llms && pip install -e .",
-		StartupCmd: []string{"python3", "-m", "mlx_llm.serve"},
+		BuildScript:  "cd llms && pip install -e .",
+		StartupCmd:   []string{"python3", "-m", "mlx_llm.serve"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "8080",
 		},
 	},
 	"mistralrs": {
-		Name:        "Mistral RS",
-		Repository:  "https://github.com/EricLBuehler/mistral.rs.git",
-		Version:     "main",
-		Description: "High-performance Rust-based inference engine",
-		DefaultPort: 8080,
+		Name:         "Mistral RS",
+		Repository:   "https://github.com/EricLBuehler/mistral.rs.git",
+		Version:      "main",
+		Description:  "High-performance Rust-based inference engine",
+		DefaultPort:  8080,
 		Dependencies: []string{"git", "cargo", "rustc"},
 		BuildScript:  "cargo build --release",
-		StartupCmd:  []string{"./target/release/mistralrs-server"},
+		StartupCmd:   []string{"./target/release/mistralrs-server"},
 		Environment: map[string]string{
 			"HOST": "127.0.0.1",
 			"PORT": "8080",
@@ -295,7 +295,7 @@ func (m *LocalLLMManager) createDirectories() error {
 // checkDependencies verifies system dependencies
 func (m *LocalLLMManager) checkDependencies() error {
 	log.Println("🔍 Checking system dependencies...")
-	
+
 	// Common dependencies
 	commonDeps := []string{"git", "curl", "wget"}
 	missing := []string{}
@@ -421,7 +421,7 @@ func (m *LocalLLMManager) buildProvider(ctx context.Context, provider *LocalLLMP
 		cmd := exec.CommandContext(ctx, "bash", "-c", provider.BuildScript)
 		cmd.Dir = dir
 		cmd.Env = env
-		
+
 		if output, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("build failed: %s", string(output))
 		}
@@ -481,7 +481,7 @@ func (m *LocalLLMManager) StartProvider(ctx context.Context, providerName string
 	scriptPath := filepath.Join(m.binaryDir, strings.ToLower(providerName)+".sh")
 	cmd := exec.CommandContext(ctx, "bash", scriptPath)
 	cmd.Dir = filepath.Join(m.dataDir, strings.ToLower(providerName))
-	
+
 	// Set environment variables
 	env := os.Environ()
 	for k, v := range provider.Environment {
@@ -567,7 +567,7 @@ func (m *LocalLLMManager) waitForProvider(ctx context.Context, provider *LocalLL
 // isProviderHealthy checks if a provider is healthy
 func (m *LocalLLMManager) isProviderHealthy(ctx context.Context, provider *LocalLLMProvider) bool {
 	healthURL := fmt.Sprintf("http://127.0.0.1:%d/health", provider.DefaultPort)
-	
+
 	req, err := http.NewRequestWithContext(ctx, "GET", healthURL, nil)
 	if err != nil {
 		return false
@@ -601,27 +601,27 @@ func (m *LocalLLMManager) GetProviderStatus(ctx context.Context) map[string]*Loc
 func (m *LocalLLMManager) GetRunningProviders(ctx context.Context) []string {
 	var running []string
 	status := m.GetProviderStatus(ctx)
-	
+
 	for _, provider := range status {
 		if provider.Status == "running" {
 			endpoint := fmt.Sprintf("http://127.0.0.1:%d", provider.DefaultPort)
 			running = append(running, endpoint)
 		}
 	}
-	
+
 	return running
 }
 
 // StartAllProviders starts all available providers
 func (m *LocalLLMManager) StartAllProviders(ctx context.Context) error {
 	log.Println("🚀 Starting all local LLM providers...")
-	
+
 	for name := range m.providers {
 		if err := m.StartProvider(ctx, name); err != nil {
 			log.Printf("⚠️  Failed to start %s: %v", name, err)
 		}
 	}
-	
+
 	log.Println("✅ Started available providers")
 	return nil
 }
@@ -629,13 +629,13 @@ func (m *LocalLLMManager) StartAllProviders(ctx context.Context) error {
 // StopAllProviders stops all running providers
 func (m *LocalLLMManager) StopAllProviders(ctx context.Context) error {
 	log.Println("🛑 Stopping all local LLM providers...")
-	
+
 	for name := range m.providers {
 		if err := m.StopProvider(ctx, name); err != nil {
 			log.Printf("⚠️  Failed to stop %s: %v", name, err)
 		}
 	}
-	
+
 	log.Println("✅ Stopped all providers")
 	return nil
 }
@@ -643,14 +643,14 @@ func (m *LocalLLMManager) StopAllProviders(ctx context.Context) error {
 // Cleanup cleans up all provider resources
 func (m *LocalLLMManager) Cleanup(ctx context.Context) error {
 	log.Println("🧹 Cleaning up local LLM providers...")
-	
+
 	// Stop all providers first
 	m.StopAllProviders(ctx)
-	
+
 	// Optionally remove data directories
 	// (Commented out to preserve downloaded models and configs)
 	// os.RemoveAll(m.dataDir)
-	
+
 	log.Println("✅ Cleanup completed")
 	return nil
 }
@@ -661,16 +661,16 @@ func (m *LocalLLMManager) UpdateProvider(ctx context.Context, providerName strin
 	if !exists {
 		return fmt.Errorf("provider %s not found", providerName)
 	}
-	
+
 	log.Printf("🔄 Updating %s...", provider.Name)
-	
+
 	// Stop provider if running
 	if provider.Status == "running" {
 		if err := m.StopProvider(ctx, providerName); err != nil {
 			log.Printf("⚠️  Failed to stop provider for update: %v", err)
 		}
 	}
-	
+
 	// Pull latest changes
 	providerDir := filepath.Join(m.dataDir, strings.ToLower(provider.Name))
 	cmd := exec.CommandContext(ctx, "git", "pull", "origin", provider.Version)
@@ -678,17 +678,17 @@ func (m *LocalLLMManager) UpdateProvider(ctx context.Context, providerName strin
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("git pull failed: %s", string(output))
 	}
-	
+
 	// Rebuild provider
 	if err := m.buildProvider(ctx, provider, providerDir); err != nil {
 		return fmt.Errorf("failed to rebuild provider: %w", err)
 	}
-	
+
 	// Update startup script
 	if err := m.createStartupScript(provider); err != nil {
 		return fmt.Errorf("failed to update startup script: %w", err)
 	}
-	
+
 	log.Printf("✅ Successfully updated %s", provider.Name)
 	return nil
 }
@@ -696,36 +696,36 @@ func (m *LocalLLMManager) UpdateProvider(ctx context.Context, providerName strin
 // ShareModelWithProviders shares a downloaded model with all compatible providers
 func (m *LocalLLMManager) ShareModelWithProviders(ctx context.Context, modelPath string, modelName string) error {
 	log.Printf("🔗 Sharing model %s with compatible providers...", modelName)
-	
+
 	// Detect model format
 	format, err := m.detectModelFormat(modelPath)
 	if err != nil {
 		return fmt.Errorf("failed to detect model format: %w", err)
 	}
-	
+
 	// Find compatible providers
 	compatibleProviders := []string{}
-	for name, provider := range m.providers {
+	for name := range m.providers {
 		if m.isFormatCompatibleWithProvider(format, name) {
 			compatibleProviders = append(compatibleProviders, name)
 		}
 	}
-	
+
 	if len(compatibleProviders) == 0 {
 		return fmt.Errorf("no providers found compatible with format %s", format)
 	}
-	
+
 	// Create symlinks or copies for each compatible provider
 	for _, providerName := range compatibleProviders {
 		provider := m.providers[providerName]
 		targetDir := filepath.Join(provider.DataPath, "models")
 		os.MkdirAll(targetDir, 0755)
-		
+
 		targetPath := filepath.Join(targetDir, filepath.Base(modelPath))
-		
+
 		// Remove existing target if it exists
 		os.Remove(targetPath)
-		
+
 		// Create symlink (or copy if symlink fails)
 		err := os.Symlink(modelPath, targetPath)
 		if err != nil {
@@ -739,7 +739,7 @@ func (m *LocalLLMManager) ShareModelWithProviders(ctx context.Context, modelPath
 			log.Printf("✅ Linked model for %s", providerName)
 		}
 	}
-	
+
 	log.Printf("✅ Model shared with %d providers", len(compatibleProviders))
 	return nil
 }
@@ -747,32 +747,32 @@ func (m *LocalLLMManager) ShareModelWithProviders(ctx context.Context, modelPath
 // DownloadModelForAllProviders downloads a model and makes it available to all compatible providers
 func (m *LocalLLMManager) DownloadModelForAllProviders(ctx context.Context, modelID string, sourceFormat ModelFormat) error {
 	log.Printf("🌐 Downloading model %s for all providers...", modelID)
-	
+
 	// Initialize download manager
 	downloadManager := NewModelDownloadManager(m.baseDir)
-	
+
 	// Get model info
-	model, err := downloadManager.GetModelByID(modelID)
+	_, err := downloadManager.GetModelByID(modelID)
 	if err != nil {
 		return fmt.Errorf("model not found: %w", err)
 	}
-	
+
 	// Find best format to download (most compatible)
 	bestFormat := m.findMostCompatibleFormat(sourceFormat)
-	
+
 	// Download model in best format
 	req := ModelDownloadRequest{
-		ModelID:       modelID,
-		Format:        bestFormat,
+		ModelID:        modelID,
+		Format:         bestFormat,
 		TargetProvider: "", // Download to shared location
 		ForceDownload:  false,
 	}
-	
+
 	progressChan, err := downloadManager.DownloadModel(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to start download: %w", err)
 	}
-	
+
 	// Monitor download
 	for progress := range progressChan {
 		if progress.Error != "" {
@@ -783,10 +783,10 @@ func (m *LocalLLMManager) DownloadModelForAllProviders(ctx context.Context, mode
 			break
 		}
 	}
-	
+
 	// Get the downloaded model path
 	downloadedPath := filepath.Join(m.baseDir, "shared", modelID, fmt.Sprintf("model.%s", bestFormat))
-	
+
 	// Share with all compatible providers
 	return m.ShareModelWithProviders(ctx, downloadedPath, modelID)
 }
@@ -794,7 +794,7 @@ func (m *LocalLLMManager) DownloadModelForAllProviders(ctx context.Context, mode
 // GetSharedModels returns list of models shared across providers
 func (m *LocalLLMManager) GetSharedModels(ctx context.Context) (map[string][]string, error) {
 	shared := make(map[string][]string)
-	
+
 	for name, provider := range m.providers {
 		modelsDir := filepath.Join(provider.DataPath, "models")
 		if _, err := os.Stat(modelsDir); err == nil {
@@ -802,20 +802,20 @@ func (m *LocalLLMManager) GetSharedModels(ctx context.Context) (map[string][]str
 			if err != nil {
 				continue
 			}
-			
+
 			var models []string
 			for _, entry := range entries {
 				if !entry.IsDir() {
 					models = append(models, entry.Name())
 				}
 			}
-			
+
 			if len(models) > 0 {
 				shared[name] = models
 			}
 		}
 	}
-	
+
 	return shared, nil
 }
 
@@ -825,23 +825,23 @@ func (m *LocalLLMManager) OptimizeModelForProvider(ctx context.Context, modelPat
 	if !exists {
 		return fmt.Errorf("provider %s not found", targetProvider)
 	}
-	
+
 	log.Printf("⚡ Optimizing model for %s...", provider.Name)
-	
+
 	// Detect current format
 	currentFormat, err := m.detectModelFormat(modelPath)
 	if err != nil {
 		return fmt.Errorf("failed to detect current format: %w", err)
 	}
-	
+
 	// Get optimal format for provider
 	optimalFormat := m.getOptimalFormatForProvider(targetProvider)
-	
+
 	// If already in optimal format, just share it
 	if currentFormat == optimalFormat {
 		return m.ShareModelWithProviders(ctx, modelPath, filepath.Base(modelPath))
 	}
-	
+
 	// Convert model
 	converter := NewModelConverter(m.baseDir)
 	config := ConversionConfig{
@@ -854,16 +854,16 @@ func (m *LocalLLMManager) OptimizeModelForProvider(ctx context.Context, modelPat
 		},
 		Timeout: 60,
 	}
-	
+
 	job, err := converter.ConvertModel(ctx, config)
 	if err != nil {
 		return fmt.Errorf("failed to start conversion: %w", err)
 	}
-	
+
 	// Wait for conversion completion
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -873,7 +873,7 @@ func (m *LocalLLMManager) OptimizeModelForProvider(ctx context.Context, modelPat
 			if err != nil {
 				return fmt.Errorf("failed to get conversion status: %w", err)
 			}
-			
+
 			switch status.Status {
 			case StatusCompleted:
 				log.Printf("✅ Model optimized for %s", provider.Name)
@@ -936,7 +936,7 @@ func (m *LocalLLMManager) isFormatCompatibleWithProvider(format ModelFormat, pro
 	default:
 		supportedFormats = []ModelFormat{FormatGGUF} // Most universal format
 	}
-	
+
 	for _, supportedFormat := range supportedFormats {
 		if supportedFormat == format {
 			return true
@@ -948,7 +948,7 @@ func (m *LocalLLMManager) isFormatCompatibleWithProvider(format ModelFormat, pro
 func (m *LocalLLMManager) findMostCompatibleFormat(sourceFormat ModelFormat) ModelFormat {
 	// Count how many providers support each format
 	formatCounts := make(map[ModelFormat]int)
-	
+
 	for _, provider := range m.providers {
 		var supportedFormats []ModelFormat
 		switch provider.Name {
@@ -961,12 +961,12 @@ func (m *LocalLLMManager) findMostCompatibleFormat(sourceFormat ModelFormat) Mod
 		default:
 			supportedFormats = []ModelFormat{FormatGGUF}
 		}
-		
+
 		for _, format := range supportedFormats {
 			formatCounts[format]++
 		}
 	}
-	
+
 	// Return format with highest compatibility
 	maxCount := 0
 	bestFormat := FormatGGUF // Default
@@ -976,7 +976,7 @@ func (m *LocalLLMManager) findMostCompatibleFormat(sourceFormat ModelFormat) Mod
 			bestFormat = format
 		}
 	}
-	
+
 	return bestFormat
 }
 
@@ -1031,13 +1031,13 @@ func (m *LocalLLMManager) copyModel(src, dst string) error {
 		return err
 	}
 	defer sourceFile.Close()
-	
+
 	destFile, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
 	defer destFile.Close()
-	
+
 	_, err = destFile.ReadFrom(sourceFile)
 	return err
 }

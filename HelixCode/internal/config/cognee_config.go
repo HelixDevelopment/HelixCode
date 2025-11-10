@@ -5,65 +5,66 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
 // CogneeConfig contains Cognee.ai configuration
 type CogneeConfig struct {
 	// Basic Settings
-	Enabled    bool `json:"enabled" yaml:"enabled"`
-	AutoStart  bool `json:"auto_start" yaml:"auto_start"`
-	Host       string `json:"host" yaml:"host"`
-	Port       int    `json:"port" yaml:"port"`
-	
+	Enabled   bool   `json:"enabled" yaml:"enabled"`
+	AutoStart bool   `json:"auto_start" yaml:"auto_start"`
+	Host      string `json:"host" yaml:"host"`
+	Port      int    `json:"port" yaml:"port"`
+
 	// Dynamic Configuration
 	DynamicConfig bool `json:"dynamic_config" yaml:"dynamic_config"`
-	
+
 	// Repository Settings
 	Source    string `json:"source,omitempty" yaml:"source,omitempty"`
 	Branch    string `json:"branch,omitempty" yaml:"branch,omitempty"`
 	BuildPath string `json:"build_path,omitempty" yaml:"build_path,omitempty"`
-	
+
 	// Optimization Settings
 	Optimization *CogneeOptimizationConfig `json:"optimization,omitempty" yaml:"optimization,omitempty"`
-	
+
 	// Feature Settings
 	Features *CogneeFeatureConfig `json:"features,omitempty" yaml:"features,omitempty"`
-	
+
 	// Provider Integration
 	Providers map[string]*CogneeProviderConfig `json:"providers,omitempty" yaml:"providers,omitempty"`
-	
+
 	// API Configuration
-	API *CogneeAPIConfig `json:"api,omitempty" yaml:"api,omitempty"`
-	
+	API *CogneeServerConfig `json:"api,omitempty" yaml:"api,omitempty"`
+
 	// Performance Configuration
 	Performance *CogneePerformanceConfig `json:"performance,omitempty" yaml:"performance,omitempty"`
-	
+
 	// Cache Configuration
 	Cache *CogneeCacheConfig `json:"cache,omitempty" yaml:"cache,omitempty"`
-	
+
 	// Monitoring Configuration
 	Monitoring *CogneeMonitoringConfig `json:"monitoring,omitempty" yaml:"monitoring,omitempty"`
 }
 
 // CogneeOptimizationConfig contains optimization settings
 type CogneeOptimizationConfig struct {
-	HostAware         bool                   `json:"host_aware" yaml:"host_aware"`
-	CPUOptimization   bool                   `json:"cpu_optimization" yaml:"cpu_optimization"`
-	GPUOptimization   bool                   `json:"gpu_optimization" yaml:"gpu_optimization"`
+	HostAware          bool                   `json:"host_aware" yaml:"host_aware"`
+	CPUOptimization    bool                   `json:"cpu_optimization" yaml:"cpu_optimization"`
+	GPUOptimization    bool                   `json:"gpu_optimization" yaml:"gpu_optimization"`
 	MemoryOptimization bool                   `json:"memory_optimization" yaml:"memory_optimization"`
-	HostSpecific      map[string]interface{} `json:"host_specific,omitempty" yaml:"host_specific,omitempty"`
+	HostSpecific       map[string]interface{} `json:"host_specific,omitempty" yaml:"host_specific,omitempty"`
 }
 
 // CogneeFeatureConfig contains feature settings
 type CogneeFeatureConfig struct {
 	KnowledgeGraph     bool `json:"knowledge_graph" yaml:"knowledge_graph"`
 	SemanticSearch     bool `json:"semantic_search" yaml:"semantic_search"`
-	RealTimeProcessing  bool `json:"real_time_processing" yaml:"real_time_processing"`
-	MultiModalSupport   bool `json:"multi_modal_support" yaml:"multi_modal_support"`
-	GraphAnalytics      bool `json:"graph_analytics" yaml:"graph_analytics"`
-	AdvancedInsights    bool `json:"advanced_insights" yaml:"advanced_insights"`
-	AutoOptimization    bool `json:"auto_optimization" yaml:"auto_optimization"`
+	RealTimeProcessing bool `json:"real_time_processing" yaml:"real_time_processing"`
+	MultiModalSupport  bool `json:"multi_modal_support" yaml:"multi_modal_support"`
+	GraphAnalytics     bool `json:"graph_analytics" yaml:"graph_analytics"`
+	AdvancedInsights   bool `json:"advanced_insights" yaml:"advanced_insights"`
+	AutoOptimization   bool `json:"auto_optimization" yaml:"auto_optimization"`
 }
 
 // CogneeProviderConfig contains provider-specific Cognee settings
@@ -75,26 +76,26 @@ type CogneeProviderConfig struct {
 }
 
 // CogneeAPIConfig contains API configuration
-type CogneeAPIConfig struct {
-	Enabled       bool          `json:"enabled" yaml:"enabled"`
-	Host          string        `json:"host" yaml:"host"`
-	Port          int           `json:"port" yaml:"port"`
-	AuthRequired  bool          `json:"auth_required" yaml:"auth_required"`
-	RateLimit     int           `json:"rate_limit,omitempty" yaml:"rate_limit,omitempty"`
-	CORS          bool          `json:"cors" yaml:"cors"`
-	DocsEnabled   bool          `json:"docs_enabled" yaml:"docs_enabled"`
-	Timeout       time.Duration `json:"timeout" yaml:"timeout"`
-	MaxRequestSize int64        `json:"max_request_size,omitempty" yaml:"max_request_size,omitempty"`
+type CogneeServerConfig struct {
+	Enabled        bool          `json:"enabled" yaml:"enabled"`
+	Host           string        `json:"host" yaml:"host"`
+	Port           int           `json:"port" yaml:"port"`
+	AuthRequired   bool          `json:"auth_required" yaml:"auth_required"`
+	RateLimit      int           `json:"rate_limit,omitempty" yaml:"rate_limit,omitempty"`
+	CORS           bool          `json:"cors" yaml:"cors"`
+	DocsEnabled    bool          `json:"docs_enabled" yaml:"docs_enabled"`
+	Timeout        time.Duration `json:"timeout" yaml:"timeout"`
+	MaxRequestSize int64         `json:"max_request_size,omitempty" yaml:"max_request_size,omitempty"`
 }
 
 // CogneePerformanceConfig contains performance configuration
 type CogneePerformanceConfig struct {
-	Workers          int           `json:"workers" yaml:"workers"`
-	QueueSize        int           `json:"queue_size" yaml:"queue_size"`
-	BatchSize        int           `json:"batch_size" yaml:"batch_size"`
-	FlushInterval    time.Duration `json:"flush_interval" yaml:"flush_interval"`
-	MaxMemory        int64         `json:"max_memory,omitempty" yaml:"max_memory,omitempty"`
-	CacheSize        int64         `json:"cache_size,omitempty" yaml:"cache_size,omitempty"`
+	Workers           int           `json:"workers" yaml:"workers"`
+	QueueSize         int           `json:"queue_size" yaml:"queue_size"`
+	BatchSize         int           `json:"batch_size" yaml:"batch_size"`
+	FlushInterval     time.Duration `json:"flush_interval" yaml:"flush_interval"`
+	MaxMemory         int64         `json:"max_memory,omitempty" yaml:"max_memory,omitempty"`
+	CacheSize         int64         `json:"cache_size,omitempty" yaml:"cache_size,omitempty"`
 	OptimizationLevel string        `json:"optimization_level" yaml:"optimization_level"`
 }
 
@@ -107,7 +108,7 @@ type CogneeCacheConfig struct {
 	Database    int           `json:"database,omitempty" yaml:"database,omitempty"`
 	TTL         time.Duration `json:"ttl" yaml:"ttl"`
 	MaxSize     int64         `json:"max_size,omitempty" yaml:"max_size,omitempty"`
-	Compression  bool          `json:"compression" yaml:"compression"`
+	Compression bool          `json:"compression" yaml:"compression"`
 }
 
 // CogneeMonitoringConfig contains monitoring configuration
@@ -127,36 +128,36 @@ func DefaultCogneeConfig() *CogneeConfig {
 		AutoStart:     true,
 		Host:          "localhost",
 		Port:          8000,
-		DynamicConfig:  true,
+		DynamicConfig: true,
 		Source:        "https://github.com/cognee-ai/cognee.git",
 		Branch:        "main",
 		BuildPath:     "external/cognee",
 		Optimization: &CogneeOptimizationConfig{
-			HostAware:         true,
-			CPUOptimization:   true,
-			GPUOptimization:   true,
+			HostAware:          true,
+			CPUOptimization:    true,
+			GPUOptimization:    true,
 			MemoryOptimization: true,
-			HostSpecific:      make(map[string]interface{}),
+			HostSpecific:       make(map[string]interface{}),
 		},
 		Features: &CogneeFeatureConfig{
 			KnowledgeGraph:     true,
 			SemanticSearch:     true,
-			RealTimeProcessing:  true,
-			MultiModalSupport:   true,
-			GraphAnalytics:      true,
-			AdvancedInsights:    true,
-			AutoOptimization:    true,
+			RealTimeProcessing: true,
+			MultiModalSupport:  true,
+			GraphAnalytics:     true,
+			AdvancedInsights:   true,
+			AutoOptimization:   true,
 		},
 		Providers: make(map[string]*CogneeProviderConfig),
-		API: &CogneeAPIConfig{
-			Enabled:        true,
-			Host:           "localhost",
-			Port:           8000,
-			AuthRequired:   false,
-			RateLimit:      1000,
-			CORS:           true,
-			DocsEnabled:    true,
-			Timeout:        30 * time.Second,
+		API: &CogneeServerConfig{
+			Enabled:      true,
+			Host:         "localhost",
+			Port:         8000,
+			AuthRequired: false,
+			RateLimit:    1000,
+			CORS:         true,
+			DocsEnabled:  true,
+			Timeout:      30 * time.Second,
 		},
 		Performance: &CogneePerformanceConfig{
 			Workers:           4,
@@ -166,12 +167,12 @@ func DefaultCogneeConfig() *CogneeConfig {
 			OptimizationLevel: "high",
 		},
 		Cache: &CogneeCacheConfig{
-			Enabled:    true,
-			Type:       "redis",
-			Host:       "localhost",
-			Port:       6379,
-			Database:   0,
-			TTL:        1 * time.Hour,
+			Enabled:     true,
+			Type:        "redis",
+			Host:        "localhost",
+			Port:        6379,
+			Database:    0,
+			TTL:         1 * time.Hour,
 			Compression: true,
 		},
 		Monitoring: &CogneeMonitoringConfig{
@@ -191,22 +192,22 @@ func LoadCogneeConfig(configPath string) (*CogneeConfig, error) {
 		// Return default config
 		return DefaultCogneeConfig(), nil
 	}
-	
+
 	// Read file
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read Cognee config: %w", err)
 	}
-	
+
 	// Parse JSON
 	var config CogneeConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse Cognee config: %w", err)
 	}
-	
+
 	// Apply defaults for missing fields
 	config = config.applyDefaults()
-	
+
 	return &config, nil
 }
 
@@ -217,54 +218,54 @@ func SaveCogneeConfig(config *CogneeConfig, configPath string) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	// Convert to JSON
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal Cognee config: %w", err)
 	}
-	
+
 	// Write file
 	if err := os.WriteFile(configPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write Cognee config: %w", err)
 	}
-	
+
 	return nil
 }
 
 // applyDefaults applies default values for missing fields
 func (config *CogneeConfig) applyDefaults() CogneeConfig {
 	defaults := DefaultCogneeConfig()
-	
+
 	// Apply defaults for missing fields
 	if config.Optimization == nil {
 		config.Optimization = defaults.Optimization
 	}
-	
+
 	if config.Features == nil {
 		config.Features = defaults.Features
 	}
-	
+
 	if config.Providers == nil {
 		config.Providers = make(map[string]*CogneeProviderConfig)
 	}
-	
+
 	if config.API == nil {
 		config.API = defaults.API
 	}
-	
+
 	if config.Performance == nil {
 		config.Performance = defaults.Performance
 	}
-	
+
 	if config.Cache == nil {
 		config.Cache = defaults.Cache
 	}
-	
+
 	if config.Monitoring == nil {
 		config.Monitoring = defaults.Monitoring
 	}
-	
+
 	return *config
 }
 
@@ -274,69 +275,69 @@ func (config *CogneeConfig) Validate() error {
 	if config.Port <= 0 || config.Port > 65535 {
 		return fmt.Errorf("invalid port: %d (must be 1-65535)", config.Port)
 	}
-	
+
 	if config.Host == "" {
 		return fmt.Errorf("host cannot be empty")
 	}
-	
+
 	// Validate optimization settings
 	if config.Optimization != nil {
 		if config.Optimization.HostSpecific == nil {
 			config.Optimization.HostSpecific = make(map[string]interface{})
 		}
 	}
-	
+
 	// Validate API settings
 	if config.API != nil {
 		if config.API.Port <= 0 || config.API.Port > 65535 {
 			return fmt.Errorf("invalid API port: %d", config.API.Port)
 		}
-		
+
 		if config.API.Timeout <= 0 {
 			config.API.Timeout = 30 * time.Second
 		}
 	}
-	
+
 	// Validate performance settings
 	if config.Performance != nil {
 		if config.Performance.Workers <= 0 {
 			config.Performance.Workers = 4
 		}
-		
+
 		if config.Performance.QueueSize <= 0 {
 			config.Performance.QueueSize = 1000
 		}
-		
+
 		if config.Performance.BatchSize <= 0 {
 			config.Performance.BatchSize = 32
 		}
-		
+
 		if config.Performance.FlushInterval <= 0 {
 			config.Performance.FlushInterval = 5 * time.Second
 		}
 	}
-	
+
 	// Validate cache settings
 	if config.Cache != nil {
 		if config.Cache.Port <= 0 || config.Cache.Port > 65535 {
 			config.Cache.Port = 6379
 		}
-		
+
 		if config.Cache.TTL <= 0 {
 			config.Cache.TTL = 1 * time.Hour
 		}
 	}
-	
+
 	// Validate monitoring settings
 	if config.Monitoring != nil {
 		if config.Monitoring.MetricsPort <= 0 || config.Monitoring.MetricsPort > 65535 {
 			config.Monitoring.MetricsPort = 9090
 		}
-		
+
 		if config.Monitoring.HealthCheck <= 0 {
 			config.Monitoring.HealthCheck = 30 * time.Second
 		}
-		
+
 		validLogLevels := []string{"debug", "info", "warn", "error", "fatal"}
 		logLevelValid := false
 		for _, level := range validLogLevels {
@@ -349,7 +350,7 @@ func (config *CogneeConfig) Validate() error {
 			config.Monitoring.LogLevel = "info"
 		}
 	}
-	
+
 	return nil
 }
 
@@ -487,7 +488,7 @@ providers:`,
 		config.Monitoring.TraceEnabled,
 		config.Monitoring.AlertWebhook,
 	)
-	
+
 	// Add providers
 	for name, provConfig := range config.Providers {
 		yaml += fmt.Sprintf(`
@@ -500,10 +501,10 @@ providers:`,
 			provConfig.Enabled,
 			provConfig.Integration,
 			provConfig.Priority,
-			`"` + strings.Join(provConfig.Features, `", "`) + `"`,
+			`"`+strings.Join(provConfig.Features, `", "`)+`"`,
 		)
 	}
-	
+
 	return []byte(yaml), nil
 }
 
@@ -514,12 +515,12 @@ func (config *CogneeConfig) Clone() *CogneeConfig {
 	if err != nil {
 		return nil
 	}
-	
+
 	var clone CogneeConfig
 	if err := json.Unmarshal(data, &clone); err != nil {
 		return nil
 	}
-	
+
 	return &clone
 }
 
@@ -528,45 +529,45 @@ func (config *CogneeConfig) Merge(other *CogneeConfig) {
 	if other.Enabled {
 		config.Enabled = other.Enabled
 	}
-	
+
 	if other.AutoStart {
 		config.AutoStart = other.AutoStart
 	}
-	
+
 	if other.Host != "" {
 		config.Host = other.Host
 	}
-	
+
 	if other.Port > 0 {
 		config.Port = other.Port
 	}
-	
+
 	if other.Source != "" {
 		config.Source = other.Source
 	}
-	
+
 	if other.Branch != "" {
 		config.Branch = other.Branch
 	}
-	
+
 	if other.BuildPath != "" {
 		config.BuildPath = other.BuildPath
 	}
-	
+
 	if other.Optimization != nil {
 		if config.Optimization == nil {
 			config.Optimization = &CogneeOptimizationConfig{}
 		}
 		mergeOptimizationConfig(config.Optimization, other.Optimization)
 	}
-	
+
 	if other.Features != nil {
 		if config.Features == nil {
 			config.Features = &CogneeFeatureConfig{}
 		}
 		mergeFeatureConfig(config.Features, other.Features)
 	}
-	
+
 	if other.Providers != nil {
 		if config.Providers == nil {
 			config.Providers = make(map[string]*CogneeProviderConfig)
@@ -575,28 +576,28 @@ func (config *CogneeConfig) Merge(other *CogneeConfig) {
 			config.Providers[name] = provConfig
 		}
 	}
-	
+
 	if other.API != nil {
 		if config.API == nil {
-			config.API = &CogneeAPIConfig{}
+			config.API = &CogneeServerConfig{}
 		}
 		mergeAPIConfig(config.API, other.API)
 	}
-	
+
 	if other.Performance != nil {
 		if config.Performance == nil {
 			config.Performance = &CogneePerformanceConfig{}
 		}
 		mergePerformanceConfig(config.Performance, other.Performance)
 	}
-	
+
 	if other.Cache != nil {
 		if config.Cache == nil {
 			config.Cache = &CogneeCacheConfig{}
 		}
 		mergeCacheConfig(config.Cache, other.Cache)
 	}
-	
+
 	if other.Monitoring != nil {
 		if config.Monitoring == nil {
 			config.Monitoring = &CogneeMonitoringConfig{}
@@ -654,7 +655,7 @@ func mergeFeatureConfig(base, other *CogneeFeatureConfig) {
 	}
 }
 
-func mergeAPIConfig(base, other *CogneeAPIConfig) {
+func mergeAPIConfig(base, other *CogneeServerConfig) {
 	if other.Enabled {
 		base.Enabled = other.Enabled
 	}

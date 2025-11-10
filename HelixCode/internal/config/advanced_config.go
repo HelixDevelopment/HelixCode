@@ -8,14 +8,11 @@ import (
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
 )
 
 // ConfigurationValidator provides comprehensive validation for configuration
 type ConfigurationValidator struct {
-	rules       map[string][]ValidationRule
+	rules       map[string][]ValidationRuleConfig
 	schema      *AdvancedConfigurationSchema
 	strictMode  bool
 	customRules map[string]func(interface{}) error
@@ -154,12 +151,14 @@ type TemplateVariable struct {
 	Pattern     string        `json:"pattern"`
 	Min         *float64      `json:"min"`
 	Max         *float64      `json:"max"`
+	MinLength   *int          `json:"min_length"`
+	MaxLength   *int          `json:"max_length"`
 }
 
 // NewConfigurationValidator creates a new configuration validator
 func NewConfigurationValidator(strictMode bool) *ConfigurationValidator {
 	validator := &ConfigurationValidator{
-		rules:       make(map[string][]ValidationRule),
+		rules:       make(map[string][]ValidationRuleConfig),
 		strictMode:  strictMode,
 		customRules: make(map[string]func(interface{}) error),
 	}
@@ -268,9 +267,9 @@ func (v *ConfigurationValidator) ValidateField(config *HelixConfig, fieldPath st
 }
 
 // AddRule adds a validation rule
-func (v *ConfigurationValidator) AddRule(fieldPath string, rule ValidationRule) {
+func (v *ConfigurationValidator) AddRule(fieldPath string, rule ValidationRuleConfig) {
 	if v.rules[fieldPath] == nil {
-		v.rules[fieldPath] = make([]ValidationRule, 0)
+		v.rules[fieldPath] = make([]ValidationRuleConfig, 0)
 	}
 	v.rules[fieldPath] = append(v.rules[fieldPath], rule)
 }
@@ -281,7 +280,7 @@ func (v *ConfigurationValidator) AddCustomRule(fieldPath string, rule func(inter
 }
 
 // SetSchema sets the validation schema
-func (v *ConfigurationValidator) SetSchema(schema *ConfigurationSchema) {
+func (v *ConfigurationValidator) SetSchema(schema *AdvancedConfigurationSchema) {
 	v.schema = schema
 }
 
@@ -295,7 +294,7 @@ func (v *ConfigurationValidator) validateSchema(config *HelixConfig, result *Val
 }
 
 // validateProperty validates a property against schema
-func (v *ConfigurationValidator) validateProperty(path string, value interface{}, schema *ConfigurationSchema, result *ValidationResult) error {
+func (v *ConfigurationValidator) validateProperty(path string, value interface{}, schema *AdvancedConfigurationSchema, result *ValidationResult) error {
 	// Handle schema references
 	if schema.Properties["$ref"] != nil {
 		ref := schema.Properties["$ref"].Ref
@@ -813,7 +812,7 @@ func (v *ConfigurationValidator) validateFieldRules(config *HelixConfig, result 
 	return nil
 }
 
-func (v *ConfigurationValidator) validateRule(path string, value interface{}, rule ValidationRule) error {
+func (v *ConfigurationValidator) validateRule(path string, value interface{}, rule ValidationRuleConfig) error {
 	switch rule.Type {
 	case "required":
 		if value == nil || value == "" {
@@ -857,8 +856,8 @@ func (v *ConfigurationValidator) validateRule(path string, value interface{}, ru
 }
 
 // createDefaultSchema creates the default configuration schema
-func (v *ConfigurationValidator) createDefaultSchema() *ConfigurationSchema {
-	return &ConfigurationSchema{
+func (v *ConfigurationValidator) createDefaultSchema() *AdvancedConfigurationSchema {
+	return &AdvancedConfigurationSchema{
 		Version: "1.0",
 		Properties: map[string]*SchemaProperty{
 			"version": {
@@ -965,14 +964,14 @@ func (v *ConfigurationValidator) createDefaultSchema() *ConfigurationSchema {
 // initializeDefaultRules initializes default validation rules
 func (v *ConfigurationValidator) initializeDefaultRules() {
 	// Server port validation
-	v.AddRule("server.port", ValidationRule{
+	v.AddRule("server.port", ValidationRuleConfig{
 		Type:      "min",
 		Parameter: 1,
 		Message:   "Server port must be greater than 0",
 		Severity:  "error",
 	})
 
-	v.AddRule("server.port", ValidationRule{
+	v.AddRule("server.port", ValidationRuleConfig{
 		Type:      "max",
 		Parameter: 65535,
 		Message:   "Server port must be less than 65536",
@@ -1001,14 +1000,14 @@ func (v *ConfigurationValidator) initializeDefaultRules() {
 	})
 
 	// Temperature validation
-	v.AddRule("llm.temperature", ValidationRule{
+	v.AddRule("llm.temperature", ValidationRuleConfig{
 		Type:      "min",
 		Parameter: 0.0,
 		Message:   "Temperature must be between 0.0 and 2.0",
 		Severity:  "error",
 	})
 
-	v.AddRule("llm.temperature", ValidationRule{
+	v.AddRule("llm.temperature", ValidationRuleConfig{
 		Type:      "max",
 		Parameter: 2.0,
 		Message:   "Temperature must be between 0.0 and 2.0",
@@ -1155,7 +1154,7 @@ func (m *ConfigurationMigrator) findMigrationPath(from, to string) []string {
 
 		// Take first available migration
 		nextMigration := migrations[0]
-		path = append(path, m.getMigrationID(nextMigration))
+		path = append(path, m.getMigrationID(&nextMigration))
 		current = nextMigration.To
 
 		// Prevent infinite loops
@@ -1310,7 +1309,7 @@ func (t *ConfigurationTransformer) applyRule(config *HelixConfig, rule Transform
 
 	// Apply transformation to matches
 	for _, match := range matches {
-		transformed := rule.Transform(match)
+		_ = rule.Transform(match)
 		// Update config with transformed value
 		// Implementation depends on specific use case
 	}

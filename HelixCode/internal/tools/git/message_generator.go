@@ -167,9 +167,8 @@ func (mg *MessageGenerator) Generate(ctx context.Context, req MessageRequest) (*
 
 	// Generate message using LLM
 	llmReq := &llm.LLMRequest{
-		ID:           uuid.New(),
-		ProviderType: llm.ProviderTypeLocal,
-		Model:        "llama-3-8b",
+		ID:    uuid.New(),
+		Model: "llama-3-8b",
 		Messages: []llm.Message{
 			{
 				Role:    "user",
@@ -366,16 +365,16 @@ func ensureImperativeMood(subject string) string {
 
 	// Common past tense to imperative conversions
 	conversions := map[string]string{
-		"added":      "add",
-		"fixed":      "fix",
-		"updated":    "update",
-		"removed":    "remove",
-		"deleted":    "delete",
-		"created":    "create",
+		"added":       "add",
+		"fixed":       "fix",
+		"updated":     "update",
+		"removed":     "remove",
+		"deleted":     "delete",
+		"created":     "create",
 		"implemented": "implement",
-		"improved":   "improve",
-		"refactored": "refactor",
-		"changed":    "change",
+		"improved":    "improve",
+		"refactored":  "refactor",
+		"changed":     "change",
 	}
 
 	// Check if first word needs conversion
@@ -511,14 +510,14 @@ func extractFunctionName(line, language string) string {
 	switch language {
 	case "go":
 		patterns = []string{
-			`func\s+(\w+)\s*\(`,           // func Name(
+			`func\s+(\w+)\s*\(`,                    // func Name(
 			`func\s+\(\w+\s+\*?\w+\)\s+(\w+)\s*\(`, // func (r *Type) Name(
 		}
 	case "javascript", "typescript":
 		patterns = []string{
-			`function\s+(\w+)\s*\(`,       // function name(
-			`(\w+)\s*:\s*function\s*\(`,   // name: function(
-			`const\s+(\w+)\s*=\s*\(`,      // const name = (
+			`function\s+(\w+)\s*\(`,     // function name(
+			`(\w+)\s*:\s*function\s*\(`, // name: function(
+			`const\s+(\w+)\s*=\s*\(`,    // const name = (
 		}
 	case "python":
 		patterns = []string{

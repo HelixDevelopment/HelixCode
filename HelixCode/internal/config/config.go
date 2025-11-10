@@ -22,55 +22,6 @@ type Config struct {
 	Logging  LoggingConfig   `mapstructure:"logging"`
 }
 
-// ServerConfig represents server configuration
-type ServerConfig struct {
-	Address         string `mapstructure:"address"`
-	Port            int    `mapstructure:"port"`
-	ReadTimeout     int    `mapstructure:"read_timeout"`
-	WriteTimeout    int    `mapstructure:"write_timeout"`
-	IdleTimeout     int    `mapstructure:"idle_timeout"`
-	ShutdownTimeout int    `mapstructure:"shutdown_timeout"`
-}
-
-// RedisConfig represents Redis configuration
-type RedisConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	Password string `mapstructure:"password"`
-	DB       int    `mapstructure:"db"`
-	Enabled  bool   `mapstructure:"enabled"`
-}
-
-// AuthConfig represents authentication configuration
-type AuthConfig struct {
-	JWTSecret     string `mapstructure:"jwt_secret"`
-	TokenExpiry   int    `mapstructure:"token_expiry"`
-	SessionExpiry int    `mapstructure:"session_expiry"`
-	BcryptCost    int    `mapstructure:"bcrypt_cost"`
-}
-
-// WorkersConfig represents worker configuration
-type WorkersConfig struct {
-	HealthCheckInterval int `mapstructure:"health_check_interval"`
-	HealthTTL           int `mapstructure:"health_ttl"`
-	MaxConcurrentTasks  int `mapstructure:"max_concurrent_tasks"`
-}
-
-// TasksConfig represents task configuration
-type TasksConfig struct {
-	MaxRetries         int `mapstructure:"max_retries"`
-	CheckpointInterval int `mapstructure:"checkpoint_interval"`
-	CleanupInterval    int `mapstructure:"cleanup_interval"`
-}
-
-// LLMConfig represents LLM configuration
-type LLMConfig struct {
-	DefaultProvider string            `mapstructure:"default_provider"`
-	Providers       map[string]string `mapstructure:"providers"`
-	MaxTokens       int               `mapstructure:"max_tokens"`
-	Temperature     float64           `mapstructure:"temperature"`
-}
-
 // LoggingConfig represents logging configuration
 type LoggingConfig struct {
 	Level  string `mapstructure:"level"`

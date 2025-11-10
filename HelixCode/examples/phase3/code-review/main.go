@@ -36,11 +36,15 @@ func main() {
 }`
 
 	// Create code review session
-	sess := sessionMgr.Create(
-		"review-payment-processing",
-		session.ModeBuilding, // or add ModeReview
+	sess, err := sessionMgr.Create(
 		"payment-service",
+		"review-payment-processing",
+		"Code review session for payment processing",
+		session.ModeBuilding, // or add ModeReview
 	)
+	if err != nil {
+		log.Fatalf("Failed to create session: %v", err)
+	}
 	sess.AddTag("review")
 	sess.AddTag("payments")
 	sess.SetMetadata("reviewer", "ai-assistant")
@@ -49,7 +53,10 @@ func main() {
 	fmt.Printf("Started code review session: %s\n\n", sess.Name)
 
 	// Create conversation
-	conv := memoryMgr.CreateConversation("Code Review: Payment Processing")
+	conv, err := memoryMgr.CreateConversation("Code Review: Payment Processing")
+	if err != nil {
+		log.Fatalf("Failed to create conversation: %v", err)
+	}
 	conv.SessionID = sess.ID
 
 	// Generate review prompt from template

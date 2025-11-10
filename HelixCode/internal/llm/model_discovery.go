@@ -2,14 +2,12 @@ package llm
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"math"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,138 +17,159 @@ import (
 
 // ModelDiscoveryEngine provides intelligent model recommendation and discovery
 type ModelDiscoveryEngine struct {
-	registry          *CrossProviderRegistry
-	hardwareDetector   *hardware.Detector
-	usageAnalytics    *UsageAnalytics
-	modelRanker       *ModelRanker
-	baseDir           string
-	cacheDir          string
-	mu                sync.RWMutex
+	registry         *CrossProviderRegistry
+	hardwareDetector *hardware.Detector
+	usageAnalytics   *UsageAnalytics
+	modelRanker      *ModelRanker
+	baseDir          string
+	cacheDir         string
+	mu               sync.RWMutex
 }
 
 // ModelRecommendation represents a recommended model
 type ModelRecommendation struct {
-	Model            *ModelInfo             `json:"model"`
-	RecommendationScore float64               `json:"score"`
-	Reasons          []string              `json:"reasons"`
-	Providers         []string              `json:"providers"`
+	Model                *ModelInfo           `json:"model"`
+	RecommendationScore  float64              `json:"score"`
+	Reasons              []string             `json:"reasons"`
+	Providers            []string             `json:"providers"`
 	EstimatedPerformance *PerformanceEstimate `json:"performance"`
-	HardwareFit      *HardwareFit          `json:"hardware_fit"`
-	UsageMatch        *UsageMatch           `json:"usage_match"`
+	HardwareFit          *HardwareFit         `json:"hardware_fit"`
+	UsageMatch           *UsageMatch          `json:"usage_match"`
 }
 
 // PerformanceEstimate provides performance predictions
 type PerformanceEstimate struct {
-	TokensPerSecond   float64 `json:"tokens_per_second"`
-	MemoryUsage       int64   `json:"memory_usage_mb"`
-	Latency          int64   `json:"latency_ms"`
-	Throughput       int64   `json:"throughput_req_per_min"`
-	CostPerMillion   float64 `json:"cost_per_million_tokens"`
-	QualityScore     float64 `json:"quality_score"`
+	TokensPerSecond float64 `json:"tokens_per_second"`
+	MemoryUsage     int64   `json:"memory_usage_mb"`
+	Latency         int64   `json:"latency_ms"`
+	Throughput      int64   `json:"throughput_req_per_min"`
+	CostPerMillion  float64 `json:"cost_per_million_tokens"`
+	QualityScore    float64 `json:"quality_score"`
 }
 
 // HardwareFit evaluates model-hardware compatibility
 type HardwareFit struct {
-	CPUScore         float64 `json:"cpu_score"`
-	GPUScore         float64 `json:"gpu_score"`
-	MemoryScore      float64 `json:"memory_score"`
-	OverallFit       float64 `json:"overall_fit"`
-	WillRun          bool    `json:"will_run"`
-	OptimalSettings  map[string]interface{} `json:"optimal_settings"`
-	Warnings         []string `json:"warnings"`
-	Recommendations  []string `json:"recommendations"`
+	CPUScore        float64                `json:"cpu_score"`
+	GPUScore        float64                `json:"gpu_score"`
+	MemoryScore     float64                `json:"memory_score"`
+	OverallFit      float64                `json:"overall_fit"`
+	WillRun         bool                   `json:"will_run"`
+	OptimalSettings map[string]interface{} `json:"optimal_settings"`
+	Warnings        []string               `json:"warnings"`
+	Recommendations []string               `json:"recommendations"`
 }
 
 // UsageMatch analyzes model fit for specific use cases
 type UsageMatch struct {
-	TaskType         string  `json:"task_type"`
-	FitScore         float64 `json:"fit_score"`
-	RecommendedFor   []string `json:"recommended_for"`
+	TaskType          string   `json:"task_type"`
+	FitScore          float64  `json:"fit_score"`
+	RecommendedFor    []string `json:"recommended_for"`
 	NotRecommendedFor []string `json:"not_recommended_for"`
-	Reasoning        []string `json:"reasoning"`
+	Reasoning         []string `json:"reasoning"`
 }
 
 // UsageAnalytics tracks model usage patterns
 type UsageAnalytics struct {
-	modelUsageStats  map[string]*ModelUsageStats `json:"model_usage_stats"`
-	taskPatterns     map[string]*TaskPattern      `json:"task_patterns"`
-	userPreferences  map[string]*UserPreferences  `json:"user_preferences"`
+	modelUsageStats    map[string]*ModelUsageStats    `json:"model_usage_stats"`
+	taskPatterns       map[string]*TaskPattern        `json:"task_patterns"`
+	userPreferences    map[string]*UserPreferences    `json:"user_preferences"`
 	performanceHistory map[string]*PerformanceHistory `json:"performance_history"`
-	mu               sync.RWMutex
+	mu                 sync.RWMutex
 }
 
 // ModelUsageStats tracks usage statistics for models
 type ModelUsageStats struct {
-	ModelID          string    `json:"model_id"`
-	TotalRequests    int64     `json:"total_requests"`
-	AverageLatency   float64   `json:"average_latency_ms"`
-	SuccessRate      float64   `json:"success_rate"`
-	UserSatisfaction float64   `json:"user_satisfaction"`
-	PreferredBy      []string  `json:"preferred_by"`
-	CommonTasks     []string  `json:"common_tasks"`
+	ModelID           string    `json:"model_id"`
+	TotalRequests     int64     `json:"total_requests"`
+	AverageLatency    float64   `json:"average_latency_ms"`
+	SuccessRate       float64   `json:"success_rate"`
+	UserSatisfaction  float64   `json:"user_satisfaction"`
+	PreferredBy       []string  `json:"preferred_by"`
+	CommonTasks       []string  `json:"common_tasks"`
 	PerformanceIssues []string  `json:"performance_issues"`
-	LastUsed        time.Time `json:"last_used"`
-	UsageTrend      string    `json:"usage_trend"` // "increasing", "decreasing", "stable"
+	LastUsed          time.Time `json:"last_used"`
+	UsageTrend        string    `json:"usage_trend"` // "increasing", "decreasing", "stable"
 }
 
 // TaskPattern represents usage patterns for specific tasks
 type TaskPattern struct {
-	TaskType         string    `json:"task_type"`
-	CommonModels     []string  `json:"common_models"`
-	AverageComplexity float64   `json:"average_complexity"`
-	PeakHours        []string  `json:"peak_hours"`
+	TaskType                string             `json:"task_type"`
+	CommonModels            []string           `json:"common_models"`
+	AverageComplexity       float64            `json:"average_complexity"`
+	PeakHours               []string           `json:"peak_hours"`
 	PerformanceRequirements map[string]float64 `json:"performance_requirements"`
-	RecommendedModelSizes []string `json:"recommended_model_sizes"`
+	RecommendedModelSizes   []string           `json:"recommended_model_sizes"`
 }
 
 // UserPreferences tracks individual user preferences
 type UserPreferences struct {
-	UserID            string            `json:"user_id"`
-	PreferredProviders []string          `json:"preferred_providers"`
-	QualityPreference  string            `json:"quality_preference"` // "fast", "balanced", "quality"
-	BudgetConstraints  map[string]float64 `json:"budget_constraints"`
-	TaskFrequencies   map[string]int    `json:"task_frequencies"`
-	HardwareConstraints map[string]bool   `json:"hardware_constraints"`
-	PrivacyRequirements map[string]bool   `json:"privacy_requirements"`
+	UserID              string             `json:"user_id"`
+	PreferredProviders  []string           `json:"preferred_providers"`
+	QualityPreference   string             `json:"quality_preference"` // "fast", "balanced", "quality"
+	BudgetConstraints   map[string]float64 `json:"budget_constraints"`
+	TaskFrequencies     map[string]int     `json:"task_frequencies"`
+	HardwareConstraints map[string]bool    `json:"hardware_constraints"`
+	PrivacyRequirements map[string]bool    `json:"privacy_requirements"`
 }
 
 // PerformanceHistory tracks performance over time
 type PerformanceHistory struct {
-	ModelID       string            `json:"model_id"`
-	Provider      string            `json:"provider"`
-	TimeSeries    []PerformanceDataPoint `json:"time_series"`
-	AverageMetrics *PerformanceEstimate `json:"average_metrics"`
-	OptimizationHistory []OptimizationRecord `json:"optimization_history"`
+	ModelID             string                 `json:"model_id"`
+	Provider            string                 `json:"provider"`
+	TimeSeries          []PerformanceDataPoint `json:"time_series"`
+	AverageMetrics      *PerformanceEstimate   `json:"average_metrics"`
+	OptimizationHistory []OptimizationRecord   `json:"optimization_history"`
 }
 
 // PerformanceDataPoint represents a single performance measurement
 type PerformanceDataPoint struct {
-	Timestamp       time.Time `json:"timestamp"`
-	TokensPerSecond float64   `json:"tokens_per_second"`
-	MemoryUsage     int64     `json:"memory_usage_mb"`
-	Latency        int64     `json:"latency_ms"`
-	SuccessRate    float64   `json:"success_rate"`
-	UserRating     float64   `json:"user_rating"`
-	HardwareConfig map[string]interface{} `json:"hardware_config"`
+	Timestamp       time.Time              `json:"timestamp"`
+	TokensPerSecond float64                `json:"tokens_per_second"`
+	MemoryUsage     int64                  `json:"memory_usage_mb"`
+	Latency         int64                  `json:"latency_ms"`
+	SuccessRate     float64                `json:"success_rate"`
+	UserRating      float64                `json:"user_rating"`
+	HardwareConfig  map[string]interface{} `json:"hardware_config"`
 }
 
 // OptimizationRecord tracks optimization attempts
 type OptimizationRecord struct {
-	Timestamp       time.Time `json:"timestamp"`
-	OptimizationType string   `json:"optimization_type"`
-	BeforeMetrics   *PerformanceEstimate `json:"before_metrics"`
-	AfterMetrics    *PerformanceEstimate `json:"after_metrics"`
-	Improvement     float64   `json:"improvement_percentage"`
-	Success        bool      `json:"success"`
-	Method         string    `json:"method"`
+	Timestamp        time.Time            `json:"timestamp"`
+	OptimizationType string               `json:"optimization_type"`
+	BeforeMetrics    *PerformanceEstimate `json:"before_metrics"`
+	AfterMetrics     *PerformanceEstimate `json:"after_metrics"`
+	Improvement      float64              `json:"improvement_percentage"`
+	Success          bool                 `json:"success"`
+	Method           string               `json:"method"`
 }
 
 // ModelRanker provides intelligent model ranking
 type ModelRanker struct {
-	weights           map[string]float64 `json:"weights"`
-	scoringFactors    []string          `json:"scoring_factors"`
-	customScorers     map[string]CustomScorer `json:"custom_scorers"`
-	mu                sync.RWMutex
+	weights        map[string]float64      `json:"weights"`
+	scoringFactors []string                `json:"scoring_factors"`
+	customScorers  map[string]CustomScorer `json:"custom_scorers"`
+	mu             sync.RWMutex
+}
+
+// NewModelRanker creates a new model ranker with default weights
+func NewModelRanker() *ModelRanker {
+	return &ModelRanker{
+		weights: map[string]float64{
+			"performance":     0.3,
+			"compatibility":   0.25,
+			"cost_efficiency": 0.2,
+			"reliability":     0.15,
+			"features":        0.1,
+		},
+		scoringFactors: []string{
+			"context_size",
+			"max_tokens",
+			"response_time",
+			"cost_per_token",
+			"success_rate",
+		},
+		customScorers: make(map[string]CustomScorer),
+	}
 }
 
 // CustomScorer allows custom scoring logic
@@ -162,42 +181,42 @@ type CustomScorer interface {
 
 // RecommendationRequest represents a request for model recommendations
 type RecommendationRequest struct {
-	TaskTypes         []string               `json:"task_types"`
-	Constraints       map[string]interface{} `json:"constraints"`
-	UserPreferences   *UserPreferences        `json:"user_preferences,omitempty"`
-	HardwareProfile   *hardware.HardwareProfile `json:"hardware_profile,omitempty"`
-	BudgetLimit       float64                `json:"budget_limit,omitempty"`
+	TaskTypes          []string               `json:"task_types"`
+	Constraints        map[string]interface{} `json:"constraints"`
+	UserPreferences    *UserPreferences       `json:"user_preferences,omitempty"`
+	HardwareProfile    *hardware.HardwareInfo `json:"hardware_profile,omitempty"`
+	BudgetLimit        float64                `json:"budget_limit,omitempty"`
 	QualityPreference  string                 `json:"quality_preference"` // "fast", "balanced", "quality"
-	PrivacyLevel      string                 `json:"privacy_level"` // "local", "hybrid", "cloud"
+	PrivacyLevel       string                 `json:"privacy_level"`      // "local", "hybrid", "cloud"
 	MaxRecommendations int                    `json:"max_recommendations"`
-	ExcludeModels    []string               `json:"exclude_models,omitempty"`
-	IncludeProviders []string               `json:"include_providers,omitempty"`
+	ExcludeModels      []string               `json:"exclude_models,omitempty"`
+	IncludeProviders   []string               `json:"include_providers,omitempty"`
 }
 
 // RecommendationResponse contains model recommendations
 type RecommendationResponse struct {
-	Recommendations  []*ModelRecommendation `json:"recommendations"`
-	TotalModels     int                  `json:"total_models"`
-	SearchTime      time.Duration         `json:"search_time"`
-	RelevanceScore  float64              `json:"relevance_score"`
-	Alternatives     []*ModelRecommendation `json:"alternatives"`
+	Recommendations []*ModelRecommendation  `json:"recommendations"`
+	TotalModels     int                     `json:"total_models"`
+	SearchTime      time.Duration           `json:"search_time"`
+	RelevanceScore  float64                 `json:"relevance_score"`
+	Alternatives    []*ModelRecommendation  `json:"alternatives"`
 	Insights        *RecommendationInsights `json:"insights"`
 }
 
 // RecommendationInsights provides insights about recommendations
 type RecommendationInsights struct {
-	MarketTrends     []string `json:"market_trends"`
-	PerformanceComparisons map[string]float64 `json:"performance_comparisons"`
-	CostAnalysis     map[string]float64 `json:"cost_analysis"`
-	HardwareAnalysis map[string]string `json:"hardware_analysis"`
-	RecommendationReasoning []string `json:"recommendation_reasoning"`
+	MarketTrends            []string           `json:"market_trends"`
+	PerformanceComparisons  map[string]float64 `json:"performance_comparisons"`
+	CostAnalysis            map[string]float64 `json:"cost_analysis"`
+	HardwareAnalysis        map[string]string  `json:"hardware_analysis"`
+	RecommendationReasoning []string           `json:"recommendation_reasoning"`
 }
 
 // NewModelDiscoveryEngine creates a new model discovery engine
 func NewModelDiscoveryEngine(baseDir string) *ModelDiscoveryEngine {
 	cacheDir := filepath.Join(baseDir, "cache", "discovery")
 	os.MkdirAll(cacheDir, 0755)
-	
+
 	return &ModelDiscoveryEngine{
 		registry:         NewCrossProviderRegistry(baseDir),
 		hardwareDetector: hardware.NewDetector(),
@@ -211,35 +230,35 @@ func NewModelDiscoveryEngine(baseDir string) *ModelDiscoveryEngine {
 // GetRecommendations returns intelligent model recommendations
 func (e *ModelDiscoveryEngine) GetRecommendations(ctx context.Context, req *RecommendationRequest) (*RecommendationResponse, error) {
 	startTime := time.Now()
-	
+
 	// Get available models
 	models := e.getAvailableModels(ctx, req)
-	
+
 	// Score and rank models
 	recommendations := e.scoreAndRankModels(models, req)
-	
+
 	// Generate alternatives
 	alternatives := e.generateAlternatives(recommendations, req)
-	
+
 	// Generate insights
 	insights := e.generateInsights(recommendations, alternatives, req)
-	
+
 	// Sort by score
 	sort.Slice(recommendations, func(i, j int) bool {
 		return recommendations[i].RecommendationScore > recommendations[j].RecommendationScore
 	})
-	
+
 	// Limit results
 	if req.MaxRecommendations > 0 && len(recommendations) > req.MaxRecommendations {
 		recommendations = recommendations[:req.MaxRecommendations]
 	}
-	
+
 	return &RecommendationResponse{
 		Recommendations: recommendations,
 		TotalModels:     len(models),
 		SearchTime:      time.Since(startTime),
 		RelevanceScore:  e.calculateRelevanceScore(recommendations, req),
-		Alternatives:     alternatives,
+		Alternatives:    alternatives,
 		Insights:        insights,
 	}, nil
 }
@@ -248,27 +267,27 @@ func (e *ModelDiscoveryEngine) GetRecommendations(ctx context.Context, req *Reco
 func (e *ModelDiscoveryEngine) getAvailableModels(ctx context.Context, req *RecommendationRequest) []*ModelInfo {
 	// Get models from cross-provider registry
 	downloadedModels := e.registry.GetDownloadedModels()
-	
+
 	// Convert to ModelInfo
 	var models []*ModelInfo
 	modelMap := make(map[string]*ModelInfo)
-	
+
 	for _, downloadedModel := range downloadedModels {
 		model := &ModelInfo{
-			ID:            downloadedModel.ModelID,
-			Name:          strings.Title(strings.ReplaceAll(downloadedModel.ModelID, "-", " ")),
-			Format:        downloadedModel.Format,
-			Size:          downloadedModel.Size,
-			ContextSize:   4096, // Default, should be from metadata
-			Provider:      ProviderLocalLLM,
-			Capabilities:  e.inferCapabilities(downloadedModel.ModelID),
-			Metadata:      downloadedModel.Metadata,
+			ID:           downloadedModel.ModelID,
+			Name:         strings.Title(strings.ReplaceAll(downloadedModel.ModelID, "-", " ")),
+			Format:       downloadedModel.Format,
+			Size:         downloadedModel.Size,
+			ContextSize:  4096, // Default, should be from metadata
+			Provider:     ProviderTypeLocal,
+			Capabilities: e.inferCapabilities(downloadedModel.ModelID),
+			Metadata:     e.convertMetadata(downloadedModel.Metadata),
 		}
-		
+
 		models = append(models, model)
 		modelMap[downloadedModel.ModelID] = model
 	}
-	
+
 	// Add models from external sources (HuggingFace, etc.)
 	externalModels := e.fetchExternalModels(ctx, req)
 	for _, model := range externalModels {
@@ -276,17 +295,17 @@ func (e *ModelDiscoveryEngine) getAvailableModels(ctx context.Context, req *Reco
 			models = append(models, model)
 		}
 	}
-	
+
 	// Filter by constraints
 	filtered := e.filterModelsByConstraints(models, req)
-	
+
 	// Exclude specified models
 	if len(req.ExcludeModels) > 0 {
 		excludeMap := make(map[string]bool)
 		for _, exclude := range req.ExcludeModels {
 			excludeMap[exclude] = true
 		}
-		
+
 		var result []*ModelInfo
 		for _, model := range filtered {
 			if !excludeMap[model.ID] {
@@ -295,19 +314,19 @@ func (e *ModelDiscoveryEngine) getAvailableModels(ctx context.Context, req *Reco
 		}
 		filtered = result
 	}
-	
+
 	return filtered
 }
 
 // scoreAndRankModels scores and ranks models based on request
 func (e *ModelDiscoveryEngine) scoreAndRankModels(models []*ModelInfo, req *RecommendationRequest) []*ModelRecommendation {
 	var recommendations []*ModelRecommendation
-	
+
 	for _, model := range models {
 		recommendation := e.scoreModel(model, req)
 		recommendations = append(recommendations, recommendation)
 	}
-	
+
 	return recommendations
 }
 
@@ -315,62 +334,62 @@ func (e *ModelDiscoveryEngine) scoreAndRankModels(models []*ModelInfo, req *Reco
 func (e *ModelDiscoveryEngine) scoreModel(model *ModelInfo, req *RecommendationRequest) *ModelRecommendation {
 	score := 0.0
 	reasons := []string{}
-	
+
 	// Task compatibility scoring
 	taskScore := e.scoreTaskCompatibility(model, req.TaskTypes)
 	score += taskScore * 0.3
 	if taskScore > 0.7 {
 		reasons = append(reasons, "Excellent task compatibility")
 	}
-	
+
 	// Hardware compatibility scoring
 	hardwareScore := e.scoreHardwareCompatibility(model, req.HardwareProfile)
 	score += hardwareScore * 0.25
 	if hardwareScore > 0.8 {
 		reasons = append(reasons, "Perfect hardware fit")
 	}
-	
+
 	// Performance scoring
 	performanceScore := e.scorePerformance(model, req.QualityPreference)
 	score += performanceScore * 0.2
 	if performanceScore > 0.8 {
 		reasons = append(reasons, "High performance expected")
 	}
-	
+
 	// Cost scoring
 	costScore := e.scoreCost(model, req.BudgetLimit)
 	score += costScore * 0.15
 	if costScore > 0.8 {
 		reasons = append(reasons, "Cost-effective")
 	}
-	
+
 	// Privacy scoring
 	privacyScore := e.scorePrivacy(model, req.PrivacyLevel)
 	score += privacyScore * 0.1
 	if privacyScore > 0.9 {
 		reasons = append(reasons, "Privacy-compliant")
 	}
-	
+
 	// Get compatible providers
 	providers := e.getCompatibleProviders(model)
-	
+
 	// Estimate performance
 	performanceEstimate := e.estimatePerformance(model, req.HardwareProfile)
-	
+
 	// Evaluate hardware fit
 	hardwareFit := e.evaluateHardwareFit(model, req.HardwareProfile)
-	
+
 	// Analyze usage match
 	usageMatch := e.analyzeUsageMatch(model, req.TaskTypes)
-	
+
 	return &ModelRecommendation{
-		Model:               model,
+		Model:                model,
 		RecommendationScore:  score,
-		Reasons:             reasons,
-		Providers:           providers,
+		Reasons:              reasons,
+		Providers:            providers,
 		EstimatedPerformance: performanceEstimate,
-		HardwareFit:         hardwareFit,
-		UsageMatch:          usageMatch,
+		HardwareFit:          hardwareFit,
+		UsageMatch:           usageMatch,
 	}
 }
 
@@ -379,13 +398,13 @@ func (e *ModelDiscoveryEngine) scoreTaskCompatibility(model *ModelInfo, taskType
 	if len(taskTypes) == 0 {
 		return 0.5 // Neutral score
 	}
-	
+
 	totalScore := 0.0
 	for _, taskType := range taskTypes {
 		taskScore := e.scoreModelForTask(model, taskType)
 		totalScore += taskScore
 	}
-	
+
 	return totalScore / float64(len(taskTypes))
 }
 
@@ -394,21 +413,21 @@ func (e *ModelDiscoveryEngine) scoreModelForTask(model *ModelInfo, taskType stri
 	taskRequirements := map[string]map[ModelCapability]float64{
 		"code_generation": {
 			CapabilityCodeGeneration: 1.0,
-			CapabilityReasoning:       0.8,
-			CapabilityDebugging:       0.7,
+			CapabilityReasoning:      0.8,
+			CapabilityDebugging:      0.7,
 		},
 		"planning": {
-			CapabilityPlanning:        1.0,
-			CapabilityReasoning:       0.9,
-			CapabilityAnalysis:       0.8,
+			CapabilityPlanning:  1.0,
+			CapabilityReasoning: 0.9,
+			CapabilityAnalysis:  0.8,
 		},
 		"debugging": {
-			CapabilityDebugging:       1.0,
+			CapabilityDebugging:      1.0,
 			CapabilityCodeGeneration: 0.8,
-			CapabilityReasoning:       0.7,
+			CapabilityReasoning:      0.7,
 		},
 		"testing": {
-			CapabilityTesting:         1.0,
+			CapabilityTesting:        1.0,
 			CapabilityCodeGeneration: 0.7,
 			CapabilityAnalysis:       0.6,
 		},
@@ -419,21 +438,21 @@ func (e *ModelDiscoveryEngine) scoreModelForTask(model *ModelInfo, taskType stri
 		},
 		"documentation": {
 			CapabilityDocumentation: 1.0,
-			CapabilityReasoning:       0.6,
-			CapabilityWriting:        0.8,
+			CapabilityReasoning:     0.6,
+			CapabilityWriting:       0.8,
 		},
 		"analysis": {
-			CapabilityAnalysis:       1.0,
-			CapabilityReasoning:       0.8,
-			CapabilityPlanning:        0.6,
+			CapabilityAnalysis:  1.0,
+			CapabilityReasoning: 0.8,
+			CapabilityPlanning:  0.6,
 		},
 	}
-	
+
 	requirements, exists := taskRequirements[taskType]
 	if !exists {
 		return 0.5 // Unknown task, neutral score
 	}
-	
+
 	totalScore := 0.0
 	totalWeight := 0.0
 	for capability, weight := range requirements {
@@ -442,16 +461,16 @@ func (e *ModelDiscoveryEngine) scoreModelForTask(model *ModelInfo, taskType stri
 		}
 		totalWeight += weight
 	}
-	
+
 	if totalWeight == 0 {
 		return 0.0
 	}
-	
+
 	return totalScore / totalWeight
 }
 
 // scoreHardwareCompatibility scores model compatibility with hardware
-func (e *ModelDiscoveryEngine) scoreHardwareCompatibility(model *ModelInfo, profile *hardware.HardwareProfile) float64 {
+func (e *ModelDiscoveryEngine) scoreHardwareCompatibility(model *ModelInfo, profile *hardware.HardwareInfo) float64 {
 	if profile == nil {
 		// Use detected hardware if no profile provided
 		var err error
@@ -460,26 +479,26 @@ func (e *ModelDiscoveryEngine) scoreHardwareCompatibility(model *ModelInfo, prof
 			return 0.5 // Unknown hardware, neutral score
 		}
 	}
-	
+
 	// Estimate model memory requirements
 	modelMemory := e.estimateModelMemoryRequirements(model)
-	
+
 	// Score based on available memory
-	if profile.TotalRAM > 0 {
-		memoryScore := math.Min(1.0, float64(profile.TotalRAM)/float64(modelMemory))
+	if profile.Memory.Total > 0 {
+		memoryScore := math.Min(1.0, float64(profile.Memory.Total)/float64(modelMemory))
 		if memoryScore < 0.5 {
 			return memoryScore // Not enough memory
 		}
 	}
-	
+
 	// GPU compatibility
-	if profile.GPU != nil {
-		gpuScore := e.scoreGPUCompatibility(model, profile.GPU)
+	if profile.GPU.Name != "" {
+		gpuScore := e.scoreGPUCompatibility(model, &profile.GPU)
 		return gpuScore
 	}
-	
+
 	// CPU-only scoring
-	cpuScore := e.scoreCPUCompatibility(model, profile.CPU)
+	cpuScore := e.scoreCPUCompatibility(model, &profile.CPU)
 	return cpuScore
 }
 
@@ -487,13 +506,14 @@ func (e *ModelDiscoveryEngine) scoreHardwareCompatibility(model *ModelInfo, prof
 func (e *ModelDiscoveryEngine) scoreGPUCompatibility(model *ModelInfo, gpu *hardware.GPUInfo) float64 {
 	// Check VRAM requirements
 	modelVRAM := e.estimateModelVRAMRequirements(model)
-	if gpu.VRAM > 0 && modelVRAM > 0 {
-		vramScore := math.Min(1.0, float64(gpu.VRAM)/float64(modelVRAM))
+	vramBytes := e.parseVRAMString(gpu.VRAM)
+	if vramBytes > 0 && modelVRAM > 0 {
+		vramScore := math.Min(1.0, float64(vramBytes)/float64(modelVRAM))
 		if vramScore < 0.5 {
 			return vramScore
 		}
 	}
-	
+
 	// Check compute capability
 	if gpu.ComputeCapability > 0 {
 		// Certain models require specific compute capabilities
@@ -503,7 +523,7 @@ func (e *ModelDiscoveryEngine) scoreGPUCompatibility(model *ModelInfo, gpu *hard
 		}
 		return computeScore
 	}
-	
+
 	return 0.8 // Unknown GPU capability, reasonably compatible
 }
 
@@ -511,7 +531,7 @@ func (e *ModelDiscoveryEngine) scoreGPUCompatibility(model *ModelInfo, gpu *hard
 func (e *ModelDiscoveryEngine) scoreCPUCompatibility(model *ModelInfo, cpu *hardware.CPUInfo) float64 {
 	// Check for AVX/AVX2 support (important for many models)
 	cpuScore := 0.7 // Base score
-	
+
 	if cpu.HasAVX {
 		cpuScore += 0.1
 	}
@@ -521,7 +541,7 @@ func (e *ModelDiscoveryEngine) scoreCPUCompatibility(model *ModelInfo, cpu *hard
 	if cpu.HasNEON {
 		cpuScore += 0.1
 	}
-	
+
 	// Model size considerations for CPU
 	modelSize := e.estimateModelSize(model.ID)
 	if modelSize == "70B" || modelSize == "34B" {
@@ -529,14 +549,14 @@ func (e *ModelDiscoveryEngine) scoreCPUCompatibility(model *ModelInfo, cpu *hard
 			cpuScore *= 0.6
 		}
 	}
-	
+
 	return math.Min(1.0, cpuScore)
 }
 
 // scorePerformance scores model based on quality preference
 func (e *ModelDiscoveryEngine) scorePerformance(model *ModelInfo, qualityPreference string) float64 {
 	modelSize := e.estimateModelSize(model.ID)
-	
+
 	switch qualityPreference {
 	case "fast":
 		// Prefer smaller, faster models
@@ -596,15 +616,15 @@ func (e *ModelDiscoveryEngine) scoreCost(model *ModelInfo, budgetLimit float64) 
 	if budgetLimit <= 0 {
 		return 0.5 // No budget constraint
 	}
-	
+
 	// Estimate cost per million tokens (simplified)
 	modelSize := e.estimateModelSize(model.ID)
 	costPerMillion := e.estimateCostPerMillion(modelSize, model.Format)
-	
+
 	if costPerMillion > budgetLimit {
 		return 0.0 // Over budget
 	}
-	
+
 	// Score based on how much under budget
 	budgetRatio := costPerMillion / budgetLimit
 	return math.Max(0.0, 1.0-budgetRatio*2.0) // Penalize as we approach budget
@@ -632,11 +652,46 @@ func (e *ModelDiscoveryEngine) scorePrivacy(model *ModelInfo, privacyLevel strin
 
 // Helper methods
 
+func (e *ModelDiscoveryEngine) parseVRAMString(vramStr string) int64 {
+	// Parse VRAM string like "8GB", "16GB", etc.
+	if vramStr == "" {
+		return 0
+	}
+	// Simple parsing - assume GB
+	if strings.Contains(vramStr, "GB") {
+		numStr := strings.TrimSuffix(vramStr, "GB")
+		numStr = strings.TrimSpace(numStr)
+		if num, err := strconv.ParseFloat(numStr, 64); err == nil {
+			return int64(num * 1024 * 1024 * 1024) // Convert GB to bytes
+		}
+	}
+	if strings.Contains(vramStr, "MB") {
+		numStr := strings.TrimSuffix(vramStr, "MB")
+		numStr = strings.TrimSpace(numStr)
+		if num, err := strconv.ParseFloat(numStr, 64); err == nil {
+			return int64(num * 1024 * 1024) // Convert MB to bytes
+		}
+	}
+	// Try to parse as number directly
+	if num, err := strconv.ParseFloat(vramStr, 64); err == nil {
+		return int64(num * 1024 * 1024 * 1024) // Assume GB
+	}
+	return 0
+}
+
+func (e *ModelDiscoveryEngine) convertMetadata(metadata map[string]string) map[string]interface{} {
+	result := make(map[string]interface{})
+	for k, v := range metadata {
+		result[k] = v
+	}
+	return result
+}
+
 func (e *ModelDiscoveryEngine) inferCapabilities(modelID string) []ModelCapability {
 	capabilities := []ModelCapability{}
-	
+
 	modelID = strings.ToLower(modelID)
-	
+
 	// Infer capabilities from model name
 	if strings.Contains(modelID, "code") || strings.Contains(modelID, "instruct") {
 		capabilities = append(capabilities, CapabilityCodeGeneration)
@@ -659,12 +714,12 @@ func (e *ModelDiscoveryEngine) inferCapabilities(modelID string) []ModelCapabili
 	if strings.Contains(modelID, "doc") || strings.Contains(modelID, "write") {
 		capabilities = append(capabilities, CapabilityDocumentation, CapabilityWriting)
 	}
-	
+
 	// Default capabilities for all models
 	if len(capabilities) == 0 {
 		capabilities = append(capabilities, CapabilityTextGeneration, CapabilityReasoning)
 	}
-	
+
 	return capabilities
 }
 
@@ -678,7 +733,7 @@ func (e *ModelDiscoveryEngine) fetchExternalModels(ctx context.Context, req *Rec
 			Format:       FormatGGUF,
 			Size:         4700000000, // ~4.7GB
 			ContextSize:  8192,
-			Provider:     ProviderLocalLLM,
+			Provider:     ProviderTypeLocal,
 			Capabilities: []ModelCapability{CapabilityCodeGeneration, CapabilityReasoning, CapabilityDebugging},
 		},
 		{
@@ -687,7 +742,7 @@ func (e *ModelDiscoveryEngine) fetchExternalModels(ctx context.Context, req *Rec
 			Format:       FormatGGUF,
 			Size:         4100000000, // ~4.1GB
 			ContextSize:  32768,
-			Provider:     ProviderLocalLLM,
+			Provider:     ProviderTypeLocal,
 			Capabilities: []ModelCapability{CapabilityCodeGeneration, CapabilityReasoning, CapabilityAnalysis},
 		},
 		{
@@ -696,7 +751,7 @@ func (e *ModelDiscoveryEngine) fetchExternalModels(ctx context.Context, req *Rec
 			Format:       FormatGGUF,
 			Size:         3800000000, // ~3.8GB
 			ContextSize:  16384,
-			Provider:     ProviderLocalLLM,
+			Provider:     ProviderTypeLocal,
 			Capabilities: []ModelCapability{CapabilityCodeGeneration, CapabilityDebugging, CapabilityTesting},
 		},
 	}
@@ -704,13 +759,13 @@ func (e *ModelDiscoveryEngine) fetchExternalModels(ctx context.Context, req *Rec
 
 func (e *ModelDiscoveryEngine) filterModelsByConstraints(models []*ModelInfo, req *RecommendationRequest) []*ModelInfo {
 	var filtered []*ModelInfo
-	
+
 	for _, model := range models {
 		if e.modelSatisfiesConstraints(model, req) {
 			filtered = append(filtered, model)
 		}
 	}
-	
+
 	return filtered
 }
 
@@ -731,7 +786,7 @@ func (e *ModelDiscoveryEngine) modelSatisfiesConstraints(model *ModelInfo, req *
 			return false
 		}
 	}
-	
+
 	// Check size constraints
 	if maxMemory, ok := req.Constraints["max_memory_mb"].(float64); ok {
 		modelMemory := float64(e.estimateModelMemoryRequirements(model))
@@ -739,7 +794,7 @@ func (e *ModelDiscoveryEngine) modelSatisfiesConstraints(model *ModelInfo, req *
 			return false
 		}
 	}
-	
+
 	// Check privacy constraints
 	if privacyLevel, ok := req.Constraints["privacy_level"].(string); ok {
 		privacyScore := e.scorePrivacy(model, privacyLevel)
@@ -747,20 +802,20 @@ func (e *ModelDiscoveryEngine) modelSatisfiesConstraints(model *ModelInfo, req *
 			return false
 		}
 	}
-	
+
 	return true
 }
 
 func (e *ModelDiscoveryEngine) getCompatibleProviders(model *ModelInfo) []string {
 	providers := []string{}
-	
+
 	allProviders := []string{"vllm", "llamacpp", "ollama", "localai", "fastchat", "textgen"}
 	for _, provider := range allProviders {
 		if e.isModelCompatibleWithProvider(model, provider) {
 			providers = append(providers, provider)
 		}
 	}
-	
+
 	return providers
 }
 
@@ -778,21 +833,21 @@ func (e *ModelDiscoveryEngine) isModelCompatibleWithProvider(model *ModelInfo, p
 	}
 }
 
-func (e *ModelDiscoveryEngine) estimatePerformance(model *ModelInfo, profile *hardware.HardwareProfile) *PerformanceEstimate {
+func (e *ModelDiscoveryEngine) estimatePerformance(model *ModelInfo, profile *hardware.HardwareInfo) *PerformanceEstimate {
 	modelSize := e.estimateModelSize(model.ID)
 	baseTPS := e.estimateBaseTokensPerSecond(modelSize, profile)
-	
+
 	return &PerformanceEstimate{
 		TokensPerSecond: baseTPS,
 		MemoryUsage:     int64(e.estimateModelMemoryRequirements(model)),
-		Latency:        int64(1000.0 / baseTPS), // Approximate latency
-		Throughput:     int64(baseTPS * 60),      // Requests per minute
-		CostPerMillion: e.estimateCostPerMillion(modelSize, model.Format),
-		QualityScore:   e.estimateQualityScore(modelSize),
+		Latency:         int64(1000.0 / baseTPS), // Approximate latency
+		Throughput:      int64(baseTPS * 60),     // Requests per minute
+		CostPerMillion:  e.estimateCostPerMillion(modelSize, model.Format),
+		QualityScore:    e.estimateQualityScore(modelSize),
 	}
 }
 
-func (e *ModelDiscoveryEngine) evaluateHardwareFit(model *ModelInfo, profile *hardware.HardwareProfile) *HardwareFit {
+func (e *ModelDiscoveryEngine) evaluateHardwareFit(model *ModelInfo, profile *hardware.HardwareInfo) *HardwareFit {
 	if profile == nil {
 		var err error
 		profile, err = e.hardwareDetector.Detect()
@@ -800,14 +855,14 @@ func (e *ModelDiscoveryEngine) evaluateHardwareFit(model *ModelInfo, profile *ha
 			return &HardwareFit{
 				OverallFit: 0.5,
 				WillRun:    true,
-				Warnings:    []string{"Hardware detection failed"},
+				Warnings:   []string{"Hardware detection failed"},
 			}
 		}
 	}
-	
+
 	modelMemory := e.estimateModelMemoryRequirements(model)
 	modelVRAM := e.estimateModelVRAMRequirements(model)
-	
+
 	// CPU scoring
 	cpuScore := 0.7 // Base score
 	if profile.CPU.HasAVX2 {
@@ -816,48 +871,49 @@ func (e *ModelDiscoveryEngine) evaluateHardwareFit(model *ModelInfo, profile *ha
 	if profile.CPU.Cores >= 8 {
 		cpuScore += 0.1
 	}
-	
+
 	// GPU scoring
 	gpuScore := 0.0
-	if profile.GPU != nil {
+	if profile.GPU.Name != "" {
 		gpuScore = 0.7 // Base score
-		if profile.GPU.VRAM >= modelVRAM {
+		vramBytes := e.parseVRAMString(profile.GPU.VRAM)
+		if vramBytes >= modelVRAM {
 			gpuScore += 0.3
 		}
 	}
-	
+
 	// Memory scoring
 	memoryScore := 0.0
-	if profile.TotalRAM >= modelMemory {
+	if profile.Memory.Total >= modelMemory {
 		memoryScore = 1.0
-	} else if profile.TotalRAM >= modelMemory/2 {
+	} else if profile.Memory.Total >= modelMemory/2 {
 		memoryScore = 0.7
 	} else {
 		memoryScore = 0.3
 	}
-	
+
 	// Overall fit
 	overallFit := (cpuScore + gpuScore + memoryScore) / 3.0
-	willRun := profile.TotalRAM >= modelMemory/2 // Minimum requirements
-	
+	willRun := profile.Memory.Total >= modelMemory/2 // Minimum requirements
+
 	warnings := []string{}
 	recommendations := []string{}
 	optimalSettings := map[string]interface{}{}
-	
-	if profile.TotalRAM < modelMemory {
+
+	if profile.Memory.Total < modelMemory {
 		warnings = append(warnings, "Insufficient RAM for optimal performance")
 		recommendations = append(recommendations, "Consider using a smaller model or upgrading RAM")
 	}
-	
-	if profile.GPU != nil && profile.GPU.VRAM < modelVRAM {
+
+	if profile.GPU.Name != "" && e.parseVRAMString(profile.GPU.VRAM) < modelVRAM {
 		warnings = append(warnings, "Insufficient VRAM for GPU acceleration")
 		recommendations = append(recommendations, "GPU fallback to CPU or consider quantization")
 		optimalSettings["use_gpu"] = false
-	} else if profile.GPU != nil {
+	} else if profile.GPU.Name != "" {
 		optimalSettings["use_gpu"] = true
-		optimalSettings["gpu_layers"] = e.calculateOptimalGPULayers(model, profile.GPU)
+		optimalSettings["gpu_layers"] = e.calculateOptimalGPULayers(model, &profile.GPU)
 	}
-	
+
 	return &HardwareFit{
 		CPUScore:        cpuScore,
 		GPUScore:        gpuScore,
@@ -873,42 +929,42 @@ func (e *ModelDiscoveryEngine) evaluateHardwareFit(model *ModelInfo, profile *ha
 func (e *ModelDiscoveryEngine) analyzeUsageMatch(model *ModelInfo, taskTypes []string) *UsageMatch {
 	if len(taskTypes) == 0 {
 		return &UsageMatch{
-			TaskType:   "general",
-			FitScore:   0.5,
-			Reasoning:  []string{"No specific tasks provided"},
+			TaskType:  "general",
+			FitScore:  0.5,
+			Reasoning: []string{"No specific tasks provided"},
 		}
 	}
-	
+
 	totalFitScore := 0.0
 	allRecommended := []string{}
 	allNotRecommended := []string{}
 	allReasoning := []string{}
-	
+
 	for _, taskType := range taskTypes {
 		fitScore := e.scoreModelForTask(model, taskType)
 		totalFitScore += fitScore
-		
+
 		if fitScore > 0.8 {
 			allRecommended = append(allRecommended, taskType)
 		} else if fitScore < 0.4 {
 			allNotRecommended = append(allNotRecommended, taskType)
 		}
-		
+
 		if fitScore > 0.7 {
 			allReasoning = append(allReasoning, fmt.Sprintf("Well-suited for %s", taskType))
 		} else if fitScore < 0.5 {
 			allReasoning = append(allReasoning, fmt.Sprintf("Not ideal for %s", taskType))
 		}
 	}
-	
+
 	averageFitScore := totalFitScore / float64(len(taskTypes))
-	
+
 	return &UsageMatch{
-		TaskType:           strings.Join(taskTypes, ", "),
-		FitScore:           averageFitScore,
-		RecommendedFor:     allRecommended,
-		NotRecommendedFor:  allNotRecommended,
-		Reasoning:          allReasoning,
+		TaskType:          strings.Join(taskTypes, ", "),
+		FitScore:          averageFitScore,
+		RecommendedFor:    allRecommended,
+		NotRecommendedFor: allNotRecommended,
+		Reasoning:         allReasoning,
 	}
 }
 
@@ -916,7 +972,7 @@ func (e *ModelDiscoveryEngine) analyzeUsageMatch(model *ModelInfo, taskTypes []s
 
 func (e *ModelDiscoveryEngine) estimateModelSize(modelID string) string {
 	modelID = strings.ToLower(modelID)
-	
+
 	if strings.Contains(modelID, "70b") {
 		return "70B"
 	}
@@ -935,7 +991,7 @@ func (e *ModelDiscoveryEngine) estimateModelSize(modelID string) string {
 	if strings.Contains(modelID, "3b") {
 		return "3B"
 	}
-	
+
 	return "7B" // Default estimate
 }
 
@@ -950,11 +1006,11 @@ func (e *ModelDiscoveryEngine) estimateModelMemoryRequirements(model *ModelInfo)
 		"34B": 20.0,
 		"70B": 40.0,
 	}
-	
+
 	if gb, exists := sizeInGB[modelSize]; exists {
 		return int64(gb * 1024)
 	}
-	
+
 	return int64(4.5 * 1024) // Default for 7B
 }
 
@@ -964,7 +1020,7 @@ func (e *ModelDiscoveryEngine) estimateModelVRAMRequirements(model *ModelInfo) i
 	return int64(float64(ramRequirement) * 0.7) // 70% of RAM requirement
 }
 
-func (e *ModelDiscoveryEngine) estimateBaseTokensPerSecond(modelSize string, profile *hardware.HardwareProfile) float64 {
+func (e *ModelDiscoveryEngine) estimateBaseTokensPerSecond(modelSize string, profile *hardware.HardwareInfo) float64 {
 	baseTPS := map[string]float64{
 		"3B":  50.0,
 		"7B":  25.0,
@@ -973,26 +1029,27 @@ func (e *ModelDiscoveryEngine) estimateBaseTokensPerSecond(modelSize string, pro
 		"34B": 4.0,
 		"70B": 2.0,
 	}
-	
+
 	tps, exists := baseTPS[modelSize]
 	if !exists {
 		tps = 25.0 // Default
 	}
-	
+
 	// Adjust based on hardware
 	if profile != nil {
-		if profile.GPU != nil {
+		if profile.GPU.Name != "" {
 			tps *= 2.0 // GPU acceleration
-			if profile.GPU.VRAM > 16000 { // >16GB
+			vramBytes := e.parseVRAMString(profile.GPU.VRAM)
+			if vramBytes > 16*1024*1024*1024 { // >16GB
 				tps *= 1.5 // High-end GPU
 			}
 		}
-		
+
 		if profile.CPU.Cores >= 16 {
 			tps *= 1.3 // High-end CPU
 		}
 	}
-	
+
 	return tps
 }
 
@@ -1007,11 +1064,11 @@ func (e *ModelDiscoveryEngine) estimateCostPerMillion(modelSize string, format M
 		"34B": 1.0,
 		"70B": 2.0,
 	}
-	
+
 	if multiplier, exists := sizeMultiplier[modelSize]; exists {
 		return multiplier
 	}
-	
+
 	return 0.2 // Default
 }
 
@@ -1025,11 +1082,11 @@ func (e *ModelDiscoveryEngine) estimateQualityScore(modelSize string) float64 {
 		"34B": 0.9,
 		"70B": 0.95,
 	}
-	
+
 	if score, exists := sizeScore[modelSize]; exists {
 		return score
 	}
-	
+
 	return 0.7 // Default
 }
 
@@ -1044,42 +1101,44 @@ func (e *ModelDiscoveryEngine) calculateOptimalGPULayers(model *ModelInfo, gpu *
 		"34B": 45,
 		"70B": 48,
 	}
-	
+
 	if layers, exists := baseLayers[modelSize]; exists {
 		// Adjust based on VRAM
-		vramRatio := float64(gpu.VRAM) / 8000.0 // Base on 8GB
+		vramBytes := e.parseVRAMString(gpu.VRAM)
+		vramGB := float64(vramBytes) / (1024 * 1024 * 1024) // Convert to GB
+		vramRatio := vramGB / 8.0                           // Base on 8GB
 		adjustedLayers := int(float64(layers) * vramRatio)
 		return int(math.Min(float64(layers), float64(adjustedLayers)))
 	}
-	
+
 	return 32 // Default
 }
 
 func (e *ModelDiscoveryEngine) generateAlternatives(recommendations []*ModelRecommendation, req *RecommendationRequest) []*ModelRecommendation {
 	// Generate alternative recommendations for variety
 	alternatives := []*ModelRecommendation{}
-	
+
 	// For each top recommendation, suggest alternatives
 	for _, rec := range recommendations[:min(3, len(recommendations))] {
 		// Find similar models with different characteristics
 		alternatives = append(alternatives, e.findAlternativeModels(rec.Model, req)...)
 	}
-	
+
 	return alternatives
 }
 
 func (e *ModelDiscoveryEngine) findAlternativeModels(model *ModelInfo, req *RecommendationRequest) []*ModelRecommendation {
 	// Find models with similar capabilities but different sizes/formats
 	alternatives := []*ModelRecommendation{}
-	
+
 	// This would typically query external APIs
 	// For now, return some hardcoded alternatives
 	alternativeMap := map[string][]string{
-		"llama-3-8b-instruct": {"mistral-7b-instruct", "codellama-7b-instruct"},
-		"mistral-7b-instruct":  {"llama-3-8b-instruct", "zephyr-7b-beta"},
+		"llama-3-8b-instruct":   {"mistral-7b-instruct", "codellama-7b-instruct"},
+		"mistral-7b-instruct":   {"llama-3-8b-instruct", "zephyr-7b-beta"},
 		"codellama-7b-instruct": {"starcoder-7b", "deepseek-coder-6.7b"},
 	}
-	
+
 	if altModels, exists := alternativeMap[model.ID]; exists {
 		for _, altModelID := range altModels {
 			// Create mock alternative model
@@ -1089,24 +1148,24 @@ func (e *ModelDiscoveryEngine) findAlternativeModels(model *ModelInfo, req *Reco
 				Format:       FormatGGUF,
 				Capabilities: e.inferCapabilities(altModelID),
 			}
-			
+
 			altRecommendation := e.scoreModel(altModel, req)
 			alternatives = append(alternatives, altRecommendation)
 		}
 	}
-	
+
 	return alternatives
 }
 
 func (e *ModelDiscoveryEngine) generateInsights(recommendations []*ModelRecommendation, alternatives []*ModelRecommendation, req *RecommendationRequest) *RecommendationInsights {
 	insights := &RecommendationInsights{
-		MarketTrends:     []string{},
-		PerformanceComparisons: map[string]float64{},
-		CostAnalysis:     map[string]float64{},
-		HardwareAnalysis: map[string]string{},
+		MarketTrends:            []string{},
+		PerformanceComparisons:  map[string]float64{},
+		CostAnalysis:            map[string]float64{},
+		HardwareAnalysis:        map[string]string{},
 		RecommendationReasoning: []string{},
 	}
-	
+
 	// Analyze market trends
 	if len(recommendations) > 0 {
 		topRec := recommendations[0]
@@ -1117,7 +1176,7 @@ func (e *ModelDiscoveryEngine) generateInsights(recommendations []*ModelRecommen
 			insights.MarketTrends = append(insights.MarketTrends, "Mistral models offer excellent performance")
 		}
 	}
-	
+
 	// Performance comparisons
 	for i, rec := range recommendations {
 		if rec.EstimatedPerformance != nil {
@@ -1128,20 +1187,20 @@ func (e *ModelDiscoveryEngine) generateInsights(recommendations []*ModelRecommen
 			if rec.EstimatedPerformance != nil && nextRec.EstimatedPerformance != nil {
 				ratio := rec.EstimatedPerformance.TokensPerSecond / nextRec.EstimatedPerformance.TokensPerSecond
 				if ratio > 1.5 {
-					insights.RecommendationReasoning = append(insights.RecommendationReasoning, 
+					insights.RecommendationReasoning = append(insights.RecommendationReasoning,
 						fmt.Sprintf("%s is %.1fx faster than alternatives", rec.Model.ID, ratio))
 				}
 			}
 		}
 	}
-	
+
 	// Cost analysis
 	for _, rec := range recommendations {
 		if rec.EstimatedPerformance != nil {
 			insights.CostAnalysis[rec.Model.ID] = rec.EstimatedPerformance.CostPerMillion
 		}
 	}
-	
+
 	// Hardware analysis
 	for _, rec := range recommendations {
 		if rec.HardwareFit != nil {
@@ -1154,7 +1213,7 @@ func (e *ModelDiscoveryEngine) generateInsights(recommendations []*ModelRecommen
 			}
 		}
 	}
-	
+
 	return insights
 }
 
@@ -1162,15 +1221,15 @@ func (e *ModelDiscoveryEngine) calculateRelevanceScore(recommendations []*ModelR
 	if len(recommendations) == 0 {
 		return 0.0
 	}
-	
+
 	// Calculate average score
 	totalScore := 0.0
 	for _, rec := range recommendations {
 		totalScore += rec.RecommendationScore
 	}
-	
+
 	averageScore := totalScore / float64(len(recommendations))
-	
+
 	// Adjust based on how well recommendations match request
 	relevanceMultiplier := 1.0
 	if len(req.TaskTypes) > 0 {
@@ -1184,7 +1243,7 @@ func (e *ModelDiscoveryEngine) calculateRelevanceScore(recommendations []*ModelR
 		taskMatch /= float64(len(recommendations))
 		relevanceMultiplier *= taskMatch
 	}
-	
+
 	return averageScore * relevanceMultiplier
 }
 
