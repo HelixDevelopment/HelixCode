@@ -245,7 +245,6 @@ func TestHelixConfigBackup(t *testing.T) {
 	assert.Equal(t, "Backup Test", backupConfig.Application.Name)
 
 	// Test automatic backup path generation
-	autoBackupPath := filepath.Join(tempDir, "auto_backup")
 	manager2, err := NewHelixConfigManager(configPath)
 	require.NoError(t, err)
 

@@ -9,16 +9,16 @@ import (
 
 // Manager manages conversation memory
 type Manager struct {
-	conversations   map[string]*Conversation // All conversations by ID
-	activeConv      *Conversation            // Currently active conversation
-	maxMessages     int                      // Maximum messages per conversation
-	maxTokens       int                      // Maximum tokens per conversation
-	maxConversations int                     // Maximum conversations to keep
-	mu              sync.RWMutex             // Thread-safety
-	onCreate        []ConversationCallback   // Callbacks on conversation creation
-	onMessage       []MessageCallback        // Callbacks on message addition
-	onClear         []ConversationCallback   // Callbacks on conversation clear
-	onDelete        []ConversationCallback   // Callbacks on conversation deletion
+	conversations    map[string]*Conversation // All conversations by ID
+	activeConv       *Conversation            // Currently active conversation
+	maxMessages      int                      // Maximum messages per conversation
+	maxTokens        int                      // Maximum tokens per conversation
+	maxConversations int                      // Maximum conversations to keep
+	mu               sync.RWMutex             // Thread-safety
+	onCreate         []ConversationCallback   // Callbacks on conversation creation
+	onMessage        []MessageCallback        // Callbacks on message addition
+	onClear          []ConversationCallback   // Callbacks on conversation clear
+	onDelete         []ConversationCallback   // Callbacks on conversation deletion
 }
 
 // ConversationCallback is called for conversation events
@@ -31,9 +31,9 @@ type MessageCallback func(*Conversation, *Message)
 func NewManager() *Manager {
 	return &Manager{
 		conversations:    make(map[string]*Conversation),
-		maxMessages:      1000,    // Default max messages
-		maxTokens:        100000,  // Default max tokens (~25K words)
-		maxConversations: 100,     // Default max conversations
+		maxMessages:      1000,   // Default max messages
+		maxTokens:        100000, // Default max tokens (~25K words)
+		maxConversations: 100,    // Default max conversations
 		onCreate:         make([]ConversationCallback, 0),
 		onMessage:        make([]MessageCallback, 0),
 		onClear:          make([]ConversationCallback, 0),
@@ -107,6 +107,8 @@ func (m *Manager) AddMessage(convID string, message *Message) error {
 	}
 
 	conv.AddMessage(message)
+	conv.Version++
+	conv.UpdatedAt = time.Now()
 
 	// Check limits and truncate if needed
 	m.enforceConversationLimits(conv)
@@ -168,6 +170,8 @@ func (m *Manager) ClearConversation(id string) error {
 	}
 
 	conv.Clear()
+	conv.Version++
+	conv.UpdatedAt = time.Now()
 
 	// Trigger callbacks
 	for _, callback := range m.onClear {
@@ -501,12 +505,12 @@ func (m *Manager) Import(snapshot *ConversationSnapshot) error {
 
 // ManagerStatistics contains manager statistics
 type ManagerStatistics struct {
-	TotalConversations      int               // Total conversations
-	TotalMessages           int               // Total messages
-	TotalTokens             int               // Total tokens
-	ByRole                  map[Role]int      // Message count by role
-	AverageMessagesPerConv  float64           // Average messages per conversation
-	AverageTokensPerMessage float64           // Average tokens per message
+	TotalConversations      int          // Total conversations
+	TotalMessages           int          // Total messages
+	TotalTokens             int          // Total tokens
+	ByRole                  map[Role]int // Message count by role
+	AverageMessagesPerConv  float64      // Average messages per conversation
+	AverageTokensPerMessage float64      // Average tokens per message
 }
 
 // String returns a string representation
@@ -519,4 +523,152 @@ func (s *ManagerStatistics) String() string {
 type ConversationSnapshot struct {
 	Conversation *Conversation `json:"conversation"`
 	ExportedAt   time.Time     `json:"exported_at"`
+}
+
+// ConflictResolution represents the result of a conflict resolution attempt
+type ConflictResolution struct {
+	Resolved   bool          // Whether the conflict was resolved
+	Current    *Conversation // Current version in memory
+	Incoming   *Conversation // Incoming version that caused conflict
+	Resolution *Conversation // Resolved version (if auto-resolved)
+	Error      error         // Error if resolution failed
+}
+
+// UpdateConversationWithVersion updates a conversation with version conflict detection
+func (m *Manager) UpdateConversationWithVersion(id string, updated *Conversation, expectedVersion int64) (*ConflictResolution, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	current, exists := m.conversations[id]
+	if !exists {
+		return nil, fmt.Errorf("conversation not found: %s", id)
+	}
+
+	// Check version conflict
+	if current.Version != expectedVersion {
+		return &ConflictResolution{
+			Resolved: false,
+			Current:  current,
+			Incoming: updated,
+			Error:    fmt.Errorf("version conflict: expected %d, got %d", expectedVersion, current.Version),
+		}, nil
+	}
+
+	// Update version and timestamp
+	updated.Version = current.Version + 1
+	updated.UpdatedAt = time.Now()
+
+	// Update in memory
+	m.conversations[id] = updated
+
+	// Update active conversation if needed
+	if m.activeConv != nil && m.activeConv.ID == id {
+		m.activeConv = updated
+	}
+
+	return &ConflictResolution{
+		Resolved: true,
+		Current:  updated,
+	}, nil
+}
+
+// ResolveConflict attempts to auto-resolve a version conflict
+func (m *Manager) ResolveConflict(id string, incoming *Conversation, strategy string) (*ConflictResolution, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	current, exists := m.conversations[id]
+	if !exists {
+		return nil, fmt.Errorf("conversation not found: %s", id)
+	}
+
+	switch strategy {
+	case "overwrite":
+		// Overwrite with incoming version
+		incoming.Version = current.Version + 1
+		incoming.UpdatedAt = time.Now()
+		m.conversations[id] = incoming
+
+		if m.activeConv != nil && m.activeConv.ID == id {
+			m.activeConv = incoming
+		}
+
+		return &ConflictResolution{
+			Resolved:   true,
+			Current:    incoming,
+			Incoming:   incoming,
+			Resolution: incoming,
+		}, nil
+
+	case "merge":
+		// Simple merge: keep current title, append new messages
+		merged := &Conversation{
+			ID:           current.ID,
+			Title:        current.Title, // Keep current title
+			SessionID:    current.SessionID,
+			CharacterID:  current.CharacterID,
+			UserID:       current.UserID,
+			Messages:     append(current.Messages, incoming.Messages...), // Append messages
+			CharMessages: append(current.CharMessages, incoming.CharMessages...),
+			Metadata:     mergeMetadata(current.Metadata, incoming.Metadata),
+			CreatedAt:    current.CreatedAt,
+			UpdatedAt:    time.Now(),
+			Version:      current.Version + 1,
+			Status:       incoming.Status, // Use incoming status
+			Summary:      incoming.Summary,
+			TokenCount:   current.TokenCount + incoming.TokenCount,
+			MessageCount: current.MessageCount + incoming.MessageCount,
+		}
+
+		m.conversations[id] = merged
+
+		if m.activeConv != nil && m.activeConv.ID == id {
+			m.activeConv = merged
+		}
+
+		return &ConflictResolution{
+			Resolved:   true,
+			Current:    merged,
+			Incoming:   incoming,
+			Resolution: merged,
+		}, nil
+
+	default:
+		return &ConflictResolution{
+			Resolved: false,
+			Current:  current,
+			Incoming: incoming,
+			Error:    fmt.Errorf("unknown conflict resolution strategy: %s", strategy),
+		}, nil
+	}
+}
+
+// mergeMetadata merges two metadata maps
+func mergeMetadata(current, incoming map[string]string) map[string]string {
+	merged := make(map[string]string)
+
+	// Copy current
+	for k, v := range current {
+		merged[k] = v
+	}
+
+	// Override with incoming
+	for k, v := range incoming {
+		merged[k] = v
+	}
+
+	return merged
+}
+
+// GetConversationVersion returns the current version of a conversation
+func (m *Manager) GetConversationVersion(id string) (int64, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	conv, exists := m.conversations[id]
+	if !exists {
+		return 0, fmt.Errorf("conversation not found: %s", id)
+	}
+
+	return conv.Version, nil
 }

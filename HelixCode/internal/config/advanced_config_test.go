@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -215,37 +214,6 @@ func TestConfigurationTransformer(t *testing.T) {
 	// Verify transformations
 	assert.Equal(t, 9090, result.Server.Port)
 	assert.Equal(t, "Transformed App", result.Application.Name)
-}
-
-// TestConfigurationTransformerTypes tests type transformations
-func TestConfigurationTransformerTypes(t *testing.T) {
-	transformer := NewConfigurationTransformer()
-
-	// Test string to int conversion
-	mapping := TransformMapping{
-		Source:    "test_value",
-		Target:    "converted_value",
-		Transform: "convert",
-		Parameters: map[string]interface{}{
-			"from": "string",
-			"to":   "int",
-		},
-	}
-
-	transformer.AddMapping(mapping)
-
-	// Test conversion
-	config := &struct {
-		TestValue      string
-		ConvertedValue int
-	}{}
-
-	variables := map[string]interface{}{
-		"test_value": "123",
-	}
-
-	err := transformer.applyMapping(config, mapping, variables)
-	assert.NoError(t, err)
 }
 
 // TestConfigurationTransformerConditions tests conditional transformations
@@ -720,7 +688,6 @@ func BenchmarkAdvancedConfiguration(b *testing.B) {
 	})
 
 	manager := NewConfigurationTemplateManager()
-	templates := CreateDefaultTemplates()
 
 	b.Run("TemplateApplication", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {

@@ -135,6 +135,7 @@ type Conversation struct {
 	Metadata     map[string]string   // Additional metadata
 	CreatedAt    time.Time           // When created
 	UpdatedAt    time.Time           // Last updated
+	Version      int64               // Version for conflict resolution
 	Status       string              // Conversation status
 	Summary      string              // Conversation summary
 	TokenCount   int                 // Total tokens
@@ -150,6 +151,7 @@ func NewConversation(title string) *Conversation {
 		Metadata:     make(map[string]string),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
+		Version:      1,
 		TokenCount:   0,
 		MessageCount: 0,
 	}
@@ -230,6 +232,7 @@ func (c *Conversation) Clear() {
 	c.TokenCount = 0
 	c.MessageCount = 0
 	c.UpdatedAt = time.Now()
+	c.Version++
 }
 
 // Truncate keeps only the last N messages
@@ -249,6 +252,7 @@ func (c *Conversation) Truncate(keepLast int) int {
 
 	c.MessageCount = len(c.Messages)
 	c.UpdatedAt = time.Now()
+	c.Version++
 
 	return removed
 }

@@ -28,12 +28,12 @@ type FileWatcher struct {
 }
 
 func (w *FileWatcher) OnConfigChange(change *ConfigChange) error {
-	w.logger.Info("Configuration file changed", "path", change.Path, "type", change.Type)
+	w.logger.Info("Configuration file changed: path=%s type=%s", change.Path, change.Type)
 
 	// This would trigger configuration reload
 	// For now, just log the change
 	changeJSON, _ := json.MarshalIndent(change, "", "  ")
-	w.logger.Debug("Configuration change details", "change", string(changeJSON))
+	w.logger.Debug("Configuration change details: %s", string(changeJSON))
 
 	return nil
 }
@@ -61,7 +61,7 @@ type WebhookWatcher struct {
 }
 
 func (w *WebhookWatcher) OnConfigChange(change *ConfigChange) error {
-	w.logger.Info("Sending webhook notification", "url", w.URL, "type", change.Type)
+	w.logger.Info("Sending webhook notification: url=%s type=%s", w.URL, change.Type)
 
 	// Prepare webhook payload
 	payload := map[string]interface{}{
@@ -102,7 +102,7 @@ func (w *WebhookWatcher) OnConfigChange(change *ConfigChange) error {
 		if err != nil {
 			lastErr = err
 			if i < w.RetryCount {
-				w.logger.Warn("Webhook request failed, retrying", "attempt", i+1, "error", err)
+				w.logger.Warn("Webhook request failed, retrying: attempt=%d error=%v", i+1, err)
 				time.Sleep(w.RetryDelay)
 				continue
 			}
@@ -112,12 +112,12 @@ func (w *WebhookWatcher) OnConfigChange(change *ConfigChange) error {
 		defer resp.Body.Close()
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			w.logger.Info("Webhook notification sent successfully", "status", resp.StatusCode)
+			w.logger.Info("Webhook notification sent successfully: status=%d", resp.StatusCode)
 			return nil
 		} else {
 			lastErr = fmt.Errorf("webhook returned status %d", resp.StatusCode)
 			if i < w.RetryCount {
-				w.logger.Warn("Webhook request failed, retrying", "attempt", i+1, "status", resp.StatusCode)
+				w.logger.Warn("Webhook request failed, retrying: attempt=%d status=%d", i+1, resp.StatusCode)
 				time.Sleep(w.RetryDelay)
 				continue
 			}

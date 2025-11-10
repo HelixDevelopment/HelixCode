@@ -52,10 +52,10 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	// Register all built-in providers
 	// r.providers[ProviderTypePinecone] = func(config map[string]interface{}) (VectorProvider, error) { return NewPineconeProvider(config) }
 	// r.providers[ProviderTypeMilvus] = func(config map[string]interface{}) (VectorProvider, error) { return NewMilvusProvider(config) }
-	// r.providers[ProviderTypeWeaviate] = func(config map[string]interface{}) (VectorProvider, error) { return NewWeaviateProvider(config) }
+	r.providers[ProviderTypeWeaviate] = func(config map[string]interface{}) (VectorProvider, error) { return NewWeaviateProvider(config) }
 	// r.providers[ProviderTypeQdrant] = func(config map[string]interface{}) (VectorProvider, error) { return NewQdrantProvider(config) }
 	// r.providers[ProviderTypeRedis] = func(config map[string]interface{}) (VectorProvider, error) { return NewRedisProvider(config) }
-	// r.providers[ProviderTypeChroma] = func(config map[string]interface{}) (VectorProvider, error) { return NewChromaDBProvider(config) }
+	r.providers[ProviderTypeChroma] = func(config map[string]interface{}) (VectorProvider, error) { return NewChromaDBProvider(config) }
 
 	// r.providers[ProviderTypeOpenAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewOpenAIProvider(config) }
 	// r.providers[ProviderTypeAnthropic] = func(config map[string]interface{}) (VectorProvider, error) { return NewAnthropicProvider(config) }

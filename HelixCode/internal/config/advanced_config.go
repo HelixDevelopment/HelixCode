@@ -816,20 +816,20 @@ func (v *ConfigurationValidator) validateRule(path string, value interface{}, ru
 	switch rule.Type {
 	case "required":
 		if value == nil || value == "" {
-			return fmt.Errorf(rule.Message)
+			return fmt.Errorf("%s", rule.Message)
 		}
 	case "min":
 		if numValue, ok := v.getNumberValue(value); ok {
 			min, ok := rule.Parameter.(float64)
 			if !ok || numValue < min {
-				return fmt.Errorf(rule.Message)
+				return fmt.Errorf("%s", rule.Message)
 			}
 		}
 	case "max":
 		if numValue, ok := v.getNumberValue(value); ok {
 			max, ok := rule.Parameter.(float64)
 			if !ok || numValue > max {
-				return fmt.Errorf(rule.Message)
+				return fmt.Errorf("%s", rule.Message)
 			}
 		}
 	case "pattern":
@@ -840,7 +840,7 @@ func (v *ConfigurationValidator) validateRule(path string, value interface{}, ru
 			}
 			// In real implementation, use regex
 			if !strings.Contains(strValue, pattern) { // Simplified
-				return fmt.Errorf(rule.Message)
+				return fmt.Errorf("%s", rule.Message)
 			}
 		}
 	case "custom":

@@ -10,22 +10,22 @@ import (
 // TestBasePlatformAdapter tests base platform adapter functionality
 func TestBasePlatformAdapter(t *testing.T) {
 	adapter := NewBasePlatformAdapter("desktop")
-	
+
 	// Test platform type
 	assert.Equal(t, "desktop", adapter.GetPlatformType())
-	
+
 	// Test features
 	features := adapter.GetPlatformFeatures()
 	assert.NotEmpty(t, features)
 	assert.Contains(t, features, "native_menus")
 	assert.Contains(t, features, "system_tray")
 	assert.Contains(t, features, "file_dialogs")
-	
+
 	// Test themes
 	themes := adapter.GetPlatformThemes()
 	assert.NotEmpty(t, themes)
 	assert.Contains(t, themes, "system")
-	
+
 	systemTheme := themes["system"]
 	assert.Equal(t, "System", systemTheme.Name)
 	assert.Equal(t, "Matches system appearance", systemTheme.Description)
@@ -34,10 +34,10 @@ func TestBasePlatformAdapter(t *testing.T) {
 // TestDesktopUIAdapter tests desktop UI adapter
 func TestDesktopUIAdapter(t *testing.T) {
 	adapter := NewDesktopUIAdapter()
-	
+
 	// Test platform type
 	assert.Equal(t, "desktop", adapter.GetPlatformType())
-	
+
 	// Test features
 	features := adapter.GetPlatformFeatures()
 	expectedFeatures := []string{
@@ -52,31 +52,31 @@ func TestDesktopUIAdapter(t *testing.T) {
 		"auto_update",
 		"window_management",
 	}
-	
+
 	for _, feature := range expectedFeatures {
 		assert.Contains(t, features, feature)
 	}
-	
+
 	// Test themes
 	themes := adapter.GetPlatformThemes()
 	assert.Contains(t, themes, "system")
 	assert.Contains(t, themes, "dark")
 	assert.Contains(t, themes, "light")
-	
+
 	// Test config form rendering
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	form, err := adapter.RenderConfigForm(configUI)
 	require.NoError(t, err)
-	
+
 	// Verify form structure
 	desktopForm, ok := form.(DesktopConfigForm)
 	require.True(t, ok)
-	
+
 	assert.Equal(t, "helix_config_form", desktopForm.ID)
 	assert.Equal(t, "HelixCode Configuration", desktopForm.Title)
 	assert.Equal(t, "native_window", desktopForm.Type)
@@ -88,11 +88,11 @@ func TestDesktopUIAdapter(t *testing.T) {
 	assert.Equal(t, 1200, desktopForm.DefaultWidth)
 	assert.Equal(t, 800, desktopForm.DefaultHeight)
 	assert.True(t, desktopForm.CenterScreen)
-	
+
 	// Verify sections
 	assert.NotEmpty(t, desktopForm.Sections)
 	assert.Greater(t, len(desktopForm.Sections), 0)
-	
+
 	// Find application section
 	var appSection *DesktopConfigSection
 	for _, section := range desktopForm.Sections {
@@ -101,18 +101,18 @@ func TestDesktopUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, appSection)
 	assert.Equal(t, "Application", appSection.Title)
 	assert.Equal(t, "🚀", appSection.Icon)
 	assert.Equal(t, "tab_page", appSection.Type)
 	assert.True(t, appSection.Expanded)
 	assert.NotEmpty(t, appSection.Fields)
-	
+
 	// Verify actions
 	assert.NotEmpty(t, desktopForm.Actions)
 	assert.Greater(t, len(desktopForm.Actions), 0)
-	
+
 	// Find save action
 	var saveAction *DesktopConfigAction
 	for _, action := range desktopForm.Actions {
@@ -121,7 +121,7 @@ func TestDesktopUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, saveAction)
 	assert.Equal(t, "Save", saveAction.Label)
 	assert.Equal(t, "primary", saveAction.Type)
@@ -135,10 +135,10 @@ func TestDesktopUIAdapter(t *testing.T) {
 // TestWebUIAdapter tests web UI adapter
 func TestWebUIAdapter(t *testing.T) {
 	adapter := NewWebUIAdapter()
-	
+
 	// Test platform type
 	assert.Equal(t, "web", adapter.GetPlatformType())
-	
+
 	// Test features
 	features := adapter.GetPlatformFeatures()
 	expectedFeatures := []string{
@@ -152,30 +152,30 @@ func TestWebUIAdapter(t *testing.T) {
 		"service_worker",
 		"css_animations",
 	}
-	
+
 	for _, feature := range expectedFeatures {
 		assert.Contains(t, features, feature)
 	}
-	
+
 	// Test themes
 	themes := adapter.GetPlatformThemes()
 	assert.Contains(t, themes, "dark")
 	assert.Contains(t, themes, "light")
-	
+
 	// Test config form rendering
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	form, err := adapter.RenderConfigForm(configUI)
 	require.NoError(t, err)
-	
+
 	// Verify form structure
 	webForm, ok := form.(WebConfigForm)
 	require.True(t, ok)
-	
+
 	assert.Equal(t, "helix_config_form", webForm.ID)
 	assert.Equal(t, "HelixCode Configuration", webForm.Title)
 	assert.Equal(t, "spa_component", webForm.Type)
@@ -183,10 +183,10 @@ func TestWebUIAdapter(t *testing.T) {
 	assert.True(t, webForm.Responsive)
 	assert.NotEmpty(t, webForm.JavaScript)
 	assert.NotEmpty(t, webForm.CSS)
-	
+
 	// Verify sections
 	assert.NotEmpty(t, webForm.Sections)
-	
+
 	// Find application section
 	var appSection *WebConfigSection
 	for _, section := range webForm.Sections {
@@ -195,16 +195,16 @@ func TestWebUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, appSection)
 	assert.Equal(t, "Application", appSection.Title)
 	assert.Equal(t, "🚀", appSection.Icon)
 	assert.Equal(t, "tab", appSection.Type)
 	assert.NotEmpty(t, appSection.Fields)
-	
+
 	// Verify fields
 	require.NotEmpty(t, appSection.Fields)
-	
+
 	// Find app name field
 	var nameField *WebConfigField
 	for _, field := range appSection.Fields {
@@ -213,7 +213,7 @@ func TestWebUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, nameField)
 	assert.Equal(t, "text", nameField.Type)
 	assert.Equal(t, "Application Name", nameField.Label)
@@ -226,10 +226,10 @@ func TestWebUIAdapter(t *testing.T) {
 // TestMobileUIAdapter tests mobile UI adapter
 func TestMobileUIAdapter(t *testing.T) {
 	adapter := NewMobileUIAdapter()
-	
+
 	// Test platform type
 	assert.Equal(t, "mobile", adapter.GetPlatformType())
-	
+
 	// Test features
 	features := adapter.GetPlatformFeatures()
 	expectedFeatures := []string{
@@ -243,46 +243,46 @@ func TestMobileUIAdapter(t *testing.T) {
 		"device_orientation",
 		"native_plugins",
 	}
-	
+
 	for _, feature := range expectedFeatures {
 		assert.Contains(t, features, feature)
 	}
-	
+
 	// Test themes
 	themes := adapter.GetPlatformThemes()
 	assert.Contains(t, themes, "mobile_light")
 	assert.Contains(t, themes, "mobile_dark")
-	
+
 	// Test config form rendering
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	form, err := adapter.RenderConfigForm(configUI)
 	require.NoError(t, err)
-	
+
 	// Verify form structure
 	mobileForm, ok := form.(MobileConfigForm)
 	require.True(t, ok)
-	
+
 	assert.Equal(t, "helix_config_form", mobileForm.ID)
 	assert.Equal(t, "HelixCode Configuration", mobileForm.Title)
 	assert.Equal(t, "mobile_screens", mobileForm.Type)
 	assert.Equal(t, "carousel", mobileForm.Layout)
 	assert.True(t, mobileForm.Responsive)
 	assert.NotEmpty(t, mobileForm.Gestures)
-	
+
 	// Verify gestures
 	assert.Contains(t, mobileForm.Gestures, "swipe")
 	assert.Contains(t, mobileForm.Gestures, "tap")
 	assert.Contains(t, mobileForm.Gestures, "double_tap")
 	assert.Contains(t, mobileForm.Gestures, "pinch")
-	
+
 	// Verify sections
 	assert.NotEmpty(t, mobileForm.Sections)
-	
+
 	// Find application section
 	var appSection *MobileConfigSection
 	for _, section := range mobileForm.Sections {
@@ -291,16 +291,16 @@ func TestMobileUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, appSection)
 	assert.Equal(t, "Application", appSection.Title)
 	assert.Equal(t, "🚀", appSection.Icon)
 	assert.Equal(t, "screen", appSection.Type)
 	assert.NotEmpty(t, appSection.Fields)
-	
+
 	// Verify fields
 	require.NotEmpty(t, appSection.Fields)
-	
+
 	// Find app name field
 	var nameField *MobileConfigField
 	for _, field := range appSection.Fields {
@@ -309,7 +309,7 @@ func TestMobileUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, nameField)
 	assert.Equal(t, "text", nameField.Type)
 	assert.Equal(t, "Application Name", nameField.Label)
@@ -320,10 +320,10 @@ func TestMobileUIAdapter(t *testing.T) {
 // TestTUIAdapter tests terminal UI adapter
 func TestTUIAdapter(t *testing.T) {
 	adapter := NewTUIAdapter()
-	
+
 	// Test platform type
 	assert.Equal(t, "tui", adapter.GetPlatformType())
-	
+
 	// Test features
 	features := adapter.GetPlatformFeatures()
 	expectedFeatures := []string{
@@ -337,29 +337,29 @@ func TestTUIAdapter(t *testing.T) {
 		"terminal_shortcuts",
 		"resize_handling",
 	}
-	
+
 	for _, feature := range expectedFeatures {
 		assert.Contains(t, features, feature)
 	}
-	
+
 	// Test themes
 	themes := adapter.GetPlatformThemes()
 	assert.Contains(t, themes, "terminal")
-	
+
 	// Test config form rendering
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	form, err := adapter.RenderConfigForm(configUI)
 	require.NoError(t, err)
-	
+
 	// Verify form structure
 	tuiForm, ok := form.(TUIConfigForm)
 	require.True(t, ok)
-	
+
 	assert.Equal(t, "helix_config_form", tuiForm.ID)
 	assert.Equal(t, "HelixCode Configuration", tuiForm.Title)
 	assert.Equal(t, "tui_screens", tuiForm.Type)
@@ -367,7 +367,7 @@ func TestTUIAdapter(t *testing.T) {
 	assert.Equal(t, "terminal", tuiForm.Theme)
 	assert.True(t, tuiForm.Features != nil)
 	assert.NotEmpty(t, tuiForm.KeyBindings)
-	
+
 	// Verify key bindings
 	keyBindings := tuiForm.KeyBindings
 	assert.Equal(t, "Ctrl+S", keyBindings["save"])
@@ -377,10 +377,10 @@ func TestTUIAdapter(t *testing.T) {
 	assert.Equal(t, "Shift+Tab", keyBindings["prev_field"])
 	assert.Equal(t, "Enter", keyBindings["select"])
 	assert.Equal(t, "Esc", keyBindings["cancel"])
-	
+
 	// Verify sections
 	assert.NotEmpty(t, tuiForm.Sections)
-	
+
 	// Find application section
 	var appSection *TUIConfigSection
 	for _, section := range tuiForm.Sections {
@@ -389,14 +389,14 @@ func TestTUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, appSection)
 	assert.Equal(t, "Application", appSection.Title)
 	assert.NotEmpty(t, appSection.Fields)
-	
+
 	// Verify fields
 	require.NotEmpty(t, appSection.Fields)
-	
+
 	// Find app name field
 	var nameField *TUIConfigField
 	for _, field := range appSection.Fields {
@@ -405,7 +405,7 @@ func TestTUIAdapter(t *testing.T) {
 			break
 		}
 	}
-	
+
 	require.NotNil(t, nameField)
 	assert.Equal(t, "text", nameField.Type)
 	assert.Equal(t, "Application Name", nameField.Label)
@@ -418,22 +418,22 @@ func TestPlatformUIAdapterFactory(t *testing.T) {
 	desktopAdapter := GetPlatformUIAdapter("desktop")
 	assert.IsType(t, &DesktopUIAdapter{}, desktopAdapter)
 	assert.Equal(t, "desktop", desktopAdapter.GetPlatformType())
-	
+
 	// Test web adapter
 	webAdapter := GetPlatformUIAdapter("web")
 	assert.IsType(t, &WebUIAdapter{}, webAdapter)
 	assert.Equal(t, "web", webAdapter.GetPlatformType())
-	
+
 	// Test mobile adapter
 	mobileAdapter := GetPlatformUIAdapter("mobile")
 	assert.IsType(t, &MobileUIAdapter{}, mobileAdapter)
 	assert.Equal(t, "mobile", mobileAdapter.GetPlatformType())
-	
+
 	// Test TUI adapter
 	tuiAdapter := GetPlatformUIAdapter("tui")
 	assert.IsType(t, &TUIAdapter{}, tuiAdapter)
 	assert.Equal(t, "tui", tuiAdapter.GetPlatformType())
-	
+
 	// Test default adapter (fallback to desktop)
 	defaultAdapter := GetPlatformUIAdapter("unknown")
 	assert.IsType(t, &DesktopUIAdapter{}, defaultAdapter)
@@ -454,45 +454,45 @@ func TestConfigFieldTransformation(t *testing.T) {
 			HelpText:    "Field help",
 		},
 	}
-	
+
 	// Test desktop transformation
 	desktopAdapter := NewDesktopUIAdapter()
 	desktopFields := desktopAdapter.transformFields([]ConfigField{field})
 	require.Len(t, desktopFields, 1)
-	
+
 	desktopField := desktopFields[0]
 	assert.Equal(t, "text_input", desktopField.Type)
 	assert.Equal(t, 300, desktopField.Width)
 	assert.Equal(t, 1, desktopField.TabIndex)
 	assert.False(t, desktopField.Disabled)
 	assert.True(t, desktopField.Visible)
-	
+
 	// Test web transformation
 	webAdapter := NewWebUIAdapter()
 	webFields := webAdapter.transformWebFields([]ConfigField{field})
 	require.Len(t, webFields, 1)
-	
+
 	webField := webFields[0]
 	assert.Equal(t, "text", webField.Type)
 	assert.Equal(t, "form-control", webField.Class)
 	assert.False(t, webField.Disabled)
 	assert.True(t, webField.Visible)
-	
+
 	// Test mobile transformation
 	mobileAdapter := NewMobileUIAdapter()
 	mobileFields := mobileAdapter.transformMobileFields([]ConfigField{field})
 	require.Len(t, mobileFields, 1)
-	
+
 	mobileField := mobileFields[0]
 	assert.Equal(t, "text", mobileField.Type)
 	assert.Equal(t, "default", mobileField.Keyboard)
 	assert.False(t, mobileField.Disabled)
-	
+
 	// Test TUI transformation
 	tuiAdapter := NewTUIAdapter()
 	tuiFields := tuiAdapter.transformTUIFields([]ConfigField{field})
 	require.Len(t, tuiFields, 1)
-	
+
 	tuiField := tuiFields[0]
 	assert.Equal(t, "text", tuiField.Type)
 	assert.NotEmpty(t, tuiField.HelpText)
@@ -510,43 +510,41 @@ func TestConfigActionTransformation(t *testing.T) {
 		Shortcut:    "Ctrl+S",
 		Disabled:    false,
 	}
-	
+
 	// Test desktop transformation
 	desktopAdapter := NewDesktopUIAdapter()
 	desktopActions := desktopAdapter.transformActions([]ConfigAction{action})
 	require.Len(t, desktopActions, 1)
-	
+
 	desktopAction := desktopActions[0]
 	assert.Equal(t, "default_button", desktopAction.Type)
 	assert.True(t, desktopAction.Default)
 	assert.False(t, desktopAction.Cancel)
 	assert.Equal(t, "right", desktopAction.Position)
-	assert.Equal(t, 100, desktopAction.Width)
-	assert.Equal(t, 32, desktopAction.Height)
-	
+
 	// Test web transformation
 	webAdapter := NewWebUIAdapter()
 	webActions := webAdapter.transformWebActions([]ConfigAction{action})
 	require.Len(t, webActions, 1)
-	
+
 	webAction := webActions[0]
 	assert.Equal(t, "btn btn-primary", webAction.Class)
 	assert.False(t, webAction.Disabled)
-	
+
 	// Test mobile transformation
 	mobileAdapter := NewMobileUIAdapter()
 	mobileActions := mobileAdapter.transformMobileActions([]ConfigAction{action})
 	require.Len(t, mobileActions, 1)
-	
+
 	mobileAction := mobileActions[0]
 	assert.Equal(t, "blue", mobileAction.Color)
 	assert.False(t, mobileAction.Disabled)
-	
+
 	// Test TUI transformation
 	tuiAdapter := NewTUIAdapter()
 	tuiActions := tuiAdapter.transformTUIActions([]ConfigAction{action})
 	require.Len(t, tuiActions, 1)
-	
+
 	tuiAction := tuiActions[0]
 	assert.Equal(t, "Ctrl+S", tuiAction.Shortcut)
 	assert.False(t, tuiAction.Disabled)
@@ -556,68 +554,68 @@ func TestConfigActionTransformation(t *testing.T) {
 func TestConfigChangeHandling(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	// Create initial config
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	// Test desktop adapter
 	desktopAdapter := NewDesktopUIAdapter()
-	
+
 	// Handle field change
 	err = desktopAdapter.HandleConfigChange(configUI, "app_name", "Test App")
 	require.NoError(t, err)
-	
+
 	// Verify change
-	config := configUI.GetConfig()
+	config := configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, "Test App", config.Application.Name)
-	
+
 	// Test number change
 	err = desktopAdapter.HandleConfigChange(configUI, "server_port", 9090)
 	require.NoError(t, err)
-	
-	config = configUI.GetConfig()
+
+	config = configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, 9090, config.Server.Port)
-	
+
 	// Test float to int conversion
 	err = desktopAdapter.HandleConfigChange(configUI, "server_port", float64(8080))
 	require.NoError(t, err)
-	
-	config = configUI.GetConfig()
+
+	config = configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, 8080, config.Server.Port)
-	
+
 	// Test temperature change
 	err = desktopAdapter.HandleConfigChange(configUI, "llm_temperature", 0.8)
 	require.NoError(t, err)
-	
-	config = configUI.GetConfig()
+
+	config = configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, 0.8, config.LLM.Temperature)
-	
+
 	// Test web adapter
 	webAdapter := NewWebUIAdapter()
-	
+
 	err = webAdapter.HandleConfigChange(configUI, "app_description", "Web Test Description")
 	require.NoError(t, err)
-	
-	config = configUI.GetConfig()
+
+	config = configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, "Web Test Description", config.Application.Description)
-	
+
 	// Test mobile adapter
 	mobileAdapter := NewMobileUIAdapter()
-	
+
 	err = mobileAdapter.HandleConfigChange(configUI, "ui_theme", "mobile_light")
 	require.NoError(t, err)
-	
-	config = configUI.GetConfig()
+
+	config = configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, "mobile_light", config.UI.Theme)
-	
+
 	// Test TUI adapter
 	tuiAdapter := NewTUIAdapter()
-	
+
 	err = tuiAdapter.HandleConfigChange(configUI, "ui_font_size", 16)
 	require.NoError(t, err)
-	
-	config = configUI.GetConfig()
+
+	config = configUI.GetConfigManager().GetConfig()
 	assert.Equal(t, 16, config.UI.FontSize)
 }
 
@@ -625,10 +623,10 @@ func TestConfigChangeHandling(t *testing.T) {
 func TestPlatformValidation(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	// Test all adapters
 	adapters := []PlatformUIAdapter{
 		NewDesktopUIAdapter(),
@@ -636,7 +634,7 @@ func TestPlatformValidation(t *testing.T) {
 		NewMobileUIAdapter(),
 		NewTUIAdapter(),
 	}
-	
+
 	for _, adapter := range adapters {
 		errors, err := adapter.ValidateConfig(configUI)
 		require.NoError(t, err)
@@ -654,21 +652,21 @@ func TestPlatformSpecificFeatures(t *testing.T) {
 	assert.Contains(t, desktopFeatures, "native_menus")
 	assert.Contains(t, desktopFeatures, "system_tray")
 	assert.Contains(t, desktopFeatures, "file_dialogs")
-	
+
 	// Test web features
 	webAdapter := NewWebUIAdapter()
 	webFeatures := webAdapter.GetPlatformFeatures()
 	assert.Contains(t, webFeatures, "responsive_design")
 	assert.Contains(t, webFeatures, "pwa")
 	assert.Contains(t, webFeatures, "websockets")
-	
+
 	// Test mobile features
 	mobileAdapter := NewMobileUIAdapter()
 	mobileFeatures := mobileAdapter.GetPlatformFeatures()
 	assert.Contains(t, mobileFeatures, "touch_gestures")
 	assert.Contains(t, mobileFeatures, "biometric_auth")
 	assert.Contains(t, mobileFeatures, "push_notifications")
-	
+
 	// Test TUI features
 	tuiAdapter := NewTUIAdapter()
 	tuiFeatures := tuiAdapter.GetPlatformFeatures()
@@ -683,27 +681,27 @@ func TestPlatformSpecificThemes(t *testing.T) {
 	desktopAdapter := NewDesktopUIAdapter()
 	desktopThemes := desktopAdapter.GetPlatformThemes()
 	assert.Contains(t, desktopThemes, "system")
-	
+
 	systemTheme := desktopThemes["system"]
 	assert.Equal(t, "system", systemTheme.Colors["primary"])
 	assert.Equal(t, "system", systemTheme.Colors["background"])
-	
+
 	// Test mobile themes
 	mobileAdapter := NewMobileUIAdapter()
 	mobileThemes := mobileAdapter.GetPlatformThemes()
 	assert.Contains(t, mobileThemes, "mobile_light")
 	assert.Contains(t, mobileThemes, "mobile_dark")
-	
+
 	mobileLightTheme := mobileThemes["mobile_light"]
 	assert.Equal(t, "#fafafa", mobileLightTheme.Colors["background"])
 	assert.Equal(t, "#212121", mobileLightTheme.Colors["foreground"])
 	assert.Equal(t, "#2196f3", mobileLightTheme.Colors["primary"])
-	
+
 	// Test TUI themes
 	tuiAdapter := NewTUIAdapter()
 	tuiThemes := tuiAdapter.GetPlatformThemes()
 	assert.Contains(t, tuiThemes, "terminal")
-	
+
 	terminalTheme := tuiThemes["terminal"]
 	assert.Equal(t, "#000000", terminalTheme.Colors["background"])
 	assert.Equal(t, "#ffffff", terminalTheme.Colors["foreground"])
@@ -713,13 +711,13 @@ func TestPlatformSpecificThemes(t *testing.T) {
 // TestFieldTransformationByType tests field transformation for different types
 func TestFieldTransformationByType(t *testing.T) {
 	fieldTypes := []string{
-		"text", "textarea", "number", "boolean", "select", 
+		"text", "textarea", "number", "boolean", "select",
 		"multiselect", "password", "file", "directory", "slider", "color",
 	}
-	
+
 	// Test desktop adapter
 	desktopAdapter := NewDesktopUIAdapter()
-	
+
 	for _, fieldType := range fieldTypes {
 		field := ConfigField{
 			ID:    "test_" + fieldType,
@@ -727,33 +725,33 @@ func TestFieldTransformationByType(t *testing.T) {
 			Label: "Test " + fieldType,
 			UI:    FieldUI{},
 		}
-		
+
 		desktopFields := desktopAdapter.transformFields([]ConfigField{field})
 		require.Len(t, desktopFields, 1)
-		
+
 		transformedType := desktopAdapter.getDesktopFieldType(fieldType)
 		assert.NotEmpty(t, transformedType)
-		
+
 		width := desktopAdapter.getDesktopFieldWidth(fieldType)
 		assert.Greater(t, width, 0)
 	}
-	
+
 	// Test action transformation
 	actionTypes := []string{"primary", "secondary", "danger"}
-	
+
 	for _, actionType := range actionTypes {
 		action := ConfigAction{
 			ID:    "test_" + actionType,
 			Type:  actionType,
 			Label: "Test " + actionType,
 		}
-		
+
 		desktopActions := desktopAdapter.transformActions([]ConfigAction{action})
 		require.Len(t, desktopActions, 1)
-		
+
 		transformedType := desktopAdapter.getDesktopActionType(actionType)
 		assert.NotEmpty(t, transformedType)
-		
+
 		position := desktopAdapter.getDesktopActionPosition(action.ID)
 		assert.NotEmpty(t, position)
 	}
@@ -763,10 +761,10 @@ func TestFieldTransformationByType(t *testing.T) {
 func TestShowConfigDialog(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	// Test all adapters
 	adapters := []PlatformUIAdapter{
 		NewDesktopUIAdapter(),
@@ -774,7 +772,7 @@ func TestShowConfigDialog(t *testing.T) {
 		NewMobileUIAdapter(),
 		NewTUIAdapter(),
 	}
-	
+
 	for _, adapter := range adapters {
 		changesMade, err := adapter.ShowConfigDialog(configUI)
 		require.NoError(t, err)
@@ -815,31 +813,31 @@ func TestComplexFieldTypes(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// Test desktop transformation
 	desktopAdapter := NewDesktopUIAdapter()
 	desktopFields := desktopAdapter.transformFields([]ConfigField{field})
 	require.Len(t, desktopFields, 1)
-	
+
 	desktopField := desktopFields[0]
 	assert.Equal(t, "combo_box", desktopField.Type)
 	assert.NotEmpty(t, desktopField.Options)
 	assert.Equal(t, 200, desktopField.Width) // Select field width
-	
+
 	// Test web transformation
 	webAdapter := NewWebUIAdapter()
 	webFields := webAdapter.transformWebFields([]ConfigField{field})
 	require.Len(t, webFields, 1)
-	
+
 	webField := webFields[0]
 	assert.Equal(t, "select", webField.Type)
 	assert.NotEmpty(t, webField.Options)
-	
+
 	// Test mobile transformation
 	mobileAdapter := NewMobileUIAdapter()
 	mobileFields := mobileAdapter.transformMobileFields([]ConfigField{field})
 	require.Len(t, mobileFields, 1)
-	
+
 	mobileField := mobileFields[0]
 	assert.Equal(t, "select", mobileField.Type)
 	assert.NotEmpty(t, mobileField.Options)
@@ -850,25 +848,25 @@ func TestComplexFieldTypes(t *testing.T) {
 func TestValidationWithPlatformAdapter(t *testing.T) {
 	tempDir := t.TempDir()
 	configPath := tempDir + "/test_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(t, err)
-	
+
 	// Create invalid configuration by making changes
 	desktopAdapter := NewDesktopUIAdapter()
-	
+
 	// Invalid port
 	err = desktopAdapter.HandleConfigChange(configUI, "server_port", 70000)
 	require.NoError(t, err)
-	
+
 	// Invalid temperature
 	err = desktopAdapter.HandleConfigChange(configUI, "llm_temperature", 3.0)
 	require.NoError(t, err)
-	
+
 	// Validate with adapter
 	errors, err := desktopAdapter.ValidateConfig(configUI)
 	require.NoError(t, err)
-	
+
 	// Should have validation errors
 	assert.NotEmpty(t, errors)
 	assert.Contains(t, errors, "server.port")
@@ -880,7 +878,7 @@ func TestGetPlatformUIAdapterForCurrentPlatform(t *testing.T) {
 	// This test simulates getting adapter for current platform configuration
 	adapter := GetPlatformUIAdapterForCurrentPlatform()
 	assert.NotNil(t, adapter)
-	
+
 	// Should be a desktop adapter by default
 	assert.IsType(t, &DesktopUIAdapter{}, adapter)
 	assert.Equal(t, "desktop", adapter.GetPlatformType())
@@ -890,20 +888,20 @@ func TestGetPlatformUIAdapterForCurrentPlatform(t *testing.T) {
 func BenchmarkPlatformUIAdapter(b *testing.B) {
 	tempDir := b.TempDir()
 	configPath := tempDir + "/bench_config.json"
-	
+
 	configUI, err := NewConfigUI(configPath)
 	require.NoError(b, err)
-	
+
 	// Test desktop adapter rendering
 	desktopAdapter := NewDesktopUIAdapter()
-	
+
 	b.Run("Desktop_RenderForm", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_, err := desktopAdapter.RenderConfigForm(configUI)
 			require.NoError(b, err)
 		}
 	})
-	
+
 	// Test field transformation
 	field := ConfigField{
 		ID:    "test_field",
@@ -911,14 +909,14 @@ func BenchmarkPlatformUIAdapter(b *testing.B) {
 		Label: "Test Field",
 		UI:    FieldUI{},
 	}
-	
+
 	b.Run("Desktop_TransformField", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			fields := desktopAdapter.transformFields([]ConfigField{field})
 			require.Len(b, fields, 1)
 		}
 	})
-	
+
 	// Test config change handling
 	b.Run("Desktop_HandleConfigChange", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {

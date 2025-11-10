@@ -358,18 +358,18 @@ func (cm *ConfigurationManager) UpdateConfig(updates map[string]interface{}) err
 
 	// Notify watchers
 	if err := cm.notifyWatchers(change); err != nil {
-		cm.logger.Warn("Failed to notify configuration watchers", "error", err)
+		cm.logger.Warn("Failed to notify configuration watchers: %v", err)
 	}
 
 	// Auto-save if enabled
 	if cm.autoSave {
 		if err := cm.saveConfiguration(cm.configPath); err != nil {
-			cm.logger.Warn("Failed to auto-save configuration", "error", err)
+			cm.logger.Warn("Failed to auto-save configuration: %v", err)
 		}
 	}
 
 	cm.lastModified = time.Now()
-	cm.logger.Info("Configuration updated successfully", "changes", len(updates))
+	cm.logger.Info("Configuration updated successfully, changes: %d", len(updates))
 
 	return nil
 }
@@ -422,18 +422,18 @@ func (cm *ConfigurationManager) SetProperty(path string, value interface{}) erro
 
 	// Notify watchers
 	if err := cm.notifyWatchers(change); err != nil {
-		cm.logger.Warn("Failed to notify configuration watchers", "error", err)
+		cm.logger.Warn("Failed to notify configuration watchers: %v", err)
 	}
 
 	// Auto-save if enabled
 	if cm.autoSave {
 		if err := cm.saveConfiguration(cm.configPath); err != nil {
-			cm.logger.Warn("Failed to auto-save configuration", "error", err)
+			cm.logger.Warn("Failed to auto-save configuration: %v", err)
 		}
 	}
 
 	cm.lastModified = time.Now()
-	cm.logger.Debug("Property set successfully", "path", path)
+	cm.logger.Debug("Property set successfully: %s", path)
 
 	return nil
 }
@@ -444,7 +444,7 @@ func (cm *ConfigurationManager) AddSchema(name string, schema *ConfigurationSche
 	defer cm.mu.Unlock()
 
 	cm.schemas[name] = schema
-	cm.logger.Debug("Schema added", "name", name, "version", schema.Version)
+	cm.logger.Debug("Schema added: name=%s version=%s", name, schema.Version)
 
 	return nil
 }
@@ -459,7 +459,7 @@ func (cm *ConfigurationManager) AddValidator(property string, rule ValidationRul
 	}
 
 	cm.validators[property] = append(cm.validators[property], rule)
-	cm.logger.Debug("Validator added", "property", property, "rule", rule.GetName())
+	cm.logger.Debug("Validator added: property=%s rule=%s", property, rule.GetName())
 
 	return nil
 }
@@ -474,7 +474,7 @@ func (cm *ConfigurationManager) AddTransformer(property string, transformer Tran
 	}
 
 	cm.transformers[property] = append(cm.transformers[property], transformer)
-	cm.logger.Debug("Transformer added", "property", property, "transformer", transformer.GetName())
+	cm.logger.Debug("Transformer added: property=%s transformer=%s", property, transformer.GetName())
 
 	return nil
 }
@@ -489,7 +489,7 @@ func (cm *ConfigurationManager) AddWatcher(property string, watcher ConfigFileWa
 	}
 
 	cm.watchers[property] = append(cm.watchers[property], watcher)
-	cm.logger.Debug("Watcher added", "property", property, "watcher", watcher.GetName())
+	cm.logger.Debug("Watcher added: property=%s watcher=%s", property, watcher.GetName())
 
 	return nil
 }
@@ -505,7 +505,7 @@ func (cm *ConfigurationManager) AddHook(hook ConfigHook) error {
 	}
 
 	cm.hooks[hookType] = append(cm.hooks[hookType], hook)
-	cm.logger.Debug("Hook added", "type", hookType, "hook", hook.GetName())
+	cm.logger.Debug("Hook added: type=%s hook=%s", hookType, hook.GetName())
 
 	return nil
 }
@@ -530,10 +530,10 @@ func (cm *ConfigurationManager) CreateBackup() error {
 
 	// Clean up old backups
 	if err := cm.cleanupOldBackups(); err != nil {
-		cm.logger.Warn("Failed to cleanup old backups", "error", err)
+		cm.logger.Warn("Failed to cleanup old backups: %v", err)
 	}
 
-	cm.logger.Info("Backup created successfully", "file", backupFile)
+	cm.logger.Info("Backup created successfully: %s", backupFile)
 	return nil
 }
 
@@ -573,7 +573,7 @@ func (cm *ConfigurationManager) RestoreBackup(backupFile string) error {
 	}
 
 	cm.lastModified = time.Now()
-	cm.logger.Info("Configuration restored from backup", "file", backupFile)
+	cm.logger.Info("Configuration restored from backup: %s", backupFile)
 
 	return nil
 }
@@ -649,7 +649,7 @@ func (cm *ConfigurationManager) Export(format string, path string) error {
 		return fmt.Errorf("failed to write export file: %w", err)
 	}
 
-	cm.logger.Info("Configuration exported successfully", "format", format, "path", path)
+	cm.logger.Info("Configuration exported successfully: format=%s path=%s", format, path)
 	return nil
 }
 
@@ -693,11 +693,11 @@ func (cm *ConfigurationManager) Import(format string, path string) error {
 	// Auto-save if enabled
 	if cm.autoSave {
 		if err := cm.saveConfiguration(cm.configPath); err != nil {
-			cm.logger.Warn("Failed to auto-save imported configuration", "error", err)
+			cm.logger.Warn("Failed to auto-save imported configuration: %v", err)
 		}
 	}
 
-	cm.logger.Info("Configuration imported successfully", "format", format, "path", path)
+	cm.logger.Info("Configuration imported successfully: format=%s path=%s", format, path)
 	return nil
 }
 
@@ -736,7 +736,7 @@ func (cm *ConfigurationManager) saveConfiguration(path string) error {
 	// Create backup if enabled
 	if cm.autoBackup {
 		if err := cm.CreateBackup(); err != nil {
-			cm.logger.Warn("Failed to create backup before save", "error", err)
+			cm.logger.Warn("Failed to create backup before save: %v", err)
 		}
 	}
 
@@ -1146,7 +1146,7 @@ func (cm *ConfigurationManager) notifyWatchers(change *ConfigChange) error {
 		if strings.HasPrefix(change.Path, property) || property == "*" {
 			for _, watcher := range watchers {
 				if err := watcher.OnConfigChange(change); err != nil {
-					cm.logger.Warn("Watcher notification failed", "watcher", watcher.GetName(), "error", err)
+					cm.logger.Warn("Watcher notification failed: watcher=%s error=%v", watcher.GetName(), err)
 				}
 			}
 		}
@@ -1187,7 +1187,7 @@ func (cm *ConfigurationManager) cleanupOldBackups() error {
 		for i := maxBackups; i < len(backups); i++ {
 			backupFile := filepath.Join(cm.backupPath, backups[i].Name())
 			if err := os.Remove(backupFile); err != nil {
-				cm.logger.Warn("Failed to remove old backup", "file", backupFile, "error", err)
+				cm.logger.Warn("Failed to remove old backup: file=%s error=%v", backupFile, err)
 			}
 		}
 	}

@@ -10,17 +10,17 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 
-	"dev.helix.code/internal/memory"
-	"dev.helix.code/internal/memory/providers"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/memory"
+	"dev.helix.code/internal/memory/providers"
 )
 
 // MockVectorProvider mocks the VectorProvider interface
 type MockVectorProvider struct {
 	mock.Mock
 	mu sync.Mutex
-	
+
 	// Internal state for testing
 	store       map[string][]*memory.VectorData
 	collections map[string]*memory.CollectionConfig
@@ -41,8 +41,8 @@ func NewMockVectorProvider(t interface{}) *MockVectorProvider {
 			TotalVectors:     0,
 			TotalCollections: 0,
 			TotalSize:        0,
-			AverageLatency:    0,
-			LastOperation:     time.Now(),
+			AverageLatency:   0,
+			LastOperation:    time.Now(),
 			ErrorCount:       0,
 			Uptime:           0,
 		},
@@ -56,26 +56,26 @@ func NewMockVectorProvider(t interface{}) *MockVectorProvider {
 func (m *MockVectorProvider) Store(ctx context.Context, vectors []*memory.VectorData) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	// Update call count
 	m.Called(ctx, vectors)
-	
+
 	if len(vectors) == 0 {
 		return errors.New("no vectors to store")
 	}
-	
+
 	// Store vectors
 	for _, vector := range vectors {
 		collection := vector.Collection
 		if collection == "" {
 			collection = "default"
 		}
-		
+
 		m.store[collection] = append(m.store[collection], vector)
 		m.stats.TotalVectors++
 		m.stats.TotalSize += int64(len(vector.Vector) * 8) // Approximate size
 	}
-	
+
 	m.stats.LastOperation = time.Now()
 	return nil
 }
@@ -84,19 +84,19 @@ func (m *MockVectorProvider) Store(ctx context.Context, vectors []*memory.Vector
 func (m *MockVectorProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, ids)
-	
+
 	if result := args.Get(0); result != nil {
 		if vectors, ok := result.([]*memory.VectorData); ok {
 			return vectors, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	// Find vectors by ID
 	var results []*memory.VectorData
 	for _, collection := range m.store {
@@ -109,7 +109,7 @@ func (m *MockVectorProvider) Retrieve(ctx context.Context, ids []string) ([]*mem
 			}
 		}
 	}
-	
+
 	m.stats.LastOperation = time.Now()
 	return results, nil
 }
@@ -118,38 +118,38 @@ func (m *MockVectorProvider) Retrieve(ctx context.Context, ids []string) ([]*mem
 func (m *MockVectorProvider) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, query)
-	
+
 	if result := args.Get(0); result != nil {
 		if searchResult, ok := result.(*memory.VectorSearchResult); ok {
 			return searchResult, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	// Mock search results
 	var results []*memory.VectorSearchResultItem
 	collection := query.Collection
 	if collection == "" {
 		collection = "default"
 	}
-	
+
 	if vectors, exists := m.store[collection]; exists {
 		for i, vector := range vectors {
 			if i >= query.TopK {
 				break
 			}
-			
+
 			// Mock similarity score
 			score := 1.0 - float64(i)*0.1
 			if score < query.Threshold {
 				continue
 			}
-			
+
 			results = append(results, &memory.VectorSearchResultItem{
 				ID:       vector.ID,
 				Vector:   vector.Vector,
@@ -159,7 +159,7 @@ func (m *MockVectorProvider) Search(ctx context.Context, query *memory.VectorQue
 			})
 		}
 	}
-	
+
 	m.stats.LastOperation = time.Now()
 	return &memory.VectorSearchResult{
 		Results:   results,
@@ -174,19 +174,19 @@ func (m *MockVectorProvider) Search(ctx context.Context, query *memory.VectorQue
 func (m *MockVectorProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*memory.VectorSimilarityResult, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, embedding, k, filters)
-	
+
 	if result := args.Get(0); result != nil {
 		if similarResults, ok := result.([]*memory.VectorSimilarityResult); ok {
 			return similarResults, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	// Mock similar results
 	var results []*memory.VectorSimilarityResult
 	for _, collection := range m.store {
@@ -194,10 +194,10 @@ func (m *MockVectorProvider) FindSimilar(ctx context.Context, embedding []float6
 			if i >= k {
 				break
 			}
-			
+
 			// Mock similarity score
 			score := 0.9 - float64(i)*0.1
-			
+
 			results = append(results, &memory.VectorSimilarityResult{
 				ID:       vector.ID,
 				Vector:   vector.Vector,
@@ -207,7 +207,7 @@ func (m *MockVectorProvider) FindSimilar(ctx context.Context, embedding []float6
 			})
 		}
 	}
-	
+
 	return results, nil
 }
 
@@ -215,22 +215,22 @@ func (m *MockVectorProvider) FindSimilar(ctx context.Context, embedding []float6
 func (m *MockVectorProvider) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, name, config)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	if _, exists := m.collections[name]; exists {
 		return fmt.Errorf("collection %s already exists", name)
 	}
-	
+
 	m.collections[name] = config
 	m.store[name] = make([]*memory.VectorData, 0)
 	m.stats.TotalCollections++
 	m.stats.LastOperation = time.Now()
-	
+
 	return nil
 }
 
@@ -238,22 +238,22 @@ func (m *MockVectorProvider) CreateCollection(ctx context.Context, name string, 
 func (m *MockVectorProvider) DeleteCollection(ctx context.Context, name string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, name)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	if _, exists := m.collections[name]; !exists {
 		return fmt.Errorf("collection %s not found", name)
 	}
-	
+
 	delete(m.collections, name)
 	delete(m.store, name)
 	m.stats.TotalCollections--
 	m.stats.LastOperation = time.Now()
-	
+
 	return nil
 }
 
@@ -261,25 +261,24 @@ func (m *MockVectorProvider) DeleteCollection(ctx context.Context, name string) 
 func (m *MockVectorProvider) ListCollections(ctx context.Context) ([]*memory.CollectionInfo, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx)
-	
+
 	if result := args.Get(0); result != nil {
 		if collections, ok := result.([]*memory.CollectionInfo); ok {
 			return collections, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	var result []*memory.CollectionInfo
 	for name, config := range m.collections {
 		size := len(m.store[name])
 		result = append(result, &memory.CollectionInfo{
 			Name:        name,
-			Description: config.Description,
 			Dimension:   config.Dimension,
 			Metric:      config.Metric,
 			VectorCount: int64(size),
@@ -288,7 +287,7 @@ func (m *MockVectorProvider) ListCollections(ctx context.Context) ([]*memory.Col
 			UpdatedAt:   time.Now(),
 		})
 	}
-	
+
 	return result, nil
 }
 
@@ -296,24 +295,24 @@ func (m *MockVectorProvider) ListCollections(ctx context.Context) ([]*memory.Col
 func (m *MockVectorProvider) GetCollection(ctx context.Context, name string) (*memory.CollectionInfo, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, name)
-	
+
 	if result := args.Get(0); result != nil {
 		if collection, ok := result.(*memory.CollectionInfo); ok {
 			return collection, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	config, exists := m.collections[name]
 	if !exists {
 		return nil, fmt.Errorf("collection %s not found", name)
 	}
-	
+
 	size := len(m.store[name])
 	return &memory.CollectionInfo{
 		Name:        name,
@@ -331,22 +330,22 @@ func (m *MockVectorProvider) GetCollection(ctx context.Context, name string) (*m
 func (m *MockVectorProvider) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, collection, config)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	indexName := fmt.Sprintf("%s_%s", collection, config.Name)
 	m.indices[indexName] = &memory.IndexInfo{
-		Name:       config.Name,
-		Type:       config.Type,
-		Dimension:  config.Dimension,
-		Metric:     config.Metric,
-		CreatedAt:  time.Now(),
+		Name:      config.Name,
+		Type:      config.Type,
+		Dimension: config.Dimension,
+		Metric:    config.Metric,
+		CreatedAt: time.Now(),
 	}
-	
+
 	return nil
 }
 
@@ -354,16 +353,16 @@ func (m *MockVectorProvider) CreateIndex(ctx context.Context, collection string,
 func (m *MockVectorProvider) DeleteIndex(ctx context.Context, collection, name string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, collection, name)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	indexName := fmt.Sprintf("%s_%s", collection, name)
 	delete(m.indices, indexName)
-	
+
 	return nil
 }
 
@@ -371,26 +370,26 @@ func (m *MockVectorProvider) DeleteIndex(ctx context.Context, collection, name s
 func (m *MockVectorProvider) ListIndexes(ctx context.Context, collection string) ([]*memory.IndexInfo, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, collection)
-	
+
 	if result := args.Get(0); result != nil {
 		if indices, ok := result.([]*memory.IndexInfo); ok {
 			return indices, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	var result []*memory.IndexInfo
 	for name, index := range m.indices {
 		if len(name) > len(collection) && name[:len(collection)] == collection {
 			result = append(result, index)
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -398,13 +397,13 @@ func (m *MockVectorProvider) ListIndexes(ctx context.Context, collection string)
 func (m *MockVectorProvider) AddMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, id, metadata)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	// Find vector and add metadata
 	for _, collection := range m.store {
 		for _, vector := range collection {
@@ -419,7 +418,7 @@ func (m *MockVectorProvider) AddMetadata(ctx context.Context, id string, metadat
 			}
 		}
 	}
-	
+
 	return fmt.Errorf("vector with ID %s not found", id)
 }
 
@@ -427,13 +426,13 @@ func (m *MockVectorProvider) AddMetadata(ctx context.Context, id string, metadat
 func (m *MockVectorProvider) UpdateMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, id, metadata)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	// Find vector and update metadata
 	for _, collection := range m.store {
 		for _, vector := range collection {
@@ -449,7 +448,7 @@ func (m *MockVectorProvider) UpdateMetadata(ctx context.Context, id string, meta
 			}
 		}
 	}
-	
+
 	return fmt.Errorf("vector with ID %s not found", id)
 }
 
@@ -457,19 +456,19 @@ func (m *MockVectorProvider) UpdateMetadata(ctx context.Context, id string, meta
 func (m *MockVectorProvider) GetMetadata(ctx context.Context, ids []string) (map[string]map[string]interface{}, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, ids)
-	
+
 	if result := args.Get(0); result != nil {
 		if metadata, ok := result.(map[string]map[string]interface{}); ok {
 			return metadata, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	result := make(map[string]map[string]interface{})
 	for _, collection := range m.store {
 		for _, vector := range collection {
@@ -481,7 +480,7 @@ func (m *MockVectorProvider) GetMetadata(ctx context.Context, ids []string) (map
 			}
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -489,13 +488,13 @@ func (m *MockVectorProvider) GetMetadata(ctx context.Context, ids []string) (map
 func (m *MockVectorProvider) DeleteMetadata(ctx context.Context, ids []string, keys []string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, ids, keys)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	// Delete metadata keys from specified vectors
 	for _, collection := range m.store {
 		for _, vector := range collection {
@@ -509,7 +508,7 @@ func (m *MockVectorProvider) DeleteMetadata(ctx context.Context, ids []string, k
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -517,19 +516,19 @@ func (m *MockVectorProvider) DeleteMetadata(ctx context.Context, ids []string, k
 func (m *MockVectorProvider) GetStats(ctx context.Context) (*providers.ProviderStats, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx)
-	
+
 	if result := args.Get(0); result != nil {
 		if stats, ok := result.(*providers.ProviderStats); ok {
 			return stats, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	// Return copy of stats
 	return &providers.ProviderStats{
 		TotalVectors:     m.stats.TotalVectors,
@@ -538,7 +537,7 @@ func (m *MockVectorProvider) GetStats(ctx context.Context) (*providers.ProviderS
 		AverageLatency:   m.stats.AverageLatency,
 		LastOperation:    m.stats.LastOperation,
 		ErrorCount:       m.stats.ErrorCount,
-		Uptime:          m.stats.Uptime,
+		Uptime:           m.stats.Uptime,
 	}, nil
 }
 
@@ -546,13 +545,13 @@ func (m *MockVectorProvider) GetStats(ctx context.Context) (*providers.ProviderS
 func (m *MockVectorProvider) Optimize(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	m.stats.LastOperation = time.Now()
 	return nil
 }
@@ -561,13 +560,13 @@ func (m *MockVectorProvider) Optimize(ctx context.Context) error {
 func (m *MockVectorProvider) Backup(ctx context.Context, path string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, path)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	m.stats.LastOperation = time.Now()
 	return nil
 }
@@ -576,13 +575,13 @@ func (m *MockVectorProvider) Backup(ctx context.Context, path string) error {
 func (m *MockVectorProvider) Restore(ctx context.Context, path string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, path)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	m.stats.LastOperation = time.Now()
 	return nil
 }
@@ -591,13 +590,13 @@ func (m *MockVectorProvider) Restore(ctx context.Context, path string) error {
 func (m *MockVectorProvider) Initialize(ctx context.Context, config interface{}) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx, config)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	m.initialized = true
 	m.stats.LastOperation = time.Now()
 	return nil
@@ -607,21 +606,21 @@ func (m *MockVectorProvider) Initialize(ctx context.Context, config interface{})
 func (m *MockVectorProvider) Start(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	if !m.initialized {
 		return errors.New("provider not initialized")
 	}
-	
+
 	m.started = true
 	m.stats.LastOperation = time.Now()
 	m.stats.Uptime = time.Since(time.Now())
-	
+
 	return nil
 }
 
@@ -629,16 +628,16 @@ func (m *MockVectorProvider) Start(ctx context.Context) error {
 func (m *MockVectorProvider) Stop(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx)
-	
+
 	if args.Error(0) != nil {
 		return args.Error(0)
 	}
-	
+
 	m.started = false
 	m.stats.LastOperation = time.Now()
-	
+
 	return nil
 }
 
@@ -646,29 +645,29 @@ func (m *MockVectorProvider) Stop(ctx context.Context) error {
 func (m *MockVectorProvider) Health(ctx context.Context) (*providers.HealthStatus, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	args := m.Called(ctx)
-	
+
 	if result := args.Get(0); result != nil {
 		if health, ok := result.(*providers.HealthStatus); ok {
 			return health, nil
 		}
 	}
-	
+
 	if args.Error(1) != nil {
 		return nil, args.Error(1)
 	}
-	
+
 	status := "healthy"
 	if !m.healthy {
 		status = "unhealthy"
 	}
-	
+
 	return &providers.HealthStatus{
-		Status:      status,
-		LastCheck:   time.Now(),
+		Status:       status,
+		LastCheck:    time.Now(),
 		ResponseTime: 10 * time.Millisecond,
-		Metrics:     make(map[string]float64),
+		Metrics:      make(map[string]float64),
 		Dependencies: make(map[string]string),
 	}, nil
 }
@@ -740,7 +739,7 @@ func (m *MockVectorProvider) GetCostInfo() *providers.CostInfo {
 		TotalCost:     0.0,
 		Currency:      "USD",
 		BillingPeriod: "monthly",
-		FreeTierUsed: false,
+		FreeTierUsed:  false,
 		FreeTierLimit: 0.0,
 	}
 }
@@ -758,13 +757,13 @@ func (m *MockVectorProvider) SetHealth(healthy bool) {
 func (m *MockVectorProvider) AddTestData(vectors []*memory.VectorData) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	for _, vector := range vectors {
 		collection := vector.Collection
 		if collection == "" {
 			collection = "default"
 		}
-		
+
 		m.store[collection] = append(m.store[collection], vector)
 		m.stats.TotalVectors++
 		m.stats.TotalSize += int64(len(vector.Vector) * 8)
@@ -775,7 +774,7 @@ func (m *MockVectorProvider) AddTestData(vectors []*memory.VectorData) {
 func (m *MockVectorProvider) ClearTestData() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.store = make(map[string][]*memory.VectorData)
 	m.collections = make(map[string]*memory.CollectionConfig)
 	m.indices = make(map[string]*memory.IndexInfo)
@@ -788,11 +787,11 @@ func (m *MockVectorProvider) ClearTestData() {
 func (m *MockVectorProvider) GetStoredVectors(collection string) []*memory.VectorData {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if collection == "" {
 		collection = "default"
 	}
-	
+
 	vectors := make([]*memory.VectorData, len(m.store[collection]))
 	copy(vectors, m.store[collection])
 	return vectors
@@ -802,7 +801,7 @@ func (m *MockVectorProvider) GetStoredVectors(collection string) []*memory.Vecto
 type MockVectorProviderManager struct {
 	mock.Mock
 	mu sync.Mutex
-	
+
 	providers map[string]providers.VectorProvider
 	active    string
 }
@@ -902,7 +901,7 @@ func (m *MockVectorProviderManager) GetProviderPerformance() map[string]provider
 type MockAPIKeyManager struct {
 	mock.Mock
 	mu sync.Mutex
-	
+
 	keys map[string]config.APIKeyConfig
 }
 
@@ -1026,11 +1025,11 @@ func (m *MockConversationManager) GetContextWindow(ctx context.Context, sessionI
 // CreateTestVector creates a test vector for testing
 func CreateTestVector(id, collection string, size int) *memory.VectorData {
 	return &memory.VectorData{
-		ID:        id,
-		Vector:    makeTestFloat64Slice(size),
-		Metadata:  map[string]interface{}{
-			"test":     true,
-			"created":  time.Now(),
+		ID:     id,
+		Vector: makeTestFloat64Slice(size),
+		Metadata: map[string]interface{}{
+			"test":    true,
+			"created": time.Now(),
 		},
 		Collection: collection,
 		Timestamp:  time.Now(),
@@ -1053,13 +1052,13 @@ func CreateTestVectors(count int, collection string, size int) []*memory.VectorD
 // CreateTestMemory creates test memory data
 func CreateTestMemory(id, memType, content string) *memory.MemoryData {
 	return &memory.MemoryData{
-		ID:       id,
-		Type:     memory.MemoryType(memType),
-		Content:  content,
-		Source:   "test",
+		ID:      id,
+		Type:    memory.MemoryType(memType),
+		Content: content,
+		Source:  "test",
 		Metadata: map[string]interface{}{
-			"test":     true,
-			"created":  time.Now(),
+			"test":    true,
+			"created": time.Now(),
 		},
 		Timestamp: time.Now(),
 	}
@@ -1090,13 +1089,13 @@ func createTestFloat64Slice(size int) []float64 {
 // MockSuite is a test suite that includes mock providers
 type MockSuite struct {
 	suite.Suite
-	ctx                context.Context
-	logger             logging.Logger
-	mockProvider       *MockVectorProvider
+	ctx                 context.Context
+	logger              logging.Logger
+	mockProvider        *MockVectorProvider
 	mockProviderManager *MockVectorProviderManager
-	mockAPIKeyManager  *MockAPIKeyManager
-	mockMemoryManager  *MockMemoryManager
-	mockConvManager    *MockConversationManager
+	mockAPIKeyManager   *MockAPIKeyManager
+	mockMemoryManager   *MockMemoryManager
+	mockConvManager     *MockConversationManager
 }
 
 // SetupSuite sets up the test suite with mocks
@@ -1124,7 +1123,7 @@ func (s *MockSuite) SetupTest() {
 // CreateMockVectorProvider creates a mock vector provider with test data
 func CreateMockVectorProvider(t interface{}, vectorCount int) *MockVectorProvider {
 	provider := NewMockVectorProvider(t)
-	
+
 	// Add test data
 	for i := 0; i < vectorCount; i++ {
 		vector := CreateTestVector(
@@ -1134,6 +1133,6 @@ func CreateMockVectorProvider(t interface{}, vectorCount int) *MockVectorProvide
 		)
 		provider.AddTestData([]*memory.VectorData{vector})
 	}
-	
+
 	return provider
 }
