@@ -21,11 +21,11 @@ type ConfigManager struct {
 type ProviderConfig struct {
 	DefaultProvider string                           `json:"default_provider"`
 	Providers       map[string]*SingleProviderConfig `json:"providers"`
-	Manager         *ManagerConfig                   `json:"manager"`
-	Backup          *BackupConfig                    `json:"backup"`
-	Monitoring      *MonitoringConfig                `json:"monitoring"`
-	Security        *SecurityConfig                  `json:"security"`
-	Performance     *PerformanceConfig               `json:"performance"`
+	// Manager         *ManagerConfig                   `json:"manager"`
+	Backup      *BackupConfig      `json:"backup"`
+	Monitoring  *MonitoringConfig  `json:"monitoring"`
+	Security    *SecurityConfig    `json:"security"`
+	Performance *PerformanceConfig `json:"performance"`
 }
 
 // SingleProviderConfig contains configuration for a single provider
@@ -264,20 +264,20 @@ func (cm *ConfigManager) createDefaultConfig() error {
 				},
 			},
 		},
-		Manager: &ManagerConfig{
-			Providers:             []ProviderConfig{},
-			DefaultProvider:       "pinecone",
-			LoadBalancing:         LoadBalanceRoundRobin,
-			FailoverEnabled:       true,
-			FailoverTimeout:       30000,
-			RetryAttempts:         3,
-			RetryBackoff:          1000,
-			HealthCheckInterval:   60000,
-			PerformanceMonitoring: true,
-			CostTracking:          true,
-			BackupEnabled:         true,
-			BackupInterval:        86400000, // 24 hours
-		},
+		// Manager: &ManagerConfig{
+		// 	Providers:             []ProviderConfig{},
+		// 	DefaultProvider:       "pinecone",
+		// 	LoadBalancing:         LoadBalanceRoundRobin,
+		// 	FailoverEnabled:       true,
+		// 	FailoverTimeout:       30000,
+		// 	RetryAttempts:         3,
+		// 	RetryBackoff:          1000,
+		// 	HealthCheckInterval:   60000,
+		// 	PerformanceMonitoring: true,
+		// 	CostTracking:          true,
+		// 	BackupEnabled:         true,
+		// 	BackupInterval:        86400000, // 24 hours
+		// },
 		Backup: &BackupConfig{
 			Enabled:          true,
 			DefaultSchedule:  "0 2 * * *",
@@ -582,11 +582,11 @@ func (cm *ConfigManager) MergeConfigs(base, override *ProviderConfig) *ProviderC
 	result := &ProviderConfig{
 		DefaultProvider: override.DefaultProvider,
 		Providers:       make(map[string]*SingleProviderConfig),
-		Manager:         override.Manager,
-		Backup:          override.Backup,
-		Monitoring:      override.Monitoring,
-		Security:        override.Security,
-		Performance:     override.Performance,
+		// Manager:         override.Manager,
+		Backup:      override.Backup,
+		Monitoring:  override.Monitoring,
+		Security:    override.Security,
+		Performance: override.Performance,
 	}
 
 	// Merge providers
@@ -601,9 +601,9 @@ func (cm *ConfigManager) MergeConfigs(base, override *ProviderConfig) *ProviderC
 	if override.DefaultProvider != "" {
 		result.DefaultProvider = override.DefaultProvider
 	}
-	if override.Manager != nil {
-		result.Manager = override.Manager
-	}
+	// if override.Manager != nil {
+	// 	result.Manager = override.Manager
+	// }
 	if override.Backup != nil {
 		result.Backup = override.Backup
 	}

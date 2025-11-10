@@ -51,11 +51,11 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	defer r.mu.Unlock()
 
 	// Register all built-in providers
-	r.providers[memory.ProviderTypePinecone] = func(config map[string]interface{}) (VectorProvider, error) { return NewPineconeProvider(config) }
-	r.providers[memory.ProviderTypeMilvus] = func(config map[string]interface{}) (VectorProvider, error) { return NewMilvusProvider(config) }
+	// r.providers[memory.ProviderTypePinecone] = func(config map[string]interface{}) (VectorProvider, error) { return NewPineconeProvider(config) }
+	// r.providers[memory.ProviderTypeMilvus] = func(config map[string]interface{}) (VectorProvider, error) { return NewMilvusProvider(config) }
 	r.providers[memory.ProviderTypeWeaviate] = func(config map[string]interface{}) (VectorProvider, error) { return NewWeaviateProvider(config) }
-	r.providers[memory.ProviderTypeQdrant] = func(config map[string]interface{}) (VectorProvider, error) { return NewQdrantProvider(config) }
-	r.providers[memory.ProviderTypeRedis] = func(config map[string]interface{}) (VectorProvider, error) { return NewRedisProvider(config) }
+	// r.providers[memory.ProviderTypeQdrant] = func(config map[string]interface{}) (VectorProvider, error) { return NewQdrantProvider(config) }
+	// r.providers[memory.ProviderTypeRedis] = func(config map[string]interface{}) (VectorProvider, error) { return NewRedisProvider(config) }
 	r.providers[memory.ProviderTypeChroma] = func(config map[string]interface{}) (VectorProvider, error) { return NewChromaDBProvider(config) }
 
 	// r.providers[memory.ProviderTypeOpenAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewOpenAIProvider(config) }
@@ -73,10 +73,10 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	// r.providers[memory.ProviderTypeDeepLake] = func(config map[string]interface{}) (VectorProvider, error) { return NewDeepLakeProvider(config) }
 	r.providers[memory.ProviderTypeFAISS] = func(config map[string]interface{}) (VectorProvider, error) { return NewFAISSProvider(config) }
 
-	r.providers[memory.ProviderTypeMemGPT] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemGPTProvider(config) }
+	// r.providers[memory.ProviderTypeMemGPT] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemGPTProvider(config) }
 	// r.providers[memory.ProviderTypeCrewAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewCrewAIProvider(config) }
 	r.providers[memory.ProviderTypeCharacterAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewCharacterAIProvider(config) }
-	r.providers[memory.ProviderTypeReplika] = func(config map[string]interface{}) (VectorProvider, error) { return NewReplikaProvider(config) }
+	// r.providers[memory.ProviderTypeReplika] = func(config map[string]interface{}) (VectorProvider, error) { return NewReplikaProvider(config) }
 	// r.providers[memory.ProviderTypeAnima] = func(config map[string]interface{}) (VectorProvider, error) { return NewAnimaProvider(config) }
 
 	// r.providers[memory.ProviderTypeAgnostic] = func(config map[string]interface{}) (VectorProvider, error) {
