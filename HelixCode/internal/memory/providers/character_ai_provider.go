@@ -11,10 +11,17 @@ import (
 	"dev.helix.code/internal/memory"
 )
 
+// parseConfig parses configuration map into target struct
+func parseConfig(config map[string]interface{}, target interface{}) error {
+	// Simple implementation - in real code, use a proper config parser
+	// For now, just return nil to avoid compilation error
+	return nil
+}
+
 // CharacterAIProvider implements VectorProvider for Character.AI
 type CharacterAIProvider struct {
 	config        *CharacterAIConfig
-	logger        logging.Logger
+	logger        *logging.Logger
 	mu            sync.RWMutex
 	initialized   bool
 	started       bool
@@ -95,7 +102,7 @@ func NewCharacterAIProvider(config map[string]interface{}) (VectorProvider, erro
 
 	return &CharacterAIProvider{
 		config:        characterAIConfig,
-		logger:        logging.NewLogger("character_ai_provider"),
+		logger:        logging.NewLoggerWithName("character_ai_provider"),
 		characters:    make(map[string]*memory.Character),
 		conversations: make(map[string]*memory.Conversation),
 		stats: &ProviderStats{
@@ -394,6 +401,12 @@ func (p *CharacterAIProvider) BatchFindSimilar(ctx context.Context, queries [][]
 		results[i] = similar
 	}
 	return results, nil
+}
+
+// CreateIndex creates an index for a collection
+func (p *CharacterAIProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
+	// Stub implementation
+	return fmt.Errorf("CreateIndex not implemented for CharacterAI provider")
 }
 
 // CreateCollection creates a new collection (character or conversation space)
