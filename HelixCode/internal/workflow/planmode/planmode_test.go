@@ -3,6 +3,7 @@ package planmode
 import (
 	"bytes"
 	"context"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -428,7 +429,12 @@ func TestStateManager(t *testing.T) {
 
 // Test Executor
 func TestExecutor(t *testing.T) {
-	executor := NewDefaultExecutor("/tmp/test")
+	// Create temp directory for test
+	testDir := "/tmp/test"
+	os.MkdirAll(testDir, 0755)
+	defer os.RemoveAll(testDir)
+
+	executor := NewDefaultExecutor(testDir)
 
 	t.Run("ExecuteStep", func(t *testing.T) {
 		step := &PlanStep{

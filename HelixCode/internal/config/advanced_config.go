@@ -658,7 +658,9 @@ func (v *ConfigurationValidator) getValueAtPath(obj interface{}, path string) in
 				r = r.Elem()
 			}
 			if r.Kind() == reflect.Struct {
-				field := r.FieldByName(part)
+				// Capitalize first letter for Go struct field names
+				fieldName := strings.ToUpper(part[:1]) + part[1:]
+				field := r.FieldByName(fieldName)
 				if field.IsValid() {
 					current = field.Interface()
 				} else {
@@ -696,7 +698,9 @@ func (v *ConfigurationValidator) hasProperty(obj interface{}, prop string) bool 
 			}
 		}
 	case reflect.Struct:
-		field := r.FieldByName(prop)
+		// Capitalize first letter for Go struct field names
+		fieldName := strings.ToUpper(prop[:1]) + prop[1:]
+		field := r.FieldByName(fieldName)
 		return field.IsValid()
 	}
 
@@ -722,7 +726,9 @@ func (v *ConfigurationValidator) getPropertyValue(obj interface{}, prop string) 
 			}
 		}
 	case reflect.Struct:
-		field := r.FieldByName(prop)
+		// Capitalize first letter for Go struct field names
+		fieldName := strings.ToUpper(prop[:1]) + prop[1:]
+		field := r.FieldByName(fieldName)
 		if field.IsValid() {
 			return field.Interface()
 		}

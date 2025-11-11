@@ -437,6 +437,20 @@ func TestControllerIntegration(t *testing.T) {
 		t.Errorf("Mode = %v, want %v", controller.GetCurrentMode(), ModeSemiAuto)
 	}
 
+	// Test capabilities for current mode
+	caps := controller.GetCapabilities()
+	if caps == nil {
+		t.Fatal("GetCapabilities() should not return nil")
+	}
+	// Semi-auto mode should allow auto context loading
+	if !caps.AutoContext {
+		t.Error("Semi-auto mode should have AutoContext = true")
+	}
+	// But not auto apply
+	if caps.AutoApply {
+		t.Error("Semi-auto mode should have AutoApply = false")
+	}
+
 	// Test permission request
 	action := NewAction(ActionLoadContext, "Test", RiskNone)
 	perm, err := controller.RequestPermission(ctx, action)
@@ -669,4 +683,297 @@ func BenchmarkActionExecution(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = executor.Execute(ctx, action)
 	}
+}
+
+// TestActionBuilderMethods tests Action builder pattern methods
+func TestActionBuilderMethods(t *testing.T) {
+	t.Run("WithContext", func(t *testing.T) {
+		action := NewAction(ActionLoadContext, "Test action", RiskLow)
+
+		// Initially has empty context
+		if action.Context == nil {
+			t.Fatal("Context should be initialized")
+		}
+
+		// Add context with WithContext
+		ctx := &ActionContext{
+			TaskID:         "task-123",
+			StepNumber:     5,
+			FilesAffected:  []string{"file1.go", "file2.go"},
+			CommandToRun:   "go test",
+			ExpectedOutcome: "tests pass",
+			Reversible:     true,
+			IterationCount: 2,
+		}
+
+		result := action.WithContext(ctx)
+
+		// Should return the same action (fluent interface)
+		if result != action {
+			t.Error("WithContext should return the same action for chaining")
+		}
+
+		// Context should be set
+		if action.Context != ctx {
+			t.Error("Context was not set correctly")
+		}
+
+		// Verify all fields
+		if action.Context.TaskID != "task-123" {
+			t.Errorf("TaskID = %s, want task-123", action.Context.TaskID)
+		}
+		if action.Context.StepNumber != 5 {
+			t.Errorf("StepNumber = %d, want 5", action.Context.StepNumber)
+		}
+		if len(action.Context.FilesAffected) != 2 {
+			t.Errorf("FilesAffected length = %d, want 2", len(action.Context.FilesAffected))
+		}
+	})
+
+	t.Run("WithMetadata", func(t *testing.T) {
+		action := NewAction(ActionApplyChange, "Test action", RiskMedium)
+
+		// Initially has empty metadata map
+		if action.Metadata == nil {
+			t.Fatal("Metadata should be initialized")
+		}
+
+		// Add metadata
+		result1 := action.WithMetadata("key1", "value1")
+		if result1 != action {
+			t.Error("WithMetadata should return the same action for chaining")
+		}
+
+		// Add more metadata (testing fluent interface)
+		result2 := action.WithMetadata("key2", 123).WithMetadata("key3", true)
+		if result2 != action {
+			t.Error("WithMetadata chain should return the same action")
+		}
+
+		// Verify metadata
+		if action.Metadata["key1"] != "value1" {
+			t.Errorf("Metadata[key1] = %v, want value1", action.Metadata["key1"])
+		}
+		if action.Metadata["key2"] != 123 {
+			t.Errorf("Metadata[key2] = %v, want 123", action.Metadata["key2"])
+		}
+		if action.Metadata["key3"] != true {
+			t.Errorf("Metadata[key3] = %v, want true", action.Metadata["key3"])
+		}
+	})
+
+	t.Run("WithMetadata nil metadata", func(t *testing.T) {
+		action := &Action{
+			Type:        ActionLoadContext,
+			Description: "Test",
+			Risk:        RiskLow,
+			Context:     &ActionContext{},
+			Metadata:    nil, // Explicitly nil
+		}
+
+		// Should initialize metadata map if nil
+		action.WithMetadata("test", "value")
+
+		if action.Metadata == nil {
+			t.Error("Metadata should be initialized when nil")
+		}
+		if action.Metadata["test"] != "value" {
+			t.Error("Metadata value should be set")
+		}
+	})
+}
+
+// TestActionPredicates tests Action predicate methods
+func TestActionPredicates(t *testing.T) {
+	t.Run("IsRisky", func(t *testing.T) {
+		tests := []struct {
+			name      string
+			risk      RiskLevel
+			wantRisky bool
+		}{
+			{"none risk", RiskNone, false},
+			{"low risk", RiskLow, false},
+			{"medium risk", RiskMedium, false},
+			{"high risk", RiskHigh, true},
+			{"critical risk", RiskCritical, true},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				action := NewAction(ActionLoadContext, "Test", tt.risk)
+				got := action.IsRisky()
+				if got != tt.wantRisky {
+					t.Errorf("IsRisky() = %v, want %v for %s", got, tt.wantRisky, tt.risk)
+				}
+			})
+		}
+	})
+
+	t.Run("IsBulk", func(t *testing.T) {
+		tests := []struct {
+			name          string
+			filesAffected []string
+			threshold     int
+			wantBulk      bool
+		}{
+			{"no files", []string{}, 5, false},
+			{"below threshold", []string{"f1.go", "f2.go"}, 5, false},
+			{"at threshold", []string{"f1.go", "f2.go", "f3.go", "f4.go", "f5.go"}, 5, true},
+			{"above threshold", []string{"f1.go", "f2.go", "f3.go", "f4.go", "f5.go", "f6.go"}, 5, true},
+			{"threshold 1", []string{"f1.go"}, 1, true},
+			{"threshold 0", []string{"f1.go"}, 0, true},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				action := NewAction(ActionBulkEdit, "Test", RiskMedium)
+				action.WithContext(&ActionContext{
+					FilesAffected: tt.filesAffected,
+				})
+
+				got := action.IsBulk(tt.threshold)
+				if got != tt.wantBulk {
+					t.Errorf("IsBulk(%d) = %v, want %v (files: %d)",
+						tt.threshold, got, tt.wantBulk, len(tt.filesAffected))
+				}
+			})
+		}
+	})
+
+	t.Run("IsBulk with nil context", func(t *testing.T) {
+		action := &Action{
+			Type:        ActionBulkEdit,
+			Description: "Test",
+			Risk:        RiskMedium,
+			Context:     nil, // No context
+			Metadata:    make(map[string]interface{}),
+		}
+
+		// Should return false when context is nil
+		if action.IsBulk(5) {
+			t.Error("IsBulk should return false when context is nil")
+		}
+	})
+
+	t.Run("IsDestructive", func(t *testing.T) {
+		tests := []struct {
+			name            string
+			actionType      ActionType
+			risk            RiskLevel
+			wantDestructive bool
+		}{
+			{"file delete", ActionFileDelete, RiskMedium, true},
+			{"system change", ActionSystemChange, RiskHigh, true},
+			{"critical risk load context", ActionLoadContext, RiskCritical, true},
+			{"critical risk apply change", ActionApplyChange, RiskCritical, true},
+			{"high risk load context", ActionLoadContext, RiskHigh, false},
+			{"low risk apply change", ActionApplyChange, RiskLow, false},
+			{"execute command low risk", ActionExecuteCmd, RiskLow, false},
+			{"execute command high risk", ActionExecuteCmd, RiskHigh, false},
+			{"network call", ActionNetworkCall, RiskMedium, false},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				action := NewAction(tt.actionType, "Test", tt.risk)
+				got := action.IsDestructive()
+				if got != tt.wantDestructive {
+					t.Errorf("IsDestructive() = %v, want %v for type=%s risk=%s",
+						got, tt.wantDestructive, tt.actionType, tt.risk)
+				}
+			})
+		}
+	})
+}
+
+// TestEscalationConfig tests escalation configuration
+func TestEscalationConfig(t *testing.T) {
+	t.Run("NewDefaultEscalationConfig", func(t *testing.T) {
+		config := NewDefaultEscalationConfig()
+
+		// Verify all default values
+		if config == nil {
+			t.Fatal("NewDefaultEscalationConfig returned nil")
+		}
+
+		if !config.AllowEscalation {
+			t.Error("AllowEscalation should be true by default")
+		}
+
+		if config.MaxDuration != 1*time.Hour {
+			t.Errorf("MaxDuration = %v, want 1 hour", config.MaxDuration)
+		}
+
+		if !config.RequireReason {
+			t.Error("RequireReason should be true by default")
+		}
+
+		if !config.AutoRevert {
+			t.Error("AutoRevert should be true by default")
+		}
+
+		if !config.NotifyOnRevert {
+			t.Error("NotifyOnRevert should be true by default")
+		}
+	})
+}
+
+// TestConfigClone tests configuration cloning
+func TestConfigClone(t *testing.T) {
+	t.Run("Clone basic config", func(t *testing.T) {
+		original := NewDefaultConfig()
+
+		// Modify some values
+		original.DefaultMode = ModeFullAuto
+		original.BulkThreshold = 10
+		original.MaxRetries = 5
+		original.PersistPath = "/custom/path"
+
+		// Clone it
+		clone := original.Clone()
+
+		// Verify it's a different instance
+		if clone == original {
+			t.Error("Clone should return a different instance")
+		}
+
+		// Verify all values are copied
+		if clone.DefaultMode != original.DefaultMode {
+			t.Errorf("DefaultMode = %v, want %v", clone.DefaultMode, original.DefaultMode)
+		}
+		if clone.BulkThreshold != original.BulkThreshold {
+			t.Errorf("BulkThreshold = %d, want %d", clone.BulkThreshold, original.BulkThreshold)
+		}
+		if clone.MaxRetries != original.MaxRetries {
+			t.Errorf("MaxRetries = %d, want %d", clone.MaxRetries, original.MaxRetries)
+		}
+		if clone.PersistPath != original.PersistPath {
+			t.Errorf("PersistPath = %s, want %s", clone.PersistPath, original.PersistPath)
+		}
+		if clone.AllowModeSwitch != original.AllowModeSwitch {
+			t.Errorf("AllowModeSwitch = %v, want %v", clone.AllowModeSwitch, original.AllowModeSwitch)
+		}
+		if clone.EnableGuardrails != original.EnableGuardrails {
+			t.Errorf("EnableGuardrails = %v, want %v", clone.EnableGuardrails, original.EnableGuardrails)
+		}
+	})
+
+	t.Run("Clone independence", func(t *testing.T) {
+		original := NewDefaultConfig()
+		original.BulkThreshold = 5
+
+		clone := original.Clone()
+
+		// Modify clone
+		clone.BulkThreshold = 10
+		clone.MaxRetries = 7
+
+		// Original should not be affected
+		if original.BulkThreshold != 5 {
+			t.Errorf("Original BulkThreshold = %d, want 5 (should not be affected by clone)", original.BulkThreshold)
+		}
+		if original.MaxRetries == 7 {
+			t.Error("Original MaxRetries should not be affected by clone modification")
+		}
+	})
 }

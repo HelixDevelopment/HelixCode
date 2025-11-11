@@ -38,7 +38,9 @@ func (t *ConfigurationTransformer) getValueAtPath(obj interface{}, path string) 
 				r = r.Elem()
 			}
 			if r.Kind() == reflect.Struct {
-				field := r.FieldByName(part)
+				// Capitalize first letter for Go struct field names
+				fieldName := strings.ToUpper(part[:1]) + part[1:]
+				field := r.FieldByName(fieldName)
 				if field.IsValid() {
 					current = field.Interface()
 				} else {
@@ -87,8 +89,10 @@ func (t *ConfigurationTransformer) setValueAtPath(obj interface{}, path string, 
 			}
 
 			if r.Kind() == reflect.Struct {
+				// Capitalize first letter for Go struct field names
+				fieldName := strings.ToUpper(part[:1]) + part[1:]
 				if isLast {
-					field := r.FieldByName(part)
+					field := r.FieldByName(fieldName)
 					if field.IsValid() && field.CanSet() {
 						// Convert value to field type
 						converted, err := t.convertValueForField(value, field.Type())
@@ -98,9 +102,10 @@ func (t *ConfigurationTransformer) setValueAtPath(obj interface{}, path string, 
 						field.Set(reflect.ValueOf(converted))
 					}
 				} else {
-					field := r.FieldByName(part)
+					field := r.FieldByName(fieldName)
 					if field.IsValid() {
-						if field.IsNil() {
+						// Check if field is a pointer and nil
+						if field.Kind() == reflect.Ptr && field.IsNil() {
 							// Initialize pointer field
 							field.Set(reflect.New(field.Type().Elem()))
 						}
