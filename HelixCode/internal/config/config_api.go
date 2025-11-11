@@ -314,11 +314,6 @@ func (api *ConfigurationAPI) setupRoutes(router *mux.Router, config *Configurati
 	// Health and status endpoints
 	router.HandleFunc("/api/v1/config/health", api.handleHealth).Methods("GET")
 	router.HandleFunc("/api/v1/config/status", api.handleStatus).Methods("GET")
-
-	// Serve static documentation if configured
-	if config.EnableDocs {
-		router.PathPrefix("/docs/").Handler(http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs/config"))))
-	}
 }
 
 // API Route Handlers

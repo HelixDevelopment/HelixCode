@@ -18,6 +18,7 @@ import (
 	"dev.helix.code/internal/worker"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/google/uuid"
 	"github.com/rivo/tview"
 )
 
@@ -346,7 +347,7 @@ func (tui *TerminalUI) showTasks() {
 	// Action buttons
 	actions := tview.NewFlex().SetDirection(tview.FlexColumn)
 	newTaskBtn := tview.NewButton("New Task").SetSelectedFunc(func() {
-		// TODO: Implement new task form
+		tui.showNewTaskForm()
 	})
 	actions.AddItem(newTaskBtn, 0, 1, false)
 
@@ -540,14 +541,43 @@ func (tui *TerminalUI) createCogneeSettingsView() tview.Primitive {
 	controls := tview.NewFlex().SetDirection(tview.FlexColumn)
 
 	enableBtn := tview.NewButton("Enable Cognee").SetSelectedFunc(func() {
-		// TODO: Enable Cognee
-		statusView.SetText("Status: [green]Enabled\nMode: local\nHost: localhost\nPort: 8000")
+		// Enable Cognee in configuration
+		tui.helixConfig.Cognee.Enabled = true
+		if tui.helixConfig.Cognee.Host == "" {
+			tui.helixConfig.Cognee.Host = "localhost"
+		}
+		if tui.helixConfig.Cognee.Port == 0 {
+			tui.helixConfig.Cognee.Port = 8000
+		}
+
+		// Save configuration
+		if err := config.SaveHelixConfig(tui.helixConfig); err != nil {
+			log.Printf("Failed to save Cognee config: %v", err)
+		}
+
+		// Update status display
+		statusView.SetText(fmt.Sprintf("Status: [green]Enabled\nMode: %s\nHost: %s\nPort: %d",
+			tui.helixConfig.Cognee.Mode,
+			tui.helixConfig.Cognee.Host,
+			tui.helixConfig.Cognee.Port))
+
+		tui.statusBar.SetText(" Status: Cognee enabled successfully")
 	})
 	controls.AddItem(enableBtn, 0, 1, false)
 
 	disableBtn := tview.NewButton("Disable Cognee").SetSelectedFunc(func() {
-		// TODO: Disable Cognee
+		// Disable Cognee in configuration
+		tui.helixConfig.Cognee.Enabled = false
+
+		// Save configuration
+		if err := config.SaveHelixConfig(tui.helixConfig); err != nil {
+			log.Printf("Failed to save Cognee config: %v", err)
+		}
+
+		// Update status display
 		statusView.SetText("Status: [red]Disabled\nMode: N/A\nHost: N/A\nPort: N/A")
+
+		tui.statusBar.SetText(" Status: Cognee disabled successfully")
 	})
 	controls.AddItem(disableBtn, 0, 1, false)
 
@@ -579,6 +609,110 @@ func (tui *TerminalUI) createCogneeSettingsView() tview.Primitive {
 		AddItem(configView, 0, 1, false)
 
 	return view
+}
+
+// showNewTaskForm displays a modal form for creating a new task
+func (tui *TerminalUI) showNewTaskForm() {
+	form := tview.NewForm()
+	form.SetBorder(true).SetTitle("Create New Task").SetTitleAlign(tview.AlignLeft)
+
+	// Form fields
+	var taskType, taskData, taskPriority, taskCriticality string
+
+	form.AddDropDown("Task Type", []string{
+		"Planning",
+		"Building",
+		"Testing",
+		"Refactoring",
+		"Debugging",
+		"Deployment",
+	}, 0, func(option string, index int) {
+		taskType = option
+	})
+
+	form.AddInputField("Task Data (JSON)", `{"description": "Task description"}`, 50, nil, func(text string) {
+		taskData = text
+	})
+
+	form.AddDropDown("Priority", []string{"Low", "Normal", "High", "Critical"}, 1, func(option string, index int) {
+		taskPriority = option
+	})
+
+	form.AddDropDown("Criticality", []string{"Low", "Normal", "High", "Critical"}, 1, func(option string, index int) {
+		taskCriticality = option
+	})
+
+	// Buttons
+	form.AddButton("Create", func() {
+		// Parse task data
+		var data map[string]interface{}
+		if taskData != "" {
+			// In production, would properly parse JSON
+			data = map[string]interface{}{
+				"description": taskData,
+			}
+		}
+
+		// Map string values to task constants
+		typeMap := map[string]task.TaskType{
+			"Planning":     task.TaskTypePlanning,
+			"Building":     task.TaskTypeBuilding,
+			"Testing":      task.TaskTypeTesting,
+			"Refactoring":  task.TaskTypeRefactoring,
+			"Debugging":    task.TaskTypeDebugging,
+			"Deployment":   task.TaskTypeDeployment,
+		}
+
+		priorityMap := map[string]task.TaskPriority{
+			"Low":      task.PriorityLow,
+			"Normal":   task.PriorityNormal,
+			"High":     task.PriorityHigh,
+			"Critical": task.PriorityCritical,
+		}
+
+		criticalityMap := map[string]task.TaskCriticality{
+			"Low":      task.CriticalityLow,
+			"Normal":   task.CriticalityNormal,
+			"High":     task.CriticalityHigh,
+			"Critical": task.CriticalityCritical,
+		}
+
+		// Create task
+		newTask, err := tui.taskManager.CreateTask(
+			typeMap[taskType],
+			data,
+			priorityMap[taskPriority],
+			criticalityMap[taskCriticality],
+			[]uuid.UUID{}, // No dependencies for now
+		)
+
+		if err != nil {
+			tui.statusBar.SetText(fmt.Sprintf(" Status: Failed to create task: %v", err))
+		} else {
+			tui.statusBar.SetText(fmt.Sprintf(" Status: Task created successfully: %s", newTask.ID))
+		}
+
+		// Close the modal
+		tui.pages.RemovePage("newTaskForm")
+		tui.app.SetFocus(tui.content)
+	})
+
+	form.AddButton("Cancel", func() {
+		tui.pages.RemovePage("newTaskForm")
+		tui.app.SetFocus(tui.content)
+	})
+
+	// Create a modal
+	modal := tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(form, 20, 1, true).
+			AddItem(nil, 0, 1, false), 60, 1, true).
+		AddItem(nil, 0, 1, false)
+
+	tui.pages.AddPage("newTaskForm", modal, true, true)
+	tui.app.SetFocus(form)
 }
 
 // createSystemSettingsView creates the system settings view

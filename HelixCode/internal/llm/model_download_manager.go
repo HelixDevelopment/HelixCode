@@ -1,12 +1,14 @@
 package llm
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -395,24 +397,102 @@ func (m *ModelDownloadManager) convertModel(inputPath string, targetFormat Model
 		return progress
 	}
 
-	// This is a placeholder for actual conversion logic
-	// In a real implementation, you would call the conversion tool
+	// Validate input file exists
+	if _, err := os.Stat(inputPath); os.IsNotExist(err) {
+		progress.Error = fmt.Sprintf("input file not found: %s", inputPath)
+		return progress
+	}
+
 	log.Printf("Converting model to %s format using %s", targetFormat, tool.Name)
 
-	// Simulate conversion progress
-	progress.Progress = 0.5
+	// Prepare output path
+	outputPath := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + "." + string(targetFormat)
+
+	// Build conversion command with arguments
+	args := make([]string, 0, len(tool.Args)+2)
+	for _, arg := range tool.Args {
+		// Replace placeholders in arguments
+		arg = strings.ReplaceAll(arg, "{input}", inputPath)
+		arg = strings.ReplaceAll(arg, "{output}", outputPath)
+		arg = strings.ReplaceAll(arg, "{format}", string(targetFormat))
+		args = append(args, arg)
+	}
+
+	// Update progress
+	progress.Progress = 0.1
+	log.Printf("Preparing conversion to %s", targetFormat)
 	progressChan <- *progress
 
-	// TODO: Implement actual conversion using tools like:
-	// - llama.cpp for GGUF conversion
-	// - AutoGPTQ for GPTQ conversion
-	// - AutoAWQ for AWQ conversion
-	// - transformers library for BF16/FP16 conversion
+	// Execute conversion command
+	cmd := exec.Command(tool.Command, args...)
 
-	progress.Progress = 1.0
+	// Set environment variables if specified
+	if len(tool.EnvVars) > 0 {
+		cmd.Env = os.Environ()
+		for key, value := range tool.EnvVars {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+
+	// Capture output for error reporting
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	// Start the conversion process
+	progress.Progress = 0.2
+	log.Printf("Running conversion command: %s %v", tool.Command, args)
 	progressChan <- *progress
 
-	return progress
+	if err := cmd.Start(); err != nil {
+		progress.Error = fmt.Sprintf("failed to start conversion: %v", err)
+		return progress
+	}
+
+	// Monitor conversion progress (simplified - in production would parse tool output)
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	// Simulate incremental progress updates
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	currentProgress := 0.2
+	for {
+		select {
+		case err := <-done:
+			if err != nil {
+				progress.Error = fmt.Sprintf("conversion failed: %v\nStderr: %s", err, stderr.String())
+				return progress
+			}
+
+			// Verify output file was created
+			if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+				progress.Error = fmt.Sprintf("conversion completed but output file not found: %s", outputPath)
+				return progress
+			}
+
+			// Log completion
+			if stat, err := os.Stat(outputPath); err == nil {
+				log.Printf("Conversion complete: output file size: %d bytes", stat.Size())
+			}
+
+			progress.Progress = 1.0
+			log.Printf("Model conversion to %s complete: %s", targetFormat, outputPath)
+			progressChan <- *progress
+			return progress
+
+		case <-ticker.C:
+			// Increment progress gradually (would ideally parse tool output for real progress)
+			if currentProgress < 0.9 {
+				currentProgress += 0.1
+				progress.Progress = currentProgress
+				log.Printf("Converting to %s format... %.0f%% complete", targetFormat, currentProgress*100)
+				progressChan <- *progress
+			}
+		}
+	}
 }
 
 // Helper functions
