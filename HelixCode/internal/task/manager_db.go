@@ -12,11 +12,11 @@ import (
 
 // DatabaseManager handles task lifecycle and operations with database persistence
 type DatabaseManager struct {
-	db *database.Database
+	db database.DatabaseInterface
 }
 
 // NewDatabaseManager creates a new task manager with database persistence
-func NewDatabaseManager(db *database.Database) *DatabaseManager {
+func NewDatabaseManager(db database.DatabaseInterface) *DatabaseManager {
 	return &DatabaseManager{
 		db: db,
 	}
@@ -69,7 +69,7 @@ func (m *DatabaseManager) CreateTask(ctx context.Context, name, description, tas
 	`
 
 	var createdAt, updatedAt time.Time
-	err := m.db.Pool.QueryRow(ctx, query,
+	err := m.db.QueryRow(ctx, query,
 		task.ID, task.Type, task.Data, task.Status, task.Priority, task.Criticality,
 		task.Dependencies, task.MaxRetries, task.CreatedAt, task.UpdatedAt,
 	).Scan(&createdAt, &updatedAt)
@@ -124,7 +124,7 @@ func (m *DatabaseManager) GetTask(ctx context.Context, id string) (*Task, error)
 		updatedAt         time.Time
 	)
 
-	err = m.db.Pool.QueryRow(ctx, query, taskID).Scan(
+	err = m.db.QueryRow(ctx, query, taskID).Scan(
 		&dbID, &taskType, &taskData, &status, &priority, &criticality,
 		&assignedWorkerID, &originalWorkerID, &dependencies,
 		&retryCount, &maxRetries, &errorMessage, &resultData,
@@ -189,7 +189,7 @@ func (m *DatabaseManager) ListTasks(ctx context.Context) ([]*Task, error) {
 		ORDER BY created_at DESC
 	`
 
-	rows, err := m.db.Pool.Query(ctx, query)
+	rows, err := m.db.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query tasks: %v", err)
 	}
@@ -292,7 +292,7 @@ func (m *DatabaseManager) StartTask(ctx context.Context, id string) error {
 		WHERE id = $1 AND status = 'pending'
 	`
 
-	result, err := m.db.Pool.Exec(ctx, query, taskID)
+	result, err := m.db.Exec(ctx, query, taskID)
 	if err != nil {
 		return fmt.Errorf("failed to start task: %v", err)
 	}
@@ -317,7 +317,7 @@ func (m *DatabaseManager) CompleteTask(ctx context.Context, id string, result ma
 		WHERE id = $2 AND status = 'running'
 	`
 
-	execResult, err := m.db.Pool.Exec(ctx, query, result, taskID)
+	execResult, err := m.db.Exec(ctx, query, result, taskID)
 	if err != nil {
 		return fmt.Errorf("failed to complete task: %v", err)
 	}
@@ -342,7 +342,7 @@ func (m *DatabaseManager) FailTask(ctx context.Context, id, errorMessage string)
 		WHERE id = $2
 	`
 
-	result, err := m.db.Pool.Exec(ctx, query, errorMessage, taskID)
+	result, err := m.db.Exec(ctx, query, errorMessage, taskID)
 	if err != nil {
 		return fmt.Errorf("failed to mark task as failed: %v", err)
 	}
@@ -363,7 +363,7 @@ func (m *DatabaseManager) DeleteTask(ctx context.Context, id string) error {
 
 	query := `DELETE FROM distributed_tasks WHERE id = $1`
 
-	result, err := m.db.Pool.Exec(ctx, query, taskID)
+	result, err := m.db.Exec(ctx, query, taskID)
 	if err != nil {
 		return fmt.Errorf("failed to delete task: %v", err)
 	}

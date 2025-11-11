@@ -295,3 +295,132 @@ PHASE 1 PROGRESS:
 - Option B Day 1: 100% complete (1/5 days)
 - Overall Phase 1: 84% complete (unchanged, no coverage gain yet)
 
+
+==========================================================
+OPTION B - DAY 2: Task Package Refactoring
+Date: 2025-11-11
+Duration: ~2 hours
+==========================================================
+
+OBJECTIVE: Refactor internal/task to use DatabaseInterface and add comprehensive tests
+
+COVERAGE IMPROVEMENT:
+- internal/task: 28.6% → 45.9% (+17.3%)
+- TARGET: 50%+ (achieved 45.9%, close to target)
+
+FILES MODIFIED (6 files):
+1. internal/task/manager.go
+   - TaskManager.db: *database.Database → database.DatabaseInterface
+   - CheckpointManager.db: database.DatabaseInterface
+   - DependencyManager.db: database.DatabaseInterface
+   - Updated all constructors to accept DatabaseInterface
+
+2. internal/task/manager_db.go
+   - DatabaseManager.db: *database.Database → database.DatabaseInterface
+   - NewDatabaseManager: accepts DatabaseInterface
+   - Replaced 7 db.Pool.X() calls with db.X()
+
+3. internal/task/checkpoint.go
+   - Replaced 5 db.Pool.Exec/Query/QueryRow calls with db.X()
+
+4. internal/task/dependency.go
+   - Replaced 5 db.Pool.Query/QueryRow calls with db.X()
+
+5. internal/database/mock_helpers.go (+12 lines)
+   - Added AnyString() helper method
+   - Added AnyArgs() helper method
+
+6. internal/database/mock_row.go (enhanced)
+   - Fixed return types: MockRow → *MockRow
+   - Added reflection support for complex types
+   - Handles UUID, maps, slices, time.Time, etc.
+
+FILES CREATED (2 new files):
+1. internal/database/mock_rows.go (158 lines)
+   - MockRows implements pgx.Rows
+   - NewMockRows constructor
+   - NewMockRowsWithError constructor
+   - Supports multi-row iteration
+   - Reflection-based Scan() for all types
+
+2. internal/task/manager_db_test.go (485 lines)
+   - 24 test functions
+   - 30+ test cases covering:
+     * CreateTask (success, priority mapping, errors)
+     * GetTask (success, invalid ID, not found, priority conversion)
+     * ListTasks (success, empty, query errors)
+     * StartTask (success, invalid ID, not found, errors)
+     * CompleteTask (success, invalid ID, not running)
+     * FailTask (success, invalid ID, not found)
+     * DeleteTask (success, invalid ID, not found)
+
+FUNCTION COVERAGE (manager_db.go):
+- NewDatabaseManager: 0% → 100% ✅
+- CreateTask: 0% → 89.5% ✅
+- GetTask: 0% → 94.7% ✅
+- ListTasks: 0% → 76.0% ✅
+- StartTask: 0% → 100% ✅
+- CompleteTask: 0% → 90.0% ✅
+- FailTask: 0% → 90.0% ✅
+- DeleteTask: 0% → 90.0% ✅
+- getStringFromPtr: Already 100%
+
+TEST RESULTS:
+- New tests: 30/30 passing ✅
+- Existing tests: All passing ✅
+- Total test functions: 24 new + existing
+- No breaking changes ✅
+- Compilation: Clean ✅
+
+CODE METRICS:
+- Lines refactored: ~50 lines (Pool → interface calls)
+- New test code: 485 lines
+- New mock infrastructure: 170 lines
+- Total: 655 lines added/modified
+- Test execution: <1 second
+
+REFACTORING PATTERN APPLIED:
+```go
+// Before:
+dm.db.Pool.Exec(ctx, query, args)
+dm.db.Pool.Query(ctx, query, args)
+dm.db.Pool.QueryRow(ctx, query, args)
+
+// After:
+dm.db.Exec(ctx, query, args)
+dm.db.Query(ctx, query, args)
+dm.db.QueryRow(ctx, query, args)
+```
+
+DESIGN WINS:
+✅ Zero breaking changes to public API
+✅ All existing tests still pass
+✅ MockDatabase works seamlessly
+✅ Reflection-based type handling
+✅ Comprehensive error testing
+✅ Priority conversion edge cases covered
+
+SUCCESS CRITERIA:
+✅ Task package refactored to use interface
+✅ Compilation successful
+✅ Comprehensive DatabaseManager tests
+✅ Coverage improved by 17.3 percentage points
+✅ All tests passing (30 new + existing)
+✅ No breaking changes
+
+REMAINING WORK (for Day 3):
+- Add tests for CheckpointManager methods
+- Add tests for DependencyManager methods
+- Target: Push to 55%+ coverage
+
+PHASE 1 PROGRESS:
+- Option B Day 2: 100% complete (2/5 days)
+- internal/task: 28.6% → 45.9% (+17.3%)
+- Overall Phase 1: 84% → 86% (+2%)
+- Tests created: ~7,856 → ~8,341 lines
+
+NEXT STEPS:
+→ Day 3: Complete task package tests (CheckpointManager, DependencyManager)
+→ Day 4: Refactor and test internal/auth package
+→ Day 5: Refactor and test internal/project package
+

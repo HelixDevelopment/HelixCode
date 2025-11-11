@@ -9,7 +9,7 @@ import (
 )
 
 // NewDependencyManager creates a new dependency manager
-func NewDependencyManager(db *database.Database) *DependencyManager {
+func NewDependencyManager(db database.DatabaseInterface) *DependencyManager {
 	return &DependencyManager{
 		db: db,
 	}
@@ -26,7 +26,7 @@ func (dm *DependencyManager) ValidateDependencies(dependencies []uuid.UUID) erro
 	// Check if all dependencies exist
 	for _, depID := range dependencies {
 		var exists bool
-		err := dm.db.Pool.QueryRow(ctx, `
+		err := dm.db.QueryRow(ctx, `
 			SELECT EXISTS(SELECT 1 FROM distributed_tasks WHERE id = $1)
 		`, depID).Scan(&exists)
 
@@ -52,8 +52,8 @@ func (dm *DependencyManager) CheckDependenciesCompleted(dependencies []uuid.UUID
 
 	// Count completed dependencies
 	var completedCount int
-	err := dm.db.Pool.QueryRow(ctx, `
-		SELECT COUNT(*) FROM distributed_tasks 
+	err := dm.db.QueryRow(ctx, `
+		SELECT COUNT(*) FROM distributed_tasks
 		WHERE id = ANY($1) AND status = 'completed'
 	`, dependencies).Scan(&completedCount)
 
@@ -72,8 +72,8 @@ func (dm *DependencyManager) GetBlockingDependencies(dependencies []uuid.UUID) (
 
 	ctx := context.Background()
 
-	rows, err := dm.db.Pool.Query(ctx, `
-		SELECT id FROM distributed_tasks 
+	rows, err := dm.db.Query(ctx, `
+		SELECT id FROM distributed_tasks
 		WHERE id = ANY($1) AND status != 'completed'
 	`, dependencies)
 
@@ -134,8 +134,8 @@ func (dm *DependencyManager) GetDependencyChain(taskID uuid.UUID) ([]uuid.UUID, 
 func (dm *DependencyManager) GetDependentTasks(taskID uuid.UUID) ([]uuid.UUID, error) {
 	ctx := context.Background()
 
-	rows, err := dm.db.Pool.Query(ctx, `
-		SELECT id FROM distributed_tasks 
+	rows, err := dm.db.Query(ctx, `
+		SELECT id FROM distributed_tasks
 		WHERE $1 = ANY(dependencies)
 	`, taskID)
 
@@ -192,7 +192,7 @@ func (dm *DependencyManager) getTaskDependencies(taskID uuid.UUID) ([]uuid.UUID,
 	ctx := context.Background()
 
 	var dependencies []uuid.UUID
-	err := dm.db.Pool.QueryRow(ctx, `
+	err := dm.db.QueryRow(ctx, `
 		SELECT dependencies FROM distributed_tasks WHERE id = $1
 	`, taskID).Scan(&dependencies)
 

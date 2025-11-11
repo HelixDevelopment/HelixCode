@@ -11,7 +11,7 @@ import (
 )
 
 // NewCheckpointManager creates a new checkpoint manager
-func NewCheckpointManager(db *database.Database) *CheckpointManager {
+func NewCheckpointManager(db database.DatabaseInterface) *CheckpointManager {
 	return &CheckpointManager{
 		db: db,
 	}
@@ -31,7 +31,7 @@ func (cm *CheckpointManager) CreateCheckpoint(taskID uuid.UUID, checkpointName s
 	workerID := uuid.New() // In real implementation, this would be the actual worker ID
 
 	// Insert checkpoint into database
-	_, err = cm.db.Pool.Exec(ctx, `
+	_, err = cm.db.Exec(ctx, `
 		INSERT INTO task_checkpoints (
 			id, task_id, checkpoint_name, checkpoint_data, worker_id, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6)
@@ -50,7 +50,7 @@ func (cm *CheckpointManager) CreateCheckpoint(taskID uuid.UUID, checkpointName s
 func (cm *CheckpointManager) GetCheckpoints(taskID uuid.UUID) ([]Checkpoint, error) {
 	ctx := context.Background()
 
-	rows, err := cm.db.Pool.Query(ctx, `
+	rows, err := cm.db.Query(ctx, `
 		SELECT id, checkpoint_name, checkpoint_data, worker_id, created_at
 		FROM task_checkpoints
 		WHERE task_id = $1
@@ -97,7 +97,7 @@ func (cm *CheckpointManager) GetLatestCheckpoint(taskID uuid.UUID) (*Checkpoint,
 	var checkpoint Checkpoint
 	var checkpointDataJSON []byte
 
-	err := cm.db.Pool.QueryRow(ctx, `
+	err := cm.db.QueryRow(ctx, `
 		SELECT id, checkpoint_name, checkpoint_data, worker_id, created_at
 		FROM task_checkpoints
 		WHERE task_id = $1
@@ -127,7 +127,7 @@ func (cm *CheckpointManager) GetLatestCheckpoint(taskID uuid.UUID) (*Checkpoint,
 func (cm *CheckpointManager) DeleteCheckpoint(checkpointID uuid.UUID) error {
 	ctx := context.Background()
 
-	_, err := cm.db.Pool.Exec(ctx, `
+	_, err := cm.db.Exec(ctx, `
 		DELETE FROM task_checkpoints
 		WHERE id = $1
 	`, checkpointID)
@@ -143,7 +143,7 @@ func (cm *CheckpointManager) DeleteCheckpoint(checkpointID uuid.UUID) error {
 func (cm *CheckpointManager) DeleteAllCheckpoints(taskID uuid.UUID) error {
 	ctx := context.Background()
 
-	_, err := cm.db.Pool.Exec(ctx, `
+	_, err := cm.db.Exec(ctx, `
 		DELETE FROM task_checkpoints
 		WHERE task_id = $1
 	`, taskID)

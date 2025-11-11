@@ -96,7 +96,7 @@ type Task struct {
 
 // TaskManager manages distributed tasks
 type TaskManager struct {
-	db            *database.Database
+	db            database.DatabaseInterface
 	redis         *redis.Client
 	mu            sync.RWMutex
 	tasks         map[uuid.UUID]*Task
@@ -136,12 +136,12 @@ type TaskQueue struct {
 
 // CheckpointManager manages task checkpoints
 type CheckpointManager struct {
-	db *database.Database
+	db database.DatabaseInterface
 }
 
 // DependencyManager manages task dependencies
 type DependencyManager struct {
-	db *database.Database
+	db database.DatabaseInterface
 }
 
 // TaskAnalysis represents analysis of a task for splitting
@@ -174,7 +174,7 @@ type SubtaskData struct {
 }
 
 // NewTaskManager creates a new task manager
-func NewTaskManager(db *database.Database, redisClient *redis.Client) *TaskManager {
+func NewTaskManager(db database.DatabaseInterface, redisClient *redis.Client) *TaskManager {
 	return &TaskManager{
 		db:            db,
 		redis:         redisClient,

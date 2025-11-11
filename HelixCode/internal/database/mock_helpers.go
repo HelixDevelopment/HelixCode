@@ -50,15 +50,15 @@ func (m *MockDatabase) MockExecErrorOnce(err error) *mock.Call {
 //
 // Note: You'll need to create a mock row implementation for your specific use case.
 // See MockRow in mock_row.go for a simple implementation.
-func (m *MockDatabase) MockQueryRowSuccess(row MockRow) *mock.Call {
-	return m.On("QueryRow", mock.Anything, mock.Anything, mock.Anything).Return(&row)
+func (m *MockDatabase) MockQueryRowSuccess(row *MockRow) *mock.Call {
+	return m.On("QueryRow", mock.Anything, mock.Anything, mock.Anything).Return(row)
 }
 
 // MockQueryRowError sets up a failed QueryRow expectation.
 // The provided error will be returned when the row is scanned.
 func (m *MockDatabase) MockQueryRowError(err error) *mock.Call {
 	row := NewMockRowWithError(err)
-	return m.On("QueryRow", mock.Anything, mock.Anything, mock.Anything).Return(&row)
+	return m.On("QueryRow", mock.Anything, mock.Anything, mock.Anything).Return(row)
 }
 
 // MockPingSuccess sets up a successful Ping expectation.
@@ -87,4 +87,16 @@ func (m *MockDatabase) MockExecWithSQL(sql string, rowsAffected int64) *mock.Cal
 func (m *MockDatabase) MockExecWithSQLAndArgs(sql string, args []interface{}, rowsAffected int64) *mock.Call {
 	tag := pgconn.NewCommandTag(fmt.Sprintf("INSERT 0 %d", rowsAffected))
 	return m.On("Exec", mock.Anything, sql, args).Return(tag, nil)
+}
+
+// AnyString returns a matcher that matches any string argument.
+// This is useful when you don't care about the exact SQL string.
+func (m *MockDatabase) AnyString() interface{} {
+	return mock.Anything
+}
+
+// AnyArgs returns a matcher that matches any arguments slice.
+// This is useful when you don't care about the exact arguments.
+func (m *MockDatabase) AnyArgs() interface{} {
+	return mock.Anything
 }

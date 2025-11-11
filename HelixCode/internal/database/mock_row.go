@@ -1,6 +1,8 @@
 package database
 
 import (
+	"reflect"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -24,8 +26,8 @@ type MockRow struct {
 
 // NewMockRowWithValues creates a MockRow that will scan the provided values.
 // Call Scan() on the row to populate your variables.
-func NewMockRowWithValues(values ...interface{}) MockRow {
-	return MockRow{
+func NewMockRowWithValues(values ...interface{}) *MockRow {
+	return &MockRow{
 		values: values,
 		err:    nil,
 		index:  0,
@@ -33,8 +35,8 @@ func NewMockRowWithValues(values ...interface{}) MockRow {
 }
 
 // NewMockRowWithError creates a MockRow that returns an error when Scan() is called.
-func NewMockRowWithError(err error) MockRow {
-	return MockRow{
+func NewMockRowWithError(err error) *MockRow {
+	return &MockRow{
 		values: nil,
 		err:    err,
 		index:  0,
@@ -52,25 +54,54 @@ func (m *MockRow) Scan(dest ...interface{}) error {
 		return pgx.ErrNoRows // Return appropriate error if counts don't match
 	}
 
-	for i, d := range dest {
+	for i, val := range m.values {
+		if val == nil {
+			// Skip nil values - leave destination at zero value
+			continue
+		}
+
+		d := dest[i]
 		switch v := d.(type) {
 		case *string:
-			*v = m.values[i].(string)
+			if s, ok := val.(string); ok {
+				*v = s
+			}
+		case **string:
+			if s, ok := val.(string); ok {
+				str := s
+				*v = &str
+			}
 		case *int:
-			*v = m.values[i].(int)
+			if i, ok := val.(int); ok {
+				*v = i
+			}
 		case *int64:
-			*v = m.values[i].(int64)
+			if i, ok := val.(int64); ok {
+				*v = i
+			}
 		case *bool:
-			*v = m.values[i].(bool)
+			if b, ok := val.(bool); ok {
+				*v = b
+			}
 		case *float64:
-			*v = m.values[i].(float64)
+			if f, ok := val.(float64); ok {
+				*v = f
+			}
 		case *[]byte:
-			*v = m.values[i].([]byte)
-		// Add more types as needed
+			if b, ok := val.([]byte); ok {
+				*v = b
+			}
 		default:
-			// For complex types, try direct assignment
-			// This works for pointers to structs, etc.
-			*v.(*interface{}) = m.values[i]
+			// For complex types (UUID, maps, slices, time.Time, etc.),
+			// use reflection to assign the value
+			destValue := reflect.ValueOf(d)
+			if destValue.Kind() == reflect.Ptr {
+				srcValue := reflect.ValueOf(val)
+				// Check if types match
+				if destValue.Elem().Type() == srcValue.Type() {
+					destValue.Elem().Set(srcValue)
+				}
+			}
 		}
 	}
 
