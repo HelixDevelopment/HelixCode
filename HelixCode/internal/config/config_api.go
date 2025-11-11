@@ -287,7 +287,38 @@ func (api *ConfigurationAPI) setupRouter(config *ConfigurationAPIServer) http.Ha
 
 // setupRoutes sets up API routes
 func (api *ConfigurationAPI) setupRoutes(router *mux.Router, config *ConfigurationAPIServer) {
-	// TODO: Implement route setup
+	// Configuration CRUD operations
+	router.HandleFunc("/api/v1/config", api.handleGetConfig).Methods("GET")
+	router.HandleFunc("/api/v1/config", api.handleUpdateConfig).Methods("PUT", "PATCH")
+	router.HandleFunc("/api/v1/config/validate", api.handleValidateConfig).Methods("POST")
+
+	// Configuration import/export
+	router.HandleFunc("/api/v1/config/export", api.handleExportConfig).Methods("GET")
+	router.HandleFunc("/api/v1/config/import", api.handleImportConfig).Methods("POST")
+
+	// Configuration management
+	router.HandleFunc("/api/v1/config/backup", api.handleBackupConfig).Methods("POST")
+	router.HandleFunc("/api/v1/config/restore", api.handleRestoreConfig).Methods("POST")
+	router.HandleFunc("/api/v1/config/reset", api.handleResetConfig).Methods("POST")
+	router.HandleFunc("/api/v1/config/reload", api.handleReloadConfig).Methods("POST")
+
+	// Field-specific operations
+	router.HandleFunc("/api/v1/config/field/{path:.*}", api.handleGetField).Methods("GET")
+	router.HandleFunc("/api/v1/config/field/{path:.*}", api.handleUpdateField).Methods("PUT", "PATCH")
+	router.HandleFunc("/api/v1/config/field/{path:.*}", api.handleDeleteField).Methods("DELETE")
+
+	// WebSocket endpoints for real-time updates
+	router.HandleFunc("/api/v1/config/ws", api.handleWebSocket)
+	router.HandleFunc("/api/v1/config/ws/field/{path:.*}", api.handleWebSocketField)
+
+	// Health and status endpoints
+	router.HandleFunc("/api/v1/config/health", api.handleHealth).Methods("GET")
+	router.HandleFunc("/api/v1/config/status", api.handleStatus).Methods("GET")
+
+	// Serve static documentation if configured
+	if config.EnableDocs {
+		router.PathPrefix("/docs/").Handler(http.StripPrefix("/docs/", http.FileServer(http.Dir("./docs/config"))))
+	}
 }
 
 // API Route Handlers
@@ -506,11 +537,19 @@ func (api *ConfigurationAPI) handleRestoreConfig(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// TODO: Implement RestoreConfig
-	// if err := api.manager.RestoreConfig(request.Path); err != nil {
-	// 	api.writeErrorResponse(w, http.StatusInternalServerError, "RESTORE_FAILED", err.Error())
-	// 	return
-	// }
+	// Restore configuration from backup
+	if err := api.manager.RestoreConfig(request.Path); err != nil {
+		api.writeErrorResponse(w, http.StatusInternalServerError, "RESTORE_FAILED", err.Error())
+		return
+	}
+
+	// Broadcast configuration change event
+	api.broadcastEvent(ConfigurationEvent{
+		Type:      "restore",
+		Context:   request.Context,
+		User:      request.User,
+		Timestamp: time.Now(),
+	})
 
 	response := APIResponse{
 		Success:   true,
@@ -539,15 +578,30 @@ func (api *ConfigurationAPI) handleResetConfig(w http.ResponseWriter, r *http.Re
 }
 
 func (api *ConfigurationAPI) handleReloadConfig(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement ReloadConfig
-	// if err := api.manager.ReloadConfig(); err != nil {
-	// 	api.writeErrorResponse(w, http.StatusInternalServerError, "RELOAD_FAILED", err.Error())
-	// 	return
-	// }
+	// Capture old config for event
+	oldConfig := api.config
+
+	// Reload configuration from disk
+	if err := api.manager.ReloadConfig(); err != nil {
+		api.writeErrorResponse(w, http.StatusInternalServerError, "RELOAD_FAILED", err.Error())
+		return
+	}
+
+	// Update API config reference
+	api.config = api.manager.GetConfig()
+
+	// Broadcast configuration change event
+	api.broadcastEvent(ConfigurationEvent{
+		Type:      "reload",
+		OldValue:  oldConfig,
+		NewValue:  api.config,
+		Timestamp: time.Now(),
+	})
 
 	response := APIResponse{
 		Success:   true,
 		Message:   "Configuration reloaded successfully",
+		Data:      api.config,
 		Timestamp: time.Now(),
 		RequestID: getRequestID(r),
 	}
@@ -848,6 +902,45 @@ func (api *ConfigurationAPI) convertToInt(value float64, targetType reflect.Type
 		return int(value)
 	}
 }
+
+// Health and Status handlers
+
+func (api *ConfigurationAPI) handleHealth(w http.ResponseWriter, r *http.Request) {
+	response := APIResponse{
+		Success:   true,
+		Message:   "Configuration API is healthy",
+		Data: map[string]interface{}{
+			"status": "ok",
+			"uptime": time.Since(time.Now()).String(), // Would track actual start time in production
+		},
+		Timestamp: time.Now(),
+		RequestID: getRequestID(r),
+	}
+
+	api.writeJSONResponse(w, http.StatusOK, response)
+}
+
+func (api *ConfigurationAPI) handleStatus(w http.ResponseWriter, r *http.Request) {
+	api.clientsMutex.RLock()
+	connectedClients := len(api.clients)
+	api.clientsMutex.RUnlock()
+
+	response := APIResponse{
+		Success:   true,
+		Data: map[string]interface{}{
+			"config_loaded":       api.config != nil,
+			"config_path":         api.manager.GetConfigPath(),
+			"websocket_clients":   connectedClients,
+			"server_running":      true,
+		},
+		Timestamp: time.Now(),
+		RequestID: getRequestID(r),
+	}
+
+	api.writeJSONResponse(w, http.StatusOK, response)
+}
+
+// Utility methods
 
 func (api *ConfigurationAPI) parseBool(s string) bool {
 	return strings.ToLower(s) == "true" || s == "1" || s == "yes" || s == "on"

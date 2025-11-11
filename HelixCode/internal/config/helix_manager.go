@@ -283,6 +283,77 @@ func (m *HelixConfigManager) BackupConfig(backupPath string) error {
 	return os.WriteFile(backupPath, data, 0644)
 }
 
+// RestoreConfig restores configuration from a backup file
+func (m *HelixConfigManager) RestoreConfig(backupPath string) error {
+	// Read backup file
+	data, err := os.ReadFile(backupPath)
+	if err != nil {
+		return fmt.Errorf("failed to read backup file: %w", err)
+	}
+
+	// Parse backup configuration
+	var backupConfig HelixConfig
+	if err := json.Unmarshal(data, &backupConfig); err != nil {
+		return fmt.Errorf("failed to parse backup configuration: %w", err)
+	}
+
+	// Validate backup configuration
+	if err := m.validateConfig(&backupConfig); err != nil {
+		return fmt.Errorf("backup configuration validation failed: %w", err)
+	}
+
+	// Apply restored configuration
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	oldConfig := m.copyConfig()
+	m.config = &backupConfig
+
+	// Save to current config path
+	if err := m.saveLocked(); err != nil {
+		// Rollback on save failure
+		m.config = oldConfig
+		return fmt.Errorf("failed to save restored configuration: %w", err)
+	}
+
+	// Notify watchers
+	m.notifyWatchers(oldConfig, m.config)
+
+	return nil
+}
+
+// ReloadConfig reloads configuration from disk
+func (m *HelixConfigManager) ReloadConfig() error {
+	// Read current config file
+	data, err := os.ReadFile(m.configPath)
+	if err != nil {
+		return fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	// Parse configuration
+	var newConfig HelixConfig
+	if err := json.Unmarshal(data, &newConfig); err != nil {
+		return fmt.Errorf("failed to parse configuration: %w", err)
+	}
+
+	// Validate configuration
+	if err := m.validateConfig(&newConfig); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	// Apply reloaded configuration
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	oldConfig := m.copyConfig()
+	m.config = &newConfig
+
+	// Notify watchers
+	m.notifyWatchers(oldConfig, m.config)
+
+	return nil
+}
+
 // Helper methods for configuration management
 
 func (m *HelixConfigManager) saveLocked() error {
