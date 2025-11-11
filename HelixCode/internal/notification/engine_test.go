@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -164,4 +165,314 @@ func TestAllNotificationChannels(t *testing.T) {
 	assert.NotNil(t, engine.channels["telegram"])
 	assert.NotNil(t, engine.channels["yandex_messenger"])
 	assert.NotNil(t, engine.channels["max"])
+}
+
+// TestApplyTemplate tests template application to notifications
+func TestApplyTemplate(t *testing.T) {
+	engine := NewNotificationEngine()
+
+	t.Run("apply existing template", func(t *testing.T) {
+		// Load a template
+		templateStr := "Alert: {{.Title}} - {{.Message}}"
+		err := engine.LoadTemplate("alert-template", templateStr)
+		assert.NoError(t, err)
+
+		// Create a notification
+		notification := &Notification{
+			Title:   "System Error",
+			Message: "Database connection failed",
+			Type:    NotificationTypeError,
+		}
+
+		// Apply the template
+		engine.applyTemplate(notification, "alert-template")
+
+		// Verify the message was updated
+		expected := "Alert: System Error - Database connection failed"
+		assert.Equal(t, expected, notification.Message)
+	})
+
+	t.Run("apply non-existent template", func(t *testing.T) {
+		notification := &Notification{
+			Title:   "Test",
+			Message: "Original message",
+			Type:    NotificationTypeInfo,
+		}
+
+		// Apply a template that doesn't exist
+		engine.applyTemplate(notification, "non-existent-template")
+
+		// Message should remain unchanged
+		assert.Equal(t, "Original message", notification.Message)
+	})
+
+	t.Run("apply template with complex fields", func(t *testing.T) {
+		// Load a complex template
+		templateStr := "{{.Type}}: {{.Title}}\nPriority: {{.Priority}}\n{{.Message}}"
+		err := engine.LoadTemplate("complex-template", templateStr)
+		assert.NoError(t, err)
+
+		notification := &Notification{
+			Title:    "Deployment Complete",
+			Message:  "Version 2.0 deployed successfully",
+			Type:     NotificationTypeSuccess,
+			Priority: NotificationPriorityHigh,
+		}
+
+		engine.applyTemplate(notification, "complex-template")
+
+		expected := "success: Deployment Complete\nPriority: high\nVersion 2.0 deployed successfully"
+		assert.Equal(t, expected, notification.Message)
+	})
+
+	t.Run("template with execution error preserves original", func(t *testing.T) {
+		// Load a template that will fail (referencing non-existent field)
+		templateStr := "{{.NonExistentField}}"
+		err := engine.LoadTemplate("bad-template", templateStr)
+		assert.NoError(t, err) // Template parsing succeeds
+
+		notification := &Notification{
+			Title:   "Test",
+			Message: "Original message",
+		}
+
+		// Apply template that will fail during execution
+		engine.applyTemplate(notification, "bad-template")
+
+		// Message should remain unchanged when execution fails
+		assert.Equal(t, "Original message", notification.Message)
+	})
+}
+
+// TestContains tests the contains helper function
+func TestContains(t *testing.T) {
+	t.Run("item exists in slice", func(t *testing.T) {
+		slice := []string{"apple", "banana", "cherry"}
+		assert.True(t, contains(slice, "banana"))
+		assert.True(t, contains(slice, "apple"))
+		assert.True(t, contains(slice, "cherry"))
+	})
+
+	t.Run("item does not exist in slice", func(t *testing.T) {
+		slice := []string{"apple", "banana", "cherry"}
+		assert.False(t, contains(slice, "orange"))
+		assert.False(t, contains(slice, "grape"))
+		assert.False(t, contains(slice, ""))
+	})
+
+	t.Run("empty slice", func(t *testing.T) {
+		slice := []string{}
+		assert.False(t, contains(slice, "anything"))
+	})
+
+	t.Run("single item slice", func(t *testing.T) {
+		slice := []string{"onlyitem"}
+		assert.True(t, contains(slice, "onlyitem"))
+		assert.False(t, contains(slice, "other"))
+	})
+
+	t.Run("case sensitivity", func(t *testing.T) {
+		slice := []string{"Apple", "Banana"}
+		assert.False(t, contains(slice, "apple")) // Case sensitive
+		assert.True(t, contains(slice, "Apple"))
+	})
+
+	t.Run("empty string in slice", func(t *testing.T) {
+		slice := []string{"", "something"}
+		assert.True(t, contains(slice, ""))
+		assert.True(t, contains(slice, "something"))
+	})
+}
+
+// TestGetChannelStats tests channel statistics retrieval
+func TestGetChannelStats(t *testing.T) {
+	engine := NewNotificationEngine()
+
+	t.Run("no channels registered", func(t *testing.T) {
+		stats := engine.GetChannelStats()
+
+		assert.NotNil(t, stats)
+		summary := stats["summary"].(map[string]interface{})
+		assert.Equal(t, 0, summary["total_channels"])
+		assert.Equal(t, 0, summary["enabled_channels"])
+		assert.Equal(t, 0, summary["total_rules"])
+		assert.Equal(t, 0, summary["active_rules"])
+	})
+
+	t.Run("with channels registered", func(t *testing.T) {
+		// Register some channels
+		slack := NewSlackChannel("https://hooks.slack.com/test", "#test", "bot")
+		email := NewEmailChannel("smtp.test.com", 587, "user", "pass", "from@test.com")
+		discord := NewDiscordChannel("https://discord.com/webhook/test")
+
+		engine.RegisterChannel(slack)
+		engine.RegisterChannel(email)
+		engine.RegisterChannel(discord)
+
+		stats := engine.GetChannelStats()
+
+		// Check individual channel stats
+		slackStat := stats["slack"].(map[string]interface{})
+		assert.True(t, slackStat["enabled"].(bool))
+		assert.NotNil(t, slackStat["config"])
+
+		emailStat := stats["email"].(map[string]interface{})
+		assert.True(t, emailStat["enabled"].(bool))
+
+		discordStat := stats["discord"].(map[string]interface{})
+		assert.True(t, discordStat["enabled"].(bool))
+
+		// Check summary
+		summary := stats["summary"].(map[string]interface{})
+		assert.Equal(t, 3, summary["total_channels"])
+		assert.Equal(t, 3, summary["enabled_channels"])
+	})
+
+	t.Run("with enabled and disabled channels", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		// Register enabled channel
+		enabled := &mockChannel{name: "enabled-mock", enabled: true}
+		engine.RegisterChannel(enabled)
+
+		// Register disabled channel
+		disabled := &mockChannel{name: "disabled-mock", enabled: false}
+		engine.RegisterChannel(disabled)
+
+		stats := engine.GetChannelStats()
+
+		// Check individual stats
+		enabledStat := stats["enabled-mock"].(map[string]interface{})
+		assert.True(t, enabledStat["enabled"].(bool))
+
+		disabledStat := stats["disabled-mock"].(map[string]interface{})
+		assert.False(t, disabledStat["enabled"].(bool))
+
+		// Check summary
+		summary := stats["summary"].(map[string]interface{})
+		assert.Equal(t, 2, summary["total_channels"])
+		assert.Equal(t, 1, summary["enabled_channels"]) // Only one enabled
+	})
+
+	t.Run("with rules", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		// Add some rules
+		rule1 := NotificationRule{
+			Name:     "rule1",
+			Enabled:  true,
+			Channels: []string{"slack"},
+		}
+		rule2 := NotificationRule{
+			Name:     "rule2",
+			Enabled:  false,
+			Channels: []string{"email"},
+		}
+		rule3 := NotificationRule{
+			Name:     "rule3",
+			Enabled:  true,
+			Channels: []string{"discord"},
+		}
+
+		engine.AddRule(rule1)
+		engine.AddRule(rule2)
+		engine.AddRule(rule3)
+
+		stats := engine.GetChannelStats()
+
+		summary := stats["summary"].(map[string]interface{})
+		assert.Equal(t, 3, summary["total_rules"])
+		assert.Equal(t, 2, summary["active_rules"]) // Only 2 enabled
+	})
+}
+
+// TestCountActiveRules tests counting of active notification rules
+func TestCountActiveRules(t *testing.T) {
+	engine := NewNotificationEngine()
+
+	t.Run("no rules", func(t *testing.T) {
+		count := engine.countActiveRules()
+		assert.Equal(t, 0, count)
+	})
+
+	t.Run("all rules enabled", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		for i := 0; i < 5; i++ {
+			rule := NotificationRule{
+				Name:    fmt.Sprintf("rule-%d", i),
+				Enabled: true,
+			}
+			engine.AddRule(rule)
+		}
+
+		count := engine.countActiveRules()
+		assert.Equal(t, 5, count)
+	})
+
+	t.Run("all rules disabled", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		for i := 0; i < 3; i++ {
+			rule := NotificationRule{
+				Name:    fmt.Sprintf("rule-%d", i),
+				Enabled: false,
+			}
+			engine.AddRule(rule)
+		}
+
+		count := engine.countActiveRules()
+		assert.Equal(t, 0, count)
+	})
+
+	t.Run("mixed enabled and disabled", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		// Add enabled rules
+		for i := 0; i < 7; i++ {
+			rule := NotificationRule{
+				Name:    fmt.Sprintf("enabled-rule-%d", i),
+				Enabled: true,
+			}
+			engine.AddRule(rule)
+		}
+
+		// Add disabled rules
+		for i := 0; i < 3; i++ {
+			rule := NotificationRule{
+				Name:    fmt.Sprintf("disabled-rule-%d", i),
+				Enabled: false,
+			}
+			engine.AddRule(rule)
+		}
+
+		count := engine.countActiveRules()
+		assert.Equal(t, 7, count) // Only the enabled ones
+	})
+
+	t.Run("single enabled rule", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		rule := NotificationRule{
+			Name:    "single-rule",
+			Enabled: true,
+		}
+		engine.AddRule(rule)
+
+		count := engine.countActiveRules()
+		assert.Equal(t, 1, count)
+	})
+
+	t.Run("single disabled rule", func(t *testing.T) {
+		engine := NewNotificationEngine()
+
+		rule := NotificationRule{
+			Name:    "disabled-rule",
+			Enabled: false,
+		}
+		engine.AddRule(rule)
+
+		count := engine.countActiveRules()
+		assert.Equal(t, 0, count)
+	})
 }
