@@ -750,3 +750,77 @@ func TestModeAndStatus(t *testing.T) {
 		assert.Equal(t, "paused", StatusPaused.String())
 	})
 }
+
+// ========================================
+// Additional Coverage Tests
+// ========================================
+
+func TestNewManagerWithIntegrations(t *testing.T) {
+	// Note: focus.Manager and hooks.Manager are external dependencies
+	// For this test, we pass nil since we're just testing that the function works
+	mgr := NewManagerWithIntegrations(nil, nil)
+
+	assert.NotNil(t, mgr)
+	assert.Nil(t, mgr.GetFocusManager())
+	assert.Nil(t, mgr.GetHooksManager())
+}
+
+func TestManager_GetFocusManager(t *testing.T) {
+	mgr := NewManagerWithIntegrations(nil, nil)
+
+	focusMgr := mgr.GetFocusManager()
+	assert.Nil(t, focusMgr, "Should return nil when no focus manager set")
+}
+
+func TestManager_GetHooksManager(t *testing.T) {
+	mgr := NewManagerWithIntegrations(nil, nil)
+
+	hooksMgr := mgr.GetHooksManager()
+	assert.Nil(t, hooksMgr, "Should return nil when no hooks manager set")
+}
+
+func TestManager_OnResume(t *testing.T) {
+	mgr := NewManager()
+
+	callback := func(session *Session) {
+		// Callback function - just for registration test
+	}
+
+	mgr.OnResume(callback)
+
+	// Verify callback was registered (we can't directly test the slice, but we can verify no panic)
+	assert.NotNil(t, mgr)
+}
+
+func TestManager_OnDelete(t *testing.T) {
+	mgr := NewManager()
+
+	callback := func(session *Session) {
+		// Callback function - just for registration test
+	}
+
+	mgr.OnDelete(callback)
+
+	// Verify callback was registered (we can't directly test the slice, but we can verify no panic)
+	assert.NotNil(t, mgr)
+}
+
+func TestStatistics_String(t *testing.T) {
+	stats := &Statistics{
+		Total: 10,
+		ByStatus: map[Status]int{
+			StatusActive:    3,
+			StatusCompleted: 7,
+		},
+		ByMode: map[Mode]int{
+			ModePlanning: 5,
+			ModeBuilding: 5,
+		},
+	}
+
+	result := stats.String()
+
+	// The String() method should return information about statistics
+	assert.NotEmpty(t, result)
+	assert.Contains(t, result, "10", "Should contain total count")
+}

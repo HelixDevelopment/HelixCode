@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -715,5 +716,354 @@ func TestParserExtractMentionInfo(t *testing.T) {
 		assert.Equal(t, "url", mentionType)
 		assert.Equal(t, "https://example.com", target)
 		assert.NotNil(t, options)
+	})
+}
+
+// ========================================
+// Additional Coverage Tests
+// ========================================
+
+func TestNewFolderMentionHandler_DefaultMaxTokens(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	t.Run("with zero maxTokens uses default", func(t *testing.T) {
+		handler := NewFolderMentionHandler(tmpDir, 0)
+		assert.NotNil(t, handler)
+		assert.Equal(t, 8000, handler.maxTokens, "Should use default of 8000 when maxTokens is 0")
+	})
+
+	t.Run("with explicit maxTokens", func(t *testing.T) {
+		handler := NewFolderMentionHandler(tmpDir, 5000)
+		assert.NotNil(t, handler)
+		assert.Equal(t, 5000, handler.maxTokens)
+	})
+}
+
+func TestFolderMentionHandler_EdgeCases(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create test structure with edge cases
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, ".hidden"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "node_modules"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "vendor"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, ".git"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "dist"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "build"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "bin"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "valid"), 0755))
+
+	// Add hidden file
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, ".hiddenfile"), []byte("hidden"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, ".hidden", "file.txt"), []byte("in hidden dir"), 0644))
+
+	// Add files in excluded directories
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "node_modules", "dep.js"), []byte("dependency"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "vendor", "lib.go"), []byte("vendor lib"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, ".git", "config"), []byte("git config"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "dist", "bundle.js"), []byte("built file"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "build", "output"), []byte("build output"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "bin", "binary"), []byte("binary"), 0755))
+
+	// Add valid file
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "valid", "file.txt"), []byte("valid content"), 0644))
+
+	handler := NewFolderMentionHandler(tmpDir, 8000)
+	ctx := context.Background()
+
+	t.Run("skips hidden files and directories", func(t *testing.T) {
+		result, err := handler.Resolve(ctx, ".", map[string]string{"recursive": "true"})
+
+		require.NoError(t, err)
+		assert.NotContains(t, result.Content, ".hiddenfile", "Should skip hidden files")
+		assert.NotContains(t, result.Content, ".hidden", "Should skip hidden directories")
+	})
+
+	t.Run("skips node_modules directory", func(t *testing.T) {
+		result, err := handler.Resolve(ctx, ".", map[string]string{"recursive": "true"})
+
+		require.NoError(t, err)
+		assert.NotContains(t, result.Content, "node_modules", "Should skip node_modules")
+		assert.NotContains(t, result.Content, "dep.js", "Should skip files in node_modules")
+	})
+
+	t.Run("skips vendor directory", func(t *testing.T) {
+		result, err := handler.Resolve(ctx, ".", map[string]string{"recursive": "true"})
+
+		require.NoError(t, err)
+		assert.NotContains(t, result.Content, "vendor", "Should skip vendor")
+		assert.NotContains(t, result.Content, "lib.go", "Should skip files in vendor")
+	})
+
+	t.Run("skips .git directory", func(t *testing.T) {
+		result, err := handler.Resolve(ctx, ".", map[string]string{"recursive": "true"})
+
+		require.NoError(t, err)
+		assert.NotContains(t, result.Content, ".git", "Should skip .git")
+	})
+
+	t.Run("skips dist, build, bin directories", func(t *testing.T) {
+		result, err := handler.Resolve(ctx, ".", map[string]string{"recursive": "true"})
+
+		require.NoError(t, err)
+		assert.NotContains(t, result.Content, "dist", "Should skip dist")
+		assert.NotContains(t, result.Content, "build", "Should skip build")
+		assert.NotContains(t, result.Content, "bin", "Should skip bin")
+		assert.NotContains(t, result.Content, "bundle.js", "Should skip files in dist")
+		assert.NotContains(t, result.Content, "output", "Should skip files in build")
+		assert.NotContains(t, result.Content, "binary", "Should skip files in bin")
+	})
+
+	t.Run("includes valid directories", func(t *testing.T) {
+		result, err := handler.Resolve(ctx, ".", map[string]string{"recursive": "true"})
+
+		require.NoError(t, err)
+		assert.Contains(t, result.Content, "valid", "Should include valid directory")
+		assert.Contains(t, result.Content, "file.txt", "Should include files in valid directory")
+	})
+
+	t.Run("target is file not directory", func(t *testing.T) {
+		// Create a file to test error case
+		testFile := filepath.Join(tmpDir, "notadir.txt")
+		require.NoError(t, os.WriteFile(testFile, []byte("test"), 0644))
+
+		_, err := handler.Resolve(ctx, "notadir.txt", nil)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "not a directory")
+	})
+
+	t.Run("token limit with content inclusion", func(t *testing.T) {
+		// Create handler with very small token limit
+		smallHandler := NewFolderMentionHandler(tmpDir, 10)
+
+		// Create a file with enough content to exceed limit
+		largeContent := strings.Repeat("x", 100)
+		require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "large.txt"), []byte(largeContent), 0644))
+
+		result, err := smallHandler.Resolve(ctx, ".", map[string]string{"content": "true", "recursive": "false"})
+
+		require.NoError(t, err)
+		// Should contain message about token limit
+		assert.Contains(t, result.Content, "token limit reached", "Should indicate token limit was reached")
+	})
+}
+
+func TestFuzzySearch_BuildCache_EdgeCases(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create structure with hidden files and excluded directories
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, ".hidden"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "node_modules"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "vendor"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, ".git"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "dist"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "build"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "bin"), 0755))
+	require.NoError(t, os.Mkdir(filepath.Join(tmpDir, "valid"), 0755))
+
+	// Add hidden files
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, ".hiddenfile"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, ".hidden", "file.go"), []byte("test"), 0644))
+
+	// Add files in excluded directories
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "node_modules", "package.json"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "vendor", "lib.go"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, ".git", "config"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "dist", "app.js"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "build", "output"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "bin", "binary"), []byte("test"), 0755))
+
+	// Add valid files
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte("test"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "valid", "test.go"), []byte("test"), 0644))
+
+	fs := NewFuzzySearch(tmpDir)
+
+	t.Run("excludes hidden files from cache", func(t *testing.T) {
+		matches := fs.Search("hiddenfile", 10)
+		assert.Equal(t, 0, len(matches), "Hidden files should not be in cache")
+	})
+
+	t.Run("excludes node_modules from cache", func(t *testing.T) {
+		matches := fs.Search("package.json", 10)
+		assert.Equal(t, 0, len(matches), "node_modules files should not be in cache")
+	})
+
+	t.Run("excludes vendor from cache", func(t *testing.T) {
+		matches := fs.Search("lib.go", 10)
+		// Note: main.go might match "lib.go" fuzzy search, but vendor/lib.go should not be in cache
+		for _, match := range matches {
+			assert.NotContains(t, match.Path, "vendor", "vendor files should not be in cache")
+		}
+	})
+
+	t.Run("excludes .git from cache", func(t *testing.T) {
+		matches := fs.Search("config", 10)
+		for _, match := range matches {
+			assert.NotContains(t, match.Path, ".git", ".git files should not be in cache")
+		}
+	})
+
+	t.Run("excludes dist, build, bin from cache", func(t *testing.T) {
+		matches := fs.Search("app.js", 10)
+		for _, match := range matches {
+			assert.NotContains(t, match.Path, "dist", "dist files should not be in cache")
+		}
+
+		matches = fs.Search("output", 10)
+		for _, match := range matches {
+			assert.NotContains(t, match.Path, "build", "build files should not be in cache")
+		}
+
+		matches = fs.Search("binary", 10)
+		for _, match := range matches {
+			assert.NotContains(t, match.Path, "bin", "bin files should not be in cache")
+		}
+	})
+
+	t.Run("includes valid files in cache", func(t *testing.T) {
+		matches := fs.Search("main.go", 10)
+		require.Greater(t, len(matches), 0, "Valid files should be in cache")
+		assert.Contains(t, matches[0].Path, "main.go")
+	})
+
+	t.Run("RefreshCache rebuilds cache", func(t *testing.T) {
+		initialCount := len(fs.fileCache)
+
+		// Add a new file
+		newFile := filepath.Join(tmpDir, "newfile.go")
+		require.NoError(t, os.WriteFile(newFile, []byte("test"), 0644))
+
+		// Refresh cache
+		fs.RefreshCache()
+
+		// New file should be findable
+		matches := fs.Search("newfile.go", 10)
+		require.Greater(t, len(matches), 0, "New file should be in refreshed cache")
+		assert.Contains(t, matches[0].Path, "newfile.go")
+
+		// Cache should have more files now
+		assert.Greater(t, len(fs.fileCache), initialCount, "Cache should have grown after refresh")
+	})
+}
+
+func TestFileMentionHandler_ErrorPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+	ctx := context.Background()
+
+	t.Run("fuzzy search finds file", func(t *testing.T) {
+		// Create a file in subdirectory first
+		testDir := filepath.Join(tmpDir, "subdir")
+		require.NoError(t, os.Mkdir(testDir, 0755))
+		require.NoError(t, os.WriteFile(filepath.Join(testDir, "myfile.txt"), []byte("content"), 0644))
+
+		// Create handler AFTER file exists so it's in the cache
+		handler := NewFileMentionHandler(tmpDir)
+
+		// Search with the exact filename - fuzzy search will find it
+		result, err := handler.Resolve(ctx, "myfile.txt", nil)
+
+		require.NoError(t, err)
+		assert.Equal(t, "content", result.Content)
+	})
+
+	t.Run("absolute path resolution", func(t *testing.T) {
+		absFile := filepath.Join(tmpDir, "absolute.txt")
+		require.NoError(t, os.WriteFile(absFile, []byte("abs content"), 0644))
+
+		handler := NewFileMentionHandler(tmpDir)
+		result, err := handler.Resolve(ctx, absFile, nil)
+
+		require.NoError(t, err)
+		assert.Equal(t, "abs content", result.Content)
+	})
+}
+
+func TestURLMentionHandler_ExtractHTMLContent(t *testing.T) {
+	handler := NewURLMentionHandler()
+
+	t.Run("extracts text from HTML", func(t *testing.T) {
+		html := `<html>
+			<head><title>Test Page</title></head>
+			<body>
+				<h1>Hello World</h1>
+				<p>This is a test paragraph.</p>
+				<script>alert('test');</script>
+				<style>body { color: red; }</style>
+			</body>
+		</html>`
+
+		content, metadata := handler.extractHTMLContent(html)
+
+		assert.Contains(t, content, "Hello World")
+		assert.Contains(t, content, "This is a test paragraph")
+		assert.NotContains(t, content, "alert", "Should not include script content")
+		assert.NotContains(t, content, "color: red", "Should not include style content")
+		assert.Contains(t, metadata["title"], "Test Page")
+	})
+
+	t.Run("handles HTML without title", func(t *testing.T) {
+		html := `<html><body><p>No title here</p></body></html>`
+
+		content, metadata := handler.extractHTMLContent(html)
+
+		assert.Contains(t, content, "No title here")
+		// Title may be nil or empty string when not present
+		if title, ok := metadata["title"]; ok {
+			assert.Equal(t, "", title)
+		}
+	})
+
+	t.Run("handles plain text", func(t *testing.T) {
+		plainText := "Just plain text, no HTML tags"
+
+		content, metadata := handler.extractHTMLContent(plainText)
+
+		assert.Contains(t, content, "Just plain text")
+		assert.NotNil(t, metadata)
+	})
+
+	t.Run("handles empty HTML", func(t *testing.T) {
+		html := ""
+
+		content, metadata := handler.extractHTMLContent(html)
+
+		assert.Equal(t, "", content)
+		assert.NotNil(t, metadata)
+	})
+}
+
+func TestParseAndResolve_ErrorHandling(t *testing.T) {
+	tmpDir := t.TempDir()
+	parser := NewMentionParser()
+	parser.RegisterHandler(NewFileMentionHandler(tmpDir))
+	parser.RegisterHandler(NewFolderMentionHandler(tmpDir, 8000))
+
+	ctx := context.Background()
+
+	t.Run("handles mention resolution errors", func(t *testing.T) {
+		// Try to resolve a file that doesn't exist
+		input := "@file[nonexistent_file_xyz.txt] should fail"
+
+		result, err := parser.ParseAndResolve(ctx, input)
+
+		// Should return error for failed resolution
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("resolves valid mentions", func(t *testing.T) {
+		// Create a valid file
+		testFile := filepath.Join(tmpDir, "validfile.txt")
+		require.NoError(t, os.WriteFile(testFile, []byte("test content"), 0644))
+
+		input := "@file[validfile.txt] should work"
+
+		result, err := parser.ParseAndResolve(ctx, input)
+
+		require.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, 1, len(result.Contexts))
+		assert.Contains(t, result.Contexts[0].Content, "test content")
 	})
 }
