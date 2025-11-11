@@ -12,11 +12,11 @@ import (
 
 // DatabaseManager handles project lifecycle and operations with database persistence
 type DatabaseManager struct {
-	db *database.Database
+	db database.DatabaseInterface
 }
 
 // NewDatabaseManager creates a new project manager with database persistence
-func NewDatabaseManager(db *database.Database) *DatabaseManager {
+func NewDatabaseManager(db database.DatabaseInterface) *DatabaseManager {
 	return &DatabaseManager{
 		db: db,
 	}
@@ -60,7 +60,7 @@ func (m *DatabaseManager) CreateProject(ctx context.Context, name, description, 
 	}
 
 	var createdAt, updatedAt time.Time
-	err = m.db.Pool.QueryRow(ctx, query,
+	err = m.db.QueryRow(ctx, query,
 		project.ID, name, description, ownerUUID, path, config,
 	).Scan(&createdAt, &updatedAt)
 
@@ -99,7 +99,7 @@ func (m *DatabaseManager) GetProject(ctx context.Context, id string) (*Project, 
 		updatedAt     time.Time
 	)
 
-	err = m.db.Pool.QueryRow(ctx, query, projectID).Scan(
+	err = m.db.QueryRow(ctx, query, projectID).Scan(
 		&dbID, &name, &description, &ownerID, &workspacePath, &config, &status, &createdAt, &updatedAt,
 	)
 
@@ -144,7 +144,7 @@ func (m *DatabaseManager) ListProjects(ctx context.Context, ownerID string) ([]*
 		ORDER BY created_at DESC
 	`
 
-	rows, err := m.db.Pool.Query(ctx, query, ownerUUID)
+	rows, err := m.db.Query(ctx, query, ownerUUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query projects: %v", err)
 	}
@@ -207,7 +207,7 @@ func (m *DatabaseManager) UpdateProjectMetadata(ctx context.Context, id string, 
 	// Get current config
 	var currentConfig map[string]interface{}
 	query := `SELECT config FROM projects WHERE id = $1`
-	err = m.db.Pool.QueryRow(ctx, query, projectID).Scan(&currentConfig)
+	err = m.db.QueryRow(ctx, query, projectID).Scan(&currentConfig)
 	if err != nil {
 		return fmt.Errorf("failed to get project config: %v", err)
 	}
@@ -217,12 +217,12 @@ func (m *DatabaseManager) UpdateProjectMetadata(ctx context.Context, id string, 
 
 	// Update database
 	updateQuery := `
-		UPDATE projects 
+		UPDATE projects
 		SET config = $1, updated_at = NOW()
 		WHERE id = $2
 	`
 
-	_, err = m.db.Pool.Exec(ctx, updateQuery, currentConfig, projectID)
+	_, err = m.db.Exec(ctx, updateQuery, currentConfig, projectID)
 	if err != nil {
 		return fmt.Errorf("failed to update project metadata: %v", err)
 	}
@@ -238,12 +238,12 @@ func (m *DatabaseManager) DeleteProject(ctx context.Context, id string) error {
 	}
 
 	query := `
-		UPDATE projects 
+		UPDATE projects
 		SET status = 'deleted', updated_at = NOW()
 		WHERE id = $1
 	`
 
-	result, err := m.db.Pool.Exec(ctx, query, projectID)
+	result, err := m.db.Exec(ctx, query, projectID)
 	if err != nil {
 		return fmt.Errorf("failed to delete project: %v", err)
 	}
