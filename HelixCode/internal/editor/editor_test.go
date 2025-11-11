@@ -1,8 +1,10 @@
 package editor
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -435,5 +437,72 @@ func TestCodeEditorApplyEditIntegration(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// ========================================
+// Additional Coverage Tests
+// ========================================
+
+// Custom validator for testing
+type testValidator struct {
+	rejectEmpty bool
+}
+
+func (tv *testValidator) Validate(edit Edit) error {
+	if tv.rejectEmpty {
+		if wholeContent, ok := edit.Content.(string); ok {
+			if len(wholeContent) == 0 {
+				return fmt.Errorf("empty content not allowed")
+			}
+		}
+	}
+	return nil
+}
+
+func TestCodeEditor_SetValidator(t *testing.T) {
+	editor, err := NewCodeEditor(EditFormatWhole)
+	if err != nil {
+		t.Fatalf("Failed to create editor: %v", err)
+	}
+
+	// Create a custom validator
+	customValidator := &testValidator{rejectEmpty: true}
+
+	// Set the validator
+	editor.SetValidator(customValidator)
+
+	// Verify validator was set by using ValidateEdit
+	edit := Edit{
+		FilePath: "test.txt",
+		Format:   EditFormatWhole,
+		Content:  "",
+	}
+
+	// Test that validator is called and rejects empty content
+	err = editor.ValidateEdit(edit)
+	if err == nil {
+		t.Error("Expected validator to reject empty content")
+	}
+	if !strings.Contains(err.Error(), "empty content") {
+		t.Errorf("Expected custom validator error, got: %v", err)
+	}
+
+	// Test with valid content
+	edit.Content = "valid content"
+	err = editor.ValidateEdit(edit)
+	if err != nil {
+		t.Errorf("Expected validation to pass, got error: %v", err)
+	}
+
+	// Test setting a different validator
+	nonRejectValidator := &testValidator{rejectEmpty: false}
+	editor.SetValidator(nonRejectValidator)
+
+	// Now empty content should pass
+	edit.Content = ""
+	err = editor.ValidateEdit(edit)
+	if err != nil {
+		t.Errorf("Expected validation to pass with non-rejecting validator, got error: %v", err)
 	}
 }

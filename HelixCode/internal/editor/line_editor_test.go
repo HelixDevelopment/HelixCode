@@ -554,3 +554,88 @@ func TestLineEditorEmptyContent(t *testing.T) {
 		t.Error("Expected error for empty edits")
 	}
 }
+
+// ========================================
+// Additional Coverage Tests
+// ========================================
+
+func TestLineEditor_ValidateLineRange(t *testing.T) {
+	editor := NewLineEditor()
+
+	testLines := []string{
+		"line 1",
+		"line 2",
+		"line 3",
+		"line 4",
+		"line 5",
+	}
+
+	t.Run("valid range", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 1, 3)
+		if err != nil {
+			t.Errorf("Expected no error for valid range, got: %v", err)
+		}
+	})
+
+	t.Run("valid single line", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 2, 2)
+		if err != nil {
+			t.Errorf("Expected no error for single line, got: %v", err)
+		}
+	})
+
+	t.Run("valid full range", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 1, 5)
+		if err != nil {
+			t.Errorf("Expected no error for full range, got: %v", err)
+		}
+	})
+
+	t.Run("start line less than 1", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 0, 3)
+		if err == nil {
+			t.Error("Expected error for start line < 1")
+		}
+		if !strings.Contains(err.Error(), "start line must be >= 1") {
+			t.Errorf("Expected start line error, got: %v", err)
+		}
+	})
+
+	t.Run("end line less than start", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 3, 2)
+		if err == nil {
+			t.Error("Expected error for end < start")
+		}
+		if !strings.Contains(err.Error(), "end line must be >= start line") {
+			t.Errorf("Expected end line error, got: %v", err)
+		}
+	})
+
+	t.Run("start line exceeds file length", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 10, 15)
+		if err == nil {
+			t.Error("Expected error for start line exceeding file length")
+		}
+		if !strings.Contains(err.Error(), "exceeds file length") {
+			t.Errorf("Expected file length error, got: %v", err)
+		}
+	})
+
+	t.Run("end line exceeds file length", func(t *testing.T) {
+		err := editor.ValidateLineRange(testLines, 2, 10)
+		if err == nil {
+			t.Error("Expected error for end line exceeding file length")
+		}
+		if !strings.Contains(err.Error(), "exceeds file length") {
+			t.Errorf("Expected file length error, got: %v", err)
+		}
+	})
+
+	t.Run("empty lines array", func(t *testing.T) {
+		emptyLines := []string{}
+		err := editor.ValidateLineRange(emptyLines, 1, 1)
+		if err == nil {
+			t.Error("Expected error for empty lines with non-empty range")
+		}
+	})
+}
