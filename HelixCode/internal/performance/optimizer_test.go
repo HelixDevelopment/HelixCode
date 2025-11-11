@@ -812,3 +812,176 @@ func TestConcurrentOptimizations(t *testing.T) {
 		}
 	})
 }
+
+// TestGenerateOptimizationReport tests report generation
+func TestGenerateOptimizationReport(t *testing.T) {
+	config := PerformanceConfig{
+		CPUOptimization:    true,
+		MemoryOptimization: true,
+		TargetThroughput:   1000,
+	}
+	po, _ := NewPerformanceOptimizer(config)
+
+	t.Run("GenerateReport_WithCompleteData", func(t *testing.T) {
+		result := &OptimizationResult{
+			StartTime:    time.Now(),
+			Duration:     5 * time.Minute,
+			TotalApplied: 10,
+			Successful:   8,
+			Failed:       2,
+			Baseline: &PerformanceMetrics{
+				CPUUtilization:  80.0,
+				MemoryUsage:     500 * 1024 * 1024,
+				Throughput:      800,
+				AverageLatency:  50 * time.Millisecond,
+				P95Latency:      100 * time.Millisecond,
+				P99Latency:      200 * time.Millisecond,
+				CacheHitRate:    0.85,
+				ErrorRate:       0.01,
+			},
+			PostOptimization: &PerformanceMetrics{
+				CPUUtilization:  60.0,
+				MemoryUsage:     400 * 1024 * 1024,
+				Throughput:      1200,
+				AverageLatency:  30 * time.Millisecond,
+				P95Latency:      60 * time.Millisecond,
+				P99Latency:      120 * time.Millisecond,
+				CacheHitRate:    0.95,
+				ErrorRate:       0.005,
+			},
+			OverallImprovement: &OverallImprovement{
+				ThroughputImprovement: 50.0,
+				LatencyImprovement:    40.0,
+				MemoryImprovement:     20.0,
+				CPUImprovement:        25.0,
+				OverallScore:          33.75,
+			},
+			Optimizations: make(map[string]Optimization),
+		}
+
+		// This should not panic and should complete
+		po.generateOptimizationReport(result)
+
+		// Generate recommendations too
+		recommendations := po.generateRecommendations(result)
+		assert.NotEmpty(t, recommendations)
+
+		// Generate achievements
+		achievements := po.generateKeyAchievements(result)
+		assert.NotEmpty(t, achievements)
+	})
+
+	t.Run("GenerateReport_WithZeroValues", func(t *testing.T) {
+		result := &OptimizationResult{
+			StartTime:          time.Now(),
+			Duration:           1 * time.Minute,
+			Baseline:           &PerformanceMetrics{},
+			PostOptimization:   &PerformanceMetrics{},
+			OverallImprovement: &OverallImprovement{},
+			Optimizations:      make(map[string]Optimization),
+		}
+
+		// Should handle zero values gracefully
+		po.generateOptimizationReport(result)
+	})
+}
+
+// TestEdgeCases tests edge cases for better coverage
+func TestEdgeCases(t *testing.T) {
+	t.Run("NewPerformanceOptimizer_EmptyConfig", func(t *testing.T) {
+		config := PerformanceConfig{}
+		po, err := NewPerformanceOptimizer(config)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, po)
+		assert.NotNil(t, po.metrics)
+		assert.NotNil(t, po.optimizations)
+	})
+
+	t.Run("GetOptimizationsByType", func(t *testing.T) {
+		config := PerformanceConfig{
+			CPUOptimization:    true,
+			MemoryOptimization: true,
+		}
+		po, _ := NewPerformanceOptimizer(config)
+
+		// Get CPU optimizations
+		cpuOpts := po.getOptimizationsByType(CPUOpt)
+		assert.NotNil(t, cpuOpts)
+
+		// Get Memory optimizations
+		memOpts := po.getOptimizationsByType(MemoryOpt)
+		assert.NotNil(t, memOpts)
+	})
+
+	t.Run("ProductionReadiness_EdgeValues", func(t *testing.T) {
+		config := PerformanceConfig{
+			TargetThroughput:     1000,
+			TargetCPUUtilization: 70.0,
+			MinCacheHitRate:      0.95,
+		}
+		po, _ := NewPerformanceOptimizer(config)
+
+		result := &OptimizationResult{
+			PostOptimization: &PerformanceMetrics{
+				Throughput:     1000, // Exactly at target
+				CPUUtilization: 70.0, // Exactly at target
+				CacheHitRate:   0.95, // Exactly at target
+				ErrorRate:      0.01, // Exactly at target
+			},
+		}
+
+		readiness := po.evaluateProductionReadiness(result)
+		assert.NotEmpty(t, readiness)
+	})
+}
+
+// TestAllOptimizationInitialization tests that all optimization types initialize correctly
+func TestAllOptimizationInitialization(t *testing.T) {
+	config := PerformanceConfig{
+		CPUOptimization:         true,
+		MemoryOptimization:      true,
+		GarbageCollection:       true,
+		ConcurrencyOptimization: true,
+		CacheOptimization:       true,
+		NetworkOptimization:     true,
+		DatabaseOptimization:    true,
+		WorkerOptimization:      true,
+		LLMOptimization:         true,
+	}
+	po, err := NewPerformanceOptimizer(config)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, po)
+
+	// Verify all optimizations were initialized
+	assert.NotEmpty(t, po.optimizations)
+
+	// Check specific optimization types exist
+	cpuOpts := po.getOptimizationsByType(CPUOpt)
+	assert.NotEmpty(t, cpuOpts)
+
+	memOpts := po.getOptimizationsByType(MemoryOpt)
+	assert.NotEmpty(t, memOpts)
+
+	gcOpts := po.getOptimizationsByType(GCOpt)
+	assert.NotEmpty(t, gcOpts)
+
+	concOpts := po.getOptimizationsByType(ConcurrencyOpt)
+	assert.NotEmpty(t, concOpts)
+
+	cacheOpts := po.getOptimizationsByType(CacheOpt)
+	assert.NotEmpty(t, cacheOpts)
+
+	netOpts := po.getOptimizationsByType(NetworkOpt)
+	assert.NotEmpty(t, netOpts)
+
+	dbOpts := po.getOptimizationsByType(DatabaseOpt)
+	assert.NotEmpty(t, dbOpts)
+
+	workerOpts := po.getOptimizationsByType(WorkerOpt)
+	assert.NotEmpty(t, workerOpts)
+
+	llmOpts := po.getOptimizationsByType(LLMOpt)
+	assert.NotEmpty(t, llmOpts)
+}
