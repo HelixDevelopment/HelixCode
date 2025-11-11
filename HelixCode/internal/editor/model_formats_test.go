@@ -236,6 +236,37 @@ func TestSelectFormatByComplexity(t *testing.T) {
 			}
 		})
 	}
+
+	// Additional tests for fallthrough paths and edge cases
+	t.Run("Llama model medium complexity without lines support", func(t *testing.T) {
+		// Llama doesn't support Lines format, should use SearchReplace
+		format := SelectFormatByComplexity("llama-2-13b", ComplexityMedium)
+		if format != EditFormatSearchReplace && format != EditFormatWhole {
+			t.Errorf("Expected SearchReplace or Whole for llama, got %s", format)
+		}
+	})
+
+	t.Run("Unknown model defaults correctly", func(t *testing.T) {
+		// Unknown models should get sensible defaults
+		format := SelectFormatByComplexity("unknown-model-xyz", ComplexitySimple)
+		// Should get a valid format (not empty)
+		if format == "" {
+			t.Error("Got empty format for unknown model")
+		}
+	})
+
+	t.Run("Model with all complexity levels", func(t *testing.T) {
+		// Test a capable model handles all complexity levels
+		modelName := "gpt-4"
+		complexities := []FormatComplexity{ComplexitySimple, ComplexityMedium, ComplexityComplex}
+
+		for _, complexity := range complexities {
+			format := SelectFormatByComplexity(modelName, complexity)
+			if format == "" {
+				t.Errorf("Got empty format for %s with complexity %v", modelName, complexity)
+			}
+		}
+	})
 }
 
 func TestRecommendFormat(t *testing.T) {

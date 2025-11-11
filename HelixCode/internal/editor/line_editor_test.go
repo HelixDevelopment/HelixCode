@@ -483,6 +483,66 @@ func TestLineEditorApplySingleLineEdit(t *testing.T) {
 	if string(result) != expected {
 		t.Errorf("Result mismatch:\nGot:  %q\nWant: %q", string(result), expected)
 	}
+
+	// Test error paths
+	t.Run("file does not exist", func(t *testing.T) {
+		nonExistentFile := filepath.Join(tmpDir, "nonexistent.txt")
+		editor := NewLineEditor()
+		lineEdit := LineEdit{StartLine: 1, EndLine: 1, NewContent: "test"}
+
+		err := editor.ApplySingleLineEdit(nonExistentFile, lineEdit)
+
+		if err == nil {
+			t.Error("Expected error for non-existent file")
+		}
+		if !strings.Contains(err.Error(), "failed to read file") {
+			t.Errorf("Expected 'failed to read file' error, got: %v", err)
+		}
+	})
+
+	t.Run("invalid line range", func(t *testing.T) {
+		testFile2 := filepath.Join(tmpDir, "test2.txt")
+		if err := os.WriteFile(testFile2, []byte("line1\nline2"), 0644); err != nil {
+			t.Fatalf("Failed to create test file: %v", err)
+		}
+
+		editor := NewLineEditor()
+		lineEdit := LineEdit{StartLine: 10, EndLine: 20, NewContent: "test"}
+
+		err := editor.ApplySingleLineEdit(testFile2, lineEdit)
+
+		if err == nil {
+			t.Error("Expected error for invalid line range")
+		}
+		if !strings.Contains(err.Error(), "invalid edit") {
+			t.Errorf("Expected 'invalid edit' error, got: %v", err)
+		}
+	})
+
+	t.Run("multiline edit", func(t *testing.T) {
+		testFile3 := filepath.Join(tmpDir, "test3.txt")
+		initial := "line1\nline2\nline3\nline4\nline5"
+		if err := os.WriteFile(testFile3, []byte(initial), 0644); err != nil {
+			t.Fatalf("Failed to create test file: %v", err)
+		}
+
+		editor := NewLineEditor()
+		lineEdit := LineEdit{StartLine: 2, EndLine: 4, NewContent: "replaced"}
+
+		if err := editor.ApplySingleLineEdit(testFile3, lineEdit); err != nil {
+			t.Fatalf("Failed to apply multiline edit: %v", err)
+		}
+
+		result, err := os.ReadFile(testFile3)
+		if err != nil {
+			t.Fatalf("Failed to read result: %v", err)
+		}
+
+		expected := "line1\nreplaced\nline5\n"
+		if string(result) != expected {
+			t.Errorf("Multiline edit result mismatch:\nGot:  %q\nWant: %q", string(result), expected)
+		}
+	})
 }
 
 func TestLineEditorLargeFile(t *testing.T) {

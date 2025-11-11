@@ -506,3 +506,120 @@ func TestCodeEditor_SetValidator(t *testing.T) {
 		t.Errorf("Expected validation to pass with non-rejecting validator, got error: %v", err)
 	}
 }
+
+func TestCodeEditor_ApplyEditErrorPaths(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "editor_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	testFile := filepath.Join(tmpDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("original content"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	t.Run("unsupported format error", func(t *testing.T) {
+		editor, err := NewCodeEditor(EditFormatWhole)
+		if err != nil {
+			t.Fatalf("Failed to create editor: %v", err)
+		}
+
+		edit := Edit{
+			FilePath: testFile,
+			Format:   EditFormat("invalid-format"),
+			Content:  "test",
+		}
+
+		err = editor.ApplyEdit(edit)
+		if err == nil {
+			t.Error("Expected error for unsupported format")
+		}
+		// Validator catches this first, so check for validation error
+		if !strings.Contains(err.Error(), "validation failed") && !strings.Contains(err.Error(), "invalid edit format") {
+			t.Errorf("Expected validation or format error, got: %v", err)
+		}
+	})
+
+	t.Run("validation failure", func(t *testing.T) {
+		editor, err := NewCodeEditor(EditFormatWhole)
+		if err != nil {
+			t.Fatalf("Failed to create editor: %v", err)
+		}
+
+		edit := Edit{
+			FilePath: "",  // Empty file path will fail validation
+			Format:   EditFormatWhole,
+			Content:  "test",
+		}
+
+		err = editor.ApplyEdit(edit)
+		if err == nil {
+			t.Error("Expected validation error")
+		}
+		if !strings.Contains(err.Error(), "validation failed") {
+			t.Errorf("Expected 'validation failed' error, got: %v", err)
+		}
+	})
+
+	t.Run("backup creation for existing file", func(t *testing.T) {
+		editor, err := NewCodeEditor(EditFormatWhole)
+		if err != nil {
+			t.Fatalf("Failed to create editor: %v", err)
+		}
+
+		testFile2 := filepath.Join(tmpDir, "backup_test.txt")
+		original := "original content for backup"
+		if err := os.WriteFile(testFile2, []byte(original), 0644); err != nil {
+			t.Fatalf("Failed to create test file: %v", err)
+		}
+
+		edit := Edit{
+			FilePath: testFile2,
+			Format:   EditFormatWhole,
+			Content:  "new content",
+			Backup:   true,
+		}
+
+		if err := editor.ApplyEdit(edit); err != nil {
+			t.Fatalf("Failed to apply edit with backup: %v", err)
+		}
+
+		// Check backup file exists
+		backupFile := testFile2 + ".bak"
+		backupContent, err := os.ReadFile(backupFile)
+		if err != nil {
+			t.Fatalf("Failed to read backup file: %v", err)
+		}
+
+		if string(backupContent) != original {
+			t.Errorf("Backup content mismatch: got %q, want %q", string(backupContent), original)
+		}
+	})
+
+	t.Run("no backup for new file", func(t *testing.T) {
+		editor, err := NewCodeEditor(EditFormatWhole)
+		if err != nil {
+			t.Fatalf("Failed to create editor: %v", err)
+		}
+
+		newFile := filepath.Join(tmpDir, "newfile.txt")
+
+		edit := Edit{
+			FilePath: newFile,
+			Format:   EditFormatWhole,
+			Content:  "new content",
+			Backup:   true,
+		}
+
+		if err := editor.ApplyEdit(edit); err != nil {
+			t.Fatalf("Failed to apply edit: %v", err)
+		}
+
+		// Backup should not exist for new file
+		backupFile := newFile + ".bak"
+		if _, err := os.Stat(backupFile); !os.IsNotExist(err) {
+			t.Error("Backup file should not exist for new file")
+		}
+	})
+}

@@ -516,3 +516,125 @@ func TestSearchReplaceEditorNoOperations(t *testing.T) {
 		t.Error("Expected error for empty operations")
 	}
 }
+
+func TestSearchReplaceEditor_ApplyRegexOperation(t *testing.T) {
+	editor := NewSearchReplaceEditor()
+
+	t.Run("replace all matches with regex", func(t *testing.T) {
+		content := "foo bar foo baz foo"
+		op := SearchReplace{
+			Search:  "foo",
+			Replace: "qux",
+			Count:   -1,
+			Regex:   true,
+		}
+
+		result, err := editor.applyRegexOperation(content, op)
+
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		expected := "qux bar qux baz qux"
+		if result != expected {
+			t.Errorf("Result mismatch:\nGot:  %q\nWant: %q", result, expected)
+		}
+	})
+
+	t.Run("replace limited number of matches", func(t *testing.T) {
+		content := "foo bar foo baz foo"
+		op := SearchReplace{
+			Search:  "foo",
+			Replace: "qux",
+			Count:   2,
+			Regex:   true,
+		}
+
+		result, err := editor.applyRegexOperation(content, op)
+
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		expected := "qux bar qux baz foo"
+		if result != expected {
+			t.Errorf("Result mismatch:\nGot:  %q\nWant: %q", result, expected)
+		}
+	})
+
+	t.Run("replace single match", func(t *testing.T) {
+		content := "foo bar foo baz"
+		op := SearchReplace{
+			Search:  "foo",
+			Replace: "qux",
+			Count:   1,
+			Regex:   true,
+		}
+
+		result, err := editor.applyRegexOperation(content, op)
+
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		expected := "qux bar foo baz"
+		if result != expected {
+			t.Errorf("Result mismatch:\nGot:  %q\nWant: %q", result, expected)
+		}
+	})
+
+	t.Run("invalid regex pattern", func(t *testing.T) {
+		content := "test content"
+		op := SearchReplace{
+			Search:  "[invalid",
+			Replace: "replacement",
+			Count:   -1,
+			Regex:   true,
+		}
+
+		_, err := editor.applyRegexOperation(content, op)
+
+		if err == nil {
+			t.Error("Expected error for invalid regex")
+		}
+		if !strings.Contains(err.Error(), "invalid regex pattern") {
+			t.Errorf("Expected 'invalid regex pattern' error, got: %v", err)
+		}
+	})
+
+	t.Run("pattern not found error", func(t *testing.T) {
+		content := "hello world"
+		op := SearchReplace{
+			Search:  "xyz",
+			Replace: "abc",
+			Count:   1,
+			Regex:   true,
+		}
+
+		_, err := editor.applyRegexOperation(content, op)
+
+		if err == nil {
+			t.Error("Expected error for pattern not found")
+		}
+		if !strings.Contains(err.Error(), "regex pattern not found") {
+			t.Errorf("Expected 'regex pattern not found' error, got: %v", err)
+		}
+	})
+
+	t.Run("complex regex with groups", func(t *testing.T) {
+		content := "user@example.com and admin@test.org"
+		op := SearchReplace{
+			Search:  `(\w+)@(\w+\.\w+)`,
+			Replace: "$1 at $2",
+			Count:   -1,
+			Regex:   true,
+		}
+
+		result, err := editor.applyRegexOperation(content, op)
+
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		expected := "user at example.com and admin at test.org"
+		if result != expected {
+			t.Errorf("Result mismatch:\nGot:  %q\nWant: %q", result, expected)
+		}
+	})
+}
