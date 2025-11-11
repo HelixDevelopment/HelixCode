@@ -2,6 +2,7 @@ package builtin
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"dev.helix.code/internal/commands"
@@ -603,5 +604,153 @@ func TestExtractFilesFromHistory(t *testing.T) {
 
 	if !foundGo {
 		t.Error("extractFilesFromHistory() should find .go files")
+	}
+}
+
+// ========================================
+// Description and Usage Tests
+// ========================================
+
+func TestCondenseCommand_Description(t *testing.T) {
+	cmd := &CondenseCommand{}
+	desc := cmd.Description()
+
+	if desc == "" {
+		t.Error("Description() should not return empty string")
+	}
+	if !strings.Contains(strings.ToLower(desc), "condense") && !strings.Contains(strings.ToLower(desc), "summarize") {
+		t.Error("Description() should mention condense or summarize")
+	}
+}
+
+func TestCondenseCommand_Usage(t *testing.T) {
+	cmd := &CondenseCommand{}
+	usage := cmd.Usage()
+
+	if usage == "" {
+		t.Error("Usage() should not return empty string")
+	}
+	if !strings.Contains(usage, "/condense") {
+		t.Error("Usage() should mention /condense command")
+	}
+}
+
+func TestDeepPlanningCommand_Description(t *testing.T) {
+	cmd := &DeepPlanningCommand{}
+	desc := cmd.Description()
+
+	if desc == "" {
+		t.Error("Description() should not return empty string")
+	}
+	if !strings.Contains(strings.ToLower(desc), "plan") {
+		t.Error("Description() should mention planning")
+	}
+}
+
+func TestDeepPlanningCommand_Usage(t *testing.T) {
+	cmd := &DeepPlanningCommand{}
+	usage := cmd.Usage()
+
+	if usage == "" {
+		t.Error("Usage() should not return empty string")
+	}
+	if !strings.Contains(usage, "/deepplanning") {
+		t.Error("Usage() should mention /deepplanning command")
+	}
+}
+
+func TestNewRuleCommand_Description(t *testing.T) {
+	cmd := &NewRuleCommand{}
+	desc := cmd.Description()
+
+	if desc == "" {
+		t.Error("Description() should not return empty string")
+	}
+	if !strings.Contains(strings.ToLower(desc), "rule") {
+		t.Error("Description() should mention rule")
+	}
+}
+
+func TestNewRuleCommand_Usage(t *testing.T) {
+	cmd := &NewRuleCommand{}
+	usage := cmd.Usage()
+
+	if usage == "" {
+		t.Error("Usage() should not return empty string")
+	}
+	if !strings.Contains(usage, "/newrule") {
+		t.Error("Usage() should mention /newrule command")
+	}
+}
+
+func TestNewTaskCommand_Description(t *testing.T) {
+	cmd := &NewTaskCommand{}
+	desc := cmd.Description()
+
+	if desc == "" {
+		t.Error("Description() should not return empty string")
+	}
+	if !strings.Contains(strings.ToLower(desc), "task") {
+		t.Error("Description() should mention task")
+	}
+}
+
+func TestNewTaskCommand_Usage(t *testing.T) {
+	cmd := &NewTaskCommand{}
+	usage := cmd.Usage()
+
+	if usage == "" {
+		t.Error("Usage() should not return empty string")
+	}
+	if !strings.Contains(usage, "/newtask") {
+		t.Error("Usage() should mention /newtask command")
+	}
+}
+
+func TestReportBugCommand_Description(t *testing.T) {
+	cmd := &ReportBugCommand{}
+	desc := cmd.Description()
+
+	if desc == "" {
+		t.Error("Description() should not return empty string")
+	}
+	if !strings.Contains(strings.ToLower(desc), "bug") {
+		t.Error("Description() should mention bug")
+	}
+}
+
+func TestReportBugCommand_Usage(t *testing.T) {
+	cmd := &ReportBugCommand{}
+	usage := cmd.Usage()
+
+	if usage == "" {
+		t.Error("Usage() should not return empty string")
+	}
+	if !strings.Contains(usage, "/reportbug") {
+		t.Error("Usage() should mention /reportbug command")
+	}
+}
+
+func TestWorkflowsCommand_Description(t *testing.T) {
+	cmd := &WorkflowsCommand{}
+	desc := cmd.Description()
+
+	if desc == "" {
+		t.Error("Description() should not return empty string")
+	}
+	if !strings.Contains(strings.ToLower(desc), "workflow") {
+		t.Error("Description() should mention workflow")
+	}
+}
+
+func TestWorkflowsCommand_Usage(t *testing.T) {
+	cmd := &WorkflowsCommand{}
+	usage := cmd.Usage()
+
+	if usage == "" {
+		t.Error("Usage() should not return empty string")
+	}
+	if !strings.Contains(usage, "/workflows") {
+		t.Error("Usage() should mention /workflows command")
 	}
 }
