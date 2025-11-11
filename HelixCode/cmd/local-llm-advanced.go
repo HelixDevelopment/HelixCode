@@ -16,12 +16,11 @@ import (
 // Advanced discovery and analytics command implementations
 
 func runDiscover(cmd *cobra.Command, args []string) error {
-	ctx := context.Background()
-	_ = ctx // TODO: Use context for cancellation
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	// Initialize model discovery engine
 	discoveryEngine := llm.NewModelDiscoveryEngine(getLocalLLMBaseDir())
-	_ = discoveryEngine // TODO: Implement discovery logic
 
 	fmt.Println("🔍 Discovering models...")
 	fmt.Printf("Source: %s\n", discoverSource)
@@ -30,9 +29,27 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println()
 
-	// Get all available models (simplified for discover)
-	// In a real implementation, this would fetch from external sources
-	models := []*llm.ModelInfo{
+	// Use discovery engine to get comprehensive model information
+	// Create a discovery request to fetch available models
+	req := &llm.RecommendationRequest{
+		TaskTypes:          []string{"code_generation", "analysis"},
+		QualityPreference:  "balanced",
+		PrivacyLevel:       "high",
+		MaxRecommendations: 100, // Get all available models
+	}
+
+	// Get models from discovery engine which includes local and potentially external sources
+	recommendResp, err := discoveryEngine.GetRecommendations(ctx, req)
+	var models []*llm.ModelInfo
+	if err == nil && recommendResp != nil {
+		for _, rec := range recommendResp.Recommendations {
+			models = append(models, rec.Model)
+		}
+	}
+
+	// If no models found or error, fall back to default local models
+	if len(models) == 0 {
+		models = []*llm.ModelInfo{
 		{
 			ID:           "llama-3-8b-instruct",
 			Name:         "Llama 3 8B Instruct",
@@ -60,6 +77,7 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 			Provider:     "local",
 			Capabilities: []llm.ModelCapability{llm.CapabilityCodeGeneration, llm.CapabilityDebugging},
 		},
+		}
 	}
 
 	// Apply filter if specified
@@ -301,15 +319,27 @@ func runReport(cmd *cobra.Command, args []string) error {
 }
 
 func runInsights(cmd *cobra.Command, args []string) error {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	// Initialize model discovery engine and analytics
 	discoveryEngine := llm.NewModelDiscoveryEngine(getLocalLLMBaseDir())
-	_ = discoveryEngine // TODO: Use for insights generation
 	analytics := llm.NewUsageAnalytics(getLocalLLMBaseDir())
 
 	fmt.Println("🧠 Generating AI-powered insights...")
 	fmt.Printf("Insights Type: %s\n\n", insightsType)
+
+	// Get model recommendations from discovery engine for insights
+	recReq := &llm.RecommendationRequest{
+		TaskTypes:          []string{"analysis", "code_generation"},
+		QualityPreference:  "balanced",
+		MaxRecommendations: 10,
+	}
+	recommendations, err := discoveryEngine.GetRecommendations(ctx, recReq)
+	if err == nil && recommendations != nil {
+		fmt.Printf("📊 Discovered %d models matching current usage patterns\n\n",
+			len(recommendations.Recommendations))
+	}
 
 	// Generate usage report for insights
 	timeRange := parseTimeRange("7d")

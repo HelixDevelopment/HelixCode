@@ -745,9 +745,14 @@ func (p *WeaviateProvider) CreateCollection(ctx context.Context, name string, co
 	if config != nil && config.Properties != nil {
 		properties := classDef["properties"].([]map[string]interface{})
 		for key, propType := range config.Properties {
+			// Type assert propType to string
+			propTypeStr, ok := propType.(string)
+			if !ok {
+				propTypeStr = "text" // Default fallback
+			}
 			properties = append(properties, map[string]interface{}{
 				"name":     key,
-				"dataType": []string{propType},
+				"dataType": []string{propTypeStr},
 			})
 		}
 		classDef["properties"] = properties
@@ -865,9 +870,12 @@ func (p *WeaviateProvider) ListCollections(ctx context.Context) ([]*CollectionIn
 	for i, class := range schema.Classes {
 		collections[i] = &CollectionInfo{
 			Name:        class.Class,
-			Description: class.Description,
 			VectorCount: 0, // Weaviate doesn't provide this in schema endpoint
+			Status:      "active",
 			CreatedAt:   time.Now(),
+			Metadata: map[string]interface{}{
+				"description": class.Description,
+			},
 		}
 	}
 
@@ -921,9 +929,12 @@ func (p *WeaviateProvider) GetCollection(ctx context.Context, name string) (*Col
 
 	return &CollectionInfo{
 		Name:        class.Class,
-		Description: class.Description,
 		VectorCount: 0,
+		Status:      "active",
 		CreatedAt:   time.Now(),
+		Metadata: map[string]interface{}{
+			"description": class.Description,
+		},
 	}, nil
 }
 
@@ -978,12 +989,14 @@ func (p *WeaviateProvider) ListIndexes(ctx context.Context, collection string) (
 	// Return the default index info
 	return []*IndexInfo{
 		{
-			Name:        "hnsw_vector_index",
-			Collection:  collection,
-			Type:        "hnsw",
-			Status:      "ready",
-			VectorCount: 0,
-			CreatedAt:   time.Now(),
+			Name:      "hnsw_vector_index",
+			Type:      "hnsw",
+			State:     "ready",
+			CreatedAt: time.Now(),
+			Metadata: map[string]interface{}{
+				"collection":   collection,
+				"vector_count": 0,
+			},
 		},
 	}, nil
 }

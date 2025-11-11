@@ -74,6 +74,7 @@ type UsageAnalytics struct {
 	taskPatterns       map[string]*TaskPattern        `json:"task_patterns"`
 	userPreferences    map[string]*UserPreferences    `json:"user_preferences"`
 	performanceHistory map[string]*PerformanceHistory `json:"performance_history"`
+	analyticsDir       string
 	mu                 sync.RWMutex
 }
 

@@ -3,6 +3,7 @@ package providers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"dev.helix.code/internal/logging"
 	"dev.helix.code/internal/memory"
@@ -47,8 +48,12 @@ func (p *AnimaProvider) Stop(ctx context.Context) error {
 }
 
 // Health returns health status
-func (p *AnimaProvider) Health(ctx context.Context) (*memory.HealthStatus, error) {
-	return memory.NewHealthStatus("stub", "Anima provider not implemented"), nil
+func (p *AnimaProvider) Health(ctx context.Context) (*HealthStatus, error) {
+	return &HealthStatus{
+		Status:    "stub",
+		Message:   "Anima provider not implemented",
+		Timestamp: time.Now(),
+	}, nil
 }
 
 // GetName returns provider name
@@ -82,17 +87,17 @@ func (p *AnimaProvider) GetCostInfo() *memory.CostInfo {
 }
 
 // Store stores vectors (stub)
-func (p *AnimaProvider) Store(ctx context.Context, vectors []*memory.VectorData) error {
+func (p *AnimaProvider) Store(ctx context.Context, vectors []*VectorData) error {
 	return fmt.Errorf("Anima provider not implemented - stub only")
 }
 
 // Retrieve retrieves vectors (stub)
-func (p *AnimaProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
+func (p *AnimaProvider) Retrieve(ctx context.Context, ids []string) ([]*VectorData, error) {
 	return nil, fmt.Errorf("Anima provider not implemented - stub only")
 }
 
 // Update updates a vector (stub)
-func (p *AnimaProvider) Update(ctx context.Context, id string, vector *memory.VectorData) error {
+func (p *AnimaProvider) Update(ctx context.Context, id string, vector *VectorData) error {
 	return fmt.Errorf("Anima provider not implemented - stub only")
 }
 
@@ -102,7 +107,7 @@ func (p *AnimaProvider) Delete(ctx context.Context, ids []string) error {
 }
 
 // Search searches for vectors (stub)
-func (p *AnimaProvider) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
+func (p *AnimaProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
 	return nil, fmt.Errorf("Anima provider not implemented - stub only")
 }
 
@@ -117,7 +122,7 @@ func (p *AnimaProvider) BatchFindSimilar(ctx context.Context, queries [][]float6
 }
 
 // CreateCollection creates a collection (stub)
-func (p *AnimaProvider) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
+func (p *AnimaProvider) CreateCollection(ctx context.Context, name string, config *CollectionConfig) error {
 	return fmt.Errorf("Anima provider not implemented - stub only")
 }
 
@@ -127,17 +132,17 @@ func (p *AnimaProvider) DeleteCollection(ctx context.Context, name string) error
 }
 
 // ListCollections lists collections (stub)
-func (p *AnimaProvider) ListCollections(ctx context.Context) ([]*memory.CollectionInfo, error) {
+func (p *AnimaProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
 	return nil, fmt.Errorf("Anima provider not implemented - stub only")
 }
 
 // GetCollection gets collection info (stub)
-func (p *AnimaProvider) GetCollection(ctx context.Context, name string) (*memory.CollectionInfo, error) {
+func (p *AnimaProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
 	return nil, fmt.Errorf("Anima provider not implemented - stub only")
 }
 
 // CreateIndex creates an index (stub)
-func (p *AnimaProvider) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
+func (p *AnimaProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
 	return fmt.Errorf("Anima provider not implemented - stub only")
 }
 
@@ -147,7 +152,7 @@ func (p *AnimaProvider) DeleteIndex(ctx context.Context, collection, name string
 }
 
 // ListIndexes lists indexes (stub)
-func (p *AnimaProvider) ListIndexes(ctx context.Context, collection string) ([]*memory.IndexInfo, error) {
+func (p *AnimaProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
 	return nil, fmt.Errorf("Anima provider not implemented - stub only")
 }
 
@@ -172,8 +177,12 @@ func (p *AnimaProvider) DeleteMetadata(ctx context.Context, ids []string, keys [
 }
 
 // GetStats gets provider stats (stub)
-func (p *AnimaProvider) GetStats(ctx context.Context) (*memory.ProviderStats, error) {
-	return memory.NewProviderStats("anima", "anima", "stub"), nil
+func (p *AnimaProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
+	return &ProviderStats{
+		Name:   "anima",
+		Type:   "anima",
+		Status: "stub",
+	}, nil
 }
 
 // Optimize optimizes the provider (stub)

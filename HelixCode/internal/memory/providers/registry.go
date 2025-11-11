@@ -83,12 +83,12 @@ func (r *ProviderRegistry) registerBuiltInProviders() error {
 	//	return NewProviderAgnosticProvider(config)
 	// }
 
-	// Register new memory providers
-	// Note: Mem0, Zep, Memonto, BaseAI are memory providers, not vector providers
-	// r.providers[ProviderTypeMem0] = func(config map[string]interface{}) (VectorProvider, error) { return NewMem0Provider(config) }
-	// r.providers[ProviderTypeZep] = func(config map[string]interface{}) (VectorProvider, error) { return NewZepProvider(config) }
-	// r.providers[ProviderTypeMemonto] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemontoProvider(config) }
-	// r.providers[ProviderTypeBaseAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewBaseAIProvider(config) }
+	// Register memory providers
+	// Note: Mem0, Zep, Memonto, BaseAI provide memory/context management with vector capabilities
+	r.providers[ProviderTypeMem0] = func(config map[string]interface{}) (VectorProvider, error) { return NewMem0Provider(config) }
+	r.providers[ProviderTypeZep] = func(config map[string]interface{}) (VectorProvider, error) { return NewZepProvider(config) }
+	r.providers[ProviderTypeMemonto] = func(config map[string]interface{}) (VectorProvider, error) { return NewMemontoProvider(config) }
+	r.providers[ProviderTypeBaseAI] = func(config map[string]interface{}) (VectorProvider, error) { return NewBaseAIProvider(config) }
 
 	r.initialized = true
 	r.logger.Info("Provider registry initialized total_providers=%d", len(r.providers))

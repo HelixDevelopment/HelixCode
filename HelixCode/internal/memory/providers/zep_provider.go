@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"dev.helix.code/internal/logging"
-	"dev.helix.code/internal/memory"
 	zep "github.com/getzep/zep-go/v3"
 	zepclient "github.com/getzep/zep-go/v3/client"
 	"github.com/getzep/zep-go/v3/option"
@@ -91,7 +90,7 @@ func (p *ZepProvider) IsCloud() bool {
 }
 
 // Store stores memory data in Zep
-func (p *ZepProvider) Store(ctx context.Context, data []*memory.VectorData) error {
+func (p *ZepProvider) Store(ctx context.Context, data []*VectorData) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -142,7 +141,7 @@ func (p *ZepProvider) Store(ctx context.Context, data []*memory.VectorData) erro
 }
 
 // Search searches for memory in Zep
-func (p *ZepProvider) Search(ctx context.Context, query *memory.VectorQuery) (*memory.VectorSearchResult, error) {
+func (p *ZepProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
 	// Use graph search for Zep
 	searchResults, err := p.client.Graph.Search(ctx, &zep.GraphSearchQuery{
 		UserID: zep.String(p.userID),
@@ -153,9 +152,9 @@ func (p *ZepProvider) Search(ctx context.Context, query *memory.VectorQuery) (*m
 	}
 
 	// Convert results
-	results := []*memory.VectorSearchResultItem{}
+	results := []*VectorSearchResultItem{}
 	for _, edge := range searchResults.Edges {
-		results = append(results, &memory.VectorSearchResultItem{
+		results = append(results, &VectorSearchResultItem{
 			ID: edge.UUID,
 			Metadata: map[string]interface{}{
 				"fact":     edge.Fact,
@@ -167,7 +166,7 @@ func (p *ZepProvider) Search(ctx context.Context, query *memory.VectorQuery) (*m
 	}
 
 	for _, node := range searchResults.Nodes {
-		results = append(results, &memory.VectorSearchResultItem{
+		results = append(results, &VectorSearchResultItem{
 			ID: node.UUID,
 			Metadata: map[string]interface{}{
 				"name":    node.Name,
@@ -178,20 +177,20 @@ func (p *ZepProvider) Search(ctx context.Context, query *memory.VectorQuery) (*m
 		})
 	}
 
-	return &memory.VectorSearchResult{
+	return &VectorSearchResult{
 		Results: results,
 	}, nil
 }
 
 // Retrieve retrieves vectors by IDs from Zep
-func (p *ZepProvider) Retrieve(ctx context.Context, ids []string) ([]*memory.VectorData, error) {
+func (p *ZepProvider) Retrieve(ctx context.Context, ids []string) ([]*VectorData, error) {
 	// Zep doesn't have direct retrieve by ID, this is a stub
 	p.logger.Warn("Retrieve operation not fully supported in Zep")
-	return []*memory.VectorData{}, nil
+	return []*VectorData{}, nil
 }
 
 // Update updates a vector in Zep
-func (p *ZepProvider) Update(ctx context.Context, id string, vector *memory.VectorData) error {
+func (p *ZepProvider) Update(ctx context.Context, id string, vector *VectorData) error {
 	// Zep doesn't have direct update by ID, this is a stub
 	p.logger.Warn("Update operation not fully supported in Zep")
 	return nil
@@ -244,7 +243,7 @@ func (p *ZepProvider) BatchFindSimilar(ctx context.Context, queries [][]float64,
 }
 
 // CreateCollection creates a collection in Zep
-func (p *ZepProvider) CreateCollection(ctx context.Context, name string, config *memory.CollectionConfig) error {
+func (p *ZepProvider) CreateCollection(ctx context.Context, name string, config *CollectionConfig) error {
 	// Zep doesn't have explicit collections, this is a stub
 	p.logger.Warn("CreateCollection not supported in Zep")
 	return nil
@@ -258,20 +257,20 @@ func (p *ZepProvider) DeleteCollection(ctx context.Context, name string) error {
 }
 
 // ListCollections lists collections in Zep
-func (p *ZepProvider) ListCollections(ctx context.Context) ([]*memory.CollectionInfo, error) {
+func (p *ZepProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
 	// Zep doesn't have explicit collections, return empty
-	return []*memory.CollectionInfo{}, nil
+	return []*CollectionInfo{}, nil
 }
 
 // GetCollection gets collection info in Zep
-func (p *ZepProvider) GetCollection(ctx context.Context, name string) (*memory.CollectionInfo, error) {
+func (p *ZepProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
 	// Zep doesn't have explicit collections, this is a stub
 	p.logger.Warn("GetCollection not supported in Zep")
 	return nil, fmt.Errorf("collection not found")
 }
 
 // CreateIndex creates an index in Zep
-func (p *ZepProvider) CreateIndex(ctx context.Context, collection string, config *memory.IndexConfig) error {
+func (p *ZepProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
 	// Zep doesn't have explicit indexes, this is a stub
 	p.logger.Warn("CreateIndex not supported in Zep")
 	return nil
@@ -285,9 +284,9 @@ func (p *ZepProvider) DeleteIndex(ctx context.Context, collection, name string) 
 }
 
 // ListIndexes lists indexes in Zep
-func (p *ZepProvider) ListIndexes(ctx context.Context, collection string) ([]*memory.IndexInfo, error) {
+func (p *ZepProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
 	// Zep doesn't have explicit indexes, return empty
-	return []*memory.IndexInfo{}, nil
+	return []*IndexInfo{}, nil
 }
 
 // AddMetadata adds metadata to a vector in Zep
@@ -371,19 +370,19 @@ func (p *ZepProvider) GetCostInfo() *CostInfo {
 }
 
 // GetStats returns provider statistics
-func (p *ZepProvider) GetStats(ctx context.Context) (*memory.ProviderStats, error) {
+func (p *ZepProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 	// Get user info as basic stats
-	stats := &memory.ProviderStats{
+	stats := &ProviderStats{
 		Name:             "Zep",
 		Type:             "zep",
 		Status:           "active",
 		TotalOperations:  0,
 		SuccessfulOps:    0,
 		FailedOps:        0,
-		AvgResponseTime:  0,
+		AverageLatency:  0,
 		TotalVectors:     0,
 		TotalCollections: 0,
-		StorageSize:      0,
+		TotalSize:      0,
 		LastHealthCheck:  time.Now(),
 	}
 
@@ -391,18 +390,18 @@ func (p *ZepProvider) GetStats(ctx context.Context) (*memory.ProviderStats, erro
 }
 
 // Health checks provider health
-func (p *ZepProvider) Health(ctx context.Context) (*memory.HealthStatus, error) {
+func (p *ZepProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	// Simple health check by trying to get user info
 	_, err := p.client.User.Get(ctx, p.userID)
 	if err != nil {
-		return &memory.HealthStatus{
+		return &HealthStatus{
 			Status:    "unhealthy",
 			Message:   err.Error(),
 			Timestamp: time.Now(),
 		}, nil
 	}
 
-	return &memory.HealthStatus{
+	return &HealthStatus{
 		Status:    "healthy",
 		Timestamp: time.Now(),
 	}, nil

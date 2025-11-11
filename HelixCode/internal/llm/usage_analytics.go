@@ -19,6 +19,7 @@ func NewUsageAnalytics(baseDir string) *UsageAnalytics {
 		taskPatterns:       make(map[string]*TaskPattern),
 		userPreferences:    make(map[string]*UserPreferences),
 		performanceHistory: make(map[string]*PerformanceHistory),
+		analyticsDir:       analyticsDir,
 	}
 
 	// Load existing data
@@ -689,11 +690,20 @@ func (a *UsageAnalytics) analyzeUsers() *UserAnalysis {
 func (a *UsageAnalytics) generateRecommendations(report *UsageReport) []string {
 	recommendations := []string{}
 
-	// Model recommendations
-	// TODO: Implement trending models analysis
-	// if len(report.TrendingModels) > 0 {
-	// 	recommendations = append(recommendations, fmt.Sprintf("Consider allocating more resources to trending models: %s", strings.Join(report.TrendingModels, ", ")))
-	// }
+	// Model recommendations - analyze trending models
+	if len(report.Summary.TrendingModels) > 0 {
+		trendingStr := ""
+		for i, model := range report.Summary.TrendingModels {
+			if i > 0 {
+				trendingStr += ", "
+			}
+			trendingStr += model
+			if i >= 4 { // Limit to top 5 trending models
+				break
+			}
+		}
+		recommendations = append(recommendations, fmt.Sprintf("Consider allocating more resources to trending models: %s", trendingStr))
+	}
 
 	// Performance recommendations
 	if report.PerformanceAnalysis.AverageTPS < 10.0 {
@@ -703,6 +713,21 @@ func (a *UsageAnalytics) generateRecommendations(report *UsageReport) []string {
 	// User recommendations
 	if report.UserAnalysis.UserRetention.MonthlyRetention < 0.4 {
 		recommendations = append(recommendations, "Focus on improving user experience to increase retention")
+	}
+
+	// Task-specific recommendations
+	for taskType, analysis := range report.TaskAnalysis {
+		if analysis.AverageLatency > 1000.0 { // Latency > 1 second
+			recommendations = append(recommendations, fmt.Sprintf("Task '%s' has high latency (%.0fms), consider using faster providers or optimizing", taskType, analysis.AverageLatency))
+		}
+		if analysis.SuccessRate < 0.8 {
+			recommendations = append(recommendations, fmt.Sprintf("Task '%s' has low success rate (%.1f%%), investigate failures", taskType, analysis.SuccessRate*100))
+		}
+	}
+
+	// Optimization recommendations
+	if report.PerformanceAnalysis.OptimizationImpact != nil && report.PerformanceAnalysis.OptimizationImpact.SuccessfulRate < 0.5 {
+		recommendations = append(recommendations, "Many optimizations are failing, review optimization strategies")
 	}
 
 	return recommendations
@@ -735,7 +760,11 @@ func (a *UsageAnalytics) loadAnalyticsData(dir string) error {
 }
 
 func (a *UsageAnalytics) saveAnalyticsData() error {
-	dir := filepath.Join(filepath.Dir(a.modelUsageStats[""].LastUsed.String()), "analytics")
+	if a.analyticsDir == "" {
+		return fmt.Errorf("analytics directory not set")
+	}
+
+	dir := a.analyticsDir
 	os.MkdirAll(dir, 0755)
 
 	// Save model usage stats
