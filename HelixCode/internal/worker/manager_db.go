@@ -12,11 +12,11 @@ import (
 
 // DatabaseManager handles worker lifecycle and operations with database persistence
 type DatabaseManager struct {
-	db *database.Database
+	db database.DatabaseInterface
 }
 
 // NewDatabaseManager creates a new worker manager with database persistence
-func NewDatabaseManager(db *database.Database) *DatabaseManager {
+func NewDatabaseManager(db database.DatabaseInterface) *DatabaseManager {
 	return &DatabaseManager{
 		db: db,
 	}
@@ -58,7 +58,7 @@ func (m *DatabaseManager) GetWorker(ctx context.Context, id string) (*Worker, er
 		updatedAt          time.Time
 	)
 
-	err = m.db.Pool.QueryRow(ctx, query, workerID).Scan(
+	err = m.db.QueryRow(ctx, query, workerID).Scan(
 		&dbID, &hostname, &displayName, &sshConfig, &capabilities, &resources,
 		&status, &healthStatus, &lastHeartbeat, &cpuUsagePercent,
 		&memoryUsagePercent, &diskUsagePercent, &currentTasksCount,
@@ -127,7 +127,7 @@ func (m *DatabaseManager) ListWorkers(ctx context.Context) ([]*Worker, error) {
 		ORDER BY created_at DESC
 	`
 
-	rows, err := m.db.Pool.Query(ctx, query)
+	rows, err := m.db.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query workers: %v", err)
 	}
@@ -241,7 +241,7 @@ func (m *DatabaseManager) RegisterWorker(ctx context.Context, hostname, displayN
 	`
 
 	var createdAt, updatedAt time.Time
-	err := m.db.Pool.QueryRow(ctx, query,
+	err := m.db.QueryRow(ctx, query,
 		worker.ID, worker.Hostname, worker.DisplayName, worker.SSHConfig,
 		worker.Capabilities, worker.Resources, worker.Status, worker.HealthStatus,
 		worker.CurrentTasksCount, worker.MaxConcurrentTasks,
@@ -267,12 +267,12 @@ func (m *DatabaseManager) UpdateWorkerHeartbeat(ctx context.Context, id string, 
 
 	// Update worker record
 	query := `
-		UPDATE workers 
+		UPDATE workers
 		SET last_heartbeat = NOW(), updated_at = NOW()
 		WHERE id = $1
 	`
 
-	_, err = m.db.Pool.Exec(ctx, query, workerID)
+	_, err = m.db.Exec(ctx, query, workerID)
 	if err != nil {
 		return fmt.Errorf("failed to update worker heartbeat: %v", err)
 	}
@@ -294,7 +294,7 @@ func (m *DatabaseManager) UpdateWorkerHeartbeat(ctx context.Context, id string, 
 	currentTasks, _ := metrics["current_tasks_count"].(int)
 	temperature, _ := metrics["temperature_celsius"].(float64)
 
-	_, err = m.db.Pool.Exec(ctx, metricsQuery,
+	_, err = m.db.Exec(ctx, metricsQuery,
 		workerID, cpuUsage, memoryUsage, diskUsage,
 		networkRx, networkTx, currentTasks, temperature,
 	)
