@@ -7,17 +7,17 @@ import (
 	"net"
 	"time"
 
+	"dev.helix.code/internal/database"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // AuthDB implements AuthRepository using PostgreSQL
 type AuthDB struct {
-	db *pgxpool.Pool
+	db database.DatabaseInterface
 }
 
 // NewAuthDB creates a new AuthDB instance
-func NewAuthDB(db *pgxpool.Pool) *AuthDB {
+func NewAuthDB(db database.DatabaseInterface) *AuthDB {
 	return &AuthDB{db: db}
 }
 
