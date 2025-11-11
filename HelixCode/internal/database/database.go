@@ -7,6 +7,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq"
@@ -69,6 +71,30 @@ func (db *Database) Close() {
 		db.Pool.Close()
 		log.Println("✅ Database connection pool closed")
 	}
+}
+
+// Exec executes a query without returning any rows.
+// Implements DatabaseInterface.
+func (db *Database) Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error) {
+	return db.Pool.Exec(ctx, sql, arguments...)
+}
+
+// Query executes a query that returns rows.
+// Implements DatabaseInterface.
+func (db *Database) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
+	return db.Pool.Query(ctx, sql, args...)
+}
+
+// QueryRow executes a query that returns at most one row.
+// Implements DatabaseInterface.
+func (db *Database) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+	return db.Pool.QueryRow(ctx, sql, args...)
+}
+
+// Ping verifies the database connection.
+// Implements DatabaseInterface.
+func (db *Database) Ping(ctx context.Context) error {
+	return db.Pool.Ping(ctx)
 }
 
 // InitializeSchema creates the database schema if it doesn't exist
