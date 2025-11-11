@@ -167,8 +167,278 @@ func (f *ProviderFactory) getDefaultConfiguration(providerType ProviderType) map
 
 // wrapWithMonitoring wraps provider with monitoring capabilities
 func (f *ProviderFactory) wrapWithMonitoring(provider VectorProvider) VectorProvider {
-	// TODO: Implement monitoring wrapper
-	return provider
+	// Create monitoring wrapper that tracks metrics
+	return &MonitoredProvider{
+		provider: provider,
+		metrics: &ProviderMetrics{
+			TotalOperations: 0,
+			SuccessCount:    0,
+			FailureCount:    0,
+			TotalLatency:    0,
+			LastOperation:   time.Now(),
+		},
+	}
+}
+
+// MonitoredProvider wraps a VectorProvider with monitoring capabilities
+type MonitoredProvider struct {
+	provider VectorProvider
+	metrics  *ProviderMetrics
+	mu       sync.RWMutex
+}
+
+// ProviderMetrics tracks provider performance metrics
+type ProviderMetrics struct {
+	TotalOperations int64
+	SuccessCount    int64
+	FailureCount    int64
+	TotalLatency    time.Duration
+	LastOperation   time.Time
+}
+
+// Helper method to record operation metrics
+func (m *MonitoredProvider) recordOperation(start time.Time, err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.metrics.TotalOperations++
+	m.metrics.TotalLatency += time.Since(start)
+	m.metrics.LastOperation = time.Now()
+
+	if err != nil {
+		m.metrics.FailureCount++
+	} else {
+		m.metrics.SuccessCount++
+	}
+}
+
+// GetMetrics returns current provider metrics
+func (m *MonitoredProvider) GetMetrics() *ProviderMetrics {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return &ProviderMetrics{
+		TotalOperations: m.metrics.TotalOperations,
+		SuccessCount:    m.metrics.SuccessCount,
+		FailureCount:    m.metrics.FailureCount,
+		TotalLatency:    m.metrics.TotalLatency,
+		LastOperation:   m.metrics.LastOperation,
+	}
+}
+
+// Delegate all VectorProvider methods to wrapped provider with monitoring
+
+func (m *MonitoredProvider) GetType() string {
+	return m.provider.GetType()
+}
+
+func (m *MonitoredProvider) GetName() string {
+	return m.provider.GetName()
+}
+
+func (m *MonitoredProvider) GetCapabilities() []string {
+	return m.provider.GetCapabilities()
+}
+
+func (m *MonitoredProvider) GetConfiguration() interface{} {
+	return m.provider.GetConfiguration()
+}
+
+func (m *MonitoredProvider) IsCloud() bool {
+	return m.provider.IsCloud()
+}
+
+func (m *MonitoredProvider) Store(ctx context.Context, data []*VectorData) error {
+	start := time.Now()
+	err := m.provider.Store(ctx, data)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
+	start := time.Now()
+	result, err := m.provider.Search(ctx, query)
+	m.recordOperation(start, err)
+	return result, err
+}
+
+func (m *MonitoredProvider) Delete(ctx context.Context, ids []string) error {
+	start := time.Now()
+	err := m.provider.Delete(ctx, ids)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
+	start := time.Now()
+	stats, err := m.provider.GetStats(ctx)
+	m.recordOperation(start, err)
+	return stats, err
+}
+
+func (m *MonitoredProvider) Health(ctx context.Context) (*HealthStatus, error) {
+	start := time.Now()
+	health, err := m.provider.Health(ctx)
+	m.recordOperation(start, err)
+	return health, err
+}
+
+func (m *MonitoredProvider) Close() error {
+	start := time.Now()
+	err := m.provider.Close()
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) AddMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	start := time.Now()
+	err := m.provider.AddMetadata(ctx, id, metadata)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) UpdateMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	start := time.Now()
+	err := m.provider.UpdateMetadata(ctx, id, metadata)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) GetMetadata(ctx context.Context, ids []string) (map[string]map[string]interface{}, error) {
+	start := time.Now()
+	metadata, err := m.provider.GetMetadata(ctx, ids)
+	m.recordOperation(start, err)
+	return metadata, err
+}
+
+func (m *MonitoredProvider) DeleteMetadata(ctx context.Context, ids []string, keys []string) error {
+	start := time.Now()
+	err := m.provider.DeleteMetadata(ctx, ids, keys)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Retrieve(ctx context.Context, ids []string) ([]*VectorData, error) {
+	start := time.Now()
+	data, err := m.provider.Retrieve(ctx, ids)
+	m.recordOperation(start, err)
+	return data, err
+}
+
+func (m *MonitoredProvider) Update(ctx context.Context, id string, vector *VectorData) error {
+	start := time.Now()
+	err := m.provider.Update(ctx, id, vector)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
+	start := time.Now()
+	results, err := m.provider.FindSimilar(ctx, embedding, k, filters)
+	m.recordOperation(start, err)
+	return results, err
+}
+
+func (m *MonitoredProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	start := time.Now()
+	results, err := m.provider.BatchFindSimilar(ctx, queries, k)
+	m.recordOperation(start, err)
+	return results, err
+}
+
+func (m *MonitoredProvider) CreateCollection(ctx context.Context, name string, config *CollectionConfig) error {
+	start := time.Now()
+	err := m.provider.CreateCollection(ctx, name, config)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) DeleteCollection(ctx context.Context, name string) error {
+	start := time.Now()
+	err := m.provider.DeleteCollection(ctx, name)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
+	start := time.Now()
+	collections, err := m.provider.ListCollections(ctx)
+	m.recordOperation(start, err)
+	return collections, err
+}
+
+func (m *MonitoredProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
+	start := time.Now()
+	collection, err := m.provider.GetCollection(ctx, name)
+	m.recordOperation(start, err)
+	return collection, err
+}
+
+func (m *MonitoredProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
+	start := time.Now()
+	err := m.provider.CreateIndex(ctx, collection, config)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) DeleteIndex(ctx context.Context, collection, name string) error {
+	start := time.Now()
+	err := m.provider.DeleteIndex(ctx, collection, name)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
+	start := time.Now()
+	indexes, err := m.provider.ListIndexes(ctx, collection)
+	m.recordOperation(start, err)
+	return indexes, err
+}
+
+func (m *MonitoredProvider) Optimize(ctx context.Context) error {
+	start := time.Now()
+	err := m.provider.Optimize(ctx)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Backup(ctx context.Context, path string) error {
+	start := time.Now()
+	err := m.provider.Backup(ctx, path)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Restore(ctx context.Context, path string) error {
+	start := time.Now()
+	err := m.provider.Restore(ctx, path)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Initialize(ctx context.Context, config interface{}) error {
+	start := time.Now()
+	err := m.provider.Initialize(ctx, config)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Start(ctx context.Context) error {
+	start := time.Now()
+	err := m.provider.Start(ctx)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) Stop(ctx context.Context) error {
+	start := time.Now()
+	err := m.provider.Stop(ctx)
+	m.recordOperation(start, err)
+	return err
+}
+
+func (m *MonitoredProvider) GetCostInfo() *CostInfo {
+	return m.provider.GetCostInfo()
 }
 
 // ProviderValidator interface for providers that can validate themselves
@@ -543,4 +813,367 @@ func NewHybridProvider(strategy HybridStrategy, providers map[string]VectorProvi
 	}
 }
 
-// TODO: Implement HybridProvider methods based on strategy
+// HybridProvider methods implementing VectorProvider interface based on strategy
+
+func (hp *HybridProvider) selectProvider(operation string) VectorProvider {
+	switch hp.strategy {
+	case HybridStrategyFailover:
+		// Use first available provider
+		for _, provider := range hp.providers {
+			return provider
+		}
+	case HybridStrategyRoundRobin:
+		// Rotate through providers
+		providers := make([]VectorProvider, 0, len(hp.providers))
+		for _, p := range hp.providers {
+			providers = append(providers, p)
+		}
+		if len(providers) > 0 {
+			selected := providers[hp.roundRobin%len(providers)]
+			hp.roundRobin++
+			return selected
+		}
+	case HybridStrategyLoadBalance:
+		// Simple load balancing - could be enhanced with metrics
+		return hp.selectProvider("roundrobin")
+	}
+	// Default: return first provider
+	for _, provider := range hp.providers {
+		return provider
+	}
+	return nil
+}
+
+func (hp *HybridProvider) GetType() string {
+	return "hybrid"
+}
+
+func (hp *HybridProvider) GetName() string {
+	return fmt.Sprintf("Hybrid(%s)", hp.strategy)
+}
+
+func (hp *HybridProvider) GetCapabilities() []string {
+	// Aggregate capabilities from all providers
+	capMap := make(map[string]bool)
+	for _, provider := range hp.providers {
+		for _, cap := range provider.GetCapabilities() {
+			capMap[cap] = true
+		}
+	}
+	caps := make([]string, 0, len(capMap))
+	for cap := range capMap {
+		caps = append(caps, cap)
+	}
+	return caps
+}
+
+func (hp *HybridProvider) GetConfiguration() interface{} {
+	configs := make(map[string]interface{})
+	for name, provider := range hp.providers {
+		configs[name] = provider.GetConfiguration()
+	}
+	return map[string]interface{}{
+		"strategy":  hp.strategy,
+		"providers": configs,
+	}
+}
+
+func (hp *HybridProvider) IsCloud() bool {
+	// If any provider is cloud-based, return true
+	for _, provider := range hp.providers {
+		if provider.IsCloud() {
+			return true
+		}
+	}
+	return false
+}
+
+func (hp *HybridProvider) Store(ctx context.Context, data []*VectorData) error {
+	provider := hp.selectProvider("store")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.Store(ctx, data)
+}
+
+func (hp *HybridProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
+	provider := hp.selectProvider("search")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.Search(ctx, query)
+}
+
+func (hp *HybridProvider) Delete(ctx context.Context, ids []string) error {
+	provider := hp.selectProvider("delete")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.Delete(ctx, ids)
+}
+
+func (hp *HybridProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
+	provider := hp.selectProvider("stats")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.GetStats(ctx)
+}
+
+func (hp *HybridProvider) Health(ctx context.Context) (*HealthStatus, error) {
+	// Aggregate health from all providers
+	allHealthy := true
+	messages := []string{}
+	for name, provider := range hp.providers {
+		health, err := provider.Health(ctx)
+		if err != nil || (health != nil && health.Status != "healthy") {
+			allHealthy = false
+			msg := fmt.Sprintf("%s: unhealthy", name)
+			if err != nil {
+				msg = fmt.Sprintf("%s (%v)", msg, err)
+			}
+			messages = append(messages, msg)
+		}
+	}
+
+	status := "healthy"
+	message := "All providers healthy"
+	if !allHealthy {
+		status = "degraded"
+		message = strings.Join(messages, "; ")
+	}
+
+	return &HealthStatus{
+		Status:    status,
+		Message:   message,
+		Timestamp: time.Now(),
+	}, nil
+}
+
+func (hp *HybridProvider) Close() error {
+	// Close all providers
+	var errs []string
+	for name, provider := range hp.providers {
+		if err := provider.Close(); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("errors closing providers: %s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func (hp *HybridProvider) AddMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	provider := hp.selectProvider("metadata")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.AddMetadata(ctx, id, metadata)
+}
+
+func (hp *HybridProvider) UpdateMetadata(ctx context.Context, id string, metadata map[string]interface{}) error {
+	provider := hp.selectProvider("metadata")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.UpdateMetadata(ctx, id, metadata)
+}
+
+func (hp *HybridProvider) GetMetadata(ctx context.Context, ids []string) (map[string]map[string]interface{}, error) {
+	provider := hp.selectProvider("metadata")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.GetMetadata(ctx, ids)
+}
+
+func (hp *HybridProvider) DeleteMetadata(ctx context.Context, ids []string, keys []string) error {
+	provider := hp.selectProvider("metadata")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.DeleteMetadata(ctx, ids, keys)
+}
+
+func (hp *HybridProvider) Retrieve(ctx context.Context, ids []string) ([]*VectorData, error) {
+	provider := hp.selectProvider("retrieve")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.Retrieve(ctx, ids)
+}
+
+func (hp *HybridProvider) Update(ctx context.Context, id string, vector *VectorData) error {
+	provider := hp.selectProvider("update")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.Update(ctx, id, vector)
+}
+
+func (hp *HybridProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
+	provider := hp.selectProvider("similar")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.FindSimilar(ctx, embedding, k, filters)
+}
+
+func (hp *HybridProvider) BatchFindSimilar(ctx context.Context, queries [][]float64, k int) ([][]*VectorSimilarityResult, error) {
+	provider := hp.selectProvider("batch_similar")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.BatchFindSimilar(ctx, queries, k)
+}
+
+func (hp *HybridProvider) CreateCollection(ctx context.Context, name string, config *CollectionConfig) error {
+	provider := hp.selectProvider("collection")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.CreateCollection(ctx, name, config)
+}
+
+func (hp *HybridProvider) DeleteCollection(ctx context.Context, name string) error {
+	provider := hp.selectProvider("collection")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.DeleteCollection(ctx, name)
+}
+
+func (hp *HybridProvider) ListCollections(ctx context.Context) ([]*CollectionInfo, error) {
+	provider := hp.selectProvider("collection")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.ListCollections(ctx)
+}
+
+func (hp *HybridProvider) GetCollection(ctx context.Context, name string) (*CollectionInfo, error) {
+	provider := hp.selectProvider("collection")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.GetCollection(ctx, name)
+}
+
+func (hp *HybridProvider) CreateIndex(ctx context.Context, collection string, config *IndexConfig) error {
+	provider := hp.selectProvider("index")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.CreateIndex(ctx, collection, config)
+}
+
+func (hp *HybridProvider) DeleteIndex(ctx context.Context, collection, name string) error {
+	provider := hp.selectProvider("index")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.DeleteIndex(ctx, collection, name)
+}
+
+func (hp *HybridProvider) ListIndexes(ctx context.Context, collection string) ([]*IndexInfo, error) {
+	provider := hp.selectProvider("index")
+	if provider == nil {
+		return nil, fmt.Errorf("no provider available")
+	}
+	return provider.ListIndexes(ctx, collection)
+}
+
+func (hp *HybridProvider) Optimize(ctx context.Context) error {
+	provider := hp.selectProvider("optimize")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.Optimize(ctx)
+}
+
+func (hp *HybridProvider) Backup(ctx context.Context, path string) error {
+	provider := hp.selectProvider("backup")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.Backup(ctx, path)
+}
+
+func (hp *HybridProvider) Restore(ctx context.Context, path string) error {
+	provider := hp.selectProvider("restore")
+	if provider == nil {
+		return fmt.Errorf("no provider available")
+	}
+	return provider.Restore(ctx, path)
+}
+
+func (hp *HybridProvider) Initialize(ctx context.Context, config interface{}) error {
+	// Initialize all providers
+	var errs []string
+	for name, provider := range hp.providers {
+		if err := provider.Initialize(ctx, config); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("errors initializing providers: %s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func (hp *HybridProvider) Start(ctx context.Context) error {
+	// Start all providers
+	var errs []string
+	for name, provider := range hp.providers {
+		if err := provider.Start(ctx); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("errors starting providers: %s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func (hp *HybridProvider) Stop(ctx context.Context) error {
+	// Stop all providers
+	var errs []string
+	for name, provider := range hp.providers {
+		if err := provider.Stop(ctx); err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("errors stopping providers: %s", strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func (hp *HybridProvider) GetCostInfo() *CostInfo {
+	// Aggregate cost from all providers
+	totalCost := &CostInfo{
+		Currency:      "USD",
+		ComputeCost:   0,
+		TransferCost:  0,
+		StorageCost:   0,
+		TotalCost:     0,
+		BillingPeriod: "monthly",
+		FreeTierUsed:  0,
+		FreeTierLimit: 0,
+	}
+
+	for _, provider := range hp.providers {
+		cost := provider.GetCostInfo()
+		if cost != nil {
+			totalCost.ComputeCost += cost.ComputeCost
+			totalCost.TransferCost += cost.TransferCost
+			totalCost.StorageCost += cost.StorageCost
+			totalCost.TotalCost += cost.TotalCost
+			totalCost.FreeTierUsed += cost.FreeTierUsed
+			totalCost.FreeTierLimit += cost.FreeTierLimit
+		}
+	}
+
+	return totalCost
+}

@@ -668,41 +668,223 @@ type AIStatsProvider interface {
 
 // Placeholder implementations for missing types and functions
 type MemoryIntegration struct {
-	// TODO: Add memory integration fields
+	mu                 sync.RWMutex
+	logger             *logging.Logger
+	config             *MemoryConfig
+	provider           providers.VectorProvider
+	generations        map[string]*GenerationResult
+	conversations      map[string][]*ChatMessage
+	totalGenerations   int64
+	totalConversations int64
+	totalTokens        int64
+	totalCost          float64
+	lastUpdate         time.Time
 }
 
 func NewMemoryIntegration(config *MemoryConfig) *MemoryIntegration {
-	return &MemoryIntegration{}
+	if config == nil {
+		config = &MemoryConfig{
+			Enabled:         true,
+			MaxGenerations:  10000,
+			MaxConversations: 1000,
+			TTL:             24 * time.Hour,
+		}
+	}
+
+	return &MemoryIntegration{
+		logger:        logging.NewLogger(logging.INFO),
+		config:        config,
+		generations:   make(map[string]*GenerationResult),
+		conversations: make(map[string][]*ChatMessage),
+		lastUpdate:    time.Now(),
+	}
 }
 
 func (mi *MemoryIntegration) Initialize(ctx context.Context) error {
+	mi.mu.Lock()
+	defer mi.mu.Unlock()
+
+	mi.logger.Info("Initializing memory integration: max_generations=%d, max_conversations=%d",
+		mi.config.MaxGenerations, mi.config.MaxConversations)
+
+	// Initialize memory provider if configured
+	if mi.config.Provider != "" {
+		registry := providers.GetRegistry()
+		provider, err := registry.Get(mi.config.Provider)
+		if err != nil {
+			mi.logger.Warn("Failed to get memory provider: %v", err)
+		} else {
+			if vectorProvider, ok := provider.(providers.VectorProvider); ok {
+				mi.provider = vectorProvider
+				mi.logger.Info("Memory provider initialized: %s", mi.config.Provider)
+			}
+		}
+	}
+
+	mi.logger.Info("Memory integration initialized successfully")
 	return nil
 }
 
 func (mi *MemoryIntegration) StoreGeneration(ctx context.Context, providerName, prompt string, generation *GenerationResult) error {
+	mi.mu.Lock()
+	defer mi.mu.Unlock()
+
+	// Store generation with timestamp-based key
+	key := fmt.Sprintf("%s_%d", providerName, time.Now().UnixNano())
+	mi.generations[key] = generation
+
+	// Update statistics
+	mi.totalGenerations++
+	mi.totalTokens += int64(generation.Tokens)
+	mi.totalCost += generation.Cost
+	mi.lastUpdate = time.Now()
+
+	// Clean up old generations if limit exceeded
+	if len(mi.generations) > mi.config.MaxGenerations {
+		mi.cleanupGenerations()
+	}
+
+	mi.logger.Debug("Stored generation: provider=%s, tokens=%d, cost=%.4f",
+		providerName, generation.Tokens, generation.Cost)
+
 	return nil
 }
 
 func (mi *MemoryIntegration) StoreConversation(ctx context.Context, providerName string, messages []*ChatMessage, result *ChatResult) error {
+	mi.mu.Lock()
+	defer mi.mu.Unlock()
+
+	// Store conversation with timestamp-based key
+	key := fmt.Sprintf("%s_%d", providerName, time.Now().UnixNano())
+	mi.conversations[key] = messages
+
+	// Update statistics
+	mi.totalConversations++
+	mi.totalTokens += int64(result.Tokens)
+	mi.totalCost += result.Cost
+	mi.lastUpdate = time.Now()
+
+	// Clean up old conversations if limit exceeded
+	if len(mi.conversations) > mi.config.MaxConversations {
+		mi.cleanupConversations()
+	}
+
+	mi.logger.Debug("Stored conversation: provider=%s, messages=%d, tokens=%d, cost=%.4f",
+		providerName, len(messages), result.Tokens, result.Cost)
+
 	return nil
+}
+
+func (mi *MemoryIntegration) cleanupGenerations() {
+	// Remove oldest generations (simple FIFO cleanup)
+	toRemove := len(mi.generations) - mi.config.MaxGenerations
+	if toRemove <= 0 {
+		return
+	}
+
+	// Remove first N entries
+	count := 0
+	for key := range mi.generations {
+		delete(mi.generations, key)
+		count++
+		if count >= toRemove {
+			break
+		}
+	}
+
+	mi.logger.Debug("Cleaned up %d old generations", count)
+}
+
+func (mi *MemoryIntegration) cleanupConversations() {
+	// Remove oldest conversations (simple FIFO cleanup)
+	toRemove := len(mi.conversations) - mi.config.MaxConversations
+	if toRemove <= 0 {
+		return
+	}
+
+	// Remove first N entries
+	count := 0
+	for key := range mi.conversations {
+		delete(mi.conversations, key)
+		count++
+		if count >= toRemove {
+			break
+		}
+	}
+
+	mi.logger.Debug("Cleaned up %d old conversations", count)
 }
 
 func (mi *MemoryIntegration) GetMemoryStats(ctx context.Context) (*MemoryStats, error) {
-	return &MemoryStats{}, nil
+	mi.mu.RLock()
+	defer mi.mu.RUnlock()
+
+	return &MemoryStats{
+		TotalGenerations:   mi.totalGenerations,
+		TotalConversations: mi.totalConversations,
+		TotalTokens:        mi.totalTokens,
+		TotalCost:          mi.totalCost,
+		StoredGenerations:  len(mi.generations),
+		StoredConversations: len(mi.conversations),
+		LastUpdate:         mi.lastUpdate,
+	}, nil
 }
 
 func (mi *MemoryIntegration) Stop(ctx context.Context) error {
+	mi.mu.Lock()
+	defer mi.mu.Unlock()
+
+	mi.logger.Info("Stopping memory integration")
+
+	// Clear in-memory storage
+	mi.generations = make(map[string]*GenerationResult)
+	mi.conversations = make(map[string][]*ChatMessage)
+
+	mi.logger.Info("Memory integration stopped")
 	return nil
 }
 
-type MemoryConfig struct{}
+type MemoryConfig struct {
+	Enabled          bool          `json:"enabled"`
+	Provider         string        `json:"provider"`
+	MaxGenerations   int           `json:"max_generations"`
+	MaxConversations int           `json:"max_conversations"`
+	TTL              time.Duration `json:"ttl"`
+}
 type ConversationManager struct {
+	mu                     sync.RWMutex
+	logger                 *logging.Logger
+	ai                     *AIIntegration
+	config                 *AIConfig
 	compressionCoordinator compressioniface.CompressionCoordinator
+	conversations          map[string]*Conversation
+	activeConversations    map[string]*Conversation
+	totalMessages          int64
+	totalTokens            int64
+	lastUpdate             time.Time
+}
+
+type Conversation struct {
+	ID           string
+	Messages     []*ChatMessage
+	Context      map[string]interface{}
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	TotalTokens  int
+	TotalCost    float64
+	Compressed   bool
+	CompressionRatio float64
 }
 
 func NewConversationManager(ai *AIIntegration, config *AIConfig) *ConversationManager {
-	// Initialize compression coordinator
-	// TODO: Pass actual LLM provider when available
+	// Initialize compression coordinator with actual LLM provider
+	var llmProvider AIProvider
+	if config.DefaultLLM != "" {
+		if provider, err := ai.GetProvider(config.DefaultLLM); err == nil {
+			llmProvider = provider
+		}
+	}
+
 	compressionConfig := &compressioniface.Config{
 		Enabled:              true,
 		DefaultStrategy:      compressioniface.StrategyHybrid,
@@ -713,29 +895,386 @@ func NewConversationManager(ai *AIIntegration, config *AIConfig) *ConversationMa
 		AutoCompressInterval: 5 * time.Minute,
 	}
 
-	compressionCoordinator, err := compressioniface.NewCoordinatorFactory(nil, compressionConfig)
-	if err != nil {
-		// Log error but don't fail initialization
-		ai.logger.Warn("Failed to initialize compression coordinator: %v", err)
-		compressionCoordinator = nil
+	// Convert AIProvider to LLMProvider if possible
+	var compressionCoordinator compressioniface.CompressionCoordinator
+	if llmProvider != nil {
+		// Create wrapper that implements LLMProvider interface
+		llmWrapper := &LLMProviderWrapper{provider: llmProvider}
+		coordinator, err := compressioniface.NewCoordinatorFactory(llmWrapper, compressionConfig)
+		if err != nil {
+			ai.logger.Warn("Failed to initialize compression coordinator: %v", err)
+			compressionCoordinator = nil
+		} else {
+			compressionCoordinator = coordinator
+		}
 	}
 
 	return &ConversationManager{
+		logger:                 logging.NewLogger(logging.INFO),
+		ai:                     ai,
+		config:                 config,
 		compressionCoordinator: compressionCoordinator,
+		conversations:          make(map[string]*Conversation),
+		activeConversations:    make(map[string]*Conversation),
+		lastUpdate:             time.Now(),
 	}
 }
-func (cm *ConversationManager) Stop(ctx context.Context) error { return nil }
+
+func (cm *ConversationManager) CreateConversation(ctx context.Context, id string) (*Conversation, error) {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	conv := &Conversation{
+		ID:        id,
+		Messages:  make([]*ChatMessage, 0),
+		Context:   make(map[string]interface{}),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	cm.conversations[id] = conv
+	cm.activeConversations[id] = conv
+
+	cm.logger.Info("Created conversation: id=%s", id)
+	return conv, nil
+}
+
+func (cm *ConversationManager) AddMessage(ctx context.Context, conversationID string, message *ChatMessage) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	conv, exists := cm.conversations[conversationID]
+	if !exists {
+		return fmt.Errorf("conversation not found: %s", conversationID)
+	}
+
+	conv.Messages = append(conv.Messages, message)
+	conv.UpdatedAt = time.Now()
+	conv.TotalTokens += message.Tokens
+
+	cm.totalMessages++
+	cm.totalTokens += int64(message.Tokens)
+	cm.lastUpdate = time.Now()
+
+	cm.logger.Debug("Added message to conversation: id=%s, role=%s, tokens=%d",
+		conversationID, message.Role, message.Tokens)
+
+	return nil
+}
+
+func (cm *ConversationManager) GetConversation(ctx context.Context, id string) (*Conversation, error) {
+	cm.mu.RLock()
+	defer cm.mu.RUnlock()
+
+	conv, exists := cm.conversations[id]
+	if !exists {
+		return nil, fmt.Errorf("conversation not found: %s", id)
+	}
+
+	return conv, nil
+}
+
+func (cm *ConversationManager) Stop(ctx context.Context) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	cm.logger.Info("Stopping conversation manager")
+
+	// Clear conversations
+	cm.conversations = make(map[string]*Conversation)
+	cm.activeConversations = make(map[string]*Conversation)
+
+	cm.logger.Info("Conversation manager stopped")
+	return nil
+}
+
+// LLMProviderWrapper wraps AIProvider to implement compressioniface.LLMProvider
+type LLMProviderWrapper struct {
+	provider AIProvider
+}
+
+func (w *LLMProviderWrapper) Generate(ctx context.Context, prompt string) (string, error) {
+	result, err := w.provider.GenerateText(ctx, prompt, &GenerationOptions{
+		MaxTokens:   4096,
+		Temperature: 0.7,
+	})
+	if err != nil {
+		return "", err
+	}
+	return result.Text, nil
+}
 
 type PersonalityManager struct {
-	// TODO: Add personality management fields
+	mu                sync.RWMutex
+	logger            *logging.Logger
+	ai                *AIIntegration
+	config            *AIConfig
+	personalities     map[string]*Personality
+	activePersonality *Personality
+	defaultPersonality string
+	lastUpdate        time.Time
+}
+
+type Personality struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Traits      map[string]interface{} `json:"traits"`
+	SystemPrompt string                 `json:"system_prompt"`
+	Temperature  float64                `json:"temperature"`
+	TopP         float64                `json:"top_p"`
+	Enabled      bool                   `json:"enabled"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
+	UsageCount   int64                  `json:"usage_count"`
 }
 
 func NewPersonalityManager(ai *AIIntegration, config *AIConfig) *PersonalityManager {
-	return &PersonalityManager{}
-}
-func (pm *PersonalityManager) Stop(ctx context.Context) error { return nil }
+	pm := &PersonalityManager{
+		logger:             logging.NewLogger(logging.INFO),
+		ai:                 ai,
+		config:             config,
+		personalities:      make(map[string]*Personality),
+		defaultPersonality: "default",
+		lastUpdate:         time.Now(),
+	}
 
-type MemoryStats struct{}
+	// Create default personality
+	defaultPersonality := &Personality{
+		ID:          "default",
+		Name:        "Default Assistant",
+		Description: "A helpful and professional AI assistant",
+		Traits: map[string]interface{}{
+			"helpfulness": 0.9,
+			"professionalism": 0.8,
+			"creativity": 0.7,
+			"conciseness": 0.7,
+		},
+		SystemPrompt: "You are a helpful, professional AI assistant. Provide clear and accurate responses.",
+		Temperature:  0.7,
+		TopP:         1.0,
+		Enabled:      true,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	pm.personalities["default"] = defaultPersonality
+	pm.activePersonality = defaultPersonality
+
+	// Create additional default personalities
+	pm.personalities["technical"] = &Personality{
+		ID:          "technical",
+		Name:        "Technical Expert",
+		Description: "A highly technical AI assistant for development tasks",
+		Traits: map[string]interface{}{
+			"technical_depth": 0.95,
+			"precision": 0.9,
+			"verbosity": 0.6,
+		},
+		SystemPrompt: "You are a technical expert specializing in software development. Provide detailed, accurate technical guidance.",
+		Temperature:  0.5,
+		TopP:         0.95,
+		Enabled:      true,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	pm.personalities["creative"] = &Personality{
+		ID:          "creative",
+		Name:        "Creative Assistant",
+		Description: "A creative and imaginative AI assistant",
+		Traits: map[string]interface{}{
+			"creativity": 0.95,
+			"imagination": 0.9,
+			"flexibility": 0.85,
+		},
+		SystemPrompt: "You are a creative AI assistant. Think outside the box and provide innovative solutions.",
+		Temperature:  0.9,
+		TopP:         0.95,
+		Enabled:      true,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	pm.logger.Info("Personality manager initialized with %d personalities", len(pm.personalities))
+
+	return pm
+}
+
+func (pm *PersonalityManager) GetPersonality(id string) (*Personality, error) {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	personality, exists := pm.personalities[id]
+	if !exists {
+		return nil, fmt.Errorf("personality not found: %s", id)
+	}
+
+	return personality, nil
+}
+
+func (pm *PersonalityManager) SetActivePersonality(id string) error {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	personality, exists := pm.personalities[id]
+	if !exists {
+		return fmt.Errorf("personality not found: %s", id)
+	}
+
+	if !personality.Enabled {
+		return fmt.Errorf("personality is disabled: %s", id)
+	}
+
+	pm.activePersonality = personality
+	pm.lastUpdate = time.Now()
+
+	pm.logger.Info("Set active personality: id=%s, name=%s", id, personality.Name)
+	return nil
+}
+
+func (pm *PersonalityManager) GetActivePersonality() *Personality {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	return pm.activePersonality
+}
+
+func (pm *PersonalityManager) AddPersonality(personality *Personality) error {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	if personality.ID == "" {
+		return fmt.Errorf("personality ID cannot be empty")
+	}
+
+	if _, exists := pm.personalities[personality.ID]; exists {
+		return fmt.Errorf("personality already exists: %s", personality.ID)
+	}
+
+	personality.CreatedAt = time.Now()
+	personality.UpdatedAt = time.Now()
+	pm.personalities[personality.ID] = personality
+	pm.lastUpdate = time.Now()
+
+	pm.logger.Info("Added personality: id=%s, name=%s", personality.ID, personality.Name)
+	return nil
+}
+
+func (pm *PersonalityManager) UpdatePersonality(id string, updates map[string]interface{}) error {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	personality, exists := pm.personalities[id]
+	if !exists {
+		return fmt.Errorf("personality not found: %s", id)
+	}
+
+	// Apply updates
+	if name, ok := updates["name"].(string); ok {
+		personality.Name = name
+	}
+	if description, ok := updates["description"].(string); ok {
+		personality.Description = description
+	}
+	if systemPrompt, ok := updates["system_prompt"].(string); ok {
+		personality.SystemPrompt = systemPrompt
+	}
+	if temperature, ok := updates["temperature"].(float64); ok {
+		personality.Temperature = temperature
+	}
+	if topP, ok := updates["top_p"].(float64); ok {
+		personality.TopP = topP
+	}
+	if enabled, ok := updates["enabled"].(bool); ok {
+		personality.Enabled = enabled
+	}
+	if traits, ok := updates["traits"].(map[string]interface{}); ok {
+		personality.Traits = traits
+	}
+
+	personality.UpdatedAt = time.Now()
+	pm.lastUpdate = time.Now()
+
+	pm.logger.Info("Updated personality: id=%s", id)
+	return nil
+}
+
+func (pm *PersonalityManager) RemovePersonality(id string) error {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	if id == pm.defaultPersonality {
+		return fmt.Errorf("cannot remove default personality")
+	}
+
+	if _, exists := pm.personalities[id]; !exists {
+		return fmt.Errorf("personality not found: %s", id)
+	}
+
+	// If this is the active personality, switch to default
+	if pm.activePersonality != nil && pm.activePersonality.ID == id {
+		pm.activePersonality = pm.personalities[pm.defaultPersonality]
+	}
+
+	delete(pm.personalities, id)
+	pm.lastUpdate = time.Now()
+
+	pm.logger.Info("Removed personality: id=%s", id)
+	return nil
+}
+
+func (pm *PersonalityManager) ListPersonalities() []*Personality {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	personalities := make([]*Personality, 0, len(pm.personalities))
+	for _, personality := range pm.personalities {
+		personalities = append(personalities, personality)
+	}
+
+	return personalities
+}
+
+func (pm *PersonalityManager) IncrementUsage(id string) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	if personality, exists := pm.personalities[id]; exists {
+		personality.UsageCount++
+		personality.UpdatedAt = time.Now()
+	}
+}
+
+func (pm *PersonalityManager) Stop(ctx context.Context) error {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	pm.logger.Info("Stopping personality manager")
+
+	// Clear non-default personalities
+	for id := range pm.personalities {
+		if id != pm.defaultPersonality {
+			delete(pm.personalities, id)
+		}
+	}
+
+	// Reset to default personality
+	pm.activePersonality = pm.personalities[pm.defaultPersonality]
+
+	pm.logger.Info("Personality manager stopped")
+	return nil
+}
+
+type MemoryStats struct {
+	TotalGenerations    int64     `json:"total_generations"`
+	TotalConversations  int64     `json:"total_conversations"`
+	TotalTokens         int64     `json:"total_tokens"`
+	TotalCost           float64   `json:"total_cost"`
+	StoredGenerations   int       `json:"stored_generations"`
+	StoredConversations int       `json:"stored_conversations"`
+	LastUpdate          time.Time `json:"last_update"`
+}
 
 // Placeholder provider implementations
 func NewOpenAIProvider(config *AIProviderConfig) AIProvider      { return &MockAIProvider{} }

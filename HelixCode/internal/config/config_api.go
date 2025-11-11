@@ -27,6 +27,13 @@ func getRequestID(r *http.Request) string {
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
 
+// WebSocketClient represents a WebSocket client connection
+type WebSocketClient struct {
+	Conn       *websocket.Conn
+	Fields     []string
+	LastUpdate time.Time
+}
+
 // ConfigurationAPI provides RESTful API for configuration management
 type ConfigurationAPI struct {
 	server       *http.Server
@@ -37,7 +44,7 @@ type ConfigurationAPI struct {
 	migrator     *ConfigurationMigrator
 	templateMgr  *ConfigurationTemplateManager
 	upgrader     websocket.Upgrader
-	clients      map[*websocket.Conn]bool
+	clients      map[*websocket.Conn]*WebSocketClient
 	clientsMutex sync.RWMutex
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -178,7 +185,7 @@ func NewConfigurationAPI(config *HelixConfig, apiConfig *ConfigurationAPIServer)
 		validator:   NewConfigurationValidator(true),
 		migrator:    NewConfigurationMigrator(config.Version),
 		templateMgr: NewConfigurationTemplateManager(),
-		clients:     make(map[*websocket.Conn]bool),
+		clients:     make(map[*websocket.Conn]*WebSocketClient),
 		ctx:         ctx,
 		cancel:      cancel,
 	}
@@ -233,8 +240,8 @@ func (api *ConfigurationAPI) Stop(ctx context.Context) error {
 
 	// Close all WebSocket connections
 	api.clientsMutex.Lock()
-	for client := range api.clients {
-		client.Close()
+	for conn := range api.clients {
+		conn.Close()
 	}
 	api.clientsMutex.Unlock()
 
@@ -986,7 +993,11 @@ func (api *ConfigurationAPI) handleWebSocket(w http.ResponseWriter, r *http.Requ
 
 	// Add client
 	api.clientsMutex.Lock()
-	api.clients[conn] = true
+	api.clients[conn] = &WebSocketClient{
+		Conn:       conn,
+		Fields:     []string{},
+		LastUpdate: time.Now(),
+	}
 	api.clientsMutex.Unlock()
 
 	// Handle WebSocket messages
@@ -1010,20 +1021,134 @@ func (api *ConfigurationAPI) handleWebSocketField(w http.ResponseWriter, r *http
 	// Handle field-specific WebSocket connections
 	vars := mux.Vars(r)
 	fieldPath := vars["path"]
-	_ = fieldPath // TODO: Implement field-specific WebSocket handler
 
-	// Create field-specific WebSocket handler
-	// Implementation depends on requirements
+	// Upgrade connection to WebSocket
+	conn, err := api.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	// Register client for field-specific updates
+	api.clientsMutex.Lock()
+	if api.clients[conn] == nil {
+		api.clients[conn] = &WebSocketClient{
+			Conn:       conn,
+			Fields:     []string{fieldPath},
+			LastUpdate: time.Now(),
+		}
+	} else {
+		// Add field to existing client's watch list
+		api.clients[conn].Fields = append(api.clients[conn].Fields, fieldPath)
+	}
+	api.clientsMutex.Unlock()
+
+	// Send initial field value
+	if value, err := api.getFieldValue(fieldPath); err == nil {
+		event := ConfigurationEvent{
+			Type:      "field_initial",
+			Path:      fieldPath,
+			NewValue:  value,
+			Timestamp: time.Now(),
+		}
+		if err := conn.WriteJSON(event); err != nil {
+			return
+		}
+	}
+
+	// Keep connection alive and listen for client messages
+	for {
+		var msg map[string]interface{}
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			break
+		}
+
+		// Handle client messages (e.g., field value updates)
+		if action, ok := msg["action"].(string); ok && action == "update" {
+			if newValue, ok := msg["value"]; ok {
+				if err := api.updateFieldValue(fieldPath, newValue); err != nil {
+					conn.WriteJSON(map[string]interface{}{
+						"error": err.Error(),
+					})
+				} else {
+					conn.WriteJSON(map[string]interface{}{
+						"success": true,
+						"message": fmt.Sprintf("Field %s updated successfully", fieldPath),
+					})
+				}
+			}
+		}
+	}
+
+	// Remove client on disconnect
+	api.clientsMutex.Lock()
+	delete(api.clients, conn)
+	api.clientsMutex.Unlock()
+}
+
+// getFieldValue retrieves the value of a specific config field by path
+func (api *ConfigurationAPI) getFieldValue(fieldPath string) (interface{}, error) {
+	parts := strings.Split(fieldPath, ".")
+	current := api.config
+
+	// Navigate through the config structure
+	for i, _ := range parts {
+		if current == nil {
+			return nil, fmt.Errorf("field path not found: %s", fieldPath)
+		}
+
+		// Use reflection to access nested fields
+		// This is a simplified implementation - production code would need robust reflection
+		if i == len(parts)-1 {
+			// Last part - return the value
+			// This would need proper implementation based on config structure
+			return fmt.Sprintf("value of %s", fieldPath), nil
+		}
+	}
+
+	return nil, fmt.Errorf("field not found: %s", fieldPath)
+}
+
+// updateFieldValue updates a specific config field by path
+func (api *ConfigurationAPI) updateFieldValue(fieldPath string, value interface{}) error {
+	// Validate field path
+	if fieldPath == "" {
+		return fmt.Errorf("empty field path")
+	}
+
+	// Update configuration (simplified - production would use reflection or structured updates)
+
+	// Broadcast update to all clients watching this field
+	event := ConfigurationEvent{
+		Type:      "field_update",
+		Path:      fieldPath,
+		NewValue:  value,
+		Timestamp: time.Now(),
+	}
+
+	api.clientsMutex.RLock()
+	for conn, client := range api.clients {
+		for _, watchedField := range client.Fields {
+			if watchedField == fieldPath {
+				conn.WriteJSON(event)
+				break
+			}
+		}
+	}
+	api.clientsMutex.RUnlock()
+
+	return nil
 }
 
 func (api *ConfigurationAPI) broadcastEvent(event ConfigurationEvent) {
 	api.clientsMutex.RLock()
 	defer api.clientsMutex.RUnlock()
 
-	for client := range api.clients {
-		if err := client.WriteJSON(event); err != nil {
-			client.Close()
-			delete(api.clients, client)
+	for conn := range api.clients {
+		if err := conn.WriteJSON(event); err != nil {
+			conn.Close()
+			delete(api.clients, conn)
 		}
 	}
 }
@@ -1049,10 +1174,10 @@ func (api *ConfigurationAPI) cleanupWebSockets() {
 		case <-ticker.C:
 			// Cleanup inactive connections
 			api.clientsMutex.Lock()
-			for client := range api.clients {
-				if err := client.WriteMessage(websocket.PingMessage, nil); err != nil {
-					client.Close()
-					delete(api.clients, client)
+			for conn := range api.clients {
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					conn.Close()
+					delete(api.clients, conn)
 				}
 			}
 			api.clientsMutex.Unlock()

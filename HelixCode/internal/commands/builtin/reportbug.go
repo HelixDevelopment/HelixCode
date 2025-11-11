@@ -3,11 +3,15 @@ package builtin
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 
 	"dev.helix.code/internal/commands"
+	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/version"
 )
 
 // ReportBugCommand files bug reports with system info
@@ -133,7 +137,7 @@ func collectSystemInfo() map[string]string {
 		"os":            runtime.GOOS,
 		"arch":          runtime.GOARCH,
 		"num_cpu":       fmt.Sprintf("%d", runtime.NumCPU()),
-		"helix_version": "0.1.0", // TODO: Get from build info
+		"helix_version": version.GetFullVersion(),
 		"timestamp":     time.Now().Format(time.RFC3339),
 		"goroutines":    fmt.Sprintf("%d", runtime.NumGoroutine()),
 	}
@@ -141,9 +145,50 @@ func collectSystemInfo() map[string]string {
 
 // collectRecentLogs collects recent log entries
 func collectRecentLogs(sessionID string, limit int) string {
-	// TODO: Integrate with actual logging system
-	// For now, return placeholder
-	return fmt.Sprintf("[Last %d log entries for session %s would appear here]", limit, sessionID)
+	// Try to read from standard log locations
+	logLocations := []string{
+		filepath.Join(os.TempDir(), "helixcode", "logs", fmt.Sprintf("session_%s.log", sessionID)),
+		filepath.Join(os.Getenv("HOME"), ".helixcode", "logs", fmt.Sprintf("session_%s.log", sessionID)),
+		filepath.Join("logs", fmt.Sprintf("session_%s.log", sessionID)),
+		filepath.Join("logs", "helixcode.log"),
+	}
+
+	var logContent strings.Builder
+	logContent.WriteString(fmt.Sprintf("=== Recent Logs (Session: %s, Limit: %d) ===\n\n", sessionID, limit))
+
+	foundLogs := false
+	for _, logPath := range logLocations {
+		if data, err := os.ReadFile(logPath); err == nil {
+			foundLogs = true
+			lines := strings.Split(string(data), "\n")
+
+			// Get last N lines
+			start := 0
+			if len(lines) > limit {
+				start = len(lines) - limit
+			}
+
+			logContent.WriteString(fmt.Sprintf("--- Log file: %s ---\n", logPath))
+			for i := start; i < len(lines); i++ {
+				if strings.TrimSpace(lines[i]) != "" {
+					logContent.WriteString(lines[i])
+					logContent.WriteString("\n")
+				}
+			}
+			logContent.WriteString("\n")
+			break // Found logs, no need to check other locations
+		}
+	}
+
+	if !foundLogs {
+		// Fall back to in-memory logging if available
+		logger := logging.NewLoggerWithName("reportbug")
+		logContent.WriteString("Note: No log files found. Log entries may be in memory or stdout.\n")
+		logContent.WriteString(fmt.Sprintf("Logger configured: %s\n", logger.GetName()))
+		logContent.WriteString("To enable file logging, configure log output in helixcode config.\n")
+	}
+
+	return logContent.String()
 }
 
 // formatBugReport formats the bug report for GitHub
