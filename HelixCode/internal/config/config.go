@@ -10,6 +10,54 @@ import (
 	"github.com/spf13/viper"
 )
 
+// AuthConfig represents authentication configuration
+type AuthConfig struct {
+	JWTSecret       string `mapstructure:"jwt_secret"`
+	TokenExpiry     int    `mapstructure:"token_expiry"`
+	SessionExpiry   int    `mapstructure:"session_expiry"`
+	BcryptCost      int    `mapstructure:"bcrypt_cost"`
+}
+
+// ServerConfig represents server configuration
+type ServerConfig struct {
+	Address         string `mapstructure:"address"`
+	Port            int    `mapstructure:"port"`
+	ReadTimeout     int    `mapstructure:"read_timeout"`
+	WriteTimeout    int    `mapstructure:"write_timeout"`
+	IdleTimeout     int    `mapstructure:"idle_timeout"`
+	ShutdownTimeout int    `mapstructure:"shutdown_timeout"`
+}
+
+// RedisConfig represents Redis configuration
+type RedisConfig struct {
+	Enabled  bool   `mapstructure:"enabled"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Password string `mapstructure:"password"`
+	Database int    `mapstructure:"database"`
+}
+
+// WorkersConfig represents worker configuration
+type WorkersConfig struct {
+	HealthCheckInterval int `mapstructure:"health_check_interval"`
+	HealthTTL           int `mapstructure:"health_ttl"`
+	MaxConcurrentTasks  int `mapstructure:"max_concurrent_tasks"`
+}
+
+// TasksConfig represents task configuration
+type TasksConfig struct {
+	MaxRetries         int `mapstructure:"max_retries"`
+	CheckpointInterval int `mapstructure:"checkpoint_interval"`
+	CleanupInterval    int `mapstructure:"cleanup_interval"`
+}
+
+// LLMConfig represents LLM configuration
+type LLMConfig struct {
+	DefaultProvider string  `mapstructure:"default_provider"`
+	MaxTokens       int     `mapstructure:"max_tokens"`
+	Temperature     float64 `mapstructure:"temperature"`
+}
+
 // Config represents the application configuration
 type Config struct {
 	Server    ServerConfig    `mapstructure:"server"`

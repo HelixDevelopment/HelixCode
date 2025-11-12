@@ -38,6 +38,8 @@ services:
   # PostgreSQL database
   postgres:
     image: postgres:15
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_DB=helixcode_prod
       - POSTGRES_USER=helix
@@ -56,6 +58,8 @@ services:
   # Redis cache
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379:6379"
     command: redis-server --requirepass ${HELIX_REDIS_PASSWORD}
     volumes:
       - redis_prod_data:/data

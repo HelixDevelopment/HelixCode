@@ -18,20 +18,19 @@ services:
       - HELIX_DATABASE_PORT=5432
       - HELIX_DATABASE_USER=helix
       - HELIX_DATABASE_NAME=helixcode_prod
-      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD}
+      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD:-helixpass}
       - HELIX_REDIS_URL=redis://redis:6379
       - HELIX_REDIS_HOST=redis
       - HELIX_REDIS_PORT=6379
-      - HELIX_REDIS_PASSWORD=${HELIX_REDIS_PASSWORD}
+      - HELIX_REDIS_PASSWORD=${HELIX_REDIS_PASSWORD:-redispass}
       - HELIX_API_PORT=8080
       - HELIX_SSH_PORT=2222
       - HELIX_WEB_PORT=3000
       - HELIX_NETWORK_MODE=${HELIX_NETWORK_MODE:-standalone}
       - HELIX_AUTO_PORT=${HELIX_AUTO_PORT:-false}
-      - HELIX_AUTH_JWT_SECRET=${HELIX_AUTH_JWT_SECRET}
+      - HELIX_AUTH_JWT_SECRET=helixcode-jwt-secret-testing-2025-change-in-production
     volumes:
-      - ./HelixCode/config:/app/config:ro
-      - ./HelixCode/assets:/app/assets:ro
+      - ./HelixCode/config/working-config.yaml:/app/config/config.yaml:ro
       - ./workspace:/workspace
       - ./projects:/projects
       - ./shared:/shared
