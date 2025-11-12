@@ -177,7 +177,7 @@ server:
   port: 8081
   read_timeout: 30s
   write_timeout: 30s
-  idle_timeout: 60s
+  idle_timeout: 300s
 
 database:
   host: "localhost"
