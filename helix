@@ -209,7 +209,25 @@ ensure_container_running() {
 # Function to execute commands in the container
 exec_in_container() {
     ensure_container_running
-    docker exec -it helixcode helix "$@"
+    
+    # Check if non-interactive mode is requested
+    local non_interactive=false
+    
+    # Parse arguments to find --non-interactive flag
+    for arg in "$@"; do
+        if [[ "$arg" == "--non-interactive" ]]; then
+            non_interactive=true
+            break
+        fi
+    done
+    
+    if [ "$non_interactive" = true ]; then
+        # Use non-interactive mode (no -t flag)
+        docker exec -i helixcode /app/cli "$@"
+    else
+        # Use interactive mode (with -t flag)
+        docker exec -it helixcode /app/cli "$@"
+    fi
 }
 
 # Function to show container logs
@@ -339,13 +357,13 @@ main() {
             show_logs "${@:2}"
             ;;
         "cli")
-            exec_in_container cli "${@:2}"
+            exec_in_container "${@:2}"
             ;;
         "tui")
-            exec_in_container tui
+            exec_in_container tui "${@:2}"
             ;;
         "server")
-            exec_in_container server
+            exec_in_container server "${@:2}"
             ;;
         "exec")
             if [ -z "$2" ]; then

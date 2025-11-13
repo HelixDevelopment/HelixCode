@@ -50,8 +50,12 @@ func (c *CLI) Run() error {
 		notify         = flag.String("notify", "", "Send notification with message")
 		notifyType     = flag.String("notify-type", "info", "Notification type")
 		notifyPriority = flag.String("notify-priority", "medium", "Notification priority")
+		nonInteractive = flag.Bool("non-interactive", false, "Run in non-interactive mode")
 	)
 	flag.Parse()
+	
+	// Debug: print flag values
+	fmt.Fprintf(os.Stderr, "Flags parsed: listWorkers=%v, nonInteractive=%v\n", *listWorkers, *nonInteractive)
 
 	ctx := context.Background()
 
@@ -71,6 +75,9 @@ func (c *CLI) Run() error {
 		return c.handleNotification(ctx, *notify, *notifyType, *notifyPriority)
 	case *command != "":
 		return c.handleCommand(ctx, *command)
+	case *nonInteractive:
+		// In non-interactive mode, exit gracefully if no command specified
+		return nil
 	default:
 		return c.handleInteractive(ctx)
 	}
