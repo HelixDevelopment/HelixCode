@@ -252,10 +252,10 @@ func (p *MemontoProvider) GetStats(ctx context.Context) (*ProviderStats, error) 
 		TotalOperations:  0,
 		SuccessfulOps:    0,
 		FailedOps:        0,
-		AverageLatency:  0,
+		AverageLatency:   0,
 		TotalVectors:     0,
 		TotalCollections: 0,
-		TotalSize:      0,
+		TotalSize:        0,
 		LastHealthCheck:  time.Now(),
 	}, nil
 }
@@ -309,7 +309,7 @@ func (p *MemontoProvider) Health(ctx context.Context) (*HealthStatus, error) {
 }
 
 // Close closes the provider
-func (p *MemontoProvider) Close() error {
+func (p *MemontoProvider) Close(ctx context.Context) error {
 	// Cleanup if needed
 	return nil
 }

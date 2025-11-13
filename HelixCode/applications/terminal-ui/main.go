@@ -66,8 +66,8 @@ func (tui *TerminalUI) Initialize() error {
 	// Load Helix configuration
 	helixCfg, err := config.LoadHelixConfig()
 	if err != nil {
-		// If helix config doesn't exist, create default
-		helixCfg, _ = config.LoadDefaultConfig()
+		// If helix config doesn't exist, use default
+		helixCfg = &config.Config{} // Use zero value as default
 	}
 	tui.helixConfig = helixCfg
 
@@ -655,12 +655,12 @@ func (tui *TerminalUI) showNewTaskForm() {
 
 		// Map string values to task constants
 		typeMap := map[string]task.TaskType{
-			"Planning":     task.TaskTypePlanning,
-			"Building":     task.TaskTypeBuilding,
-			"Testing":      task.TaskTypeTesting,
-			"Refactoring":  task.TaskTypeRefactoring,
-			"Debugging":    task.TaskTypeDebugging,
-			"Deployment":   task.TaskTypeDeployment,
+			"Planning":    task.TaskTypePlanning,
+			"Building":    task.TaskTypeBuilding,
+			"Testing":     task.TaskTypeTesting,
+			"Refactoring": task.TaskTypeRefactoring,
+			"Debugging":   task.TaskTypeDebugging,
+			"Deployment":  task.TaskTypeDeployment,
 		}
 
 		priorityMap := map[string]task.TaskPriority{

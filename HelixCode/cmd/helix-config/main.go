@@ -840,10 +840,6 @@ func bindFlags(flags *pflag.FlagSet) {
 }
 
 func getConfig() (*config.HelixConfig, error) {
-	if configFile == "" {
-		return config.GetGlobalConfigManager().GetDefaultConfig(), nil
-	}
-
 	return config.LoadHelixConfig()
 }
 

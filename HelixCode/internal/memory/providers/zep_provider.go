@@ -352,7 +352,7 @@ func (p *ZepProvider) Start(ctx context.Context) error {
 // Stop stops the Zep provider
 func (p *ZepProvider) Stop(ctx context.Context) error {
 	// Close client if needed
-	return p.Close()
+	return p.Close(ctx)
 }
 
 // GetCostInfo returns cost information for Zep
@@ -379,10 +379,10 @@ func (p *ZepProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		TotalOperations:  0,
 		SuccessfulOps:    0,
 		FailedOps:        0,
-		AverageLatency:  0,
+		AverageLatency:   0,
 		TotalVectors:     0,
 		TotalCollections: 0,
-		TotalSize:      0,
+		TotalSize:        0,
 		LastHealthCheck:  time.Now(),
 	}
 
@@ -408,7 +408,7 @@ func (p *ZepProvider) Health(ctx context.Context) (*HealthStatus, error) {
 }
 
 // Close closes the provider
-func (p *ZepProvider) Close() error {
+func (p *ZepProvider) Close(ctx context.Context) error {
 	// Cleanup if needed
 	return nil
 }

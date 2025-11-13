@@ -210,10 +210,10 @@ func (p *BaseAIProvider) GetStats(ctx context.Context) (*ProviderStats, error) {
 		TotalOperations:  0,
 		SuccessfulOps:    0,
 		FailedOps:        0,
-		AverageLatency:  0,
+		AverageLatency:   0,
 		TotalVectors:     0,
 		TotalCollections: 0,
-		TotalSize:      0,
+		TotalSize:        0,
 		LastHealthCheck:  time.Now(),
 	}, nil
 }
@@ -266,7 +266,7 @@ func (p *BaseAIProvider) Health(ctx context.Context) (*HealthStatus, error) {
 }
 
 // Close closes the provider
-func (p *BaseAIProvider) Close() error {
+func (p *BaseAIProvider) Close(ctx context.Context) error {
 	// Cleanup if needed
 	return nil
 }

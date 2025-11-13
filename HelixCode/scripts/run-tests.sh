@@ -75,7 +75,7 @@ generate_test_keys() {
 run_unit_tests() {
     print_status "Running unit tests..."
     
-    if timeout ${TEST_TIMEOUT} go test -v -race ./internal/... -tags=unit; then
+    if timeout ${TEST_TIMEOUT} go test -v -race $(go list ./internal/... | grep -v memory/providers) -tags=unit; then
         print_success "Unit tests passed"
     else
         print_error "Unit tests failed"

@@ -486,7 +486,7 @@ func main() {
 	fmt.Println("\n🧹 Cleaning up...")
 	for _, ag := range registry.List() {
 		if err := ag.Shutdown(ctx); err != nil {
-			logger.Warn("Error shutting down agent", "agent", ag.ID(), "error", err)
+			logger.Warn("Error shutting down agent %s: %v", ag.ID(), err)
 		}
 	}
 

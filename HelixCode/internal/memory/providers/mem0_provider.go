@@ -215,7 +215,7 @@ func (p *Mem0Provider) Health(ctx context.Context) (*HealthStatus, error) {
 }
 
 // Close closes the provider
-func (p *Mem0Provider) Close() error {
+func (p *Mem0Provider) Close(ctx context.Context) error {
 	// Cleanup resources if needed
 	return nil
 }
@@ -381,7 +381,7 @@ func (p *Mem0Provider) Start(ctx context.Context) error {
 
 // Stop stops the provider
 func (p *Mem0Provider) Stop(ctx context.Context) error {
-	return p.Close()
+	return p.Close(ctx)
 }
 
 // GetCostInfo returns cost information

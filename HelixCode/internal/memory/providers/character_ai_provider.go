@@ -849,6 +849,12 @@ func (p *CharacterAIProvider) IsCloud() bool {
 	return true // Character.AI is a cloud-based service
 }
 
+// Close closes the provider
+func (p *CharacterAIProvider) Close(ctx context.Context) error {
+	// Cleanup resources if needed
+	return nil
+}
+
 // GetCostInfo returns cost information
 func (p *CharacterAIProvider) GetCostInfo() *CostInfo {
 	// Character.AI pricing based on usage

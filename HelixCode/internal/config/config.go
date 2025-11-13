@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,10 +13,10 @@ import (
 
 // AuthConfig represents authentication configuration
 type AuthConfig struct {
-	JWTSecret       string `mapstructure:"jwt_secret"`
-	TokenExpiry     int    `mapstructure:"token_expiry"`
-	SessionExpiry   int    `mapstructure:"session_expiry"`
-	BcryptCost      int    `mapstructure:"bcrypt_cost"`
+	JWTSecret     string `mapstructure:"jwt_secret"`
+	TokenExpiry   int    `mapstructure:"token_expiry"`
+	SessionExpiry int    `mapstructure:"session_expiry"`
+	BcryptCost    int    `mapstructure:"bcrypt_cost"`
 }
 
 // ServerConfig represents server configuration
@@ -60,16 +61,23 @@ type LLMConfig struct {
 
 // Config represents the application configuration
 type Config struct {
-	Server    ServerConfig    `mapstructure:"server"`
-	Database  database.Config `mapstructure:"database"`
-	Redis     RedisConfig     `mapstructure:"redis"`
-	Auth      AuthConfig      `mapstructure:"auth"`
-	Workers   WorkersConfig   `mapstructure:"workers"`
-	Tasks     TasksConfig     `mapstructure:"tasks"`
-	LLM       LLMConfig       `mapstructure:"llm"`
-	Providers ProvidersConfig `mapstructure:"providers"`
-	Logging   LoggingConfig   `mapstructure:"logging"`
+	Version     string            `mapstructure:"version"`
+	UpdatedBy   string            `mapstructure:"updated_by"`
+	Application ApplicationConfig `mapstructure:"application"`
+	Server      ServerConfig      `mapstructure:"server"`
+	Database    database.Config   `mapstructure:"database"`
+	Redis       RedisConfig       `mapstructure:"redis"`
+	Auth        AuthConfig        `mapstructure:"auth"`
+	Workers     WorkersConfig     `mapstructure:"workers"`
+	Tasks       TasksConfig       `mapstructure:"tasks"`
+	LLM         LLMConfig         `mapstructure:"llm"`
+	Providers   ProvidersConfig   `mapstructure:"providers"`
+	Logging     LoggingConfig     `mapstructure:"logging"`
+	Cognee      *CogneeConfig     `mapstructure:"cognee"`
 }
+
+// HelixConfig is an alias for Config
+type HelixConfig = Config
 
 // ProvidersConfig represents provider configurations
 type ProvidersConfig struct {
@@ -108,6 +116,54 @@ type LoggingConfig struct {
 	Level  string `mapstructure:"level"`
 	Format string `mapstructure:"format"`
 	Output string `mapstructure:"output"`
+}
+
+// TelemetryConfig represents telemetry configuration
+type TelemetryConfig struct {
+	Enabled bool   `mapstructure:"enabled"`
+	Level   string `mapstructure:"level"`
+}
+
+// ApplicationConfig represents application configuration
+type ApplicationConfig struct {
+	Name        string          `mapstructure:"name"`
+	Description string          `mapstructure:"description"`
+	Environment string          `mapstructure:"environment"`
+	Workspace   WorkspaceConfig `mapstructure:"workspace"`
+	Session     SessionConfig   `mapstructure:"session"`
+	Logging     LoggingConfig   `mapstructure:"logging"`
+	Telemetry   TelemetryConfig `mapstructure:"telemetry"`
+}
+
+// WorkspaceConfig represents workspace configuration
+type WorkspaceConfig struct {
+	AutoSave         bool   `mapstructure:"auto_save"`
+	DefaultPath      string `mapstructure:"default_path"`
+	AutoSaveInterval int    `mapstructure:"auto_save_interval"`
+	BackupEnabled    bool   `mapstructure:"backup_enabled"`
+	BackupLocation   string `mapstructure:"backup_location"`
+	BackupRetention  int    `mapstructure:"backup_retention"`
+}
+
+// ContextCompressionConfig represents context compression configuration
+type ContextCompressionConfig struct {
+	Enabled          bool    `mapstructure:"enabled"`
+	Threshold        int     `mapstructure:"threshold"`
+	Strategy         string  `mapstructure:"strategy"`
+	CompressionRatio float64 `mapstructure:"compression_ratio"`
+	RetentionPolicy  string  `mapstructure:"retention_policy"`
+}
+
+// SessionConfig represents session configuration
+type SessionConfig struct {
+	Timeout            int                      `mapstructure:"timeout"`
+	AutoSave           bool                     `mapstructure:"auto_save"`
+	MaxHistory         int                      `mapstructure:"max_history"`
+	PersistContext     bool                     `mapstructure:"persist_context"`
+	ContextRetention   int                      `mapstructure:"context_retention"`
+	MaxHistorySize     int                      `mapstructure:"max_history_size"`
+	AutoResume         bool                     `mapstructure:"auto_resume"`
+	ContextCompression ContextCompressionConfig `mapstructure:"context_compression"`
 }
 
 // Load loads configuration from file and environment variables
@@ -171,6 +227,13 @@ func Load() (*Config, error) {
 
 // setDefaults sets default configuration values
 func setDefaults() {
+	// Version defaults
+	viper.SetDefault("version", "1.0.0")
+
+	// Application defaults
+	viper.SetDefault("application.name", "HelixCode")
+	viper.SetDefault("application.workspace.auto_save", true)
+
 	// Server defaults
 	viper.SetDefault("server.address", "0.0.0.0")
 	viper.SetDefault("server.port", 8080)
@@ -250,6 +313,16 @@ func findConfigFile() string {
 
 // validateConfig validates the configuration
 func validateConfig(cfg *Config) error {
+	// Version validation
+	if cfg.Version == "" {
+		return fmt.Errorf("version is required")
+	}
+
+	// Application validation
+	if cfg.Application.Name == "" {
+		return fmt.Errorf("application name is required")
+	}
+
 	// Server validation
 	if cfg.Server.Port < 1 || cfg.Server.Port > 65535 {
 		return fmt.Errorf("server port must be between 1 and 65535")
@@ -390,4 +463,321 @@ func GetEnvIntOrDefault(key string, defaultValue int) int {
 		}
 	}
 	return defaultValue
+}
+
+// getDefaultConfig returns a default configuration
+func getDefaultConfig() *Config {
+	setDefaults()
+	var cfg Config
+	viper.Unmarshal(&cfg)
+	return &cfg
+}
+
+// ConfigManager manages configuration loading and saving
+type ConfigManager struct {
+	configPath string
+	config     *Config
+}
+
+// NewHelixConfigManager creates a new configuration manager
+func NewHelixConfigManager(configPath string) (*ConfigManager, error) {
+	manager := &ConfigManager{
+		configPath: configPath,
+	}
+
+	// Try to load existing config
+	if _, err := os.Stat(configPath); err == nil {
+		if err := manager.loadConfig(); err != nil {
+			return nil, err
+		}
+	} else {
+		// Create default config
+		manager.config = getDefaultConfig()
+		if err := manager.saveConfig(); err != nil {
+			return nil, err
+		}
+	}
+
+	return manager, nil
+}
+
+// GetConfig returns the current configuration
+func (m *ConfigManager) GetConfig() *Config {
+	return m.config
+}
+
+// UpdateConfig updates the configuration with the provided function
+func (m *ConfigManager) UpdateConfig(updateFunc func(*Config)) error {
+	updateFunc(m.config)
+	return m.saveConfig()
+}
+
+// IsConfigPresent checks if the configuration file exists
+func (m *ConfigManager) IsConfigPresent() bool {
+	_, err := os.Stat(m.configPath)
+	return err == nil
+}
+
+// GetConfigPath returns the configuration file path
+func (m *ConfigManager) GetConfigPath() string {
+	return m.configPath
+}
+
+// loadConfig loads configuration from file
+func (m *ConfigManager) loadConfig() error {
+	data, err := os.ReadFile(m.configPath)
+	if err != nil {
+		return err
+	}
+
+	m.config = &Config{}
+	return json.Unmarshal(data, m.config)
+}
+
+// saveConfig saves configuration to file
+func (m *ConfigManager) saveConfig() error {
+	data, err := json.MarshalIndent(m.config, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(m.configPath, data, 0644)
+}
+
+// AddWatcher adds a configuration change watcher
+func (m *ConfigManager) AddWatcher(watcher ConfigWatcher) {}
+
+// ExportConfig exports the configuration to a file
+func (m *ConfigManager) ExportConfig(path string) error {
+	data, err := json.MarshalIndent(m.config, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+// ImportConfig imports the configuration from a file
+func (m *ConfigManager) ImportConfig(path string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	m.config = &Config{}
+	err = json.Unmarshal(data, m.config)
+	if err != nil {
+		return err
+	}
+	return m.saveConfig()
+}
+
+// BackupConfig backs up the configuration to a file
+func (m *ConfigManager) BackupConfig(path string) error {
+	data, err := json.MarshalIndent(m.config, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
+
+// ResetToDefaults resets the configuration to defaults
+func (m *ConfigManager) ResetToDefaults() error {
+	m.config = getDefaultConfig()
+	return m.saveConfig()
+}
+
+// LoadConfig loads configuration from the default location
+func LoadConfig() (*Config, error) {
+	path := GetConfigPath()
+	manager, err := NewHelixConfigManager(path)
+	if err != nil {
+		return nil, err
+	}
+	return manager.GetConfig(), nil
+}
+
+// SaveConfig saves configuration to the default location
+func SaveConfig(config *Config) error {
+	path := GetConfigPath()
+	manager, err := NewHelixConfigManager(path)
+	if err != nil {
+		return err
+	}
+	manager.config = config
+	return manager.saveConfig()
+}
+
+// GetConfigPath returns the default configuration file path
+func GetConfigPath() string {
+	if path := os.Getenv("HELIX_CONFIG_PATH"); path != "" {
+		return path
+	}
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".config", "helixcode", "config.json")
+}
+
+// IsConfigPresent checks if the default configuration file exists
+func IsConfigPresent() bool {
+	path := GetConfigPath()
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+// UpdateConfig updates the configuration with the provided function
+func UpdateConfig(updateFunc func(*Config)) error {
+	config, err := LoadConfig()
+	if err != nil {
+		return err
+	}
+	updateFunc(config)
+	return SaveConfig(config)
+}
+
+// GetHelixConfigPath returns the default configuration file path
+func GetHelixConfigPath() string {
+	return GetConfigPath()
+}
+
+// CreateDefaultHelixConfig creates a default configuration file
+func CreateDefaultHelixConfig() error {
+	return CreateDefaultConfig(GetConfigPath())
+}
+
+// IsHelixConfigPresent checks if the default configuration file exists
+func IsHelixConfigPresent() bool {
+	return IsConfigPresent()
+}
+
+// LoadHelixConfig loads configuration from the default location
+func LoadHelixConfig() (*Config, error) {
+	return LoadConfig()
+}
+
+// SaveHelixConfig saves configuration to the default location
+func SaveHelixConfig(config *Config) error {
+	return SaveConfig(config)
+}
+
+// UpdateHelixConfig updates the configuration with the provided function
+func UpdateHelixConfig(updateFunc func(*Config)) error {
+	return UpdateConfig(updateFunc)
+}
+
+// NewConfigWatcher creates a new configuration watcher
+func NewConfigWatcher(configPath string) (ConfigWatcher, error) {
+	return nil, nil
+}
+
+// GetConfigInfo returns configuration information
+func GetConfigInfo() (*ConfigInfo, error) {
+	return &ConfigInfo{}, nil
+}
+
+// ConfigInfo represents configuration information
+type ConfigInfo struct{}
+
+// ConfigWatcher represents a configuration watcher
+type ConfigWatcher interface {
+	OnConfigChange(old, new *Config) error
+}
+
+// ConfigurationValidator validates configuration
+type ConfigurationValidator struct{}
+
+// NewConfigurationValidator creates a new configuration validator
+func NewConfigurationValidator(strict bool) *ConfigurationValidator {
+	return &ConfigurationValidator{}
+}
+
+// Validate validates the configuration
+func (v *ConfigurationValidator) Validate(config *Config) ValidationResult {
+	return ValidationResult{Valid: true}
+}
+
+// ValidateField validates a specific field
+func (v *ConfigurationValidator) ValidateField(config *Config, field string) ValidationResult {
+	return ValidationResult{Valid: true}
+}
+
+// AddCustomRule adds a custom validation rule
+func (v *ConfigurationValidator) AddCustomRule(field string, rule func(interface{}) error) {}
+
+// ValidationResult represents validation result
+type ValidationResult struct {
+	Valid  bool
+	Errors []ValidationError
+	Path   string
+}
+
+// ValidationError represents a validation error
+type ValidationError struct {
+	Property string
+	Path     string
+	Severity string
+	Code     string
+	Message  string
+}
+
+// createDefaultSchema creates the default validation schema
+func (v *ConfigurationValidator) createDefaultSchema() *ValidationSchema {
+	return &ValidationSchema{Version: "1.0"}
+}
+
+// ValidationSchema represents validation schema
+type ValidationSchema struct {
+	Version    string
+	Properties map[string]*SchemaProperty
+	Required   []string
+}
+
+// SchemaProperty represents a schema property
+type SchemaProperty struct {
+	Type       string
+	Properties map[string]*SchemaProperty
+	Required   []string
+	MinLength  *int
+	MaxLength  *int
+}
+
+// ConfigurationMigrator migrates configuration between versions
+type ConfigurationMigrator struct {
+	current string
+}
+
+// NewConfigurationMigrator creates a new configuration migrator
+func NewConfigurationMigrator(currentVersion string) *ConfigurationMigrator {
+	return &ConfigurationMigrator{current: currentVersion}
+}
+
+// GetAvailableVersions returns available versions
+func (m *ConfigurationMigrator) GetAvailableVersions() []string {
+	return []string{"1.0.0", "1.1.0", "1.2.0"}
+}
+
+// Migrate migrates configuration to a target version
+func (m *ConfigurationMigrator) Migrate(config *Config, targetVersion string) error {
+	return nil
+}
+
+// findMigrationPath finds the migration path
+func (m *ConfigurationMigrator) findMigrationPath(from, to string) []string {
+	return []string{from, to}
+}
+
+// ConfigurationTransformer transforms configuration
+type ConfigurationTransformer struct{}
+
+// NewConfigurationTransformer creates a new configuration transformer
+func NewConfigurationTransformer() *ConfigurationTransformer {
+	return &ConfigurationTransformer{}
+}
+
+// AddMapping adds a transformation mapping
+func (t *ConfigurationTransformer) AddMapping(mapping TransformMapping) {}
+
+// TransformMapping represents a transformation mapping
+type TransformMapping struct {
+	Source    string
+	Target    string
+	Transform string
+	Priority  int
 }

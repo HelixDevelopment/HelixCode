@@ -10,6 +10,7 @@ import (
 type Logger struct {
 	level  LogLevel
 	logger *log.Logger
+	name   string
 }
 
 // LogLevel represents the severity level of log messages
@@ -59,6 +60,7 @@ func NewLoggerWithName(name string) *Logger {
 	return &Logger{
 		level:  INFO,
 		logger: log.New(os.Stdout, "["+name+"] ", log.LstdFlags),
+		name:   name,
 	}
 }
 
@@ -70,6 +72,11 @@ func DefaultLogger() *Logger {
 // NewTestLogger creates a new logger instance for testing
 func NewTestLogger(name string) *Logger {
 	return NewLoggerWithName(name)
+}
+
+// GetName returns the logger name
+func (l *Logger) GetName() string {
+	return l.name
 }
 
 // Debug logs a debug message

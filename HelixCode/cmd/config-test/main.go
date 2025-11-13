@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"dev.helix.code/internal/config"
 )
@@ -24,23 +23,10 @@ func main() {
 	fmt.Println("✅ Initial configuration loaded:")
 	printConfigInfo(cfg)
 
-	// Set up configuration watcher
-	configPath, err := config.GetConfigPath()
-	if err != nil {
-		log.Fatalf("❌ Failed to get config path: %v", err)
-	}
+	// Configuration watcher not implemented in current API
+	configPath := config.GetConfigPath()
 
-	watcher, err := config.NewConfigWatcher(configPath, func(newCfg *config.Config) {
-		fmt.Printf("\n🔄 Configuration reloaded at %s\n", time.Now().Format("15:04:05"))
-		printConfigInfo(newCfg)
-	})
-	if err != nil {
-		log.Fatalf("❌ Failed to create config watcher: %v", err)
-	}
-	defer watcher.Stop()
-
-	fmt.Printf("👀 Watching for changes in: %s\n", configPath)
-	fmt.Println("💡 Try editing the config file and saving it...")
+	fmt.Printf("📁 Config path: %s\n", configPath)
 	fmt.Println("⏹️  Press Ctrl+C to exit")
 
 	// Wait for interrupt signal
@@ -52,20 +38,19 @@ func main() {
 }
 
 func printConfigInfo(cfg *config.Config) {
-	info := config.GetConfigInfo(cfg)
-	
-	fmt.Printf("   🖥️  Server: %s:%d\n", info["server"].(map[string]interface{})["address"], info["server"].(map[string]interface{})["port"])
-	fmt.Printf("   🗄️  Database: %s:%d/%s\n", 
-		info["database"].(map[string]interface{})["host"],
-		info["database"].(map[string]interface{})["port"],
-		info["database"].(map[string]interface{})["database"])
-	fmt.Printf("   🔴 Redis: %s:%d (enabled: %t)\n", 
-		info["redis"].(map[string]interface{})["host"],
-		info["redis"].(map[string]interface{})["port"],
-		info["redis"].(map[string]interface{})["enabled"])
+	// ConfigInfo is empty struct, so we'll print directly from cfg
+	fmt.Printf("   🖥️  Server: %s:%d\n", cfg.Server.Address, cfg.Server.Port)
+	fmt.Printf("   🗄️  Database: %s:%d/%s\n",
+		cfg.Database.Host,
+		cfg.Database.Port,
+		cfg.Database.DBName)
+	fmt.Printf("   🔴 Redis: %s:%d (enabled: %t)\n",
+		cfg.Redis.Host,
+		cfg.Redis.Port,
+		cfg.Redis.Enabled)
 	fmt.Printf("   🔐 Auth: JWT Secret Length: %d\n", len(cfg.Auth.JWTSecret))
-	fmt.Printf("   🤖 LLM: %s (tokens: %d, temp: %.1f)\n", 
-		info["llm"].(map[string]interface{})["default_provider"],
-		info["llm"].(map[string]interface{})["max_tokens"],
-		info["llm"].(map[string]interface{})["temperature"])
+	fmt.Printf("   🤖 LLM: %s (tokens: %d, temp: %.1f)\n",
+		cfg.LLM.DefaultProvider,
+		cfg.LLM.MaxTokens,
+		cfg.LLM.Temperature)
 }

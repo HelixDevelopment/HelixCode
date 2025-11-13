@@ -3,6 +3,9 @@ package providers
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
 
 	"dev.helix.code/internal/memory"
 )
@@ -283,9 +286,9 @@ func (m *MonitoredProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	return health, err
 }
 
-func (m *MonitoredProvider) Close() error {
+func (m *MonitoredProvider) Close(ctx context.Context) error {
 	start := time.Now()
-	err := m.provider.Close()
+	err := m.provider.Close(ctx)
 	m.recordOperation(start, err)
 	return err
 }
@@ -432,7 +435,7 @@ func (m *MonitoredProvider) Start(ctx context.Context) error {
 
 func (m *MonitoredProvider) Stop(ctx context.Context) error {
 	start := time.Now()
-	err := m.provider.Stop(ctx)
+	err := m.provider.Close(ctx)
 	m.recordOperation(start, err)
 	return err
 }
@@ -793,6 +796,7 @@ type ProviderRef struct {
 type HybridStrategy string
 
 const (
+	HybridStrategyFailover       HybridStrategy = "failover"
 	HybridStrategyRoundRobin     HybridStrategy = "round_robin"
 	HybridStrategyLoadBalance    HybridStrategy = "load_balance"
 	HybridStrategyOperationBased HybridStrategy = "operation_based"
@@ -950,11 +954,11 @@ func (hp *HybridProvider) Health(ctx context.Context) (*HealthStatus, error) {
 	}, nil
 }
 
-func (hp *HybridProvider) Close() error {
+func (hp *HybridProvider) Close(ctx context.Context) error {
 	// Close all providers
 	var errs []string
 	for name, provider := range hp.providers {
-		if err := provider.Close(); err != nil {
+		if err := provider.Close(ctx); err != nil {
 			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
 		}
 	}
