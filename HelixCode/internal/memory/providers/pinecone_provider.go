@@ -758,3 +758,24 @@ func (p *PineconeProvider) Health(ctx context.Context) (*HealthStatus, error) {
 		Timestamp:    time.Now(),
 	}, nil
 }
+
+// Close closes the Pinecone provider
+func (p *PineconeProvider) Close(ctx context.Context) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.started {
+		return nil // Already stopped
+	}
+
+	if p.httpClient != nil {
+		// Close idle connections
+		p.httpClient.CloseIdleConnections()
+	}
+
+	p.started = false
+	p.initialized = false
+
+	p.logger.Info("Pinecone provider closed successfully")
+	return nil
+}

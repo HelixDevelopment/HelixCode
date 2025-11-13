@@ -331,6 +331,6 @@ func (p *MemontoProvider) GetCostInfo() *CostInfo {
 // Helper function to call Memonto Python script
 func (p *MemontoProvider) callMemonto(action, data string) (string, error) {
 	// This is a placeholder - would need to implement Python subprocess call
-	p.logger.Info("Memonto call", "action", action, "data", data)
+	p.logger.Info("Memonto call: action=%s, data=%s", action, data)
 	return "placeholder result", nil
 }

@@ -77,14 +77,14 @@ func (p *BaseAIProvider) Store(ctx context.Context, data []*VectorData) error {
 
 	// BaseAI stores memory through pipes and documents
 	// This is a placeholder - would need to implement BaseAI API calls
-	p.logger.Info("BaseAI Store called", "data_count", len(data))
+	p.logger.Info("BaseAI Store called with %d data items", len(data))
 	return nil
 }
 
 // Search searches for memory in BaseAI
 func (p *BaseAIProvider) Search(ctx context.Context, query *VectorQuery) (*VectorSearchResult, error) {
 	// Use BaseAI memory retrieval
-	p.logger.Info("BaseAI Search called", "query", query.Text)
+	p.logger.Info("BaseAI Search called with query: %s", query.Text)
 	return &VectorSearchResult{
 		Results: []*VectorSearchResultItem{},
 	}, nil
@@ -114,7 +114,7 @@ func (p *BaseAIProvider) Delete(ctx context.Context, ids []string) error {
 // FindSimilar finds similar vectors in BaseAI
 func (p *BaseAIProvider) FindSimilar(ctx context.Context, embedding []float64, k int, filters map[string]interface{}) ([]*VectorSimilarityResult, error) {
 	// Use BaseAI RAG for similarity
-	p.logger.Info("BaseAI FindSimilar called", "k", k)
+	p.logger.Info("BaseAI FindSimilar called with k=%d", k)
 	return []*VectorSimilarityResult{}, nil
 }
 

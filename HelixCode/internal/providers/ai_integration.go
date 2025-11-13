@@ -710,14 +710,13 @@ func (mi *MemoryIntegration) Initialize(ctx context.Context) error {
 	// Initialize memory provider if configured
 	if mi.config.Provider != "" {
 		registry := providers.GetRegistry()
-		provider, err := registry.Get(mi.config.Provider)
+		providerType := providers.ProviderType(mi.config.Provider)
+		provider, err := registry.CreateProvider(providerType, make(map[string]interface{}))
 		if err != nil {
-			mi.logger.Warn("Failed to get memory provider: %v", err)
+			mi.logger.Warn("Failed to create memory provider: %v", err)
 		} else {
-			if vectorProvider, ok := provider.(providers.VectorProvider); ok {
-				mi.provider = vectorProvider
-				mi.logger.Info("Memory provider initialized: %s", mi.config.Provider)
-			}
+			mi.provider = provider
+			mi.logger.Info("Memory provider initialized: %s", mi.config.Provider)
 		}
 	}
 

@@ -1,3 +1,5 @@
+//go:build testprograms
+
 package main
 
 import (

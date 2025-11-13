@@ -1326,3 +1326,24 @@ func getIntConfig(config map[string]interface{}, key string, defaultValue int) i
 	}
 	return defaultValue
 }
+
+// Close closes the Weaviate provider
+func (p *WeaviateProvider) Close(ctx context.Context) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.started {
+		return nil // Already stopped
+	}
+
+	if p.httpClient != nil {
+		// Close idle connections
+		p.httpClient.CloseIdleConnections()
+	}
+
+	p.started = false
+	p.initialized = false
+
+	p.logger.Info("Weaviate provider closed successfully")
+	return nil
+}

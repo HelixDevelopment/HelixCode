@@ -972,3 +972,31 @@ func (idx *FAISSIndex) load() error {
 func copyDirectory(src, dst string) error {
 	return nil // Simplified for mock implementation
 }
+
+// Close closes the FAISS provider
+func (p *FAISSProvider) Close(ctx context.Context) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.started {
+		return nil // Already stopped
+	}
+
+	// Close all indices
+	for _, index := range p.indices {
+		// Clean up index resources
+		index.mu.Lock()
+		index.initialized = false
+		index.vectorMap = nil
+		index.metadataMap = nil
+		index.mu.Unlock()
+	}
+
+	p.started = false
+	p.initialized = false
+	p.indices = make(map[string]*FAISSIndex)
+	p.collections = make(map[string]*CollectionConfig)
+
+	p.logger.Info("FAISS provider closed successfully")
+	return nil
+}

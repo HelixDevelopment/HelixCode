@@ -1339,24 +1339,3 @@ func (p *ChromaDBProvider) Close(ctx context.Context) error {
 	// Cleanup resources if needed
 	return nil
 }
-
-// GetName returns provider name
-func (p *ChromaDBProvider) GetName() string {
-	return "chromadb"
-}
-
-// GetType returns provider type
-func (p *ChromaDBProvider) GetType() string {
-	return string(ProviderTypeChromaDB)
-}
-
-// GetCapabilities returns provider capabilities
-func (p *ChromaDBProvider) GetCapabilities() []string {
-	return []string{
-		"vector_storage",
-		"similarity_search",
-		"metadata_filtering",
-		"collection_management",
-		"batch_operations",
-	}
-}
