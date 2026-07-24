@@ -4,6 +4,29 @@ All notable changes to HelixCode are recorded here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Release tags are
 **helixcode-prefixed semver**: `helixcode-vX.Y.Z`.
 
+## [helix-code-1.1.0-dev-0.0.3] — 2026-07-24
+
+### Added
+
+- **HelixLLM mode switch.** The shared HelixLLM engine now accepts a
+  runtime mode parameter (`coder` / `claude`) so the same provider
+  backend serves both conversational and code-agent workloads with
+  mode-appropriate system prompts and token budgets without
+  reconfiguration.
+
+### Changed
+
+- **HelixAgent submodule pointer bumped.** Updated to the latest
+  revision bringing Zen provider as the default and a generic
+  provider fallback path.
+
+### Fixed
+
+- **`.gitignore` covers build derivatives.** Added `scratchpad/` and
+  `.git-backups/` patterns to prevent 86 GB+ of build artifacts and
+  backup copies from polluting `git status` and accidentally being
+  staged.
+
 ## [helixcode-v1.0.0] — 2026-06-15
 
 First release tag.
