@@ -34,7 +34,18 @@ EnvironmentFile=-@HELIX_ROOT@/.env
 # relative to the working directory. Starting it elsewhere silently produces a
 # second, empty database in whatever directory systemd happened to use.
 WorkingDirectory=@HELIX_ROOT@/submodules/llms_verifier/llm-verifier
-ExecStart=@HELIX_ROOT@/submodules/llms_verifier/llm-verifier/bin/llm-verifier server --port 8100
+#
+# -c points at OUR config, not the submodule's.
+#
+# The submodule ships a tracked config.yaml with `llms: []`. Adding this
+# platform's provider endpoints to that file would inject consuming-project
+# context into a reusable submodule (§11.4.28) AND be overwritten on the next
+# submodule update. config/llmsverifier/config.yaml is owned by this repo; the
+# server seeds its provider/model rows from that file's `llms:` at boot
+# (idempotent), so the submodule stays project-agnostic.
+ExecStart=@HELIX_ROOT@/submodules/llms_verifier/llm-verifier/bin/llm-verifier \
+    -c @HELIX_ROOT@/config/llmsverifier/config.yaml \
+    server --port 8100
 
 Restart=on-failure
 RestartSec=10

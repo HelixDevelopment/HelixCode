@@ -1,0 +1,50 @@
+# LLMsVerifier configuration — owned by HelixCode, NOT by the submodule.
+#
+# The llms_verifier submodule ships its own tracked config.yaml with `llms: []`.
+# Editing that file to add this platform's endpoints would inject consuming-
+# project context into a reusable submodule (§11.4.28) and would be overwritten
+# on the next submodule update. Instead the unit passes this file with `-c`, so
+# the submodule stays project-agnostic and this platform supplies its own data.
+#
+# Providers listed here are seeded into the verifier's database at server boot
+# (idempotent — existing rows are reused, never duplicated).
+
+api:
+  enable_cors: true
+  port: '8100'
+  rate_limit: 100
+  # jwt_secret intentionally omitted: supplied via LLM_VERIFIER_API_JWT_SECRET
+  # from .env (mode 0600, gitignored) per CONST-042 / §12.1. Never inline a
+  # secret in a tracked config file.
+
+database:
+  # Relative to the unit's WorkingDirectory (the llm-verifier module root), so
+  # this points at the same database the submodule's own default config uses --
+  # switching config files must not silently start a second, empty database.
+  path: ./llm-verifier.db
+  encryption_key: ''
+
+global:
+  max_retries: 3
+  timeout: 120s
+
+# Verifiable providers on this host.
+#
+# Only providers that can ACTUALLY be reached are listed. A provider entry whose
+# endpoint needs an API key we do not hold would seed a model that every
+# verification pass then fails on, polluting the score set with false negatives
+# (§11.4.6) — worse than publishing nothing for it. Cloud providers get added
+# here as their keys land in .env.
+llms:
+  # Local llama.cpp server, run by helixllm-coder.service. No API key required.
+  # `llamacpp` is deliberate, not cosmetic: HelixLLM's gateway treats that exact
+  # provider name as its local fallback and always ranks it last regardless of
+  # score (fallback.ScorerBridge.BuildEntries). Naming it anything else would
+  # make the gateway sort a local model in among the cloud providers.
+  - name: llamacpp
+    endpoint: http://localhost:18434/v1
+    model: /models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf
+    api_key: ''
+
+concurrency: 2
+timeout: 120s
