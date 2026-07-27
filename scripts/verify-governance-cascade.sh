@@ -16,62 +16,94 @@ CONST057_ANCHOR="CONST-057"
 CONST058_ANCHOR="CONST-058"
 CONST059_ANCHOR="CONST-059"
 
-# Covenant-114 propagation anchors (§11.4.69, §11.4.75..§11.4.141) — see §11.4.32
-# / CONST-055. The leading prefix is MANDATORY to match each anchor's own
-# HEADING or block-opener, not a cross-reference inside another anchor's body.
-# Prefix conventions (derived from actual consumer-file formatting):
-#   "## §11.4.NN —"   — H2 heading  (§11.4.69, §11.4.75..§11.4.102)
-#   "## §11.4.NNN —"  — H2 heading  (§11.4.103..§11.4.121; same H2 level)
-#   "### §11.4.NNN —" — H3 heading  (§11.4.122..§11.4.134)
-#   "**§11.4.NNN —"   — bold inline  (§11.4.135..§11.4.139, §11.4.141)
-#   "§11.4.140 —"     — bare (inside blockquote; no heading marker in files)
-# The trailing " — " guards prefix collisions (§11.4.8 vs §11.4.84/87, etc.).
-# Grep is fixed-string (-F) so § (U+00A7) and — (U+2014) match literally.
-COVENANT114_ANCHORS=(
-  # §11.4.69, §11.4.75..§11.4.102 — H2 heading format (original set, 28 entries)
-  "## §11.4.69 —" "## §11.4.75 —" "## §11.4.76 —" "## §11.4.77 —" "## §11.4.78 —"
-  "## §11.4.79 —" "## §11.4.80 —" "## §11.4.81 —" "## §11.4.82 —" "## §11.4.83 —"
-  "## §11.4.84 —" "## §11.4.85 —" "## §11.4.86 —" "## §11.4.87 —" "## §11.4.88 —"
-  "## §11.4.89 —" "## §11.4.90 —" "## §11.4.91 —" "## §11.4.92 —" "## §11.4.93 —"
-  "## §11.4.94 —" "## §11.4.95 —" "## §11.4.96 —" "## §11.4.97 —"
-  "## §11.4.98 —" "## §11.4.99 —" "## §11.4.101 —" "## §11.4.102 —"
-  # §11.4.103..§11.4.121 — H2 heading format (19 new entries)
-  "## §11.4.103 —" "## §11.4.104 —" "## §11.4.105 —" "## §11.4.106 —" "## §11.4.107 —"
-  "## §11.4.108 —" "## §11.4.109 —" "## §11.4.110 —" "## §11.4.111 —" "## §11.4.112 —"
-  "## §11.4.113 —" "## §11.4.114 —" "## §11.4.115 —" "## §11.4.116 —" "## §11.4.117 —"
-  "## §11.4.118 —" "## §11.4.119 —" "## §11.4.120 —" "## §11.4.121 —"
-  # §11.4.122..§11.4.134 — H3 heading format (13 new entries)
-  "### §11.4.122 —" "### §11.4.123 —" "### §11.4.124 —" "### §11.4.125 —" "### §11.4.126 —"
-  "### §11.4.127 —" "### §11.4.128 —" "### §11.4.129 —" "### §11.4.130 —" "### §11.4.131 —"
-  "### §11.4.132 —" "### §11.4.133 —" "### §11.4.134 —"
-  # §11.4.135..§11.4.139 — bold inline format (5 new entries)
-  "**§11.4.135 —" "**§11.4.136 —" "**§11.4.137 —" "**§11.4.138 —" "**§11.4.139 —"
-  # §11.4.140 — bare form (inside blockquote; no heading marker) (1 new entry)
-  "§11.4.140 —"
-  # §11.4.141 — bold inline format (1 new entry)
-  "**§11.4.141 —"
-  # §11.4.142..§11.4.165 — bold inline format (24 entries; ceiling 165 — §11.4.166 REPEALED 2026-06-22, anchor retired)
-  "**§11.4.142 —" "**§11.4.143 —" "**§11.4.144 —" "**§11.4.145 —" "**§11.4.146 —"
-  "**§11.4.147 —" "**§11.4.148 —" "**§11.4.149 —" "**§11.4.150 —" "**§11.4.151 —"
-  "**§11.4.152 —" "**§11.4.153 —" "**§11.4.154 —" "**§11.4.155 —" "**§11.4.156 —"
-  "**§11.4.157 —" "**§11.4.158 —" "**§11.4.159 —" "**§11.4.160 —" "**§11.4.161 —"
-  "**§11.4.162 —" "**§11.4.163 —" "**§11.4.164 —" "**§11.4.165 —"
+# ---------------------------------------------------------------------------
+# Covenant-114 propagation anchors — DERIVED DYNAMICALLY from the canonical
+# constitution (§11.4.32 / CONST-055 / §11.4.157 five-carrier lockstep).
+#
+# WHY DYNAMIC (2026-07-27 — forensic FACT, captured):
+#   This list used to be HARDCODED and topped out at §11.4.165/§11.4.166.
+#   The canonical constitution had meanwhile advanced to §11.4.234, so 46
+#   genuinely-missing anchors were STRUCTURALLY UNDETECTABLE: the verifier
+#   reported "277 checks / 0 failures / PASS" while every consumer carrier
+#   lagged the canon by a contiguous block of 42 anchors (§11.4.193..§11.4.234)
+#   plus 6 older stragglers (§11.4.18/.22/.39/.63/.64/.100). A hardcoded
+#   ceiling re-creates exactly that blind spot on every future canonical
+#   addition — so the anchor set is now DISCOVERED AT RUN TIME from the canon
+#   and there is no ceiling left to out-grow.
+#
+# DISCOVERY SOURCE: constitution/Constitution.md — every line that OPENS an
+# anchor block. The canon renders openers in four equivalent shapes:
+#     "### §11.4.N — …"   "## §11.4.N — …"   "**§11.4.N — …"   "§11.4.N — …"
+# all matched by ANCHOR_OPENER_RE below (line-anchored + em-dash guarded, so a
+# mid-prose cross-reference such as "composes §11.4.107 / §11.4.112" is NOT
+# mistaken for a definition).
+#
+# TWO TIERS — NEITHER WEAKER THAN THE CHECK THIS REPLACES:
+#   TIER-TOKEN  : every canonical anchor's literal token (e.g. `11.4.193`) MUST
+#                 appear in every consumer carrier. This is precisely what the
+#                 anchors themselves specify — "Propagation gate
+#                 CM-COVENANT-114-NNN-PROPAGATION (literal `11.4.NNN` across the
+#                 consumer fleet)". Digit-boundary guarded so `11.4.19` can
+#                 never be satisfied by a hit inside `11.4.190`.
+#   TIER-OPENER : every canonical anchor at or above COVENANT114_BLOCK_FLOOR
+#                 MUST **additionally** appear as a genuine BLOCK OPENER, so a
+#                 passing cross-reference buried in another anchor's prose
+#                 cannot masquerade as propagation. This tier is STRICTLY
+#                 STRONGER than the previous implementation, which used an
+#                 unanchored fixed-string substring match (`grep -F`) that would
+#                 have accepted the literal anywhere on any line.
+#
+# COVENANT114_BLOCK_FLOOR is a FLOOR, NEVER a ceiling. Anchors below it are the
+# parent covenant's internal sub-clauses (§11.4.1..§11.4.67); they are inherited
+# BY REFERENCE per CONST-059 / CONST-051(B) and have never been cascaded to
+# consumers as standalone blocks — demanding block form for them would be
+# over-reach, not rigour. Critically, a FLOOR cannot hide a newly-added
+# canonical anchor the way the old CEILING did: every future anchor is numbered
+# above it and is therefore enforced automatically, with no edit to this script.
+COVENANT114_BLOCK_FLOOR=68
+CANON_FILE="$ROOT/constitution/Constitution.md"
+ANCHOR_OPENER_RE='^[[:space:]]*(>[[:space:]]*)?(#{1,6}[[:space:]]*)?(\*\*)?§11\.4\.[0-9]+[[:space:]]*(\*\*)?[[:space:]]*—'
+
+if [ ! -f "$CANON_FILE" ]; then
+  echo "FAIL: canonical constitution not found at $CANON_FILE — anchor discovery impossible"
+  echo "=== Result: 1 failures ==="
+  echo "FAIL"
+  exit 1
+fi
+
+# Numeric, de-duplicated, ascending list of every anchor the canon DEFINES.
+mapfile -t COVENANT114_ANCHOR_NUMS < <(
+  grep -oE "$ANCHOR_OPENER_RE" "$CANON_FILE" \
+    | grep -oE '§11\.4\.[0-9]+' | sed 's/§11\.4\.//' | sort -n -u
 )
 
-# Map "## §11.4.NN —" -> CM-COVENANT-114-NN-PROPAGATION (exact gate ID in FAILs).
-covenant114_gate_id() {
-  local lit="$1" nn
-  nn="${lit##* §11.4.}"; nn="${nn%% —}"
-  printf 'CM-COVENANT-114-%s-PROPAGATION' "$nn"
-}
+# Fail-closed (§11.4 anti-bluff): a discovery that comes back empty or absurdly
+# small means the canon moved or the regex broke. That is a BROKEN VERIFIER and
+# MUST report FAIL — never a vacuous PASS over an empty anchor set.
+if [ "${#COVENANT114_ANCHOR_NUMS[@]}" -lt 100 ]; then
+  echo "FAIL: anchor discovery returned only ${#COVENANT114_ANCHOR_NUMS[@]} anchors from $CANON_FILE (expected >= 100)"
+  echo "      Discovery is broken — refusing to report PASS over an unverified anchor set."
+  echo "=== Result: 1 failures ==="
+  echo "FAIL"
+  exit 1
+fi
+
+COVENANT114_TOTAL="${#COVENANT114_ANCHOR_NUMS[@]}"
+COVENANT114_MAX="${COVENANT114_ANCHOR_NUMS[$((COVENANT114_TOTAL-1))]}"
 
 # Append every MISSING covenant-114 anchor for one file to $missing_anchors.
 check_covenant114_anchors() {
-  local f="$1" lit gid
-  for lit in "${COVENANT114_ANCHORS[@]}"; do
-    if ! grep -qF -- "$lit" "$f" 2>/dev/null; then
-      gid="$(covenant114_gate_id "$lit")"
-      missing_anchors+=" ${gid}(${lit% —})"
+  local f="$1" n
+  for n in "${COVENANT114_ANCHOR_NUMS[@]}"; do
+    # TIER-TOKEN — literal anchor token, digit-boundary guarded.
+    if ! grep -qE "11\.4\.${n}([^0-9]|\$)" "$f" 2>/dev/null; then
+      missing_anchors+=" CM-COVENANT-114-${n}-PROPAGATION(token 11.4.${n})"
+      continue
+    fi
+    # TIER-OPENER — genuine block opener required at/above the floor.
+    if [ "$n" -ge "$COVENANT114_BLOCK_FLOOR" ] &&
+       ! grep -qE "^[[:space:]]*(>[[:space:]]*)?(#{1,6}[[:space:]]*)?(\*\*)?§11\.4\.${n}[[:space:]]*(\*\*)?[[:space:]]*—" "$f" 2>/dev/null; then
+      missing_anchors+=" CM-COVENANT-114-${n}-PROPAGATION(opener §11.4.${n} —)"
     fi
   done
 }
@@ -97,7 +129,9 @@ done
 # 1b. Root govfiles — covenant-114 propagation (§11.4.69, §11.4.75..97).
 #     All 5 consumer-extension govfiles must carry every cascaded anchor.
 echo ""
-echo "--- Root govfiles — covenant-114 propagation (§11.4.69, §11.4.75..§11.4.165) ---"
+echo "--- Root govfiles — covenant-114 propagation (dynamically discovered from canon) ---"
+echo "    canon: $CANON_FILE"
+echo "    discovered $COVENANT114_TOTAL anchors, highest §11.4.$COVENANT114_MAX; block-opener floor §11.4.$COVENANT114_BLOCK_FLOOR"
 for f in CLAUDE.md AGENTS.md QWEN.md GEMINI.md CRUSH.md CONSTITUTION.md; do
   if [ ! -f "$ROOT/$f" ]; then
     echo "FAIL: root/$f — file missing (covenant-114 scope)"; FAILURES=$((FAILURES+1))
@@ -106,7 +140,7 @@ for f in CLAUDE.md AGENTS.md QWEN.md GEMINI.md CRUSH.md CONSTITUTION.md; do
   missing_anchors=""
   check_covenant114_anchors "$ROOT/$f"
   if [ -z "$missing_anchors" ]; then
-    echo "PASS: root/$f (all 67 covenant-114 anchors present)"
+    echo "PASS: root/$f (all $COVENANT114_TOTAL covenant-114 anchors present, up to §11.4.$COVENANT114_MAX)"
   else
     echo "FAIL: root/$f — missing:$missing_anchors"; FAILURES=$((FAILURES+1))
   fi

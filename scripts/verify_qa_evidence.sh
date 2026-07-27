@@ -50,9 +50,37 @@
 #   handled by the [no-qa-evidence] opt-out in enforcing mode.
 #
 # Match rule (does a commit carry its evidence?):
-#   A feature commit is satisfied when its subject references the basename
-#   of an existing docs/qa/<run-id>/ directory (e.g. subject mentions
-#   "HXC-019" and docs/qa/HXC-019/ exists).
+#   RULE 1 — EXACT (primary, §11.4.120 reconciliation 2026-07-27):
+#     The commit ITSELF added/changed a path under docs/qa/, and that
+#     evidence entry still exists on disk. A commit that commits its own
+#     evidence path IS the proof — unfakeable, derived from the commit's
+#     own tree via `git diff-tree --no-commit-id --name-only -r <sha>`.
+#     BOTH §11.4.83 evidence shapes are recognised:
+#       * run-id directory : docs/qa/<run-id>/<file>
+#       * flat transcript  : docs/qa/<name>.md
+#     docs/qa/README.md is the CONVENTION document, not evidence — excluded.
+#
+#   RULE 2 — LEGACY subject-substring heuristic (fallback, retained):
+#     The commit subject contains the basename of an existing
+#     docs/qa/<run-id>/ directory (e.g. subject mentions "HXC-019" and
+#     docs/qa/HXC-019/ exists).
+#
+#   Why RULE 1 exists (the false-positive this reconciles):
+#     RULE 2 alone required the COMMIT SUBJECT to contain the evidence
+#     directory's basename. Run-ids are timestamped slugs — e.g.
+#     hxc135_20260712T130921Z — that no commit subject would ever contain,
+#     so a commit that DID ship its evidence was still reported VIOL.
+#     RULE 2 also only ever enumerated DIRECTORIES (`for d in "$QA_DIR"/*/`),
+#     so evidence committed as a flat docs/qa/*.md transcript was invisible.
+#     Six such commits were false-positives before this reconciliation
+#     (4 timestamped-run-id, 2 flat-file). RULE 2 is kept ONLY so that no
+#     previously-passing commit regresses; it is a GUESS (it can match by
+#     pure coincidence) and is labelled as such in the report output, so a
+#     reader can tell proof from guess at a glance.
+#
+#   RULE 1 is strictly ADDITIVE — it can only clear commits that genuinely
+#   committed evidence. A feature commit that adds NO docs/qa/ path and
+#   whose subject names no existing run-id is still a VIOLATION.
 #
 # Usage:
 #   scripts/verify_qa_evidence.sh [N]
@@ -179,6 +207,12 @@ if [ "$MODE_ENFORCE" -eq 1 ]; then
 fi
 
 # --------- Build the set of existing run-id directories ---------
+# Feeds the LEGACY subject-substring fallback (match RULE 2) ONLY. The
+# EXACT rule (RULE 1) needs no inventory — it reads the commit's own tree.
+# Deliberately NOT extended with flat docs/qa/*.md basenames: adding those
+# here would create a NEW guess-path (a subject merely mentioning
+# "RETRO_LEDGER" would pass). Flat-file evidence is handled exactly, by
+# RULE 1, from the commit's own diff.
 existing_runids=""
 if [ -d "$QA_DIR" ]; then
 	for d in "$QA_DIR"/*/; do
@@ -187,6 +221,34 @@ if [ -d "$QA_DIR" ]; then
 		existing_runids="${existing_runids} ${rid}"
 	done
 fi
+
+# qa_evidence_added_by_commit <sha>
+#   RULE 1 (EXACT, unfakeable). Prints the docs/qa/ evidence entry that
+#   this commit ITSELF added/changed, or nothing.
+#   - Reads the commit's own tree (`git diff-tree`), never its subject text.
+#   - Handles both evidence shapes: a run-id directory (docs/qa/<run-id>/…)
+#     collapses to <run-id>; a flat transcript (docs/qa/<name>.md) collapses
+#     to <name>.md.
+#   - Requires the entry to STILL EXIST on disk, so evidence that was
+#     committed and later deleted does not keep passing the gate. Collapsing
+#     to the top-level entry (not the full path) tolerates renames INSIDE a
+#     run-id directory while still catching wholesale deletion.
+#   - docs/qa/README.md is the convention doc, not evidence — excluded.
+qa_evidence_added_by_commit() {
+	git diff-tree --no-commit-id --name-only -r "$1" 2>/dev/null \
+		| grep '^docs/qa/' \
+		| grep -v '^docs/qa/README\.md$' \
+		| while IFS= read -r qa_path; do
+			entry="${qa_path#docs/qa/}"   # <run-id>/<file…>  or  <name>.md
+			entry="${entry%%/*}"          # -> <run-id>        or  <name>.md
+			[ -n "$entry" ] || continue
+			if [ -e "$QA_DIR/$entry" ]; then
+				echo "$entry"
+				break
+			fi
+		done \
+		| head -1
+}
 
 # --------- Determine the commit window ---------
 # Advisory  : last N commits (default 20) reachable from HEAD.
@@ -261,25 +323,33 @@ for sha in $commits; do
 
 	feature_commit_count=$((feature_commit_count + 1))
 
-	# Does the commit subject reference a known run-id directory?
-	matched=""
-	for rid in $existing_runids; do
-		case "$subject" in
-			*"$rid"*) matched="$rid"; break ;;
-		esac
-	done
+	# RULE 1 (EXACT): did the commit add its own docs/qa/ evidence path?
+	matched="$(qa_evidence_added_by_commit "$sha")"
+	match_kind="added by this commit (exact)"
+
+	# RULE 2 (LEGACY heuristic): does the subject name an existing run-id
+	# directory? Only consulted when RULE 1 found nothing. This is a GUESS,
+	# not proof — reported as such so it is never mistaken for evidence.
+	if [ -z "$matched" ]; then
+		match_kind="named in commit subject (legacy heuristic — not proof)"
+		for rid in $existing_runids; do
+			case "$subject" in
+				*"$rid"*) matched="$rid"; break ;;
+			esac
+		done
+	fi
 
 	if [ -n "$matched" ]; then
 		echo "  ok     ${short}  ${subject}"
-		echo "         -> docs/qa/${matched}/ present"
+		echo "         -> docs/qa/${matched} present (${match_kind})"
 	else
 		violation_count=$((violation_count + 1))
 		if [ "$MODE_ENFORCE" -eq 1 ]; then
 			echo "  VIOL   ${short}  ${subject}" >&2
-			echo "         -> no matching docs/qa/<run-id>/ directory found" >&2
+			echo "         -> commit adds no docs/qa/ evidence path, and its subject names no existing run-id" >&2
 		else
 			echo "  WARN   ${short}  ${subject}"
-			echo "         -> no matching docs/qa/<run-id>/ directory found"
+			echo "         -> commit adds no docs/qa/ evidence path, and its subject names no existing run-id"
 		fi
 	fi
 done

@@ -338,6 +338,24 @@ coverage-full: test-infra-up
 verify-compile:
 	@echo "🔍 Verifying code compilation (nogui — no X11 system libs required)..."
 	@$(GO) build -tags=nogui ./... && echo "✅ All packages compile successfully"
+	@$(MAKE) --no-print-directory verify-compile-tests
+
+# Companion guard for verify-compile: `go build` NEVER compiles _test.go files,
+# so the target above cannot see a test file that fails to build under
+# -tags=nogui. That class is real: applications/{desktop,aurora_os,harmony_os}
+# carry GUI-only tests exercising symbols declared in !nogui-tagged sources, so
+# any such test file missing its `//go:build !nogui` constraint breaks every
+# nogui-tagged invocation (verify-compile's own `./...`, test-integration-tag,
+# desktop-nogui, …) while `go build` stays green.
+#
+# `-run='^$$'` compiles every test binary in the module and runs zero tests, so
+# this is a compile gate (seconds), not a test run. Build failures go to stderr
+# and are surfaced; the per-package "ok … [no tests to run]" chatter is dropped.
+.PHONY: verify-compile-tests
+verify-compile-tests: ## Compile-check ALL test code under -tags=nogui (go build skips _test.go)
+	@echo "🔍 Verifying TEST code compiles under -tags=nogui (go build never sees _test.go)..."
+	@$(GO) test -tags=nogui -run='^$$' -count=1 ./... >/dev/null && \
+		echo "✅ All test packages compile under -tags=nogui"
 
 # Clean build artifacts
 clean:

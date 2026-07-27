@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"errors"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,6 +29,36 @@ import (
 
 	ctrruntime "digital.vasic.containers/pkg/runtime"
 )
+
+// closedLoopbackPort binds an ephemeral loopback port, records it, and closes
+// the listener — yielding a port the kernel just confirmed was bindable and
+// which now has nothing listening on it.
+//
+// Why this exists (§11.4.50 determinism): the unhealthy-path test previously
+// relied on the default SonarQube port (9000) being unoccupied. That made the
+// verdict depend on ambient host state — it passed on a machine with no
+// SonarQube and FAILED the moment the platform was actually running, which is
+// exactly backwards for a test asserting the unhealthy branch. Pointing the
+// health check at a port we have just proven closed makes the branch
+// deterministic on any host, running platform or not, while keeping the real
+// TCP round trip this suite is built around.
+func closedLoopbackPort(t *testing.T) string {
+	t.Helper()
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("could not bind an ephemeral loopback port: %v", err)
+	}
+	_, port, err := net.SplitHostPort(ln.Addr().String())
+	if err != nil {
+		ln.Close()
+		t.Fatalf("could not parse ephemeral listener address %q: %v", ln.Addr(), err)
+	}
+	if err := ln.Close(); err != nil {
+		t.Fatalf("could not close ephemeral listener on port %s: %v", port, err)
+	}
+	return port
+}
 
 // ---------------------------------------------------------------------------
 // resolveProjectDir
@@ -215,15 +246,24 @@ func TestHelperProcess_SonarQubeStatusUnhealthy(t *testing.T) {
 }
 
 func TestHandleSonarQube_StatusAction_Unhealthy_ExitsWithCode1(t *testing.T) {
+	deadPort := closedLoopbackPort(t)
+
 	cmd := exec.Command(os.Args[0], "-test.run=^TestHelperProcess_SonarQubeStatusUnhealthy$", "-test.v=true")
-	cmd.Env = append(os.Environ(), helperProcessEnvVar+"=sonarqube_status_unhealthy")
+	cmd.Env = append(os.Environ(),
+		helperProcessEnvVar+"=sonarqube_status_unhealthy",
+		// Point the health check at a port we just proved is closed, so the
+		// unhealthy branch is exercised regardless of whether a real
+		// SonarQube is running on this host.
+		envSonarqubeHost+"=127.0.0.1",
+		envSonarqubePort+"="+deadPort,
+	)
 
 	out, runErr := cmd.CombinedOutput()
 
 	var exitErr *exec.ExitError
 	if !errors.As(runErr, &exitErr) {
-		t.Fatalf("expected helper subprocess to exit non-zero (unhealthy SonarQube on loopback:9000); "+
-			"got err=%v output=%s", runErr, out)
+		t.Fatalf("expected helper subprocess to exit non-zero (unhealthy SonarQube on closed port 127.0.0.1:%s); "+
+			"got err=%v output=%s", deadPort, runErr, out)
 	}
 	if exitErr.ExitCode() != 1 {
 		t.Fatalf("expected exit code 1 (handleSonarQube status/unhealthy path), got %d; output=%s",

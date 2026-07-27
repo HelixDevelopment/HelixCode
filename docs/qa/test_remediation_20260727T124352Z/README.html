@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README</h1>
+</header>
+<h1 id="qa-evidence-test-suite-remediation-run">QA Evidence — Test-Suite
+Remediation Run</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-07-27</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-07-27</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Run ID</td>
+<td><code>test_remediation_20260727T124352Z</code></td>
+</tr>
+<tr>
+<td>Base HEAD</td>
+<td><code>66d6fb29</code> (meta-repo, branch <code>main</code>)</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>helix_code inner module · submodules/helix_agent ·
+submodules/helix_qa</td>
+</tr>
+<tr>
+<td>Evidence class</td>
+<td>§11.4.83 end-user QA transcript; §11.4.5 / §11.4.69 captured runtime
+evidence</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#purpose">Purpose</a></li>
+<li><a href="#method">Method</a></li>
+<li><a href="#closures-with-captured-evidence">Closures with captured
+evidence</a></li>
+<li><a href="#production-defects-found">Production defects
+found</a></li>
+<li><a href="#systemic-pattern-host-state-dependent-tests">Systemic
+pattern: host-state-dependent tests</a></li>
+<li><a href="#paired-mutations">Paired mutations</a></li>
+<li><a href="#open-findings-not-closed-in-this-run">Open findings not
+closed in this run</a></li>
+<li><a href="#honest-coverage-boundary">Honest coverage
+boundary</a></li>
+</ul>
+<h2 id="purpose">Purpose</h2>
+<p>Remediate the failing-package set blocking a
+<code>helix-code-1.2.0-dev-0.0.1</code> tag, under the §11.4 anti-bluff
+covenant: every closure carries pasted runtime output from a real run,
+and every gate touched carries a paired §1.1 mutation proving it still
+bites.</p>
+<h2 id="method">Method</h2>
+<p>The inherited failure list
+(<code>qa-results/full_retest/*_20260727T115828Z.log</code>) was
+<strong>re-derived rather than trusted</strong> — it predated HEAD
+<code>66d6fb29</code>. Re-deriving mattered: two entries were already
+green, one package (<code>internal/verifier</code>) had newly regressed,
+and <code>internal/search</code> had recovered. The set churns; it is
+not a countdown.</p>
+<p>Work ran as one main stream plus parallel subagent streams on
+disjoint file scopes (§11.4.58 / §11.4.103), each stream forbidden from
+weakening assertions, adding <code>t.Skip()</code>, or stubbing
+behaviour to force green.</p>
+<h2 id="closures-with-captured-evidence">Closures with captured
+evidence</h2>
+<blockquote>
+<p><strong>Render note (§11.4.168):</strong> the closures below are a
+list, not a table. A table form of this same content was rendered twice
+— at four columns and at three — and the exported PDF silently dropped
+the rightmost <em>Captured proof</em> column both times, while the
+exporter reported <code>rendered=2 failed=0</code>. See <a href="#open-findings-not-closed-in-this-run">Open findings</a> item
+8.</p>
+</blockquote>
+<dl>
+<dt><strong><code>applications/desktop</code> + <code>aurora_os</code> +
+<code>harmony_os</code></strong> (3 pkgs)</dt>
+<dd>
+<em>Root cause</em> — 5 test files referenced GUI-only symbols
+(<code>parseHexColor</code>, <code>CustomTheme</code>,
+<code>NewThemeManager</code>, <code>NewDesktopApp</code>,
+<code>NewAuroraApp</code>, <code>NewHarmonyApp</code>) declared in
+<code>!nogui</code>-tagged sources, but carried no build constraint
+themselves, so they were compiled under <code>-tags=nogui</code> where
+those symbols do not exist.
+</dd>
+<dd>
+<em>Proof</em> — <code>go test -tags=nogui ./applications/...</code>
+exits 0, all 10 pkgs <code>ok</code>.
+</dd>
+<dt><strong><code>cmd/security_scan</code></strong></dt>
+<dd>
+<em>Root cause</em> — the unhealthy-path test asserted “unhealthy
+implies exit 1” while assuming nothing listens on :9000. SonarQube
+<strong>is</strong> running, so the health check succeeded and the
+assertion inverted.
+</dd>
+<dd>
+<em>Proof</em> — passes at <code>-count=5</code>; paired mutation FAILs
+correctly.
+</dd>
+<dt><strong><code>tests/compliance</code></strong></dt>
+<dd>
+<em>Root cause</em> — <code>getRoot()</code> returned the
+<em>submodule’s</em> root; the 20 extracted modules live at the
+<em>consuming project</em> root (CONST-051(C)) in snake_case
+(CONST-052), not CamelCase.
+</dd>
+<dd>
+<em>Proof</em> — <code>Found 20/20 extracted modules</code>, previously
+<code>0/20</code>.
+</dd>
+<dt><strong><code>internal/tools/gittools</code></strong></dt>
+<dd>
+<em>Root cause</em> — <code>git init</code> inherits the host’s
+<code>init.defaultBranch</code> (unset yields <code>master</code>) while
+assertions hardcode <code>main</code>.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 0.075s</code>, stable at
+<code>-count=3</code>.
+</dd>
+<dt><strong><code>internal/adapters/containers</code></strong></dt>
+<dd>
+<em>Root cause</em> — compose build contexts off by one directory since
+the grouped <code>submodules/helix_agent</code> layout move.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 0.700s</code>, including <code>-race</code>.
+</dd>
+<dt><strong><code>internal/mcp/servers</code></strong></dt>
+<dd>
+<em>Root cause</em> — same <code>init.defaultBranch</code> class,
+independent fixture.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 0.241s</code>, including <code>-race</code>.
+</dd>
+<dt><strong><code>internal/handlers</code></strong></dt>
+<dd>
+<em>Root cause</em> — <code>/v1/debates</code> is deliberately
+JWT-protected; tests sent no <code>Authorization</code> header after
+commit <code>186f3c9c</code> repointed them at the live server.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 2.315s</code>, 9 consecutive green runs.
+</dd>
+<dt><strong><code>internal/clis/agents/master</code></strong></dt>
+<dd>
+<em>Root cause</em> — <code>ListAvailable()</code> returned
+<code>nil</code> rather than an empty slice.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 0.092s</code>.
+</dd>
+<dt><strong><code>internal/ensemble/multi_instance</code></strong></dt>
+<dd>
+<em>Root cause</em> — <code>CreateSession</code> gates on a real
+<code>exec.LookPath</code>; neither <code>aider</code> nor
+<code>claude</code> is installed here.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 0.009s</code>.
+</dd>
+<dt><strong><code>helix_qa pkg/vision</code></strong></dt>
+<dd>
+<em>Root cause</em> — Ollama reachable but zero models pulled;
+<code>GetAvailableModels</code> correctly returned an empty list while
+the test asserted non-empty, a property of the host rather than the
+code.
+</dd>
+<dd>
+<em>Proof</em> — <code>ok 0.529s</code> plus 16 sibling packages.
+</dd>
+<dt><strong><code>internal/testing/acp</code> + <code>embeddings</code>
++ <code>vision</code> + <code>integration</code></strong> (4 pkgs)</dt>
+<dd>
+<em>Root cause</em> — port-registry collision; tests probed
+<code>:8100</code>, now owned by LLMsVerifier, which 404s HelixAgent
+routes.
+</dd>
+<dd>
+<em>Proof</em> — all four <code>ok</code>, 3 consecutive
+<code>-count=1</code> runs identical.
+</dd>
+</dl>
+<h2 id="production-defects-found">Production defects found</h2>
+<p>Two defects would have shipped broken — neither was a test
+artifact:</p>
+<ol type="1">
+<li><p><strong><code>internal/clis/agents/master</code></strong> —
+<code>ListAvailable()</code> passed the registry’s
+<code>var infos []AgentInfo</code> straight through. With no CLI agents
+installed it returned <code>nil</code>, serialising as JSON
+<code>null</code> instead of <code>[]</code>. Fixed by nil→empty
+normalisation.</p></li>
+<li><p><strong><code>docker/mcp/docker-compose.mcp-servers.yml</code></strong>
+— build contexts resolved to
+<code>&lt;meta-repo&gt;/submodules/mcp_servers</code>, which does not
+exist; the submodule is at <code>&lt;meta-repo&gt;/mcp_servers</code>.
+Commit <code>e19da5fd</code> computed “3 levels up”, correct when
+helix_agent sat at <code>&lt;meta-repo&gt;/helix_agent</code>, stale
+after the grouped-layout move. <strong>All 7 core MCP services would
+fail <code>compose build</code>.</strong></p></li>
+</ol>
+<h2 id="systemic-pattern-host-state-dependent-tests">Systemic pattern:
+host-state-dependent tests</h2>
+<p>Six of sixteen failures were one class: <strong>the test’s verdict
+depended on ambient host state rather than on the code under
+test</strong> (§11.4.50).</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Host property silently required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cmd/security_scan</code></td>
+<td>SonarQube <strong>not</strong> running on :9000</td>
+</tr>
+<tr>
+<td><code>internal/tools/gittools</code></td>
+<td><code>init.defaultBranch == main</code></td>
+</tr>
+<tr>
+<td><code>internal/mcp/servers</code></td>
+<td><code>init.defaultBranch == main</code></td>
+</tr>
+<tr>
+<td><code>internal/ensemble/multi_instance</code></td>
+<td><code>aider</code> + <code>claude</code> on <code>PATH</code></td>
+</tr>
+<tr>
+<td><code>helix_qa pkg/vision</code></td>
+<td>≥1 Ollama model pulled</td>
+</tr>
+<tr>
+<td><code>internal/testing/*</code></td>
+<td>HelixAgent owning port 8100</td>
+</tr>
+</tbody>
+</table>
+<p>Each passed on the machine that authored it and failed here.
+<strong>Bringing the platform live is what exposed them</strong> — the
+suite had been green partly because the infrastructure was down.</p>
+<p>A related bluff was found in the shared harness:
+<code>testutil.checkHTTP</code> treats <strong>any status &lt; 500 as
+“available”</strong>, so its availability guard green-lit a
+404-answering neighbouring service instead of skipping. The four testing
+packages now verify service <strong>identity</strong>, not mere
+reachability. The <code>checkHTTP</code> weakness itself remains open
+(see below).</p>
+<p>One test <strong>could never have passed</strong>:
+<code>ListProviders</code> filtered on
+<code>p.Status == &quot;available&quot;</code>, but <code>/v1/providers</code> has
+never emitted a <code>status</code> field (git pickaxe: zero hits) — the
+filter discarded every provider unconditionally.</p>
+<h2 id="paired-mutations">Paired mutations</h2>
+<p>Every gate touched was mutation-verified (§1.1) — mutate → assert
+FAIL → restore → assert PASS → residue-scan clean.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Mutation</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cmd/security_scan</code> unhealthy path</td>
+<td><code>os.Exit(1)</code> → <code>os.Exit(0)</code></td>
+<td>FAIL, showing the real round trip:
+<code>dial tcp 127.0.0.1:39695: connect: connection refused</code></td>
+</tr>
+<tr>
+<td><code>tests/compliance</code> count</td>
+<td><code>HELIX_PROJECT_ROOT</code> → empty dir</td>
+<td><code>Found 0/20</code> → FAIL</td>
+</tr>
+<tr>
+<td><code>adapters/containers</code> build context</td>
+<td>restored the broken 3-up path</td>
+<td>FAIL: <code>not a directory on disk</code></td>
+</tr>
+<tr>
+<td><code>ensemble/multi_instance</code></td>
+<td>disabled binary injection</td>
+<td>FAIL: <code>agent type aider is not available</code></td>
+</tr>
+<tr>
+<td><code>pkg/vision</code></td>
+<td>dropped last model during mapping</td>
+<td>FAIL on exact ordered list</td>
+</tr>
+<tr>
+<td><code>internal/testing/*</code></td>
+<td>pointed at impostor <code>:8100</code></td>
+<td>still PASS — identity check rejects and falls through</td>
+</tr>
+<tr>
+<td><code>master.ListAvailable</code></td>
+<td>reverted nil→empty normalisation</td>
+<td>FAIL: <code>Expected value not to be nil</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="open-findings-not-closed-in-this-run">Open findings not closed
+in this run</h2>
+<p>Stated explicitly rather than left implied (§11.4.6):</p>
+<ol type="1">
+<li><p><strong>Port-registry collision</strong> —
+<code>internal/ports</code> + registry doc assign 8100 to HelixAgent;
+<code>configs/development.yaml</code> still says 7061; LLMsVerifier now
+occupies 8100 (<code>d3e2c6e7</code>). Needs an owner decision;
+live-service blast radius.</p></li>
+<li><p><strong><code>testutil.checkHTTP</code>
+<code>&lt; 500 == available</code></strong> — affects every package
+using the shared harness, not only the four repaired here.</p></li>
+<li><p><strong>Tracked files rewritten by tests</strong> (CONST-053) —
+<code>reports/latency/p99-baseline-2026-03-16.txt</code> and
+<code>releases/.version-data/helixagent.last-hash</code> are regenerated
+on every run. A “baseline” that moves each run can never detect a
+regression.</p></li>
+<li><p><strong><code>/v1/auth/register</code> broken on the live
+server</strong> —
+<code>column &quot;username&quot; does not exist (SQLSTATE 42703)</code>; a real
+schema defect.</p></li>
+<li><p><strong>No working LLM providers on this host</strong> — every
+debate fails <code>insufficient agents (have 0, need 3)</code>,
+<code>circuit breaker is open</code>. HTTP contracts pass; end-to-end
+debate execution is genuinely non-functional here.</p></li>
+<li><p><strong>42 constitutional anchors (§11.4.193–§11.4.234) never
+cascaded</strong>; the cascade verifier’s ceiling is §11.4.166, so it
+cannot fail on them.</p></li>
+<li><p><strong>§11.4.164 post-update hook never wired</strong> — no
+<code>last_update.log</code>; this is the mechanism whose absence
+allowed the drift above.</p></li>
+<li><p><strong>PDF export silently drops the rightmost column of WIDE
+tables</strong> (§11.4.168). Discovered while validating this very
+document. <code>pandoc</code> → <code>weasyprint</code> overflows A4 and
+clips, while <code>scripts/testing/sync_all_markdown_exports.sh</code>
+reports <code>rendered=2 failed=0</code>. Measured on this doc’s own
+earlier revisions. The trigger is total rendered WIDTH, not column
+count: the closures table lost its rightmost column at BOTH four and
+three columns, while the three-column mutations table (shorter cells)
+survives. An initial column-count hypothesis was falsified by re-testing
+after the narrowing changed nothing.</p>
+<p>Verified as genuine loss, not an extraction artifact: the strings are
+present in the HTML, absent from both <code>pdftotext</code> and
+<code>pdftotext -layout</code>, and the PDF is not truncated (all 8
+headings and the closing paragraph render). Affects every governed doc
+in the repo containing a wide table. Worked around here by narrowing the
+tables to three columns; the exporter itself is unfixed.</p></li>
+<li><p><strong><code>.docs_chain/contexts/{issues,fixed}.yaml</code>
+declare the legacy summary generators as live transforms</strong>
+deriving from Markdown rather than the DB. Inert today only because the
+docs_chain engine is absent (G14 SKIPs). If it ever runs, it would
+reproduce exactly the corruption the reconciled G12 gate now
+blocks.</p></li>
+</ol>
+<h2 id="honest-coverage-boundary">Honest coverage boundary</h2>
+<p>This run repaired sixteen packages and captured the evidence above.
+It does <strong>not</strong> establish that the full suite is green: a
+full-suite sweep was deliberately deferred because parallel test streams
+were saturating the host (~4,288 TIME_WAIT sockets, with one observed
+ephemeral-port <code>bind: address already in use</code>), and evidence
+gathered under that contention would be cross-contaminated
+(§11.4.119).</p>
+<p>No release tag was cut. The claim earned by this run is precisely:
+<em>these sixteen packages pass, for these reasons, with this
+evidence</em> — not “the suite is green.”</p>
+</body>
+</html>

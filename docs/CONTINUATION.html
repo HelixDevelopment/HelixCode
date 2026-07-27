@@ -1,5 +1,56 @@
-<h1
-id="helixcode-cli-agent-fusion-programme-continuation-guide">HelixCode
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONTINUATION</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONTINUATION</h1>
+</header>
+<h1 id="helixcode-cli-agent-fusion-programme-continuation-guide">HelixCode
 CLI-Agent Fusion — Programme Continuation Guide</h1>
 <table>
 <colgroup>
@@ -15,7 +66,7 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>15</td>
+<td>16</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -23,7 +74,7 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-07-12T00:00:00Z</td>
+<td>2026-07-27T18:55:00Z</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -31,14 +82,60 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 </tr>
 <tr>
 <td>Status summary</td>
-<td>2026-07-12 (session claude2 conductor): (A) Multi-track System
-SWITCHED ON (§11.4.187) —
-<code>config/multitrack/the-factory.yaml</code> (4 tracks /mnt/track1-4
-coexisting with atmosphere+helix_ota §11.4.178, conductor=claude2
-§11.4.177, no device pool), bootstrap exit 0, resolver validated, commit
-<code>79e611b5</code>. (B) EVERYTHING MERGED TO MAIN + pushed to ALL
-upstreams (operator directive, §11.4.113 no-force, no lost commits):
-helix_code main=<code>79e611b5</code>; helix_agent
+<td><strong>2026-07-27 evening (session <code>helix-code</code>) —
+PLATFORM STOPPED + systemd-DISABLED; sweep NOT green; tag still
+blocked.</strong> Operator ended the session with an explicit shutdown
+directive. All six user units stopped AND
+<code>systemctl --user disable</code>d (<code>helix.target</code>,
+<code>helixagent</code>, <code>helixcode-server</code>,
+<code>helixcode-infra</code>, <code>helixllm-gateway</code>,
+<code>helixllm-coder</code>, + generated
+<code>helix-{pg,redis}-data-volume</code>), verified
+<code>active=inactive enabled=disabled</code>; ports
+7061/8081/8100/15432/16379/18081/5433/6380/11434/18434/8001 all
+confirmed unbound; this project’s containers stopped. Other projects on
+the shared host deliberately UNTOUCHED per §11.4.174
+(<code>helixterm-*</code>, <code>penpot-*</code>,
+<code>helix_sonarqube*</code>, and <code>atmosphere-aosp-build</code>
+which was RUNNING at shutdown). LANDED: the §11.4.174/§11.4.201
+PORT_CONFLICT ownership fix in <code>tests/precondition/</code> with
+captured RED→GREEN (<code>RED_MODE=1</code> reproduces the legacy blind
+<code>{port,port+10000}</code> probe flagging a foreign listener as our
+duplicate; <code>RED_MODE=0</code> GREEN; 3/3 both polarities) — it
+repaired TWO opposite defects: a fail-closed probe AND a fail-open
+duplicate check that ran <code>docker compose ps --filter name=…</code>
+and therefore never fired. CORRECTIONS: (1) the 1334Z gate log is STALE
+— fresh sweep <code>verify_rules_20260727T184002Z.log</code> shows
+G8/G12/G13 PASS, only G7 fails at 18 (not 24); (2) the three
+<code>internal/discovery</code> “failures” were never code defects —
+they pass on a quiet host (<code>ok … 0.013s</code>), the 1332Z run
+launched the helix_code and helix_agent sweeps 2s apart and
+ephemeral-port saturation produced them (independent confirmation of the
+§11.4.119 contamination already recorded as Correction 1 in RESUME.md).
+NEW ARCHITECTURAL BLOCKER (unresolved, operator decision pending): two
+orchestrators compete for the same containers —
+<code>helixagent.service</code>’s adapter recreates
+<code>helixagent-postgres</code> from <code>docker-compose.yml</code>,
+which has NO <code>ports:</code> section, so 15432 is never published,
+while <code>docker-compose.test.yml</code> does publish it; postgres
+then crash-loops
+(<code>could not bind IPv4 &quot;0.0.0.0&quot;: Address in use</code>, host 5432
+held by the unrelated helixterm stack) and the precondition gate cannot
+pass while the service runs.
+<code>scripts/ensure-infrastructure.sh</code> compounds it by
+health-checking
+<code>${DB_PORT:-15432}</code>/<code>${REDIS_PORT:-16379}</code> while
+booting the default compose — it cannot satisfy its own health check.
+Recommended (evidence-determined, reversible, NOT applied): point the
+infra boot at <code>docker-compose.test.yml</code> for postgres/redis.
+See <code>RESUME.md</code> rev 4 for the full handoff. Prior: 2026-07-12
+(session claude2 conductor): (A) Multi-track System SWITCHED ON
+(§11.4.187) — <code>config/multitrack/the-factory.yaml</code> (4 tracks
+/mnt/track1-4 coexisting with atmosphere+helix_ota §11.4.178,
+conductor=claude2 §11.4.177, no device pool), bootstrap exit 0, resolver
+validated, commit <code>79e611b5</code>. (B) EVERYTHING MERGED TO MAIN +
+pushed to ALL upstreams (operator directive, §11.4.113 no-force, no lost
+commits): helix_code main=<code>79e611b5</code>; helix_agent
 main=<code>82f2fb21</code> (union, clean — markers were edit-block/skill
 content); helix_llm main=<code>a44bd611</code> (ff); llms_verifier
 main=<code>13d9ac50</code> (gofmt-vs-logic conflict on 3 files resolved
@@ -433,15 +530,12 @@ test (<code>llm_default_model_regression_test.go</code>); committed
 reviewed (§11.4.142) + ff-pushed (§11.4.113, no force).</em></p>
 <h2 id="table-of-contents">Table of contents</h2>
 <ul>
-<li><a
-href="#recent-close-outs--condensed-catch-up-close-outs-143-169">Recent
+<li><a href="#recent-close-outs--condensed-catch-up-close-outs-143-169">Recent
 close-outs — condensed catch-up (close-outs 143-169)</a>
 <ul>
-<li><a
-href="#round-by-round-catch-up-table-rounds-130-189">Round-by-round
+<li><a href="#round-by-round-catch-up-table-rounds-130-189">Round-by-round
 catch-up table (rounds 130-189)</a></li>
-<li><a
-href="#aggregate-impact-across-rounds-130-189-60-rounds">Aggregate
+<li><a href="#aggregate-impact-across-rounds-130-189-60-rounds">Aggregate
 impact across rounds 130-189 (~60 rounds)</a></li>
 </ul></li>
 <li><a href="#tldr--resume-in-30-seconds">TL;DR — Resume in 30
@@ -455,8 +549,7 @@ Zero-Bluff Completion</a>
 <ul>
 <li><a href="#phase-2-completed-tasks-all">Phase 2 completed tasks
 (all):</a></li>
-<li><a
-href="#phase-3--feature-gap-implementation-complete--1f1d8f4">Phase 3 —
+<li><a href="#phase-3--feature-gap-implementation-complete--1f1d8f4">Phase 3 —
 Feature Gap Implementation (COMPLETE — <code>1f1d8f4</code>)</a></li>
 <li><a href="#phase-4--testchallenge-hardening-closed--a3f8871">Phase 4
 — Test/Challenge Hardening (CLOSED — <code>a3f8871</code>)</a></li>
@@ -474,8 +567,7 @@ Aider Git Auto-Commit Per Change (CLOSED)</a></li>
 Tool (CLOSED)</a></li>
 <li><a href="#p2-f24--codex-project-memory-closed">P2-F24 — Codex
 Project Memory (CLOSED)</a></li>
-<li><a
-href="#p2-f25--plandex-plan-trees--context-compaction-closed">P2-F25 —
+<li><a href="#p2-f25--plandex-plan-trees--context-compaction-closed">P2-F25 —
 Plandex Plan Trees + Context Compaction (CLOSED)</a></li>
 <li><a href="#p2-f26--openhands-workspace--task-planner-closed">P2-F26 —
 Openhands Workspace + Task Planner (CLOSED)</a></li>
@@ -485,19 +577,16 @@ Voice Input + Repo-Map (CLOSED)</a></li>
 Kilo-code AST-Aware Refactoring (CLOSED)</a></li>
 <li><a href="#p2-f29--roo-code-full-port-closed">P2-F29 — Roo-code Full
 Port (CLOSED)</a></li>
-<li><a
-href="#p2-f30--continue-ide-integration-closed--final-phase-2-feature">P2-F30
+<li><a href="#p2-f30--continue-ide-integration-closed--final-phase-2-feature">P2-F30
 — Continue IDE Integration (CLOSED) — FINAL Phase 2 feature</a></li>
 </ul></li>
-<li><a
-href="#known-issues--bugs--failures-out-of-scope-but-tracked">Known
+<li><a href="#known-issues--bugs--failures-out-of-scope-but-tracked">Known
 issues / bugs / failures (out of scope but tracked)</a>
 <ul>
 <li><a href="#pre-existing-from-before-p15">Pre-existing (from before
 P1.5)</a></li>
 <li><a href="#phase-15-deferred-items">Phase 1.5 deferred items</a></li>
-<li><a
-href="#cli_agents-fetch--upstream-port-cycle-2026-05-13">cli_agents
+<li><a href="#cli_agents-fetch--upstream-port-cycle-2026-05-13">cli_agents
 fetch + upstream-port cycle (2026-05-13)</a></li>
 <li><a href="#containerized-build-path-2026-05-13">Containerized build
 path (2026-05-13)</a></li>
@@ -505,8 +594,7 @@ path (2026-05-13)</a></li>
 (2026-05-13)</a></li>
 <li><a href="#constitutional-debt-open-since-p0">Constitutional debt
 (open since P0)</a></li>
-<li><a
-href="#phase-3-remaining-items-carried-forward-non-blocking-for-phase-4">Phase
+<li><a href="#phase-3-remaining-items-carried-forward-non-blocking-for-phase-4">Phase
 3 remaining items (carried forward, non-blocking for Phase 4)</a></li>
 <li><a href="#const-045--no-hardcoded-distribution-hosts">CONST-045 — No
 Hardcoded Distribution Hosts</a></li>
@@ -524,48 +612,41 @@ conventions to apply (verbatim list)</a></li>
 <li><a href="#maintenance-mandate">Maintenance mandate</a></li>
 <li><a href="#resume-prompt">Resume Prompt</a></li>
 <li><a href="#document-version-log">Document version log</a></li>
-<li><a
-href="#close-out¹³¹--rounds-191-305-catch-up-constitution-cascade--helix_codeinternal-i18n--per-repo-deep-doc--pan-001-fix">close-out¹³¹
+<li><a href="#close-out¹³¹--rounds-191-305-catch-up-constitution-cascade--helix_codeinternal-i18n--per-repo-deep-doc--pan-001-fix">close-out¹³¹
 — rounds 191-305 catch-up (constitution cascade + helix_code/internal
 i18n + per-repo deep-doc + PAN-001 fix)</a>
 <ul>
 <li><a href="#what-happened-thematic-not-per-round">What happened
 (thematic, not per-round)</a></li>
-<li><a
-href="#whats-still-open-rolled-forward-into-the-live-backlog">What’s
+<li><a href="#whats-still-open-rolled-forward-into-the-live-backlog">What’s
 still open (rolled forward into the live backlog)</a></li>
 <li><a href="#next">Next</a></li>
 <li><a href="#posture">Posture</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³²--round-398-speed-programme-launch--constitution-1146870-74-cascade--mirror-reconciliation">close-out¹³²
+<li><a href="#close-out¹³²--round-398-speed-programme-launch--constitution-1146870-74-cascade--mirror-reconciliation">close-out¹³²
 — round 398: Speed Programme launch + constitution §11.4.68/70-74
 cascade + mirror reconciliation</a>
 <ul>
-<li><a
-href="#working-points-filed-into-the-live-backlog-as-issues">Working
+<li><a href="#working-points-filed-into-the-live-backlog-as-issues">Working
 points (filed into the live backlog as Issues)</a></li>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³³--codegraph-incorporation-phase-d-cg14-cg16">close-out¹³³
+<li><a href="#close-out¹³³--codegraph-incorporation-phase-d-cg14-cg16">close-out¹³³
 — CodeGraph incorporation Phase D (CG14-CG16)</a>
 <ul>
 <li><a href="#work-performed">Work performed</a></li>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³⁴--codegraph-incorporation-phase-c-cg10-cg13">close-out¹³⁴
+<li><a href="#close-out¹³⁴--codegraph-incorporation-phase-c-cg10-cg13">close-out¹³⁴
 — CodeGraph incorporation Phase C (CG10-CG13)</a>
 <ul>
 <li><a href="#work-performed">Work performed</a></li>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³⁵--helixcode-speed-programme-complete-p5-t04--all-6-phases--31-tasks-landed">close-out¹³⁵
+<li><a href="#close-out¹³⁵--helixcode-speed-programme-complete-p5-t04--all-6-phases--31-tasks-landed">close-out¹³⁵
 — HelixCode Speed Programme COMPLETE (P5-T04 — all 6 phases / 31 tasks
 landed)</a>
 <ul>
@@ -574,8 +655,7 @@ landed)</a>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³⁶--round-403-hxc-008-governance-gap-fix--hxc-007hxc-009-verified-complete-closure">close-out¹³⁶
+<li><a href="#close-out¹³⁶--round-403-hxc-008-governance-gap-fix--hxc-007hxc-009-verified-complete-closure">close-out¹³⁶
 — round 403: HXC-008 governance-gap fix + HXC-007/HXC-009
 verified-complete closure</a>
 <ul>
@@ -583,8 +663,7 @@ verified-complete closure</a>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³⁷--round-463-hxc-003-closed-implemented--fixedmd--const-046-i18n-migration-campaign-concluded">close-out¹³⁷
+<li><a href="#close-out¹³⁷--round-463-hxc-003-closed-implemented--fixedmd--const-046-i18n-migration-campaign-concluded">close-out¹³⁷
 — round 463: HXC-003 closed <code>Implemented (→ Fixed.md)</code> —
 CONST-046 i18n migration campaign concluded</a>
 <ul>
@@ -592,8 +671,7 @@ CONST-046 i18n migration campaign concluded</a>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³⁸--round-464-hxc-010-closed-completed--fixedmd--kimiqwen-codegraph-end-to-end-verified-with-operator-provided-credentials">close-out¹³⁸
+<li><a href="#close-out¹³⁸--round-464-hxc-010-closed-completed--fixedmd--kimiqwen-codegraph-end-to-end-verified-with-operator-provided-credentials">close-out¹³⁸
 — round 464: HXC-010 closed <code>Completed (→ Fixed.md)</code> —
 Kimi/Qwen CodeGraph end-to-end verified with operator-provided
 credentials</a>
@@ -602,8 +680,7 @@ credentials</a>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹³⁹--round-465-phase-0-of-the-own-org-submodule-syncflattenrebuildtest-programme-governance-baseline">close-out¹³⁹
+<li><a href="#close-out¹³⁹--round-465-phase-0-of-the-own-org-submodule-syncflattenrebuildtest-programme-governance-baseline">close-out¹³⁹
 — round 465: Phase 0 of the own-org submodule sync→flatten→rebuild→test
 programme (governance baseline)</a>
 <ul>
@@ -611,8 +688,7 @@ programme (governance baseline)</a>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹⁴⁰--round-466-phase-1-complete--own-org-submodule-sync-to-latest--install_upstreams--push-to-all-mirrors">close-out¹⁴⁰
+<li><a href="#close-out¹⁴⁰--round-466-phase-1-complete--own-org-submodule-sync-to-latest--install_upstreams--push-to-all-mirrors">close-out¹⁴⁰
 — round 466: Phase 1 complete — own-org submodule sync-to-latest +
 install_upstreams + push-to-all-mirrors</a>
 <ul>
@@ -620,55 +696,43 @@ install_upstreams + push-to-all-mirrors</a>
 <li><a href="#state">State</a></li>
 <li><a href="#next">Next</a></li>
 </ul></li>
-<li><a
-href="#close-out¹⁴¹--round-467-phase-2--flatten-own-org-submodules-to-submodulesleaf-layout--gomod--refs-module-resolution-green">close-out¹⁴¹
+<li><a href="#close-out¹⁴¹--round-467-phase-2--flatten-own-org-submodules-to-submodulesleaf-layout--gomod--refs-module-resolution-green">close-out¹⁴¹
 — round 467: Phase 2 — flatten own-org submodules to
 <code>submodules/&lt;leaf&gt;</code> (layout + go.mod + refs;
 module-resolution GREEN)</a>
 <ul>
-<li><a
-href="#what-landed-subagent-driven-build-verify-before-commit">What
+<li><a href="#what-landed-subagent-driven-build-verify-before-commit">What
 landed (subagent-driven, build-verify-before-commit)</a></li>
 <li><a href="#state">State</a></li>
-<li><a
-href="#next-phases-35--best-run-in-a-fresh-full-context-session-subagent-parallel">Next
+<li><a href="#next-phases-35--best-run-in-a-fresh-full-context-session-subagent-parallel">Next
 (Phases 3–5 — best run in a fresh full-context session,
 subagent-parallel)</a></li>
 </ul></li>
-<li><a
-href="#close-out¹⁴²--round-468-comprehensive-completion-programme-kickoff--grounded-discovery--wave-1-fix-first-subagent-parallel-anti-bluff">close-out¹⁴²
+<li><a href="#close-out¹⁴²--round-468-comprehensive-completion-programme-kickoff--grounded-discovery--wave-1-fix-first-subagent-parallel-anti-bluff">close-out¹⁴²
 — round 468: Comprehensive-completion programme kickoff — grounded
 discovery + Wave 1 fix-first (subagent-parallel, anti-bluff)</a>
 <ul>
-<li><a
-href="#what-landed-conductor-committed-streams-implementprove-conductor-integrates-per-11484">What
+<li><a href="#what-landed-conductor-committed-streams-implementprove-conductor-integrates-per-11484">What
 landed (conductor-committed; streams implement+prove, conductor
 integrates per §11.4.84)</a></li>
-<li><a
-href="#new-defects-surfaced-tracked-for-next-waves--not-yet-fixed">New
+<li><a href="#new-defects-surfaced-tracked-for-next-waves--not-yet-fixed">New
 defects surfaced (tracked for next waves — NOT yet fixed)</a></li>
 <li><a href="#state--next">State / Next</a></li>
-<li><a
-href="#close-out¹⁴²ᵇ--round-468b-wave-2-complete--wave-3-5-broken-build-fixes--wave-4-partial--committed--pushed">close-out¹⁴²ᵇ
+<li><a href="#close-out¹⁴²ᵇ--round-468b-wave-2-complete--wave-3-5-broken-build-fixes--wave-4-partial--committed--pushed">close-out¹⁴²ᵇ
 — round 468b: Wave 2 complete + Wave 3 (5 broken-build fixes) + Wave 4
 partial — committed + PUSHED</a></li>
-<li><a
-href="#close-out¹⁴²ᶜ--round-468c-wave-4b-re-run-rate-limited-streams--committed--pushed">close-out¹⁴²ᶜ
+<li><a href="#close-out¹⁴²ᶜ--round-468c-wave-4b-re-run-rate-limited-streams--committed--pushed">close-out¹⁴²ᶜ
 — round 468c: Wave 4b (re-run rate-limited streams) — committed +
 PUSHED</a></li>
-<li><a
-href="#close-out¹⁴²ᵈ--round-468d-wave-5-queued-blockers--committed--pushed">close-out¹⁴²ᵈ
+<li><a href="#close-out¹⁴²ᵈ--round-468d-wave-5-queued-blockers--committed--pushed">close-out¹⁴²ᵈ
 — round 468d: Wave 5 (queued blockers) — committed + PUSHED</a></li>
-<li><a
-href="#close-out¹⁴²ᵉ--round-468e-wave-6-5-stream-subagent-driven-batch--committed--pushed">close-out¹⁴²ᵉ
+<li><a href="#close-out¹⁴²ᵉ--round-468e-wave-6-5-stream-subagent-driven-batch--committed--pushed">close-out¹⁴²ᵉ
 — round 468e: Wave 6 (5-stream subagent-driven batch) — committed +
 PUSHED</a></li>
-<li><a
-href="#close-out¹⁴²ᶠ--round-468f-wave-7-4-stream-batch--committed--pushed-w7d-deletion-vetted--deferred-to-next-continue">close-out¹⁴²ᶠ
+<li><a href="#close-out¹⁴²ᶠ--round-468f-wave-7-4-stream-batch--committed--pushed-w7d-deletion-vetted--deferred-to-next-continue">close-out¹⁴²ᶠ
 — round 468f: Wave 7 (4-stream batch) — committed + PUSHED; W7D deletion
 VETTED + deferred to next <code>continue</code></a></li>
-<li><a
-href="#close-out¹⁴²ᵍ--round-468g-w7d-deletion--live-infra-proof--114140141-cascade-complete--real-bug-fixes--committed--pushed">close-out¹⁴²ᵍ
+<li><a href="#close-out¹⁴²ᵍ--round-468g-w7d-deletion--live-infra-proof--114140141-cascade-complete--real-bug-fixes--committed--pushed">close-out¹⁴²ᵍ
 — round 468g: W7D deletion + LIVE infra proof + §11.4.140/141 cascade
 COMPLETE + real bug fixes — committed + PUSHED</a></li>
 </ul></li>
@@ -1702,7 +1766,7 @@ fakeTranslator). Modified main.go (refactor) +
 <code>Upstreams/{GitHub,GitLab}.sh</code> (corrected Auth→DocProcessor
 templating bug — bonus fix). Tests: 6 PASS (2 i18n + 4 CLI); full
 9-package DocProcessor suite PASS, no FAIL. Mutation verified: restoring
-<code>"Loaded %d documents\n"</code> literal caused
+<code>&quot;Loaded %d documents\n&quot;</code> literal caused
 <code>TestRunCLI_SuccessPath_EmitsAllTranslatedLines</code> to FAIL
 (“missing sentinel
 <code>&lt;TRANSLATED:docprocessor_cli_loaded_documents&gt;</code>;
@@ -1743,7 +1807,7 @@ SetTranslator/tr methods + 5 call-site migrations). Tests: 7/7 PASS
 under <code>-tags nogui</code> (3 i18n unit + 5 call-site sentinel + 1
 nil-reset guard with shared <code>assertTranslated</code> helper).
 Mutation verified: restoring
-<code>"=== HelixCode Harmony OS Status ==="</code> literal in
+<code>&quot;=== HelixCode Harmony OS Status ===&quot;</code> literal in
 <code>cmdStatus</code> caused
 <code>TestCmdStatus_UsesTranslator_NotHardcodedHeader</code> to FAIL
 (“output missing translator sentinel”); revert → PASS. Commit:
@@ -1767,10 +1831,10 @@ Phase 2 round 2 of 3).** Submodule: <code>submodules/helix_llm/</code>
 (HelixDevelopment org as expected). 2 of 2 target strings migrated:
 <code>cmd/helixllm/challenges.go:17</code> →
 <code>helixllm_cli_failed_to_load_banks</code> (original literal
-<code>"failed to load banks: %v\n"</code>) +
+<code>&quot;failed to load banks: %v\n&quot;</code>) +
 <code>cmd/helixllm/main.go:50</code> →
 <code>helixllm_cli_error_loading_config</code> (original
-<code>"error loading config: %v\n"</code>). Pattern variation: HelixLLM
+<code>&quot;error loading config: %v\n&quot;</code>). Pattern variation: HelixLLM
 extended its EXISTING <code>internal/shared/i18n/i18n.go</code> package
 (+19 LOC: 2 keys, 2 templates, <code>TranslatorAPI</code> interface)
 rather than creating new <code>pkg/i18n/</code> — equally valid; agent
@@ -1862,7 +1926,7 @@ round 3 of 9, FINAL Phase 1 round).** Chosen target submodule:
 realized: (1) Lazy defines its OWN <code>Translator</code> interface +
 <code>NoopTranslator</code> in <code>pkg/i18n/translator.go</code> (NO
 helix_code import — CONST-051(B) verified by
-<code>grep -rn "helix_code\|dev.helix.code" submodules/lazy/</code>
+<code>grep -rn &quot;helix_code\|dev.helix.code&quot; submodules/lazy/</code>
 returning ZERO matches); (2) helix_code gains
 <code>pkg/i18nadapter/</code> (66 LOC + 96 LOC tests) wrapping
 <code>i18n.Localizer</code> to satisfy any consumer Translator
@@ -2142,8 +2206,8 @@ feature extraction (documented fallback, ≥20-char threshold) — not
 fabrication. (d) CONST-050(A) check: zero production imports of
 mocks/testutil paths (zero hits). (e) CONST-046 status:
 cmd/docprocessor/main.go has 5 <code>fmt.Printf</code> lines with
-hardcoded English (<code>"Loaded %d documents\n"</code>,
-<code>"Feature map: %d features, %d screens, %d workflows\n"</code>,
+hardcoded English (<code>&quot;Loaded %d documents\n&quot;</code>,
+<code>&quot;Feature map: %d features, %d screens, %d workflows\n&quot;</code>,
 etc.) — DEFERRED per round 29 prior decision (CLI status output,
 low-priority deferral, not a §11.4 anti-bluff violation; flagged for
 future i18n sweep). (f) test status: 6 packages PASS
@@ -2534,7 +2598,7 @@ Replicate provider (<code>internal/llm/providers/replicate/</code>) -
 PASS - <strong>CONST-046</strong>: No Hardcoded Content mandate added to
 CONSTITUTION.md, AGENTS.md, CLAUDE.md</p>
 <p>Evidence: <code>go build -tags nogui ./internal/...</code> PASS |
-<code>grep -rn "simulated\|placeholder\|TODO"</code> clean | 31 tests
+<code>grep -rn &quot;simulated\|placeholder\|TODO&quot;</code> clean | 31 tests
 PASS | pushed to github + gitlab</p>
 <h3 id="phase-4-testchallenge-hardening-closed-a3f8871">Phase 4 —
 Test/Challenge Hardening (CLOSED — <code>a3f8871</code>)</h3>
@@ -2565,7 +2629,7 @@ scripts PASS (hooks, snyk, sonarqube verified with runtime evidence) -
 Tests FAIL correctly when infrastructure unavailable (deployment tests
 detect missing SSH) - <code>go build -tags nogui ./internal/...</code>
 PASS - Anti-bluff sweep clean:
-<code>grep -rn "simulated\|for now" internal/</code> returns only
+<code>grep -rn &quot;simulated\|for now&quot; internal/</code> returns only
 permitted fallback models</p>
 <p><strong>Per Article XI §11.9</strong>: Every PASS now carries
 positive runtime evidence. No false-success results tolerable.</p>
@@ -2793,8 +2857,7 @@ tools.</li>
 <code>acf158f</code></li>
 <li>Full Roo-code feature parity port.</li>
 </ul>
-<h3
-id="p2-f30-continue-ide-integration-closed-final-phase-2-feature">P2-F30
+<h3 id="p2-f30-continue-ide-integration-closed-final-phase-2-feature">P2-F30
 — Continue IDE Integration (CLOSED) — FINAL Phase 2 feature</h3>
 <ul>
 <li>Spec:
@@ -2841,7 +2904,7 @@ drift:</strong> RESOLVED 2026-05-12 —
 <code>boot.BootManagerOption</code>; dropped removed options
 (<code>WithHealthCheckRetries</code>/<code>WithHealthCheckTimeout</code>/<code>WithParallelStartup</code>);
 <code>summary.Errors</code> → walk <code>summary.Results</code>
-filtering <code>Status=="failed"</code>; <code>GetHealthStatus()</code>
+filtering <code>Status==&quot;failed&quot;</code>; <code>GetHealthStatus()</code>
 → <code>HealthCheckAll(ctx)</code>; unused <code>time</code> +
 <code>compose</code> imports removed; <code>ep.Description</code> (no
 longer on <code>ServiceEndpoint</code>) →
@@ -3060,8 +3123,7 @@ required by operator.</li>
 <li><strong>SonarQube + Snyk live-scan deferral</strong> (P0-T08.7):
 infrastructure wired, awaiting credential rotation by operator.</li>
 </ul>
-<h3
-id="phase-3-remaining-items-carried-forward-non-blocking-for-phase-4">Phase
+<h3 id="phase-3-remaining-items-carried-forward-non-blocking-for-phase-4">Phase
 3 remaining items (carried forward, non-blocking for Phase 4)</h3>
 <ul>
 <li><strong>HelixAgent build</strong> — IMPROVED: submodules populated,
@@ -3093,7 +3155,7 @@ use whichever hosts are currently configured when
 <code>CONTAINERS_REMOTE_ENABLED=true</code>. Adding, removing, or
 modifying a host means editing <code>containers/.env</code>; no code
 change is required. The CURRENT configured set can be audited with
-<code>grep '^CONTAINERS_REMOTE_HOST_' containers/.env</code>; at the
+<code>grep &#39;^CONTAINERS_REMOTE_HOST_&#39; containers/.env</code>; at the
 time of this rule’s introduction (2026-05-07) the configured hosts were
 <code>thinker.local</code>, but the rule applies to whatever set is in
 <code>.env</code> at any future point (N&gt;=1). Direct
@@ -3128,7 +3190,7 @@ commits → Challenge harness commit → close-out commit. No
 exceptions.</li>
 <li><strong>Anti-bluff smoke must always be <code>clean</code>.</strong>
 Run before each commit:
-<code>grep -rn "simulated\|for now\|TODO implement\|placeholder" helix_code/internal helix_code/cmd &amp;&amp; echo BLUFF || echo clean</code>.</li>
+<code>grep -rn &quot;simulated\|for now\|TODO implement\|placeholder&quot; helix_code/internal helix_code/cmd &amp;&amp; echo BLUFF || echo clean</code>.</li>
 <li><strong>Runtime evidence required for every PASS</strong> per
 CONST-035 / Article XI §11.9. No metadata-only / configuration-only /
 absence-of-error PASS.</li>
@@ -3468,8 +3530,8 @@ asserted hardcoded model IDs (<code>venice-uncensored</code>,
 <code>llama-3.3-70b</code>) against the live Venice API; Venice renamed
 its catalogue, so the brittle equality assertions broke. Fix:
 shape-based substring assertions
-(<code>strings.Contains(m, "llama-3")</code> /
-<code>"uncensored"</code>) that survive catalogue rename and remain
+(<code>strings.Contains(m, &quot;llama-3&quot;)</code> /
+<code>&quot;uncensored&quot;</code>) that survive catalogue rename and remain
 CONST-036 compliant. Submodule pins bumped: LLMProvider
 <code>46e703a</code>, LLMOrchestrator <code>e744a9a</code>, Security
 <code>eae0cec</code>; new Models pin added. Every owned submodule’s
@@ -3512,7 +3574,7 @@ redis containers (5432/6379), pointed HC at them, sourced
 <code>go test -tags=integration ./tests/integration/...</code>. Most
 packages PASS. Surfaced ONE legitimate anti-bluff-correct test failure:
 <code>TestCogneeRealLLMTestSuite/MemoryStorage_*</code> fails with
-<code>"0" is not greater than "0"</code> — the test calls
+<code>&quot;0&quot; is not greater than &quot;0&quot;</code> — the test calls
 <code>cogneeIntegration.StoreMemory(...)</code> then asserts
 <code>len(RetrieveMemory(...).Results) &gt; 0</code>, and gets 0
 results. <strong>This is the test doing its job correctly</strong>:
@@ -3669,7 +3731,7 @@ then swept malformed-UUID handlers I hadn’t yet wired. Found 1 more bug:
 (32) <code>GET /workers/&lt;malformed&gt;/metrics</code> returned HTTP
 500 — last handler missing the <code>respondInvalidID</code> branch.
 Fixed. Also: SQL-injection sanity-check (<code>hostname</code>
-containing <code>"; DROP TABLE workers;--"</code>) — pgx prepared
+containing <code>&quot;; DROP TABLE workers;--&quot;</code>) — pgx prepared
 statements parameterize correctly; the string stored as data, the
 workers table survived intact. Positive-coverage probe added to guard
 against any future regression to string-concatenated SQL. helix-qa
@@ -3720,7 +3782,7 @@ root docs. Round 25 probed remaining edge cases and found 1 more real
 bug — (28) <code>PUT /projects/&lt;malformed-uuid&gt;</code> and
 <code>DELETE /projects/&lt;malformed-uuid&gt;</code> returned HTTP 500
 leaking raw postgres
-<code>"invalid input syntax for type uuid: \"not-a-uuid\" (SQLSTATE 22P02)"</code>.
+<code>&quot;invalid input syntax for type uuid: \&quot;not-a-uuid\&quot; (SQLSTATE 22P02)&quot;</code>.
 Same CONST-042 + CONST-035 double-violation pattern as BUGs #24/25.
 UpdateProject and DeleteProject in <code>manager_db.go</code> passed the
 raw client-supplied id directly to postgres without UUID validation; pg
@@ -3798,10 +3860,10 @@ clean.</td>
 <td>Round 22 probed duplicate-create + workflow endpoints for the same
 CONST-042/CONST-035 family. Found 2 more bugs: (25) duplicate-hostname
 worker create returned 500 leaking
-<code>"workers_hostname_unique" (SQLSTATE 23505)</code>. Fixed:
+<code>&quot;workers_hostname_unique&quot; (SQLSTATE 23505)</code>. Fixed:
 <code>worker.ErrWorkerHostnameTaken</code> sentinel +
 <code>isUniqueViolation(err)</code> helper that parses
-<code>pgconn.PgError.Code == "23505"</code>; RegisterWorker translates
+<code>pgconn.PgError.Code == &quot;23505&quot;</code>; RegisterWorker translates
 pg unique-violations BEFORE leaking; handler returns 409 with clean
 message. (26) <code>POST /projects/&lt;bogus&gt;/workflows/*</code>
 returned 500 with “project not found” — should be 404. Fixed: introduced
@@ -3828,7 +3890,7 @@ scripts/scan-secrets.sh: clean.</td>
 <td>Round 21 probed remaining endpoints for similar patterns. Found 1
 more bug: (24) <code>POST /workers/&lt;bogus&gt;/heartbeat</code>
 returned HTTP 500 with raw postgres error message
-<code>"insert or update on table \"worker_metrics\" violates foreign key constraint \"worker_metrics_worker_id_fkey\" (SQLSTATE 23503)"</code>
+<code>&quot;insert or update on table \&quot;worker_metrics\&quot; violates foreign key constraint \&quot;worker_metrics_worker_id_fkey\&quot; (SQLSTATE 23503)&quot;</code>
 — TWO violations in one response: (a) CONST-042 schema leakage (postgres
 FK constraint name and SQL state visible to API users); (b) CONST-035
 wrong-HTTP-code (5xx for what is plainly a 404 missing-resource error).
@@ -4012,7 +4074,7 @@ run_all_challenges: 12/12 PASS. scripts/scan-secrets.sh: clean.</td>
 <td>Production-bug sweep round 13</td>
 <td>Round 13 uncovered 1 more real bug while probing task/assign
 lifecycle: (18) After <code>POST /tasks/:id/assign</code>, the response
-showed <code>"assigned_worker": null</code> even though the database
+showed <code>&quot;assigned_worker&quot;: null</code> even though the database
 row’s <code>assigned_worker_id</code> column was correctly populated.
 Same regression in both <code>GetTask</code> and <code>ListTasks</code>:
 they scanned the column into local pointers
@@ -4037,7 +4099,7 @@ server+task+worker: ok. scripts/scan-secrets.sh: clean.</td>
 <td>Round 12 uncovered 1 more real bug (5th instance of the same JSON
 contract pattern) + added 3 session-action lifecycle probes: (17)
 <code>GET /api/v1/workers/:id/metrics</code> returned
-<code>"metrics": null</code> for the empty-history case — same
+<code>&quot;metrics&quot;: null</code> for the empty-history case — same
 nil-slice→null bluff as listTasks/listProjects/listWorkers/checkpoints,
 now metrics. Fixed in <code>getWorkerMetrics</code> with
 <code>[]*worker.WorkerMetrics{}</code> default-when-nil. helix-qa
@@ -4065,7 +4127,7 @@ existing hostname with “” — destroying real state. Both fixed in
 <code>worker.DatabaseManager.UpdateWorker</code>: (a) default
 capabilities to <code>[]string{}</code> when nil; (b) replace bare
 <code>SET col = $1</code> with
-<code>COALESCE(NULLIF($1, ''), col)</code> for hostname/display_name and
+<code>COALESCE(NULLIF($1, &#39;&#39;), col)</code> for hostname/display_name and
 <code>CASE WHEN $4 &gt; 0 THEN $4 ELSE max_concurrent_tasks END</code>
 for max_concurrent_tasks — preserving the existing column when the input
 is zero-value. helix-qa expanded 45 → 49 evidence files: HCQA-042-CREATE
@@ -4088,12 +4150,12 @@ and <code>type</code> columns that DON’T EXIST in the projects schema
 (<code>internal/database/database.go:333</code>). Real schema columns:
 <code>workspace_path</code> (mapped to <code>Project.Path</code> in Go)
 and <code>config</code> JSONB (which holds the project type under
-<code>config["type"]</code> — extracted in GetProject at line 114). The
+<code>config[&quot;type&quot;]</code> — extracted in GetProject at line 114). The
 canonical “rename a project” endpoint was therefore unreachable for the
 entire deployment. Fixed by mirroring GetProject’s column-mapping
 pattern: RETURNING <code>workspace_path</code> + <code>config</code>,
-then extracting <code>Type</code> from <code>config["type"]</code> and
-<code>metadata</code> from <code>config["metadata"]</code> in Go.
+then extracting <code>Type</code> from <code>config[&quot;type&quot;]</code> and
+<code>metadata</code> from <code>config[&quot;metadata&quot;]</code> in Go.
 helix-qa expanded 41 → 45 evidence files: HCQA-039
 (create-for-lifecycle), HCQA-040 (PUT renames + asserts new
 name/description AND path round-trip), HCQA-041-DEL (DELETE 200),
@@ -4106,7 +4168,7 @@ scripts/scan-secrets.sh: clean.</td>
 <td>Production-bug sweep round 9</td>
 <td>Round 9 uncovered 1 deep bluff in the memory subsystem: (14)
 <code>GET /api/v1/memory/systems</code> returned 6 systems all hardcoded
-as <code>status: "available"</code> while
+as <code>status: &quot;available&quot;</code> while
 <code>GET /api/v1/memory/stats</code> reported
 <code>systems_connected: 0</code> — direct contradiction. Reading the
 handler revealed <code>listMemorySystems</code> is pure hardcoded
@@ -4121,7 +4183,7 @@ correctly returns “not_configured” for all 6 (matches stats). The
 catalogue itself (id/name/type/description/features) remains as the
 documented set of supported backends — that’s real metadata, not a
 runtime claim. helix-qa expanded 40 → 41: new “HCQA-MEM-BLUFF” probe
-asserts NO entry claims <code>status="available"</code> until real
+asserts NO entry claims <code>status=&quot;available&quot;</code> until real
 backing exists (any future regression to hardcoded “available” without
 manager-wiring will fail this check). helix-qa: 39/39 PASS (41 evidence
 files). run_all_challenges: 12/12 PASS. go test -short server+task: ok.
@@ -4133,7 +4195,7 @@ scripts/scan-secrets.sh: clean.</td>
 <td>Round 8 uncovered 2 more real bugs by extending helix-qa to
 task-lifecycle probes: (12)
 <code>GET /api/v1/tasks/:id/checkpoints</code> returned
-<code>"checkpoints": null</code> for an empty list — 4th instance of the
+<code>&quot;checkpoints&quot;: null</code> for an empty list — 4th instance of the
 nil-slice→null JSON contract bluff (tasks, projects, workers, now
 checkpoints); fixed by defaulting to
 <code>[]map[string]interface{}{}</code> in
@@ -4166,7 +4228,7 @@ modes are planning/building/testing/refactoring/debugging/deployment as
 defined in <code>internal/session/session.go</code>). New HCQA-035 probe
 stitches the just-created project_id from HCQA-025 evidence into a
 sessions POST, asserts 201 + <code>session.project_id</code> round-trip
-+ <code>session.mode=="planning"</code>. helix-qa: 35/35 PASS.
++ <code>session.mode==&quot;planning&quot;</code>. helix-qa: 35/35 PASS.
 run_all_challenges: 12/12 PASS.</td>
 </tr>
 <tr>
@@ -4176,7 +4238,7 @@ run_all_challenges: 12/12 PASS.</td>
 (11) <code>POST /api/v1/auth/refresh</code> returned HTTP 401 “User not
 authenticated” for EVERY caller, even with a perfectly valid Bearer
 token. Root cause: <code>refreshToken</code> handler called
-<code>c.Get("user")</code> but the <code>/auth</code> route group has NO
+<code>c.Get(&quot;user&quot;)</code> but the <code>/auth</code> route group has NO
 <code>authMiddleware</code> (must stay public for register/login). Fixed
 by manually parsing+verifying the Authorization header via
 <code>VerifyJWTWithDB</code>, mirroring the <code>logout</code>
@@ -4219,7 +4281,7 @@ server+worker: ok. scripts/scan-secrets.sh: clean.</td>
 <code>POST /api/v1/projects</code> returned HTTP 500 “invalid owner ID:
 invalid UUID length: 12” —
 <code>internal/project/manager_db.go:135</code> had
-<code>m.CreateProjectWithUser(..., "default-user")</code> literally
+<code>m.CreateProjectWithUser(..., &quot;default-user&quot;)</code> literally
 hardcoded as the owner ID; the string “default-user” is exactly 12
 chars, matching the error. Handler now extracts the real authenticated
 <code>*auth.User</code> from context and calls
@@ -4230,7 +4292,7 @@ under a <code>publicProjects</code> Gin group with comment
 create projects or trigger workflow executions
 (planning/building/testing/refactoring) against any projectId. This was
 a real production security hole AND made the createProject handler
-unreachable (it now requires <code>c.Get("user")</code> which is only
+unreachable (it now requires <code>c.Get(&quot;user&quot;)</code> which is only
 set by authMiddleware). Consolidated under the authenticated
 <code>projects</code> group; <code>publicProjects</code> removed
 entirely. helix-qa expanded 29 → 31: HCQA-030 (unauthenticated POST
@@ -4247,7 +4309,7 @@ helix-qa: 31/31 PASS. run_all_challenges: 12/12 PASS. go test -short
 <td>Continuing the anti-bluff push uncovered 2 more real bugs by
 extending helix-qa to 29 checks: (7) <code>GET /api/v1/users/me</code>
 returned a User stub with <code>is_active:false</code> and
-<code>created_at:"0001-01-01T00:00:00Z"</code> —
+<code>created_at:&quot;0001-01-01T00:00:00Z&quot;</code> —
 <code>authMiddleware</code> was calling the cheap <code>VerifyJWT</code>
 variant that returns ONLY {ID, Username, Email} from JWT claims; every
 other field defaulted to zero. The slower <code>VerifyJWTWithDB</code>
@@ -4256,7 +4318,7 @@ exists for exactly this case (fetches the full user + enforces
 <code>VerifyJWTWithDB</code>; defense-in-depth bonus: deactivated
 accounts can no longer continue authenticating with pre-deactivation
 JWTs. (8) <code>GET /api/v1/workers</code> returned
-<code>"workers": null</code> — third instance of the nil-slice→null JSON
+<code>&quot;workers&quot;: null</code> — third instance of the nil-slice→null JSON
 contract bluff (after tasks and projects); fixed by defaulting to
 <code>[]*worker.Worker{}</code> when nil. New helix-qa probes HCQA-027
 (workers as array), HCQA-028 (system stats sub-objects). HCQA-017
@@ -4278,16 +4340,16 @@ constraint” when <code>parameters</code> was omitted —
 INSERT and pgx serialized it as SQL NULL; fixed by defaulting
 <code>parameters</code> to empty map at the persistence constructor (the
 schema invariant <code>task_data JSONB NOT NULL</code> now upheld). (4)
-<code>GET /api/v1/tasks</code> returned <code>"tasks": null</code>
+<code>GET /api/v1/tasks</code> returned <code>&quot;tasks&quot;: null</code>
 instead of <code>[]</code> for empty list — JSON contract bluff (Go’s
 nil-slice→null serialization); fixed in <code>listTasks</code>. (5)
 <code>GET /api/v1/projects</code> returned 401 “user_id not found in
 context” with a VALID JWT — <code>listProjects</code> called
-<code>c.GetString("user_id")</code> while <code>authMiddleware</code>
-sets <code>c.Set("user", *auth.User)</code> (no such “user_id” key); the
+<code>c.GetString(&quot;user_id&quot;)</code> while <code>authMiddleware</code>
+sets <code>c.Set(&quot;user&quot;, *auth.User)</code> (no such “user_id” key); the
 entire projects-list endpoint was unreachable for the production
 deployment. Fixed by switching to the established
-<code>c.Get("user")</code> pattern. (6) Same <code>projects: null</code>
+<code>c.Get(&quot;user&quot;)</code> pattern. (6) Same <code>projects: null</code>
 vs <code>[]</code> bug as #4; fixed. New helix-qa probes HCQA-019..027:
 tasks-CRUD full lifecycle (list-empty → create → list-contains →
 get-by-id → delete → get-deleted-404), plus list-projects-as-array and
@@ -4327,7 +4389,7 @@ auth-flow (register → login → /users/me → garbage-bearer-401 → logout)
 with strict invariants
 (<code>session.user_id === user.id from registration</code>,
 <code>user.username === registered username</code>,
-<code>token starts with "eyJ"</code>). Pre-existing self-bluffs in
+<code>token starts with &quot;eyJ&quot;</code>). Pre-existing self-bluffs in
 HCQA-004/005/006 (assertions of expectations the server contract never
 promised) corrected. Also-discovered + fixed: helix_qa orchestrator
 0-challenge PASS-bluff at
@@ -4960,9 +5022,9 @@ Python stub HTTP server: pre-chaos 200, 5 malformed shapes survived,
 oversized 200 (Python’s BaseHTTPRequestHandler ignores X-Chaos-Huge per
 design), 5 slow-loris spawned, <strong>100/100 legit pass-rate
 (p50=1.0ms p95=3.0ms)</strong>, post-chaos 200+valid status. curl-code
-formatting bug caught + fixed (<code>|| echo "000"</code> concatenated
+formatting bug caught + fixed (<code>|| echo &quot;000&quot;</code> concatenated
 to “000000” when curl’s <code>-w %{http_code}</code> already wrote 000 —
-switched to <code>... || code="000"</code> form). <strong>Full runner
+switched to <code>... || code=&quot;000&quot;</code> form). <strong>Full runner
 now 17/17 PASS</strong> (was 16/16). Remaining 3 test types per Task
 #266: scaling, UI, UX.</td>
 </tr>
@@ -5109,7 +5171,7 @@ the tests + Challenges and captured runtime evidence.
 a214f0c → 464ada1 (upstream merge “drop obsolete §11.4.25-27
 numbering”); my §11.4.25-36 all intact post-merge. <strong>CONST-035
 anti-bluff smoke</strong>:
-<code>grep -rn "simulated\|TODO implement\|fake response\|in production this would" helix_code/internal helix_code/cmd</code>
+<code>grep -rn &quot;simulated\|TODO implement\|fake response\|in production this would&quot; helix_code/internal helix_code/cmd</code>
 → 0 production hits. <strong>Conversational REPL Challenge</strong> (6/6
 PASS): live LLM round-trip via Groq + multi-turn memory probe + /clear
 context-reset probe + token stats
@@ -5182,7 +5244,7 @@ results: 30 features, 12 owned submodules, 30 VERIFIED cells preserved,
 subtle bash bugs in early-version (grep -c exit-1 with “0” stdout →
 <code>|| echo 0</code> doubled the count, and <code>||echo</code>
 semantics on multiline reads) — fixed defensively with
-<code>printf '%s' | tr -d ' \n\r'</code> sanitisation. Smoke-tested with
+<code>printf &#39;%s&#39; | tr -d &#39; \n\r&#39;</code> sanitisation. Smoke-tested with
 ROUND_TAG=“close-out-18-regen”. Generator script is idempotent;
 subsequent runs preserve VERIFIED markers and refresh mechanical
 signals. Composes with §11.4.18 (doc-block at top of script) + §11.4.22
@@ -5246,7 +5308,7 @@ tokens (only at start-of-text or after non-identifier char so
 <code>user@host.com</code> emails / Go struct-tag forms /
 <code>path.to.symbol</code> don’t match) and
 <code>expandAtMentions(prompt)</code> appends
-<code>&lt;attached_files&gt;&lt;file path="..."&gt; ... &lt;/file&gt;&lt;/attached_files&gt;</code>
+<code>&lt;attached_files&gt;&lt;file path=&quot;...&quot;&gt; ... &lt;/file&gt;&lt;/attached_files&gt;</code>
 block to the prompt for each resolved file. 256 KiB per-file cap
 (oversized files listed but not embedded — anti-bluff: never silently
 truncate content). Deduplicates repeated paths. Directories silently
@@ -5565,7 +5627,7 @@ FinishReason time, send terminal LLMResponse with Content=“” (metadata
 fields Usage/FinishReason/ProviderMetadata still delivered for consumers
 that look at the final chunk; rendered content not duplicated). Live
 verified:
-<code>HELIX_LLM_PROVIDER=groq ./bin/cli --prompt "Reply with only: 1 2 3" --stream</code>
+<code>HELIX_LLM_PROVIDER=groq ./bin/cli --prompt &quot;Reply with only: 1 2 3&quot; --stream</code>
 → clean “1 2 3” output. <strong>(B) Three new universal governance
 anchors</strong> per operator mandates 2026-05-15: <strong>§11.4.25 /
 CONST-048 Full-Automation-Coverage</strong> (every
@@ -5731,7 +5793,7 @@ satisfied for the constitution-inheritance layer atop the existing §11.9
 <td>Closed the last deferred item from the round-39 3-deep CONST-047
 cascade ledger: <code>HelixLLM/submodules/HelixQA</code> was declared in
 <code>.gitmodules</code> but never tracked as a gitlink in the tree
-(<code>error: pathspec 'submodules/HelixQA' did not match any file(s) known to git</code>).
+(<code>error: pathspec &#39;submodules/HelixQA&#39; did not match any file(s) known to git</code>).
 Closed via
 <code>git submodule add git@github.com:HelixDevelopment/HelixQA.git submodules/HelixQA</code>
 — helix_qa tip pinned at upstream HEAD. Cascade close-out: HelixLLM
@@ -5822,7 +5884,7 @@ defect</strong>:
 config. The bug was MASKED for an unknown duration by
 <code>TestCharacterAIProvider_CreateCollectionWithNilConfig</code>,
 which wrapped the call in
-<code>defer func() { recover() }() + t.Logf'd the panic + discarded the returned error + comment "Either succeeds or fails gracefully"</code>.
+<code>defer func() { recover() }() + t.Logf&#39;d the panic + discarded the returned error + comment &quot;Either succeeds or fails gracefully&quot;</code>.
 TRIPLE bluff. Tightening the test (removed recover, removed err discard,
 asserted non-empty error message) FAILed loudly with the panic stack
 trace, confirming the real defect. Fixed in production: treat nil config
@@ -5847,16 +5909,16 @@ improvements. 12/12 challenges still PASS; helix-qa SKIP-OK’d on
 (round 40 close)</td>
 <td>Final round-40 batch surfacing the biggest bluff yet: <strong>6
 phase challenge scripts</strong> used patterns of the form
-<code>go test ./... \| grep -q "FAIL" &amp;&amp; (echo "FAIL"; exit 1)</code>
-(or <code>grep -q "PASS" \|\| exit 1</code>) which silently PASS on “no
+<code>go test ./... \| grep -q &quot;FAIL&quot; &amp;&amp; (echo &quot;FAIL&quot;; exit 1)</code>
+(or <code>grep -q &quot;PASS&quot; \|\| exit 1</code>) which silently PASS on “no
 test files” output, compile errors, panic-timeout output, or any error
 path that doesn’t print the expected grep token. Replaced with
-<code>go test ./... \|\| { echo "FAIL: ..."; exit 1; }</code> which uses
+<code>go test ./... \|\| { echo &quot;FAIL: ...&quot;; exit 1; }</code> which uses
 Go’s actual exit code. <strong>Files tightened</strong>: phase1 (LLM),
 phase2 (tools+editor), phase4 (workflow+session), phase5
 (mcp+memory+notification), phase6 (testing), phase7 (deployment+docs).
 <strong>TRIPLE BLUFF surfaced and fixed in phase6</strong>: original
-<code>cd HelixCode &amp;&amp; go test ... \| grep -q "FAIL" &amp;&amp; exit 1</code>
+<code>cd HelixCode &amp;&amp; go test ... \| grep -q &quot;FAIL&quot; &amp;&amp; exit 1</code>
 — script already cd’d to HelixCode at line 7, so the inline
 <code>cd HelixCode</code> at line 25 FAILED (“No such file or
 directory”), the &amp;&amp; shortcut skipped the entire go-test
@@ -5893,7 +5955,7 @@ failure-path asserts nil-client + “Redis” in error, success-path
 requires non-nil client + Ping round-trip);
 TestHealthMonitor_PerformHealthChecks (snapshot pre-state, assert
 non-running provider Status/Health/Metrics are NOT mutated — pins the
-<code>if provider.Status != "running" continue</code> guard).
+<code>if provider.Status != &quot;running&quot; continue</code> guard).
 <strong>Fixed 4 more in this commit</strong>:
 TestCharacterAIProvider_TimeoutContext (was <code>_ = err</code> after
 Health under cancelled ctx — now pins in-memory Health no-error
@@ -6063,8 +6125,7 @@ augmentation as a deferred polish item).</td>
 </tbody>
 </table>
 <hr />
-<h2
-id="close-out¹³¹-rounds-191-305-catch-up-constitution-cascade-helix_codeinternal-i18n-per-repo-deep-doc-pan-001-fix">close-out¹³¹
+<h2 id="close-out¹³¹-rounds-191-305-catch-up-constitution-cascade-helix_codeinternal-i18n-per-repo-deep-doc-pan-001-fix">close-out¹³¹
 — rounds 191-305 catch-up (constitution cascade + helix_code/internal
 i18n + per-repo deep-doc + PAN-001 fix)</h2>
 <p><strong>Date:</strong> 2026-05-19 <strong>Last commit at close-out
@@ -6214,8 +6275,7 @@ close-out¹³¹ remediates the CONST-044 drift across rounds 191-305 in a
 single batched narrative; per-round cadence resumes next round.</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³²-round-398-speed-programme-launch-constitution-11.4.6870-74-cascade-mirror-reconciliation">close-out¹³²
+<h2 id="close-out¹³²-round-398-speed-programme-launch-constitution-11.4.6870-74-cascade-mirror-reconciliation">close-out¹³²
 — round 398: Speed Programme launch + constitution §11.4.68/70-74
 cascade + mirror reconciliation</h2>
 <p><strong>Date:</strong> 2026-05-20 <strong>Theme:</strong> Three
@@ -6285,8 +6345,7 @@ CONST-047..057 / §11.4.69 anchors; re-run
 <code>verify-all-constitution-rules.sh</code> G1.</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³³-codegraph-incorporation-phase-d-cg14-cg16">close-out¹³³
+<h2 id="close-out¹³³-codegraph-incorporation-phase-d-cg14-cg16">close-out¹³³
 — CodeGraph incorporation Phase D (CG14-CG16)</h2>
 <p><strong>Date:</strong> 2026-05-20 <strong>Theme:</strong> CodeGraph
 (MCP code-graph server) incorporation Phase D — governance covenant sync
@@ -6356,8 +6415,7 @@ outstanding incorporation work if not yet landed by a sibling
 session.</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³⁴-codegraph-incorporation-phase-c-cg10-cg13">close-out¹³⁴
+<h2 id="close-out¹³⁴-codegraph-incorporation-phase-c-cg10-cg13">close-out¹³⁴
 — CodeGraph incorporation Phase C (CG10-CG13)</h2>
 <p><strong>Date:</strong> 2026-05-20 <strong>Theme:</strong> CodeGraph
 (MCP code-graph server) incorporation Phase C — anti-bluff verification
@@ -6432,8 +6490,7 @@ helix_qa QA run.</li>
 evidence capture.</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³⁵-helixcode-speed-programme-complete-p5-t04-all-6-phases-31-tasks-landed">close-out¹³⁵
+<h2 id="close-out¹³⁵-helixcode-speed-programme-complete-p5-t04-all-6-phases-31-tasks-landed">close-out¹³⁵
 — HelixCode Speed Programme COMPLETE (P5-T04 — all 6 phases / 31 tasks
 landed)</h2>
 <p><strong>Date:</strong> 2026-05-20 <strong>Theme:</strong>
@@ -6469,7 +6526,7 @@ PARTIAL + 0 DEFERRED</strong> across all 31 tasks.</p></li>
 the already-tracked <strong>HXC-008</strong> pre-existing drift (stale
 <code>Models</code> path + <code>helix_qa/CONSTITUTION.md</code> missing
 CONST-047..057), NOT speed-programme regressions. Anti-bluff smoke
-<code>grep -rn "simulated\|for now\|TODO implement\|placeholder" helix_code/internal helix_code/cmd</code>
+<code>grep -rn &quot;simulated\|for now\|TODO implement\|placeholder&quot; helix_code/internal helix_code/cmd</code>
 (prod, non-<code>_test.go</code>) = clean.
 <code>make verify-compile</code> not re-run (P5-T04 is docs-only;
 compile state unchanged from <code>98315a14</code>).</p></li>
@@ -6528,8 +6585,7 @@ resolved.</li>
 <li>The speed programme is complete; no further speed tasks queued.</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³⁶-round-403-hxc-008-governance-gap-fix-hxc-007hxc-009-verified-complete-closure">close-out¹³⁶
+<h2 id="close-out¹³⁶-round-403-hxc-008-governance-gap-fix-hxc-007hxc-009-verified-complete-closure">close-out¹³⁶
 — round 403: HXC-008 governance-gap fix + HXC-007/HXC-009
 verified-complete closure</h2>
 <h3 id="what-landed">What landed</h3>
@@ -6570,7 +6626,7 @@ pushed to all upstreams (helix_qa <code>1364d23</code>; VisionEngine
 (<code>Task</code>). Constitution §11.4.68/70-74 cascade verified
 genuinely complete: meta <code>.gitmodules</code> constitution pointer
 confirmed at <code>34a82b3</code>; spot-check
-<code>grep -c "11.4.70\|11.4.74"</code>=6 across <code>helix_qa</code>,
+<code>grep -c &quot;11.4.70\|11.4.74&quot;</code>=6 across <code>helix_qa</code>,
 <code>submodules/llm_provider</code>, <code>challenges</code>
 CLAUDE.md.</li>
 <li><strong>HXC-009 closed <code>Completed (→ Fixed.md)</code></strong>
@@ -6599,8 +6655,7 @@ HXC-010 (Operator-blocked Task — CodeGraph end-to-end verification
 awaiting LLM-backend credentials).</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³⁷-round-463-hxc-003-closed-implemented-fixed.md-const-046-i18n-migration-campaign-concluded">close-out¹³⁷
+<h2 id="close-out¹³⁷-round-463-hxc-003-closed-implemented-fixed.md-const-046-i18n-migration-campaign-concluded">close-out¹³⁷
 — round 463: HXC-003 closed <code>Implemented (→ Fixed.md)</code> —
 CONST-046 i18n migration campaign concluded</h2>
 <h3 id="what-landed-1">What landed</h3>
@@ -6676,8 +6731,7 @@ verification — Operator-blocked Task; awaiting LLM-backend credentials).
 No open Bug or Feature items remain.</li>
 </ul>
 <hr />
-<h2
-id="close-out¹³⁸-round-464-hxc-010-closed-completed-fixed.md-kimiqwen-codegraph-end-to-end-verified-with-operator-provided-credentials">close-out¹³⁸
+<h2 id="close-out¹³⁸-round-464-hxc-010-closed-completed-fixed.md-kimiqwen-codegraph-end-to-end-verified-with-operator-provided-credentials">close-out¹³⁸
 — round 464: HXC-010 closed <code>Completed (→ Fixed.md)</code> —
 Kimi/Qwen CodeGraph end-to-end verified with operator-provided
 credentials</h2>
@@ -6771,8 +6825,7 @@ and Qwen Code.</li>
 rename programme — Task, In progress). No open Bug, Feature, or
 Operator-blocked items remain.</li>
 </ul>
-<h2
-id="close-out¹³⁹-round-465-phase-0-of-the-own-org-submodule-syncflattenrebuildtest-programme-governance-baseline">close-out¹³⁹
+<h2 id="close-out¹³⁹-round-465-phase-0-of-the-own-org-submodule-syncflattenrebuildtest-programme-governance-baseline">close-out¹³⁹
 — round 465: Phase 0 of the own-org submodule sync→flatten→rebuild→test
 programme (governance baseline)</h2>
 <blockquote>
@@ -6839,8 +6892,7 @@ Subagent-parallel across the 70 own-org repos, with working-tree
 quiescence (§11.4.84) + per-repo fetch-investigate-integrate
 (§11.4.71).</li>
 </ul>
-<h2
-id="close-out¹⁴⁰-round-466-phase-1-complete-own-org-submodule-sync-to-latest-install_upstreams-push-to-all-mirrors">close-out¹⁴⁰
+<h2 id="close-out¹⁴⁰-round-466-phase-1-complete-own-org-submodule-sync-to-latest-install_upstreams-push-to-all-mirrors">close-out¹⁴⁰
 — round 466: Phase 1 complete — own-org submodule sync-to-latest +
 install_upstreams + push-to-all-mirrors</h2>
 <h3 id="what-landed-4">What landed</h3>
@@ -6898,8 +6950,7 @@ reference surface + <code>find_constitution.sh</code>), then
 clean git configs, reference-integrity tests. Discovery (read-only ref
 map) runs first.</li>
 </ul>
-<h2
-id="close-out¹⁴¹-round-467-phase-2-flatten-own-org-submodules-to-submodulesleaf-layout-go.mod-refs-module-resolution-green">close-out¹⁴¹
+<h2 id="close-out¹⁴¹-round-467-phase-2-flatten-own-org-submodules-to-submodulesleaf-layout-go.mod-refs-module-resolution-green">close-out¹⁴¹
 — round 467: Phase 2 — flatten own-org submodules to
 <code>submodules/&lt;leaf&gt;</code> (layout + go.mod + refs;
 module-resolution GREEN)</h2>
@@ -6952,7 +7003,7 @@ Restore anchor:
 <code>docs/migration/phase0-restore-manifest-2026-06-03.txt</code>.</li>
 <li><strong>Open NEEDS-REVIEW (deferred, non-blocking):</strong>
 <code>.gitmodules</code> still uses
-<code>[submodule "dependencies/&lt;org&gt;/&lt;leaf&gt;"]</code>
+<code>[submodule &quot;dependencies/&lt;org&gt;/&lt;leaf&gt;&quot;]</code>
 section-name KEYS though every <code>path =</code> is
 <code>submodules/&lt;leaf&gt;</code> (functional; cosmetic git-config
 cleanup pending);
@@ -6961,8 +7012,7 @@ org/remote-mismatch resolution;
 <code>helix_agent</code>/<code>helix_qa</code> third-party nested drift
 still uncommitted (intentional).</li>
 </ul>
-<h3
-id="next-phases-35-best-run-in-a-fresh-full-context-session-subagent-parallel">Next
+<h3 id="next-phases-35-best-run-in-a-fresh-full-context-session-subagent-parallel">Next
 (Phases 3–5 — best run in a fresh full-context session,
 subagent-parallel)</h3>
 <ul>
@@ -6974,8 +7024,7 @@ issue found, validated. Periodic: fetch+pull <code>constitution</code>
 and re-process on any new rule (constitution currently up-to-date @
 d90ab87).</li>
 </ul>
-<h2
-id="close-out¹⁴²-round-468-comprehensive-completion-programme-kickoff-grounded-discovery-wave-1-fix-first-subagent-parallel-anti-bluff">close-out¹⁴²
+<h2 id="close-out¹⁴²-round-468-comprehensive-completion-programme-kickoff-grounded-discovery-wave-1-fix-first-subagent-parallel-anti-bluff">close-out¹⁴²
 — round 468: Comprehensive-completion programme kickoff — grounded
 discovery + Wave 1 fix-first (subagent-parallel, anti-bluff)</h2>
 <blockquote>
@@ -6985,8 +7034,7 @@ Snyk+SonarQube, lazy-init/semaphores/non-blocking, full
 docs/courses/website), running 3–5 parallel subagent-driven streams, no
 interactive/sudo processes.</p>
 </blockquote>
-<h3
-id="what-landed-conductor-committed-streams-implementprove-conductor-integrates-per-11.4.84">What
+<h3 id="what-landed-conductor-committed-streams-implementprove-conductor-integrates-per-11.4.84">What
 landed (conductor-committed; streams implement+prove, conductor
 integrates per §11.4.84)</h3>
 <ol type="1">
@@ -7052,8 +7100,7 @@ Snyk/SonarQube/<code>govulncheck</code>/<code>-race</code>;
 FAISS/consensus/capture stub completion; coverage-to-max;
 doc/course/website reconciliation.</li>
 </ul>
-<h3
-id="close-out¹⁴²ᵇ-round-468b-wave-2-complete-wave-3-5-broken-build-fixes-wave-4-partial-committed-pushed">close-out¹⁴²ᵇ
+<h3 id="close-out¹⁴²ᵇ-round-468b-wave-2-complete-wave-3-5-broken-build-fixes-wave-4-partial-committed-pushed">close-out¹⁴²ᵇ
 — round 468b: Wave 2 complete + Wave 3 (5 broken-build fixes) + Wave 4
 partial — committed + PUSHED</h3>
 <ul>
@@ -7103,8 +7150,7 @@ same MkdirAll gap.</li>
 trips the account rate limit. Run mutating waves at ≤5, revert any
 rate-limited mid-flight edits (no evidence = no commit).</li>
 </ul>
-<h3
-id="close-out¹⁴²ᶜ-round-468c-wave-4b-re-run-rate-limited-streams-committed-pushed">close-out¹⁴²ᶜ
+<h3 id="close-out¹⁴²ᶜ-round-468c-wave-4b-re-run-rate-limited-streams-committed-pushed">close-out¹⁴²ᶜ
 — round 468c: Wave 4b (re-run rate-limited streams) — committed +
 PUSHED</h3>
 <ul>
@@ -7148,8 +7194,7 @@ BackupConfig MkdirAll gap; ssh_pool consensus transport wiring. Then
 larger phases: containerized Snyk/SonarQube/govulncheck/-race,
 coverage-to-max, dead-code disposition, docs/courses/website.</li>
 </ul>
-<h3
-id="close-out¹⁴²ᵈ-round-468d-wave-5-queued-blockers-committed-pushed">close-out¹⁴²ᵈ
+<h3 id="close-out¹⁴²ᵈ-round-468d-wave-5-queued-blockers-committed-pushed">close-out¹⁴²ᵈ
 — round 468d: Wave 5 (queued blockers) — committed + PUSHED</h3>
 <ul>
 <li><strong>W5A helix_qa</strong> <code>913ff9c</code>:
@@ -7185,8 +7230,7 @@ pkg/i18n flat-bundle reconciliation; root
 Snyk/SonarQube/govulncheck/-race (podman, §11.4.76), coverage-to-max,
 docs/courses/website.</li>
 </ul>
-<h3
-id="close-out¹⁴²ᵉ-round-468e-wave-6-5-stream-subagent-driven-batch-committed-pushed">close-out¹⁴²ᵉ
+<h3 id="close-out¹⁴²ᵉ-round-468e-wave-6-5-stream-subagent-driven-batch-committed-pushed">close-out¹⁴²ᵉ
 — round 468e: Wave 6 (5-stream subagent-driven batch) — committed +
 PUSHED</h3>
 <p>Operator directive 2026-06-04: run 3–5 parallel subagent-driven
@@ -7259,8 +7303,7 @@ stress+chaos suites (§11.4.85) for the W6 fixes; coverage-to-max;
 doc-archival execution per the W6E plan; submodule-internal doc sprawl
 (helix_code 84, llms_verifier 159).</li>
 </ul>
-<h3
-id="close-out¹⁴²ᶠ-round-468f-wave-7-4-stream-batch-committed-pushed-w7d-deletion-vetted-deferred-to-next-continue">close-out¹⁴²ᶠ
+<h3 id="close-out¹⁴²ᶠ-round-468f-wave-7-4-stream-batch-committed-pushed-w7d-deletion-vetted-deferred-to-next-continue">close-out¹⁴²ᶠ
 — round 468f: Wave 7 (4-stream batch) — committed + PUSHED; W7D deletion
 VETTED + deferred to next <code>continue</code></h3>
 <p>Operator directive: continue parallel subagent-driven streams; then
@@ -7321,8 +7364,7 @@ operator-gated mass doc-archival per
 <code>docs/DOC_RECONCILIATION_PLAN.2026-06-04.md</code>;
 submodule-internal doc sprawl.</li>
 </ul>
-<h3
-id="close-out¹⁴²ᵍ-round-468g-w7d-deletion-live-infra-proof-11.4.140141-cascade-complete-real-bug-fixes-committed-pushed">close-out¹⁴²ᵍ
+<h3 id="close-out¹⁴²ᵍ-round-468g-w7d-deletion-live-infra-proof-11.4.140141-cascade-complete-real-bug-fixes-committed-pushed">close-out¹⁴²ᵍ
 — round 468g: W7D deletion + LIVE infra proof + §11.4.140/141 cascade
 COMPLETE + real bug fixes — committed + PUSHED</h3>
 <p>Operator directive: resume under constitution <code>60e2d66</code>
@@ -7348,7 +7390,7 @@ pkgs — root is a thin governance module; all live code is inner
 <code>qa-results/W2-INFRA-evidence.txt</code>): PG+Redis booted via
 podman (machine 5.8.2), <code>bin/helixcode</code> (make build, 43.6 MB
 arm64) connected to real PG+Redis, <code>GET /health</code>→<strong>HTTP
-200</strong> <code>{"status":"healthy"}</code>,
+200</strong> <code>{&quot;status&quot;:&quot;healthy&quot;}</code>,
 <code>/api/v1/health</code>→200, auth→401. Gotcha: host port 6379 held
 by qemu (Android emulator) → used 6380.</li>
 <li><strong>§11.4.140/141 cascade COMPLETE</strong> — batches 1-6 across
@@ -7420,8 +7462,7 @@ unless intentional. Also: non-deterministic theme-color regen writes to
 the W7D-deleted root <code>internal/theme/</code> path (latent — a
 generator has a stale relative output path).</li>
 </ul>
-<h4
-id="g-addendum-late-findings-accurate-state-corrects-an-optimistic-earlier-note">468g
+<h4 id="g-addendum-late-findings-accurate-state-corrects-an-optimistic-earlier-note">468g
 addendum — late findings (ACCURATE state; corrects an optimistic earlier
 note)</h4>
 <ul>
@@ -7489,8 +7530,7 @@ per-submodule commit+push). (5) backlog: W6D
 <code>ModelsEndpoint</code>-baseURL sweep; W6B
 <code>RemoteVoteTransport</code> cross-host.</li>
 </ul>
-<h4
-id="g-final-state-accurate-session-ended-at-account-1m-context-credit-ceiling">468g
+<h4 id="g-final-state-accurate-session-ended-at-account-1m-context-credit-ceiling">468g
 FINAL state (accurate — session ended at account 1M-context credit
 ceiling)</h4>
 <p>The §11.4.103-121 H2-anchor requirement: the verifier wants each
@@ -7554,8 +7594,7 @@ to GitHub + GitLab (20 commits)</p>
 <p><strong>Next Steps:</strong> - Complete LLMsVerifier + HelixAgent
 submodule integration - Push submodule pointer updates - Doc exports
 (HTML/PDF/DOCX)</p>
-<h2
-id="close-out-2026-06-22-11.4.166-semgrep-mandate-repeal-meta-repo-de-wiring-11.4.55-sweep-debt-batch">close-out
+<h2 id="close-out-2026-06-22-11.4.166-semgrep-mandate-repeal-meta-repo-de-wiring-11.4.55-sweep-debt-batch">close-out
 — 2026-06-22: §11.4.166 semgrep-mandate REPEAL + meta-repo de-wiring +
 §11.4.55 sweep-debt batch</h2>
 <p>Operator decision (2026-06-22): semgrep is no longer a mandatory
@@ -7637,3 +7676,115 @@ distribution config update per CONST-045 — <code>thinker.local</code> +
 <code>amber.local</code> enrolled, <code>nezha.local</code>
 distribution-disabled.</li>
 </ul>
+<hr />
+<h2 id="test-suite-remediation-cycle-paused-mid-flight-operator-session-limit">2026-07-27
+— Test-suite remediation cycle (PAUSED mid-flight, operator session
+limit)</h2>
+<p><strong>Base:</strong> meta <code>66d6fb29</code> · helix_agent
+<code>36597718</code> · helix_qa <code>a729b51</code> · constitution
+checked-out <code>b00ab1c</code> (pin <code>7295a189</code>, 79 behind).
+<strong>Everything below is UNCOMMITTED in the working tree.</strong>
+Nothing committed, nothing tagged, nothing pushed. <strong>Canonical
+resumption entry point:</strong> <code>RESUME.md</code> (rev 2).
+<strong>Captured evidence:</strong>
+<code>docs/qa/test_remediation_20260727T124352Z/README.{md,html,pdf}</code>.</p>
+<h3 id="done">Done</h3>
+<ul>
+<li><strong>18 packages closed with captured runtime evidence</strong>,
+each root-caused before fix; paired §1.1 mutation wherever a gate was
+touched. No assertion weakened, no bare <code>t.Skip()</code>
+added.</li>
+<li><strong>3 PRODUCTION defects fixed</strong> (highest review priority
+— see below):
+<ol type="1">
+<li><code>internal/clis/agents/master/master.go</code> —
+<code>ListAvailable()</code> returned <code>nil</code> not
+<code>[]</code> → JSON <code>null</code> to clients.</li>
+<li><code>docker/mcp/docker-compose.mcp-servers.yml</code> — build
+contexts off by one dir since the grouped-submodule move; all 7 core MCP
+services would fail <code>compose build</code>.</li>
+<li><code>internal/services/provider_registry.go</code> —
+credential-free <code>zen</code> provider materialised inside
+<code>NewProviderRegistryWithoutAutoDiscovery</code> registries.
+Security-relevant: an approved-providers-only deployment would silently
+route prompts to an unapproved public endpoint.</li>
+</ol></li>
+<li><strong>Governance:</strong> 42 anchors §11.4.193–234 cascaded into
+all 6 carriers — verifier ceiling raised FIRST so the fix could not
+recreate the blind spot; now 277 PASS/0 FAIL, mutation-proven stronger
+than the old <code>grep -F</code>. G12 reconciled per §11.4.120. 12
+carrier HTML/PDF exports regenerated (CONST-066).
+<code>helix_code/.env</code> 644→600 (CONST-042).</li>
+<li><strong>Review remediation:</strong> independent review of the
+main-stream changes returned GO; all 5 warnings + 3 nits closed with
+evidence (incl. W1, where the in-code rationale I had written was
+factually wrong in 5 files).</li>
+</ul>
+<h3 id="state-11">State</h3>
+<ul>
+<li><strong>The inherited “24 failing packages” figure was stale in BOTH
+directions</strong> — two entries were already green,
+<code>internal/verifier</code> had newly regressed,
+<code>internal/search</code> had recovered. Re-derive; never trust a
+prior run’s log.</li>
+<li><strong>Dominant defect class: tests whose verdict depended on
+ambient host state</strong> (§11.4.50) — SonarQube being down,
+<code>init.defaultBranch</code>, CLI binaries on PATH, Ollama models
+pulled, port 8100 ownership. They passed on the authoring machine and
+failed here; <strong>bringing the platform live is what exposed
+them.</strong></li>
+<li><strong>Sweep is NOT yet green.</strong>
+<code>tests/automation</code> fails one subtest: 507 of 2422 tracked Go
+files are not gofmt-clean (pre-existing, whitespace-only, previously
+hidden because the gate only scanned its own 4 files).</li>
+<li><strong>Pending §11.4.142 gap:</strong> the subagent-authored
+changes (incl. all 3 production fixes) have NOT had independent review —
+author self-verification does not satisfy it. A review agent was
+dispatched and stopped mid-run at pause.</li>
+<li>Still-open harness bluff: <code>internal/testutil/checkHTTP</code>
+treats any status &lt; 500 as “available”, green-lighting a
+404-answering neighbour instead of skipping.</li>
+</ul>
+<h3 id="next-11">Next</h3>
+<ol type="1">
+<li>Independent review of the subagent changes (§11.4.142) — three
+production changes are the priority.</li>
+<li><code>gofmt -w $(git ls-files &#39;*.go&#39;)</code> in helix_agent —
+<strong>separate commit</strong> (507 files; folding it in makes the fix
+commit unreviewable).</li>
+<li>Full sweep: <code>-count=1</code> throughout,
+<code>-tags=nogui</code> for the inner module (without it,
+<code>applications/*</code> produce FALSE <code>[build failed]</code>
+from missing X11 headers — the inherited log’s mistake).</li>
+<li>Only if green: §11.4.84 quiescence, commit, tag
+<code>helix-code-1.2.0-dev-0.0.1</code> on main repo + every owned
+submodule with the identical prefix (§11.4.151), ff-only push (§11.4.113
+— force-push absolutely forbidden). Operator authorised the tag
+CONDITIONAL on green.</li>
+</ol>
+<h3 id="operator-decisions-blocking-closure">Operator decisions blocking
+closure</h3>
+<ul>
+<li><strong>Port collision:</strong> registry says HelixAgent owns 8100;
+<code>configs/development.yaml</code> says 7061; LLMsVerifier occupies
+8100. Beyond tests —
+<code>helixagent --generate-agent-config=opencode</code> emits
+<code>baseURL: http://localhost:8100/v1</code>, so shipped CLI-agent
+configs point users at the wrong service.</li>
+<li><strong>Constitution pin</strong> 79 commits behind (clean FF) —
+advancing needs a commit.</li>
+<li><strong>Canon defect:</strong> §11.4.64 / §11.4.205 / §11.4.206
+cited but never defined in
+<code>constitution/Constitution.md</code>.</li>
+<li><strong>CONST-053:</strong>
+<code>reports/latency/p99-baseline-2026-03-16.txt</code> +
+<code>releases/.version-data/helixagent.last-hash</code> are tracked
+files rewritten by tests. Exclude from staging; never
+<code>git add -A</code>.</li>
+<li><strong><code>.docs_chain/contexts/{issues,fixed}.yaml</code></strong>
+still point the legacy summary generators at Markdown rather than the DB
+— inert only because the engine is absent; would reproduce the
+corruption G12 now blocks.</li>
+</ul>
+</body>
+</html>

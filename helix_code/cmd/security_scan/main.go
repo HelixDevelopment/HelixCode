@@ -29,12 +29,58 @@ import (
 )
 
 const (
-	sonarqubePort    = "9000"
-	sonarqubeHealth  = "/api/system/status"
-	defaultTimeout   = 5 * time.Minute
-	defaultRetries   = 30
-	retryInterval    = 10 * time.Second
+	defaultSonarqubeHost = "localhost"
+	defaultSonarqubePort = "9000"
+	sonarqubeHealth      = "/api/system/status"
+	defaultTimeout       = 5 * time.Minute
+	defaultRetries       = 30
+	retryInterval        = 10 * time.Second
+
+	// Defaults for SonarQube's backing PostgreSQL sidecar (same compose file).
+	defaultSonarqubeDBHost = "localhost"
+	defaultSonarqubeDBPort = "5432"
+
+	// Env overrides for the SonarQube endpoint. Keeping the address
+	// configurable rather than hardcoded means (a) a non-default deployment
+	// needs no code change, and (b) the health-check tests can point at a
+	// deterministically-closed port instead of depending on whether a real
+	// SonarQube happens to be listening on the host running the suite.
+	//
+	// scripts/security-scan.sh reads HELIX_SONARQUBE_HOST / _PORT with the
+	// SAME defaults, so the shell half of the scan path and this binary always
+	// resolve the same address (no split brain).
+	envSonarqubeHost = "HELIX_SONARQUBE_HOST"
+	envSonarqubePort = "HELIX_SONARQUBE_PORT"
+
+	// Env overrides for the SonarQube PostgreSQL sidecar, for symmetry with
+	// the two above: a deployment that relocates SonarQube almost always
+	// relocates its database with it, and a hardcoded localhost:5432 would
+	// silently TCP-probe the wrong (or a completely unrelated) Postgres.
+	// These are deliberately SonarQube-scoped so they cannot collide with the
+	// application's own DB_HOST / DB_PORT.
+	envSonarqubeDBHost = "HELIX_SONARQUBE_DB_HOST"
+	envSonarqubeDBPort = "HELIX_SONARQUBE_DB_PORT"
 )
+
+// envOrDefault returns the value of env var name, or def when it is unset/empty.
+func envOrDefault(name, def string) string {
+	if v := os.Getenv(name); v != "" {
+		return v
+	}
+	return def
+}
+
+// sonarqubeHost returns the configured SonarQube host, or the default.
+func sonarqubeHost() string { return envOrDefault(envSonarqubeHost, defaultSonarqubeHost) }
+
+// sonarqubePort returns the configured SonarQube port, or the default.
+func sonarqubePort() string { return envOrDefault(envSonarqubePort, defaultSonarqubePort) }
+
+// sonarqubeDBHost returns the configured SonarQube PostgreSQL host, or the default.
+func sonarqubeDBHost() string { return envOrDefault(envSonarqubeDBHost, defaultSonarqubeDBHost) }
+
+// sonarqubeDBPort returns the configured SonarQube PostgreSQL port, or the default.
+func sonarqubeDBPort() string { return envOrDefault(envSonarqubeDBPort, defaultSonarqubeDBPort) }
 
 func main() {
 	scanner := flag.String("scanner", "", "Scanner to boot: sonarqube|snyk")
@@ -81,8 +127,8 @@ func handleSonarQube(ctx context.Context, projectDir string, rt runtime.Containe
 	composeFile := filepath.Join(projectDir, "docker", "security", "sonarqube", "docker-compose.yml")
 
 	sonarEp := endpoint.NewEndpoint().
-		WithHost("localhost").
-		WithPort(sonarqubePort).
+		WithHost(sonarqubeHost()).
+		WithPort(sonarqubePort()).
 		WithHealthPath(sonarqubeHealth).
 		WithHealthType("http").
 		WithRequired(true).
@@ -94,8 +140,8 @@ func handleSonarQube(ctx context.Context, projectDir string, rt runtime.Containe
 		Build()
 
 	postgresEp := endpoint.NewEndpoint().
-		WithHost("localhost").
-		WithPort("5432").
+		WithHost(sonarqubeDBHost()).
+		WithPort(sonarqubeDBPort()).
 		WithHealthType("tcp").
 		WithEnabled(true).
 		WithRequired(false).
@@ -130,21 +176,26 @@ func handleSonarQube(ctx context.Context, projectDir string, rt runtime.Containe
 		if summary.Failed > 0 {
 			return fmt.Errorf("one or more required services failed to start")
 		}
-		log.Printf("security-scan: SonarQube ready at http://localhost:%s", sonarqubePort)
+		log.Printf("security-scan: SonarQube ready at http://%s:%s", sonarqubeHost(), sonarqubePort())
 	case "status":
 		target := health.HealthTarget{
 			Name:    "sonarqube",
-			Host:    "localhost",
-			Port:    sonarqubePort,
+			Host:    sonarqubeHost(),
+			Port:    sonarqubePort(),
 			Path:    sonarqubeHealth,
 			Type:    health.HealthHTTP,
 			Timeout: 10 * time.Second,
 		}
 		result := checker.Check(ctx, target)
+		// Always name the endpoint that was actually probed. The address is
+		// env-overridable, so a verdict without it cannot be audited — a
+		// "healthy" line could refer to a different SonarQube entirely.
+		endpointDesc := fmt.Sprintf("http://%s:%s%s", sonarqubeHost(), sonarqubePort(), sonarqubeHealth)
 		if result.Healthy {
-			fmt.Printf("SonarQube: healthy (checked in %v)\n", result.Duration.Round(time.Millisecond))
+			fmt.Printf("SonarQube: healthy at %s (checked in %v)\n",
+				endpointDesc, result.Duration.Round(time.Millisecond))
 		} else {
-			fmt.Printf("SonarQube: unhealthy — %s\n", result.Error)
+			fmt.Printf("SonarQube: unhealthy at %s — %s\n", endpointDesc, result.Error)
 			os.Exit(1)
 		}
 	case "stop":

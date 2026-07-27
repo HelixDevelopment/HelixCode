@@ -6634,5 +6634,910 @@ mutation. <strong>Canonical authority:</strong> constitution submodule
 <code>--skip-headroom-check</code>,
 <code>--autonomous-tooling-kill</code>,
 <code>--assume-ulimit-scope</code> flag.</p>
+<p><strong>§11.4.186 — Anti-divergence enforcement: cross-document
+consistency is a mandatory-before-export/commit gate, never an
+after-the-fact audit (research-derived, 2026-07-08).</strong> Concise
+summary: any project maintaining more than one representation of the
+same tracked data (plan + brief + workable-items DB + summaries +
+<code>.md</code>/<code>.html</code>/<code>.pdf</code>/<code>.docx</code>
+exports) MUST enforce cross-document consistency as a deterministic
+PASS/FAIL/SKIP gate that runs BEFORE any export render, any doc/DB sync
+<code>verify</code>, and any doc-set commit — never as an after-the-fact
+human audit. Five decidable check families
+(DEDUP/TIMELINE/CROSS-DOC/INTEGRITY/STRUCTURAL); §11.4.86 fingerprint
+re-arms on any input change; self-validated analyzer
+(golden-good/golden-bad/negative-control) per §11.4.107(10). Honest
+boundary: proves internal consistency, not plan correctness. Composes
+§11.4.6/.12/.33/.44/.50/.53/.54/.60/.65/.73/.75/.85/.86/.91/.93/.95/.106/.107/.108/.110/.148/.176.
+Propagation gate <code>CM-COVENANT-114-186-PROPAGATION</code> (literal
+<code>11.4.186</code>) + recommended gate
+<code>CM-DOC-INTEGRITY-VALIDATION</code> + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.186. Non-compliance is a release blocker.</p>
+<p><strong>§11.4.187 — Automatic multi-track ruler orchestration (User
+mandate, 2026-07-04; landed 2026-07-09).</strong> Concise summary:
+multi-track parallel-development orchestration MUST ship as a universal,
+automatic, out-of-the-box, inherited engine (never a per-project
+reimplementation) at <code>constitution/scripts/multitrack/</code> — a
+single conductor session that spawns/resumes/monitors/controls per-track
+headless workers (native headless
+<code>claude -p --output-format stream-json</code>, session_id from the
+<code>init</code> event, success read from <code>result.is_error</code>
+never exit code), per-subscription auth + rate-limit fallback (unset
+ambient <code>ANTHROPIC_API_KEY</code>, rebind on 429), crash-resilient
+self-supervisor (durable state, write-temp-then-rename), idempotent
+bootstrap auto-invoked on every constitution pull. Project-agnostic
+engine; consumer supplies only per-host
+<code>config/multitrack/&lt;hostname&gt;.yaml</code> as data. Composes
+§11.4.20/.28/.58/.70/.101/.103/.111/.116/.119/.126/.128/.131/.147/.164/.167/.176/§12.6/§12.8.
+Propagation gate <code>CM-COVENANT-114-187-PROPAGATION</code> (literal
+<code>11.4.187</code>) + recommended gates
+<code>CM-MULTITRACK-ENGINE-IN-CONSTITUTION</code> /
+<code>CM-MULTITRACK-AUTOINSTALL-WIRED</code> /
+<code>CM-MULTITRACK-BOOTSTRAP-IDEMPOTENT</code> /
+<code>CM-MULTITRACK-BIND-ON-START</code> /
+<code>CM-MULTITRACK-FALLBACK-MONITOR</code> /
+<code>CM-MULTITRACK-HEADLESS-SPAWN</code> /
+<code>CM-MULTITRACK-RULER-SUPERVISOR</code> + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.187. Non-compliance is a release blocker.</p>
+<p><strong>§11.4.188 — Regular main→feature merge cadence: every
+track/feature-branch MUST FREQUENTLY merge canonical <code>main</code>
+into itself DURING the work, never only at the end (User mandate,
+2026-07-09).</strong> Concise summary: every long-lived feature branch
+AND every parallel-development track MUST regularly
+<code>git merge</code> (NEVER rebase) canonical
+<code>main</code>/<code>master</code> INTO itself THROUGHOUT the work —
+after every trunk tag, at minimum daily while live, and before starting
+significant new work — so the branch never drifts far and the eventual
+back-merge stays small and low-conflict. Fetch-first, §9.2 pre-op backup
+before large merges, resolve conflicts carefully (zero markers, zero
+dropped files), integrate only when quiescent (§11.4.84), never
+force-push after merge. Post-merge proof required: smoke gate GREEN +
+zero conflict-marker grep + no-lost-commit check. Generalises
+§11.4.167(D) from big feature-streams to every branch. Composes
+§9/.9.2/.37/.41/.42/.71/.84/.88/.89/.103/.113/.167/.176/.178/.179/.181.
+Propagation gate <code>CM-COVENANT-114-188-PROPAGATION</code> (literal
+<code>11.4.188</code>) + recommended gate
+<code>CM-REGULAR-MAIN-MERGE-INTO-FEATURE</code> + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.188. Non-compliance is a release blocker.</p>
+<p><strong>§11.4.189 — Most-reopened cases get extra-depth live-testing
+scrutiny FIRST (User mandate, 2026-07-10).</strong> Concise summary: all
+live testing (on-device/on-target runtime validation) MUST give the
+cases with the HIGHEST §11.4.55 reopens-count extra-depth retest,
+re-investigation per §11.4.102/§11.4.146, and full rock-solid
+physical-evidence confirmation (§11.4.5/.69/.107/.123) — scrutinised
+FIRST, ahead of the rest of the live-test suite. Strengthens
+§11.4.132(d) (most-reopened as ranking factor) into its own extra-depth
+mandate at the live-test layer. Composes
+§11.4.5/.6/.55/.69/.102/.107/.108/.115/.123/.129/.130/.132/.135/.146.
+Propagation gate <code>CM-COVENANT-114-189-PROPAGATION</code> (literal
+<code>11.4.189</code>) + recommended gate
+<code>CM-MOST-REOPENED-EXTRA-DEPTH-LIVE-TEST</code> + paired §1.1
+mutation. <strong>Canonical authority:</strong> constitution submodule
+<a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.189. Non-compliance is a release blocker.</p>
+<p><strong>§11.4.190 — Website engineering-quality mandate: every
+project website MUST be fully responsive + completely SEO-optimized +
+uniquely OpenDesign-authored + bleeding-edge enterprise-quality, each
+PROVEN with captured evidence (User mandate, 2026-07-10).</strong>
+Concise summary: every website/web-UI surface a project ships —
+INCLUDING the project’s own website — MUST satisfy AND PROVE with
+captured physical evidence (never a bare claim): (A) full responsiveness
+across all browser engines/OSes/device classes/screen sizes with no
+broken layout at any breakpoint; (B) complete SEO optimization (semantic
+HTML, meta/OG/Twitter cards, canonical URLs, structured data,
+sitemap/robots, WCAG AA, Core Web Vitals); (C) unique
+OpenDesign-token-authored templates (§11.4.162), never
+generic/off-the-shelf; (D) bleeding-edge enterprise visual quality in
+both light and dark themes. Proof required per facet: host-rendered
+cross-breakpoint screenshots + layout oracle, automated SEO audit
+meeting a score floor, OpenDesign-token provenance, §11.4.170
+device-independent pixel proof. Strict web expansion of §11.4.162 +
+binds §11.4.170; sibling of §11.4.168. Composes
+§11.4.5/.6/.69/.107/.162/.168/.170. Propagation gate
+<code>CM-COVENANT-114-190-PROPAGATION</code> (literal
+<code>11.4.190</code>) + recommended gates
+<code>CM-WEBSITE-RESPONSIVE-PROVEN</code> /
+<code>CM-WEBSITE-SEO-OPTIMIZED</code> /
+<code>CM-WEBSITE-OPENDESIGN-UNIQUE</code> + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.190. Non-compliance is a release blocker.</p>
+<p><strong>§11.4.191 — Work-to-track/branch binding enforcement: a
+logic-group’s work can NEVER be committed OR dispatched onto the wrong
+track/branch (research-derived, 2026-07-10).</strong> Concise summary:
+every logical group of workable items binds to EXACTLY ONE canonical
+<code>(track, branch)</code> recorded ONCE in the single source of truth
+(the §11.4.93 workable-items DB <code>logic_groups.destination</code> +
+<code>canonical_track</code> + <code>group_paths</code> file-scope
+manifest); no change belonging to a group may LAND on or be DISPATCHED
+to a different track/branch. File-scope generalisation of §11.4.181/.182
+branch-name consistency to work-PLACEMENT consistency. Preventive
+PreToolUse guard <code>guard-work-track-binding.sh</code> (inherited by
+reference, fail-closed) BLOCKS mis-placed commits/dispatches; detective
+gate <code>CM-WORK-TRACK-BINDING-ENFORCED</code> audits added commits on
+the current branch. Mis-placed changes reconciled by MERGE onto the
+canonical branch (never force-push, never commit-loss). Composes
+§11.4.6/.28/.29/.35/.58/.75/.84/.93/.95/.109/.110/.113/.119/.167/.176/.177/.178/.181/.182/§9.2.
+Propagation gate <code>CM-COVENANT-114-191-PROPAGATION</code> (literal
+<code>11.4.191</code>) + recommended gate
+<code>CM-WORK-TRACK-BINDING-ENFORCED</code> + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.191. Non-compliance is a release blocker.</p>
+<p><strong>§11.4.192 — Continuous multi-track auto-backfill: a FREE
+track MUST be IMMEDIATELY re-assigned its next-highest-priority domain
+work-set, never left idle while its domain has actionable items (User
+mandate, 2026-07-11).</strong> Concise summary: the moment any track’s
+worker COMPLETES its current work-set, that FREE track MUST be
+IMMEDIATELY assigned the NEXT-highest-priority actionable work-set from
+its own domain (§11.4.191 logic_group/canonical branch), claimed
+exactly-once (§11.4.176 registry), dispatched as a new
+§11.4.182-labelled stream — no waiting for a scheduled wake or operator
+prompt. When the next item’s on-device validation is gated (pending
+build/device/manual-QA), the track still advances the item’s SOURCE-SIDE
+work and honestly SKIPs only the device-gated validation portion.
+Promotes §11.4.103(B) auto-backfill from the STREAM layer to the TRACK
+layer. A track idles ONLY when its domain has genuinely zero remaining
+actionable items or every remaining item is externally blocked with no
+source-side advancement possible — “merges are done” is NEVER a valid
+idle reason. Composes
+§11.4.42/.58/.72/.94/.97/.101/.103/.167/.176/.178/.179/.182/.187.
+Propagation gate <code>CM-COVENANT-114-192-PROPAGATION</code> (literal
+<code>11.4.192</code>) + recommended gate
+<code>CM-CONTINUOUS-MULTITRACK-BACKFILL</code> + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.192. Non-compliance is a release blocker.</p>
+<hr />
+<h2 id="cascaded-anchor-backfill-11.4.18.22.39.63.100-11.4.19311.4.234-2026-07-27">Cascaded
+anchor backfill — §11.4.18/.22/.39/.63/.100 + §11.4.193–§11.4.234
+(2026-07-27)</h2>
+<p>The entries below restore five-carrier lockstep (§11.4.157) with the
+canonical <code>constitution/Constitution.md</code>, which had advanced
+to §11.4.234 while every consumer carrier still topped out at §11.4.192.
+Each entry is a short cascade reference in the established form: it
+carries the literal anchor token the propagation gates match on, and
+points at the canonical text, which remains the sole authority
+(CONST-059 / §11.4.35). NOTE (§11.4.6 honest boundary): §11.4.64,
+§11.4.205 and §11.4.206 are CITED but never DEFINED in the canonical
+constitution (zero block-openers), so they are not cascadable here; that
+dangling-cross-reference defect belongs to the canon and is reported
+upstream, not papered over in the consumers.</p>
+<p>NOTE (§11.4.6 honest boundary, cont.): §11.4.175, §11.4.203 and
+§11.4.204 have ZERO occurrences of any kind in the canonical
+constitution — neither defined nor cited. They are pure numbering gaps,
+not dangling cross-references: there is nothing to cascade here and
+nothing to report upstream.</p>
+<p><strong>§11.4.18 — Script documentation mandate (User mandate,
+2026-05-14).</strong> Cascade reference (short form): Forensic anchor —
+direct user mandate (verbatim, 2026-05-14): “Make sure that every single
+script inside the scripts dir (in all subdirs in depth) is fully
+documented and covered with full user manuals and user guides! …
+Whenever is some bash script modified we MUST document it fully and
+create for it complete user guide(s) and manual(s) - if already exists
+make sure all of it is in sync and fully updated! No documentation ever
+can be out of sync with its codebase!” Every Bash / shell / POSIX-sh
+script ANYWHERE in a project (anywhere under ‘scripts/’, … Propagation
+gate <code>CM-COVENANT-114-18-PROPAGATION</code> (literal
+<code>11.4.18</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.18 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.22 — Document-sync commit discipline (User mandate,
+2026-05-14).</strong> Cascade reference (short form): Forensic anchor —
+direct user mandate (verbatim, 2026-05-14): “For Issues, Issues_Summary
+and Fixed docs (and all its exports) we MUST commit and push (only them)
+as soon as they are updated (synced). Continuation doc and other similar
+/ relevant documentation MUST be committed and pushed too! Like this we
+will always have up to date status of working items without need to do
+full commit and push of everything if that is not possible to do!”
+Classification: §11.4.17-classified universal — every project that
+tracks work items through an Issues / Fixed lif … Propagation gate
+<code>CM-COVENANT-114-22-PROPAGATION</code> (literal
+<code>11.4.22</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.22 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.39 — Per-Feature On-Device End-User Validation Mandate
+(iter-76, 2026-05-17).</strong> Cascade reference (short form): Every
+user-facing feature in a consuming project MUST have at least one
+HelixQA scenario that exercises the feature from cold-launch with
+positive runtime evidence: - A screenshot or screen recording captured
+at a named checkpoint. - At least one assertion of type ‘screenshot’,
+‘accessibility_count’, ‘accessibility_node’, ‘ocr_text’,
+‘pixel_histogram’, or ‘editor_state’. - Evidence files written to a
+discoverable output directory so every PASS is cross-verifiable after
+the fact. … Propagation gate <code>CM-COVENANT-114-39-PROPAGATION</code>
+(literal <code>11.4.39</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.39 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.63 — Workable-items procedure docs as single source of
+truth (User mandate, 2026-05-19).</strong> Cascade reference (short
+form): Forensic anchor — verbatim user mandate (2026-05-19 ~10:30Z): “To
+make workable items tracking and creation through all of the mentioned
+mandatory documents we MUST create proper procedure document which will
+be named in Constitution, AGENTS.md and CLAUDE.md as single source of
+truth for this procedure! Make sure it is created under:
+docs/procedures/issues/Creation.md which will be always exported to PDF
+and HTML whenever it is updated. … Propagation gate
+<code>CM-COVENANT-114-63-PROPAGATION</code> (literal
+<code>11.4.63</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.63 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.100 — RETIRED.</strong> Cascade reference (short form):
+Demoted to consumer project (a consuming project’s
+video-color/visual-quality fidelity) per §11.4.17/§11.4.35 —
+project-specific (RK3588/MPV/Arvus), not universal. See the consuming
+project’s Constitution/CLAUDE/AGENTS/QWEN. Propagation gate
+<code>CM-COVENANT-114-100-PROPAGATION</code> (literal
+<code>11.4.100</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.100 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.193 — Anti-blind-typing mandate: every UI interaction
+MUST be “seen” and “understood” via OCR/vision/screenshot proof, NEVER
+blind-typed (User mandate, 2026-07-13).</strong> Cascade reference
+(short form): Verbatim operator mandate: “No blind typing of any kind
+anywhere!!!” and “Login to apps and services MUST BE done with
+understanding and seeing the whole UI ALWAYS!!!” and “Add into the
+constitution that blind typing is STRICTLY FORBIDDEN, and instead
+everything MUST BE seen and understood in coordination with proper
+models and means we have incorporated in HelixQA!!!” and “No bluff of
+any kind anywhere!!!” Blind typing — sending keystrokes, text, or input
+events to a UI surface WITHOUT first capturing AND understanding what is
+on screen (OCR / vision / … Propagation gate
+<code>CM-COVENANT-114-193-PROPAGATION</code> (literal
+<code>11.4.193</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.193 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.194 — Exhaustive all-scenario, all-angle code-review +
+verify-against-captured-runtime-evidence mandate (User mandate,
+2026-07-14).</strong> Cascade reference (short form): Forensic anchor —
+verbatim user mandate (2026-07-14): “CRITICAL: Code review MUST TAKE
+into the accounts all scenarios, look at the problem or change from all
+angles, deepest possible analisys! No gaps, shortcomings or false
+results or bluff is allowed! Extend our root constitution Submodule and
+all relevant files properly so the review process is more precise and we
+do not have situations like the last one!” Forensic case study
+(genericised, 2026-07-14 — “the last one”). … Propagation gate
+<code>CM-COVENANT-114-194-PROPAGATION</code> (literal
+<code>11.4.194</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.194 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.195 — Branch-structure governance: taxonomy +
+merge-after-live-QA + flavor/product non-merge (User mandate,
+2026-07-14).</strong> Cascade reference (short form): Forensic anchor —
+verbatim operator rules (2026-07-14): 1. Branch taxonomy:
+‘feat/<NAME_OF_FEATURE>’, ‘product/<NAME_OF_PRODUCT>’,
+‘flavor/<NAME_OF_FLAVOR>’ (extends §11.4.181 / §11.4.167(D)). 2. Tracks
+on FEATURE branches or ‘main’ MUST — after full confirmation +
+validation + verification + full LIVE MANUAL TESTING (§11.4.185) — MERGE
+their work to ‘main’ COMPLETELY (all submodules + main repo), ff-only,
+NEVER force-push (§11.4.113), no commit lost (§9.2) (extends
+§11.4.167(I) / §11.4.188). 3. … Propagation gate
+<code>CM-COVENANT-114-195-PROPAGATION</code> (literal
+<code>11.4.195</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.195 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.196 — Native-alias-first priority + per-alias
+real-signal limit/subscription tracking + auto-rebind-on-recovery +
+resource-detection-by-real-identity-not-substring-match (User mandate,
+2026-07-14).</strong> Cascade reference (short form): Verbatim operator
+mandate: use ALL operational claude-NATIVE aliases FIRST — as long as ≥1
+native alias is operational (NOT session-rate-limited, NOT
+weekly-limit-reached, NOT expired-subscription) — before ANY provider
+alias; track per alias the session rate-limit / weekly-limit /
+subscription expiry+renewal from REAL signals (never faked, §11.4.6) and
+record when each becomes operational AGAIN; as soon as a higher-priority
+native recovers, rebind tracks to it; … Propagation gate
+<code>CM-COVENANT-114-196-PROPAGATION</code> (literal
+<code>11.4.196</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.196 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.197 — Research / kicked-off-work completion mandate:
+every research effort MUST be driven to full, wired, verified completion
+or explicitly closed — never left un-wired in the backlog (User mandate,
+2026-07-15).</strong> Cascade reference (short form): Forensic anchor —
+verbatim operator mandate (2026-07-15): “all research work we start MUST
+BE fully finished, completely confirmed, validated and verified! It MUST
+NOT happen for it to stay at the backlog uncompleted and un-wired! Loss
+of requirements, failure to incorporate them is FORBIDDEN!!! Everything
+MUST BE fully completed! No exceptions!” Every research effort,
+kicked-off improvement, design doc, spike, prototype, proof-of-concept,
+or partially-landed feature that a project STARTS MUST be driven to FULL
+completion — OR explicitly, evidence-backed … Propagation gate
+<code>CM-COVENANT-114-197-PROPAGATION</code> (literal
+<code>11.4.197</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.197 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.198 — Default working mechanisms: multi-alias
+native-first orchestration AND heavy token-optimization are ALWAYS-ON
+defaults for single- and multi-track work (User mandate,
+2026-07-15).</strong> Cascade reference (short form): Forensic anchor —
+operator mandate (2026-07-15): multiple claude-toolkit aliases
+(native-first) AND heavy token-optimization MUST be the DEFAULT
+mechanisms, always used with single- and multi-track development and
+with single or multiple working agents. Two proven mechanisms are
+promoted to STANDING, always-on defaults — engaged automatically for
+EVERY working configuration (single-agent OR multiple-agent;
+single-track OR multi-track), never a per-request opt-in: (A)
+Multi-alias native-first orchestration is the DEFAULT. … Propagation
+gate <code>CM-COVENANT-114-198-PROPAGATION</code> (literal
+<code>11.4.198</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.198 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.199 — Exact-reproduction-sequence mandate: when a
+working reproduction exists, the investigation MUST use ITS exact
+sequence — a deviating repro proves NOTHING (research-derived,
+2026-07-15).</strong> Cascade reference (short form): Forensic anchor
+(FACT, 2026-07-15). An investigation concluded that a defensive “cover”
+mechanism “never engages” and that the defect it guards was therefore
+unfixed. The conclusion was WRONG: the hand-rolled reproduction drove
+the target with a DIFFERENT input than the existing test did (it pressed
+a HOME key where the test sent a media-pause key), so the hand-rolled
+path never reached the PRECONDITION the mechanism keys off. Re-driven
+with the TEST’S EXACT sequence, the mechanism provably ENGAGED. …
+Propagation gate <code>CM-COVENANT-114-199-PROPAGATION</code> (literal
+<code>11.4.199</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.199 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.200 — Non-targetable deploy/flash tooling MUST isolate
+exactly ONE eligible target and VERIFY-AFTER-WRITE on the INTENDED
+target (research-derived, 2026-07-15).</strong> Cascade reference (short
+form): Forensic anchor (FACT, 2026-07-15). A flashing tool with no
+device-selection argument AUTO-SELECTED a device from the bus. With a
+sibling board still attached, it silently wrote the freshly-built image
+to the WRONG board, printed a SUCCESS message, and the INTENDED board
+kept its OLD build. Every downstream test then validated a target that
+had never received the artifact: the §11.4.108 ARTIFACT →
+RUNTIME-ON-CLEAN-TARGET layer was silently broken while every tool and
+gate reported green. … Propagation gate
+<code>CM-COVENANT-114-200-PROPAGATION</code> (literal
+<code>11.4.200</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.200 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.201 — Every guard/gate MUST assert the REAL condition:
+a false-positive refusal is a FAIL-bluff, a false-negative pass is a
+PASS-bluff (research-derived, 2026-07-15).</strong> Cascade reference
+(short form): Forensic anchor (FACT, 2026-07-15 — two independent
+instances in one cycle). (a) A host-budget guard used a bare ‘pgrep
+-f’<pattern>’’ and REFUSED every worker spawn on a host with ZERO real
+builds, because a live worker’s own command line merely QUOTED the
+pattern (the §11.4.196(D) / §12.12 carrier footgun). (b) A host-safety
+pre-flight refused a build on a “swap full” reading that did not reflect
+a real memory-pressure condition, and cleared only after the operator
+manually cycled swap. … Propagation gate
+<code>CM-COVENANT-114-201-PROPAGATION</code> (literal
+<code>11.4.201</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.201 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.202 — Reporting directives: a report MUST auto-create a
+fully-populated, fully-synced workable item — never a prose
+acknowledgement (User mandate, 2026-07-15).</strong> Cascade reference
+(short form): Verbatim operator mandate: introduce reporting directives
+‘ISSUE’ / ‘BUG’ / ‘TASK’ that create a proper workable item filled with
+all details, with the WHOLE workable-items system automatically up to
+date and fully in sync — the main DB, all documents, and all external
+tracking systems; universal, reusable on every project, fully decoupled,
+recognized immediately by every project that pulls the constitution. …
+Propagation gate <code>CM-COVENANT-114-202-PROPAGATION</code> (literal
+<code>11.4.202</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.202 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.207 — Instant multi-stream resume engine: whole-fleet
+continuation state is a durable, content-addressed, atomically-committed
+snapshot resumed in O(changed) reads, not an O(history) re-read (User
+mandate, 2026-07-15).</strong> Cascade reference (short form): Compact
+summary: the continuation mechanism (§12.10 / §11.4.127 / §11.4.131 /
+§11.4.205) is EXTENDED — never replaced — by a mechanical engine so a
+fresh session resumes ALL work (every Track, main stream, and agent) at
+once, INSTANTLY and at token cost O(changed streams), by reading ONE
+snapshot manifest + one compact blob per stream, NEVER re-reading the
+full handoff history. … Propagation gate
+<code>CM-COVENANT-114-207-PROPAGATION</code> (literal
+<code>11.4.207</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.207 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.208 — Operator-request-history document: every project
+maintains a project-local, always-in-sync ledger of every operator
+request/prompt (content + timestamp+timezone + track + alias + model +
+effort) (User mandate, 2026-07-15).</strong> Cascade reference (short
+form): Verbatim operator mandate (2026-07-15): introduce a
+request-history document that captures, per operator request/prompt —
+the full request content, the accepted timestamp with an explicit
+timezone, the track that processed it, the alias that took the workable
+item, and the model + effort used — always kept in sync, with no false
+data and no bluff of any kind. The operator’s load-bearing correction
+(§11.4.35 / §11.4.17): the RULE (this universal discipline) belongs in
+the constitution submodule; … Propagation gate
+<code>CM-COVENANT-114-208-PROPAGATION</code> (literal
+<code>11.4.208</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.208 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.209 — Code-review MUST run on the Fable model at xhigh
+effort (Opus xhigh fallback) (User mandate, 2026-07-15).</strong>
+Cascade reference (short form): Verbatim operator mandate (2026-07-15):
+the mandatory independent code-review MUST ALWAYS be performed with the
+Fable model at xhigh effort; if Fable is unavailable, use Opus at xhigh
+effort. Every mandatory independent code-review the constitution
+requires — the §11.4.125 code-review-agent gate before pre-build + main
+build, the §11.4.142 universal every-change-review (no exception), and
+the §11.4.194 exhaustive all-scenario/all-angle review +
+verify-against-captured-runtime-evidence, iterated to a zero-finding GO
+per §11.4.134 — MUST be dispatched on t … Propagation gate
+<code>CM-COVENANT-114-209-PROPAGATION</code> (literal
+<code>11.4.209</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.209 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.210 — Zero-loss request/prompt intake: every operator
+request MUST be mechanically captured, tracked, and processed — never
+skipped, ignored, avoided, or lost (User mandate, 2026-07-15).</strong>
+Cascade reference (short form): Forensic anchor — verbatim user mandate
+(2026-07-15): “We MUST CHECK which requests / prompts we have given
+havent passed through except the accumulative prompts / requests history
+document !!! There may be more of it! This MUST NEVER happen! We MUST
+make sure that every request / prompt we issues is AWLAYS respected and
+taken into the account, executed and processed! This is MANDATORY RULE
+!!! There MUST NOT BE any avoiding, ignoring, skipping or any form of
+loss for requests / prompts we make! Extend properly constitution
+Submodule and add mandatory li … Propagation gate
+<code>CM-COVENANT-114-210-PROPAGATION</code> (literal
+<code>11.4.210</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.210 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.211 — Merge-conflict resolution during
+main→feature/product/flavor merges MUST run on the Fable model at xhigh
+effort (Opus xhigh fallback) (User mandate, 2026-07-16).</strong>
+Cascade reference (short form): Verbatim operator mandate (2026-07-16):
+“During the merge of main branch to all feature/product/flavor branches
+of tracks 2 - 4, if conflicts happen they MUST BE resolved using Fable
+model with xhigh effort! If Fable is not available, then with Opus with
+xhigh! Add this MANDATORY RULE into constitution Submodule and its files
+CONSTITUTION.md, CLAUDE.md, AGENTS.md, QWEN.md, GEMINI.md, and other
+related relevant files!” Any merge-CONFLICT resolution performed while
+integrating the canonical trunk (‘main’/‘master’) into a feature /
+product / flavor branch — … Propagation gate
+<code>CM-COVENANT-114-211-PROPAGATION</code> (literal
+<code>11.4.211</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.211 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.212 — Main README is the canonical starting-point /
+entry point for ALL project documentation — no doc may be an orphan
+unreachable from README (User mandate, 2026-07-16).</strong> Cascade
+reference (short form): Verbatim operator mandate (2026-07-16): “Manual
+tests catalog must have linking all through the main README as the
+starting point of this and any other Project documentation! This fact
+and mandatory rule MUST be added into the constitution.” The main README
+(‘README.md’ at the repository root) is the canonical STARTING POINT /
+entry point for ALL project documentation, for THIS project and EVERY
+project incorporating this constitution. … Propagation gate
+<code>CM-COVENANT-114-212-PROPAGATION</code> (literal
+<code>11.4.212</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.212 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.213 — FEATURE research-scheduling directive: recognized
+via all §11.4.140 forms, SCHEDULES (never synchronously executes) a
+deep, enterprise-grade research + implementation-planning effort as a
+tracked workable item (operator-directed mandate, 2026-07-16).</strong>
+Cascade reference (short form): Mandate (2026-07-16): extend the
+§11.4.202 reporting-directive family with a fourth registered action,
+‘FEATURE’, that turns a plain-language feature description into a
+SCHEDULED, deep, enterprise-grade research-and-planning effort —
+mirroring EXACTLY how ‘ISSUE’ / ‘BUG’ / ‘TASK’ turn a report into a
+tracked workable item, but for RESEARCH SCHEDULING rather than
+defect/task/feature reporting: the directive itself creates the tracked
+item and enqueues it durably; … Propagation gate
+<code>CM-COVENANT-114-213-PROPAGATION</code> (literal
+<code>11.4.213</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.213 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.214 — Recurrence-links-not-mints: a defect that returns
+MUST reopen its existing item, never enter as a new id
+(research-derived, 2026-07-17).</strong> Cascade reference (short form):
+Forensic anchor (genericised, 2026-07-17). In a consuming project,
+operator-reported defects that were RECURRENCES of already-tracked,
+already-“fixed” defects re-entered the tracker as BRAND-NEW ids rather
+than reopening the originals (measured: at least five distinct
+recurrence chains, one three deep). … Propagation gate
+<code>CM-COVENANT-114-214-PROPAGATION</code> (literal
+<code>11.4.214</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.214 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.215 — A doc that BINDS work MUST live, tracked, in the
+repository where that work happens (research-derived,
+2026-07-17).</strong> Cascade reference (short form): Forensic anchor
+(genericised, 2026-07-17). In a consuming project, the document that
+DEFINED a binding acceptance gate — the gate a body of work was ordered
+to satisfy before proceeding — was untracked and lived in an out-of-tree
+scratch directory belonging to a different working checkout, i.e. it
+existed in NO repository and in no other agent’s or operator’s checkout.
+… Propagation gate <code>CM-COVENANT-114-215-PROPAGATION</code> (literal
+<code>11.4.215</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.215 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.216 — Canonical machine-readable design-token source:
+one CSS custom-property file (<code>:root</code> +
+<code>[data-theme=&quot;dark&quot;]</code>), generated bindings everywhere else
+(User mandate, 2026-07-22).</strong> Cascade reference (short form):
+Forensic anchor — proving project (Helix Thready MVP design package,
+2026-07-22). The mandate’s shape was proven end-to-end in the Helix
+Thready design package (‘docs/public/research/mvp/design/’): ONE
+machine-readable token file (‘opendesign/tokens.css’) carries every
+color / type / spacing / radius / elevation / motion value as CSS custom
+properties — light values in a ‘:root {}’ block, dark values in a
+‘[data-theme=“dark”]’ override — and every value is evidence-traceable,
+never invented: the brand chartreuse ‘#B6E376’ is the recorded eyedrop
+MEAN of … Propagation gate <code>CM-COVENANT-114-216-PROPAGATION</code>
+(literal <code>11.4.216</code>) + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.216 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.217 — OpenDesign brand contract: every UI-shipping
+product carries a 9-section DESIGN.md + tokens.css twin with disjoint
+color roles, AA-pinned accents, and a locked attribution footer (User
+mandate, 2026-07-22).</strong> Cascade reference (short form): Forensic
+anchor — proving project (Helix Thready MVP design package, 2026-07-22).
+Helix Thready ships ‘design/opendesign/DESIGN.md’ in the OpenDesign
+9-section brand-contract schema — VERIFIED against the tool’s own source
+per §11.4.99 (spec, ‘design-systems/README.md’, the contributor
+authoring guide, and a measured 150-file corpus: two coexisting heading
+families, both parsed by number prefix only) — plus its machine-readable
+twin ‘tokens.css’ per the OpenDesign token schema, and an honest
+‘TOOLING.md’ capability check. … Propagation gate
+<code>CM-COVENANT-114-217-PROPAGATION</code> (literal
+<code>11.4.217</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.217 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.218 — Living design-library catalogue: every component
+× state × theme rendered self-contained + a cross-platform reusability
+matrix with per-cell provenance (User mandate, 2026-07-22).</strong>
+Cascade reference (short form): Forensic anchor — proving project (Helix
+Thready MVP design package, 2026-07-22). Helix Thready’s
+‘design/library/’ renders the ENTIRE component set as a living
+catalogue: ‘components.html’ — 14 groups, ~38 components, ≈ 118
+component-state cells, each auditable in BOTH themes via a real toggle
+(≈ 236 rendered states), zero external requests, interactive behaviors
+REAL not mocked (theme cycling stamps ‘data-theme’ and persists; column
+sorting drives ‘aria-sort’; a real ‘showModal()’ dialog; … Propagation
+gate <code>CM-COVENANT-114-218-PROPAGATION</code> (literal
+<code>11.4.218</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.218 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.219 — Per-app screen catalogues: full-IA coverage per
+surface, per-platform chrome variants, honesty markers for unbuilt
+behavior (User mandate, 2026-07-22).</strong> Cascade reference (short
+form): Forensic anchor — proving project (Helix Thready MVP design
+package, 2026-07-22). Helix Thready’s ‘design/screens/’ carries a screen
+catalogue PER SURFACE — 13 web screens + an interactive prototype shell
+walking the four key journeys, 11 device-framed 390×844 mobile artifacts
+with an Android/iOS chrome TOGGLE (+ HarmonyOS/Aurora port notes)
+covering EVERY node of the wireframes’ information architecture, a
+desktop shell with per-OS title bars / menus / tray / file-drop mocks,
+ten 80-column TUI mockups covering the full state machine, and a 3-page
+market … Propagation gate <code>CM-COVENANT-114-219-PROPAGATION</code>
+(literal <code>11.4.219</code>) + paired §1.1 mutation.
+<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.219 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.220 — Open-first design tooling: self-hosted open
+platforms are primary; proprietary tools are import/export targets only;
+design sources live in-repo in open formats (User mandate,
+2026-07-22).</strong> Cascade reference (short form): Forensic anchor —
+proving project (Helix Thready MVP design package, 2026-07-22). Helix
+Thready’s tooling capability check (‘opendesign/TOOLING.md’) and export
+capstone prove the posture: every design source lives IN-REPO in open
+formats (7 SVG brand masters, ‘tokens.css’, JSON manifests + 28 genuine
+‘.od-figma.json’ IR captures, 6 hand-authored Lottie JSONs,
+self-contained HTML screens); the OpenDesign daemon/CLI status was
+RUNTIME-PROBED (live health endpoint, CLI round-trip,
+headless-vs-operator matrix), never assumed; … Propagation gate
+<code>CM-COVENANT-114-220-PROPAGATION</code> (literal
+<code>11.4.220</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.220 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.221 — Motion discipline: token-bound durations/easings
++ machine-readable manifest + reduced-motion static fallbacks everywhere
+(User mandate, 2026-07-22).</strong> Cascade reference (short form):
+Forensic anchor — proving project (Helix Thready MVP design package,
+2026-07-22). Helix Thready’s ‘design/motion/’ package proves the
+discipline: six hand-authored vector Lottie animations bound to the
+token motion values, each validated by parse + structural schema check +
+REAL render (lottie-web under jsdom with animation-progression
+assertions, plus headless-Chromium light+dark contact sheets) —
+unverified runtimes (‘lottie-compose’ / ‘lottie-ios’) honestly
+‘[OPEN]’-tracked; … Propagation gate
+<code>CM-COVENANT-114-221-PROPAGATION</code> (literal
+<code>11.4.221</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.221 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.222 — Design-completion export wave: a design is not
+done until token codegen, the honest-output raster matrix, both-theme
+renders, hand-off bundles, and doc twins land (User mandate,
+2026-07-22).</strong> Cascade reference (short form): Forensic anchor —
+proving project (Helix Thready MVP design package, 2026-07-22). Helix
+Thready’s export capstone proves the wave: an icon/asset raster matrix
+locked 1:1 to its generator (‘generate-raster.sh’), which SELECTS its
+SVG renderer by PROBE — each candidate (rsvg-convert → inkscape → resvg
+→ headless Chromium → ImageMagick) must pass a real probe render with
+content verification before it is used, a failing candidate falls
+through with a note, and if NONE passes the script exits with
+instructions and writes NOTHING (“No PNGs were written (outpu …
+Propagation gate <code>CM-COVENANT-114-222-PROPAGATION</code> (literal
+<code>11.4.222</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.222 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.223 — Provenance-marker discipline for design
+documentation + central open-item registry in the area index (User
+mandate, 2026-07-22).</strong> Cascade reference (short form): Forensic
+anchor — proving project (Helix Thready MVP design package, 2026-07-22).
+Every statement in the Helix Thready design area carries an inline
+provenance marker from a closed vocabulary (‘[VERIFIED]’, ‘[OPERATOR]’,
+‘[RESEARCH]’, ‘[DEFAULT — adjustable]’, ‘[ASSUMED]’, ‘[BUILD-NEW]’,
+‘[IN-HOUSE: module]’, ‘[CONSTITUTION §x]’, ‘[GAP: id]’, ‘[OPEN: id]’); …
+Propagation gate <code>CM-COVENANT-114-223-PROPAGATION</code> (literal
+<code>11.4.223</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.223 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.224 — Test-first (TDD) for ALL work, not only fixes + a
+minimum code-coverage floor that is NECESSARY-never-sufficient (User
+mandate, 2026-07-22).</strong> Cascade reference (short form): Forensic
+anchor — verbatim user mandate (2026-07-22): “Any work we do MUST START
+by writing the test! We MUST FULLY comply and follow the TDD - The test
+driven development! It MUST BE applied for any change, implementation,
+wiring, tests, challenges and any other form of codebase we write! Bash
+scripts as well! Coverage with TDD MUST BE close to 100%, not less than
+85% !!!” The gap this closes. … Propagation gate
+<code>CM-COVENANT-114-224-PROPAGATION</code> (literal
+<code>11.4.224</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.224 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.225 — Scheduler-quota burst-throttling telemetry +
+interactive-scope isolation from bursty fleets: progressive interactive
+degradation is diagnosed from throttling accounting over time, never
+from averages, and an interactive-latency-sensitive process never shares
+a fixed-quota no-burst scope with a bursty fleet (research-derived,
+2026-07-23).</strong> Cascade reference (short form): Forensic anchor
+(genericised, 2026-07-22 — two independent instances in one day). (a)
+Progressive interactive sluggishness — worsening with the number of live
+subagents — was root-caused to a scheduler CPU quota (a cgroup ‘cpu.max’
+limit) with NO burst allowance on a session scope hosting BOTH the
+operator’s interactive terminal-multiplexer server AND a spawning agent
+fleet. Measured live on a 64-CPU host: the scope’s quota was 9.6 CPU per
+100 ms enforcement period; … Propagation gate
+<code>CM-COVENANT-114-225-PROPAGATION</code> (literal
+<code>11.4.225</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.225 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.226 — Evidence-class-at-closure + standing detection
+pressure: machinery presence does NOT predict whether a fix holds — the
+EVIDENCE CLASS at closure (runtime vs source) under real DETECTION
+PRESSURE does; prose does not bind, seams do (research-derived,
+2026-07-23).</strong> Cascade reference (short form): Forensic anchor
+(genericised — the 2026-07-22 reopen/first-touch root-cause forensics;
+operator mandate 2026-07-22, verbatim: “do deep research on how we have
+for very long time so much reopened workable items!? Why the quality of
+delivered releases was so poor mostly? We mostly detect the same major
+problems on first touch when new releases are available, and this
+happens over and over again!”). The single strongest empirical result
+across four independent evidence lines (internal forensics; a 76-source
+external literature pass; … Propagation gate
+<code>CM-COVENANT-114-226-PROPAGATION</code> (literal
+<code>11.4.226</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.226 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.227 — Governance-corpus self-custody: the rule corpus
+is bound by the same custody it imposes — every named gate is
+implemented-or-registered-deferral under a monotone ratchet, and
+propagation gates count anchor BLOCKS (exactly-once +
+lockstep-identical), never bare literals (research-derived,
+2026-07-23).</strong> Cascade reference (short form): Forensic anchor
+(measured on THIS corpus, 2026-07-22 — commands and control needles
+preserved in the root-cause analysis). The canonical rule file held
+10,735 lines and 220 distinct §11.4.N anchors; 413 named CM-* gates, of
+which 241 (58%) had no implementation in either canonical gate site,
+plus 85 literal “gate-code = separate work item” deferrals; the
+status-custody seam DESIGNED on 2026-07-17 was still prose on 2026-07-22
+— the corpus’s highest-value remediation fell into its own gap within
+five days; … Propagation gate
+<code>CM-COVENANT-114-227-PROPAGATION</code> (literal
+<code>11.4.227</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.227 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.228 — Cross-agent extension lifecycle mandate:
+per-platform compatibility declaration, source tracking, per-extension
+documentation with compatibility matrix, and auto-wiring of constitution
+extensions into all detected agent platforms on constitution pull
+(research-derived from Extensions Catalog forensics,
+2026-07-24).</strong> Cascade reference (short form): Forensic anchor
+(FACT, 2026-07-24 — measured from the live Extensions Catalog at
+‘docs/extensions/EXTENSIONS_CATALOG.md’). The project’s extension
+ecosystem — skills, MCP servers, ACPs, LSPs, plugins, and supporting
+infrastructure (34 skills, 1 MCP, 38 provider aliases, 21 CCR providers,
+4 daemons, plus a separate HelixSkills repo) — exhibited four structural
+gaps: (G1) of 18 active Claude Code project skills, only Claude Code and
+OpenCode platforms are explicitly supported — HelixCode, Gemini CLI, and
+Qwen Code have zero recorded loading paths despite b … Propagation gate
+<code>CM-COVENANT-114-228-PROPAGATION</code> (literal
+<code>11.4.228</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.228 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.229 — Live in-session task/todo tracker MUST always be
+up to date and fully in sync with the real work state — never stale,
+never showing completed work as pending nor pending as done (User
+mandate, 2026-07-25).</strong> Cascade reference (short form): Verbatim
+operator mandate (2026-07-25): “make sure it is ALWAYS up to date fully
+in sync! CRITICAL: This MUST BE one of mandatory rules / constraints!
+Add it with all relevant details into the constitution Submodule and
+relevant related files.” The agent’s LIVE IN-SESSION TASK/TODO TRACKER —
+the harness-provided task list / ‘TodoWrite’-class todo tool / any
+equivalent moment-to-moment execution-state surface the runtime exposes
+DURING a session — MUST ALWAYS be kept up to date and FULLY IN SYNC with
+the real live work state: never stale, never showing co … Propagation
+gate <code>CM-COVENANT-114-229-PROPAGATION</code> (literal
+<code>11.4.229</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.229 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.230 — Parallelized-pipeline methodology: build↔︎validate
+overlap + affected-stages-only re-run + parallel multi-device
+testing/recording + fan-out-subagents-always (research-derived,
+2026-07-26).</strong> Cascade reference (short form): Forensic
+motivation (genericised): the sequential pipeline shape — build FULLY
+completes → THEN validation begins → on ANY discovery, restart the WHOLE
+cycle from scratch → all devices tested one-at-a-time — serialises the
+operator’s wall-clock onto build latency + one-device-at-a-time evidence
+gathering, so a multi-hour containerised build followed by serial
+per-device validation and a from-scratch restart-on-discovery makes
+time-to-a-manual-QA-capable-release a multiple of what the
+genuinely-parallel work requires. … Propagation gate
+<code>CM-COVENANT-114-230-PROPAGATION</code> (literal
+<code>11.4.230</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.230 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.231 — Nano-precision model-tier selection:
+lightest-capable-model-first with dynamic mid-task escalation (User
+mandate, 2026-07-26, <code>CRITICAL</code>).</strong> Cascade reference
+(short form): Verbatim operator mandate: every work effort MUST use the
+LIGHTEST CAPABLE model, escalating tier only as complexity rises — a
+nano-precision, per-task model-tier choice, NOT “everything on the
+heaviest model.” Forensic motivation (genericised, §11.4.6): dispatching
+every task — a trivial doc-sync, a one-line status read, a mechanical
+format fix — on the heaviest available model wastes capacity + token
+budget + wall-clock that a lighter tier would spend identically well,
+while the OPPOSITE failure (a hard multi-factor root-cause investigation
+dispatched … Propagation gate
+<code>CM-COVENANT-114-231-PROPAGATION</code> (literal
+<code>11.4.231</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.231 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.232 — Anti-mess long-op orchestration: every long-op is
+registered, single-owned-per-purpose, liveness-PROVEN,
+handed-off-on-stop, safely-reaped, consistency-checked, and
+escape-bounded — the single source of truth for what is running, never
+inferred (research-derived, 2026-07-26).</strong> Cascade reference
+(short form): Forensic anchor (genericised): in one cycle a verification
+sweep produced five distinct mess states — (1) multiple concurrent
+same-purpose sweeps ran unintentionally (no single-owner-per-purpose
+claim); (2) a sweep HUNG on a consumer-blocked-on-an-unclosed-producer
+pipeline and was undetected because liveness was inferred from
+process-alive (a §11.4.201(6) FALSE-NULL: a wedged op and a progressing
+op returned the identical “process alive” signal); … Propagation gate
+<code>CM-COVENANT-114-232-PROPAGATION</code> (literal
+<code>11.4.232</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.232 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.233 — Standing anti-mess control plane: a
+level-triggered, idempotent, invariant-catalogue reconciliation loop
+over the WHOLE persistent System state, orchestrating every per-domain
+enforcer, refusing gated transitions on un-reconciled drift
+(research-derived, 2026-07-26).</strong> Cascade reference (short form):
+Forensic anchor (genericised): every existing consistency enforcer in a
+multi-track / multi-agent / multi-submodule / multi-upstream System is
+EDGE-TRIGGERED — a PreToolUse hook fires on an action, a check runs at a
+seam (lock-acquisition / merge-time / build-time / commit-time), a gate
+runs when a build runs — so a mess that arises WITHOUT an edge firing is
+un-observed until it causes harm (two live examples captured 2026-07-26:
+a large uncommitted-batch pile-up sat unreconciled through a session,
+and multiple provably-stale VCS/wrapper locks were held … Propagation
+gate <code>CM-COVENANT-114-233-PROPAGATION</code> (literal
+<code>11.4.233</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.233 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<p><strong>§11.4.234 — Dedicated hook-validation script: hook checks run
+as an explicit stage of a dedicated commit/push script, and the
+commit/push mechanism is ALWAYS unblocked (operator mandate,
+2026-07-26).</strong> Cascade reference (short form): Forensic anchor
+(genericised): a consumer project wired its full local CI gate as an
+automatic git ‘pre-push’ hook (‘core.hooksPath’ → hook → multi-minute
+build/test/sweep stage on EVERY push). The result, captured 2026-07-26:
+routine pushes took many minutes each, and when one gate stage inside
+the hook failed or stalled, the push was rejected outright — the
+commit/push mechanism itself became blocked, with pending commits
+stranded locally and no operator-usable path forward short of a
+forbidden ‘–no-verify’ bypass. The gate logic was sound; … Propagation
+gate <code>CM-COVENANT-114-234-PROPAGATION</code> (literal
+<code>11.4.234</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.234 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
 </body>
 </html>

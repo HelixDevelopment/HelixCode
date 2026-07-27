@@ -40,9 +40,12 @@
 #   G11 §11.4.93/95 workable-items   — docs/workable_items.db validates + is
 #                                    byte-identically in sync with Issues.md/
 #                                    Fixed.md (workable_items_sync_gate.sh; HXC-026)
-#   G12 §11.4.12/91 summary freshness — docs/Issues_Summary.md + Fixed_Summary.md
+#   G12 §11.4.12/53 summary freshness — docs/Issues_Summary.md + Fixed_Summary.md
 #                                    are a fresh mechanical projection of the
-#                                    trackers (summary_sync_gate.sh → the
+#                                    §11.4.93/95 SQLite SSoT docs/workable_items.db
+#                                    (summary_sync_gate.sh → `workable-items
+#                                    export`; reconciled per §11.4.120 2026-07-27,
+#                                    superseding the text-derived legacy
 #                                    generate_{issues,fixed}_summary.sh --check)
 #   G13 §11.4.99 sources-verified    — operator-facing docs carry a
 #                                    `## Sources verified` footer (advisory
@@ -461,15 +464,18 @@ if want_gate G11; then
 fi
 
 # ---------------------------------------------------------------------------
-# G12 — §11.4.12/91 summary freshness (Issues_Summary/Fixed_Summary vs trackers)
+# G12 — §11.4.12/53 summary freshness (Issues_Summary/Fixed_Summary vs the
+#       §11.4.93/95 SQLite SSoT docs/workable_items.db). Reconciled per §11.4.120
+#       on 2026-07-27: the text-derived legacy generators were superseded by the
+#       DB-derived `workable-items export` — see scripts/gates/summary_sync_gate.sh.
 # ---------------------------------------------------------------------------
 if want_gate G12; then
     GATES_RUN=$((GATES_RUN + 1))
-    gate_header "G12 — §11.4.12/91 summary-doc freshness (CM-{ISSUES,FIXED}-SUMMARY-SYNC)"
+    gate_header "G12 — §11.4.12/53 summary-doc freshness vs SQLite SSoT (CM-{ISSUES,FIXED}-SUMMARY-SYNC)"
     if bash "$ROOT/scripts/gates/summary_sync_gate.sh" >/tmp/g12-summary.out 2>&1; then
         gate_pass G12 "$(tail -1 /tmp/g12-summary.out | sed 's/^CM-SUMMARY-SYNC: //')"
     else
-        gate_fail G12 "summary docs stale vs Issues.md/Fixed.md — re-run scripts/generate_{issues,fixed}_summary.sh (see /tmp/g12-summary.out)" \
+        gate_fail G12 "summary docs drifted from the SQLite SSoT (docs/workable_items.db) — regenerate via the §11.4.93 binary: (cd constitution/scripts/workable-items && go run ./cmd/workable-items) export --db docs/workable_items.db --out-dir docs (see /tmp/g12-summary.out)" \
             "$(tail -6 /tmp/g12-summary.out)"
     fi
 fi

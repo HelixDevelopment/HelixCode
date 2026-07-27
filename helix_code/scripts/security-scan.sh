@@ -30,6 +30,15 @@
 #     SONAR_TOKEN, SONARQUBE_PROJECT_KEY, SONARQUBE_PROJECT_NAME, SONARQUBE_PROJECT_VERSION
 #     SNYK_TOKEN
 #
+# Endpoint configuration (optional, non-secret):
+#   HELIX_SONARQUBE_HOST  SonarQube host (default: localhost)
+#   HELIX_SONARQUBE_PORT  SonarQube port (default: 9000)
+#   These are the SAME two variables with the SAME two defaults that
+#   cmd/security_scan/main.go reads (sonarqubeHost() / sonarqubePort()). This
+#   script boots the server through that binary and then polls the server
+#   itself, so both halves MUST resolve the same address — see the
+#   "SonarQube endpoint" block below.
+#
 # Scanner orchestration uses cmd/security_scan/main.go (Containers BootManager) when go
 # is on PATH; falls back to direct compose otherwise.
 
@@ -84,6 +93,25 @@ load_env
 
 # Create reports directory
 mkdir -p "$REPORTS_DIR"
+
+# -------------------------------------------------------------------
+# SonarQube endpoint — single source of truth shared with the Go binary
+#
+# cmd/security_scan/main.go resolves the SonarQube address from
+# HELIX_SONARQUBE_HOST / HELIX_SONARQUBE_PORT, defaulting to localhost / 9000
+# (see its sonarqubeHost() / sonarqubePort() accessors). start_sonarqube()
+# below boots the server *through that binary* and then this script polls the
+# server directly, so both halves MUST resolve the same address from the same
+# variables with the same defaults. Hardcoding localhost:9000 here would mean
+# the Go half boots endpoint X while the shell half polls localhost:9000 —
+# a split brain the moment either variable is set.
+#
+# Resolved AFTER load_env (not in the config block near the top) so values
+# coming from HelixCode/.env are honoured, not just the calling environment.
+# -------------------------------------------------------------------
+SONARQUBE_HOST="${HELIX_SONARQUBE_HOST:-localhost}"
+SONARQUBE_PORT="${HELIX_SONARQUBE_PORT:-9000}"
+SONARQUBE_URL="http://${SONARQUBE_HOST}:${SONARQUBE_PORT}"
 
 # -------------------------------------------------------------------
 # Container runtime detection
@@ -317,7 +345,7 @@ run_snyk() {
 # SonarQube
 # -------------------------------------------------------------------
 start_sonarqube() {
-    echo -e "${BLUE}Starting SonarQube server via compose...${NC}"
+    echo -e "${BLUE}Starting SonarQube server via compose (endpoint: ${SONARQUBE_URL})...${NC}"
     # containers BootManager call (P0-T08.7/4): use Go binary if go is available.
     # Falls back to direct compose when go is not on PATH.
     if command -v go &>/dev/null && [ -f "${PROJECT_DIR}/cmd/security_scan/main.go" ]; then
@@ -331,7 +359,7 @@ start_sonarqube() {
     local attempt=0
 
     while [ $attempt -lt $max_attempts ]; do
-        if curl -sf "http://localhost:9000/api/system/status" | grep -q '"status":"UP"'; then
+        if curl -sf "${SONARQUBE_URL}/api/system/status" | grep -q '"status":"UP"'; then
             echo -e "${GREEN}SonarQube is ready!${NC}"
             return 0
         fi
@@ -340,7 +368,7 @@ start_sonarqube() {
         sleep 5
     done
 
-    echo -e "${RED}SonarQube failed to start within timeout${NC}"
+    echo -e "${RED}SonarQube failed to start within timeout (endpoint: ${SONARQUBE_URL})${NC}"
     return 1
 }
 
@@ -349,7 +377,7 @@ run_sonarqube() {
     echo -e "${BLUE}Running SonarQube Code Analysis${NC}"
     echo -e "${BLUE}========================================${NC}"
 
-    if ! curl -sf "http://localhost:9000/api/system/status" | grep -q '"status":"UP"'; then
+    if ! curl -sf "${SONARQUBE_URL}/api/system/status" | grep -q '"status":"UP"'; then
         echo -e "${YELLOW}SonarQube not running, starting...${NC}"
         start_sonarqube || return 1
     fi
@@ -360,7 +388,7 @@ run_sonarqube() {
         local sonar_pass="${SONARQUBE_ADMIN_PASSWORD:-admin}"
         echo -e "${YELLOW}No SONAR_TOKEN — generating temporary token with admin credentials${NC}"
         sonar_token=$(curl -sf -u "${sonar_user}:${sonar_pass}" \
-            -X POST "http://localhost:9000/api/user_tokens/generate" \
+            -X POST "${SONARQUBE_URL}/api/user_tokens/generate" \
             -d "name=helixcode-scan-${TIMESTAMP}" 2>/dev/null | jq -r '.token // empty')
         if [ -z "$sonar_token" ]; then
             echo -e "${RED}Failed to generate SonarQube token. Set SONAR_TOKEN in HelixCode/.env.${NC}"
@@ -381,7 +409,7 @@ run_sonarqube() {
     if command -v sonar-scanner &>/dev/null; then
         echo -e "${GREEN}Using local sonar-scanner${NC}"
         sonar-scanner \
-            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.host.url="${SONARQUBE_URL}" \
             -Dsonar.token="$sonar_token" \
             -Dsonar.projectKey="$project_key" \
             -Dsonar.projectName="$project_name" \
@@ -397,7 +425,7 @@ run_sonarqube() {
             -v "${PROJECT_DIR}:/usr/src${mount_opts}" \
             -w /usr/src \
             --network=host \
-            -e SONAR_HOST_URL="http://localhost:9000" \
+            -e SONAR_HOST_URL="${SONARQUBE_URL}" \
             -e SONAR_TOKEN="$sonar_token" \
             docker.io/sonarsource/sonar-scanner-cli \
             -Dsonar.projectKey="$project_key" \
@@ -409,7 +437,7 @@ run_sonarqube() {
     fi
 
     echo -e "${GREEN}SonarQube analysis complete!${NC}"
-    echo -e "${BLUE}View results at: http://localhost:9000/dashboard?id=${project_key}${NC}"
+    echo -e "${BLUE}View results at: ${SONARQUBE_URL}/dashboard?id=${project_key}${NC}"
 }
 
 # -------------------------------------------------------------------

@@ -90,6 +90,37 @@ cat > "$TMP/docs/Issues.md" <<'EOF'
 EOF
 assert_pass "compliant Obsolete item with Reason: not-reproducible"
 
+# --- Reconciliation (§11.4.120, 2026-07-27): the canonical §11.4.90 sub-fact
+#     label is "Triple-check evidence:" — emitted verbatim by the §11.4.93/95
+#     SSoT renderer (workable-items obsolete.go:187) when projecting
+#     docs/workable_items.db → docs/Fixed.md. The gate MUST accept it. ---
+cat > "$TMP/docs/Issues.md" <<'EOF'
+# Issues
+
+## XXX-007 — planted obsolete item using the canonical renderer label
+
+**Status:** Obsolete (→ Fixed.md)
+**Type:** Bug
+**Obsolete-Details:** Since: 2026-07-12; Reason: duplicate-of; Superseding-item: b058c7c2; Triple-check evidence: scratch/discovery/fixes/XXX007_evidence.md
+EOF
+assert_pass "compliant Obsolete item with canonical 'Triple-check evidence:' label"
+
+# --- Mutation 3 (pairs the reconciliation above — proves the widened label is
+#     NOT a tautology): canonical label present but the evidence value is
+#     EMPTY → MUST still FAIL. If this assertion ever passes, the gate has
+#     been weakened into a label-presence check and no longer asserts that
+#     positive captured evidence exists (§11.4.90 / §11.4.6). ---
+cat > "$TMP/docs/Issues.md" <<'EOF'
+# Issues
+
+## XXX-008 — planted obsolete item with EMPTY triple-check evidence
+
+**Status:** Obsolete (→ Fixed.md)
+**Type:** Bug
+**Obsolete-Details:** Since: 2026-07-12; Reason: duplicate-of; Superseding-item: b058c7c2; Triple-check evidence:
+EOF
+assert_fail "canonical label present but evidence value EMPTY"
+
 # --- Control: no Obsolete items at all → PASS ---
 cat > "$TMP/docs/Issues.md" <<'EOF'
 # Issues

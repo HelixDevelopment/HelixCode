@@ -84,7 +84,10 @@ func (c *Client) Generate(ctx context.Context, req *llm.LLMRequest) (*llm.LLMRes
 	}
 	data, _ := json.Marshal(body)
 	predURL := c.baseURL + "/models/" + model + "/predictions"
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", predURL, bytes.NewReader(data))
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", predURL, bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("build replicate prediction request: %w", err)
+	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
 	resp, err := c.client.Do(httpReq)
@@ -126,7 +129,10 @@ func (c *Client) waitForCompletion(ctx context.Context, id string) (string, stri
 			return "", "", "", ctx.Err()
 		case <-time.After(interval):
 		}
-		req, _ := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/predictions/"+id, nil)
+		req, err := http.NewRequestWithContext(ctx, "GET", c.baseURL+"/predictions/"+id, nil)
+		if err != nil {
+			return "", "", "", fmt.Errorf("build replicate poll request: %w", err)
+		}
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 		resp, err := c.client.Do(req)
 		if err != nil {

@@ -342,7 +342,14 @@ func (p *LlamaCPPProvider) GenerateStream(ctx context.Context, request *LLMReque
 	}
 
 	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequestWithContext(ctx, "POST", baseURL+"/completion", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", baseURL+"/completion", bytes.NewReader(body))
+	if err != nil {
+		// A malformed URL makes NewRequestWithContext return (nil, err).
+		// Discarding this error made the next line dereference a nil
+		// *http.Request — an unrecoverable panic in the caller's goroutine
+		// that killed the process. Mirrors Generate's handling above.
+		return fmt.Errorf("llama.cpp stream request creation failed: %w", err)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
 

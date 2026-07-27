@@ -69,7 +69,10 @@ func (c *Client) Generate(ctx context.Context, req *llm.LLMRequest) (*llm.LLMRes
 		body.Temperature = 0.7
 	}
 	data, _ := json.Marshal(body)
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL, bytes.NewReader(data))
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL, bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("build together request: %w", err)
+	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+c.apiKey)
 	resp, err := c.client.Do(httpReq)

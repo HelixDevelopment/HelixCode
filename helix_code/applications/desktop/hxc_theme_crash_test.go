@@ -1,3 +1,10 @@
+//go:build !nogui
+
+// Exercises GUI-only symbols declared in the !nogui-tagged sources
+// (theme.go / main.go). Without this constraint the file is compiled under
+// -tags=nogui, where those symbols do not exist, so `go vet` and
+// `go test -tags=nogui` fail to build the test binary. (`go build` is
+// unaffected — it never compiles _test.go files.)
 package main
 
 import (

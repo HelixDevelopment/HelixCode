@@ -8,7 +8,26 @@
 #   - Since:           an ISO date (YYYY-MM-DD)
 #   - Reason:          a value from the closed vocabulary
 #   - Superseding-item: a non-empty reference
-#   - Triple-check:    non-empty evidence
+#   - Triple-check evidence: non-empty evidence
+#
+# Triple-check label reconciliation (§11.4.120, 2026-07-27):
+#   The canonical sub-fact name in constitution/Constitution.md §11.4.90 is
+#   "Triple-check evidence:", and the §11.4.93/95 SSoT renderer
+#   (constitution/scripts/workable-items/cmd/workable-items/obsolete.go:187)
+#   emits exactly `...; Triple-check evidence: <path>` when projecting
+#   docs/workable_items.db → docs/Fixed.md. This gate previously asserted only
+#   the narrower literal `Triple-check:`, so it FALSE-POSITIVE-refused every
+#   item written by the canonical renderer (a §11.4.201 false-positive
+#   refusal). Hand-editing the docs to the narrow label was NOT an option: it
+#   would contradict the canonical constitution wording AND break G11
+#   (CM-WORKABLE-ITEMS-MD-DB-IN-SYNC), whose md→db→md round-trip regenerates
+#   the renderer's label byte-identically. The gate is therefore reconciled to
+#   the mechanism the fix introduced: BOTH `Triple-check:` (legacy
+#   hand-authored) and `Triple-check evidence:` (canonical renderer) are
+#   accepted, and BOTH still require a NON-EMPTY value — this is a label
+#   widening, never a tautology. Paired §1.1 mutation in
+#   scripts/tests/obsolete_details_meta_test.sh asserts an EMPTY
+#   `Triple-check evidence:` still FAILs.
 #
 # Closed Reason vocabulary (§11.4.90):
 #   superseded-by-design-change | superseded-by-later-mandate |
@@ -57,7 +76,10 @@ for f in "${FILES[@]}"; do
             if (details_line !~ /Since:[ ]*[0-9]{4}-[0-9]{2}-[0-9]{2}/)        missing = missing " Since(ISO-date)"
             if (details_line !~ ("Reason:[ ]*(" vocab ")"))                    missing = missing " Reason(closed-vocab)"
             if (details_line !~ /Superseding-item:[ ]*[^ ]/)                   missing = missing " Superseding-item"
-            if (details_line !~ /Triple-check:[ ]*[^ ]/)                       missing = missing " Triple-check"
+            # §11.4.120 reconciliation: accept the canonical renderer label
+            # "Triple-check evidence:" AND the legacy "Triple-check:"; both
+            # still require a non-empty value (see header note).
+            if (details_line !~ /Triple-check([ ]+evidence)?:[ ]*[^ ]/)         missing = missing " Triple-check(evidence)"
             if (missing != "") {
                 printf("VIOLATION\t%s\t%s\tmissing/invalid sub-fact(s):%s\n", file, cur_heading, missing)
                 viol++
