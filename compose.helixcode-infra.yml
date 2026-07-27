@@ -146,7 +146,10 @@ services:
     image: semitechnologies/weaviate:1.24.1
     container_name: helixcode-infra-weaviate
     ports:
-      - "8081:8080"
+      # Host 8081 is owned by helixcode-server (config/replica-8081.yaml).
+      # Weaviate moved to 8083 to end the bind collision that failed this
+      # whole stack and took the sibling containers' port forwarders with it.
+      - "8083:8080"
       - "50051:50051"
     environment:
       - QUERY_DEFAULTS_LIMIT=25

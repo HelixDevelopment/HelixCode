@@ -1,0 +1,15 @@
+[Unit]
+Description=Helix Platform (HelixCode + HelixAgent + HelixLLM + infrastructure)
+Documentation=file://@HELIX_ROOT@/docs/SYSTEMD.md
+# Umbrella target: `systemctl --user {start,stop,status} helix.target` brings the
+# whole platform up or down as one unit. Each member service also remains
+# individually addressable (systemctl --user status helixagent).
+#
+# The members declare `WantedBy=helix.target`, so enabling a member wires it in
+# automatically -- this target does not enumerate them (avoids drift between the
+# target file and the member set).
+Wants=helixcode-infra.service
+After=helixcode-infra.service
+
+[Install]
+WantedBy=default.target

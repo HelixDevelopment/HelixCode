@@ -1,16 +1,38 @@
 [Unit]
-Description=HelixCode Infrastructure (PostgreSQL + Redis via podman compose)
-After=network-online.target podman.socket
+Description=HelixCode Infrastructure (PostgreSQL, Redis, Weaviate, Qdrant, ChromaDB, Cognee, Ollama)
+Documentation=file://@HELIX_ROOT@/docs/SYSTEMD.md
+After=network-online.target
 Wants=network-online.target
+PartOf=helix.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
-WorkingDirectory=/home/milos/Factory/projects/tools_and_research/helix_code
+WorkingDirectory=@HELIX_ROOT@
 ExecStart=/usr/bin/podman compose -f compose.helixcode-infra.yml up -d
 ExecStop=/usr/bin/podman compose -f compose.helixcode-infra.yml down
-TimeoutStartSec=120
+
+# KillMode=process is load-bearing, not cosmetic.
+#
+# `podman compose up -d` returns immediately but leaves conmon + rootlessport
+# (the host-side port forwarders) parented into THIS unit's cgroup. Under the
+# default KillMode=control-group, any stop -- or any FAILURE -- makes systemd
+# SIGKILL the entire cgroup, which kills the port forwarders of every container
+# in the stack while the containers themselves survive.
+#
+# Observed 2026-07-24: a single weaviate port clash failed this unit, and
+# systemd's cgroup teardown silently severed the host bindings of all ten
+# sibling containers. `podman ps` kept reporting "Up (healthy) 0.0.0.0:5433->..."
+# because the containers were alive -- only the forwarders were gone. Nothing on
+# the host could reach Postgres, Redis, ChromaDB, Cognee or Qdrant for two days.
+#
+# KillMode=process confines the kill to the main process (the already-exited
+# compose command), leaving container supervision intact. Teardown is handled
+# explicitly and correctly by ExecStop.
+KillMode=process
+TimeoutStartSec=300
+TimeoutStopSec=120
 
 [Install]
-WantedBy=default.target
+WantedBy=helix.target

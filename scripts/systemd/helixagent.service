@@ -1,0 +1,67 @@
+[Unit]
+Description=HelixAgent (multi-provider AI agent runtime) on :7061
+Documentation=file://@HELIX_ROOT@/submodules/helix_agent/README.md
+# HelixAgent runs a MANDATORY strict dependency verification at boot
+# (-strict-dependencies, default true) covering PostgreSQL, Redis, Cognee and
+# ChromaDB. If those are not reachable it exits non-zero by design, so the
+# infra unit is a hard ordering dependency, not a soft one.
+After=network-online.target helixcode-infra.service
+Wants=network-online.target
+Requires=helixcode-infra.service
+PartOf=helix.target
+
+[Service]
+Type=simple
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=@HELIX_ROOT@/submodules/helix_agent
+
+# --- Dependency wiring -------------------------------------------------------
+# HelixAgent resolves every endpoint from the environment
+# (internal/config/config.go getEnv + internal/ports/ports.go). Its compiled-in
+# defaults (PG :5432, ChromaDB :8001) point at ports this host does NOT serve --
+# :5432 belongs to an unrelated helixterm stack -- which is why the binary could
+# never complete boot verification here. Bind it to the real infra stack:
+Environment=DB_HOST=localhost
+Environment=DB_PORT=5433
+Environment=DB_USER=helixagent
+Environment=DB_NAME=helixagent_db
+Environment=DB_SSLMODE=disable
+Environment=REDIS_HOST=localhost
+Environment=REDIS_PORT=6380
+Environment=HELIXAGENT_PORT_COGNEE=8000
+Environment=HELIXAGENT_PORT_CHROMADB=8082
+Environment=HELIXAGENT_PORT_QDRANT=6333
+
+# DB_PASSWORD and provider API keys are secrets: they live in .env (mode 0600,
+# gitignored per CONST-042/§12.1) and are NEVER inlined into this unit, which is
+# world-readable and version-controlled. Leading '-' => optional, so a missing
+# .env degrades to a clear dependency-verification failure rather than a
+# confusing unit-file parse error.
+EnvironmentFile=-@HELIX_ROOT@/.env
+EnvironmentFile=-@HELIX_ROOT@/submodules/helix_agent/.env
+
+# -auto-start-docker=false is REQUIRED, not an optimisation.
+#
+# The flag defaults to true, which makes HelixAgent run `docker compose up -d`
+# against its OWN submodules/helix_agent/docker-compose.yml, booting a second
+# postgres + redis + chromadb. Those containers are already owned by
+# helixcode-infra.service; a second owner duplicates them and collides on their
+# ports (§11.4.119 single-resource-owner). Observed 2026-07-27: with the flag at
+# its default the unit reported "active (running)" while hung inside compose,
+# never binding :7061 -- active-but-not-listening.
+#
+# Infra lifecycle belongs to helixcode-infra.service (see Requires= above);
+# HelixAgent consumes it via the DB_*/HELIXAGENT_PORT_* wiring and must not
+# start it.
+ExecStart=@HELIX_ROOT@/submodules/helix_agent/bin/helixagent \
+    -config configs/development.yaml \
+    -auto-start-docker=false
+
+Restart=on-failure
+RestartSec=15
+LimitNOFILE=65536
+# Boot runs a provider-verification pipeline that can take several minutes.
+TimeoutStartSec=600
+
+[Install]
+WantedBy=helix.target

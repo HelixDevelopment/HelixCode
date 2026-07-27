@@ -1,0 +1,28 @@
+[Unit]
+Description=HelixCode AI Development Server (main binary) on :8081
+Documentation=file://@HELIX_ROOT@/helix_code/cmd/server/README.md
+# Ordered last: the server's llm.default_provider=local expects the coder lane,
+# and its infraboot expects Postgres/Redis. Wants= (not Requires=) so the server
+# still starts and reports its own health if a backend is degraded -- it has its
+# own infraboot fallback path.
+After=network-online.target helixcode-infra.service helixllm-coder.service helixllm-gateway.service
+Wants=network-online.target helixcode-infra.service helixllm-coder.service
+PartOf=helix.target
+
+[Service]
+Type=simple
+# podman is required by the server's infraboot (auto-boots its Postgres+Redis).
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=HELIX_CONFIG=@HELIX_ROOT@/helix_code/config/replica-8081.yaml
+EnvironmentFile=-@HELIX_ROOT@/.env
+WorkingDirectory=@HELIX_ROOT@/helix_code
+ExecStart=@HELIX_ROOT@/helix_code/bin/helixcode server
+# Mirrors packaging/debian/helixcode.service (Restart=on-failure, RestartSec=10,
+# LimitNOFILE=65536) adapted to user scope.
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+TimeoutStartSec=180
+
+[Install]
+WantedBy=helix.target

@@ -1,0 +1,28 @@
+[Unit]
+Description=HelixLLM coder (Qwen3-Coder-30B) on :18434
+Documentation=file://@HELIX_ROOT@/submodules/helix_llm/docs/OPERATOR_GUIDE.md
+After=network-online.target
+Wants=network-online.target
+PartOf=helix.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# podman + nvidia-ctk + curl all live in /usr/bin (on the systemd --user PATH),
+# but pin PATH explicitly so the unit is robust regardless of the manager env.
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=@HELIX_ROOT@
+# boot_coder_cdi.sh regenerates the rootless CDI spec (~/.config/cdi) then
+# `podman start helixllm-coder` (idempotent) and waits for :18434 readiness.
+# It preserves the existing container's -c/--parallel; it does NOT recreate it,
+# so enabling this unit never changes GPU allocation (§11.4.133-safe).
+ExecStart=/usr/bin/bash scripts/boot_coder_cdi.sh
+ExecStop=/usr/bin/podman stop helixllm-coder
+# Same rationale as helixcode-infra.service: keep systemd's cgroup teardown from
+# reaping podman's conmon/rootlessport for the coder container.
+KillMode=process
+# Model load from cold cache is slow; 650s matches the observed worst case.
+TimeoutStartSec=650
+
+[Install]
+WantedBy=helix.target

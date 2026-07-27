@@ -1,14 +1,27 @@
 [Unit]
 Description=HelixLLM Gateway (multi-provider LLM router)
-After=network-online.target
+Documentation=file://@HELIX_ROOT@/docs/SYSTEMD.md
+After=network-online.target helixcode-infra.service
 Wants=network-online.target
+PartOf=helix.target
 
 [Service]
 Type=simple
-Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/milos/.local/bin
-Environment=HELIXLLM_CONFIG=${XDG_CONFIG_HOME:-%h/.config}/helixllm/gateway.yaml
-WorkingDirectory=/home/milos/Factory/projects/tools_and_research/helix_code/submodules/helix_llm
-ExecStart=/home/milos/.local/bin/helixllm
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:%h/.local/bin
+# HelixLLM is env-configured via internal/shared/config (envconfig struct tags);
+# it takes no --config flag. A previous revision set HELIXLLM_CONFIG pointing at
+# a gateway.yaml that the binary never reads and that did not exist on disk.
+Environment=HELIX_HOST=0.0.0.0
+Environment=HELIX_PORT=8443
+# Reuse the infra stack rather than the default localhost:6379/6333, which
+# belong to unrelated containers on this host.
+Environment=HELIX_CACHE_REDIS_HOST=localhost
+Environment=HELIX_CACHE_REDIS_PORT=6380
+Environment=HELIX_VECTOR_DB_HOST=localhost
+Environment=HELIX_VECTOR_DB_PORT=6333
+EnvironmentFile=-@HELIX_ROOT@/.env
+WorkingDirectory=@HELIX_ROOT@/submodules/helix_llm
+ExecStart=@HELIXLLM_BIN@
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=10
@@ -16,4 +29,4 @@ TimeoutStartSec=120
 LimitNOFILE=65536
 
 [Install]
-WantedBy=default.target
+WantedBy=helix.target
