@@ -91,8 +91,8 @@ func TestVerifyRealLLMAPIsUsed(t *testing.T) {
 
 			// Create executor with minimal config
 			config := &ChallengeConfig{
-				ResultsBaseDir: "test-results",
-				LogsBaseDir:    "test-results/logs",
+				ResultsBaseDir: "_test-results",
+				LogsBaseDir:    "_test-results/logs",
 			}
 			executor := NewChallengeExecutor(config)
 
@@ -100,7 +100,7 @@ func TestVerifyRealLLMAPIsUsed(t *testing.T) {
 			execution, _ := executor.Execute(ctx, spec, InterfaceCLI, DistributionSingle, tc.provider, tc.model)
 
 			// Read execution log
-			logPath := filepath.Join("test-results/logs", execution.ID, "execution.log")
+			logPath := filepath.Join("_test-results/logs", execution.ID, "execution.log")
 			logContent, err := os.ReadFile(logPath)
 			if err != nil {
 				t.Fatalf("Failed to read execution log: %v", err)
