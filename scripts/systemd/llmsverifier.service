@@ -1,0 +1,45 @@
+[Unit]
+Description=LLMsVerifier (model/provider verification + scoring API) on :8100
+Documentation=file://@HELIX_ROOT@/docs/SYSTEMD.md
+# Ordered before helixllm-gateway: the gateway polls this service's
+# /api/scores on an interval and falls back to a static score table whenever it
+# is unreachable (CONST-036 makes this service the single source of truth for
+# model/provider metadata and scoring, so the static table is a degraded mode).
+After=network-online.target
+Wants=network-online.target
+PartOf=helix.target
+
+[Service]
+Type=simple
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+# Port 8100 is the address HelixLLM's gateway already looks for
+# (HELIX_LLM_VERIFIER_URL, default http://localhost:8100). The binary's own
+# default is 8080, which collides with nothing here but is not where any
+# consumer looks -- so the port is passed explicitly rather than left to differ.
+#
+# NOTE: 8100 appears in this submodule's own sources as "HelixAgentPort" (see
+# pkg/cliagents/generator.go). That is a separate, unrelated use of the same
+# number for a different service; HelixAgent actually runs on 7061 here. The
+# binding below is the consumer-facing contract, not that constant.
+
+# The API JWT secret lives in .env (mode 0600, gitignored) -- never inlined into
+# this unit, which is world-readable and version-controlled (CONST-042 / §12.1).
+# Without it the binary logs "Using default JWT secret" and runs with the
+# placeholder committed in config.yaml.
+EnvironmentFile=-@HELIX_ROOT@/.env
+
+# WorkingDirectory is load-bearing: the binary resolves its default `-c
+# config.yaml` and its SQLite path (./llm-verifier.db, per that config)
+# relative to the working directory. Starting it elsewhere silently produces a
+# second, empty database in whatever directory systemd happened to use.
+WorkingDirectory=@HELIX_ROOT@/submodules/llms_verifier/llm-verifier
+ExecStart=@HELIX_ROOT@/submodules/llms_verifier/llm-verifier/bin/llm-verifier server --port 8100
+
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+TimeoutStartSec=120
+
+[Install]
+WantedBy=helix.target

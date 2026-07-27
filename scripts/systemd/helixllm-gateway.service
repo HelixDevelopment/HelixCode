@@ -1,8 +1,12 @@
 [Unit]
 Description=HelixLLM Gateway (multi-provider LLM router)
 Documentation=file://@HELIX_ROOT@/docs/SYSTEMD.md
-After=network-online.target helixcode-infra.service
-Wants=network-online.target
+# Ordered after llmsverifier: the gateway polls {verifier}/api/scores and
+# degrades to a static score table when it is unreachable. Wants= (not
+# Requires=) because that degraded mode is a real, working fallback -- the
+# gateway must still start and route if the verifier is down.
+After=network-online.target helixcode-infra.service llmsverifier.service
+Wants=network-online.target llmsverifier.service
 PartOf=helix.target
 
 [Service]
@@ -19,6 +23,9 @@ Environment=HELIX_CACHE_REDIS_HOST=localhost
 Environment=HELIX_CACHE_REDIS_PORT=6380
 Environment=HELIX_VECTOR_DB_HOST=localhost
 Environment=HELIX_VECTOR_DB_PORT=6333
+# LLMsVerifier is the single source of truth for provider/model scoring
+# (CONST-036); llmsverifier.service binds this address.
+Environment=HELIX_LLM_VERIFIER_URL=http://localhost:8100
 EnvironmentFile=-@HELIX_ROOT@/.env
 WorkingDirectory=@HELIX_ROOT@/submodules/helix_llm
 ExecStart=@HELIXLLM_BIN@

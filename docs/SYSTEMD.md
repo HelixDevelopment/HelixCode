@@ -38,16 +38,26 @@ so enabling a service wires it in automatically.
 |---|---|---|---|
 | `helix.target` | target | — | Umbrella — start/stop the platform as one |
 | `helixcode-infra.service` | oneshot | see below | Postgres, Redis, Weaviate, Qdrant, ChromaDB, Cognee, Ollama, Selenium, memcached via podman compose |
+| `llmsverifier.service` | simple | 8100 | LLMsVerifier — model/provider verification + scoring API |
 | `helixllm-coder.service` | oneshot | 18434 | Local Qwen3-Coder-30B model container |
 | `helixllm-gateway.service` | simple | 8443 (TLS) | HelixLLM multi-provider LLM router |
 | `helixagent.service` | simple | 7061 | HelixAgent runtime (HTTP/1.1+2 on TCP, HTTP/3 on UDP) |
 | `helixcode-server.service` | simple | 8081 | HelixCode API server |
 
-Start ordering: `infra` → `llm-coder` / `llm-gateway` → `helixagent` →
-`helixcode-server`. `helixagent` uses `Requires=helixcode-infra.service`
-because its startup dependency verification is mandatory and hard-fails;
-`helixcode-server` uses the softer `Wants=` since it has its own infra-boot
-fallback.
+Start ordering: `infra` → `llmsverifier` → `llm-coder` / `llm-gateway` →
+`helixagent` → `helixcode-server`.
+
+Dependency strength is deliberate per service:
+
+- `helixagent` uses `Requires=helixcode-infra.service` — its startup dependency
+  verification is mandatory and hard-fails, so starting without infra is
+  pointless.
+- `helixllm-gateway` uses `Wants=llmsverifier.service` — the gateway polls
+  `{verifier}/api/scores` and falls back to a static score table when it is
+  unreachable. That fallback is a real working mode, so a down verifier must
+  not prevent the gateway from starting and routing.
+- `helixcode-server` uses `Wants=` for the same reason: it has its own
+  infra-boot fallback path.
 
 ### Port map
 
@@ -56,6 +66,7 @@ fallback.
 | 8081 | helixcode-server | `config/replica-8081.yaml` |
 | 8443 | helixllm-gateway | **TLS** — use `https://`, health route is `/v1/models` |
 | 7061 | helixagent | TCP *and* UDP (QUIC) |
+| 8100 | llmsverifier | the address the gateway looks for; the binary's own default is 8080, so the unit passes `--port 8100` explicitly |
 | 18434 | helixllm-coder | local model |
 | 5433 | infra postgres | not 5432 — 5432 belongs to an unrelated stack on this host |
 | 6380 | infra redis | not 6379, same reason |
@@ -179,9 +190,18 @@ Recorded honestly rather than papered over (§11.4.6):
   `Error cleaning locks: relation "distributed_locks" does not exist` every
   30 s. Non-fatal — the service runs normally. Needs a migration authored by
   someone who can specify the intended columns; not invented here.
-- **LLMsVerifier (`:8100`) is not part of this unit set.** `helixllm-gateway`
-  logs `verifier unreachable, using static scores` every 5 min and degrades to
-  static scoring.
+- **LLMsVerifier publishes no scores yet.** `llmsverifier.service` is running
+  and `GET :8100/api/scores` returns `200 {"scores":{}}` — an honest "nothing
+  measured yet", because no verification run has populated its database. The
+  gateway reads that correctly and keeps its static score table, logging
+  `verifier returned empty scores, using static scores`. To populate it, run a
+  verification pass (`llm-verifier --help` for the model/provider verification
+  commands) with provider API keys configured; `/api/scores` then publishes the
+  per-provider aggregate and the gateway adopts it.
+
+  This is distinct from the earlier state, where the gateway logged
+  `verifier unreachable … connection refused` because nothing served `:8100`
+  at all.
 - **`helixllm-gateway` lists no models** (`{"object":"list","data":null}`)
   until provider API keys are configured in `.env`. The API itself works.
 - **QUIC receive-buffer warning** from `helixllm-gateway`

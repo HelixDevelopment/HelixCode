@@ -28,6 +28,7 @@ UNIT_DST="${XDG_CONFIG_HOME:-${HOME}/.config}/systemd/user"
 UNITS=(
   helix.target
   helixcode-infra.service
+  llmsverifier.service
   helixllm-coder.service
   helixllm-gateway.service
   helixagent.service

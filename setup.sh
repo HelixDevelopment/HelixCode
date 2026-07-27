@@ -88,6 +88,16 @@ if [ "${DO_BUILD}" -eq 1 ]; then
     warn "submodules/helix_agent not initialised — skipping (run scripts/init-submodules.sh)"
   fi
 
+  section "Building LLMsVerifier"
+  # The real Go module lives one level down at llms_verifier/llm-verifier/
+  # (module digital.vasic.llmsverifier); the submodule root is a thin wrapper.
+  if [ -f submodules/llms_verifier/llm-verifier/go.mod ]; then
+    ( cd submodules/llms_verifier/llm-verifier && go build -o bin/llm-verifier ./cmd )
+    ok "submodules/llms_verifier/llm-verifier/bin/llm-verifier"
+  else
+    warn "submodules/llms_verifier not initialised — skipping"
+  fi
+
   section "Building HelixLLM"
   if [ -f submodules/helix_llm/Makefile ]; then
     make -C submodules/helix_llm build
@@ -146,8 +156,9 @@ The platform is installed as systemd USER units and will start on boot.
 
 Services and ports:
   helixcode-server    :8081    HelixCode API
-  helixllm-gateway    :8443    HelixLLM multi-provider router
+  helixllm-gateway    :8443    HelixLLM multi-provider router (TLS)
   helixagent          :7061    HelixAgent runtime
+  llmsverifier        :8100    LLMsVerifier model/provider scoring API
   helixllm-coder      :18434   Local Qwen3-Coder model
   helixcode-infra     :5433 postgres  :6380 redis  :8083 weaviate
                       :8082 chromadb  :8000 cognee :6333 qdrant
