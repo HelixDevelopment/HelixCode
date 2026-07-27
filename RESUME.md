@@ -11,7 +11,7 @@
 
 ## SHORT variant (one paste, first sentence)
 
-> Read `RESUME.md` then `docs/CONTINUATION.md`, run `git fetch --all --prune --tags`, and continue the test-suite remediation on `main` at HEAD `66d6fb29`. **Everything is UNCOMMITTED in the working tree** (~470 files: 431 gofmt-only + 30 prior remediation + this cycle's fixes, incl. the new `tests/precondition/port_conflict_ownership_test.go`). The full sweep is **NOT green** — the tag is blocked. **The whole Helix platform is STOPPED and systemd-DISABLED as of 2026-07-27 evening — nothing auto-starts; you must boot infra before any infra-dependent test** (see "Session 2026-07-27 evening" below). Do NOT trust any "package ok" without checking the ambient-contention caveat in "Traps". Next action: settle the competing-orchestrator decision (task #9) — until it is settled, postgres:15432 cannot stay up and the precondition gate cannot pass. Force-push is absolutely forbidden (§11.4.113).
+> Read `RESUME.md` then `docs/CONTINUATION.md`, run `git fetch --all --prune --tags`, and continue the test-suite remediation on `main` at HEAD `cf26a173`. **Everything is COMMITTED AND PUSHED** to all upstreams as of 2026-07-28 (main + constitution + challenges + helix_qa + helix_agent; every push fast-forward, no force §11.4.113). Working tree is clean at every submodule depth, zero unpushed commits. The full sweep is **NOT green** — the tag is blocked. **The whole Helix platform is STOPPED and systemd-DISABLED as of 2026-07-27 evening — nothing auto-starts; you must boot infra before any infra-dependent test** (see "Session 2026-07-27 evening" below). Do NOT trust any "package ok" without checking the ambient-contention caveat in "Traps". Next action: settle the competing-orchestrator decision (task #9) — until it is settled, postgres:15432 cannot stay up and the precondition gate cannot pass. Force-push is absolutely forbidden (§11.4.113).
 
 ---
 
@@ -33,10 +33,11 @@
 
 | Key | Value |
 |-----|-------|
-| **Meta-repo HEAD** | `66d6fb29` (branch `main`, 0 behind upstream — verified this session, `HEAD..@{u}` empty) |
-| **helix_agent** | `36597718` |
-| **helix_qa** | `a729b51` |
-| **constitution (checked out)** | `b00ab1c` — meta-repo pins `7295a189`, 79 commits behind (clean FF) |
+| **Meta-repo HEAD** | `cf26a173` (branch `main`) — committed + pushed to github/gitlab/origin/upstream, all tips verified equal |
+| **helix_agent** | `0165ab1d` — pushed to 4 remotes, all in sync |
+| **helix_qa** | `88ef0579` — pushed to 5 remotes, all in sync |
+| **challenges** | `072724af` — pushed to 5 remotes, all in sync |
+| **constitution (checked out)** | `731bf1d3` — pushed to all 8 remotes; upstream merge brought **§11.4.235** (speed-first build-and-deploy) |
 | **Release prefix** | `helix-code` (from `HELIX_RELEASE_PREFIX` in `.env`, mode 0600) |
 | **Latest existing tag** | `helix-code-1.1.0-dev-0.0.3` → next is `helix-code-1.2.0-dev-0.0.1` |
 | **Working tree** | ~470 modified files, ALL uncommitted |

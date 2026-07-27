@@ -129,19 +129,19 @@ paste, first sentence)</h2>
 <p>Read <code>RESUME.md</code> then <code>docs/CONTINUATION.md</code>,
 run <code>git fetch --all --prune --tags</code>, and continue the
 test-suite remediation on <code>main</code> at HEAD
-<code>66d6fb29</code>. <strong>Everything is UNCOMMITTED in the working
-tree</strong> (~470 files: 431 gofmt-only + 30 prior remediation + this
-cycle’s fixes, incl. the new
-<code>tests/precondition/port_conflict_ownership_test.go</code>). The
-full sweep is <strong>NOT green</strong> — the tag is blocked.
-<strong>The whole Helix platform is STOPPED and systemd-DISABLED as of
-2026-07-27 evening — nothing auto-starts; you must boot infra before any
-infra-dependent test</strong> (see “Session 2026-07-27 evening” below).
-Do NOT trust any “package ok” without checking the ambient-contention
-caveat in “Traps”. Next action: settle the competing-orchestrator
-decision (task #9) — until it is settled, postgres:15432 cannot stay up
-and the precondition gate cannot pass. Force-push is absolutely
-forbidden (§11.4.113).</p>
+<code>cf26a173</code>. <strong>Everything is COMMITTED AND
+PUSHED</strong> to all upstreams as of 2026-07-28 (main + constitution +
+challenges + helix_qa + helix_agent; every push fast-forward, no force
+§11.4.113). Working tree is clean at every submodule depth, zero
+unpushed commits. The full sweep is <strong>NOT green</strong> — the tag
+is blocked. <strong>The whole Helix platform is STOPPED and
+systemd-DISABLED as of 2026-07-27 evening — nothing auto-starts; you
+must boot infra before any infra-dependent test</strong> (see “Session
+2026-07-27 evening” below). Do NOT trust any “package ok” without
+checking the ambient-contention caveat in “Traps”. Next action: settle
+the competing-orchestrator decision (task #9) — until it is settled,
+postgres:15432 cannot stay up and the precondition gate cannot pass.
+Force-push is absolutely forbidden (§11.4.113).</p>
 </blockquote>
 <hr />
 <h2 id="full-variant-paste-ready-block">FULL variant (paste-ready
@@ -186,21 +186,25 @@ force green.</p>
 <tbody>
 <tr>
 <td><strong>Meta-repo HEAD</strong></td>
-<td><code>66d6fb29</code> (branch <code>main</code>, 0 behind upstream —
-verified this session, <code>HEAD..@{u}</code> empty)</td>
+<td><code>cf26a173</code> (branch <code>main</code>) — committed +
+pushed to github/gitlab/origin/upstream, all tips verified equal</td>
 </tr>
 <tr>
 <td><strong>helix_agent</strong></td>
-<td><code>36597718</code></td>
+<td><code>0165ab1d</code> — pushed to 4 remotes, all in sync</td>
 </tr>
 <tr>
 <td><strong>helix_qa</strong></td>
-<td><code>a729b51</code></td>
+<td><code>88ef0579</code> — pushed to 5 remotes, all in sync</td>
+</tr>
+<tr>
+<td><strong>challenges</strong></td>
+<td><code>072724af</code> — pushed to 5 remotes, all in sync</td>
 </tr>
 <tr>
 <td><strong>constitution (checked out)</strong></td>
-<td><code>b00ab1c</code> — meta-repo pins <code>7295a189</code>, 79
-commits behind (clean FF)</td>
+<td><code>731bf1d3</code> — pushed to all 8 remotes; upstream merge
+brought <strong>§11.4.235</strong> (speed-first build-and-deploy)</td>
 </tr>
 <tr>
 <td><strong>Release prefix</strong></td>
