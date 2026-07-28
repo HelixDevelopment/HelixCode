@@ -1,0 +1,194 @@
+### case: committed_docgo_example
+### label: the exact package-comment text this commit committed into doc.go
+### time: 2026-07-28T12:11:09Z
+### command: git show f9dcf6a6a688f158edfa1881641f649e84ac5671:helix_code/internal/server/doc.go
+### cwd: /home/milos/Factory/projects/tools_and_research/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+// Package server provides the HTTP server implementation for the HelixCode platform.
+//
+// The server package implements a comprehensive REST API server using the Gin
+// framework, providing endpoints for authentication, task management, worker
+// coordination, project operations, and real-time communication via WebSocket.
+// It integrates with database, Redis, LLM providers, and MCP (Model Context Protocol).
+//
+// # Key Components
+//
+// Server is the main HTTP server that coordinates all services:
+//
+//	cfg := config.Load()
+//	db := database.Connect(cfg)
+//	rds := redis.Connect(cfg)
+//
+//	server := server.New(cfg, db, rds)
+//
+//	// Start the server
+//	if err := server.Start(); err != nil {
+//	    log.Fatal(err)
+//	}
+//
+//	// Graceful shutdown
+//	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+//	defer cancel()
+//	server.Shutdown(ctx)
+//
+// # API Routes
+//
+// The server exposes the following API endpoints:
+//
+// Authentication:
+//
+//	POST /api/v1/auth/register  - Register new user
+//	POST /api/v1/auth/login     - User login
+//	POST /api/v1/auth/logout    - User logout
+//	POST /api/v1/auth/refresh   - Refresh access token
+//
+// Users:
+//
+//	GET  /api/v1/users/me       - Get current user (authenticated)
+//	PUT  /api/v1/users/me       - Update current user
+//
+// Workers:
+//
+//	GET  /api/v1/workers        - List all workers
+//	POST /api/v1/workers        - Register new worker
+//	GET  /api/v1/workers/:id    - Get worker details
+//	POST /api/v1/workers/:id/heartbeat - Worker heartbeat
+//
+// Tasks:
+//
+//	GET    /api/v1/tasks        - List tasks
+//	POST   /api/v1/tasks        - Create task
+//	GET    /api/v1/tasks/:id    - Get task details
+//	PUT    /api/v1/tasks/:id    - Update task
+//	DELETE /api/v1/tasks/:id    - Delete task
+//
+// Projects:
+//
+//	GET    /api/v1/projects     - List projects
+//	POST   /api/v1/projects     - Create project
+//	GET    /api/v1/projects/:id - Get project
+//	PUT    /api/v1/projects/:id - Update project
+//	DELETE /api/v1/projects/:id - Delete project
+//
+// Workflows:
+//
+//	POST /api/v1/projects/:id/workflows/planning    - Execute planning workflow
+//	POST /api/v1/projects/:id/workflows/building    - Execute building workflow
+//	POST /api/v1/projects/:id/workflows/testing     - Execute testing workflow
+//	POST /api/v1/projects/:id/workflows/refactoring - Execute refactoring workflow
+//
+// System:
+//
+//	GET /health             - Health check
+//	GET /api/v1/system/stats  - System statistics
+//	GET /api/v1/system/status - System status
+//	GET /api/v1/server/info   - Server information
+//	GET /api/v1/metrics       - Prometheus metrics
+//
+// LLM:
+//
+//	GET /api/v1/llm/providers     - List LLM providers
+//	GET /api/v1/llm/providers/:id - Get provider details
+//	GET /api/v1/llm/models        - List available models
+//
+// Memory:
+//
+//	GET /api/v1/memory/systems - List memory systems
+//	GET /api/v1/memory/stats   - Memory statistics
+//
+// WebSocket:
+//
+//	GET /ws - WebSocket connection for real-time communication
+//
+// # Middleware
+//
+// The server includes several middleware components:
+//
+//	// CORS middleware for cross-origin requests — takes an explicit
+//	// origin allowlist (cfg.Auth.CORSAllowedOrigins /
+//	// HELIX_CORS_ALLOWED_ORIGINS); never a wildcard + credentials combo
+//	server.CORSMiddleware(allowedOrigins)
+//
+//	// Security headers middleware
+//	server.SecurityMiddleware()
+//
+//	// Authentication middleware for protected routes
+//	server.authMiddleware()
+//
+// # Authentication
+//
+// Protected routes require JWT authentication:
+//
+//	// Include Authorization header
+//	Authorization: Bearer <jwt_token>
+//
+// The auth middleware validates tokens and sets the user context:
+//
+//	user := c.Get("user")  // Get authenticated user from context
+//
+// # Health Checks
+//
+// The health endpoint checks all dependencies:
+//
+//	GET /health
+//
+//	// Response when healthy
+//	{
+//	    "status": "healthy",
+//	    "version": "1.0.0",
+//	    "timestamp": "2025-01-08T12:00:00Z"
+//	}
+//
+//	// Response when unhealthy
+//	{
+//	    "status": "error",
+//	    "message": "Database connection failed",
+//	    "error": "connection refused"
+//	}
+//
+// # Configuration
+//
+// Server behavior is controlled by configuration:
+//
+//	cfg.Server.Address = "0.0.0.0"
+//	cfg.Server.Port = 8080
+//	cfg.Server.ReadTimeout = 30    // seconds
+//	cfg.Server.WriteTimeout = 30   // seconds
+//	cfg.Server.IdleTimeout = 120   // seconds
+//
+// # WebSocket Support
+//
+// The server provides WebSocket connections for MCP:
+//
+//	// Connect via WebSocket
+//	ws := websocket.Connect("ws://localhost:8080/ws")
+//
+//	// Messages are handled by the MCP server
+//	server.mcp.HandleWebSocket(w, r)
+//
+// # Static Files
+//
+// The server serves static files for the web interface:
+//
+//	/static/*     - Static assets (CSS, JS, images)
+//	/             - Web interface index.html
+//	/favicon.ico  - Application favicon
+//
+// # Error Handling
+//
+// API errors follow a consistent format:
+//
+//	{
+//	    "status": "error",
+//	    "message": "Resource not found",
+//	    "error": "task with ID xyz not found"
+//	}
+//
+// # Thread Safety
+//
+// The server is designed for concurrent request handling with proper
+// synchronization for shared resources.
+package server
+
+--- exit code: 0 ---

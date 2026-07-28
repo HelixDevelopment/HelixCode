@@ -1,0 +1,35 @@
+### case: fixed_godoc_signature
+### label: go doc ./internal/server CORSMiddleware at this commit — the REAL, live signature
+### time: 2026-07-28T12:11:09Z
+### command: go doc ./internal/server CORSMiddleware
+### cwd: /tmp/.private/milos/tmp.O1BiLxZ5l5/wt_fixed/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+package server // import "dev.helix.code/internal/server"
+
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc
+    CORSMiddleware provides CORS headers for cross-origin requests.
+
+    SECURITY (fixed — was CVE-class CORS misconfiguration): this middleware
+    MUST NEVER combine a wildcard "Access-Control-Allow-Origin: *" with
+    "Access-Control-Allow-Credentials: true" — that combination is forbidden by
+    the Fetch/CORS spec. Real browsers reject a wildcard Allow-Origin whenever
+    credentials mode is "include", and an implementation that instead reflects
+    the wildcard as the literal request Origin would let ANY origin make
+    credentialed cross-origin requests (a genuine cross-origin credential-theft
+    vector).
+
+    Only an origin present in allowedOrigins is ever echoed back — as that
+    SPECIFIC origin, never "*" — together with "Vary: Origin" (so shared
+    caches don't leak one origin's response to another) and only then is
+    Allow-Credentials set. Every other request (no Origin header, or an Origin
+    not on the allowlist) gets no CORS-allow headers at all (default-deny);
+    same-origin requests are unaffected since browsers don't consult CORS
+    headers for those.
+
+    allowedOrigins is populated from cfg.Auth.CORSAllowedOrigins /
+    HELIX_CORS_ALLOWED_ORIGINS (§11.4.74 reuse of the WSAllowedOrigins allowlist
+    pattern used by the /ws MCP WebSocket upgrader).
+
+
+--- exit code: 0 ---
