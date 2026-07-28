@@ -204,6 +204,7 @@ func TestSkillManifestPlaceholders_NoUnresolvableTokens(t *testing.T) {
 	require.NoError(t, err, "must be able to read the embedded builtin_skills tree")
 
 	swept := 0
+	found := 0
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
@@ -221,6 +222,7 @@ func TestSkillManifestPlaceholders_NoUnresolvableTokens(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			problems, err := findManifestPlaceholderProblems(name, string(data))
 			require.NoError(t, err, "shipped manifest %s must parse", name)
+			found += len(problems)
 			assert.Empty(t, problems, "manifest %s has unresolvable placeholder(s):\n%s",
 				name, strings.Join(problems, "\n"))
 		})
@@ -228,7 +230,15 @@ func TestSkillManifestPlaceholders_NoUnresolvableTokens(t *testing.T) {
 
 	require.Greater(t, swept, 0,
 		"swept zero builtin skill manifests — the walk is broken and this guard would vacuously pass")
-	t.Logf("swept %d builtin skill manifest(s), zero unresolvable placeholders", swept)
+	// Report what was actually observed. A summary line that asserts success
+	// unconditionally is itself a §11.4 false-success surface: it would print
+	// "zero unresolvable placeholders" on the very run whose subtests failed.
+	if found == 0 {
+		t.Logf("swept %d builtin skill manifest(s), zero unresolvable placeholders", swept)
+	} else {
+		t.Logf("swept %d builtin skill manifest(s), found %d unresolvable placeholder(s) — see subtest failures above",
+			swept, found)
+	}
 }
 
 // TestFindManifestPlaceholderProblems_AcceptsEverySupportedForm proves the
