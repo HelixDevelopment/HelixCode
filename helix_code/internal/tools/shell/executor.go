@@ -11,15 +11,20 @@ import (
 	"time"
 )
 
-// streamDrainGrace bounds how long ExecuteStream waits for the output scanners
-// to reach EOF AFTER the direct child has already been reaped.
+// streamDrainGrace is how long ExecuteStream tolerates NO output being
+// delivered, once the direct child has already been reaped, before it tears the
+// readers down.
 //
-// It is not a command timeout — by the time it starts, the command has exited.
-// The only work left is draining what is already sitting in the kernel pipe
-// buffers, which is capped at the pipe capacity (64 KiB per stream on Linux):
-// milliseconds of work. Two seconds is therefore a very wide margin even on a
-// heavily loaded host, while still bounding the failure mode it exists for — a
-// grandchild that inherited the write ends and holds them open indefinitely.
+// It is a no-progress window, NOT a total drain budget: the timer is rearmed
+// while lines are still reaching a consumer, so a slow-but-draining reader is
+// never cut off (see the drain loop in ExecuteStream). What it bounds is the
+// case where delivery has stopped completely — most importantly a grandchild
+// that inherited the pipe write ends and holds them open with nothing to say.
+//
+// Because it only ever measures a stall, the exact value is not load-bearing:
+// it trades how long a wedged execution keeps its semaphore slot against how
+// long a legitimately idle-but-live stream is given to resume. Two seconds is
+// comfortably longer than any scheduling hiccup on a loaded host.
 const streamDrainGrace = 2 * time.Second
 
 // ExecutionState represents the state of an execution
@@ -73,11 +78,14 @@ type ExecutionResult struct {
 	// reached EOF, so Stdout/Stderr (for ExecuteStream, the output channels) may
 	// be missing trailing data the command's descendants had not yet written.
 	//
-	// It is set only by ExecuteStream, and only when the drain grace period
-	// expired with a descendant still holding the pipe write ends open. It is
-	// deliberately NOT an Error: the command itself may have succeeded, and
-	// reporting it as a failure would misclassify a healthy exit. Callers that
-	// need "all output or nothing" must check this flag.
+	// It is set by ExecuteStream whenever the scanners did NOT both reach a
+	// clean EOF — the drain grace expired with delivery stalled, the caller
+	// cancelled while lines were still in flight, or a read genuinely failed.
+	// False means both streams were read to EOF and nothing was dropped.
+	//
+	// It is deliberately NOT an Error: the command itself may have succeeded,
+	// and reporting a healthy exit as a failure would misclassify it. Callers
+	// that need "all output or nothing" must check this flag.
 	OutputIncomplete bool
 }
 
@@ -102,8 +110,7 @@ type AsyncExecution struct {
 // Consume it one of these two ways:
 //
 //   - drain Stdout/Stderr concurrently (e.g. from their own goroutines) and read
-//     Done from another — this is the intended usage and the only one that
-//     guarantees complete output; or
+//     Done from another — this is the intended usage; or
 //   - call Cancel to abandon the execution, which releases the parked scanners.
 //
 // Waiting on Done first is safe only while the total output stays under the
@@ -111,6 +118,13 @@ type AsyncExecution struct {
 // (see streamDrainGrace) bounds the wait, after which the result is delivered
 // with OutputIncomplete set. That is a truncation, not a hang — but it is still
 // a truncation, so prefer draining concurrently.
+//
+// A concurrently-draining consumer is not cut off for being SLOW: the grace is
+// a no-progress window and is rearmed while lines are still being delivered
+// (see the drain loop in ExecuteStream). It can still be cut short if delivery
+// stops entirely for a full window — which is what an abandoned consumer looks
+// like. Whenever output may have been lost, OutputIncomplete is set; check it
+// rather than assuming any usage pattern guarantees completeness.
 type StreamingExecution struct {
 	ID        string
 	Command   string
@@ -503,15 +517,64 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 		// Closing the read ends is the load-bearing half of that teardown:
 		// Stop only releases a scanner parked handing a line to an abandoned
 		// channel — it cannot interrupt one parked in Read on the pipe itself.
-		select {
-		case <-streamer.Done():
-			// Clean EOF on both streams: every byte has been delivered.
-		case <-time.After(streamDrainGrace):
-			result.OutputIncomplete = true
-			streamer.Stop()
-			pipes.closeReadEnds()
-			<-streamer.Done()
+		//
+		// The grace is a NO-PROGRESS window, not a total budget. A consumer that
+		// reads slower than the kernel buffered is DRAINING, not wedged: the
+		// child can exit instantly with a full pipe, so "how much is left" is
+		// bounded by the pipe, but "how long the consumer needs" is not. Cutting
+		// that consumer off would lose output a perfectly healthy command had
+		// already produced. So the timer is rearmed whenever a line has been
+		// delivered since the last check, and only a FULL window with nothing
+		// delivered counts as stuck.
+		//
+		// That cannot resurrect the HXC-184 wedge, because progress requires an
+		// ACTIVE consumer: an abandoned one fills its 100-slot channel, the
+		// scanner parks on send, delivery stops, and the teardown fires within
+		// two windows. The one case that can extend indefinitely is a live
+		// consumer draining a descendant that keeps producing — a genuinely
+		// alive stream, whose caller is by definition still engaged and holds
+		// Cancel. Bounding that would mean truncating output someone is actively
+		// reading, which is the failure this clause exists to prevent.
+		drainDeadline := time.NewTimer(streamDrainGrace)
+		defer drainDeadline.Stop()
+		lastProgress := streamer.Progress()
+
+	drain:
+		for {
+			select {
+			case <-streamer.Done():
+				// Clean EOF on both streams: every byte has been delivered.
+				break drain
+
+			case <-drainDeadline.C:
+				if p := streamer.Progress(); p != lastProgress {
+					lastProgress = p
+					drainDeadline.Reset(streamDrainGrace)
+					continue
+				}
+				// Done can become ready alongside the timer, and select picks a
+				// ready case at random. Re-check before tearing anything down so
+				// a fully-delivered run is never reported as truncated.
+				select {
+				case <-streamer.Done():
+					break drain
+				default:
+				}
+				streamer.Stop()
+				pipes.closeReadEnds()
+				<-streamer.Done()
+				break drain
+			}
 		}
+
+		// Derive the truncation flag from what the SCANNERS observed rather than
+		// from which select branch ran. A recorded error means a scanner was
+		// interrupted — by the grace teardown, by a caller cancel, or by a real
+		// read failure; nil means both reached clean EOF and nothing was lost.
+		// Reading it here makes the flag immune to the timer/Done tie above, and
+		// makes it honest on the cancel path too, where Stop can also drop
+		// in-flight lines.
+		result.OutputIncomplete = streamer.Err() != nil
 
 		if streamErr := streamer.Err(); streamErr != nil &&
 			result.Error == nil && !errors.Is(streamErr, ErrStreamStopped) {

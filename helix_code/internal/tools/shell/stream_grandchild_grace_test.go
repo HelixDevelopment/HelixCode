@@ -63,14 +63,19 @@ const (
 	// grandchildLifetime is how long the orphaned grandchild holds the inherited
 	// write ends open. It is chosen to outlive graceDecisionDeadline by a wide
 	// margin so neither polarity can be decided by the grandchild exiting.
-	grandchildLifetime = 8 * time.Second
+	grandchildLifetime = 12 * time.Second
 
 	// graceDecisionDeadline is the bounded window both polarities are judged
-	// against. It sits between streamDrainGrace (2s — when the FIXED artifact
-	// releases) and grandchildLifetime (8s — when even the BROKEN artifact would
-	// eventually release), with a 2x margin on each side, so the verdict is not
-	// a timing coin-flip on a loaded host.
-	graceDecisionDeadline = 4 * time.Second
+	// against.
+	//
+	// The FIXED artifact releases after at most TWO no-progress windows (~4s):
+	// the command's own output is delivered during the first window, which
+	// counts as progress and rearms the timer once; the second window sees
+	// nothing and fires. It sits between that ~4s and grandchildLifetime (12s —
+	// when even the BROKEN artifact would eventually release), leaving a 1.5x
+	// margin below and a 2x margin above, so the verdict is not a timing
+	// coin-flip on a loaded host.
+	graceDecisionDeadline = 6 * time.Second
 )
 
 // TestExecuteStreamReturnsWhenGrandchildHoldsPipes is the HXC-184 guard.
@@ -198,6 +203,75 @@ func TestExecuteStreamHangDoesNotWedgeTheExecutor(t *testing.T) {
 			"it was still wedged after %s", elapsed)
 	require.NotNil(t, result)
 	assert.Equal(t, 0, result.ExitCode, "the probe command must actually run, not merely be admitted")
+}
+
+// TestExecuteStreamDoesNotTruncateASlowButDrainingConsumer is the regression
+// guard for I1 — a defect introduced by the FIRST version of this fix and
+// caught in review, not by me.
+//
+// That version treated the grace as a total drain budget, reasoning that only
+// "<=64 KiB of already-buffered data, milliseconds of work" could remain after
+// the child was reaped. The reasoning was wrong about WHOSE pace matters. A
+// healthy command with no grandchild at all can exit instantly with everything
+// already in the kernel buffer; the 100-slot channel then fills, the scanner
+// parks on send, and a consumer following the documented concurrent-drain
+// contract at a few ms/line is cut off mid-stream. Measured on that version:
+// 490 of 5000 lines delivered, where the pre-fix code delivered all 5000.
+//
+// The fix is that the grace is a NO-PROGRESS window, rearmed while lines are
+// still being delivered. This case pins that: the command exits immediately,
+// there is no grandchild, and the consumer deliberately reads slowly enough to
+// span several grace windows. Every line must still arrive.
+//
+// Asserted unconditionally in both polarities: completeness for a draining
+// consumer is a property the fix must PRESERVE, so it must hold on the pre-fix
+// artifact too — only the intermediate version failed it.
+func TestExecuteStreamDoesNotTruncateASlowButDrainingConsumer(t *testing.T) {
+	const (
+		lineCount    = 500                   // >> the 100-slot channel buffer
+		perLineDelay = 10 * time.Millisecond // ~5s total: spans ~2.5 grace windows
+	)
+
+	executor := NewShellExecutor(DefaultConfig())
+
+	execution, err := executor.ExecuteStream(context.Background(), &Command{
+		ID:      "hxc184-slow-but-draining-consumer",
+		Command: fmt.Sprintf("seq 1 %d", lineCount),
+	})
+	require.NoError(t, err)
+
+	// A consumer that honours the contract — draining concurrently — but slowly.
+	type drained struct {
+		count int
+		last  string
+	}
+	got := make(chan drained, 1)
+	go func() {
+		var d drained
+		for line := range execution.Stdout {
+			d.last = line
+			d.count++
+			time.Sleep(perLineDelay)
+		}
+		got <- d
+	}()
+
+	var result *ExecutionResult
+	select {
+	case result = <-execution.Done:
+	case <-time.After(60 * time.Second):
+		t.Fatal("ExecuteStream did not complete within 60s for a slow-but-draining consumer")
+	}
+
+	d := <-got
+
+	assert.Equal(t, lineCount, d.count,
+		"a consumer that is still draining must never be cut off for being slow")
+	assert.Equal(t, fmt.Sprint(lineCount), d.last, "the stream must run to its true end")
+	assert.False(t, result.OutputIncomplete,
+		"nothing was dropped, so the truncation flag must stay clear")
+	assert.NoError(t, result.Error)
+	assert.Equal(t, 0, result.ExitCode)
 }
 
 // TestOutputStreamerParksForeverOnBackpressureWithoutStop is the mechanism-level

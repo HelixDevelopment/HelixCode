@@ -27,6 +27,7 @@ type OutputStreamer struct {
 	stop        chan struct{}
 	stopOnce    sync.Once
 	startOnce   sync.Once
+	progress    atomic.Uint64
 
 	mu        sync.Mutex
 	stdoutErr error
@@ -91,6 +92,7 @@ func (os *OutputStreamer) streamOutput(reader io.Reader, ch chan<- string, errOu
 		line := scanner.Text()
 		select {
 		case ch <- line:
+			os.progress.Add(1)
 		case <-os.stop:
 			os.setErr(errOut, ErrStreamStopped)
 			return
@@ -133,11 +135,36 @@ func (os *OutputStreamer) setErr(errOut *error, err error) {
 	}
 }
 
-// Err returns the first error observed while streaming, or nil if both streams
-// were read cleanly to EOF. It is only meaningful once Done is closed.
+// Progress reports how many lines have been successfully handed to a consumer
+// across both streams. It only advances on a completed channel send, so it
+// measures END-TO-END delivery, not merely bytes read: a scanner parked on a
+// full channel (no consumer) does not advance it, while a consumer that is
+// draining slowly does.
+//
+// That distinction is what lets ExecuteStream tell "still draining, just slow"
+// apart from "wedged", and it is monotonic, so callers can compare two samples.
+func (os *OutputStreamer) Progress() uint64 {
+	return os.progress.Load()
+}
+
+// Err returns the most significant error observed while streaming, or nil if
+// both streams were read cleanly to EOF. It is only meaningful once Done is
+// closed.
+//
+// A genuine failure outranks the ErrStreamStopped teardown sentinel regardless
+// of which stream it came from. Returning stdout's error unconditionally would
+// let a deliberate stdout teardown mask a REAL stderr failure (e.g.
+// bufio.ErrTooLong) — and because callers filter ErrStreamStopped as expected,
+// that genuine failure would then be dropped entirely rather than reported.
 func (os *OutputStreamer) Err() error {
 	os.mu.Lock()
 	defer os.mu.Unlock()
+
+	for _, err := range [2]error{os.stdoutErr, os.stderrErr} {
+		if err != nil && !errors.Is(err, ErrStreamStopped) {
+			return err
+		}
+	}
 	if os.stdoutErr != nil {
 		return os.stdoutErr
 	}
