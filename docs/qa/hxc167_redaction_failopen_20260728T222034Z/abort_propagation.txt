@@ -1,0 +1,38 @@
+# Abort-propagation proof — a failed scrub kills the CAPTURE SCRIPT
+
+The library is SOURCED and callers run 'set -uo pipefail' WITHOUT errexit,
+so a non-zero return is not sufficient: if the abort only killed a subshell
+the capture would continue past a failed scrub and record a PASS.
+
+```
+
+===============================================================
+ FATAL: TRANSCRIPT SCRUBBING FAILED — CAPTURE ABORTED (HXC-167)
+===============================================================
+ file   : /tmp/.private/milos/tmp.16LZ1rhseJ/prop.http
+ reason : scripts/secret_scan.sh reported a key-shaped secret:
+
+FAIL: key-shaped secret pattern(s) found (value never printed):
+
+  /tmp/.private/milos/tmp.16LZ1rhseJ/prop.http:3  (OpenAI API key)
+
+If real: rotate immediately, git rm --cached the file, and follow
+the CONST-042 / §11.4.10 post-mortem procedure before re-committing.
+If a false positive (documentation example): add a redaction marker
+such as REDACTED / EXAMPLE / ... to the line so the allowlist
+recognizes it as intentional, non-secret content.
+
+ The file has been REMOVED: it could not be certified free of
+ credentials, and a transcript whose scrubbing status is unknown
+ must never be left on disk where it can be committed.
+
+ This is deliberately fatal. Redaction is the control that
+ protects every other capture; a redaction that did not apply is
+ a security failure, not a warning (§11.4.201 / §11.4.1).
+
+ The offending value is NOT printed here (§11.4.10).
+===============================================================
+capture script exit=1
+
+RESULT: unscrubbed file quarantined (good)
+```

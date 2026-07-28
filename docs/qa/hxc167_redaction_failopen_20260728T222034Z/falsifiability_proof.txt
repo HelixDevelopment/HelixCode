@@ -1,0 +1,35 @@
+# Falsifiability proof — the GREEN gate against a REVERTED library
+
+The pre-fix library (commit 1cc1619d) was reconstructed in an isolated /tmp
+tree. Run 1 is the gate exactly as shipped. Run 2 disables ONLY the two
+source-grep checks, so every remaining check must catch the defect by
+OBSERVED BEHAVIOUR alone — proving the guard is not resting on a grep.
+
+## Run 1 — gate as shipped, against the reverted library
+```
+CM-QA-TRANSCRIPT-REDACTION-FAIL-CLOSED  RED_MODE=0 (standing GREEN guard)
+GATE FAIL — the fail-open sed redaction is STILL PRESENT (non-comment) in /tmp/hxc167_falsify/scripts/qa/lib/sec_capture_lib.sh
+exit=1
+```
+
+## Run 2 — behavioural checks only, against the reverted library
+```
+CM-QA-TRANSCRIPT-REDACTION-FAIL-CLOSED  RED_MODE=0 (standing GREEN guard)
+  [ok] fail-open sed construct absent from the library's executable source
+  [ok] gate and library agree on the redaction marker
+  [FAIL] metacharacter secret SURVIVED redaction — HXC-167 has regressed
+  [FAIL] metacharacter battery: a secret survived at rc=0 (value withheld)
+  [FAIL] metacharacter battery: a secret survived at rc=0 (value withheld)
+  [ok] degenerate no-op (marker registered as secret) does not abort
+  [ok] plain secret removed
+  [FAIL] server-originated Set-Cookie written VERBATIM — post-write scan did not catch it
+  [FAIL] unregistered provider-shaped key survived at rc=0 — Layer 3 not wired
+  [FAIL] unscrubbable secret: exited 0 while the secret remained — FAIL-OPEN
+  [FAIL] abort did NOT propagate — a capture would continue past a failed scrub
+  [FAIL] the unscrubbable transcript was left on disk
+  [ok] no secret value appears in any failure output
+  [ok] benign transcript untouched (no false positive on WS digest / trace id / response id)
+
+GATE FAIL — one or more HXC-167 invariants regressed (see [FAIL] lines above)
+exit=1
+```

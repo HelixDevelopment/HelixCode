@@ -1,0 +1,52 @@
+# Nine-pattern end-to-end probe — every Layer-2 row, incl. two-per-line
+
+This probe is what caught the two fail-opens INSIDE the fix during
+development: greedy per-line extraction redacting only the LAST
+credential, and a line-level allowlist then masking the survivor.
+
+```
+-- findings before scrub --
+5: Set-Cookie (server-issued session/bot token)
+6: Cookie header (session credential replayed)
+7: Authorization credential (Bearer/Basic/Token)
+8: Proxy-Authenticate/Authorization credential
+9: Vendor API-key / session-token header
+11: JSON token field (access/refresh/id/session)
+12: JSON secret field (client_secret/api_key/private_key)
+13: Pre-signed URL signature (AWS SigV4)
+14: Pre-signed / query-string credential
+
+-- scrub: auto-redacted a Set-Cookie (server-issued session/bot token) (value withheld, §11.4.10)
+-- scrub: auto-redacted a Cookie header (session credential replayed) (value withheld, §11.4.10)
+-- scrub: auto-redacted a Authorization credential (Bearer/Basic/Token) (value withheld, §11.4.10)
+-- scrub: auto-redacted a Proxy-Authenticate/Authorization credential (value withheld, §11.4.10)
+-- scrub: auto-redacted a Vendor API-key / session-token header (value withheld, §11.4.10)
+-- scrub: auto-redacted a JSON token field (access/refresh/id/session) (value withheld, §11.4.10)
+-- scrub: auto-redacted a JSON token field (access/refresh/id/session) (value withheld, §11.4.10)
+-- scrub: auto-redacted a JSON secret field (client_secret/api_key/private_key) (value withheld, §11.4.10)
+-- scrub: auto-redacted a JSON secret field (client_secret/api_key/private_key) (value withheld, §11.4.10)
+-- scrub: auto-redacted a Pre-signed URL signature (AWS SigV4) (value withheld, §11.4.10)
+-- scrub: auto-redacted a Pre-signed URL signature (AWS SigV4) (value withheld, §11.4.10)
+-- scrub: auto-redacted a Pre-signed / query-string credential (value withheld, §11.4.10)
+
+-- resulting file --
+### case: probe
+--- WIRE TRACE ---
+> Authorization: Bearer SENTsideMustBeIgnoredAAAAAAAAAAAA
+< HTTP/1.1 200 OK
+< set-cookie: __cf_bm=<EPHEMERAL_KEY_REDACTED>; Path=/
+< cookie: sid=<EPHEMERAL_KEY_REDACTED>; Path=/
+< Authorization: Bearer <EPHEMERAL_KEY_REDACTED>
+< Proxy-Authenticate: Bearer <EPHEMERAL_KEY_REDACTED>
+< x-api-key: <EPHEMERAL_KEY_REDACTED>
+--- RESPONSE BODY (400 bytes) ---
+{"access_token":"<EPHEMERAL_KEY_REDACTED>","refresh_token":"<EPHEMERAL_KEY_REDACTED>"}
+{"client_secret":"<EPHEMERAL_KEY_REDACTED>","api_key":"<EPHEMERAL_KEY_REDACTED>"}
+{"url":"https://s3.test/o?X-Amz-Signature=<EPHEMERAL_KEY_REDACTED>&X-Amz-Credential=<EPHEMERAL_KEY_REDACTED>"}
+{"url":"https://x.test/cb?token=<EPHEMERAL_KEY_REDACTED>"}
+--- curl exit code: 0 ---
+
+-- server-side secrets left behind (must be none) --
+-- sent-half preserved as evidence --
+SENTsideMustBeIgnoredAAAAAAAAAAAA
+```

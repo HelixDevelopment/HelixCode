@@ -79,16 +79,372 @@ qa_init() {
     qa_capture_grounding
 }
 
+# ---------------------------------------------------------------------------
+# Transcript scrubbing (HXC-167)
+#
+# TWO independent layers, both mandatory, neither able to fail silently:
+#
+#   LAYER 1 — allowlist redaction (_qa_redact_literal):
+#       Removes secrets THIS SCRIPT supplied (registered via qa_redact).
+#       Replacement is LITERAL, never a regex or a sed s-command pattern.
+#
+#   LAYER 2 — post-write scan (_qa_scan_transcript):
+#       Scans the FINISHED file for credential shapes the script never knew
+#       about — in particular anything the SERVER sent back (Set-Cookie,
+#       bearer/refresh/session tokens, pre-signed URL signatures). Layer 1
+#       structurally cannot see these; without Layer 2 they are written
+#       verbatim.  Forensic anchor: expired Cloudflare `__cf_bm` cookies
+#       were committed verbatim in
+#       docs/qa/feat_cerebras_models_f8c38181_20260728T120731Z/transcripts/.
+#
+# WHY LITERAL, NOT sed (the fail-open defect this replaces):
+#   The previous implementation was
+#       sed -i "s|${p//|/\\|}|<EPHEMERAL_KEY_REDACTED>|g" "$f" 2>/dev/null || true
+#   which interpolated the secret INTO A REGEX and escaped only `|`. A secret
+#   containing any other regex/sed metacharacter — canonically an unbalanced
+#   `[` — made sed abort with "unterminated `s' command", and `2>/dev/null ||
+#   true` discarded both the message and the exit status. The secret stayed in
+#   the transcript with NO signal of any kind: a §11.4.201 false-null inside
+#   the control that protects every other capture. (Escaping `|` as `\|` was
+#   itself wrong under GNU BRE, where `\|` is the ALTERNATION operator.)
+#
+#   Exhaustively escaping every metacharacter for every sed dialect has to be
+#   right in all cases; a literal substring replacement CANNOT be wrong. We
+#   take the second option: awk index()/substr() splicing, which never
+#   interprets the secret as a pattern.
+#
+# FAIL LOUD, NEVER FAIL OPEN (§11.4.201 / §11.4.1):
+#   Every scrub is VERIFIED after the fact with `grep -F` (fixed-string, no
+#   regex). If a registered secret is still present, or the scan finds an
+#   unknown credential shape, the run ABORTS: the offending transcript is
+#   quarantined (removed — this run created it seconds earlier, so nothing
+#   pre-existing is destroyed) and the process exits non-zero. A transcript
+#   whose scrubbing status is unknown is NEVER written or left on disk.
+#   There is no --skip-redaction / --allow-unscrubbed escape hatch.
+# ---------------------------------------------------------------------------
+
+QA_REDACT_TOKEN="<EPHEMERAL_KEY_REDACTED>"
+
 # Redact a literal secret from every transcript written after this call.
 qa_redact() { [ -n "${1:-}" ] && QA_REDACT_PATTERNS+=("$1"); }
 
+# _qa_redact_literal <file> <secret>
+# Replaces every occurrence of <secret> — treated as PLAIN TEXT, never as a
+# pattern — with QA_REDACT_TOKEN. Returns non-zero if the rewrite failed.
+_qa_redact_literal() {
+    local f="$1" secret="$2"
+    [ -n "$secret" ] || return 0
+    [ -f "$f" ] || return 0
+    # Degenerate no-op: the marker is what we replace secrets WITH. Replacing
+    # it with itself would leave it present and trip the caller's verification.
+    [ "$secret" = "$QA_REDACT_TOKEN" ] && return 0
+
+    local tmp
+    tmp="$(mktemp "${f}.redact.XXXXXX")" || return 1
+
+    # awk index()/substr() splicing: `needle` and `token` are ordinary string
+    # VALUES compared with index(), so no character in either is ever given
+    # syntactic meaning.
+    #
+    # The secret is passed through the ENVIRONMENT and read via ENVIRON[], NOT
+    # via `awk -v`. That is deliberate: POSIX `-v` applies escape-sequence
+    # processing to the assigned value, so a secret containing a backslash
+    # (`sk-...\meta...`) would arrive MANGLED and silently fail to match — the
+    # same class of bug as the sed defect this function replaces, just one
+    # layer down. ENVIRON[] performs no such processing, so the needle is the
+    # exact bytes we registered. (Verified: a backslash-bearing secret is
+    # redacted, not merely detected-and-aborted.)
+    if ! QA_NEEDLE="$secret" QA_TOKEN="$QA_REDACT_TOKEN" awk '
+        BEGIN { needle = ENVIRON["QA_NEEDLE"]; token = ENVIRON["QA_TOKEN"]; nlen = length(needle) }
+        {
+            line = $0
+            out  = ""
+            while (nlen > 0 && (i = index(line, needle)) > 0) {
+                out  = out substr(line, 1, i - 1) token
+                line = substr(line, i + nlen)
+            }
+            print out line
+        }
+    ' "$f" > "$tmp" 2>/dev/null; then
+        rm -f "$tmp"
+        return 1
+    fi
+
+    # Preserve the original mode, then swap atomically.
+    # chmod --reference is GNU-only; where it is unavailable (macOS/BSD) the
+    # file keeps mktemp's 0600, which is MORE restrictive, never less — the
+    # degradation is safe by construction (§11.4.81).
+    chmod --reference="$f" "$tmp" 2>/dev/null || true
+    mv -f "$tmp" "$f" || { rm -f "$tmp"; return 1; }
+    return 0
+}
+
+# _qa_scrub_fail <file> <reason>
+# The loud path. Quarantines the unscrubbed file and kills the run.
+_qa_scrub_fail() {
+    local f="$1" reason="$2"
+    rm -f "$f" 2>/dev/null || true
+    {
+        echo
+        echo "==============================================================="
+        echo " FATAL: TRANSCRIPT SCRUBBING FAILED — CAPTURE ABORTED (HXC-167)"
+        echo "==============================================================="
+        echo " file   : ${f}"
+        echo " reason : ${reason}"
+        echo
+        echo " The file has been REMOVED: it could not be certified free of"
+        echo " credentials, and a transcript whose scrubbing status is unknown"
+        echo " must never be left on disk where it can be committed."
+        echo
+        echo " This is deliberately fatal. Redaction is the control that"
+        echo " protects every other capture; a redaction that did not apply is"
+        echo " a security failure, not a warning (§11.4.201 / §11.4.1)."
+        echo
+        echo " The offending value is NOT printed here (§11.4.10)."
+        echo "==============================================================="
+    } >&2
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# LAYER 2 pattern table — server-originated / unknown credential shapes.
+#
+# Three TAB-separated fields per row:
+#   <label>  <detect-ERE>  <value-extract-sed-ERE>
+#
+# The extract expression prints ONLY the credential value (capture group 1),
+# so the surrounding context — cookie NAME, header NAME, JSON KEY — is kept in
+# the transcript as evidence while the secret itself is replaced. The extracted
+# value is then handed to _qa_redact_literal, i.e. the substitution is still
+# literal: no captured value is ever interpolated back into a pattern. (Our own
+# fixed regexes doing the FINDING is safe — the fail-open defect came from
+# interpolating an untrusted SECRET into a pattern, never from matching with a
+# pattern we wrote.)
+#
+# Patterns are CONTEXT-ANCHORED (a credential-bearing header name or JSON key
+# plus a substantial opaque value) rather than free-floating entropy. That is a
+# MEASURED decision, not an assumption: a context-free high-entropy sweep over
+# this repo's own committed transcripts flags ordinary content —
+# `Sec-WebSocket-Accept` handshake digests (a publicly computable SHA-1 of the
+# client key plus a constant GUID, not a credential), LLM response ids, trace
+# ids, base64 bodies — and a scanner that cries wolf gets disabled, which is
+# strictly worse than no scanner (§11.4.201). Both the shipped context-anchored
+# scan and the rejected context-free entropy variant were calibrated against
+# every committed transcript in docs/qa/; the measured figures are recorded in
+# the HXC-167 QA evidence directory.
+# ---------------------------------------------------------------------------
+_qa_scan_patterns() {
+    printf '%s\n' \
+"Set-Cookie (server-issued session/bot token)	^<[[:space:]]*[Ss]et-[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=[A-Za-z0-9+/_.~-]{16,}	s/^<[[:space:]]*[Ss]et-[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=([A-Za-z0-9+\/_.~-]{16,}).*/\1/p" \
+"Cookie header (session credential replayed)	^<[[:space:]]*[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=[A-Za-z0-9+/_.~-]{16,}	s/^<[[:space:]]*[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=([A-Za-z0-9+\/_.~-]{16,}).*/\1/p" \
+"Authorization credential (Bearer/Basic/Token)	^<[[:space:]]*[Aa]uthorization:[[:space:]]*(Bearer|BEARER|Basic|BASIC|Token|token)[[:space:]]+[A-Za-z0-9+/_.=~-]{16,}	s/^<[[:space:]]*[Aa]uthorization:[[:space:]]*(Bearer|BEARER|Basic|BASIC|Token|token)[[:space:]]+([A-Za-z0-9+\/_.=~-]{16,}).*/\2/p" \
+"Proxy-Authenticate/Authorization credential	^<[[:space:]]*[Pp]roxy-[Aa]uth[A-Za-z-]*:[[:space:]]*[A-Za-z]+[[:space:]]+[A-Za-z0-9+/_.=~-]{16,}	s/^<[[:space:]]*[Pp]roxy-[Aa]uth[A-Za-z-]*:[[:space:]]*[A-Za-z]+[[:space:]]+([A-Za-z0-9+\/_.=~-]{16,}).*/\1/p" \
+"Vendor API-key / session-token header	^<[[:space:]]*([Xx]-[Aa]pi-[Kk]ey|[Aa]pi-[Kk]ey|[Xx]-[Aa]uth-[Tt]oken|[Xx]-[Ss]ession-[Tt]oken|[Xx]-[Aa]mz-[Ss]ecurity-[Tt]oken):[[:space:]]*[A-Za-z0-9+/_.=~-]{16,}	s/^<[[:space:]]*([Xx]-[Aa]pi-[Kk]ey|[Aa]pi-[Kk]ey|[Xx]-[Aa]uth-[Tt]oken|[Xx]-[Ss]ession-[Tt]oken|[Xx]-[Aa]mz-[Ss]ecurity-[Tt]oken):[[:space:]]*([A-Za-z0-9+\/_.=~-]{16,}).*/\2/p" \
+"JSON token field (access/refresh/id/session)	\"(access_token|refresh_token|id_token|session_token|accessToken|refreshToken|idToken|sessionToken)\"[[:space:]]*:[[:space:]]*\"[^\"<]{16,}\"	s/.*\"(access_token|refresh_token|id_token|session_token|accessToken|refreshToken|idToken|sessionToken)\"[[:space:]]*:[[:space:]]*\"([^\"<]{16,})\".*/\2/p" \
+"JSON secret field (client_secret/api_key/private_key)	\"(client_secret|clientSecret|api_key|apiKey|secret_key|secretKey|private_key|privateKey)\"[[:space:]]*:[[:space:]]*\"[^\"<]{16,}\"	s/.*\"(client_secret|clientSecret|api_key|apiKey|secret_key|secretKey|private_key|privateKey)\"[[:space:]]*:[[:space:]]*\"([^\"<]{16,})\".*/\2/p" \
+"Pre-signed URL signature (AWS SigV4)	[Xx]-[Aa]mz-(Signature|Credential)=[A-Za-z0-9%/_.-]{16,}	s/.*[Xx]-[Aa]mz-(Signature|Credential)=([A-Za-z0-9%\/_.-]{16,}).*/\2/p" \
+"Pre-signed / query-string credential	[?&](sig|signature|token|access_token|api_key|apikey|key|password)=[A-Za-z0-9+/_.%=~-]{20,}	s/.*[?\&](sig|signature|token|access_token|api_key|apikey|key|password)=([A-Za-z0-9+\/_.%=~-]{20,}).*/\2/p"
+}
+
+# NO LINE-LEVEL ALLOWLIST — and that is deliberate. Two rejected designs:
+#
+#   (a) scripts/secret_scan.sh's markers ("redacted" / "example" / "..."). Right
+#       for hand-written source and docs, wrong here: this scanner reads
+#       machine-generated HTTP transcripts where "example" routinely appears in
+#       real header values (`Domain=api.example.test`, `Host: example.com`, an
+#       Origin under test) that have nothing to do with the credential on the
+#       same line. It would let any cookie issued for an example.* host through
+#       unexamined.
+#
+#   (b) A narrower "line contains REDACTED" allowlist — which was implemented,
+#       and then MEASURED to fail open. With two credentials on ONE line
+#       (`{"access_token":"...","refresh_token":"..."}`), redacting the second
+#       one puts the marker on that line, so the re-scan allowlisted the WHOLE
+#       line and the first credential survived with exit 0 — the exact HXC-167
+#       defect class, recreated inside its own fix. Caught by the nine-pattern
+#       end-to-end probe before this landed.
+#
+# Termination is instead guaranteed STRUCTURALLY: QA_REDACT_TOKEN begins with
+# '<', and no pattern's value character class admits '<' (the JSON rows use
+# `[^"<]`, every other row an explicit class without it). An already-redacted
+# value therefore cannot re-match, so the auto-redact/re-scan loop converges
+# without any line-level suppression — and a second credential on the same line
+# is still seen.
+
+# _qa_server_view <file>
+# Emits the transcript with every NON-server-originated line blanked out, line
+# numbering preserved (so a finding's line number still points at the real
+# file). The server-originated region is:
+#   * received header lines — curl -v prefixes these with '< '
+#   * the response body — between the "--- RESPONSE BODY" and
+#     "--- curl exit code" markers qa_http writes
+#
+# WHY LAYER 2 IS SCOPED THIS WAY (measured, not assumed):
+#   Run unscoped against all 125 committed transcripts, this scan produced 27
+#   findings of which only 2 were real (the Cloudflare `__cf_bm` cookies) — a
+#   92.6% false-positive rate. All 25 false positives were the deliberately
+#   INVALID probe credentials the security captures SEND to prove they are
+#   rejected ("Bearer wrong-key-qa-probe", "x-api-key: qa-probe-not-a-real-key"
+#   and friends). Those are not secrets: they are the test input, and their
+#   visibility in the transcript IS the evidence the case rests on — redacting
+#   them would destroy it. The discriminator was perfectly clean: all 2 real
+#   findings sat on '<' lines, all 25 false positives on '>' lines or in the
+#   "### curl args:" echo. Scoping to the server-originated region takes the
+#   false-positive rate to 0 while keeping every true positive.
+#
+#   This is a division of labour, not a coverage cut. What the script SENDS is
+#   the script's own business and is covered twice over: Layer 1 removes
+#   anything it registered with qa_redact, and Layer 3 (scripts/secret_scan.sh)
+#   matches real provider key shapes ANYWHERE in the file, sent half included.
+#   Layer 2 owns exactly what the other two structurally cannot know about:
+#   what the SERVER sent back.
+#
+#   Honest residual gap (§11.4.6): a real credential with a NON-standard shape
+#   (matching no Layer 3 provider pattern) that a capture script sends WITHOUT
+#   registering it via qa_redact is caught by none of the three layers. The
+#   control for that is qa_redact itself — registering what you send — not this
+#   scan. It is stated here rather than papered over.
+_qa_server_view() {
+    awk '
+        /^--- RESPONSE BODY/   { inbody = 1; print ""; next }
+        /^--- curl exit code/  { inbody = 0; print ""; next }
+        inbody                 { print; next }
+        /^</                   { print; next }
+        { print "" }
+    ' "$1" 2>/dev/null
+}
+
+# _qa_scan_transcript <file>
+# Emits "<line>: <label>" for each finding on stdout; the matched VALUE is
+# never printed (§11.4.10). Returns 1 if anything was found, 0 if clean.
+_qa_scan_transcript() {
+    local f="$1"
+    [ -f "$f" ] || return 0
+
+    local view
+    view="$(_qa_server_view "$f")"
+    [ -n "$view" ] || return 0
+
+    local found=0 label pattern _extract lineno rest
+    while IFS=$'\t' read -r label pattern _extract; do
+        [ -n "$label" ] || continue
+        while IFS=: read -r lineno rest; do
+            [ -n "$lineno" ] || continue
+            echo "${lineno}: ${label}"
+            found=1
+        done < <(printf '%s\n' "$view" | grep -nE -e "$pattern" 2>/dev/null || true)
+    done < <(_qa_scan_patterns)
+
+    return $(( found ? 1 : 0 ))
+}
+
+# _qa_autoredact_scan_hits <file>
+# For every Layer-2 finding, extract the credential VALUE with that pattern's
+# extraction expression and remove it via the LITERAL replacement path. Prints
+# one "auto-redacted" notice per distinct value (never the value itself).
+# Returns 0 if it redacted at least one value, 1 if it could not extract any.
+_qa_autoredact_scan_hits() {
+    local f="$1"
+    local view label pattern extract match val redacted=0
+    view="$(_qa_server_view "$f")"
+    [ -n "$view" ] || return 1
+
+    while IFS=$'\t' read -r label pattern extract; do
+        [ -n "$label" ] || continue
+        # `grep -oE` yields EVERY match separately, not one per line. That is
+        # load-bearing, not a style choice: iterating over whole LINES and
+        # running the extract on the line returned only ONE value, because the
+        # extract expressions are anchored with a leading `.*` which is GREEDY
+        # and therefore latches onto the LAST occurrence. A body line carrying
+        # two credentials —
+        #   {"access_token":"...","refresh_token":"..."}
+        # — had only its second credential redacted, and the first survived.
+        # Measured, not theorised: the nine-pattern end-to-end probe caught
+        # `access_token`, `client_secret` and `X-Amz-Signature` surviving while
+        # the run still reported success. Isolating each match first removes
+        # the ambiguity entirely — there is only one occurrence to latch onto.
+        #
+        # Matching is against the server-originated view only, the same scoping
+        # the scan uses, so auto-redaction can never touch a value the scan
+        # would not have reported.
+        while IFS= read -r match; do
+            [ -n "$match" ] || continue
+            val="$(printf '%s\n' "$match" | sed -nE "$extract" | head -1)"
+            [ -n "$val" ] || continue
+            [ "$val" = "$QA_REDACT_TOKEN" ] && continue
+            # Literal removal — the extracted value is DATA, never a pattern.
+            if _qa_redact_literal "$f" "$val"; then
+                echo "-- scrub: auto-redacted a ${label} (value withheld, §11.4.10)" >&2
+                redacted=1
+            fi
+        done < <(printf '%s\n' "$view" | grep -oE -e "$pattern" 2>/dev/null || true)
+    done < <(_qa_scan_patterns)
+
+    return $(( redacted ? 0 : 1 ))
+}
+
+# _qa_apply_redaction <file>
+# The single entry point every writer calls. Runs Layer 1, VERIFIES it,
+# runs Layer 2, then delegates to the repo's shared key-shape scanner
+# (scripts/secret_scan.sh — reused, not reimplemented, §11.4.74). Any failure
+# in any layer aborts the run via _qa_scrub_fail.
 _qa_apply_redaction() {
     local f="$1" p
+    [ -f "$f" ] || return 0
+
+    # --- LAYER 1: literal removal of script-supplied secrets ---------------
     for p in "${QA_REDACT_PATTERNS[@]:-}"; do
         [ -n "$p" ] || continue
-        # shellcheck disable=SC2001
-        sed -i "s|${p//|/\\|}|<EPHEMERAL_KEY_REDACTED>|g" "$f" 2>/dev/null || true
+        # Registering the redaction marker itself is a degenerate no-op: it is
+        # what secrets are replaced WITH, so it is expected to be present and
+        # cannot be "removed". Skipping it keeps the verification below from
+        # aborting a perfectly healthy run (a cry-wolf abort is as damaging to
+        # this control's credibility as a missed secret, §11.4.201).
+        [ "$p" = "$QA_REDACT_TOKEN" ] && continue
+        if ! _qa_redact_literal "$f" "$p"; then
+            _qa_scrub_fail "$f" "literal redaction pass failed to rewrite the file (a registered secret may remain)"
+        fi
+        # Verify with FIXED-STRING grep — no regex, so verification cannot be
+        # defeated by the same metacharacter that broke the old sed.
+        if grep -qF -- "$p" "$f" 2>/dev/null; then
+            _qa_scrub_fail "$f" "a registered secret is STILL PRESENT after redaction (value withheld)"
+        fi
     done
+
+    # --- LAYER 2: unknown / server-originated credential shapes ------------
+    # A finding here is NOT automatically fatal: the whole point of Layer 2 is
+    # that these secrets are ones the script could not know about in advance
+    # (a Set-Cookie from a Cloudflare-fronted provider, a token in a response
+    # body), so aborting every such capture would make the scan intolerable and
+    # get it switched off — the §11.4.201 cry-wolf failure. Instead we REMOVE
+    # the credential and then PROVE it is gone by re-scanning. Only a finding
+    # that survives its own removal is fatal, and nothing unscrubbed is ever
+    # left on disk either way.
+    local findings
+    if findings="$(_qa_scan_transcript "$f")"; then
+        : # clean
+    else
+        _qa_autoredact_scan_hits "$f" || true
+        # Re-verify. Anything still matching could not be neutralised.
+        if findings="$(_qa_scan_transcript "$f")"; then
+            : # clean after auto-redaction
+        else
+            _qa_scrub_fail "$f" "post-write scan found credential-shaped content that SURVIVED auto-redaction:
+${findings}"
+        fi
+    fi
+
+    # --- LAYER 3: shared repo key-shape scanner (§11.4.74 reuse) ----------
+    local shared="${QA_REPO_ROOT}/scripts/secret_scan.sh"
+    if [ -x "$shared" ]; then
+        local shared_out
+        if ! shared_out="$("$shared" "$f" 2>&1)"; then
+            _qa_scrub_fail "$f" "scripts/secret_scan.sh reported a key-shaped secret:
+${shared_out}"
+        fi
+    fi
+
+    return 0
 }
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,26 @@
+# GREEN capture — HXC-167 fix verified on the CURRENT artifact
+
+Command: scripts/gates/qa_transcript_redaction_gate.sh
+
+```
+CM-QA-TRANSCRIPT-REDACTION-FAIL-CLOSED  RED_MODE=0 (standing GREEN guard)
+  [ok] fail-open sed construct absent from the library's executable source
+  [ok] gate and library agree on the redaction marker
+  [ok] metacharacter secret removed (literal replacement, no regex)
+  [ok] metacharacter battery: all 8 variants removed or aborted loudly
+  [ok] degenerate no-op (marker registered as secret) does not abort
+  [ok] plain secret removed
+  [ok] server-originated Set-Cookie neutralised by the post-write scan
+  [ok] unregistered provider-shaped key: file quarantined (rc=1) — Layer 3 wired
+  [ok] all 4 same-line credentials removed (greedy-extract + allowlist-masking closed)
+  [ok] unscrubbable secret: aborted loudly (rc=1)
+  [ok] abort message present on stderr (not swallowed)
+  [ok] abort terminates the whole capture script (rc=1), not just a subshell
+  [ok] unscrubbable transcript quarantined, not left for a later commit
+  [ok] no secret value appears in any failure output
+  [ok] benign transcript untouched (no false positive on WS digest / trace id / response id)
+
+GREEN PASS — HXC-167 fix holds: literal redaction, loud failure, post-write scan
+             catches server-originated secrets, and benign content is untouched.
+exit=0
+```
