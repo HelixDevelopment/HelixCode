@@ -575,6 +575,32 @@ if want_gate G16; then
 fi
 
 # ---------------------------------------------------------------------------
+# G17 — §11.4.108/§11.4.110 fyneui main-goroutine dispatch contract
+#
+# internal/fyneui documents in PROSE that Do/DoAndWait must be called only from
+# a spawned goroutine. Prose is not enforcement, and the failure it guards is
+# silent at compile time: under glfw, a DoAndWait issued FROM the main goroutine
+# queues onto the very FIFO the main goroutine drains, then blocks — a permanent
+# UI freeze with no panic, no log line, no failing test.
+#
+# Honest boundary (§11.4.6): the gate is TEXTUAL. Go hides goroutine identity
+# and fyne's IsMainGoroutine is internal/, so a runtime assertion is genuinely
+# unavailable. Read a PASS as "no textually-detectable main-goroutine call site",
+# never as "misuse is impossible" — the gate header enumerates what it cannot
+# catch. Registered here because an unregistered gate enforces nothing.
+# ---------------------------------------------------------------------------
+if want_gate G17; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G17 — §11.4.108 fyneui main-goroutine dispatch (CM-FYNEUI-UITHREAD-DISPATCH)"
+    if bash "$ROOT/scripts/gates/fyneui_uithread_dispatch_gate.sh" >/tmp/g17-fyneui.out 2>&1; then
+        gate_pass G17 "$(grep -oE 'call sites: [0-9]+ \| goroutine-dispatched: [0-9]+ \| violations: [0-9]+' /tmp/g17-fyneui.out | tail -1) — every fyneui.Do/DoAndWait site is goroutine-dispatched"
+    else
+        gate_fail G17 "a fyneui.Do/DoAndWait call site is not goroutine-dispatched — main-goroutine misuse self-deadlocks the UI under glfw (see /tmp/g17-fyneui.out)" \
+            "$(tail -6 /tmp/g17-fyneui.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
