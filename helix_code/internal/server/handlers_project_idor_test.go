@@ -52,9 +52,9 @@ func argEqualsUUID(arg interface{}, want uuid.UUID) bool {
 // auth user-lookup and the project owner-lookup return distinct, realistic rows,
 // so the owner-scoping decision is exercised end-to-end through the real router.
 //
-// Polarity switch RED_PROJECT_IDOR: default ("" or "1") asserts the DEFECT is
-// present on the pre-fix artifact (cross-user access SUCCEEDS = bug). Set to "0"
-// for the standing GREEN guard (cross-user access 404s = fixed).
+// Polarity switch RED_PROJECT_IDOR: default ("" or "0") is the standing GREEN
+// guard (cross-user access 404s = fixed). Set to "1" to assert the DEFECT is
+// present on the pre-fix artifact (cross-user access SUCCEEDS = bug).
 //
 // The two roles share ONE test body; the env switch flips the assertion polarity
 // (§11.4.115 one-source-two-roles).
