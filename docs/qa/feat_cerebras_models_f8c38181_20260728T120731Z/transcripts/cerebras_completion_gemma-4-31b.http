@@ -1,0 +1,86 @@
+### case: cerebras_completion_gemma-4-31b
+### time: 2026-07-28T12:07:32Z
+### request: POST https://api.cerebras.ai/v1/chat/completions
+### curl args: -H Content-Type: application/json -H Authorization: Bearer <EPHEMERAL_KEY_REDACTED> -d {"model":"gemma-4-31b","messages":[{"role":"user","content":"Reply with exactly this token and nothing else: qanonce-cb-3262e7c90eb8"}],"max_tokens":300,"temperature":0} --max-time 60
+
+--- WIRE TRACE (curl -v; '>' = sent by client, '<' = received from server) ---
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host api.cerebras.ai:443 was resolved.
+* IPv6: 2606:4700::6812:b92, 2606:4700::6812:a92
+* IPv4: 104.18.11.146, 104.18.10.146
+*   Trying [2606:4700::6812:b92]:443...
+* Immediate connect fail for 2606:4700::6812:b92: Network is unreachable
+* connect to 2606:4700::6812:b92 port 443 from :: port 0 failed: Network is unreachable
+*   Trying 104.18.11.146:443...
+* GnuTLS priority: NORMAL:%PROFILE_MEDIUM:-ARCFOUR-128:-CTYPE-ALL:+CTYPE-X509:-VERS-SSL3.0:-VERS-TLS-ALL:+VERS-TLS1.3:+VERS-TLS1.2
+* ALPN: curl offers h2,http/1.1
+* SSL Trust Anchors:
+*   CAfile: 152 certificates in /usr/share/ca-certificates/ca-bundle.crt
+* SSL connection using TLS1.3 / ECDHE_RSA_AES_256_GCM_SHA384
+*   SSL certificate verified by GnuTLS
+*   SSL certificate expiration date OK
+*   SSL certificate activation date OK
+*   SSL certificate status verification SKIPPED
+*   common name: api.cerebras.ai (matched)
+*   certificate public key: EC/ECDSA
+*   certificate version: #3
+*   subject: CN=api.cerebras.ai
+*   start date: Mon, 22 Jun 2026 23:26:51 GMT
+*   expire date: Mon, 21 Sep 2026 00:26:37 GMT
+*   issuer: C=US,O=Google Trust Services,CN=WE1
+* ALPN: server accepted h2
+* Established connection to api.cerebras.ai (104.18.11.146 port 443) from 10.6.100.221 port 57988 
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://api.cerebras.ai/v1/chat/completions
+* [HTTP/2] [1] [:method: POST]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: api.cerebras.ai]
+* [HTTP/2] [1] [:path: /v1/chat/completions]
+* [HTTP/2] [1] [user-agent: curl/8.21.0]
+* [HTTP/2] [1] [accept: */*]
+* [HTTP/2] [1] [content-type: application/json]
+* [HTTP/2] [1] [authorization: Bearer <EPHEMERAL_KEY_REDACTED>]
+* [HTTP/2] [1] [content-length: 169]
+> POST /v1/chat/completions HTTP/2
+> Host: api.cerebras.ai
+> User-Agent: curl/8.21.0
+> Accept: */*
+> Content-Type: application/json
+> Authorization: Bearer <EPHEMERAL_KEY_REDACTED>
+> Content-Length: 169
+> 
+} [169 bytes data]
+* upload completely sent off: 169 bytes
+< HTTP/2 200 
+< date: Tue, 28 Jul 2026 12:07:32 GMT
+< content-type: application/json
+< content-length: 623
+< set-cookie: __cf_bm=ssuCvjQLxHJrr3t._te5C9x.J.hJZr6KzE.H6hqx_Do-1785240452.6238995-1.0.1.1-sYh9Gz5m_WlP.XRV0Z.vet7NtV1hi8xVr0.P1csedLbmkUsy4HcT9SOFxRUjYjTZBsL6jp_7xffsXTvm1TOZ4tY54BqDlyogdoNZ.pWyPROiNjJWWbubpQa0dTIzOffA; HttpOnly; SameSite=None; Secure; Path=/; Domain=api.cerebras.ai; Expires=Tue, 28 Jul 2026 12:37:32 GMT
+< server: cloudflare
+< x-request-id: a223c39ceb283f34-CLE
+< x-ratelimit-remaining-requests-minute: 4
+< x-ratelimit-remaining-requests-hour: 149
+< x-ratelimit-remaining-requests-day: 2399
+< x-ratelimit-remaining-tokens-minute: 29683
+< x-ratelimit-remaining-tokens-hour: 999683
+< x-ratelimit-remaining-tokens-day: 999683
+< x-ratelimit-limit-requests-minute: 5
+< x-ratelimit-limit-requests-hour: 150
+< x-ratelimit-limit-requests-day: 2400
+< x-ratelimit-limit-tokens-minute: 30000
+< x-ratelimit-limit-tokens-hour: 1000000
+< x-ratelimit-limit-tokens-day: 1000000
+< inference-id: chatcmpl-cf78f9d2-56cc-4549-9146-c294e8492a0d
+< referrer-policy: strict-origin-when-cross-origin
+< x-content-type-options: nosniff
+< strict-transport-security: max-age=15552000; includeSubDomains; preload
+< cf-cache-status: DYNAMIC
+< cf-ray: a223c39ceb283f34-AKX
+< alt-svc: h3=":443"; ma=86400
+< 
+{ [623 bytes data]
+* Connection #0 to host api.cerebras.ai:443 left intact
+
+--- RESPONSE BODY (623 bytes) ---
+{"id":"chatcmpl-cf78f9d2-56cc-4549-9146-c294e8492a0d","choices":[{"finish_reason":"stop","index":0,"message":{"content":"qanonce-cb-3262e7c90eb8","role":"assistant"}}],"created":1785240452,"model":"gemma-4-31b","system_fingerprint":"fp_b2c59c382b338de84cfc","object":"chat.completion","usage":{"image_tokens":0,"total_tokens":57,"completion_tokens":18,"completion_tokens_details":{"reasoning_tokens":0},"prompt_tokens":39,"prompt_tokens_details":{"cached_tokens":0}},"time_info":{"created":1785240452.8104072,"queue_time":0.025282396,"prompt_time":0.002590721,"completion_time":0.000783867,"total_time":0.0317385196685791}}
+--- curl exit code: 0 ---

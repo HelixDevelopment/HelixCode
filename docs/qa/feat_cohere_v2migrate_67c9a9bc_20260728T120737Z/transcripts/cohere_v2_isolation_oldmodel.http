@@ -1,0 +1,75 @@
+### case: cohere_v2_isolation_oldmodel
+### time: 2026-07-28T12:07:40Z
+### request: POST https://api.cohere.com/v2/chat
+### curl args: -H Content-Type: application/json -H Authorization: Bearer <EPHEMERAL_KEY_REDACTED> -d {"model":"command-r-plus","messages":[{"role":"user","content":"ping"}],"max_tokens":8} --max-time 30
+
+--- WIRE TRACE (curl -v; '>' = sent by client, '<' = received from server) ---
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host api.cohere.com:443 was resolved.
+* IPv6: (none)
+* IPv4: 34.96.76.122
+*   Trying 34.96.76.122:443...
+* GnuTLS priority: NORMAL:%PROFILE_MEDIUM:-ARCFOUR-128:-CTYPE-ALL:+CTYPE-X509:-VERS-SSL3.0:-VERS-TLS-ALL:+VERS-TLS1.3:+VERS-TLS1.2
+* ALPN: curl offers h2,http/1.1
+* SSL Trust Anchors:
+*   CAfile: 152 certificates in /usr/share/ca-certificates/ca-bundle.crt
+* SSL connection using TLS1.3 / ECDHE_RSA_AES_256_GCM_SHA384
+*   SSL certificate verified by GnuTLS
+*   SSL certificate expiration date OK
+*   SSL certificate activation date OK
+*   SSL certificate status verification SKIPPED
+*   common name: api.cohere.com (matched)
+*   certificate public key: RSA
+*   certificate version: #3
+*   subject: CN=api.cohere.com
+*   start date: Tue, 21 Jul 2026 11:50:49 GMT
+*   expire date: Mon, 19 Oct 2026 11:50:48 GMT
+*   issuer: C=US,O=Let's Encrypt,CN=YR1
+* ALPN: server accepted h2
+* Established connection to api.cohere.com (34.96.76.122 port 443) from 10.6.100.221 port 57814 
+* using HTTP/2
+* [HTTP/2] [1] OPENED stream for https://api.cohere.com/v2/chat
+* [HTTP/2] [1] [:method: POST]
+* [HTTP/2] [1] [:scheme: https]
+* [HTTP/2] [1] [:authority: api.cohere.com]
+* [HTTP/2] [1] [:path: /v2/chat]
+* [HTTP/2] [1] [user-agent: curl/8.21.0]
+* [HTTP/2] [1] [accept: */*]
+* [HTTP/2] [1] [content-type: application/json]
+* [HTTP/2] [1] [authorization: Bearer <EPHEMERAL_KEY_REDACTED>]
+* [HTTP/2] [1] [content-length: 87]
+> POST /v2/chat HTTP/2
+> Host: api.cohere.com
+> User-Agent: curl/8.21.0
+> Accept: */*
+> Content-Type: application/json
+> Authorization: Bearer <EPHEMERAL_KEY_REDACTED>
+> Content-Length: 87
+> 
+} [87 bytes data]
+* upload completely sent off: 87 bytes
+< HTTP/2 404 
+< access-control-expose-headers: X-Debug-Trace-ID
+< cache-control: no-cache, no-store, no-transform, must-revalidate, private, max-age=0
+< content-type: application/json
+< expires: Thu, 01 Jan 1970 00:00:00 GMT
+< pragma: no-cache
+< vary: Origin
+< x-accel-expires: 0
+< x-debug-trace-id: 2a8b616b9dcefe753a758ebec9e9bade
+< x-endpoint-monthly-call-limit: 1000
+< x-trial-endpoint-call-limit: 40
+< x-trial-endpoint-call-remaining: 36
+< date: Tue, 28 Jul 2026 12:07:41 GMT
+< content-length: 205
+< x-envoy-upstream-service-time: 12
+< server: envoy
+< via: 1.1 google
+< alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+< 
+{ [205 bytes data]
+* Connection #0 to host api.cohere.com:443 left intact
+
+--- RESPONSE BODY (205 bytes) ---
+{"id":"4a487213-67a7-4f6b-b3d1-58a1ddc329d5","message":"model 'command-r-plus' was removed on September 15, 2025. See https://docs.cohere.com/docs/models#command for a list of models you can use instead."}
+--- curl exit code: 0 ---
