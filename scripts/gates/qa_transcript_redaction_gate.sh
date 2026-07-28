@@ -98,6 +98,58 @@ trap cleanup EXIT
 fail() { echo "GATE FAIL — $*" >&2; exit 1; }
 skip() { echo "GATE SKIP (§11.4.3) — $*" >&2; exit 2; }
 
+# _contains_vuln <file>
+# True when <file> carries the vulnerable construct in EXECUTABLE (non-comment)
+# form. Comments are stripped first because the fix DOCUMENTS the construct it
+# replaced, so a raw match would trip on the fix's own forensic record.
+#
+# Deliberately NOT `sed ... | grep -qF`. That pipeline silently returns a FALSE
+# NEGATIVE here, and it took a measurement to see it: `grep -q` exits the moment
+# it matches, which SIGPIPEs the upstream `sed`, and under `set -o pipefail` the
+# pipeline then reports sed's 141 instead of grep's 0 — so a REAL match reads as
+# "no match". Measured directly on the pre-fix blob: `grep -qF` -> 141 while
+# `grep -cF` -> 0 with count 1. It hid because the interactive shell this was
+# first tested in resolves `grep` to a ugrep shim that drains its input, while
+# the gate runs as a script where `grep` is GNU grep and does not. That is the
+# same defect class this whole gate exists to catch — a check that reports
+# success while checking nothing — so it is closed with a construct that has no
+# pipeline, no external tool, and no exit-status subtlety at all.
+_contains_vuln() {
+    local stripped
+    stripped="$(sed -E 's/^[[:space:]]*#.*$//' "$1" 2>/dev/null)" || return 1
+    case "$stripped" in
+        *"$VULN_FINGERPRINT"*) return 0 ;;
+    esac
+    return 1
+}
+
+# _qa_token_is_inert
+# True when QA_REDACT_TOKEN cannot be matched as a credential VALUE by any row
+# of the library's own scan table — the invariant the scrub loop's termination
+# depends on. Sources the library to read the real table rather than restating
+# it, so the two cannot drift.
+_qa_token_is_inert() {
+    ( set +u
+      # shellcheck source=/dev/null
+      source "$LIB" >/dev/null 2>&1 || exit 1
+      probe="< set-cookie: sid=${QA_REDACT_TOKEN}; Path=/"
+      probe2="{\"access_token\":\"${QA_REDACT_TOKEN}\"}"
+      while IFS=$'\t' read -r _label _ctx valre _mode; do
+          [ -n "${_label:-}" ] || continue
+          for line in "$probe" "$probe2"; do
+              while IFS= read -r m; do
+                  [ -n "$m" ] || continue
+                  v="$(_qa_strip_value "$_mode" "$m")"
+                  case "$v" in
+                      "$QA_REDACT_TOKEN"|*"$QA_REDACT_TOKEN"*) continue ;;
+                  esac
+                  [ -n "$v" ] && exit 1
+              done < <(printf '%s\n' "$line" | grep -oE -e "$valre" 2>/dev/null || true)
+          done
+      done < <(_qa_scan_patterns)
+      exit 0 )
+}
+
 [ -f "$LIB" ] || fail "library not found: $LIB"
 
 # ===========================================================================
@@ -109,27 +161,39 @@ if [ "$RED_MODE" = "1" ]; then
     command -v git >/dev/null 2>&1 || skip "git not available; cannot recover the pre-fix artifact"
     git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1 || skip "not a git repository"
 
-    # Locate the commit that REMOVED the vulnerable line; its parent is the
-    # last artifact that still contains the defect.
-    fix_commit="$(git -C "$ROOT" log -1 --format=%H -S"$VULN_FINGERPRINT" \
-                    -- scripts/qa/lib/sec_capture_lib.sh 2>/dev/null || true)"
-    [ -n "$fix_commit" ] || skip "no commit touches the vulnerable line; pre-fix artifact unavailable"
-
+    # Find the NEWEST revision of the library whose EXECUTABLE (non-comment)
+    # source still contains the vulnerable construct — that is the genuine
+    # pre-fix artifact.
+    #
+    # `git log -S` is deliberately NOT used to locate it. The fix documents the
+    # construct it replaced, so the string's occurrence COUNT is unchanged
+    # across the fix commit (one executable line became one comment line) and
+    # -S — which reports only count changes — does not see the fix at all. An
+    # earlier version of this gate relied on -S and consequently printed
+    # "fix not yet landed" AFTER the fix had landed: a true RED result under a
+    # false caption. Stripping comments before matching is what makes the
+    # search agree with reality.
     prefix_lib=""
-    if git -C "$ROOT" show "${fix_commit}^:scripts/qa/lib/sec_capture_lib.sh" \
-         > "$TMP/prefix_lib.sh" 2>/dev/null \
-       && grep -qF -- "$VULN_FINGERPRINT" "$TMP/prefix_lib.sh"; then
-        prefix_lib="$TMP/prefix_lib.sh"
-        echo "  pre-fix artifact: ${fix_commit}^ (parent of the fix commit)"
-    elif git -C "$ROOT" show "${fix_commit}:scripts/qa/lib/sec_capture_lib.sh" \
-           > "$TMP/prefix_lib.sh" 2>/dev/null \
-         && grep -qF -- "$VULN_FINGERPRINT" "$TMP/prefix_lib.sh"; then
-        # The located commit is the one that INTRODUCED the line (the fix has
-        # not landed yet) — that commit itself is the pre-fix artifact.
-        prefix_lib="$TMP/prefix_lib.sh"
-        echo "  pre-fix artifact: ${fix_commit} (fix not yet landed)"
+    prefix_commit=""
+    while IFS= read -r rev; do
+        [ -n "$rev" ] || continue
+        git -C "$ROOT" show "${rev}:scripts/qa/lib/sec_capture_lib.sh" \
+            > "$TMP/cand.sh" 2>/dev/null || continue
+        if _contains_vuln "$TMP/cand.sh"; then
+            cp "$TMP/cand.sh" "$TMP/prefix_lib.sh"
+            prefix_lib="$TMP/prefix_lib.sh"
+            prefix_commit="$rev"
+            break
+        fi
+    done < <(git -C "$ROOT" log --format=%H -- scripts/qa/lib/sec_capture_lib.sh 2>/dev/null || true)
+
+    [ -n "$prefix_lib" ] || skip "no revision of the library carries the vulnerable construct in executable form"
+
+    head_rev="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo '')"
+    if [ "$prefix_commit" = "$head_rev" ]; then
+        echo "  pre-fix artifact: ${prefix_commit} (== HEAD — the fix has NOT landed yet)"
     else
-        skip "could not recover a pre-fix artifact containing the vulnerable line"
+        echo "  pre-fix artifact: ${prefix_commit} (fix landed in a later commit)"
     fi
 
     # Extract ONLY the pre-fix redaction pair from that artifact and drive it.
@@ -196,23 +260,83 @@ fi
 # RED_MODE=0 — standing GREEN regression guard against the CURRENT library
 # ===========================================================================
 echo "CM-QA-TRANSCRIPT-REDACTION-FAIL-CLOSED  RED_MODE=0 (standing GREEN guard)"
+green_fail_early=0
 
 # (0) The vulnerable construct must be gone from the EXECUTABLE source.
 # Comment lines are excluded deliberately: the fix documents the construct it
 # replaced (that documentation is the forensic record and must not be what the
 # gate trips on). Only a live, non-comment occurrence is a regression.
-if sed -E 's/^[[:space:]]*#.*$//' "$LIB" | grep -qF -- "$VULN_FINGERPRINT"; then
+if _contains_vuln "$LIB"; then
     fail "the fail-open sed redaction is STILL PRESENT (non-comment) in $LIB"
 fi
 echo "  [ok] fail-open sed construct absent from the library's executable source"
 
 # (0b) The marker this gate asserts on must be the marker the library uses.
 # Without this the gate could silently drift and test a token nothing produces.
+# shellcheck disable=SC1090  # $LIB is resolved from this script's location at runtime
 lib_token="$( set +u; source "$LIB" >/dev/null 2>&1; printf '%s' "${QA_REDACT_TOKEN:-}" )"
 if [ "$lib_token" != "$QA_REDACT_TOKEN_EXPECTED" ]; then
     fail "redaction marker drift: library uses '${lib_token}', gate asserts '${QA_REDACT_TOKEN_EXPECTED}'"
 fi
 echo "  [ok] gate and library agree on the redaction marker"
+
+# (0c) PAIRED MUTATION for check (0) — §1.1 / §11.4.107(10).
+# Check (0) is itself a gate, so it needs its own falsifiability proof. Without
+# this, check (0) could silently never fire and nobody would notice — which is
+# exactly what happened: while it was written as
+#   sed -E 's/#.*//' "$LIB" | grep -qF -- "$FINGERPRINT"
+# `grep -q` exited on first match, SIGPIPEd `sed`, and under `set -o pipefail`
+# the pipeline returned sed's 141 — so a PRESENT construct read as absent and
+# check (0) printed "[ok] absent" against a fully reverted library. It was
+# caught only because the BEHAVIOURAL checks failed. A check with no mutation
+# proving it can fail is decorative, so here is that mutation: plant the
+# construct in EXECUTABLE form and require the detector to see it.
+mutant="$TMP/mutant_lib.sh"
+{
+    echo '#!/usr/bin/env bash'
+    echo '# a comment quoting the construct must NOT trip the detector:'
+    echo "#     sed -i \"s|\${p//|/\\\\|}|<EPHEMERAL_KEY_REDACTED>|g\" \"\$f\" 2>/dev/null || true"
+    echo '_qa_apply_redaction() {'
+    echo '    local f="$1" p'
+    echo '    for p in "${QA_REDACT_PATTERNS[@]:-}"; do'
+    echo "        sed -i \"s|\${p//|/\\\\|}|<EPHEMERAL_KEY_REDACTED>|g\" \"\$f\" 2>/dev/null || true"
+    echo '    done'
+    echo '}'
+} > "$mutant"
+if _contains_vuln "$mutant"; then
+    echo "  [ok] check (0) detector FIRES on a planted executable construct (paired mutation)"
+else
+    echo "  [FAIL] check (0) detector is BLIND — a reverted library would pass unnoticed"
+    green_fail_early=1
+fi
+# Negative control: a file where the construct appears ONLY in a comment must
+# NOT trip it, or check (0) would fail on the fix's own forensic record.
+comment_only="$TMP/comment_only.sh"
+{
+    echo '#!/usr/bin/env bash'
+    echo "#     sed -i \"s|\${p//|/\\\\|}|<EPHEMERAL_KEY_REDACTED>|g\" \"\$f\" 2>/dev/null || true"
+    echo 'true'
+} > "$comment_only"
+if _contains_vuln "$comment_only"; then
+    echo "  [FAIL] check (0) detector trips on a COMMENT-only occurrence (false positive)"
+    green_fail_early=1
+else
+    echo "  [ok] check (0) detector ignores comment-only occurrences (negative control)"
+fi
+
+# (0d) TERMINATION INVARIANT — the redaction marker must match NO scan pattern.
+# The auto-redact/re-scan loop terminates only because a redacted value can
+# never re-match. That rests entirely on QA_REDACT_TOKEN starting with '<',
+# which no value character class admits. It is load-bearing and was untested:
+# changing the marker to a bare word makes an ordinary Set-Cookie capture loop
+# and then abort every time. Asserted here so the dependency cannot be broken
+# silently by an innocent-looking rename.
+if _qa_token_is_inert; then
+    echo "  [ok] redaction marker matches no scan pattern (loop termination safe)"
+else
+    echo "  [FAIL] redaction marker itself matches a scan pattern — scrub loop cannot converge"
+    green_fail_early=1
+fi
 
 # Drive the REAL library. qa_init is not called (it would create a docs/qa run
 # directory); the scrub helpers are self-contained and operate on a given file.
@@ -222,16 +346,26 @@ run_scrub() {
     local s
     (
         set +u
+        # SC1090: $LIB is resolved from this script's own location at runtime, so
+        # it cannot be a literal path here — following it statically is exactly
+        # what shellcheck cannot do and is not a defect.
+        # SC2034: QA_REPO_ROOT and QA_REDACT_PATTERNS look unused to shellcheck
+        # because their only consumers live in the dynamically-sourced library
+        # ($LIB) that SC1090 just told us it cannot follow. Both are genuinely
+        # read there: QA_REPO_ROOT by _qa_apply_redaction's Layer 3, and
+        # QA_REDACT_PATTERNS by qa_redact/_qa_apply_redaction's Layer 1.
         # shellcheck disable=SC1090
         source "$LIB"
+        # shellcheck disable=SC2034
         QA_REPO_ROOT="$ROOT"
+        # shellcheck disable=SC2034
         QA_REDACT_PATTERNS=()
         for s in "$@"; do qa_redact "$s"; done
         _qa_apply_redaction "$target"
     )
 }
 
-green_fail=0
+green_fail=${green_fail_early:-0}
 
 # --- (1) THE DECISIVE CASE: metacharacter secret must be removed ------------
 printf 'Authorization: Bearer %s\n' "$FIXTURE_META" > "$TMP/g_meta.txt"
@@ -366,6 +500,32 @@ else
     fi
 fi
 
+# --- (3d) the shared allowlist must NOT exempt transcripts ------------------
+# Layer 3 delegates to scripts/secret_scan.sh, which honours the repo-root
+# .scan-secrets-allow path globs. If a future entry there ever matched
+# docs/qa/**, *.http, or a transcripts/ directory, Layer 3 would silently skip
+# the very files this control exists to protect — the scan would still "pass"
+# on every run while checking nothing. That is a decorative-gate failure, so it
+# is asserted rather than assumed. Ground truth, not a reimplementation of the
+# glob logic: plant a synthetic key at a REAL docs/qa transcript path and
+# require the scanner to catch it.
+allow_probe_dir="$ROOT/docs/qa/_hxc167_allowlist_probe_$$/transcripts"
+cleanup_probe() { rm -rf "$ROOT/docs/qa/_hxc167_allowlist_probe_$$"; }
+trap 'cleanup_probe; cleanup' EXIT
+if mkdir -p "$allow_probe_dir" 2>/dev/null; then
+    probe_key="sk-$(printf 'FAKEallowprobe')$(printf 'Z%.0s' $(seq 1 24))"
+    printf '{"k":"%s"}\n' "$probe_key" > "$allow_probe_dir/probe.http"
+    if "$ROOT/scripts/secret_scan.sh" "$allow_probe_dir/probe.http" >/dev/null 2>&1; then
+        echo "  [FAIL] .scan-secrets-allow EXEMPTS docs/qa transcripts — Layer 3 is decorative"
+        green_fail=1
+    else
+        echo "  [ok] .scan-secrets-allow does not exempt docs/qa transcripts — Layer 3 real"
+    fi
+    cleanup_probe
+else
+    echo "  [warn] could not create allowlist probe dir; Layer 3 exemption NOT verified"
+fi
+
 # --- (4) fail LOUD: an unscrubbable secret must abort, not continue ---------
 # A genuinely unscrubbable secret is produced by making the target unwritable,
 # so the literal rewrite cannot land. The run must exit non-zero and must not
@@ -408,7 +568,7 @@ echo "REACHED_LINE_AFTER_SCRUB"
 CAP
 prop_out="$(LIBPATH="$LIB" REPOROOT="$ROOT" WORKDIR="$TMP" bash "$TMP/fake_capture.sh" 2>&1)"
 prop_rc=$?
-if printf '%s' "$prop_out" | grep -q 'REACHED_LINE_AFTER_SCRUB'; then
+if case "$prop_out" in *REACHED_LINE_AFTER_SCRUB*) true ;; *) false ;; esac; then
     echo "  [FAIL] abort did NOT propagate — a capture would continue past a failed scrub"
     green_fail=1
 elif [ "$prop_rc" -eq 0 ]; then

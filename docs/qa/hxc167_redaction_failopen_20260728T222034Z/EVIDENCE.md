@@ -40,7 +40,7 @@ already in the tree: expired Cloudflare `__cf_bm` session cookies committed verb
 | Layer | Scope | Mechanism |
 |-------|-------|-----------|
 | 1 | Secrets the script registered | **Literal** awk `index()`/`substr()` splice — the secret is never a pattern — then **verified** with fixed-string `grep -F` |
-| 2 | Server-originated / unknown credentials | Context-anchored scan of the **server-originated region only**, auto-redact then **re-verify** |
+| 2 | Server-originated / unknown credentials | Per-line **context + all-values** scan of the **server-originated region only**, auto-redact then re-scan, **iterated to a fixed point** |
 | 3 | Real provider key shapes, anywhere in the file | Delegates to the existing `scripts/secret_scan.sh` (**reused**, not reimplemented — §11.4.74) |
 
 **Fail loud, never fail open.** Any layer that cannot certify the file calls
@@ -61,18 +61,25 @@ during development and fixed before landing.
 | Artefact | What it proves | Result |
 |----------|----------------|--------|
 | `red_capture.txt` | Both halves reproduce on the **pre-fix artifact recovered from git history** (commit `1cc1619d`), with a working negative control | **RED PASS** (exit 0) |
-| `green_capture.txt` | 14 invariants hold on the fixed artifact | **GREEN PASS** (exit 0) |
-| `falsifiability_proof.txt` | The gate **fails** against a reverted library — and still fails with both source-greps disabled, so **7 checks detect the defect by observed behaviour alone** | **exit 1 both runs** (as required) |
+| `green_capture.txt` | 19 invariants hold on the fixed artifact | **GREEN PASS** (exit 0) |
+| `falsifiability_proof.txt` | The gate **fails** against a reverted library — and still fails with both source-greps disabled, so **10 checks detect the defect by observed behaviour alone** | **exit 1 both runs** (as required) |
 | `abort_propagation.txt` | A failed scrub terminates the whole **capture script**, not just a subshell, and quarantines the file | **exit 1, file removed** |
 | `edge_case_battery.txt` | 17 metacharacter/edge secrets: none survives at exit 0; no value leaks to output | **no fail-open** |
 | `fp_calibration_shipped.txt` | Shipped scan vs all 125 committed transcripts | **2 findings, 2 true positives, 0 false positives** |
+| `shellcheck_baseline.txt` | Gate is shellcheck-clean; the library's findings are **byte-identical to the pre-fix baseline** (zero new) | **no new findings** |
 | `fp_calibration_entropy_rejected.txt` | The context-free entropy alternative, measured then rejected | **94.3% FP at its best threshold** |
 
 Falsifiability matters more than the GREEN count: with the two source-grep checks
-disabled, the reverted library still trips **7 independent behavioural checks** —
-metacharacter survival, the battery, the server-originated cookie, the unregistered
-provider key, the silent exit-0, non-propagating abort, and the un-quarantined file.
-The guard cannot pass vacuously.
+disabled, the reverted library still trips **10 independent behavioural checks** —
+the redaction marker matching a scan pattern, metacharacter survival, two entries of
+the metacharacter battery, the server-originated cookie, the unregistered provider
+key, all four same-line credentials, the silent exit-0, the non-propagating abort,
+and the un-quarantined transcript. The guard cannot pass vacuously.
+
+Check (0) additionally carries its own paired mutation (0c): a library with the
+construct planted in **executable** form must trip the detector, and one where it
+appears only in a **comment** must not. That mutation exists because check (0) was
+itself fail-open until measured — see the four fail-opens below.
 
 ### RED → GREEN, the decisive case
 A secret containing an unbalanced `[` **survived** redaction with no signal on the
@@ -124,27 +131,45 @@ entropy is not.
 
 ---
 
-## Two fail-opens found *inside* the fix, before it landed
+## Four fail-opens found *inside* the fix, before it landed
 
-The nine-pattern end-to-end probe (`nine_pattern_probe.txt`) caught the fix
-reproducing the very defect class it exists to close. Recorded because "the fix was
-clean first try" would be the bluff:
+Recorded because "the fix was clean first try" would be the bluff. Each was
+**reproduced**, not reasoned about, and each is now pinned by a gate check:
 
-1. **Greedy per-line extraction redacted only the LAST credential on a line.** The
-   value-extract expressions lead with `.*`, which is greedy, so on
-   `{"access_token":"…","refresh_token":"…"}` only `refresh_token` was extracted.
-   `access_token`, `client_secret` and `X-Amz-Signature` all survived.
-2. **A line-level allowlist then HID the survivor.** Redacting the second credential
-   put `<EPHEMERAL_KEY_REDACTED>` on that line; the re-scan's "line contains REDACTED"
-   allowlist therefore skipped the whole line, so the surviving credential was never
-   reported and the run **exited 0**.
+1. **Greedy per-line extraction redacted only the LAST credential on a line.**
+   The value-extract expressions led with `.*`, which is greedy, so on a body line
+   carrying two token fields only the second was removed; the first, plus
+   `client_secret` and `X-Amz-Signature`, survived. Closed by isolating matches
+   with `grep -oE` before extraction.
+2. **A line-level allowlist then HID the survivor.** Redacting one credential put
+   the redaction marker on that line, so the re-scan's "line contains REDACTED"
+   rule skipped the whole line and the run **exited 0**. Closed by removing the
+   line-level allowlist entirely.
+3. **A second credential on one header line was never DETECTED.** The header rows
+   were anchored from `^<` through the first value, so a Set-Cookie line carrying
+   two `name=value` pairs reported clean once the first was scrubbed, and the
+   second survived at rc=0. The fixed-point loop could not help — the *scan* was
+   blind, not the redactor. Closed by splitting each row into a per-line CONTEXT
+   match plus an all-values match, with bash prefix strips replacing sed.
+4. **The gate's own check (0) was fail-open — the ticket's defect, in the guard.**
+   It read `sed -E 's/#.*//' "$LIB" | grep -qF -- "$FINGERPRINT"`. `grep -q` exits
+   on first match, SIGPIPEs `sed`, and under `set -o pipefail` the pipeline returns
+   sed's **141** — so a PRESENT construct read as absent and check (0) printed
+   `[ok]` against a fully reverted library. It hid because the shell it was first
+   tested in resolves `grep` to a **ugrep** shim that drains its input, while the
+   gate runs as a script where `grep` is GNU grep and does not. Closed with a bash
+   `case` — no pipeline, no external tool, no exit-status subtlety — and it now
+   carries its own paired mutation (check 0c) plus a comment-only negative control.
 
-Together those were two independent ways to leak a secret while reporting success —
-the same shape as the original defect. Both are now closed structurally rather than by
-patching symptoms: matches are isolated with `grep -oE` before extraction (no greedy
-ambiguity to lose), and there is **no line-level allowlist at all** — termination is
-guaranteed instead by the redaction marker starting with `<`, which no pattern's value
-character class admits. Both are pinned by gate check (3c).
+A fifth, **server-controlled evasion** was closed alongside them: a response body
+line containing the literal `--- curl exit code` used to CLOSE the scanned body
+region, so every credential after it went unexamined at rc=0. The body region now
+runs to EOF.
+
+Item 4 is the one worth sitting with: a guard built to catch a swallowed exit
+status was itself swallowing an exit status to decide whether the swallowed exit
+status was present. It is why check (0) now has a mutation proving it can fail,
+and why the falsifiability proof re-runs with the source-greps disabled.
 
 ## Honest boundary (§11.4.6)
 

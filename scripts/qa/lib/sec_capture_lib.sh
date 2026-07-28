@@ -235,15 +235,37 @@ _qa_scrub_fail() {
 # ---------------------------------------------------------------------------
 _qa_scan_patterns() {
     printf '%s\n' \
-"Set-Cookie (server-issued session/bot token)	^<[[:space:]]*[Ss]et-[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=[A-Za-z0-9+/_.~-]{16,}	s/^<[[:space:]]*[Ss]et-[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=([A-Za-z0-9+\/_.~-]{16,}).*/\1/p" \
-"Cookie header (session credential replayed)	^<[[:space:]]*[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=[A-Za-z0-9+/_.~-]{16,}	s/^<[[:space:]]*[Cc]ookie:[[:space:]]*[A-Za-z0-9_.-]+=([A-Za-z0-9+\/_.~-]{16,}).*/\1/p" \
-"Authorization credential (Bearer/Basic/Token)	^<[[:space:]]*[Aa]uthorization:[[:space:]]*(Bearer|BEARER|Basic|BASIC|Token|token)[[:space:]]+[A-Za-z0-9+/_.=~-]{16,}	s/^<[[:space:]]*[Aa]uthorization:[[:space:]]*(Bearer|BEARER|Basic|BASIC|Token|token)[[:space:]]+([A-Za-z0-9+\/_.=~-]{16,}).*/\2/p" \
-"Proxy-Authenticate/Authorization credential	^<[[:space:]]*[Pp]roxy-[Aa]uth[A-Za-z-]*:[[:space:]]*[A-Za-z]+[[:space:]]+[A-Za-z0-9+/_.=~-]{16,}	s/^<[[:space:]]*[Pp]roxy-[Aa]uth[A-Za-z-]*:[[:space:]]*[A-Za-z]+[[:space:]]+([A-Za-z0-9+\/_.=~-]{16,}).*/\1/p" \
-"Vendor API-key / session-token header	^<[[:space:]]*([Xx]-[Aa]pi-[Kk]ey|[Aa]pi-[Kk]ey|[Xx]-[Aa]uth-[Tt]oken|[Xx]-[Ss]ession-[Tt]oken|[Xx]-[Aa]mz-[Ss]ecurity-[Tt]oken):[[:space:]]*[A-Za-z0-9+/_.=~-]{16,}	s/^<[[:space:]]*([Xx]-[Aa]pi-[Kk]ey|[Aa]pi-[Kk]ey|[Xx]-[Aa]uth-[Tt]oken|[Xx]-[Ss]ession-[Tt]oken|[Xx]-[Aa]mz-[Ss]ecurity-[Tt]oken):[[:space:]]*([A-Za-z0-9+\/_.=~-]{16,}).*/\2/p" \
-"JSON token field (access/refresh/id/session)	\"(access_token|refresh_token|id_token|session_token|accessToken|refreshToken|idToken|sessionToken)\"[[:space:]]*:[[:space:]]*\"[^\"<]{16,}\"	s/.*\"(access_token|refresh_token|id_token|session_token|accessToken|refreshToken|idToken|sessionToken)\"[[:space:]]*:[[:space:]]*\"([^\"<]{16,})\".*/\2/p" \
-"JSON secret field (client_secret/api_key/private_key)	\"(client_secret|clientSecret|api_key|apiKey|secret_key|secretKey|private_key|privateKey)\"[[:space:]]*:[[:space:]]*\"[^\"<]{16,}\"	s/.*\"(client_secret|clientSecret|api_key|apiKey|secret_key|secretKey|private_key|privateKey)\"[[:space:]]*:[[:space:]]*\"([^\"<]{16,})\".*/\2/p" \
-"Pre-signed URL signature (AWS SigV4)	[Xx]-[Aa]mz-(Signature|Credential)=[A-Za-z0-9%/_.-]{16,}	s/.*[Xx]-[Aa]mz-(Signature|Credential)=([A-Za-z0-9%\/_.-]{16,}).*/\2/p" \
-"Pre-signed / query-string credential	[?&](sig|signature|token|access_token|api_key|apikey|key|password)=[A-Za-z0-9+/_.%=~-]{20,}	s/.*[?\&](sig|signature|token|access_token|api_key|apikey|key|password)=([A-Za-z0-9+\/_.%=~-]{20,}).*/\2/p"
+"Set-Cookie (server-issued session/bot token)	^<[[:space:]]*[Ss]et-[Cc]ookie:	[A-Za-z0-9_.-]+=[A-Za-z0-9+/_.~-]{16,}	eq" \
+"Cookie header (session credential replayed)	^<[[:space:]]*[Cc]ookie:	[A-Za-z0-9_.-]+=[A-Za-z0-9+/_.~-]{16,}	eq" \
+"Authorization credential (Bearer/Basic/Token)	^<[[:space:]]*[Aa]uthorization:	(Bearer|BEARER|Basic|BASIC|Token|token)[[:space:]]+[A-Za-z0-9+/_.=~-]{16,}	sp" \
+"Proxy-Authenticate/Authorization credential	^<[[:space:]]*[Pp]roxy-[Aa]uth[A-Za-z-]*:	[A-Za-z]+[[:space:]]+[A-Za-z0-9+/_.=~-]{16,}	sp" \
+"Vendor API-key / session-token header	^<[[:space:]]*([Xx]-[Aa]pi-[Kk]ey|[Aa]pi-[Kk]ey|[Xx]-[Aa]uth-[Tt]oken|[Xx]-[Ss]ession-[Tt]oken|[Xx]-[Aa]mz-[Ss]ecurity-[Tt]oken):	:[[:space:]]*[A-Za-z0-9+/_.=~-]{16,}	colon" \
+"JSON token field (access/refresh/id/session)	.	\"(access_token|refresh_token|id_token|session_token|accessToken|refreshToken|idToken|sessionToken)\"[[:space:]]*:[[:space:]]*\"[^\"<]{16,}\"	json" \
+"JSON secret field (client_secret/api_key/private_key)	.	\"(client_secret|clientSecret|api_key|apiKey|secret_key|secretKey|private_key|privateKey)\"[[:space:]]*:[[:space:]]*\"[^\"<]{16,}\"	json" \
+"Pre-signed URL signature (AWS SigV4)	.	[Xx]-[Aa]mz-(Signature|Credential)=[A-Za-z0-9%/_.-]{16,}	eq" \
+"Pre-signed / query-string credential	.	[?&](sig|signature|token|access_token|api_key|apikey|key|password)=[A-Za-z0-9+/_.%=~-]{20,}	eq"
+}
+
+# _qa_strip_value <strip-mode> <matched-text>
+# Reduces one `grep -oE` match to the credential VALUE alone, using bash
+# parameter expansion only — no regex, no capture groups, no sed.
+#
+# This replaced a per-row `sed -nE 's/.*<pattern>.*/\N/p'` extraction, and the
+# reason is a defect that design kept producing: the leading `.*` is GREEDY, so
+# on a line carrying two credentials it latched onto the LAST one and the first
+# survived. Matches are now isolated by `grep -oE` first, so each fragment holds
+# exactly one credential and the value is a simple prefix strip.
+_qa_strip_value() {
+    local mode="$1" m="$2" v=""
+    case "$mode" in
+        eq)    v="${m#*=}" ;;                       # name=VALUE   -> VALUE
+        sp)    v="${m##*[[:space:]]}" ;;            # Bearer VALUE -> VALUE
+        colon) v="${m#*:}"                          # : VALUE      -> VALUE
+               v="${v#"${v%%[![:space:]]*}"}" ;;    # trim leading blanks
+        json)  v="${m%\"}"; v="${v##*\"}" ;;        # "k":"VALUE"  -> VALUE
+        *)     v="$m" ;;
+    esac
+    printf '%s' "$v"
 }
 
 # NO LINE-LEVEL ALLOWLIST — and that is deliberate. Two rejected designs:
@@ -305,10 +327,16 @@ _qa_scan_patterns() {
 #   control for that is qa_redact itself — registering what you send — not this
 #   scan. It is stated here rather than papered over.
 _qa_server_view() {
+    # The body region runs from the first "--- RESPONSE BODY" marker to EOF and
+    # is NEVER closed by a later marker. Closing it on "--- curl exit code" was
+    # a server-controlled evasion: a response body whose own content contained
+    # that literal ended the scanned region early, and every credential after it
+    # went unexamined while the run exited 0. The producer (qa_http) writes the
+    # exit-code line last, so running to EOF loses nothing and removes the
+    # evasion by construction rather than by escaping the marker.
     awk '
-        /^--- RESPONSE BODY/   { inbody = 1; print ""; next }
-        /^--- curl exit code/  { inbody = 0; print ""; next }
         inbody                 { print; next }
+        /^--- RESPONSE BODY/   { inbody = 1; print ""; next }
         /^</                   { print; next }
         { print "" }
     ' "$1" 2>/dev/null
@@ -325,14 +353,26 @@ _qa_scan_transcript() {
     view="$(_qa_server_view "$f")"
     [ -n "$view" ] || return 0
 
-    local found=0 label pattern _extract lineno rest
-    while IFS=$'\t' read -r label pattern _extract; do
+    local found=0 label ctx valre mode lineno rest m val
+    while IFS=$'\t' read -r label ctx valre mode; do
         [ -n "$label" ] || continue
+        # Stage 1: which lines are in this row's CONTEXT (e.g. a Set-Cookie
+        # response header). Stage 2: EVERY credential value on such a line.
+        # Two stages, because a single anchored pattern can only ever describe
+        # the FIRST credential on a line — which is how a second `name=value`
+        # pair on one Set-Cookie line went undetected and survived at rc=0.
         while IFS=: read -r lineno rest; do
             [ -n "$lineno" ] || continue
-            echo "${lineno}: ${label}"
-            found=1
-        done < <(printf '%s\n' "$view" | grep -nE -e "$pattern" 2>/dev/null || true)
+            while IFS= read -r m; do
+                [ -n "$m" ] || continue
+                val="$(_qa_strip_value "$mode" "$m")"
+                [ -n "$val" ] || continue
+                [ "$val" = "$QA_REDACT_TOKEN" ] && continue
+                case "$val" in *"$QA_REDACT_TOKEN"*) continue ;; esac
+                echo "${lineno}: ${label}"
+                found=1
+            done < <(printf '%s\n' "$rest" | grep -oE -e "$valre" 2>/dev/null || true)
+        done < <(printf '%s\n' "$view" | grep -nE -e "$ctx" 2>/dev/null || true)
     done < <(_qa_scan_patterns)
 
     return $(( found ? 1 : 0 ))
@@ -345,39 +385,27 @@ _qa_scan_transcript() {
 # Returns 0 if it redacted at least one value, 1 if it could not extract any.
 _qa_autoredact_scan_hits() {
     local f="$1"
-    local view label pattern extract match val redacted=0
+    local view label ctx valre mode rest m val redacted=0
     view="$(_qa_server_view "$f")"
     [ -n "$view" ] || return 1
 
-    while IFS=$'\t' read -r label pattern extract; do
+    while IFS=$'\t' read -r label ctx valre mode; do
         [ -n "$label" ] || continue
-        # `grep -oE` yields EVERY match separately, not one per line. That is
-        # load-bearing, not a style choice: iterating over whole LINES and
-        # running the extract on the line returned only ONE value, because the
-        # extract expressions are anchored with a leading `.*` which is GREEDY
-        # and therefore latches onto the LAST occurrence. A body line carrying
-        # two credentials —
-        #   {"access_token":"...","refresh_token":"..."}
-        # — had only its second credential redacted, and the first survived.
-        # Measured, not theorised: the nine-pattern end-to-end probe caught
-        # `access_token`, `client_secret` and `X-Amz-Signature` surviving while
-        # the run still reported success. Isolating each match first removes
-        # the ambiguity entirely — there is only one occurrence to latch onto.
-        #
-        # Matching is against the server-originated view only, the same scoping
-        # the scan uses, so auto-redaction can never touch a value the scan
-        # would not have reported.
-        while IFS= read -r match; do
-            [ -n "$match" ] || continue
-            val="$(printf '%s\n' "$match" | sed -nE "$extract" | head -1)"
-            [ -n "$val" ] || continue
-            [ "$val" = "$QA_REDACT_TOKEN" ] && continue
-            # Literal removal — the extracted value is DATA, never a pattern.
-            if _qa_redact_literal "$f" "$val"; then
-                echo "-- scrub: auto-redacted a ${label} (value withheld, §11.4.10)" >&2
-                redacted=1
-            fi
-        done < <(printf '%s\n' "$view" | grep -oE -e "$pattern" 2>/dev/null || true)
+        while IFS= read -r rest; do
+            [ -n "$rest" ] || continue
+            while IFS= read -r m; do
+                [ -n "$m" ] || continue
+                val="$(_qa_strip_value "$mode" "$m")"
+                [ -n "$val" ] || continue
+                [ "$val" = "$QA_REDACT_TOKEN" ] && continue
+                case "$val" in *"$QA_REDACT_TOKEN"*) continue ;; esac
+                # Literal removal — the extracted value is DATA, never a pattern.
+                if _qa_redact_literal "$f" "$val"; then
+                    echo "-- scrub: auto-redacted a ${label} (value withheld, §11.4.10)" >&2
+                    redacted=1
+                fi
+            done < <(printf '%s\n' "$rest" | grep -oE -e "$valre" 2>/dev/null || true)
+        done < <(printf '%s\n' "$view" | grep -E -e "$ctx" 2>/dev/null || true)
     done < <(_qa_scan_patterns)
 
     return $(( redacted ? 0 : 1 ))
@@ -420,19 +448,37 @@ _qa_apply_redaction() {
     # the credential and then PROVE it is gone by re-scanning. Only a finding
     # that survives its own removal is fatal, and nothing unscrubbed is ever
     # left on disk either way.
-    local findings
-    if findings="$(_qa_scan_transcript "$f")"; then
-        : # clean
-    else
-        _qa_autoredact_scan_hits "$f" || true
-        # Re-verify. Anything still matching could not be neutralised.
+    # Iterated to a FIXED POINT, not a single pass. One pass is not enough: the
+    # header rows are anchored at `^<`, so `grep -oE` yields exactly ONE match
+    # per line, and a line carrying a second credential
+    #   < set-cookie: sid=<first>; alt=<second>; Path=/
+    # kept `alt` after `sid` was redacted — and the run exited 0. Measured, not
+    # hypothesised. Rather than complicate every pattern, the scrub simply
+    # repeats until a scan comes back clean.
+    #
+    # Termination is guaranteed and does not rest on the iteration cap: every
+    # pass that finds anything redacts at least one value, a redacted value
+    # begins with '<' which no pattern's value class admits (so it can never
+    # re-match), and the loop exits the moment a pass makes no progress. The cap
+    # is a backstop against a pattern bug, not the mechanism — and reaching it
+    # aborts rather than proceeding.
+    local findings max_passes=16 pass=0
+    while :; do
         if findings="$(_qa_scan_transcript "$f")"; then
-            : # clean after auto-redaction
-        else
-            _qa_scrub_fail "$f" "post-write scan found credential-shaped content that SURVIVED auto-redaction:
+            break                       # clean
+        fi
+        pass=$((pass + 1))
+        if [ "$pass" -gt "$max_passes" ]; then
+            _qa_scrub_fail "$f" "post-write scan still reports credential-shaped content after ${max_passes} scrub passes:
 ${findings}"
         fi
-    fi
+        if ! _qa_autoredact_scan_hits "$f"; then
+            # Findings exist but nothing could be extracted/removed — the value
+            # is detectable yet not neutralisable. Never continue past that.
+            _qa_scrub_fail "$f" "post-write scan found credential-shaped content that could NOT be neutralised:
+${findings}"
+        fi
+    done
 
     # --- LAYER 3: shared repo key-shape scanner (§11.4.74 reuse) ----------
     local shared="${QA_REPO_ROOT}/scripts/secret_scan.sh"
