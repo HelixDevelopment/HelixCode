@@ -26,20 +26,48 @@ package server
 // and acquires state.Mu exactly once.
 //
 // Polarity switch (§11.4.115): set HELIX_QASTATUS_RED_MODE=1 to run the RED
-// reproduction. It performs the EXACT lock sequence the pre-fix handler
-// performed (outer RLock, then the MarshalJSON-equivalent inner RLock) against
-// a faithful SessionState with a DETERMINISTICALLY-PENDING writer, and asserts
-// the inner RLock genuinely never completes within a deadline (proving the
-// deadlock is real). DEFAULT (no env) runs the GREEN guard — it drives the
-// REAL fixed getQASessionStatus while a writer goroutine hammers state.Mu.Lock()
-// and asserts the handler completes well within a deadline (no hang).
+// reproduction. BOTH polarities drive the REAL shipped getQASessionStatus
+// handler on a REAL live session while a writer goroutine hammers
+// state.Mu.Lock(), and BOTH observe it from the SAME child probe process; only
+// the assertion flips. RED asserts the probe DIED reporting a wedge (true on
+// the pre-fix artifact, false on the fixed one); DEFAULT (no env) runs the
+// GREEN guard and asserts the probe survived every attempt.
+//
+// An earlier revision of this file reproduced the defect by hand-rolling the
+// lock sequence in a test-LOCAL helper. That helper only re-proved a documented
+// property of sync.RWMutex: it never touched the shipped handler, so it
+// behaved identically on every build ever made — pre-fix, fixed, or
+// arbitrarily broken — and the RED branch could not fail (§11.4.1). Converted,
+// not deleted: deleting a bluff gate removes coverage, converting it creates
+// real coverage.
+//
+// WHY A CHILD PROCESS IS REQUIRED. A first conversion drove the real handler
+// IN-PROCESS and returned on wedge. It could never report PASS on a pre-fix
+// artifact: the wedged handler goroutine holds state.Mu.RLock() forever, and
+// setupQATestServer registers t.Cleanup(qaEngine.Shutdown) — Shutdown takes
+// s.Mu.Lock() (internal/helixqa/wrapper.go:210), so cleanup blocks behind the
+// wedged reader and the binary dies on the go-test timeout instead. Measured on
+// a pre-fix artifact (0dfd0fbc reverted): the defect DID reproduce
+// ("wedged on attempt 1") and the run STILL exited 1 with
+// "panic: test timed out after 1m30s", the stack showing
+// helixqa.(*Engine).Shutdown <- testing.(*common).runCleanup. A guard whose
+// top-left quadrant is unreachable is not falsifiable, so the observation point
+// moved out of process: the probe calls os.Exit on wedge, which bypasses
+// t.Cleanup entirely and turns "the handler hung" into a bounded, readable exit
+// code. Observing a deadlock that poisons its own teardown means observing a
+// process — the same reason the sibling double-close guard in
+// llm_generate_regression_test.go uses a child probe.
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -47,79 +75,18 @@ import (
 	"dev.helix.code/internal/helixqa"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/require"
 )
 
-// reproduceRecursiveRLockDeadlock performs the precise lock sequence the pre-fix
-// getQASessionStatus performed: acquire an OUTER state.Mu.RLock() (the handler's
-// own lock), then — with a writer deterministically pending — attempt the INNER
-// state.Mu.RLock() that (*SessionState).MarshalJSON performs. It returns true if
-// the inner RLock completed within the deadline, false if it deadlocked.
-//
-// This is the literal bug mechanism (handler RLock + MarshalJSON RLock + a
-// pending writer), not a synthetic failure: it is exactly what the shipped
-// handler + wrapper.go did together.
-func reproduceRecursiveRLockDeadlock(deadline time.Duration) (innerAcquired bool) {
-	st := &helixqa.SessionState{ID: "red", Status: "running"}
-
-	// Handler's OUTER read lock.
-	st.Mu.RLock()
-	defer st.Mu.RUnlock()
-
-	writerBlocked := make(chan struct{})
-	go func() {
-		// Signal we are about to request the write lock, then block on it.
-		// Because the outer RLock above is held, this Lock() cannot proceed —
-		// it becomes the "pending writer" that poisons all subsequent RLocks.
-		close(writerBlocked)
-		st.Mu.Lock()
-		st.Status = "completed"
-		st.Mu.Unlock()
-	}()
-
-	<-writerBlocked
-	// Give the writer goroutine time to actually enter Lock() and register as
-	// a pending writer before we attempt the recursive inner RLock.
-	time.Sleep(50 * time.Millisecond)
-
-	done := make(chan struct{})
-	go func() {
-		// MarshalJSON's INNER read lock. With a writer pending, RWMutex blocks
-		// this forever on the pre-fix code path.
-		st.Mu.RLock()
-		st.Mu.RUnlock()
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		return true
-	case <-time.After(deadline):
-		return false
-	}
-}
-
-func TestGuard_GetQASessionStatus_RecursiveRLockDeadlock(t *testing.T) {
-	if os.Getenv("HELIX_QASTATUS_RED_MODE") == "1" {
-		// RED reproduction: the inner (recursive) RLock MUST NOT complete while
-		// a writer is pending — i.e. it deadlocks. If it DID complete, the
-		// defect is not reproduced and the guard would be blind (§11.4.115
-		// honest boundary).
-		if reproduceRecursiveRLockDeadlock(2 * time.Second) {
-			t.Fatal("RED_MODE: expected the recursive inner RLock to deadlock " +
-				"behind a pending writer, but it completed — the defect did not reproduce")
-		}
-		// Note: this leaves a goroutine blocked on Lock()/RLock() forever; that
-		// is inherent to demonstrating the deadlock and only runs in RED_MODE.
-		return
-	}
-
-	// GREEN guard (DEFAULT): drive the REAL fixed handler while a writer
-	// goroutine hammers state.Mu.Lock(). The handler must finish quickly.
+// startLiveQASession boots a real QA engine, starts a real session, and returns
+// the server plus the live *SessionState the orchestrator goroutine mutates
+// under state.Mu.Lock(). BOTH polarities share this fixture so they exercise
+// the identical shipped code path.
+func startLiveQASession(t *testing.T) (*Server, *helixqa.SessionState) {
+	t.Helper()
 	gin.SetMode(gin.TestMode)
 	server, w, c, bankFile := setupQATestServer(t)
 
-	// Start a real session so getQASessionStatus has a live *SessionState
-	// (the same one the orchestrator goroutine mutates under state.Mu.Lock()).
 	startReq := StartSessionRequest{Platforms: []string{"web"}, Banks: []string{bankFile}}
 	body, _ := json.Marshal(startReq)
 	c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/qa/session", bytes.NewReader(body))
@@ -137,58 +104,197 @@ func TestGuard_GetQASessionStatus_RecursiveRLockDeadlock(t *testing.T) {
 	if !ok {
 		t.Fatalf("setup: session %s not found in engine", created.ID)
 	}
+	return server, state
+}
 
-	// Hammer the writer lock concurrently to widen the deadlock window — this
-	// is precisely the orchestrator's write pattern that the bug raced against.
+// hammerWriteLock reproduces the orchestrator's write pattern — the pattern the
+// pre-fix handler raced against — by taking state.Mu.Lock() in a tight loop
+// until stop is closed.
+func hammerWriteLock(state *helixqa.SessionState, stop <-chan struct{}, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for {
+		select {
+		case <-stop:
+			return
+		default:
+			state.Mu.Lock()
+			state.Phase = "orchestration"
+			state.PhaseProgress += 0.0
+			state.Mu.Unlock()
+		}
+	}
+}
+
+// callQAStatus drives the REAL shipped getQASessionStatus for one Accept mode
+// and reports whether it returned within deadline (plus the recorder, valid
+// only when it did return).
+func callQAStatus(server *Server, id, accept string, deadline time.Duration) (*httptest.ResponseRecorder, bool) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/qa/session/"+id+"/status", nil)
+	if accept != "" {
+		c.Request.Header.Set("Accept", accept)
+	}
+	c.Params = gin.Params{{Key: "id", Value: id}}
+
+	done := make(chan struct{})
+	go func() {
+		server.getQASessionStatus(c)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return w, true
+	case <-time.After(deadline):
+		return w, false
+	}
+}
+
+// qaStatusProbeEnv turns this test binary into the one-shot child probe that
+// TestGuard_GetQASessionStatus_RecursiveRLockDeadlock re-executes.
+const qaStatusProbeEnv = "HELIX_QASTATUS_DEADLOCK_PROBE"
+
+// qaStatusProbeWedgeExit is the probe's distinct "I observed the handler wedge"
+// exit code. It is deliberately NOT 1 and NOT 2, so a wedge is distinguishable
+// from an ordinary test failure (1) or a go-test timeout panic (2) — otherwise
+// an unrelated breakage would masquerade as a reproduced deadlock (§11.4.6).
+const qaStatusProbeWedgeExit = 97
+
+// Markers the parent matches on, so a wedge/survival is asserted on the probe's
+// own words rather than on an exit code alone.
+const (
+	qaStatusWedgeMarker    = "QASTATUS_PROBE_WEDGED"
+	qaStatusSurvivedMarker = "QASTATUS_PROBE_SURVIVED"
+)
+
+// qaStatusWedgeDeadline is how long one getQASessionStatus call may take before
+// the probe calls it wedged. The handler marshals an in-memory struct, and a
+// transient wait behind one writer resolves in microseconds, so this is ~6
+// orders of magnitude of headroom — chosen so a loaded shared host cannot
+// manufacture a false wedge (a false wedge would make the standing GREEN guard
+// flaky, §11.4.50).
+const qaStatusWedgeDeadline = 8 * time.Second
+
+// qaStatusProbeAttempts is how many times the probe re-drives the handler before
+// concluding no wedge occurs. The deadlock needs a writer to land between the
+// handler's outer RLock and MarshalJSON's inner RLock, so it is racy per call;
+// on a pre-fix artifact it reproduced on attempt 1, and this many attempts
+// against a tight writer loop makes a miss vanishingly unlikely.
+const qaStatusProbeAttempts = 40
+
+// qaStatusProbeTimeout bounds the child probe so a hang cannot wedge the suite.
+const qaStatusProbeTimeout = 120 * time.Second
+
+// TestGuard_QAStatusDeadlockProbe is the CHILD half of both polarities below. It
+// is not a standalone guard: it is skipped unless re-executed with
+// qaStatusProbeEnv set.
+//
+// It drives the REAL shipped getQASessionStatus against a REAL live session
+// while a writer goroutine hammers state.Mu.Lock(). On a pre-fix artifact the
+// handler's outer RLock and MarshalJSON's inner RLock straddle that pending
+// writer and the request wedges PERMANENTLY; the probe reports it and calls
+// os.Exit, which is load-bearing — returning normally would run
+// t.Cleanup(qaEngine.Shutdown), which blocks forever behind the wedged reader
+// (see the WHY A CHILD PROCESS IS REQUIRED note above). On the fixed artifact
+// every attempt returns and the probe exits 0.
+func TestGuard_QAStatusDeadlockProbe(t *testing.T) {
+	if os.Getenv(qaStatusProbeEnv) != "1" {
+		t.Skip("SKIP-OK: child-process probe, driven only by " +
+			"TestGuard_GetQASessionStatus_RecursiveRLockDeadlock; it is not a standalone guard")
+	}
+
+	server, state := startLiveQASession(t)
+
 	stop := make(chan struct{})
 	var hammer sync.WaitGroup
 	hammer.Add(1)
-	go func() {
-		defer hammer.Done()
-		for {
-			select {
-			case <-stop:
-				return
-			default:
-				state.Mu.Lock()
-				state.Phase = "orchestration"
-				state.PhaseProgress += 0.0
-				state.Mu.Unlock()
+	go hammerWriteLock(state, stop, &hammer)
+
+	for i := 0; i < qaStatusProbeAttempts; i++ {
+		for _, accept := range []string{"", "text/event-stream"} {
+			w, returned := callQAStatus(server, state.ID, accept, qaStatusWedgeDeadline)
+			if !returned {
+				// Written straight to stdout, not t.Logf: os.Exit skips the
+				// testing framework's buffered-output flush, and this line is
+				// the parent's evidence.
+				fmt.Printf("%s accept=%q attempt=%d\n", qaStatusWedgeMarker, accept, i+1)
+				os.Exit(qaStatusProbeWedgeExit)
 			}
-		}
-	}()
-
-	// Run the real handler under contention with a hard deadline. A hang here
-	// is the deadlock recurring.
-	for _, accept := range []string{"", "text/event-stream"} {
-		w2 := httptest.NewRecorder()
-		c2, _ := gin.CreateTestContext(w2)
-		c2.Request = httptest.NewRequest(http.MethodGet, "/api/v1/qa/session/"+created.ID+"/status", nil)
-		if accept != "" {
-			c2.Request.Header.Set("Accept", accept)
-		}
-		c2.Params = gin.Params{{Key: "id", Value: created.ID}}
-
-		done := make(chan struct{})
-		go func() {
-			server.getQASessionStatus(c2)
-			close(done)
-		}()
-
-		select {
-		case <-done:
-			if w2.Code != http.StatusOK && accept == "" {
+			// Status is asserted for the JSON mode only. The SSE branch never
+			// sets a status explicitly — it writes the event body straight to
+			// c.Writer — so the recorder simply reports its default 200.
+			// Asserting that would assert httptest's default, not the handler
+			// (§11.4.1); the SSE path's real observable is that it RETURNED at
+			// all, which the wedge check above already covers.
+			if w.Code != http.StatusOK && accept == "" {
+				close(stop)
+				hammer.Wait()
 				t.Fatalf("getQASessionStatus(accept=%q) returned %d, want 200 (body=%s)",
-					accept, w2.Code, w2.Body.String())
+					accept, w.Code, w.Body.String())
 			}
-		case <-time.After(5 * time.Second):
-			close(stop)
-			t.Fatalf("DEADLOCK: getQASessionStatus(accept=%q) did not return within "+
-				"5s under concurrent writer contention — the recursive-RLock "+
-				"self-deadlock has regressed", accept)
 		}
 	}
 
 	close(stop)
 	hammer.Wait()
+	fmt.Printf("%s attempts=%d\n", qaStatusSurvivedMarker, qaStatusProbeAttempts)
+}
+
+// TestGuard_GetQASessionStatus_RecursiveRLockDeadlock — the standing guard.
+//
+// BOTH polarities run the SAME child probe over the SAME fixture; only the
+// assertion flips (§11.4.115 one-source-two-roles). Observing from a process in
+// BOTH directions is deliberate: it is what lets a REGRESSION fail this guard
+// cleanly and quickly. An in-process GREEN branch would instead hang in
+// t.Cleanup and only surface as a whole-suite timeout.
+//
+// RED_MODE (HELIX_QASTATUS_RED_MODE=1): assert the probe DIED reporting a wedge.
+// True on a pre-fix artifact; false on the fixed one, where it exits 0.
+//
+// DEFAULT (no env): assert the probe SURVIVED every attempt — the fixed handler
+// never wedges under writer contention.
+func TestGuard_GetQASessionStatus_RecursiveRLockDeadlock(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), qaStatusProbeTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, os.Args[0],
+		"-test.run=^TestGuard_QAStatusDeadlockProbe$", "-test.v=true",
+		// Bound the child independently of the parent so a child-side hang
+		// surfaces as its own panic rather than as a killed context.
+		"-test.timeout="+(qaStatusProbeTimeout-20*time.Second).String())
+	cmd.Env = append(os.Environ(), qaStatusProbeEnv+"=1")
+	out, runErr := cmd.CombinedOutput()
+
+	require.NoError(t, ctx.Err(),
+		"the child probe must terminate on its own, not hit the %s timeout.\nchild output:\n%s",
+		qaStatusProbeTimeout, out)
+
+	exitCode := cmd.ProcessState.ExitCode()
+
+	if os.Getenv("HELIX_QASTATUS_RED_MODE") == "1" {
+		require.Error(t, runErr,
+			"RED expectation: driving the REAL getQASessionStatus on a PRE-FIX artifact under "+
+				"writer contention MUST wedge the probe. A clean exit means the handler no longer "+
+				"self-deadlocks, so the defect is absent and this RED baseline no longer "+
+				"characterises anything.\nchild output:\n%s", out)
+		require.Equal(t, qaStatusProbeWedgeExit, exitCode,
+			"RED: the probe must die from the recursive-RLock wedge (exit %d), not from an "+
+				"unrelated failure or timeout.\nchild output:\n%s", qaStatusProbeWedgeExit, out)
+		require.Contains(t, string(out), qaStatusWedgeMarker,
+			"RED: the probe must report the wedge it observed.\nchild output:\n%s", out)
+		t.Logf("RED reproduced: the real getQASessionStatus wedged the probe process (exit %d)", exitCode)
+		return
+	}
+
+	// GREEN guard (DEFAULT).
+	require.NoError(t, runErr,
+		"DEADLOCK: the probe driving the REAL getQASessionStatus did not survive under concurrent "+
+			"writer contention. Exit %d means the recursive-RLock self-deadlock has regressed.\n"+
+			"child output:\n%s", exitCode, out)
+	require.Contains(t, string(out), qaStatusSurvivedMarker,
+		"GREEN: the probe must report that every attempt returned; a missing marker means it "+
+			"exited 0 without completing the loop.\nchild output:\n%s", out)
+	require.False(t, strings.Contains(string(out), qaStatusWedgeMarker),
+		"GREEN: the probe reported a wedge.\nchild output:\n%s", out)
 }

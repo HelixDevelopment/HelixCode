@@ -15,21 +15,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// funnelRedMode is the §11.4.115 polarity switch for the server-side
-// working-model funnel wiring guard.
+// §11.4.115 polarity for the server-side working-model funnel wiring guard is
+// carried by the package-shared redMode(t) helper
+// (llm_generate_regression_test.go) — ONE polarity shape for the whole package:
 //
-//	RED_MODE=1 (default): reproduce the not-wired defect — the raw
-//	            GetVerifiedModels path leaks failed / sub-threshold / no-key
-//	            models, so a server listing built from it would show models the
-//	            user cannot use (the pre-fix server handler called
-//	            GetVerifiedModels directly).
-//	RED_MODE=0: the GREEN guard — the wired handler runs GetWorkingModels with
-//	            the llm.PresentProviderNames() key-presence gate, so only the
-//	            single working+key-present model survives end-to-end over HTTP.
-func funnelRedMode() bool {
-	v := os.Getenv("RED_MODE")
-	return v == "" || v == "1"
-}
+//	RED_MODE=0 (default): the standing GREEN guard — the wired handler runs
+//	            GetWorkingModels with the llm.PresentProviderNames()
+//	            key-presence gate, so only the single working+key-present model
+//	            survives end-to-end over HTTP.
+//	RED_MODE=1: reproduce the not-wired defect — the pre-fix handler called
+//	            GetVerifiedModels directly, so the SAME real handler leaked
+//	            failed / pending / sub-threshold / no-key models to the client.
+//
+// Both polarities drive the REAL shipped handler over the SAME served response;
+// only the assertion flips (§11.4.115). A RED branch that asserted against the
+// raw adapter instead would pass on every artifact ever built — the handler is
+// what the fix changed, so the handler is what the RED branch must observe.
 
 // newFunnelCatalogServer serves the same mixed catalog the verifier-layer test
 // uses: one working anthropic model, one sub-threshold, one failed, one
@@ -105,25 +106,30 @@ func TestServerListLLMModels_WorkingFunnelEndToEnd(t *testing.T) {
 	var resp map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 
-	if funnelRedMode() {
-		// RED: prove the raw verifier path (pre-fix) leaks unusable models, so a
-		// listing built from it would be a PASS-bluff. We exercise the same
-		// adapter via the unfiltered call to capture the defect signal.
-		raw, err := adapter.GetVerifiedModels(req.Context())
-		require.NoError(t, err)
-		ids := map[string]bool{}
-		for _, m := range raw {
-			ids[m.ID] = true
-		}
-		assert.True(t, ids["claude-failed"], "RED: unfiltered path leaks the failed model")
-		assert.True(t, ids["gpt-good"], "RED: unfiltered path leaks the no-key openai model")
+	served := idSetFromModels(t, resp["models"])
+
+	if redMode(t) {
+		// RED: on the PRE-FIX artifact listLLMModels called GetVerifiedModels
+		// directly, so the handler's OWN response leaked every unusable model.
+		// This drives the REAL shipped handler (same request, same response as
+		// GREEN) and asserts the leak is present — false on the fixed artifact.
+		require.Equal(t, "success", resp["status"])
+		require.Equal(t, "verifier", resp["source"])
+		assert.True(t, served["claude-failed"],
+			"RED: the pre-fix handler leaks the FAILED model to the client")
+		assert.True(t, served["claude-lowscore"],
+			"RED: the pre-fix handler leaks the sub-threshold model to the client")
+		assert.True(t, served["claude-pending"],
+			"RED: the pre-fix handler leaks the PENDING model to the client")
+		assert.True(t, served["gpt-good"],
+			"RED: the pre-fix handler leaks the no-key openai model to the client")
+		assert.Len(t, served, 5, "RED: the pre-fix handler serves the whole unfiltered catalog")
 		return
 	}
 
 	// GREEN: the wired handler emits only the working+key-present model.
 	require.Equal(t, "success", resp["status"])
 	require.Equal(t, "verifier", resp["source"], "must be sourced from the working-model funnel, not fallback")
-	served := idSetFromModels(t, resp["models"])
 	assert.True(t, served["claude-good"], "the single working+key-present model must be listed")
 	assert.False(t, served["claude-lowscore"], "sub-threshold model must be hidden (D-4)")
 	assert.False(t, served["claude-failed"], "failed model must be hidden (D-2/D-4)")
@@ -157,11 +163,6 @@ func TestServerListLLMProviders_WorkingFunnelEndToEnd(t *testing.T) {
 	var resp map[string]interface{}
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 
-	if funnelRedMode() {
-		// RED guard sibling: covered by the models test's RED branch.
-		t.Skip("RED polarity covered by TestServerListLLMModels_WorkingFunnelEndToEnd") // SKIP-OK: paired RED guard
-	}
-
 	require.Equal(t, "success", resp["status"])
 	require.Equal(t, "verifier", resp["source"])
 	provs, ok := resp["providers"].([]interface{})
@@ -173,6 +174,18 @@ func TestServerListLLMProviders_WorkingFunnelEndToEnd(t *testing.T) {
 			names[id] = true
 		}
 	}
+
+	if redMode(t) {
+		// RED: on the PRE-FIX artifact listLLMProviders called
+		// GetVerifiedModels, so a provider the caller has NO key for was still
+		// derived from the catalog and listed as available. Drives the REAL
+		// shipped handler; false on the fixed artifact. Previously this case
+		// merely t.Skip()ed, so the key-gate had NO reproduction at all.
+		assert.True(t, names["openai"],
+			"RED: the pre-fix handler lists openai despite NO openai key being present")
+		return
+	}
+
 	assert.True(t, names["anthropic"], "anthropic key-present + working model -> provider listed")
 	assert.False(t, names["openai"], "openai has NO key -> provider hidden (key-gate, anti-bluff)")
 }

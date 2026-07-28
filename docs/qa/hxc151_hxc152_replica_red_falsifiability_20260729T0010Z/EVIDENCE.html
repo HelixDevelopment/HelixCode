@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HXC-152 + HXC-151 evidence</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="../../_progress-style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HXC-152 + HXC-151 evidence</h1>
+</header>
+<h1
+id="hxc-152-hxc-151-captured-four-quadrant-evidence-11.4.83-11.4.115">HXC-152
++ HXC-151 — captured four-quadrant evidence (§11.4.83 / §11.4.115)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Items</td>
+<td>HXC-152 (Bug/High), HXC-151 (Bug/Medium)</td>
+</tr>
+<tr>
+<td>Fixed artifact</td>
+<td><code>e879702c</code> + the uncommitted guard conversions in this
+commit</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#what-was-proven">What was proven</a></li>
+<li><a href="#headline-result--hxc-152">Headline result —
+HXC-152</a></li>
+<li><a href="#four-quadrant-matrices">Four-quadrant matrices</a></li>
+<li><a href="#the-qastatus-cleanup-deadlock-finding">The qastatus
+cleanup-deadlock finding</a></li>
+<li><a href="#enumerated-residual-search">Enumerated residual
+search</a></li>
+<li><a href="#package-verification">Package verification</a></li>
+<li><a href="#honest-boundaries">Honest boundaries</a></li>
+</ul>
+<h2 id="what-was-proven">What was proven</h2>
+<p>Five RED/GREEN polarity guards in
+<code>helix_code/internal/server/</code> were made falsifiable. Method
+per guard (§11.4.115): reconstruct the pre-fix artifact in a throwaway
+<code>git worktree</code> off HEAD with <code>submodules/</code>
+symlinked in (the inner module <code>replace</code>s to
+<code>../submodules/*</code>), reverting <strong>one</strong> production
+fix at a time, then run both polarities on both artifacts. Required
+pattern is PASS / FAIL / FAIL / PASS.</p>
+<p><code>go test</code>’s own exit code was captured directly (subshell
+redirect to a file, then <code>$?</code>), never through a pipe.</p>
+<h2 id="headline-result-hxc-152">Headline result — HXC-152</h2>
+<p><code>llm_working_funnel_test.go</code> defaulted to
+<strong>RED</strong> when <code>RED_MODE</code> was unset, so its
+fix-verifying GREEN assertions had almost certainly <strong>never
+executed</strong> while the test still reported PASS. The default is now
+GREEN via the package-shared <code>redMode(t)</code>.</p>
+<p><strong>Those GREEN assertions were run for the first time and they
+PASS.</strong> No defect was being hidden by the inverted default — the
+funnel filtering works. Confirmed both with <code>RED_MODE=0</code>
+explicitly and with the variable genuinely unset.</p>
+<h2 id="four-quadrant-matrices">Four-quadrant matrices</h2>
+<p>Reverted fix per guard: systemstatus <code>7cc89da9</code>, qastatus
+<code>0dfd0fbc</code>, rag <code>225cdf77</code> (surgical — see
+boundaries), funnel <code>4d7a89ed</code> (<code>handlers.go</code>
+only).</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>guard</th>
+<th>pre-fix RED</th>
+<th>pre-fix GREEN</th>
+<th>fixed RED</th>
+<th>fixed GREEN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TestGuard_GetSystemStatus_NilDB</code></td>
+<td>PASS rc=0</td>
+<td>FAIL rc=1</td>
+<td>FAIL rc=1</td>
+<td>PASS rc=0</td>
+</tr>
+<tr>
+<td><code>TestGuard_GetQASessionStatus_RecursiveRLockDeadlock</code></td>
+<td>PASS rc=0 (8.07s)</td>
+<td>FAIL rc=1</td>
+<td>FAIL rc=1</td>
+<td>PASS rc=0</td>
+</tr>
+<tr>
+<td><code>TestGenerateLLM_RAG_Enabled_Augments_RegressionGuard</code></td>
+<td>PASS rc=0</td>
+<td>FAIL rc=1</td>
+<td>FAIL rc=1</td>
+<td>PASS rc=0</td>
+</tr>
+<tr>
+<td><code>TestServerListLLMModels_WorkingFunnelEndToEnd</code></td>
+<td>PASS rc=0</td>
+<td>FAIL rc=1</td>
+<td>FAIL rc=1</td>
+<td>PASS rc=0</td>
+</tr>
+<tr>
+<td><code>TestServerListLLMProviders_WorkingFunnelEndToEnd</code></td>
+<td>PASS rc=0</td>
+<td>FAIL rc=1</td>
+<td>FAIL rc=1</td>
+<td>PASS rc=0</td>
+</tr>
+</tbody>
+</table>
+<p>All five match. Selected verbatim observables proving each cell fired
+on the intended assertion rather than incidentally:</p>
+<ul>
+<li>systemstatus, pre-fix GREEN:
+<code>getSystemStatus panicked on a nil-db Server: runtime error: invalid memory address or nil pointer dereference</code></li>
+<li>systemstatus, fixed RED:
+<code>RED_MODE: expected the real getSystemStatus to panic ... got none — the defect did not reproduce</code></li>
+<li>rag, pre-fix GREEN:
+<code>"what is the HelixCode server binary called?" does not contain "The HelixCode server binary is bin/helixcode."</code>
+<strong>and</strong> <code>"[]" should have 1 item(s), but has 0</code>
+— prompt unaugmented <em>and</em> retriever never called</li>
+<li>rag, fixed RED: provider actually received
+<code>Context retrieved from the local knowledge base:\n\n[1] The HelixCode server binary is bin/helixcode.\n(source: docs/build.md)\n\n---\n\nwhat is ...</code></li>
+<li>funnel models, pre-fix GREEN:
+<code>map[claude-failed:true claude-good:true claude-lowscore:true claude-pending:true gpt-good:true] should have 1 item(s), but has 5</code>
+— the pre-fix handler really served the whole unfiltered catalog over
+HTTP</li>
+<li>funnel models, fixed RED:
+<code>map[claude-good:true] should have 5 item(s), but has 1</code></li>
+<li>funnel providers, fixed RED: fails at <code>:184</code>
+<code>RED: the pre-fix handler lists openai despite NO openai key being present</code>
+— proving the branch that previously only <code>t.Skip()</code>ed is now
+live</li>
+<li>qastatus, pre-fix RED: child probe printed
+<code>QASTATUS_PROBE_WEDGED accept="" attempt=1</code>, exit 97</li>
+<li>qastatus, fixed RED: child probe printed
+<code>QASTATUS_PROBE_SURVIVED attempts=40</code>, exit 0</li>
+</ul>
+<h2 id="the-qastatus-cleanup-deadlock-finding">The qastatus
+cleanup-deadlock finding</h2>
+<p>Raw log: <a
+href="qastatus_inprocess_cleanup_deadlock_prefix_RED1.txt"><code>qastatus_inprocess_cleanup_deadlock_prefix_RED1.txt</code></a></p>
+<p>The first conversion of this guard drove the real handler
+<strong>in-process</strong>. On a pre-fix artifact it could never report
+PASS, so its top-left quadrant was unreachable and the guard was not
+falsifiable. Measured with <code>0dfd0fbc</code> reverted:</p>
+<pre><code>handlers_qastatus_deadlock_guard_test.go:160: RED: real getQASessionStatus(accept=&quot;text/event-stream&quot;) wedged on attempt 1 — recursive-RLock self-deadlock reproduced
+panic: test timed out after 1m30s
+...
+sync.(*RWMutex).Lock(...)
+dev.helix.code/internal/helixqa.(*Engine).Shutdown(...)   wrapper.go:210
+dev.helix.code/internal/server.setupQATestServer.func1()  qa_handlers_test.go:58
+testing.(*common).Cleanup.func1()</code></pre>
+<p>and concurrently the wedged handler goroutine:</p>
+<pre><code>goroutine 98 [sync.RWMutex.RLock]:
+dev.helix.code/internal/helixqa.(*SessionState).MarshalJSON(...)  wrapper.go:52
+encoding/json.Marshal(...)
+dev.helix.code/internal/server.(*Server).getQASessionStatus(...)</code></pre>
+<p>The defect <strong>did</strong> reproduce, and the run
+<strong>still</strong> exited 1 on the go-test timeout:
+<code>setupQATestServer</code> registers
+<code>t.Cleanup(qaEngine.Shutdown)</code>, and <code>Shutdown</code>
+takes <code>s.Mu.Lock()</code>, which blocks forever behind the wedged
+reader.</p>
+<p>Fix: both polarities now observe the handler from a <strong>child
+probe process</strong> that calls <code>os.Exit(97)</code> on wedge,
+bypassing <code>t.Cleanup</code> entirely. This also makes a future
+regression fail the standing GREEN guard <strong>cleanly in ~8s</strong>
+instead of hanging to a suite timeout — measured pre-fix GREEN:
+<code>rc=1</code> in 8.03s with
+<code>Exit 97 means the recursive-RLock self-deadlock has regressed</code>.</p>
+<h2 id="enumerated-residual-search">Enumerated residual search</h2>
+<p>Not “no others found” (§11.4.118). Every polarity switch in the
+package was enumerated by <strong>every</strong> env-var name in use,
+not just <code>RED_MODE</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>file</th>
+<th>switch</th>
+<th>default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>handlers_systemstatus_guard_test.go</code></td>
+<td><code>HELIX_RED_MODE</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>handlers_qastatus_deadlock_guard_test.go</code></td>
+<td><code>HELIX_QASTATUS_RED_MODE</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>llm_generate_regression_test.go</code>
+(<code>redMode</code>)</td>
+<td><code>RED_MODE</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>server_nil_redis_test.go</code> (×2)</td>
+<td><code>RED_MODE</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>llm_auth_guard_test.go</code></td>
+<td><code>RED_LLM_AUTH</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>ws_auth_test.go</code></td>
+<td><code>RED_WS_AUTH</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>wire_facade_auth_test.go</code></td>
+<td><code>RED_WIRE_FACADE_AUTH</code></td>
+<td>GREEN</td>
+</tr>
+<tr>
+<td><code>handlers_project_idor_test.go</code></td>
+<td><code>RED_PROJECT_IDOR</code></td>
+<td>GREEN</td>
+</tr>
+</tbody>
+</table>
+<p>No inverted default remains. Grepping
+<code>Replica|replicat|preFix|old[A-Z]…(</code> across
+<code>internal/server/*_test.go</code> returns empty, and each named
+replica symbol is gone: <code>preFixSystemStatusHealthCheck</code>,
+<code>reproduceRecursiveRLockDeadlock</code>,
+<code>funnelRedMode</code>, <code>oldStreamPumpReplica</code>,
+<code>oldResolveDefaultModelReplica</code> — 0 occurrences each.</p>
+<h2 id="package-verification">Package verification</h2>
+<p>On the fixed artifact, all five files in place:</p>
+<pre><code>go vet   ./internal/server/...            rc=0
+go test  -count=1 ./internal/server/...   rc=0   ok 1.168s
+go test  -race -count=1 ./internal/server/...   ok 3.311s
+go build ./internal/... ./cmd/...         rc=0
+gofmt -l &lt;the five touched files&gt;         empty</code></pre>
+<p><code>go build ./...</code> fails at pristine HEAD on missing
+X11/GLFW headers — a pre-existing host gap, not a defect of this change
+(§11.4.201).</p>
+<h2 id="honest-boundaries">Honest boundaries</h2>
+<ol type="1">
+<li><p><strong>RAG pre-fix is a narrowed counterfactual.</strong> A
+whole-commit revert of <code>225cdf77</code> does not compile: later
+commits added <code>applyRAGContext</code> call sites in
+<code>wire_facade.go:651,706</code> that the revert orphans. The
+measured pre-fix shape removes only the <code>applyRAGContext</code>
+call inside <code>generateLLM</code> — the exact wiring this guard
+drives. The helper, the <code>streamLLM</code> call site and the
+wire-facade call sites remain. This is precise for the guard but
+narrower than the full commit.</p></li>
+<li><p><strong>One intermittent flake observed, cause
+UNCONFIRMED.</strong> One full-package <code>-race</code> run failed in
+<code>TestStartQASession_Success</code>
+(<code>expected "pending", actual "running"</code>) — a
+<strong>pre-existing test this work does not touch</strong>. Mechanism
+established from source: <code>startQASession</code> passes
+<code>c.JSON</code> the same live <code>*SessionState</code> pointer the
+orchestrator goroutine is concurrently flipping
+<code>pending</code>→<code>running</code>, so the serialized body races.
+Repeat runs after the observation: current tree <strong>11 clean / 1
+fail</strong>, pristine HEAD <strong>4/4 clean</strong>. One failure in
+twelve is too rare to separate “pre-existing latent flake” from
+“pre-existing latent flake whose rate the new child-process spawn nudges
+upward”, so the contribution is recorded as UNCONFIRMED rather than
+dismissed. The underlying racy assertion is a genuine §11.4.50
+determinism defect and is <strong>reported for its own tracked
+item</strong> — deliberately not patched here, since fixing an unrelated
+test without its own RED-first cycle would violate §11.4.43 /
+§11.4.146.</p></li>
+<li><p><strong>Not measured:</strong> <code>-race</code> was not run
+against each reconstructed pre-fix artifact, only against the fixed one;
+and the rag guard’s sibling stream-path/unit tests were not measured
+under either polarity (out of the named guards’ scope).</p></li>
+</ol>
+</body>
+</html>

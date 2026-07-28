@@ -1,0 +1,102 @@
+=== RUN   TestGuard_GetQASessionStatus_RecursiveRLockDeadlock
+2026/07/29 00:01:55 ✅ helix_qa engine initialized (output: /tmp/.private/milos/TestGuard_GetQASessionStatus_RecursiveRLockDeadlock4258107969/001)
+    handlers_qastatus_deadlock_guard_test.go:160: RED: real getQASessionStatus(accept="text/event-stream") wedged on attempt 1 — recursive-RLock self-deadlock reproduced
+panic: test timed out after 1m30s
+	running tests:
+		TestGuard_GetQASessionStatus_RecursiveRLockDeadlock (1m30s)
+
+goroutine 114 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/lib/golang/src/testing/testing.go:2802 +0x354
+created by time.goFunc
+	/usr/lib/golang/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0x1a38ff9e008, {0x1ec93d0?, 0x0?}, 0x1f12e70)
+	/usr/lib/golang/src/testing/testing.go:2109 +0x4e5
+testing.runTests.func1(0x1a38ff9e008)
+	/usr/lib/golang/src/testing/testing.go:2585 +0x3e
+testing.tRunner(0x1a38ff9e008, 0x1a38fb53c58)
+	/usr/lib/golang/src/testing/testing.go:2036 +0xea
+testing.runTests({0x1e81258, 0xe}, {0x1ea1b8b, 0x1e}, 0x1a38faf8588, {0x30fb920, 0xc1, 0xc1}, {0xc2925d1f629f18d8, 0x14f4e851dd, ...})
+	/usr/lib/golang/src/testing/testing.go:2583 +0x505
+testing.(*M).Run(0x1a38ff3c500)
+	/usr/lib/golang/src/testing/testing.go:2443 +0x6ac
+main.main()
+	_testmain.go:438 +0x9b
+
+goroutine 13 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x26?, 0x8?, 0x1a38fc61540?)
+	/usr/lib/golang/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x1a38ff63508)
+	/usr/lib/golang/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	/usr/lib/golang/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	/usr/lib/golang/src/sync/mutex.go:46
+sync.(*RWMutex).Lock(0x292a3e0?)
+	/usr/lib/golang/src/sync/rwmutex.go:150 +0x32
+dev.helix.code/internal/helixqa.(*Engine).Shutdown(0x1a38ff61500)
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/helixqa/wrapper.go:210 +0xaf
+dev.helix.code/internal/server.setupQATestServer.func1()
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/server/qa_handlers_test.go:58 +0x1e
+testing.(*common).Cleanup.func1()
+	/usr/lib/golang/src/testing/testing.go:1317 +0x109
+testing.(*common).runCleanup(0x1a38ff9e248, 0x1a38fe7e8e0?)
+	/usr/lib/golang/src/testing/testing.go:1667 +0xea
+testing.tRunner.func2()
+	/usr/lib/golang/src/testing/testing.go:2030 +0x25
+testing.tRunner(0x1a38ff9e248, 0x1f12e70)
+	/usr/lib/golang/src/testing/testing.go:2042 +0x114
+created by testing.(*T).Run in goroutine 1
+	/usr/lib/golang/src/testing/testing.go:2101 +0x4c5
+
+goroutine 14 [sync.Mutex.Lock]:
+internal/sync.runtime_SemacquireMutex(0x1a39020c330?, 0x0?, 0x1a39020c2d0?)
+	/usr/lib/golang/src/runtime/sema.go:95 +0x25
+internal/sync.(*Mutex).lockSlow(0x1a38ff63508)
+	/usr/lib/golang/src/internal/sync/mutex.go:149 +0x15d
+internal/sync.(*Mutex).Lock(...)
+	/usr/lib/golang/src/internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	/usr/lib/golang/src/sync/mutex.go:46
+sync.(*RWMutex).Lock(0x1a39020e000?)
+	/usr/lib/golang/src/sync/rwmutex.go:150 +0x32
+dev.helix.code/internal/helixqa.(*Engine).StartSession.func1()
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/helixqa/wrapper.go:173 +0x2c5
+created by dev.helix.code/internal/helixqa.(*Engine).StartSession in goroutine 13
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/helixqa/wrapper.go:135 +0x5ee
+
+goroutine 15 [sync.RWMutex.Lock]:
+sync.runtime_SemacquireRWMutex(0x41f47e?, 0x20?, 0x0?)
+	/usr/lib/golang/src/runtime/sema.go:105 +0x25
+sync.(*RWMutex).Lock(0x1a38ff63508?)
+	/usr/lib/golang/src/sync/rwmutex.go:155 +0x6b
+dev.helix.code/internal/server.hammerWriteLock(0x1a38ff63450, 0x1a38fd02620, 0x0?)
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/server/handlers_qastatus_deadlock_guard_test.go:99 +0x9b
+created by dev.helix.code/internal/server.TestGuard_GetQASessionStatus_RecursiveRLockDeadlock in goroutine 13
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/server/handlers_qastatus_deadlock_guard_test.go:140 +0xd3
+
+goroutine 98 [sync.RWMutex.RLock]:
+sync.runtime_SemacquireRWMutexR(0x5bcedd?, 0x80?, 0x1a38ff63450?)
+	/usr/lib/golang/src/runtime/sema.go:100 +0x25
+sync.(*RWMutex).RLock(...)
+	/usr/lib/golang/src/sync/rwmutex.go:74
+dev.helix.code/internal/helixqa.(*SessionState).MarshalJSON(0x1a38ff63450)
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/helixqa/wrapper.go:52 +0x5b
+encoding/json.marshalerEncoder(0x1a38ff65ec0, {0x1bd0380?, 0x1a38ff63450?, 0x1a3900531f0?}, {0xa8?, 0x95?})
+	/usr/lib/golang/src/encoding/json/encode.go:483 +0xb1
+encoding/json.(*encodeState).reflectValue(0x1a38ff65ec0, {0x1bd0380?, 0x1a38ff63450?, 0x1a39000d001?}, {0xc0?, 0x12?})
+	/usr/lib/golang/src/encoding/json/encode.go:367 +0x73
+encoding/json.(*encodeState).marshal(0x519a7da9d1f8ca16?, {0x1bd0380?, 0x1a38ff63450?}, {0x59?, 0xcd?})
+	/usr/lib/golang/src/encoding/json/encode.go:343 +0xb1
+encoding/json.Marshal({0x1bd0380, 0x1a38ff63450})
+	/usr/lib/golang/src/encoding/json/encode.go:209 +0xbe
+dev.helix.code/internal/server.(*Server).getQASessionStatus(0x0?, 0x1a38fe3ad00)
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/server/qa_handlers.go:67 +0x2b9
+dev.helix.code/internal/server.callQAStatus.func1()
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/server/handlers_qastatus_deadlock_guard_test.go:121 +0x25
+created by dev.helix.code/internal/server.callQAStatus in goroutine 13
+	/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/wt-qastatus/helix_code/internal/server/handlers_qastatus_deadlock_guard_test.go:120 +0x34b
+FAIL	dev.helix.code/internal/server	90.117s
+FAIL

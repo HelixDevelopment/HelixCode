@@ -162,45 +162,24 @@ func TestGenerateLLM_RAG_DisabledByDefault_PromptByteIdentical(t *testing.T) {
 // (§11.4.115) guard for the confirmed HXC-118 gap: internal/server's
 // generate endpoint had ZERO RAG integration.
 //
-// RED_MODE=1 replicates the PRE-FIX server shape exactly: build the request
-// the same way generateLLM does (buildLLMRequest) and call the provider
-// directly with NO applyRAGContext step in between — the actual code path
-// before this change (confirmed by `grep -rl rag internal/server/`
-// returning zero hits) — and asserts the prompt reaching the provider is
-// NEVER augmented, even with an enabled adapter holding a matching
-// document. This is the historic gap.
+// BOTH polarities drive the REAL, shipped generateLLM handler over a real gin
+// engine + httptest recorder, with the SAME enabled adapter holding the SAME
+// matching document; only the assertion flips. RED asserts the prompt reaching
+// the provider is NOT augmented and the retriever was never consulted — true on
+// the PRE-FIX artifact (whose handler had no applyRAGContext step at all,
+// confirmed by `grep -rl rag internal/server/` returning zero hits), false on
+// the fixed artifact. RED_MODE=0 (default, GREEN guard) asserts the prompt IS
+// augmented with the retrieved document's content.
 //
-// RED_MODE=0 (default, GREEN guard) drives the REAL, now-wired generateLLM
-// handler over a real gin engine + httptest recorder and asserts the
-// prompt reaching the provider IS augmented with the retrieved document's
-// content.
+// An earlier revision's RED branch called the fake provider DIRECTLY, skipping
+// the handler and therefore the retrieval step it was meant to prove absent.
+// The "prompt was not augmented" result was guaranteed by the test's own
+// omission, so it held on every artifact ever built and the branch could not
+// fail (§11.4.1). Converted, not deleted: deleting a bluff gate removes
+// coverage, converting it creates real coverage.
 func TestGenerateLLM_RAG_Enabled_Augments_RegressionGuard(t *testing.T) {
 	fixtureDoc := retriever.Document{ID: "d1", Content: "The HelixCode server binary is bin/helixcode.", Source: "docs/build.md"}
 	prompt := "what is the HelixCode server binary called?"
-
-	if redMode(t) {
-		// A real, enabled adapter WITH a matching document is available in
-		// this scope — proving the RED expectation below is "the pre-fix
-		// code path never consults it," not "no adapter was configured."
-		fake := &fakeRAGRetriever{docs: []retriever.Document{fixtureDoc}}
-		_ = rag.NewAdapter(fake) // deliberately constructed, deliberately never wired below
-
-		req := llmGenerateRequest{Prompt: prompt}
-		llmReq, verr := req.buildLLMRequest(false)
-		require.Empty(t, verr)
-
-		fakeProvider := &wireFacadeFakeProvider{content: "bin/helixcode", finish: "stop"}
-		_, genErr := fakeProvider.Generate(context.Background(), llmReq)
-		require.NoError(t, genErr)
-
-		require.NotNil(t, fakeProvider.gotReq)
-		got := fakeProvider.gotReq.Messages[len(fakeProvider.gotReq.Messages)-1].Content
-		require.Equal(t, prompt, got,
-			"RED expectation: the pre-fix handler sends the RAW prompt to the provider — no RAG wiring existed")
-		require.NotContains(t, got, fixtureDoc.Content,
-			"RED expectation: the retrieved document content must be ABSENT from the pre-fix request")
-		return
-	}
 
 	fake := &fakeRAGRetriever{docs: []retriever.Document{fixtureDoc}}
 	adapter := rag.NewAdapter(fake)
@@ -215,8 +194,22 @@ func TestGenerateLLM_RAG_Enabled_Augments_RegressionGuard(t *testing.T) {
 		`{"prompt":"`+prompt+`"}`)
 
 	require.Equal(t, http.StatusOK, w.Code, "body=%v", body)
-	require.NotNil(t, fakeProvider.gotReq)
+	require.NotNil(t, fakeProvider.gotReq, "handler must have called the provider")
 	got := fakeProvider.gotReq.Messages[len(fakeProvider.gotReq.Messages)-1].Content
+
+	if redMode(t) {
+		// The adapter above is enabled and holds a MATCHING document, so the
+		// RED expectation is "the pre-fix handler never consults it," not "no
+		// adapter was configured."
+		require.Equal(t, prompt, got,
+			"RED: the pre-fix handler sends the RAW prompt to the provider — no RAG wiring existed")
+		require.NotContains(t, got, fixtureDoc.Content,
+			"RED: the retrieved document content must be ABSENT from the pre-fix request")
+		require.Empty(t, fake.queries,
+			"RED: the pre-fix handler never calls the retriever at all")
+		return
+	}
+
 	assert.Contains(t, got, fixtureDoc.Content,
 		"GREEN: the wired handler must augment the prompt with the retrieved document")
 	assert.Contains(t, got, prompt, "augmented prompt must still contain the original prompt verbatim")

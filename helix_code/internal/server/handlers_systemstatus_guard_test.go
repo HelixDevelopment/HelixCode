@@ -16,11 +16,17 @@ package server
 // otherwise — matching the getServerInfo `"enabled": s.db != nil` contract.
 //
 // Polarity switch (§11.4.115): set HELIX_RED_MODE=1 to run the RED
-// reproduction — it drives a faithful pre-fix stand-in (the exact unguarded
-// s.db.HealthCheck() call) on a nil-db Server and asserts the panic is
-// genuinely present (proving the guard is real). DEFAULT (no env) runs the
-// GREEN guard — it drives the REAL fixed getSystemStatus and asserts a clean
+// reproduction. BOTH polarities drive the REAL shipped getSystemStatus handler
+// on the SAME nil-db Server; only the assertion flips. RED asserts the
+// nil-receiver panic is genuinely present (true on the pre-fix artifact, false
+// on the fixed one); DEFAULT (no env) runs the GREEN guard and asserts a clean
 // 200 with "database":"disabled" and NO panic.
+//
+// An earlier revision of this file reproduced the defect against a test-LOCAL
+// copy of the unguarded call. A local copy is not part of the artifact, so it
+// panicked identically on every build ever made — the RED branch could not
+// fail and therefore guarded nothing (§11.4.1). Converted, not deleted:
+// deleting a bluff gate removes coverage, converting it creates real coverage.
 
 import (
 	"encoding/json"
@@ -32,15 +38,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// preFixSystemStatusHealthCheck is a byte-faithful stand-in for the exact
-// unguarded line that shipped before the fix (handlers.go: `s.db.HealthCheck()`
-// with no nil guard). It exists ONLY so the RED_MODE=1 reproduction can
-// demonstrate the panic the fix eliminates, without reverting production code.
-func preFixSystemStatusHealthCheck(s *Server) {
-	// This is the defective behaviour: unconditional nil-receiver method call.
-	_ = s.db.HealthCheck()
-}
-
 func TestGuard_GetSystemStatus_NilDB(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -50,18 +47,20 @@ func TestGuard_GetSystemStatus_NilDB(t *testing.T) {
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/system/status", nil)
 
 	if os.Getenv("HELIX_RED_MODE") == "1" {
-		// RED reproduction: the pre-fix unguarded call MUST panic on nil db.
-		// If it does NOT panic, the defect is not reproduced and the guard
-		// would be blind (§11.4.115 honest boundary).
+		// RED reproduction: drive the REAL shipped handler. On the pre-fix
+		// artifact its unguarded s.db.HealthCheck() dereferences the nil
+		// *Database receiver and panics. If it does NOT panic, the defect is
+		// not reproduced and the guard would be blind (§11.4.115 honest
+		// boundary) — which is exactly what must happen on a FIXED artifact.
 		defer func() {
 			if r := recover(); r == nil {
-				t.Fatalf("RED_MODE: expected nil-receiver panic from the pre-fix " +
-					"unguarded s.db.HealthCheck() on a nil-db Server, got none — " +
+				t.Fatalf("RED_MODE: expected the real getSystemStatus to panic with " +
+					"a nil-receiver dereference on a nil-db Server, got none — " +
 					"the defect did not reproduce")
 			}
 		}()
-		preFixSystemStatusHealthCheck(s)
-		t.Fatal("RED_MODE: unreachable — pre-fix call should have panicked")
+		s.getSystemStatus(c)
+		t.Fatal("RED_MODE: unreachable — the pre-fix handler should have panicked")
 		return
 	}
 
