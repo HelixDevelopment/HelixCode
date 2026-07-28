@@ -1,0 +1,39 @@
+++ qa_iso
+++ date -u +%Y-%m-%dT%H:%M:%SZ
++ echo '# Grounding facts captured 2026-07-28T10:19:05Z'
+# Grounding facts captured 2026-07-28T10:19:05Z
++ echo '# §11.4.108: the running artifact must be the one built from the fixed source.'
+# §11.4.108: the running artifact must be the one built from the fixed source.
++ echo
+
++ echo '## repo HEAD'
+## repo HEAD
++ git -C /home/milos/Factory/projects/tools_and_research/helix_code log --oneline -1
+0a4eb8d0 docs(resume): correct live-state anchors after the end-of-session push
++ echo
+
++ echo '## fix commit under test'
+## fix commit under test
++ git -C /home/milos/Factory/projects/tools_and_research/helix_code log --oneline -1 4727a9d0d76be565e80a04afc587a906c318ecb3
+4727a9d0 fix(security): CORS no wildcard-origin-with-credentials — allowlist + Vary:Origin (§11.4.135)
++ echo
+
++ echo '## fix commit is an ancestor of HEAD?'
+## fix commit is an ancestor of HEAD?
++ git -C /home/milos/Factory/projects/tools_and_research/helix_code merge-base --is-ancestor 4727a9d0d76be565e80a04afc587a906c318ecb3 HEAD
++ echo 'YES — 4727a9d0d76be565e80a04afc587a906c318ecb3 <= HEAD'
+YES — 4727a9d0d76be565e80a04afc587a906c318ecb3 <= HEAD
++ echo
+
++ echo '## live server under test'
+## live server under test
++ echo 'base url: http://localhost:8081'
+base url: http://localhost:8081
++ local lp
+++ ss -lntp
+++ grep -oP 'pid=\K[0-9]+(?=.*helixcode)'
+++ head -1
++ lp=
++ '[' -n '' ']'
++ echo '(no listening helixcode process found via ss; grounding limited)'
+(no listening helixcode process found via ss; grounding limited)

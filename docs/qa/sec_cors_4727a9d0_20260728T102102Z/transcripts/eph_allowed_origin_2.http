@@ -1,0 +1,37 @@
+### case: eph_allowed_origin_2
+### time: 2026-07-28T10:21:03Z
+### request: GET http://127.0.0.1:46827/health
+### curl args: -H Origin: https://admin.allowed.example --max-time 15
+
+--- WIRE TRACE (curl -v; '>' = sent by client, '<' = received from server) ---
+Note: Unnecessary use of -X or --request, GET is already inferred.
+*   Trying 127.0.0.1:46827...
+* Established connection to 127.0.0.1 (127.0.0.1 port 46827) from 127.0.0.1 port 52014 
+* using HTTP/1.x
+> GET /health HTTP/1.1
+> Host: 127.0.0.1:46827
+> User-Agent: curl/8.21.0
+> Accept: */*
+> Origin: https://admin.allowed.example
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< Access-Control-Allow-Credentials: true
+< Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With
+< Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT, DELETE
+< Access-Control-Allow-Origin: https://admin.allowed.example
+< Content-Type: application/json; charset=utf-8
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Vary: Origin
+< X-Content-Type-Options: nosniff
+< X-Frame-Options: DENY
+< X-Xss-Protection: 1; mode=block
+< Date: Tue, 28 Jul 2026 10:21:03 GMT
+< Content-Length: 83
+< 
+{ [83 bytes data]
+* Connection #0 to host 127.0.0.1:46827 left intact
+
+--- RESPONSE BODY (83 bytes) ---
+{"status":"healthy","timestamp":"2026-07-28T10:21:03.847402951Z","version":"1.0.0"}
+--- curl exit code: 0 ---

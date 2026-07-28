@@ -1,0 +1,10 @@
+=== REQUEST ===
+POST http://127.0.0.1:43987/v1/chat/completions
+Content-Type: application/json
+Authorization: Bearer test-only-fullhttp-e2e-wire-facade-key-not-a-real-secret
+
+{"messages":[{"role":"user","content":"What is the weather in the city named exactly \"HELIXCODE-FULLHTTP-E2E-37cde011de6a\"? You MUST call the get_weather tool with that exact city string."}],"tools":[{"type":"function","function":{"name":"get_weather","description":"Get the current weather for a city","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}],"max_tokens":64,"temperature":0}
+
+=== RESPONSE ===
+HTTP 200
+{"id":"chatcmpl-73b3b3cd-3a33-416f-9d30-462892c107a3","object":"chat.completion","created":1785231559,"model":"/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf","choices":[{"index":0,"message":{"role":"assistant","content":"","tool_calls":[{"id":"JbJhzKGfiLbHVn5b64Sn4QP3qZ0jrUVm","type":"function","function":{"name":"get_weather","arguments":"{\"city\":\"HELIXCODE-FULLHTTP-E2E-37cde011de6a\"}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":319,"completion_tokens":41,"total_tokens":360}}

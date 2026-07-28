@@ -1,0 +1,31 @@
+### case: live_evil_origin_preflight
+### time: 2026-07-28T10:21:02Z
+### request: OPTIONS http://localhost:8081/api/v1/tasks
+### curl args: -H Origin: https://evil.example -H Access-Control-Request-Method: POST -H Access-Control-Request-Headers: authorization,content-type --max-time 15
+
+--- WIRE TRACE (curl -v; '>' = sent by client, '<' = received from server) ---
+* Host localhost:8081 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:8081...
+* Established connection to localhost (::1 port 8081) from ::1 port 46938 
+* using HTTP/1.x
+> OPTIONS /api/v1/tasks HTTP/1.1
+> Host: localhost:8081
+> User-Agent: curl/8.21.0
+> Accept: */*
+> Origin: https://evil.example
+> Access-Control-Request-Method: POST
+> Access-Control-Request-Headers: authorization,content-type
+> 
+* Request completely sent off
+< HTTP/1.1 204 No Content
+< Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With
+< Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT, DELETE
+< Date: Tue, 28 Jul 2026 10:21:02 GMT
+< 
+* Connection #0 to host localhost:8081 left intact
+
+--- RESPONSE BODY (0 bytes) ---
+
+--- curl exit code: 0 ---

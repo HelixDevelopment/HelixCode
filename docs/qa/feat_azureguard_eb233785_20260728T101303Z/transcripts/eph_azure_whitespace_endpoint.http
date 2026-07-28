@@ -1,0 +1,37 @@
+### case: eph_azure_whitespace_endpoint
+### time: 2026-07-28T10:13:04Z
+### request: POST http://127.0.0.1:46725/v1/chat/completions
+### curl args: -H Content-Type: application/json -H Authorization: Bearer <EPHEMERAL_KEY_REDACTED> -d {"model":"default","messages":[{"role":"user","content":"QA probe: provider-construction guard check"}],"max_tokens":16} --max-time 60
+
+--- WIRE TRACE (curl -v; '>' = sent by client, '<' = received from server) ---
+Note: Unnecessary use of -X or --request, POST is already inferred.
+*   Trying 127.0.0.1:46725...
+* Established connection to 127.0.0.1 (127.0.0.1 port 46725) from 127.0.0.1 port 54458 
+* using HTTP/1.x
+> POST /v1/chat/completions HTTP/1.1
+> Host: 127.0.0.1:46725
+> User-Agent: curl/8.21.0
+> Accept: */*
+> Content-Type: application/json
+> Authorization: Bearer <EPHEMERAL_KEY_REDACTED>
+> Content-Length: 120
+> 
+} [120 bytes data]
+* upload completely sent off: 120 bytes
+< HTTP/1.1 503 Service Unavailable
+< Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With
+< Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT, DELETE
+< Content-Type: application/json; charset=utf-8
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< X-Content-Type-Options: nosniff
+< X-Frame-Options: DENY
+< X-Xss-Protection: 1; mode=block
+< Date: Tue, 28 Jul 2026 10:13:04 GMT
+< Content-Length: 161
+< 
+{ [161 bytes data]
+* Connection #0 to host 127.0.0.1:46725 left intact
+
+--- RESPONSE BODY (161 bytes) ---
+{"error":{"message":"failed to construct provider \"azure\": azure endpoint is required (set in config or AZURE_OPENAI_ENDPOINT env var)","type":"server_error"}}
+--- curl exit code: 0 ---
