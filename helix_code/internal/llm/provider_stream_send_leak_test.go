@@ -2,12 +2,16 @@ package llm
 
 // provider_stream_send_leak_test.go — §11.4.115 RED-baseline + polarity-switch
 // regression guard for the unguarded blocking sends (goroutine + HTTP-body
-// leak) in anthropic_provider.go / azure_provider.go / gemini_provider.go
-// (the three MANDATORY files named in this session's audit, with vertexai
-// and groq sharing the identical pattern and fixed alongside them — see
-// vertexai_provider.go's parseSSEStream and groq_provider.go's
-// parseSSEStreamWithMetrics for the same fix, and ensemble_provider.go's
-// GenerateStream for the related missing-close + unguarded-send fix).
+// leak) in anthropic_provider.go / azure_provider.go / gemini_provider.go /
+// vertexai_provider.go / groq_provider.go (§11.4.135: every one of the five
+// SSE-parse-helper defects fixed in commit 905a0b0a now carries its own guard
+// here, sharing the identical driveProviderSendLeak/streamForeverSSE harness
+// since all five are the SAME defect class over an httptest SSE server).
+// bedrock_provider.go's processEventStream (AWS-SDK event-stream shaped, not
+// plain-HTTP SSE) and ensemble_provider.go's GenerateStream (single-shot send,
+// not a per-chunk parse loop, plus its own separate missing-close defect) do
+// NOT fit this harness and are guarded independently in
+// bedrock_provider_send_leak_test.go and ensemble_provider_send_leak_test.go.
 //
 // DEFECT (pre-fix): parseStreamingResponse (anthropic, gemini) and
 // parseSSEStream (azure) took NO ctx parameter, so every `ch <- LLMResponse{...}`
@@ -312,5 +316,73 @@ func TestProviderGenerateStream_NoGoroutineLeak_OnCtxCancelWithoutDrain(t *testi
 
 		driveProviderSendLeak(t, "gemini",
 			"dev.helix.code/internal/llm.(*GeminiProvider).parseStreamingResponse", provider, req)
+	})
+
+	t.Run("groq", func(t *testing.T) {
+		server := httptest.NewServer(streamForeverSSE(t, func() []byte {
+			b, _ := json.Marshal(map[string]interface{}{
+				"choices": []map[string]interface{}{
+					{"delta": map[string]interface{}{"content": "x"}},
+				},
+			})
+			return b
+		}, true)) // groq's parseSSEStreamWithMetrics scans `data: {...}` lines via bufio.Scanner, identical to azure.
+		defer server.Close()
+
+		provider, err := NewGroqProvider(ProviderConfigEntry{
+			Type:     ProviderTypeGroq,
+			Endpoint: server.URL,
+			APIKey:   "test-key",
+		})
+		require.NoError(t, err)
+
+		req := &LLMRequest{
+			ID:        uuid.New(),
+			Model:     "llama-3.1-8b-instant",
+			Messages:  []Message{{Role: "user", Content: "hi"}},
+			MaxTokens: 100,
+			Stream:    true,
+		}
+
+		driveProviderSendLeak(t, "groq",
+			"dev.helix.code/internal/llm.(*GroqProvider).parseSSEStreamWithMetrics", provider, req)
+	})
+
+	t.Run("vertexai", func(t *testing.T) {
+		server := httptest.NewServer(streamForeverSSE(t, func() []byte {
+			b, _ := json.Marshal(map[string]interface{}{
+				"candidates": []map[string]interface{}{
+					{"content": map[string]interface{}{
+						"parts": []map[string]interface{}{
+							{"text": "x"},
+						},
+					}},
+				},
+			})
+			return b
+		}, true)) // vertexai's parseSSEStream scans `data: {...}` lines via bufio.Scanner, identical to azure/groq.
+		defer server.Close()
+
+		// createMockVertexAIProviderWithEndpoint (vertexai_provider_test.go, same
+		// package) constructs a REAL *VertexAIProvider with a pre-cached OAuth2
+		// token — this is the established in-package pattern for driving
+		// VertexAIProvider's real methods without a live GCP credential/token
+		// exchange (see TestVertexAIProvider_StreamingGemini using the identical
+		// helper). It is NOT a replica of parseSSEStream: GenerateStream →
+		// generateGeminiStream → parseSSEStream all run for real against our
+		// httptest server; only the OAuth2 token source (irrelevant to the
+		// send-leak defect under test) is pre-seeded.
+		provider := createMockVertexAIProviderWithEndpoint(t, server.URL)
+
+		req := &LLMRequest{
+			ID:        uuid.New(),
+			Model:     "gemini-2.5-flash",
+			Messages:  []Message{{Role: "user", Content: "hi"}},
+			MaxTokens: 100,
+			Stream:    true,
+		}
+
+		driveProviderSendLeak(t, "vertexai",
+			"dev.helix.code/internal/llm.(*VertexAIProvider).parseSSEStream", provider, req)
 	})
 }
