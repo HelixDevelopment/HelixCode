@@ -2,22 +2,85 @@ context: issues
 description: >-
   Workable-items tracker chain (DB single source of truth). Issues.md and
   workable_items.db are bidirectional views of the same data; Issues_Summary.md
-  is generated from the Markdown; HTML + PDF exports are derived.
+  is generated FROM THE DB by the workable-items exporter (out-of-band, see the
+  DATA-LOSS FIX note below); HTML + PDF exports are derived from the Markdown.
   Mandates: §11.4.93 (DB single source of truth), §11.4.12 (Issues_Summary sync),
-  §11.4.95 (DB tracked + WAL-checkpoint). Supersedes: sync_issues_docs.sh,
-  generate_issues_summary.sh.
+  §11.4.95 (DB tracked + WAL-checkpoint). Supersedes: sync_issues_docs.sh.
+  #
+  # ============================================================================
+  # DATA-LOSS FIX (§11.4.102 systematic-debugging + §11.4.120 gate reconciliation,
+  # 2026-07-28) — DO NOT RE-ADD THE `gen-issues-summary` EDGE.
+  # ============================================================================
+  # The PRIOR revision declared:
+  #     - { type: derive-from, from: issues_md, to: issues_summary,
+  #         transform: gen-issues-summary }
+  #     gen-issues-summary: { exec: "scripts/generate_issues_summary.sh",
+  #                           args: ["--stdout"] }
+  # i.e. it derived the SUMMARY from the MARKDOWN — the exact INVERSE of the
+  # §11.4.93 `db-to-md` direction, in which the DB is authoritative and every
+  # derived artefact is generated FROM it.
+  #
+  # WHY THAT IS DESTRUCTIVE (measured read-only 2026-07-28, not estimated):
+  #   * docs/workable_items.db `items`      = 344 rows (239 distinct atm_id),
+  #     split 188 `representation='table'` + 156 `representation='section'`.
+  #   * docs/Fixed.md carries exactly those two surface forms: 188 pipe-table
+  #     rows + 156 `## ` H2 sections.
+  #   * The committed, DB-derived docs/Fixed_Summary.md carries all 344
+  #     ("**TOTAL** | | **344**", 344 numbered item rows).
+  #   * scripts/generate_fixed_summary.sh counts ONLY pipe rows whose column 1
+  #     matches /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/ — the 156 H2 sections are
+  #     INVISIBLE to it. Replaying its awk predicate read-only yields
+  #     BUG=79 FEAT=79 TASK=30 OBSOLETE=1 TOTAL=188 versus the committed
+  #     Bug 163+3 / Feature 95 / Task 80+3 / TOTAL 344.
+  #   => Running it rewrites 344 -> 188: 156 items of tracked state destroyed,
+  #      every per-type count corrupted, and the entire 344-row per-item table
+  #      dropped (the generator emits aggregate counts only).
+  # This is the trap recorded in RESUME.md:192. Because docs_chain would run the
+  # transform AUTOMATICALLY on `sync`, the inverted edge armed that destruction
+  # to fire the moment the engine is installed (gate G14 currently SKIPs with
+  # "docs_chain engine absent").
+  #
+  # THE FIX (same resolution already proven in .docs_chain/contexts/features.yaml,
+  # where a lossy generator wired as a derive-transform CLOBBERED a hand-authored
+  # ledger): the inverted `derive-from` edge AND its `gen-issues-summary`
+  # transform are DROPPED. Issues_Summary.md is declared a `kind: markdown`
+  # SOURCE at this layer — it is produced FROM THE DB out-of-band by
+  #     constitution/scripts/workable-items/bin/workable-items export --db <db>
+  # (cmd/workable-items/export.go -> renderIssuesSummary(loadItems(db)); it emits
+  # the committed "regenerated from the SQLite single-source-of-truth (§11.4.12)"
+  # header). docs_chain therefore regenerates ONLY the .html/.pdf exports and can
+  # never overwrite the summary. scripts/generate_issues_summary.sh remains on
+  # disk but is UNWIRED — it must not be re-attached as a transform.
+  #
+  # WHY THE DB->SUMMARY EDGE IS NOT EXPRESSED HERE (§11.4.6, honest boundary):
+  # a `derive-from` edge is one-transform-per-target-node, and the existing
+  # transforms pass `--stdout`, implying the engine captures a transform's stdout
+  # as the target's content. The DB-authoritative generator (`workable-items
+  # export`) has neither shape: it takes `--db`/`--out-dir` and WRITES FOUR files
+  # itself (Issues.md, Fixed.md, Issues_Summary.md, Fixed_Summary.md) with no
+  # stdout mode, so one edge per summary cannot faithfully invoke it. Rather than
+  # wire an unverifiable approximation, the summary is declared a source here and
+  # the DB->summary direction is enforced by the exporter. UNCONFIRMED: the
+  # engine is absent from this host, so its exact `derive-from` transform
+  # contract could not be verified empirically — the `--stdout` convention in the
+  # pre-existing transforms is the evidence for the stdout-capture reading.
+  # ============================================================================
 nodes:
   items_db:       { kind: sqlite,   path: docs/workable_items.db }
   issues_md:      { kind: markdown, path: docs/Issues.md }
-  issues_summary: { kind: summary,  path: docs/Issues_Summary.md }
+  # SOURCE at this layer — produced FROM items_db by `workable-items export`.
+  # NEVER declare a derive-from edge into this node from issues_md (see above).
+  issues_summary: { kind: markdown, path: docs/Issues_Summary.md }
   issues_html:    { kind: html,     path: docs/Issues.html }
   issues_pdf:     { kind: pdf,      path: docs/Issues.pdf }
   summary_html:   { kind: html,     path: docs/Issues_Summary.html }
   summary_pdf:    { kind: pdf,      path: docs/Issues_Summary.pdf }
 edges:
+  # DB is authoritative (§11.4.93): db-to-md regenerates the Markdown.
   - { type: sync, a: issues_md, b: items_db, authority: items_db,
       transform_a_to_b: md-to-db, transform_b_to_a: db-to-md }
-  - { type: derive-from, from: issues_md,      to: issues_summary, transform: gen-issues-summary }
+  # Export-only edges. NO markdown -> summary edge: that direction is the
+  # inverted, data-destroying one documented above.
   - { type: derive-from, from: issues_md,      to: issues_html,    transform: md-to-html }
   - { type: derive-from, from: issues_html,    to: issues_pdf,     transform: html-to-pdf }
   - { type: derive-from, from: issues_summary, to: summary_html,   transform: md-to-html }
@@ -25,6 +88,9 @@ edges:
 transforms:
   md-to-db:           { exec: "constitution/scripts/workable-items/bin/workable-items", args: ["sync", "md-to-db"] }
   db-to-md:           { exec: "constitution/scripts/workable-items/bin/workable-items", args: ["sync", "db-to-md"] }
-  gen-issues-summary: { exec: "scripts/generate_issues_summary.sh", args: ["--stdout"] }
+  # REMOVED (2026-07-28): gen-issues-summary ->
+  #   scripts/generate_issues_summary.sh --stdout
+  # It reads docs/Issues.md (SRC="$ROOT/docs/Issues.md", line 44), i.e. the
+  # markdown, NOT the DB. Re-adding it re-arms the data-loss trap above.
   md-to-html:         { builtin: pandoc-html }
   html-to-pdf:        { builtin: weasyprint-pdf }
