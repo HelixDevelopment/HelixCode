@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03b_extension_integration</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">03b_extension_integration</h1>
+</header>
+<h1 id="hxc-159-phase-1a-constitution-derived-extension-integration-matrix">HXC-159
+Phase 1a — Constitution-derived extension integration matrix</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Last modified</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Complete — 21 extensions classified, 0 silent omissions; 3 live
+defects found</td>
+</tr>
+<tr>
+<td><strong>Workable item</strong></td>
+<td>HXC-159 (Task, Queued, High)</td>
+</tr>
+<tr>
+<td><strong>Mandate</strong></td>
+<td>Operator (2026-07-29): <em>“Make sure that SpecKit and Superpowers
+are used with Bridge extension and with all extensions we have created
+derived from constitution Submodule!”</em></td>
+</tr>
+<tr>
+<td><strong>Governing anchors</strong></td>
+<td>§11.4.74 (extend-don’t-reimplement) · §11.4.164 (auto-propagation) ·
+§11.4.228 (inherit by reference, never copy) · §11.4.118 (enumerated
+negatives are evidence)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-scope-and-method">1. Scope and method</a></li>
+<li><a href="#2-the-registration-path-helixskills-must-compose-with">2.
+The registration path HelixSkills must compose with</a></li>
+<li><a href="#3-live-defects-found-while-establishing-the-baseline">3.
+LIVE DEFECTS found while establishing the baseline</a></li>
+<li><a href="#4-matrix--constitution-skills-7">4. Matrix — constitution
+skills (7)</a></li>
+<li><a href="#5-matrix--constitution-mcp-servers-2">5. Matrix —
+constitution MCP servers (2)</a></li>
+<li><a href="#6-matrix--constitution-plugins-2">6. Matrix — constitution
+plugins (2)</a></li>
+<li><a href="#7-matrix--constitution-actions-2">7. Matrix — constitution
+actions (2)</a></li>
+<li><a href="#8-matrix--constitution-hooks-7-live">8. Matrix —
+constitution hooks (7 live)</a></li>
+<li><a href="#9-matrix--speckit-superpowers-bridge">9. Matrix — SpecKit,
+Superpowers, Bridge</a></li>
+<li><a href="#10-summary-tally">10. Summary tally</a></li>
+<li><a href="#11-honest-boundary">11. Honest boundary</a></li>
+</ul>
+<hr />
+<h2 id="scope-and-method">1. Scope and method</h2>
+<p>Every constitution-derived extension named by the operator is
+classified against HelixSkills with exactly one verdict from a closed
+set:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Verdict</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REUSE</strong></td>
+<td>HelixSkills consumes it as-is; no change to the extension.</td>
+</tr>
+<tr>
+<td><strong>EXTEND</strong></td>
+<td>§11.4.74 applies — the capability is 80%+ there; the missing part is
+added <strong>to the constitution</strong>, never duplicated in
+HelixCode.</td>
+</tr>
+<tr>
+<td><strong>COMPOSE</strong></td>
+<td>Both systems own part of one workflow; the integration is a defined
+hand-off, not a merge.</td>
+</tr>
+<tr>
+<td><strong>ORTHOGONAL</strong></td>
+<td>No interaction. <strong>An explicit reason is still
+recorded</strong> — per §11.4.118, silence is not an answer.</td>
+</tr>
+</tbody>
+</table>
+<p>21 extensions are classified. None is omitted.</p>
+<hr />
+<h2 id="the-registration-path-helixskills-must-compose-with">2. The
+registration path HelixSkills must compose with</h2>
+<p><code>constitution/scripts/post_update_hook.sh</code> (20 975 bytes,
+executable) is the §11.4.164 auto-propagation engine. Its
+<code>main</code> calls exactly four installers, at
+<code>:543-546</code>:</p>
+<pre><code>install_skills          (:199)   — CHANGED_SKILLS  → &lt;project&gt;/skills/&lt;name&gt;  symlink, then runs register.sh
+install_mcp_configs     (:255)   — constitution/mcp/*.json merged into the agent MCP config
+install_hooks           (:319)   — constitution/scripts/hooks/* into .git/hooks/
+install_action_plugins  (:359)   — constitution/plugins/* registered as agent plugins</code></pre>
+<p>Change detection is by path prefix at <code>:146-159</code>
+(<code>skills/*</code>, <code>mcp/*.json</code>, hook basenames).</p>
+<p><strong>Two destinations, not one.</strong>
+<code>install_skills</code> links
+<code>constitution/skills/&lt;name&gt;</code> →
+<code>&lt;project&gt;/skills/&lt;name&gt;</code>
+(<code>:208-231</code>), <em>then</em> runs that skill’s
+<code>register.sh</code> (<code>:236-240</code>), which delegates to
+<code>install_cli_agent_plugins.sh</code> and produces the
+<strong>second</strong> link
+<code>&lt;project&gt;/.claude/skills/&lt;name&gt;</code>. The installer
+targets <strong>four</strong> agent formats —
+<code>install_cli_agent_plugins.sh:158</code>:</p>
+<pre><code>local specs=&quot;gemini:.gemini/commands:toml qwen:.qwen/commands:toml codex:prompts:md&quot;</code></pre>
+<p>plus <code>.claude/skills/</code> symlinks (<code>:111</code>,
+<code>:145</code>) and a marketplace + plugin install
+(<code>:41</code>).</p>
+<p><strong>Data-safety posture is already correct</strong> —
+<code>install_skills:225-233</code> only replaces its own symlink or a
+free slot and explicitly refuses to <code>rm -rf</code> a real
+directory, citing §9.2 / §11.4.122. So it will <strong>not</strong>
+clobber SpecKit’s <code>.claude/skills/speckit-*</code> directories.</p>
+<h3 id="the-composition-requirement-stated-concretely">2.1 The
+composition requirement, stated concretely</h3>
+<p><strong><code>&lt;project&gt;/skills/</code> — the directory
+<code>post_update_hook.sh</code> installs INTO — is
+character-for-character the directory <code>helix_agent</code>’s skill
+registry reads FROM.</strong></p>
+<ul>
+<li><code>helix_agent/internal/router/router.go:333</code> —
+<code>skillConfig.SkillsDirectory = &quot;skills&quot;</code></li>
+<li><code>post_update_hook.sh:207</code> —
+<code>local project_skills_dir=&quot;${PROJECT_ROOT}/skills&quot;</code></li>
+</ul>
+<p>This is the single highest-value integration fact in this document.
+The constitution’s skill distribution path and
+<code>helix_agent</code>’s skill discovery path <strong>already point at
+the same directory</strong> — they simply have never been pointed at the
+same <em>project root</em> at the same time. A HelixSkills incorporation
+that establishes a <em>third</em>, competing registration path would be
+a §11.4.74 violation when a two-line convergence is available.</p>
+<p><strong>Blocking caveat (§5.1 of <code>03</code>):</strong> the two
+ends disagree on schema. <code>post_update_hook</code> installs
+constitution <code>SKILL.md</code> files whose frontmatter is
+<code>name</code>/<code>description</code>/<code>version</code>;
+<code>helix_agent</code>’s parser reads that shape, but
+<code>helix_code</code>’s parser needs
+<code>triggers</code>/<code>variables</code>/<code>requires_isolation</code>.
+Convergence on the directory does not by itself give convergence on the
+format.</p>
+<h3 id="what-post_update_hook-does-not-know-about">2.2 What
+post_update_hook does NOT know about</h3>
+<pre><code>$ grep -niE &#39;speckit|superpower|superspec|superb|bridge&#39; constitution/scripts/post_update_hook.sh
+  (no output)</code></pre>
+<p><strong>The §11.4.164 auto-propagation engine has zero SpecKit,
+Superpowers or Bridge awareness.</strong> A constitution pull registers
+skills, MCP configs, hooks and action-plugins — and leaves SpecKit’s
+<code>.specify/</code> and <code>.claude/skills/speckit-*</code>
+entirely unmanaged. Combined with <code>01</code> §9 (the Bridge’s own
+installers do not exist), <strong>nothing in the constitution currently
+installs, updates, validates or even notices the SpecKit/Superpowers
+layer.</strong> That is the gap the operator’s requirement names, and it
+is unclaimed work.</p>
+<hr />
+<h2 id="live-defects-found-while-establishing-the-baseline">3. LIVE
+DEFECTS found while establishing the baseline</h2>
+<p>These were found by probing, not by inspection of intent. Each is
+independently actionable.</p>
+<h3 id="registration-census-1-of-7-constitution-skills-is-registered-and-that-one-is-broken">3.1
+Registration census: 1 of 7 constitution skills is registered, and that
+one is broken</h3>
+<pre><code>SKILL                        root skills/           .claude/skills/
+action-prefix-system         absent                 absent
+media-validator              LINKED-BUT-BROKEN      absent
+multitrack                   absent                 absent
+reporting-workable-items     absent                 absent
+scheduled-work-queue         absent                 absent
+session-sync                 absent                 absent
+workable-item-lifecycle      absent                 absent</code></pre>
+<p><strong>Not one constitution skill is registered into
+<code>.claude/skills/</code> in this checkout.</strong> The machinery is
+present and executable (<code>post_update_hook.sh</code>,
+<code>install_cli_agent_plugins.sh</code>, and a working
+<code>register.sh</code> per skill) — it has simply never completed
+here.</p>
+<h3 id="the-single-existing-symlink-is-dangling-and-points-at-a-foreign-os">3.2
+The single existing symlink is dangling, and points at a foreign OS</h3>
+<pre><code>$ ls -la skills/media-validator
+skills/media-validator -&gt; /Volumes/T7/Projects/helix_code/constitution/skills/media-validator
+
+$ [ -e skills/media-validator ] &amp;&amp; echo VALID || echo BROKEN
+BROKEN
+
+$ ls -d /Volumes/T7/Projects/helix_code/constitution/skills/media-validator
+ls: cannot access &#39;...&#39;: No such file or directory</code></pre>
+<p><code>/Volumes/T7/...</code> is a <strong>macOS</strong> mount path,
+resolved on a <strong>Linux</strong> host. This symlink was created by a
+<code>post_update_hook</code> run on a different machine and committed
+or carried across. It is a cross-platform absolute-path leak — an
+§11.4.81 (cross-platform parity) and §11.4.111 (resolve-by-stable-name,
+not by machine-specific absolute path) concern.</p>
+<h3 id="helix_agent-ships-1-174-skills-that-the-constitutions-installer-would-collide-with">3.3
+<code>helix_agent</code> ships 1 174 skills that the constitution’s
+installer would collide with</h3>
+<p><code>submodules/helix_agent/skills/</code> already exists with 15
+vendor namespaces (azure, claude-code, codex, data, development, devops,
+forge, github-copilot, gptme, misc, openhands, plugins, postgres-mcp,
+ui-ux, web). If <code>post_update_hook.sh</code> were ever run with
+<code>PROJECT_ROOT=submodules/helix_agent</code>, it would write
+constitution symlinks into that same <code>skills/</code> tree, mixing
+two schemas in one directory that a single flat-scanning parser
+(<code>Registry.Load</code>, <code>registry.go:73</code>) reads
+indiscriminately.</p>
+<p><strong>Not a live break today</strong> (the hook has not been run
+there), but it is a designed-in collision that Phase 2 must prevent —
+most cleanly by namespacing constitution skills under
+<code>skills/constitution/&lt;name&gt;</code>.</p>
+<hr />
+<h2 id="matrix-constitution-skills-7">4. Matrix — constitution skills
+(7)</h2>
+<p>All seven live at <code>constitution/skills/&lt;name&gt;/</code> as
+<code>SKILL.md</code> + <code>register.sh</code> +
+<code>.html</code>/<code>.pdf</code>/<code>.docx</code>. Frontmatter
+schema (verified on <code>action-prefix-system/SKILL.md:1-5</code>):
+<code>name</code>, <code>description</code>, <code>version</code>.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Skill</th>
+<th>Verdict</th>
+<th>Interaction with HelixSkills</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>action-prefix-system</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>Owns §11.4.140 grammar (6 forms) and the <code>registry.yaml</code>
+lookup. HelixSkills’ <code>skill_create</code> /
+<code>skill_search</code> MCP tools (<code>02</code> §8.1) are natural
+targets for <em>new</em> registered actions, and the FEATURE directive
+(§11.4.213) is how a skill-graph research task gets scheduled.
+<strong>Hand-off, not merge:</strong> the action system resolves
+<em>prompt grammar</em>; HelixSkills resolves <em>skill identity</em>.
+Neither should absorb the other.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>media-validator</strong></td>
+<td><strong>ORTHOGONAL</strong></td>
+<td>§11.4.163 media-artifact validation (OCR/metadata/pattern →
+PASS/FAIL). HelixSkills produces no media artifacts — its evidence is DB
+rows, JSON/TOML payloads and text. <strong>Reason recorded, not
+silence:</strong> it becomes relevant only if a later phase adds
+§11.4.158 recorded-video evidence for skill-graph features, at which
+point it is REUSE with no change.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>multitrack</strong></td>
+<td><strong>ORTHOGONAL</strong></td>
+<td>§11.4.187 parallel-track orchestration — governs <em>how work is
+executed across tracks</em>, entirely above the skill-data layer.
+HelixSkills is a subject of multitrack work, never a participant in it.
+Sole coupling: any HelixSkills work must carry §11.4.182 track labels,
+which is a process obligation on the <em>agent</em>, not an integration
+surface.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>reporting-workable-items</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>Owns the ISSUE/BUG/TASK engine (§11.4.202) writing to
+<code>docs/workable_items.db</code>. HXC-159 itself is one of its rows.
+Each defect in §3 above, and each in <code>03</code> §7, should become
+an item <strong>through this skill</strong> — not through a
+HelixSkills-native tracker. HelixSkills has <em>no</em> item tracker, so
+there is no contention.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>scheduled-work-queue</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>Durable BACKGROUND/REMINDER queue. Directly relevant: HelixSkills
+ships <strong>6 worker job types</strong> (<code>autoexpand</code>,
+<code>validate</code>, <code>codeanalysis</code>,
+<code>registry_review</code>, <code>batch_embed</code>,
+<code>source_rescan</code> — <code>02</code> §8.4) driven by
+<code>robfig/cron</code>. Two schedulers would be a §11.4.74
+duplication. <strong>Phase-2 decision required:</strong> does
+HelixSkills’ cron worker remain internal (it is a <em>service</em>
+concern, cron-in-process), or do its jobs surface as
+scheduled-work-queue entries (agent-visible, durable,
+operator-inspectable)? I recommend the former for in-service jobs and
+the latter for any agent-triggered re-sync — but this is a decision, not
+a finding.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>session-sync</strong></td>
+<td><strong>ORTHOGONAL</strong></td>
+<td>§11.4.207/§11.4.131 session-resumption state. Concerns <em>agent
+session continuity</em>; HelixSkills state is server-side in PostgreSQL
+and survives sessions by construction. <strong>Reason recorded:</strong>
+the only conceivable overlap — a resumption prompt citing skill-graph
+state — is a content question for the session-sync skill, requiring
+nothing from HelixSkills.</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>workable-item-lifecycle</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>Status/type/id integrity (§11.4.148), closure vocabulary (§11.4.33),
+reopen attribution (§11.4.34). Governs how HXC-159 and its children are
+opened, statused and closed. Note the <strong>conceptual
+near-collision</strong>: HelixSkills has its own lifecycle enum
+<code>SkillStatus{draft,validated,active,deprecated}</code>
+(<code>models/skill.go:12-19</code>) which is about <em>skills</em>, and
+this skill governs <em>work items</em>. They must not be conflated —
+different nouns, similar shape.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="matrix-constitution-mcp-servers-2">5. Matrix — constitution MCP
+servers (2)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>MCP server</th>
+<th>Verdict</th>
+<th>Interaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8</td>
+<td><strong>media-validator-mcp.json</strong></td>
+<td><strong>ORTHOGONAL</strong></td>
+<td>Same reasoning as #2. Verified config:
+<code>&quot;command&quot;: &quot;bash&quot;</code>,
+<code>&quot;args&quot;: [&quot;skills/media-validator/media-validator.sh&quot;]</code>,
+<code>&quot;env&quot;: {&quot;MEDIA_VALIDATOR_EVIDENCE_DIR&quot;: &quot;qa-results/media-validator&quot;}</code>.
+Note the arg is <strong>relative to <code>skills/</code></strong> — so
+it depends on the §3.1 registration that is currently broken; the MCP
+server would fail to start today.</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>scheduled-work-mcp.json</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>The MCP face of #5. If HelixSkills’ worker jobs are ever
+agent-triggered, this is the existing tool surface to extend rather than
+adding HelixSkills-native scheduling tools. Composes with HelixSkills’
+own 13-tool MCP server (<code>02</code> §8.1) as a <strong>sibling
+server</strong>, not a competitor — an agent can hold both.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Structural note for both:</strong> the constitution’s MCP
+surface is <strong>config-level</strong> (JSON specs merged into the
+agent’s MCP config by <code>install_mcp_configs:255</code>).
+HelixSkills’ MCP surface is a <strong>compiled Go server</strong>
+(<code>internal/mcp/server.go:54</code>) with stdio, HTTP and ACP
+transports. These are different layers of the same protocol and do not
+conflict: HelixSkills would be registered as one more entry in exactly
+the config that <code>install_mcp_configs</code> manages. <strong>That
+is the cleanest cross-consumer integration path in the entire
+analysis</strong> — it requires no Go coupling in either consumer (see
+<code>03</code> §6 rank 8) and works identically for
+<code>helix_code</code> and <code>helix_agent</code>.</p>
+<hr />
+<h2 id="matrix-constitution-plugins-2">6. Matrix — constitution plugins
+(2)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Plugin</th>
+<th>Verdict</th>
+<th>Interaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td><strong>helix</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td><code>plugin.json</code> verbatim: <em>“Helix Constitution action
+directives as native slash commands… Commands are GENERATED from
+<code>actions/registry.yaml</code> — adding an action is a data change,
+never a code change.”</em> This is the delivery vehicle for #1 and is
+<strong>how the <code>helix:*</code> skills reach this session
+today</strong>. Registered via <code>install_action_plugins:359</code>.
+HelixSkills would compose by contributing registered actions, never by
+shipping a competing slash-command plugin.</td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>scheduled-work</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>Contains <code>.mcp.json</code>, <code>build.sh</code>,
+<code>.claude-plugin/plugin.json</code> — the packaged form of #5/#9.
+Same verdict, same reasoning. Its <code>build.sh</code> means it is a
+<strong>compiled</strong> plugin, so any HelixSkills contribution to it
+is a code change to the constitution (§11.4.74 EXTEND path), not a
+config change.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="matrix-constitution-actions-2">7. Matrix — constitution actions
+(2)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Artifact</th>
+<th>Verdict</th>
+<th>Interaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td><strong>actions/registry.yaml</strong></td>
+<td><strong>EXTEND</strong></td>
+<td>The §11.4.140 single source of truth. Verified schema:
+<code>schema_version: 1</code>, a <code>grammar:</code> block defining
+all six forms (<code>prefix_regex:44</code>,
+<code>colon_form_regex:45</code>,
+<code>single_colon_form_regex:57</code>,
+<code>slash_form_regex:61</code>, <code>arrow_form_regex:63</code>, plus
+<code>namespace_separator</code>, <code>body_separator</code>,
+<code>multiple_prefixes: stack</code>, <code>escape: &#39;\&#39;</code>), then
+an <code>actions:</code> list (<code>:74</code>) with per-action
+<code>name</code>/<code>version</code>/<code>namespaces</code>/<code>slash_bare</code>/<code>slash_conflicts</code>/<code>summary</code>/<code>expansion</code>/<code>rules</code>.
+<strong>The only genuine EXTEND in this matrix:</strong> if HelixSkills
+warrants operator-facing directives (e.g. a <code>SKILL ::</code>
+directive to create or query a graph skill), they are added as
+<strong>rows here</strong> — a data change to the constitution, never a
+new grammar in HelixCode. The file’s own design
+(<code>&quot;adding an action is a data change, never a code change&quot;</code>)
+makes this the cheapest possible extension path.</td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>actions/subagent_tiering.yaml</strong></td>
+<td><strong>ORTHOGONAL</strong></td>
+<td>§11.4.231 nano-precision model-tier selection — governs which model
+tier a dispatched subagent runs on. A concern of the <em>dispatching
+agent</em>, with no data or control-flow relationship to a skill graph.
+<strong>Reason recorded:</strong> the only touchpoint is that
+HelixSkills incorporation work should itself be tiered per this file — a
+process obligation on me, not an integration surface.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="matrix-constitution-hooks-7-live">8. Matrix — constitution hooks
+(7 live)</h2>
+<p>All at <code>constitution/scripts/hooks/</code>, installed by
+<code>install_hooks:319</code>. The directory also holds 4
+<code>test_*.sh</code> files (their paired tests), not counted as
+separate extensions.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Hook</th>
+<th>Verdict</th>
+<th>Interaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14</td>
+<td><strong>action_prefix_expand.sh</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>Runtime expander for #1/#12. Same hand-off.</td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>credential_scan_lib.sh</strong></td>
+<td><strong>REUSE</strong></td>
+<td>CONST-042 / §11.4.10 secret-leak scanning. <strong>Directly
+load-bearing:</strong> HelixSkills handles GitHub tokens
+(<code>github.TokenFromEnv</code>, <code>02</code> §6.E6), LLM provider
+keys (<code>autoexpand.NewLLMClientFromConfig</code>), a Postgres DSN
+and an API-key auth middleware (<code>api.APIKeyAuth</code>). Its config
+uses <code>${VAR}</code> interpolation (<code>config.go:28</code>)
+precisely so secrets stay out of files. Any incorporation reuses this
+scanner unchanged — it is the existing enforcement for a risk
+HelixSkills genuinely carries.</td>
+</tr>
+<tr>
+<td>16</td>
+<td><strong>guard-forbidden-commands.sh</strong></td>
+<td><strong>REUSE</strong></td>
+<td>§11.4.109 PreToolUse guard (host-direct emulator, force-push, sudo,
+host-power). Applies to HelixSkills work as to all work.
+<strong>Specifically relevant:</strong> HelixSkills ships
+<code>deploy/docker-compose.yml</code> and 18 ops scripts including
+<code>start.sh</code>/<code>stop.sh</code>/<code>restart.sh</code>;
+§11.4.161 requires rootless podman, and this guard is the mechanical
+enforcement. Reused unchanged.</td>
+</tr>
+<tr>
+<td>17</td>
+<td><strong>guard-track-branch-label.sh</strong></td>
+<td><strong>REUSE</strong></td>
+<td>§11.4.182 label enforcement. <strong>Empirically verified in this
+very session</strong> — it blocked two of my subagent dispatches until
+the <code>(T1/main - claude1 - opus - xhigh)</code> prefix was supplied,
+and is the only wired <code>PreToolUse</code> hook in
+<code>.claude/settings.json</code>. Reused unchanged.</td>
+</tr>
+<tr>
+<td>18</td>
+<td><strong>guard-branch-consistency.sh</strong></td>
+<td><strong>REUSE</strong></td>
+<td>§11.4.181 one-feature-one-branch-name. Applies when HXC-159 work
+lands on a feature branch. Reused unchanged.</td>
+</tr>
+<tr>
+<td>19</td>
+<td><strong>guard-work-track-binding.sh</strong></td>
+<td><strong>REUSE</strong></td>
+<td>§11.4.191 work-to-track binding via
+<code>logic_groups.destination</code> + <code>group_paths</code>.
+<strong>Directly relevant:</strong> if HelixSkills lands as a submodule,
+its paths must be bound to a logic group or this guard will (correctly)
+block commits. A Phase-2 registration task, not a code change.</td>
+</tr>
+<tr>
+<td>20</td>
+<td><strong>post-merge</strong></td>
+<td><strong>COMPOSE</strong></td>
+<td>The §11.4.164 trigger that fires <code>post_update_hook.sh</code>
+after a constitution pull. <strong>This is the exact seam §2
+discusses:</strong> whatever registration path HelixSkills uses must be
+reachable from here, or it will silently drift out of sync on every
+constitution update — the §11.4.86 drift class.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="matrix-speckit-superpowers-bridge">9. Matrix — SpecKit,
+Superpowers, Bridge</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Extension</th>
+<th>Present?</th>
+<th>Verdict</th>
+<th>Interaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>21a</td>
+<td><strong>SpecKit (L2)</strong></td>
+<td><strong>YES</strong> — installed by this task</td>
+<td><strong>REUSE</strong></td>
+<td>Drives all HXC-159 phases per operator mandate:
+<code>/speckit-specify</code> → <code>/speckit-plan</code> →
+<code>/speckit-tasks</code> → <code>/speckit-implement</code>. 10 skills
++ <code>.specify/</code> (<code>01</code> §6). Note the co-tenancy in
+<code>.claude/skills/</code> (<code>01</code> §7.2) — §2 confirms
+<code>install_skills</code> will not clobber it.</td>
+</tr>
+<tr>
+<td>21b</td>
+<td><strong>Superpowers</strong></td>
+<td><strong>YES</strong> — via Claude Code plugin system</td>
+<td><strong>REUSE</strong></td>
+<td><code>superpowers:brainstorming</code>,
+<code>systematic-debugging</code> (§11.4.102),
+<code>test-driven-development</code> (§11.4.43/§11.4.115),
+<code>subagent-driven-development</code> (§11.4.70),
+<code>writing-plans</code>, <code>requesting-code-review</code>
+(§11.4.125/§11.4.142) are all live in this session. Sourced from
+<code>~/.claude-claude1/plugins/installed_plugins.json</code>,
+<strong>not</strong> from
+<code>constitution/submodules/superpowers</code> (which does not
+exist).</td>
+</tr>
+<tr>
+<td>21c</td>
+<td><strong>Bridge (L3 SuperSpec / L4 SuperB / L5 SuperBridge
+MCP)</strong></td>
+<td><strong>NO — design only</strong></td>
+<td><strong>BLOCKED</strong></td>
+<td>Every probe negative: <code>superspec</code> not on PATH;
+<code>specify extension list</code> → <em>“No extensions
+installed.”</em>; <code>superbridge</code> not on PATH; no reference in
+<code>.mcp.json</code> or <code>.claude/settings*.json</code>;
+<code>constitution/scripts/extensions/</code> does not exist, so
+<strong>neither Bridge install script exists</strong>;
+<code>constitution/submodules/</code> contains none of the four expected
+submodules; <code>constitution/.gitmodules</code> has no matching entry.
+Full analysis + layer table in <code>01</code> §9.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>On the operator’s requirement.</strong> It asks that SpecKit
+and Superpowers be <em>used with</em> the Bridge extension. SpecKit is
+installed and Superpowers is available, so two of the three named
+components are satisfiable today. <strong>The Bridge is not — it cannot
+be “used” because it is not installed, and it cannot be installed
+because its installer has never been written.</strong> Reporting
+otherwise would be exactly the §11.4.108 SOURCE-vs-RUNTIME bluff this
+requirement warns against.</p>
+<p><strong>Recommended disposition:</strong> raise “author
+<code>install_speckit_superpowers_bridge.sh</code> +
+<code>validate_bridge.sh</code> and wire L3/L4/L5” as its own tracked
+item via extension #4 (reporting-workable-items). HXC-159 Phase 2 then
+either depends on that item or explicitly scopes around it — but must
+not assume the Bridge.</p>
+<hr />
+<h2 id="summary-tally">10. Summary tally</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Verdict</th>
+<th>Count</th>
+<th>Members</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REUSE</strong></td>
+<td>7</td>
+<td>credential_scan_lib, guard-forbidden-commands,
+guard-track-branch-label, guard-branch-consistency,
+guard-work-track-binding, SpecKit, Superpowers</td>
+</tr>
+<tr>
+<td><strong>EXTEND</strong></td>
+<td>1</td>
+<td>actions/registry.yaml</td>
+</tr>
+<tr>
+<td><strong>COMPOSE</strong></td>
+<td>9</td>
+<td>action-prefix-system, reporting-workable-items,
+scheduled-work-queue, workable-item-lifecycle, scheduled-work-mcp.json,
+helix plugin, scheduled-work plugin, action_prefix_expand.sh,
+post-merge</td>
+</tr>
+<tr>
+<td><strong>ORTHOGONAL</strong></td>
+<td>5</td>
+<td>media-validator, multitrack, session-sync, media-validator-mcp.json,
+subagent_tiering.yaml</td>
+</tr>
+<tr>
+<td><strong>BLOCKED</strong></td>
+<td>1</td>
+<td>Bridge (L3/L4/L5)</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>23</strong></td>
+<td>(21 numbered rows; row 21 splits into 3)</td>
+</tr>
+</tbody>
+</table>
+<p>Every ORTHOGONAL verdict carries an explicit reason above — none is a
+silent omission (§11.4.118).</p>
+<p><strong>Only one true EXTEND.</strong> That is the healthy outcome:
+the constitution’s extensions and HelixSkills occupy genuinely different
+layers, so the integration is overwhelmingly <em>composition</em> and
+<em>reuse</em> rather than modification. The §11.4.74 duplication risk
+concentrates in exactly one place — <strong>scheduling</strong>
+(#5/#9/#11 vs HelixSkills’ 6 cron job types) — and that is a Phase-2
+decision, flagged not decided.</p>
+<hr />
+<h2 id="honest-boundary">11. Honest boundary</h2>
+<p><strong>Verified by captured probe in this session:</strong> the
+registration census (§3.1) and the dangling symlink (§3.2);
+<code>post_update_hook.sh</code>’s four installers and their line
+numbers; that it contains no speckit/superpowers/bridge reference; that
+<code>install_skills</code> targets <code>&lt;project&gt;/skills/</code>
+and refuses to delete a real directory; that
+<code>&lt;project&gt;/skills/</code> equals <code>helix_agent</code>’s
+configured <code>SkillsDirectory</code>; the four-format target list in
+<code>install_cli_agent_plugins.sh:158</code>; the
+<code>registry.yaml</code> grammar and action schema; both plugin
+manifests; the full contents of
+<code>constitution/{skills,mcp,plugins,actions,scripts/hooks}</code>;
+and every negative Bridge probe in §9.</p>
+<p><strong>Not verified:</strong> - <strong>The verdicts themselves are
+judgments, not measurements.</strong> Each is argued from what the
+extension does and what HelixSkills does, but no integration was built
+or tested. A Phase-2 design pass may reclassify any row — particularly
+#5/#9/#11 (scheduling), where I have deliberately flagged a decision
+rather than made one. - I read <code>SKILL.md</code> in full for
+<strong>one</strong> of seven constitution skills
+(<code>action-prefix-system</code>); for the other six I relied on file
+listings, the generated Layer-3 catalogue entries in the upstream repo,
+and their constitutional anchors. A full read could shift an ORTHOGONAL
+to a COMPOSE. - I read <code>post_update_hook.sh</code> selectively
+(installer signatures, <code>install_skills</code> body, change
+detection, <code>main</code> dispatch) — roughly 120 of 20 975 bytes.
+Behaviour outside those regions is not characterised. - I did
+<strong>not</strong> run <code>post_update_hook.sh</code> or any
+<code>register.sh</code>. §3.1 reports the <em>current</em> state; it
+does not prove the machinery would succeed if run. Fixing §3.1/§3.2 is a
+separate action requiring its own evidence, and is deliberately not
+attempted here — this phase is inventory, and the registration state
+belongs to shared paths other live streams may touch. - Six of the eight
+Bridge documents (NANO_TASK_ENGINE, EXTENSION_DEVELOPMENT,
+TDD_INTEGRATION, CONSTITUTION_INTEGRATION, SECURITY, APPENDIX) were
+<strong>not</strong> read. Obligations stated only there are not
+reflected in row 21c.</p>
+</body>
+</html>

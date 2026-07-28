@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01_speckit_init</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">01_speckit_init</h1>
+</header>
+<h1 id="hxc-159-phase-1a-github-speckit-initialization-in-helix_code">HXC-159
+Phase 1a — GitHub SpecKit initialization in <code>helix_code</code></h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Revision</strong></td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Last modified</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Complete — SpecKit initialized, zero conflicts, verified. Rev 2 adds
+§9 Bridge-architecture conformance (mid-flight operator
+requirement).</td>
+</tr>
+<tr>
+<td><strong>Workable item</strong></td>
+<td>HXC-159 (Task, Queued, High)</td>
+</tr>
+<tr>
+<td><strong>Track / branch</strong></td>
+<td>T1 / <code>main</code></td>
+</tr>
+<tr>
+<td><strong>Repo HEAD at init</strong></td>
+<td><code>0a4df699b32df9e0eb74c54aee08c52dd90c5765</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-outcome">1. Outcome</a></li>
+<li><a href="#2-pre-flight-interface-discovery">2. Pre-flight: interface
+discovery</a></li>
+<li><a href="#3-pre-flight-conflict-proof-via-throwaway-dry-run">3.
+Pre-flight: conflict proof via throwaway dry-run</a></li>
+<li><a href="#4-the-real-init">4. The real init</a></li>
+<li><a href="#5-post-init-verification--nothing-pre-existing-was-touched">5.
+Post-init verification — nothing pre-existing was touched</a></li>
+<li><a href="#6-what-was-installed">6. What was installed</a></li>
+<li><a href="#7-findings-and-risks-carried-into-later-phases">7.
+Findings and risks carried into later phases</a></li>
+<li><a href="#8-honest-boundary">8. Honest boundary</a></li>
+<li><a href="#9-bridge-architecture-conformance-rev-2">9.
+Bridge-architecture conformance (Rev 2)</a></li>
+</ul>
+<hr />
+<h2 id="outcome">1. Outcome</h2>
+<p><strong>SpecKit is initialized in this repository.</strong>
+<code>specify init . --integration claude --script sh --force</code>
+exited 0, installed 27 files across <code>.specify/</code> (18) and
+<code>.claude/skills/speckit-*</code> (10 — see the count note in §6),
+and modified <strong>zero</strong> pre-existing files.</p>
+<p>No fallback was needed. SpecKit is usable here and is available to
+drive Phases 1b onward via <code>/speckit-specify</code>,
+<code>/speckit-plan</code>, <code>/speckit-tasks</code>,
+<code>/speckit-implement</code>.</p>
+<hr />
+<h2 id="pre-flight-interface-discovery">2. Pre-flight: interface
+discovery</h2>
+<p>Per the mandate to work from SpecKit’s <em>actual</em> interface
+rather than assumed flags, the CLI was interrogated first.</p>
+<pre><code>$ which specify
+/home/milos/.local/bin/specify
+
+$ ls -la /home/milos/.local/bin/specify
+lrwxrwxrwx 1 milos milos 57 Jul 22 22:32 /home/milos/.local/bin/specify
+  -&gt; /home/milos/.local/share/uv/tools/specify-cli/bin/specify
+
+$ specify --version
+specify 0.13.5.dev0</code></pre>
+<p><code>specify --help</code> reports these subcommands:</p>
+<table>
+<thead>
+<tr>
+<th>Subcommand</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>init</code></td>
+<td>Initialize a new Specify project</td>
+</tr>
+<tr>
+<td><code>check</code></td>
+<td>Check that all required tools are installed</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>Display version and system information</td>
+</tr>
+<tr>
+<td><code>self</code></td>
+<td>Manage the specify CLI itself (check/upgrade,
+<code>--dry-run</code>)</td>
+</tr>
+<tr>
+<td><code>extension</code></td>
+<td>Manage spec-kit extensions</td>
+</tr>
+<tr>
+<td><code>integration</code></td>
+<td>Manage coding agent integrations</td>
+</tr>
+<tr>
+<td><code>preset</code></td>
+<td>Manage spec-kit presets</td>
+</tr>
+<tr>
+<td><code>bundle</code></td>
+<td>Discover, install, and author Spec Kit bundles</td>
+</tr>
+<tr>
+<td><code>workflow</code></td>
+<td>Manage and run automation workflows</td>
+</tr>
+</tbody>
+</table>
+<p><code>specify init --help</code> documents the exact invocation used,
+including the in-place form:</p>
+<blockquote>
+<p><code>specify init . --integration claude   # Initialize in current directory</code>
+<code>specify init --here --force  # Skip confirmation when current directory not empty</code></p>
+</blockquote>
+<p>Relevant options: <code>--script {sh,ps,py}</code>,
+<code>--here</code>, <code>--force</code>, <code>--integration</code>,
+<code>--integration-options</code>, <code>--preset</code>,
+<code>--ignore-agent-tools</code>.</p>
+<p><code>specify check</code> confirmed the agent tooling available on
+this host:</p>
+<pre><code>├── ● Claude Code (available)
+├── ● Kimi Code (available)
+├── ● opencode (available)
+...
+Specify CLI is ready to use!</code></pre>
+<p>Claude Code being <em>available</em> is what makes
+<code>--integration claude</code> the correct choice for this session.
+Note that Gemini CLI, Qwen Code and Codex CLI were reported <strong>not
+found</strong> on this host — see §7.3.</p>
+<hr />
+<h2 id="pre-flight-conflict-proof-via-throwaway-dry-run">3. Pre-flight:
+conflict proof via throwaway dry-run</h2>
+<p>The task mandates: <em>“If initialization would overwrite or conflict
+with anything existing, STOP and report rather than forcing it.”</em>
+Since <code>specify init</code> has no <code>--dry-run</code>, the safe
+determination was made empirically (§11.4.6 — verify, do not assume):
+run the identical command into an <strong>empty throwaway
+directory</strong> in scratch, enumerate exactly what it produces, then
+test each produced path against the real repo.</p>
+<pre><code>$ cd &lt;scratch&gt;/speckit_dryrun &amp;&amp; specify init . --integration claude --script sh --force
+Project ready.
+EXIT=0</code></pre>
+<p>That produced exactly 27 files. Each was then tested for existence in
+the real repo:</p>
+<pre><code>=== CONFLICT CHECK: do any speckit paths already exist in real repo? ===
+TOTAL CONFLICTS: 0
+
+=== .claude/skills exists? ===
+ls: cannot access &#39;.claude/skills&#39;: No such file or directory</code></pre>
+<p><strong>Zero conflicts.</strong> Before init the repo’s
+<code>.claude/</code> contained only <code>settings.json</code>,
+<code>settings.local.json</code> and <code>worktrees/</code> — no
+<code>skills/</code> directory, and no <code>.specify/</code> at all.
+Proceeding was therefore safe, and <code>--force</code> served only to
+skip the interactive “directory not empty” confirmation (the repo has
+203 top-level items), not to overwrite anything.</p>
+<hr />
+<h2 id="the-real-init">4. The real init</h2>
+<pre><code>$ git status --porcelain | wc -l
+27                                     # pre-init dirty count (other streams&#39; work)
+
+$ specify init . --integration claude --script sh --force
+Warning: Current directory is not empty (203 items)
+--force supplied: skipping confirmation and proceeding with merge
+
+  Project         helix_code
+  Working Path    /home/milos/Factory/projects/tools_and_research/helix_code
+Selected coding agent integration: claude
+Selected script type: sh
+
+Initialize Specify Project
+├── ● Check required tools (ok)
+├── ● Select coding agent integration (claude)
+├── ● Select script type (sh)
+├── ● Install integration (Claude Code)
+├── ● Install shared infrastructure (scripts (sh) + templates)
+├── ● Ensure scripts executable (5 updated)
+├── ● Constitution setup (copied from template)
+├── ● Install bundled workflow (speckit installed)
+└── ● Finalize (project ready)
+
+Project ready.
+SPECIFY_EXIT=0</code></pre>
+<hr />
+<h2 id="post-init-verification-nothing-pre-existing-was-touched">5.
+Post-init verification — nothing pre-existing was touched</h2>
+<pre><code>$ git status --porcelain | wc -l
+28                                     # 27 -&gt; 28
+
+$ git status --porcelain | grep -E &#39;\.specify|\.claude&#39;
+?? .specify/</code></pre>
+<p>The working tree gained <strong>exactly one</strong> status entry,
+and it is the untracked <code>.specify/</code> directory. The delta of
++1 with the sole new entry being <code>?? .specify/</code> is the proof
+that <code>specify init</code> modified no tracked file. (The 6
+<code>M</code>-state entries present both before and after belong to the
+four other agents live in this checkout — <code>internal/server/</code>,
+<code>applications/</code> + <code>internal/fyneui/</code>,
+<code>submodules/debate_orchestrator</code>, and a research sibling —
+and are untouched by this work.)</p>
+<p>Ignore-status of the two installed trees:</p>
+<pre><code>$ git check-ignore -v .claude/skills/speckit-specify/SKILL.md
+.gitignore:133:.claude/*    .claude/skills/speckit-specify/SKILL.md
+
+$ git check-ignore -v .specify/memory/constitution.md
+NOT IGNORED (trackable)</code></pre>
+<hr />
+<h2 id="what-was-installed">6. What was installed</h2>
+<h3 id="specify-18-files-tracked-this-is-what-gets-committed">6.1
+<code>.specify/</code> — 18 files, <strong>tracked</strong> (this is
+what gets committed)</h3>
+<pre><code>.specify/init-options.json
+.specify/integration.json
+.specify/integrations/claude.manifest.json
+.specify/integrations/speckit.manifest.json
+.specify/memory/constitution.md
+.specify/memory/.constitution-template.json
+.specify/scripts/bash/check-prerequisites.sh
+.specify/scripts/bash/common.sh
+.specify/scripts/bash/create-new-feature.sh
+.specify/scripts/bash/setup-plan.sh
+.specify/scripts/bash/setup-tasks.sh
+.specify/templates/checklist-template.md
+.specify/templates/constitution-template.md
+.specify/templates/plan-template.md
+.specify/templates/spec-template.md
+.specify/templates/tasks-template.md
+.specify/workflows/speckit/workflow.yml
+.specify/workflows/workflow-registry.json</code></pre>
+<p>State recorded by the installer:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">.specify/integration.json</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.13.5.dev0&quot;</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;integration_state_schema&quot;</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;installed_integrations&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;claude&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;integration_settings&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;claude&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;script&quot;</span><span class="fu">:</span> <span class="st">&quot;sh&quot;</span><span class="fu">,</span> <span class="dt">&quot;invoke_separator&quot;</span><span class="fu">:</span> <span class="st">&quot;-&quot;</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;integration&quot;</span><span class="fu">:</span> <span class="st">&quot;claude&quot;</span><span class="fu">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;default_integration&quot;</span><span class="fu">:</span> <span class="st">&quot;claude&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">.specify/init-options.json</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ai&quot;</span><span class="fu">:</span> <span class="st">&quot;claude&quot;</span><span class="fu">,</span> <span class="dt">&quot;ai_skills&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;feature_numbering&quot;</span><span class="fu">:</span> <span class="st">&quot;sequential&quot;</span><span class="fu">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;here&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;integration&quot;</span><span class="fu">:</span> <span class="st">&quot;claude&quot;</span><span class="fu">,</span> <span class="dt">&quot;script&quot;</span><span class="fu">:</span> <span class="st">&quot;sh&quot;</span><span class="fu">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;speckit_version&quot;</span><span class="fu">:</span> <span class="st">&quot;0.13.5.dev0&quot;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="claudeskillsspeckit--10-skills-gitignored-see-7.1">6.2
+<code>.claude/skills/speckit-*</code> — 10 skills,
+<strong>gitignored</strong> (see §7.1)</h3>
+<p><code>speckit-analyze</code>, <code>speckit-checklist</code>,
+<code>speckit-clarify</code>, <code>speckit-constitution</code>,
+<code>speckit-converge</code>, <code>speckit-implement</code>,
+<code>speckit-plan</code>, <code>speckit-specify</code>,
+<code>speckit-tasks</code>, <code>speckit-taskstoissues</code> — each a
+single <code>SKILL.md</code>.</p>
+<p>The core five-step flow SpecKit advertises for later phases:
+<code>/speckit-constitution</code> → <code>/speckit-specify</code> →
+<code>/speckit-plan</code> → <code>/speckit-tasks</code> →
+<code>/speckit-implement</code>, plus <code>/speckit-converge</code>;
+optional <code>/speckit-clarify</code>, <code>/speckit-analyze</code>,
+<code>/speckit-checklist</code>.</p>
+<h3 id="not-created">6.3 Not created</h3>
+<p><code>specs/</code> does not yet exist. It is created on first
+<code>/speckit-specify</code> run via
+<code>.specify/scripts/bash/create-new-feature.sh</code>. This is
+expected, not a defect.</p>
+<hr />
+<h2 id="findings-and-risks-carried-into-later-phases">7. Findings and
+risks carried into later phases</h2>
+<h3 id="the-10-speckit-skills-are-gitignored-they-will-not-be-committed">7.1
+The 10 SpecKit skills are gitignored — they will NOT be committed</h3>
+<p><code>.gitignore:133</code> is <code>.claude/*</code>, with only
+<code>!.claude/settings.json</code> negated. Every
+<code>.claude/skills/speckit-*/SKILL.md</code> therefore matches the
+ignore rule and is invisible to git.</p>
+<p>Consequence: on a fresh clone, <code>.specify/</code> (templates,
+scripts, workflow, constitution memory) is present but the ten
+agent-facing skills are <strong>not</strong>. A collaborator must re-run
+<code>specify init . --integration claude --script sh --force</code> to
+restore them.</p>
+<p>This is a <strong>§11.4.215 concern</strong> (a document that binds
+work must live tracked in the repository where the work happens) and a
+§11.4.77 concern (an excluded artifact needs a documented regeneration
+mechanism). Both are satisfiable cheaply, but the decision is not mine
+to take unilaterally in this phase, because <code>.gitignore</code> is a
+shared file that other live streams touch:</p>
+<ul>
+<li><strong>Option A</strong> — add <code>!.claude/skills/</code> (and
+the nested negations git requires) to <code>.gitignore</code> so the
+skills become tracked.</li>
+<li><strong>Option B</strong> — leave them ignored and register the
+<code>specify init</code> command as the documented §11.4.77
+regeneration mechanism in <code>.gitignore-meta/</code>.</li>
+</ul>
+<p><strong>Recommendation: Option B</strong>, because it composes with
+§7.2 below — <code>.claude/skills/</code> is <em>also</em> the
+constitution’s skill-registration target, where entries are symlinks
+that should not be tracked either. Recorded here for a Phase 2 decision;
+not actioned.</p>
+<h3 id="claudeskills-is-a-shared-namespace-speckit-is-now-a-co-tenant">7.2
+<code>.claude/skills/</code> is a shared namespace — SpecKit is now a
+co-tenant</h3>
+<p>This is directly load-bearing for HXC-159.
+<code>constitution/skills/&lt;name&gt;/register.sh</code> symlinks each
+constitution skill into
+<code>&lt;project&gt;/.claude/skills/&lt;name&gt;</code> (see
+<code>02</code>/<code>03</code> for detail). SpecKit has now placed 10
+<em>real directories</em> into that same namespace. They do not collide
+today (all SpecKit entries are <code>speckit-</code>-prefixed; the
+constitution’s 7 are not), but any future incorporation work that writes
+into <code>.claude/skills/</code> must treat it as shared, and any
+“clean and re-register” routine must not wipe the SpecKit entries.</p>
+<h3 id="only-the-claude-integration-was-installed">7.3 Only the
+<code>claude</code> integration was installed</h3>
+<p><code>specify check</code> found Gemini CLI, Qwen Code and Codex CLI
+<strong>not present on this host</strong>, so only
+<code>--integration claude</code> was installed. The repo is governed as
+a five-carrier, multi-agent project (CLAUDE.md / AGENTS.md / QWEN.md /
+GEMINI.md / CRUSH.md), and <code>.specify/integration.json</code>
+carries an <code>installed_integrations</code> <strong>array</strong>,
+so additional integrations can be added later with
+<code>specify integration</code> once those CLIs exist on the host.
+Flagged, not blocking.</p>
+<h3 id="specifymemoryconstitution.md-is-a-stock-template-not-this-projects-constitution">7.4
+<code>.specify/memory/constitution.md</code> is a stock template, not
+this project’s constitution</h3>
+<p>The installer reported
+<code>Constitution setup (copied from template)</code>. This file is
+SpecKit’s own notion of a project constitution and is entirely unrelated
+to <code>constitution/Constitution.md</code> (the HelixConstitution
+submodule). It must not be confused with, or allowed to shadow, the real
+governance corpus. Phase 2 should either populate it via
+<code>/speckit-constitution</code> to <em>point at</em> the real
+constitution, or leave it inert — but the distinction must be
+explicit.</p>
+<hr />
+<h2 id="honest-boundary">8. Honest boundary</h2>
+<p>Verified by captured output in this session: the CLI’s real
+interface; that init exits 0; that it creates exactly the 27 enumerated
+files; that it conflicted with nothing; that it modified no tracked
+file; and the ignore-status of both installed trees.</p>
+<p><strong>Not verified in this session:</strong> that any
+<code>/speckit-*</code> skill actually <em>runs</em> end-to-end and
+produces a usable spec. Running <code>/speckit-specify</code> is Phase
+1b work and would create <code>specs/</code>, which is out of scope
+here. The claim made in §1 is precisely “SpecKit is initialized and its
+artifacts are on disk” — not “the SpecKit workflow has been
+exercised.”</p>
+<hr />
+<h2 id="bridge-architecture-conformance-rev-2">9. Bridge-architecture
+conformance (Rev 2)</h2>
+<p>A binding operator requirement arrived mid-flight: <em>“Make sure
+that SpecKit and Superpowers are used with Bridge extension and with all
+extensions we have created derived from constitution
+Submodule!”</em></p>
+<p>The reference architecture is the <strong>Helix Constitution–Powered
+SpecKit–Superpowers Bridge</strong>, documented at
+<code>constitution/docs/research/extensions/speckit_superpowers/implementation/</code>
+(8 documents × 4 formats = 32 files; README.md Revision 1, last modified
+2026-07-24).</p>
+<h3 id="the-headline-answer-stated-plainly">9.1 The headline answer,
+stated plainly</h3>
+<p><strong>The Bridge is a DESIGN, not an INSTALLATION. On this host,
+exactly one of its seven layers is wired — Layer 2 — and that is the
+layer I just installed. Layers 3, 4 and 5 do not exist here at all: not
+as binaries, not as extensions, not as submodules, and not even as the
+install scripts that the design says would create them.</strong></p>
+<p>This is precisely the §11.4.108 SOURCE-vs-RUNTIME gap. The design
+documents are real, complete and high quality. That is not the same as
+the layer being available, and this section does not report it as
+such.</p>
+<h3 id="layer-by-layer-conformance-captured-probes">9.2 Layer-by-layer
+conformance — captured probes</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Bridge design</th>
+<th>Present here?</th>
+<th>Captured probe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L1</strong> Developer Workstation</td>
+<td>CLI agent + context carriers</td>
+<td><strong>YES</strong></td>
+<td>Claude Code session;
+<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>QWEN.md</code>/<code>GEMINI.md</code>/<code>CRUSH.md</code>
+all present at repo root with the §11.4 inheritance blocks</td>
+</tr>
+<tr>
+<td><strong>L2</strong> Spec-Kit Core (governance)</td>
+<td><code>specify</code> + skills in <code>.claude/skills/</code></td>
+<td><strong>YES — installed by this task</strong></td>
+<td><code>specify 0.13.5.dev0</code>; 10 <code>speckit-*</code> skills +
+<code>.specify/</code> (§4–§6)</td>
+</tr>
+<tr>
+<td><strong>L3</strong> SuperSpec bridge (orchestration)</td>
+<td><code>github.com/WangX0111/superspec</code></td>
+<td><strong>NO</strong></td>
+<td><code>command -v superspec</code> → <em>NOT ON PATH</em>; absent
+from <code>~/go/bin</code>, <code>/usr/local/bin</code></td>
+</tr>
+<tr>
+<td><strong>L4</strong> SuperB extension (discipline)</td>
+<td><code>speckit-community.github.io/extensions/superb</code></td>
+<td><strong>NO</strong></td>
+<td><code>specify extension list</code> → <strong>“No extensions
+installed.”</strong>; <code>.specify/extensions</code> → <em>No such
+file or directory</em></td>
+</tr>
+<tr>
+<td><strong>L5</strong> SuperBridge MCP (execution)</td>
+<td>MCP server, npm-built</td>
+<td><strong>NO</strong></td>
+<td><code>command -v superbridge</code> → <em>NOT ON PATH</em>; grep of
+<code>.mcp.json</code> + <code>.claude/settings*.json</code> → <em>no
+superspec/superb/superbridge reference</em></td>
+</tr>
+<tr>
+<td><strong>L6</strong> Helix LLM (inference)</td>
+<td>Gateway/Brain/Knowledge/Agents</td>
+<td><strong>NO</strong> (not on PATH)</td>
+<td><code>command -v helix-llm</code> → <em>NOT ON PATH</em>. Note: a
+<code>helixllm-gateway.service</code> unit exists in this repo’s
+<code>scripts/systemd/</code>, so L6 may exist as a <em>service</em>
+rather than a PATH binary — <strong>not verified either way</strong>,
+see §9.5</td>
+</tr>
+<tr>
+<td><strong>L7</strong> llama.cpp RPC cluster</td>
+<td>distributed inference nodes</td>
+<td><strong>NO</strong></td>
+<td><code>command -v llama-server rpc-server</code> → <em>NOT ON
+PATH</em></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Score: 2 of 7 layers present (L1, L2). The Bridge’s own
+self-validation suite advertises “ALL 8/8 CHECKS PASSED — bridge ready”;
+on this host it would fail at minimum checks 1, 5, 6, 7 and
+8.</strong></p>
+<h3 id="the-bridges-own-installers-do-not-exist">9.3 The Bridge’s own
+installers do not exist</h3>
+<p>The design’s Quick Start Step 3 and Step 4 name two scripts. Neither
+is present, and neither is their parent directory:</p>
+<pre><code>constitution/scripts/extensions/install_speckit_superpowers_bridge.sh  ABSENT
+constitution/scripts/extensions/validate_bridge.sh                     ABSENT
+
+$ ls -d constitution/scripts/extensions
+ls: cannot access &#39;constitution/scripts/extensions&#39;: No such file or directory</code></pre>
+<p>The design says that install script would clone
+<code>spec-kit</code>, <code>superpowers</code>, <code>superspec</code>
+and <code>superb</code> as submodules under
+<code>constitution/submodules/</code>. That directory exists but
+contains none of them:</p>
+<pre><code>$ ls constitution/submodules/
+anti_bluff  clickup_sync  continuum  helix_perf_cache  session_orchestrator  token_optimizer
+
+$ grep -iE &#39;spec-kit|speckit|superpower|superspec|superb&#39; constitution/.gitmodules
+  NONE in constitution/.gitmodules</code></pre>
+<p>So the gap is not “installed but stale” — the installation path
+itself has never been authored. <strong>Building
+<code>install_speckit_superpowers_bridge.sh</code> +
+<code>validate_bridge.sh</code> is unclaimed work</strong> and should
+become its own tracked item; HXC-159 Phase 2 cannot assume the Bridge
+and must either depend on that item or scope around it.</p>
+<h3 id="divergence-between-the-bridge-design-and-what-specify-init-produced">9.4
+Divergence between the Bridge design and what <code>specify init</code>
+produced</h3>
+<p>Honest reconciliation, as required:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Divergence</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Skills land in <code>.claude/skills/</code> —
+CONFORMS.</strong> The design’s install step 4 says “Installs the
+Spec-Kit extensions into <code>.claude/skills/</code>”.
+<code>specify init --integration claude</code> did exactly that.</td>
+<td><strong>No divergence.</strong> The vanilla init produced the same
+L2 placement the Bridge specifies.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Vanilla init installs L2 only.</strong> The Bridge expects
+L2 to be installed <em>by the bridge installer</em>, alongside L3/L4/L5
+in one transaction.</td>
+<td><strong>Divergence in provenance, not in artifact.</strong> The
+<code>.claude/skills/speckit-*</code> and <code>.specify/</code> trees
+are what the Bridge wants at L2; they simply arrived via
+<code>specify init</code> rather than via the (non-existent) bridge
+script. When that script is authored it must be <strong>idempotent over
+an already-initialized L2</strong>, not assume a clean slate.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>No SuperB extension registered.</strong> The Bridge routes
+L2 through L4 discipline gates (<code>check</code>,
+<code>brainstorm</code>, <code>implementation-gate</code>,
+<code>critique</code>, <code>debug</code>, <code>finish</code>).</td>
+<td><strong>Real divergence.</strong>
+<code>specify extension list</code> is empty. SpecKit here runs
+<em>ungated</em> — the discipline-enforcement layer the Bridge exists to
+provide is absent. Phase 2 plans built on <code>/speckit-*</code> alone
+inherit no §11.4 mechanical enforcement from L4.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>No SuperSpec orchestration.</strong> L3 is what actually
+<em>bridges</em> SpecKit and Superpowers (<code>status</code>,
+<code>brainstorm</code>, <code>tasks</code>, <code>execute</code>,
+<code>review</code>).</td>
+<td><strong>Real divergence, and the load-bearing one.</strong> Without
+L3 there is no SpecKit↔︎Superpowers bridge at all — the two systems
+coexist but are not composed.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Superpowers is present, but not via the Bridge.</strong> The
+<code>superpowers:*</code> skills (<code>brainstorming</code>,
+<code>systematic-debugging</code>, <code>test-driven-development</code>,
+<code>subagent-driven-development</code>, <code>writing-plans</code>, …)
+are live in this session. Their source is the Claude Code plugin system
+(<code>~/.claude-claude1/plugins/installed_plugins.json</code>),
+<strong>not</strong> <code>constitution/submodules/superpowers</code>
+(which does not exist).</td>
+<td><strong>Divergence in wiring, not in availability.</strong>
+Superpowers works; it is just not reaching the session through the
+Bridge’s declared path. Any Bridge installer must reconcile with the
+plugin-sourced copy rather than double-install.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong><code>.specify/memory/constitution.md</code> is SpecKit’s
+stock template.</strong> The Bridge’s whole premise is that the
+<em>Helix</em> Constitution governs the lifecycle.</td>
+<td><strong>Real divergence</strong> — already flagged independently at
+§7.4. Under the Bridge this file should point at
+<code>constitution/Constitution.md</code>, not carry generic
+boilerplate.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="honest-boundary-on-this-section">9.5 Honest boundary on this
+section</h3>
+<p>Verified by captured probe: L3, L4, L5 and L7 are absent from this
+host; both Bridge install scripts and their parent directory are absent;
+<code>constitution/submodules/</code> contains none of the four expected
+submodules; <code>constitution/.gitmodules</code> has no matching entry;
+<code>.claude/skills/</code> placement conforms to the design;
+superpowers reaches this session via the plugin system.</p>
+<p><strong>Explicitly NOT verified:</strong> (a) whether <strong>L6
+Helix LLM</strong> is running as a <em>systemd service</em> on this host
+— I probed only <code>command -v helix-llm</code>, and this repo ships
+<code>scripts/systemd/helixllm-gateway.service</code>, so a
+service-based L6 is plausible and I did not confirm or refute it; (b)
+whether L3/L4/L5 exist on any <em>other</em> host in the fleet — every
+probe here is local; (c) I read README.md and IMPLEMENTATION_PLAN.md
+structurally (headings, architecture diagram, Quick Start, layer table)
+plus the executive summary — I did <strong>not</strong> read
+NANO_TASK_ENGINE.md, EXTENSION_DEVELOPMENT.md, TDD_INTEGRATION.md,
+CONSTITUTION_INTEGRATION.md, SECURITY.md or APPENDIX.md in full, so
+obligations stated only in those six documents are not reflected
+here.</p>
+</body>
+</html>

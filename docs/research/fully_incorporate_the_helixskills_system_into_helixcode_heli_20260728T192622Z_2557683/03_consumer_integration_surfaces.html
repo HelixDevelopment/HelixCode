@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03_consumer_integration_surfaces</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">03_consumer_integration_surfaces</h1>
+</header>
+<h1 id="hxc-159-phase-1a-consumer-side-integration-surfaces-helix_code-helix_agent">HXC-159
+Phase 1a — Consumer-side integration surfaces (<code>helix_code</code> +
+<code>helix_agent</code>)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Last modified</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Complete — both consumers surveyed read-only; 15 divergences
+enumerated</td>
+</tr>
+<tr>
+<td><strong>Workable item</strong></td>
+<td>HXC-159 (Task, Queued, High)</td>
+</tr>
+<tr>
+<td><strong>Consumers</strong></td>
+<td><code>helix_code/</code> (<code>dev.helix.code</code>, go 1.26) ·
+<code>submodules/helix_agent</code> (<code>dev.helix.agent</code>, go
+1.26)</td>
+</tr>
+<tr>
+<td><strong>Method</strong></td>
+<td>Two parallel read-only subagent surveys; every claim carries a
+<code>file:line</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-headline-do-not-build-a-skills-system--two-already-exist">1.
+Headline: do NOT build a skills system — two already exist</a></li>
+<li><a href="#2-the-hard-structural-constraint-internal-visibility">2.
+The hard structural constraint: <code>internal/</code>
+visibility</a></li>
+<li><a href="#3-helix_code--existing-machinery">3.
+<code>helix_code</code> — existing machinery</a></li>
+<li><a href="#4-helix_agent--existing-machinery">4.
+<code>helix_agent</code> — existing machinery</a></li>
+<li><a href="#5-divergences-between-the-two-consumers">5. Divergences
+between the two consumers</a></li>
+<li><a href="#6-attachment-points-ranked">6. Attachment points,
+ranked</a></li>
+<li><a href="#7-live-defects-found-during-the-survey">7. Live defects
+found during the survey</a></li>
+<li><a href="#8-what-phase-2-must-decide">8. What Phase 2 must
+decide</a></li>
+<li><a href="#9-honest-boundary">9. Honest boundary</a></li>
+</ul>
+<hr />
+<h2 id="headline-do-not-build-a-skills-system-two-already-exist">1.
+Headline: do NOT build a skills system — two already exist</h2>
+<p>Both consumers ship a <strong>complete, working, first-class skills
+subsystem</strong>. Neither is a stub. Under §11.4.74
+(extend-don’t-reimplement) the incorporation question is therefore
+<em>not</em> “how do we add skills to HelixCode” but <strong>“which of
+the three existing skill models wins, and how do the other two converge
+onto it.”</strong></p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th><code>helix_code</code></th>
+<th><code>helix_agent</code></th>
+<th>HelixSkills (upstream)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Package</td>
+<td><code>internal/commands</code> (+ <code>internal/agent</code>)</td>
+<td><code>internal/skills</code></td>
+<td><code>internal/skill</code> + <code>internal/models</code></td>
+</tr>
+<tr>
+<td>Core type</td>
+<td><code>Skill</code> — <strong>all fields unexported</strong>,
+accessor-based</td>
+<td><code>Skill</code> — <strong>all fields exported</strong>, flat
+struct</td>
+<td><code>models.Skill</code> — exported, DB/JSON/TOML-tagged</td>
+</tr>
+<tr>
+<td>Trigger model</td>
+<td><strong>compiled <code>[]*regexp.Regexp</code></strong> w/ named
+captures</td>
+<td><code>[]string</code> phrases <strong>scraped from description
+prose</strong></td>
+<td>none — graph edges + semantic search</td>
+</tr>
+<tr>
+<td>Precedence</td>
+<td><strong>3 tiers</strong> (builtin/user/project) + 2 layouts</td>
+<td><strong>1 flat directory</strong>, silent overwrite</td>
+<td>DB rows, no tiers</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>template render + substitution</td>
+<td>LLM prompt-injection + hardcoded category switch</td>
+<td>REST/MCP/CLI serving</td>
+</tr>
+<tr>
+<td>Hot reload</td>
+<td><strong>reconciling</strong> diff</td>
+<td><strong>30 s polling ticker</strong> (self-admitted stopgap)</td>
+<td>fsnotify-gated config flag (unimplemented)</td>
+</tr>
+<tr>
+<td>Isolation</td>
+<td><code>requires_isolation</code> first-class</td>
+<td><strong>absent</strong></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td><strong>none</strong></td>
+<td><strong>none</strong></td>
+<td>PostgreSQL + pgvector</td>
+</tr>
+<tr>
+<td>Corpus on disk</td>
+<td>1 builtin + 1 project skill</td>
+<td><strong>1 174 <code>SKILL.md</code> files</strong> in
+<code>skills/</code></td>
+<td>7 in constitution, graph-served</td>
+</tr>
+</tbody>
+</table>
+<p>Three key asymmetries fall out immediately:</p>
+<ol type="1">
+<li><strong><code>helix_agent</code> has the corpus</strong> (1 174
+<code>SKILL.md</code> across 15 vendor namespaces: azure, claude-code,
+codex, data, development, devops, forge, github-copilot, gptme, misc,
+openhands, plugins, postgres-mcp, ui-ux, web) but the <strong>weakest
+engine</strong>.</li>
+<li><strong><code>helix_code</code> has the best engine</strong>
+(compiled regex triggers with named captures, three-tier precedence,
+reconciling reload, isolation flag) but almost <strong>no
+corpus</strong> (2 skills).</li>
+<li><strong>HelixSkills has the only persistence and the only
+graph</strong> — and neither consumer has <em>any</em> skill persistence
+at all (verified absent in both).</li>
+</ol>
+<p>That distribution is the single most useful fact for planning: the
+three systems are complementary, not redundant.</p>
+<hr />
+<h2 id="the-hard-structural-constraint-internal-visibility">2. The hard
+structural constraint: <code>internal/</code> visibility</h2>
+<p>This constrains every design option and must be settled before
+anything else.</p>
+<p><strong>Dependency direction is one-way and verified in both
+directions:</strong></p>
+<ul>
+<li><code>helix_code/go.mod:6</code> —
+<code>require dev.helix.agent v0.0.0-…</code></li>
+<li><code>helix_code/go.mod:240</code> —
+<code>replace dev.helix.agent =&gt; ../submodules/helix_agent</code></li>
+<li><code>helix_code/go.mod:251</code> —
+<code>replace dev.helix.agent/pkg/api =&gt; ../submodules/helix_agent/pkg/api</code></li>
+<li><code>helix_code/go.mod:253</code> —
+<code>replace github.com/HelixDevelopment/helix_agent/Toolkit =&gt; …/Toolkit</code></li>
+<li><strong>Reverse: zero.</strong> A grep for
+<code>dev.helix.code</code> across every
+<code>.go</code>/<code>.mod</code> in <code>helix_agent</code> returns
+no matches — correct per CONST-051(B) decoupling.</li>
+</ul>
+<p><strong><code>helix_agent</code>’s entire public Go surface is 4
+files:</strong></p>
+<pre><code>pkg/api/llm-facade.pb.go          (generated protobuf; own module dev.helix.agent/pkg/api)
+pkg/api/llm-facade_grpc.pb.go     (generated gRPC)
+pkg/sdk/go/verifier/client.go     (LLMsVerifier HTTP client)
+pkg/sdk/go/verifier/client_test.go</code></pre>
+<p><strong>Consequence:</strong> <code>internal/skills</code>,
+<code>internal/plugins</code>, <code>internal/tools</code>,
+<code>internal/services</code> and <code>internal/agents</code> in
+<code>helix_agent</code> are <strong>structurally unreachable</strong>
+from <code>dev.helix.code</code> under Go’s <code>internal/</code> rule.
+<code>helix_code</code>’s own source acknowledges this in three
+places:</p>
+<ul>
+<li><code>helix_code/internal/llm/ensemble_provider.go:23</code> —
+<em>“internal/ packages (dev.helix.code cannot import
+dev.helix.agent/internal/…)”</em></li>
+<li><code>helix_code/internal/llm/keyrecognition.go:14</code> — <em>“NOT
+import helix_agent…”</em></li>
+<li><code>helix_code/cmd/cli/main.go:1550</code> — <em>“on the shared
+substrate when the <code>replace dev.helix.agent</code> wiring
+lands.”</em></li>
+</ul>
+<p><strong>The only proven cross-module seam</strong> is the
+<code>pkg/sdk/go/verifier</code> pattern, consumed at
+<code>helix_code/internal/agentbridge/bridge.go:19</code>
+(<code>agentverifier &quot;dev.helix.agent/pkg/sdk/go/verifier&quot;</code>). Its
+own doc comment (<code>bridge.go:1-11</code>) states the intent:
+HelixCode depends on the <em>bridge</em>, not the foreign module path,
+“keeping the coupling point in one place.”</p>
+<p><strong>Therefore any shared skills contract must be one of exactly
+three shapes:</strong> (a) promoted into
+<code>helix_agent/pkg/sdk/go/skills</code> mirroring the verifier
+precedent; (b) an over-the-wire contract (HTTP/MCP), coupling nothing at
+the Go level; (c) a new third module both consumers import — for which a
+candidate already exists and is mis-wired (see §7.4).</p>
+<hr />
+<h2 id="helix_code-existing-machinery">3. <code>helix_code</code> —
+existing machinery</h2>
+<h3 id="the-skills-subsystem-internalcommandsmarkdown_skills.go-429-lines">3.1
+The skills subsystem (<code>internal/commands/markdown_skills.go</code>,
+429 lines)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/commands/markdown_skills.go:33-42  — ALL FIELDS UNEXPORTED</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Skill <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">,</span> description<span class="op">,</span> body <span class="dt">string</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    variables               <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    triggerPatterns         <span class="op">[]</span><span class="dt">string</span>         <span class="co">// raw (preserved for /skills show)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    triggers                <span class="op">[]*</span>regexp<span class="op">.</span>Regexp <span class="co">// compiled; bad regex skipped at parse time</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    requiresIsolation       <span class="dt">bool</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    sourcePath              <span class="dt">string</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">// :45-50 — the on-disk schema</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> skillFrontmatter <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    Description       <span class="dt">string</span>            <span class="st">`yaml:&quot;description&quot;`</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    Triggers          <span class="op">[]</span><span class="dt">string</span>          <span class="st">`yaml:&quot;triggers&quot;`</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    Variables         <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span> <span class="st">`yaml:&quot;variables&quot;`</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    RequiresIsolation <span class="dt">bool</span>              <span class="st">`yaml:&quot;requires_isolation&quot;`</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Accessors at <code>:53</code> <code>Name()</code>, <code>:56</code>
+<code>Description()</code>, <code>:59</code> <code>SourcePath()</code>,
+<code>:62</code> <code>RequiresIsolation()</code>, <code>:65</code>
+<code>Body()</code>, <code>:68</code>
+<code>TriggerPatterns()</code>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Location</th>
+<th>Contract</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SkillRegistry</code></td>
+<td><code>:146</code></td>
+<td><code>NewSkillRegistry:152</code>, <code>Add:157</code>,
+<code>Remove:164</code>, <code>Get:171</code>, <code>List:179</code>
+(sorted),
+<code>FindMatching(input) (*Skill, map[string]string, bool):198</code></td>
+</tr>
+<tr>
+<td><code>SkillLoader</code></td>
+<td><code>:252</code></td>
+<td><code>NewSkillLoader(reg, projectDir, userDir):263</code>,
+<code>Load:277</code>, <code>Reload:283</code>,
+<code>Loaded:413</code></td>
+</tr>
+<tr>
+<td>Precedence</td>
+<td><code>:234-251</code>, impl <code>:283-354</code></td>
+<td><strong>builtin (<code>//go:embed</code>, <code>:26-30</code>) →
+user → project</strong>; project wins</td>
+</tr>
+<tr>
+<td>Layouts</td>
+<td><code>:307-322</code>, <code>:326-338</code></td>
+<td>flat <code>&lt;dir&gt;/&lt;name&gt;.md</code> <strong>and</strong>
+packaged <code>&lt;dir&gt;/&lt;name&gt;/SKILL.md</code>
+(<code>skillManifestName:232</code>)</td>
+</tr>
+<tr>
+<td><code>SkillsWatcher</code></td>
+<td><code>skills_watcher.go:15</code></td>
+<td>fsnotify, 200 ms debounce (<code>:38</code>),
+<code>SetDebounce:54</code>, <code>Run:65</code>,
+<code>Close:61</code></td>
+</tr>
+<tr>
+<td>Rendering</td>
+<td><code>:123</code>, <code>:132</code></td>
+<td><code>Render(args, selection, currentFile)</code>,
+<code>RenderWithCaptures(args, captures, …)</code></td>
+</tr>
+<tr>
+<td><code>/skills</code> command</td>
+<td><code>skills_command.go:12</code></td>
+<td><code>list:60</code>, <code>show:73</code>, <code>reload:90</code>,
+<code>invoke:103</code> — fully i18n’d</td>
+</tr>
+<tr>
+<td><code>helixcode skills</code></td>
+<td><code>cmd/cli/skills_cmd.go:22</code></td>
+<td><code>list:34</code>, <code>show:50</code>, <code>invoke:75</code>,
+<code>reload:97</code></td>
+</tr>
+<tr>
+<td><code>SkillDispatcher</code></td>
+<td><code>internal/agent/skill_dispatcher.go:19</code></td>
+<td><code>Match:35</code></td>
+</tr>
+<tr>
+<td>N-directory loader</td>
+<td><code>internal/agent/skill_activation.go:23</code></td>
+<td><code>LoadSkillsAndDispatcher(skillsDirs []string)</code> —
+<strong>already generalises to an ordered list</strong>
+(<code>:32-40</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Substitution tokens (shared with markdown slash-commands, resolver at
+<code>markdown_commands.go:128-183</code>):
+<code>{{ARG1}}</code>…<code>{{ARGn}}</code>, <code>{{ARG.name}}</code>,
+<code>{{SELECTION}}</code>, <code>{{CURRENT_FILE}}</code>,
+<code>{{CWD}}</code>, <code>{{ENV.X}}</code>, <code>{{FILE:path}}</code>
+(1 MiB cap at <code>:167</code>). Unknown tokens pass through verbatim
+(<code>:180</code>).</p>
+<h3 id="the-tool-system-the-model-callable-seam">3.2 The tool system —
+the model-callable seam</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// helix_code/internal/tools/registry.go:30-69</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Tool <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Description<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> params <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="op">(</span><span class="kw">interface</span><span class="op">{},</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Schema<span class="op">()</span> ToolSchema</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Category<span class="op">()</span> ToolCategory</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Validate<span class="op">(</span>params <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    RequiresApproval<span class="op">()</span> approval<span class="op">.</span>ApprovalLevel</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>ToolRegistry:100</code>, <code>Register:298</code> (exported,
+<strong>last-write-wins, no error</strong>), 22 built-ins hardcoded in
+<code>registerAllTools:248-295</code>, 14 categories at
+<code>:82-97</code>. Execution pipeline at <code>:636</code>: plan-mode
+gate (<code>:522</code>) → approval + sandbox markers
+(<code>:550</code>) → before-hooks (<code>:721</code>) → telemetry →
+tool → after-hooks (<code>:742</code>) → LSP notify → auto-commit
+(<code>:445</code>). Exposure to the model via
+<code>registryToLLMTools</code>
+(<code>internal/agent/tool_loop.go:470-497</code>).</p>
+<p><strong>Precedent for external registration:</strong>
+<code>ask_user</code> is deliberately <em>not</em> auto-registered
+(<code>registry.go:283-287</code>) and is wired from
+<code>cmd/cli/main.go</code> instead.</p>
+<h3 id="mcp-client-and-server-with-a-working-bridge-into-tools">3.3 MCP
+— client and server, with a working bridge into tools</h3>
+<p>Client <code>Client:lifecycle.go:31</code> (<code>Connect:102</code>,
+<code>Tools:63</code>, <code>CallTool:206</code>), multiplexer
+<code>Manager:registry.go:20</code> (<code>Tools:53</code>,
+<code>CallTool:76</code>, <code>Reload:167</code>), 4 transports
+(stdio/HTTP/SSE/WS), OAuth in <code>oauth.go</code>. Config
+<code>.helixcode/mcp.yml</code> →
+<code>Config</code>/<code>ServerSpec</code>
+(<code>internal/mcp/config.go:15-56</code>), with
+<code>ReadOnly:37</code> mapping a server’s tools to
+<code>approval.LevelReadOnly</code>. Server side
+<code>MCPServer:server.go:19</code>, <code>RegisterTool:188</code>.</p>
+<p>Bridge:
+<code>(*ToolRegistry).RegisterMCPManager(m *mcp.Manager)</code> at
+<code>internal/tools/registry.go:886</code>, collision-safe naming in
+<code>registerMCPToolKey:968</code> (HXC-113). <strong>Documented
+limitation <code>:881-885</code>: called once at startup, not reconciled
+after <code>Manager.Reload</code>.</strong></p>
+<h3 id="registries-5-and-discovery-patterns">3.4 Registries (5) and
+discovery patterns</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Registry</th>
+<th>Location</th>
+<th>Semantics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SkillRegistry</code></td>
+<td><code>internal/commands/markdown_skills.go:146</code></td>
+<td><code>Add</code> replaces silently</td>
+</tr>
+<tr>
+<td><code>commands.Registry</code></td>
+<td><code>internal/commands/registry.go:12</code></td>
+<td><code>Register:27</code> <strong>errors on duplicate name or
+alias</strong></td>
+</tr>
+<tr>
+<td><code>tools.ToolRegistry</code></td>
+<td><code>internal/tools/registry.go:100</code></td>
+<td><code>Register:298</code> last-write-wins</td>
+</tr>
+<tr>
+<td><code>plugins.Registry</code></td>
+<td><code>internal/plugins/registry.go:5</code></td>
+<td><strong>dead code in wiring</strong> (§7.2)</td>
+</tr>
+<tr>
+<td><code>agent.AgentRegistry</code></td>
+<td><code>internal/agent/agent.go:217</code></td>
+<td><code>Register:230</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>No <code>init()</code>-side-effect registration exists
+anywhere in the module.</strong> Every registry is an explicit
+mutex-guarded map populated from wiring code. Discovery is
+directory-scan + parse, plus one <code>//go:embed</code> (builtin
+skills) and YAML config for MCP/hooks.</p>
+<p>Note: <code>internal/discovery/</code> is <strong>service</strong>
+discovery (ports/health/broadcast) — not skill machinery.</p>
+<h3 id="skill-config-does-not-exist">3.5 Skill config: does not
+exist</h3>
+<p><code>grep -rni &quot;skill&quot; internal/config/ config/</code> →
+<strong>zero hits</strong>. Skill directories are hardcoded string
+literals at four call sites:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Consumer</th>
+<th>Project dir</th>
+<th>User dir</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI interactive</td>
+<td><code>./.helix/skills</code></td>
+<td><code>os.UserConfigDir()/helixcode/skills</code></td>
+<td><code>cmd/cli/main.go:1043-1047</code></td>
+</tr>
+<tr>
+<td>CLI <code>skills</code> subcmd</td>
+<td><code>./.helix/skills</code></td>
+<td><code>os.UserConfigDir()/helixcode/skills</code></td>
+<td><code>cmd/cli/main.go:3287-3291</code></td>
+</tr>
+<tr>
+<td>TUI</td>
+<td><code>.helix/skills</code></td>
+<td><code>$HOME/.helix/skills</code></td>
+<td><code>applications/terminal_ui/main.go:367-368</code></td>
+</tr>
+<tr>
+<td>desktop (clientcore)</td>
+<td><code>.helix/skills</code></td>
+<td><code>$HOME/.helix/skills</code></td>
+<td><code>internal/clientcore/agentic.go:142-143</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>The CLI and the TUI/desktop disagree on the user
+directory</strong> — a live inconsistency (§7.3).</p>
+<hr />
+<h2 id="helix_agent-existing-machinery">4. <code>helix_agent</code> —
+existing machinery</h2>
+<p>Scale: 3 149 <code>.go</code> files, 727 directories containing Go
+(excluding <code>vendor/</code>). <code>internal/</code> = 1 707 files
+across 66 subpackages. Two nested modules: <code>pkg/api/go.mod</code>
+and <code>Toolkit/go.mod</code>
+(<code>github.com/HelixDevelopment/helix_agent/Toolkit</code>, go
+1.24.11).</p>
+<h3 id="internalskills-the-primary-system-11-non-test-files">4.1
+<code>internal/skills</code> — the primary system (11 non-test
+files)</h3>
+<p>Package doc (<code>types.go:1-4</code>): <em>“Skills are structured
+instruction sets that teach the AI when and how to perform specific
+tasks, auto-activating based on conversation triggers.”</em></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/skills/types.go:12-44  — ALL FIELDS EXPORTED</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Skill <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">,</span> Description <span class="dt">string</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    AllowedTools      <span class="dt">string</span>   <span class="st">`yaml:&quot;allowed-tools&quot;`</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Version<span class="op">,</span> License<span class="op">,</span> Author<span class="op">,</span> Category <span class="dt">string</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Tags<span class="op">,</span> TriggerPhrases <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    Overview<span class="op">,</span> WhenToUse<span class="op">,</span> Instructions <span class="dt">string</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    Examples      <span class="op">[]</span>SkillExample</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    Prerequisites<span class="op">,</span> Outputs <span class="dt">string</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    ErrorHandling <span class="op">[]</span>SkillError</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    Resources<span class="op">,</span> RelatedSkills<span class="op">,</span> RawContent<span class="op">,</span> FilePath <span class="dt">string</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    LoadedAt<span class="op">,</span> UpdatedAt time<span class="op">.</span>Time</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Parser</code></td>
+<td><code>parser.go:25</code></td>
+<td><code>ParseFile:38</code>, <code>Parse:48</code>,
+<code>ParseDirectory:337</code> (matches <code>SKILL.MD</code>
+case-insensitively <code>:345</code>)</td>
+</tr>
+<tr>
+<td>trigger extraction</td>
+<td><code>parser.go:32</code>, <code>:18</code></td>
+<td>regex <code>(?i)triggers?\s+on:?\s*([^.]+)</code> over the
+<strong>description prose</strong> + quoted-string scraping</td>
+</tr>
+<tr>
+<td><code>Matcher</code></td>
+<td><code>matcher.go:13</code></td>
+<td><code>matchExact:98</code>, <code>matchPartial:120</code>,
+<code>matchFuzzy:150</code>, <code>matchSemantic:181</code>;
+<code>Match:49</code>, <code>MatchBest:248</code>,
+<code>MatchMultiple:262</code></td>
+</tr>
+<tr>
+<td><code>SemanticMatcher</code></td>
+<td><code>matcher.go:21-23</code></td>
+<td><strong>clean injection interface</strong> —
+<code>Match(ctx, input, candidates) ([]float64, error)</code></td>
+</tr>
+<tr>
+<td><code>Registry</code></td>
+<td><code>registry.go:27-38</code></td>
+<td>4 <code>safe.Store</code> indexes + <code>writeMu</code>; CONST-029
+concurrency contract at <code>:16-26</code></td>
+</tr>
+<tr>
+<td><code>Service</code></td>
+<td><code>service.go:15</code></td>
+<td>30-method facade</td>
+</tr>
+<tr>
+<td><code>SkillLoader</code></td>
+<td><code>loader.go:14</code></td>
+<td><strong>parallel, unwired</strong> load path (§7.5)</td>
+</tr>
+<tr>
+<td><code>Tracker</code></td>
+<td><code>tracker.go:18</code></td>
+<td>usage telemetry, <strong>in-memory only</strong></td>
+</tr>
+<tr>
+<td><code>Integration</code></td>
+<td><code>integration.go:13</code></td>
+<td><code>ProcessRequest:34</code>,
+<code>EnhancePromptWithSkills:123</code> — <strong>prompt injection is
+the execution model</strong></td>
+</tr>
+<tr>
+<td><code>ProtocolSkillAdapter</code></td>
+<td><code>protocol_adapter.go:36</code></td>
+<td>projects skills as MCP tools / ACP actions / LSP commands</td>
+</tr>
+</tbody>
+</table>
+<p><code>Registry</code> methods: <code>NewRegistry:49</code>,
+<code>Load:73</code>, <code>LoadFromPath:107</code>,
+<code>RegisterSkill:125</code>, <code>Get:163</code>,
+<code>GetByCategory:168</code>, <code>GetByTrigger:179</code>,
+<code>GetAll:190</code>, <code>GetCategories:195</code>,
+<code>GetTriggers:200</code>, <code>Remove:205</code>,
+<code>Stats:254</code>, <code>EnableHotReload:297</code>,
+<code>DisableHotReload:319</code>, <code>Search:344</code>.</p>
+<p>Hot reload is a <strong>polling ticker</strong>, self-admitted at
+<code>registry.go:336-337</code>: <em>“Simple implementation: just
+reload periodically / A more sophisticated version would use
+fsnotify.”</em></p>
+<p><strong>Wiring</strong>
+(<code>internal/router/router.go:331-345</code>) — note the failure
+mode:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>skillConfig <span class="op">:=</span> skills<span class="op">.</span>DefaultSkillConfig<span class="op">()</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>skillConfig<span class="op">.</span>SkillsDirectory <span class="op">=</span> <span class="st">&quot;skills&quot;</span>           <span class="co">// hardcoded single path</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>skillService <span class="op">:=</span> skills<span class="op">.</span>NewService<span class="op">(</span>skillConfig<span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> initErr <span class="op">:=</span> skillService<span class="op">.</span>Initialize<span class="op">(</span>context<span class="op">.</span>Background<span class="op">());</span> initErr <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    logger<span class="op">.</span>WithError<span class="op">(</span>initErr<span class="op">).</span>Warn<span class="op">(</span><span class="st">&quot;Failed to initialize skills system, continuing without skills&quot;</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Skill-system init failure is non-fatal.</strong> The server
+runs on without skills.</p>
+<p><strong>HTTP surface</strong> (<code>router.go:1359-1370</code>, all
+auth’d): <code>GET /v1/skills</code>,
+<code>GET /v1/skills/categories</code>,
+<code>GET /v1/skills/:category</code>,
+<code>POST /v1/skills/match</code>. <strong>Read + match only</strong> —
+no create/update/delete.</p>
+<p><strong>Importers of <code>internal/skills</code> (non-test,
+exhaustive):</strong> <code>internal/router/router.go</code>,
+<code>internal/handlers/{openai_compatible,debate_handler,skills_handler,completion}.go</code>.
+Nothing else in 727 packages consumes skills.</p>
+<h3 id="two-tool-abstractions-inside-one-module">4.2 Two tool
+abstractions inside one module</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/tools/handler.go:15-20</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ToolHandler <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    Execute<span class="op">(</span>ctx<span class="op">,</span> args <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="op">(</span>ToolResult<span class="op">,</span> <span class="dt">error</span><span class="op">)</span>   <span class="co">// ToolResult</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    ValidateArgs<span class="op">(</span>args <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    GenerateDefaultArgs<span class="op">(</span>context <span class="dt">string</span><span class="op">)</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/services/tool_registry.go:14-20</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Tool <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    Description<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    Parameters<span class="op">()</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    Execute<span class="op">(</span>ctx<span class="op">,</span> params <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="op">(</span><span class="kw">interface</span><span class="op">{},</span> <span class="dt">error</span><span class="op">)</span>  <span class="co">// interface{}</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    Source<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Different return types for the same concept.
+<strong><code>internal/tools</code> has ZERO non-test importers</strong>
+— a fully-built, unwired subsystem.</p>
+<p><strong>The cleanest generic hook in either consumer</strong> lives
+in the other one:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/services/tool_registry.go:113</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>tr <span class="op">*</span>ToolRegistry<span class="op">)</span> RegisterExternalToolSource<span class="op">(</span>sourceName <span class="dt">string</span><span class="op">,</span> toolFetcher <span class="kw">func</span><span class="op">()</span> <span class="op">([]</span>Tool<span class="op">,</span> <span class="dt">error</span><span class="op">))</span> <span class="dt">error</span></span></code></pre></div>
+<p>plus <code>RegisterCustomTool(Tool) error:51</code>.
+<strong>Caveat:</strong> <code>RefreshTools:138</code> clears all
+non-<code>&quot;custom&quot;</code>-source tools (<code>:143-147</code>) and
+re-pulls only MCP+LSP — an external source would be silently dropped on
+refresh.</p>
+<p><strong>Skills are registered into neither tool registry.</strong>
+<code>ProtocolSkillAdapter</code> keeps its <em>own</em> parallel
+<code>MCPSkillTool</code>/<code>ACPSkillAction</code>/<code>LSPSkillCommand</code>
+maps.</p>
+<h3 id="plugins-llm-provider-shaped-not-general">4.3 Plugins —
+LLM-provider-shaped, not general</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/plugins/plugin.go:11-30</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LLMPlugin <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    Complete<span class="op">(</span>ctx<span class="op">,</span> <span class="op">*</span>models<span class="op">.</span>LLMRequest<span class="op">)</span> <span class="op">(*</span>models<span class="op">.</span>LLMResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    CompleteStream<span class="op">(</span>ctx<span class="op">,</span> <span class="op">*</span>models<span class="op">.</span>LLMRequest<span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> <span class="op">*</span>models<span class="op">.</span>LLMResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span><span class="op">;</span> Version<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    Capabilities<span class="op">()</span> <span class="op">*</span>models<span class="op">.</span>ProviderCapabilities</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    Init<span class="op">(</span>config <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    Shutdown<span class="op">(</span>ctx<span class="op">)</span> <span class="dt">error</span><span class="op">;</span> HealthCheck<span class="op">(</span>ctx<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    SetSecurityContext<span class="op">(*</span>PluginSecurityContext<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Native Go <code>.so</code> via <code>plugin.Open</code>
+(<code>loader.go:23</code>), symbol literal <code>&quot;Plugin&quot;</code>
+(<code>:29</code>), discovery by <code>.so</code> suffix
+(<code>discovery.go:60</code>). <strong>A skills plugin cannot implement
+this without stubbing</strong> — do not attach here. Non-test importers:
+only <code>plugins/example/plugin.go</code> and
+<code>internal/adapters/plugins/adapter.go</code>. Not wired into the
+router.</p>
+<h3 id="misnomers-worth-not-wasting-a-cycle-on">4.4 Misnomers worth not
+wasting a cycle on</h3>
+<ul>
+<li><code>internal/services/plugin_system.go</code> contains
+<strong>zero plugin machinery</strong> — it is HA / load-balancing /
+circuit-breaking (<code>HighAvailabilityManager:24</code>,
+<code>LoadBalancer:58</code>, <code>CircuitBreaker:750</code>).</li>
+<li><code>extensions/</code> is TypeScript only
+(<code>extensions/vscode/src/extension.ts</code>). <strong>No Go
+<code>Extension</code> abstraction exists in either
+consumer.</strong></li>
+</ul>
+<hr />
+<h2 id="divergences-between-the-two-consumers">5. Divergences between
+the two consumers</h2>
+<p>Cross-consumer parity is a stated requirement, so each of these is a
+parity risk. 15 found.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Dimension</th>
+<th><code>helix_code</code></th>
+<th><code>helix_agent</code></th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1</td>
+<td>Skill struct</td>
+<td>unexported fields + accessors
+(<code>markdown_skills.go:33</code>)</td>
+<td>all exported (<code>types.go:12</code>)</td>
+<td><strong>High</strong> — not convertible without a mapping layer</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>Trigger model</td>
+<td>compiled regex + <strong>named captures</strong> (<code>:37</code>,
+<code>FindMatching:198</code>)</td>
+<td>prose-scraped substrings (<code>parser.go:32</code>)</td>
+<td><strong>Critical</strong> — see §5.1</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>Precedence</td>
+<td>3 tiers + embed + 2 layouts (<code>:234-251</code>)</td>
+<td>1 flat dir, silent overwrite (<code>registry.go:139</code>)</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>D4</td>
+<td>Registry API</td>
+<td><code>Add</code>/<code>List</code>(sorted)/<code>FindMatching</code></td>
+<td><code>RegisterSkill</code>/<code>GetAll</code>(unordered)/<code>Search</code>+<code>GetByTrigger</code></td>
+<td><strong>High</strong> — no shared interface</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>Execution</td>
+<td>template render w/ editor context</td>
+<td>LLM prompt-injection + <strong>closed category switch</strong>
+(<code>protocol_adapter.go:309-579</code>)</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>D6</td>
+<td>Isolation</td>
+<td><code>requires_isolation</code> first-class
+(<code>:41</code>,<code>:62</code>)</td>
+<td><strong>absent</strong>; <code>AllowedTools</code> parsed but
+<strong>never enforced</strong></td>
+<td><strong>Critical</strong> — security posture</td>
+</tr>
+<tr>
+<td>D7</td>
+<td>Hot reload</td>
+<td>reconciling diff (<code>:279-282</code>)</td>
+<td>30 s poll + full clear (<code>registry.go:336</code>)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>D8</td>
+<td>Plugin iface</td>
+<td><code>Tools()</code>/<code>Hooks()</code>
+(<code>types.go:5-12</code>)</td>
+<td>LLM-shaped (<code>plugin.go:11</code>)</td>
+<td><strong>High</strong> — 3 incompatible contracts total</td>
+</tr>
+<tr>
+<td>D9</td>
+<td>Plugin manifest</td>
+<td>full YAML <code>Manifest</code> (<code>types.go:14-25</code>)</td>
+<td><strong>none</strong> — <code>.so</code> suffix + symbol lookup</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>D10</td>
+<td>Registry signatures</td>
+<td><code>Unregister(name)</code> no error;
+<code>List() []Plugin</code>; <code>GetToolPlugins</code></td>
+<td><code>Unregister(name) error</code>;
+<code>List() []string</code></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>D11</td>
+<td>Tool iface</td>
+<td>7-method w/ <code>Schema</code>+<code>RequiresApproval</code></td>
+<td>two ifaces, neither matching</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>D12</td>
+<td>Logging</td>
+<td><code>go.uber.org/zap</code>
+(<code>:262</code>,<code>:274</code>)</td>
+<td><code>github.com/sirupsen/logrus</code></td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>D13</td>
+<td>Type duplication</td>
+<td>1 skill type</td>
+<td><strong>3</strong> (<code>internal/skills</code>,
+<code>codexskills:30</code>, <code>claudeplugins:30</code>)</td>
+<td>Medium — 5 skill-ish + 4 plugin-ish types across both</td>
+</tr>
+<tr>
+<td>D14</td>
+<td><code>skill_registry</code> module</td>
+<td>no reference</td>
+<td><strong>dangling replace</strong> (§7.4)</td>
+<td><strong>High</strong></td>
+</tr>
+<tr>
+<td>D15</td>
+<td>Persistence</td>
+<td>none</td>
+<td>none (15 repositories, <strong>no skill repo</strong>)</td>
+<td><strong>High</strong> — shared gap, not a divergence</td>
+</tr>
+</tbody>
+</table>
+<h3 id="d2-is-the-blocking-divergence-the-two-skill.md-schemas-are-mutually-unreadable">5.1
+D2 is the blocking divergence — the two <code>SKILL.md</code> schemas
+are mutually unreadable</h3>
+<p><code>helix_agent</code> corpus,
+<code>skills/codex/skill-creator/SKILL.md:1-6</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> skill-creator</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">description</span><span class="kw">:</span><span class="at"> Guide for creating effective skills. This skill should be used when...</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span><span class="kw">:</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">short-description</span><span class="kw">:</span><span class="at"> Create or update a skill</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span></code></pre></div>
+<p><code>helix_code</code> builtin,
+<code>helix_code/internal/commands/builtin_skills/conventional-commit/SKILL.md:1-9</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">description</span><span class="kw">:</span><span class="at"> Draft a Conventional Commits message from a short summary of the change</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">triggers</span><span class="kw">:</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;(?i)^commit message for (?P&lt;summary&gt;.+)$&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;(?i)^write a (?:conventional )?commit(?: message)? for (?P&lt;summary&gt;.+)$&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">requires_isolation</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">variables</span><span class="kw">:</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">spec_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://www.conventionalcommits.org/en/v1.0.0/&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span></code></pre></div>
+<p><strong>Neither parser produces a usable skill from the other’s
+file.</strong> <code>helix_agent</code> has
+<code>name</code>/<code>allowed-tools</code>/<code>version</code>/<code>license</code>/<code>author</code>/<code>metadata</code>;
+<code>helix_code</code> has
+<code>triggers</code>/<code>variables</code>/<code>requires_isolation</code>
+and derives the name from filename/dirname. And a <strong>third</strong>
+schema exists upstream (HelixSkills TOML,
+<code>models.TOMLSkillWrapper</code>).</p>
+<p><strong>Three incompatible skill schemas is the central technical
+problem of HXC-159.</strong> No amount of plumbing hides it; Phase 2
+must pick a canonical schema and author converters both ways with
+round-trip tests.</p>
+<hr />
+<h2 id="attachment-points-ranked">6. Attachment points, ranked</h2>
+<p>Cross-consumer viability is scored against §2 (<code>internal/</code>
+visibility).</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Attachment point</th>
+<th>Location</th>
+<th>Cross-consumer?</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td><code>agent.LoadSkillsAndDispatcher(skillsDirs []string)</code></td>
+<td><code>helix_code/internal/agent/skill_activation.go:23</code></td>
+<td><code>helix_code</code> only</td>
+<td><strong>Lowest friction.</strong> Already takes an <em>ordered
+directory list</em> and runs one loader per directory over a shared
+registry (<code>:32-40</code>). Adding an external tier = one-line
+change at 4 call sites.</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td><code>services.ToolRegistry.RegisterExternalToolSource(name, fetcher)</code></td>
+<td><code>helix_agent/internal/services/tool_registry.go:113</code></td>
+<td><code>helix_agent</code> only</td>
+<td><strong>Cleanest generic hook in either module.</strong> Name +
+closure; gets validation, dedup, unified search, stats free. Lands
+skills in the same registry as MCP+LSP tools — which
+<code>ProtocolSkillAdapter</code> currently fails to do. Must extend
+<code>RefreshTools:138</code> so the source is not wiped.</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td><code>commands.SkillRegistry</code> + <code>SkillLoader</code></td>
+<td><code>helix_code/internal/commands/markdown_skills.go:146</code> /
+<code>:252</code></td>
+<td><code>helix_code</code> only</td>
+<td>The best <em>engine</em>. Integrate by writing manifests into a
+scanned directory (zero code) or adding a 4th tier at
+<code>Reload:294</code>. <strong>Blocker: no exported
+constructor</strong> (§7.1).</td>
+</tr>
+<tr>
+<td><strong>4</strong></td>
+<td><code>pkg/sdk/go/skills</code> (new, mirroring the verifier)</td>
+<td>pattern at <code>helix_agent/pkg/sdk/go/verifier/client.go</code> +
+<code>helix_code/internal/agentbridge/bridge.go:19</code></td>
+<td><strong>YES — the only proven one</strong></td>
+<td>The single demonstrated cross-module seam. Any shared contract must
+live in <code>pkg/</code> or go over the wire.</td>
+</tr>
+<tr>
+<td><strong>5</strong></td>
+<td><code>tools.ToolRegistry.Register(Tool)</code></td>
+<td><code>helix_code/internal/tools/registry.go:298</code></td>
+<td><code>helix_code</code> only</td>
+<td>For <strong>model-callable</strong> units: schema, approval, hooks,
+telemetry, sandbox, plan-mode gate, auto-commit — all free. Cost: skills
+must be re-shaped as tools with a JSON schema.</td>
+</tr>
+<tr>
+<td><strong>6</strong></td>
+<td><code>skills.Service</code> construction site</td>
+<td><code>helix_agent/internal/router/router.go:331-345</code></td>
+<td><code>helix_agent</code> only</td>
+<td>Single composition root; swapping <code>skills.Service</code> for an
+interface redirects 5 importers + 4 HTTP routes at one seam.</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><code>skills.SemanticMatcher</code></td>
+<td><code>helix_agent/internal/skills/matcher.go:21-23</code></td>
+<td><code>helix_agent</code> only</td>
+<td>Purpose-built injection interface, <strong>currently never
+injected</strong> — <code>matchSemantic:181</code> is dead code. Free,
+uncontested slot.</td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><code>mcp.Manager</code> + <code>RegisterMCPManager</code></td>
+<td><code>helix_code/internal/mcp/registry.go:20</code> +
+<code>tools/registry.go:886</code></td>
+<td><strong>YES (over the wire)</strong></td>
+<td>A skills provider shipped as an MCP server needs no new Go code in
+either consumer. Caveats: MCP has no skills primitive (tools only);
+bridge not reconciled after <code>Reload</code>
+(<code>:881-885</code>).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Deliberately excluded:</strong>
+<code>helix_agent/internal/plugins.LLMPlugin</code>
+(<code>plugin.go:11</code>) — LLM-provider- shaped; a skills plugin
+cannot implement it without stubbing
+<code>Complete</code>/<code>CompleteStream</code>/
+<code>Capabilities</code>.</p>
+<hr />
+<h2 id="live-defects-found-during-the-survey">7. Live defects found
+during the survey</h2>
+<p>Each is independently actionable and worth its own tracked item.</p>
+<h3 id="helix_code-no-exported-skill-constructor">7.1
+<code>helix_code</code>: no exported <code>Skill</code> constructor</h3>
+<p><code>grep &quot;func NewSkill\b&quot;</code> → <strong>zero hits</strong>
+module-wide. The only constructors are unexported
+<code>parseSkillFile</code> (<code>markdown_skills.go:78</code>) and
+<code>ParseSkillForTest</code> (<code>:427</code>, documented
+test-only). <strong>You cannot construct a <code>*Skill</code> from
+outside <code>package commands</code></strong> except by writing a file
+to disk. This blocks attachment point #3 and is the single most
+important structural fact for HXC-159.</p>
+<h3 id="helix_code-skill-auto-trigger-is-dead-in-the-interactive-cli">7.2
+<code>helix_code</code>: skill auto-trigger is dead in the interactive
+CLI</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cmd<span class="op">/</span>cli<span class="op">/</span>main<span class="op">.</span><span class="cf">go</span><span class="op">:</span><span class="dv">1060</span><span class="op">:</span>  _ <span class="op">=</span> agent<span class="op">.</span>NewSkillDispatcher<span class="op">(</span>skillReg<span class="op">,</span> <span class="ot">nil</span><span class="op">)</span> <span class="co">// wired into baseAgent in a follow-up</span></span></code></pre></div>
+<p>The dispatcher is constructed and <strong>thrown away</strong>.
+Auto-triggering works in the TUI
+(<code>applications/terminal_ui/main.go:1729-1734</code>) and desktop
+(<code>applications/desktop/main.go:444</code>) but <strong>not</strong>
+in the CLI, where skills are reachable only via explicit
+<code>/skills invoke</code>.</p>
+<h3 id="helix_code-cli-and-tui-disagree-on-the-user-skills-directory">7.3
+<code>helix_code</code>: CLI and TUI disagree on the user skills
+directory</h3>
+<p><code>os.UserConfigDir()/helixcode/skills</code>
+(<code>cmd/cli/main.go:1044</code>, <code>:3288</code>) vs
+<code>$HOME/.helix/skills</code>
+(<code>applications/terminal_ui/main.go:368</code>,
+<code>internal/clientcore/agentic.go:143</code>). A skill installed for
+one surface is invisible to the other.</p>
+<h3 id="helix_agent-dangling-mismatched-skill_registry-wiring">7.4
+<code>helix_agent</code>: dangling + mismatched
+<code>skill_registry</code> wiring</h3>
+<ul>
+<li><code>submodules/helix_agent/go.mod:279</code> —
+<code>replace digital.vasic.skillregistry =&gt; ../skill_registry</code></li>
+<li><strong>No <code>require</code> line for
+<code>digital.vasic.skillregistry</code> anywhere in that
+file.</strong></li>
+<li><code>submodules/skill_registry/go.mod:1</code> declares
+<code>module dev.helix.agent/skillregistry</code> — a <strong>different
+path</strong> from the replace key.</li>
+<li><code>helix_code/go.mod</code> has no <code>skillregistry</code>
+line at all.</li>
+</ul>
+<p>A dedicated skill-registry module exists in the workspace, is wired
+to neither consumer, and its module path does not match the key that
+replaces it. Given §2, <strong>this may be the intended third-module
+answer</strong> — Phase 2 should investigate before designing around it.
+(Root <code>.gitmodules</code> confirms it:
+<code>dependencies/vasic-digital/skill_registry</code> →
+<code>path = submodules/skill_registry</code>,
+<code>url = git@github.com:vasic-digital/SkillRegistry.git</code>.)</p>
+<h3 id="helix_agent-two-parallel-skill-load-paths-one-unwired">7.5
+<code>helix_agent</code>: two parallel skill load paths, one
+unwired</h3>
+<p><code>Registry.Load</code> (<code>registry.go:73</code>) and
+<code>SkillLoader.LoadFromDirectory</code> (<code>loader.go:44</code>)
+both walk for <code>SKILL.md</code>. Only <code>Registry.Load</code> is
+wired; <code>SkillLoader</code> (with <code>LoadFromConfig:99</code>,
+<code>LoadBuiltinSkills:148</code>, <code>ReloadSkill:193</code>,
+<code>GetInventory:241</code>) is dead code.</p>
+<h3 id="helix_agent-allowedtools-is-a-security-no-op">7.6
+<code>helix_agent</code>: <code>AllowedTools</code> is a security
+no-op</h3>
+<p><code>ParseAllowedTools</code> (<code>types.go:173</code>) parses
+<code>&quot;Read, Write, Bash(cmd:*)&quot;</code> into structured constraints.
+<strong>No non-test caller exists.</strong> Skills declare tool
+permissions that nothing enforces.</p>
+<h3 id="helix_agent-malformed-skills-vanish-silently">7.7
+<code>helix_agent</code>: malformed skills vanish silently</h3>
+<p><code>parser.go:347-351</code> — parse failures inside
+<code>ParseDirectory</code> are logged at <code>Debug</code> and
+skipped. With 1 174 corpus files, a malformed skill disappears with no
+operator-visible signal.</p>
+<h3 id="helix_code-plugins.registry-is-dead-code">7.8
+<code>helix_code</code>: <code>plugins.Registry</code> is dead code</h3>
+<p>No production caller of <code>plugins.NewRegistry</code> outside
+<code>internal/plugins/</code>. <code>MaybeRunPlugin</code>
+(<code>activation.go:43</code>) consults <code>Loader</code>, not
+<code>Registry</code>. Also <code>Manifest.Entrypoint</code>,
+<code>.Sandbox</code> and <code>.Env</code> are parsed and validated but
+<strong>never read</strong> — <code>ExecutePlugin</code> hardcodes
+<code>plugins/&lt;name&gt;/main</code> (<code>exec.go:49</code>).</p>
+<h3 id="both-no-skill-persistence-anywhere">7.9 Both: no skill
+persistence anywhere</h3>
+<ul>
+<li><code>helix_agent</code>: 15 repositories in
+<code>internal/database/</code>, <strong>no skill repo</strong>; grep
+for <code>skill</code> across <code>internal/database/</code> and
+<code>internal/storage/</code> → zero hits. <code>Registry</code> and
+<code>Tracker</code> (<code>tracker.go:18</code>) are in-memory; all
+usage telemetry is lost on restart.</li>
+<li><code>helix_code</code>: <code>internal/persistence/store.go</code>
+has manager slots for session/memory/focus/template
+(<code>:98-119</code>) — <strong>none for skills or
+plugins</strong>.</li>
+</ul>
+<p>HelixSkills is the only one of the three with persistence. This is
+the strongest single argument for <strong>reuse</strong> of the upstream
+Layer-2 service rather than reimplementation.</p>
+<h3 id="documentation-drift">7.10 Documentation drift</h3>
+<p><code>helix_code/docs/CAPABILITIES.md:150,153</code> cites
+<code>terminal_ui/main.go:325</code> and <code>:1652</code>; the actual
+current lines are <code>:368</code> and <code>:1730</code>.</p>
+<hr />
+<h2 id="what-phase-2-must-decide">8. What Phase 2 must decide</h2>
+<p>Ordered by blocking-ness:</p>
+<ol type="1">
+<li><strong>Which skill schema is canonical</strong> —
+<code>helix_code</code> regex/variables/isolation,
+<code>helix_agent</code> name/allowed-tools/metadata, or HelixSkills
+TOML? Converters + round-trip tests either way (§5.1).</li>
+<li><strong>Which layer of the three-layer upstream architecture is in
+scope</strong> (see <code>02</code> §2) — Layer-1 registration, Layer-2
+service consumption, Layer-3 catalogue generation, or all three.</li>
+<li><strong>How the shared contract crosses the module boundary</strong>
+— <code>pkg/sdk/go/skills</code>, over-the-wire, or the
+existing-but-mis-wired <code>submodules/skill_registry</code> (§7.4). §2
+admits no fourth option.</li>
+<li><strong>Direction of the <code>helix_agent</code> edge</strong> —
+upstream’s own <code>helix-deps.yaml</code> declares
+<code>helix_agent</code> as a <em>dependency of</em> HelixSkills
+(<code>02</code> §4.2). Incorporating HelixSkills <em>into</em>
+helix_agent inverts that and risks a cycle.</li>
+<li><strong>Whether to fix §7.1/§7.2 first</strong> — both are small,
+both block or degrade any <code>helix_code</code> skills work, and both
+are independently valuable.</li>
+<li><strong>Whether <code>helix_agent</code>’s 1 174-file corpus
+migrates</strong> to the canonical schema, and if so how the 15 vendor
+namespaces map onto the graph’s domain/kind taxonomy.</li>
+</ol>
+<hr />
+<h2 id="honest-boundary">9. Honest boundary</h2>
+<p><strong>Verified:</strong> every <code>file:line</code> in this
+document was cited by a survey that read the file. Both surveys were
+read-only — no file was written, no git state mutated, and the four
+other live agent streams (<code>internal/server/</code>,
+<code>applications/</code> + <code>internal/fyneui/</code>,
+<code>submodules/debate_orchestrator</code>, and a research sibling)
+were untouched.</p>
+<p><strong>Not verified — nothing was compiled or run.</strong> Every
+“works” claim is a code-reading claim, not runtime evidence. Under
+§11.4.108 these are SOURCE-layer findings only.</p>
+<p><strong>Partial coverage, explicitly on the record:</strong> -
+<code>helix_agent</code> is 3 149 Go files;
+<code>internal/services/</code> alone is 183 files of which 3 were read.
+The agent-runtime characterisation in §4 is <strong>partial</strong> —
+<code>internal/agents/{dream,kairos,swarm,voice,   yolo}/</code> and
+<code>internal/agents/subagent/</code> were listed, not read. -
+<code>Toolkit/</code> (own module, 50 Go files) was <strong>not</strong>
+surveyed. Whether it carries a competing skill or tool abstraction is
+<strong>unknown</strong>. - The 693 Go files under <code>MCP/</code> and
+21 dirs under <code>mcp-servers/</code> were not examined. -
+<code>helix_agent/internal/plugins/{config,dependencies,health,hot_reload,lifecycle,metrics,reload,   security,versioning,watcher}.go</code>
+were listed, not read — including <code>security.go</code>, which
+defines <code>PluginSecurityContext</code> referenced by code that
+<em>was</em> read. - <strong>CONST-040 gap:</strong> the mandate
+requires Skills and Plugins capability flags to be sourced from the
+verifier <code>VerificationResult</code>. In
+<code>helix_agent/pkg/sdk/go/verifier/client.go</code> only
+<code>CapabilityScore float64</code> (<code>:204</code>) was found;
+per-capability Skills/Plugins booleans could <strong>not</strong> be
+confirmed. Separately,
+<code>helix_code/internal/verifier/embedded_server.go:153</code> states
+in a code comment that <strong>no runtime probe for Skills/Plugins
+exists</strong>. Both are flagged, neither diagnosed. -
+<code>submodules/plugins/</code> (own <code>go.mod</code>) is outside
+the inner module and was deliberately not surveyed. - All importer/usage
+sweeps excluded <code>_test.go</code>, so “no non-test caller” claims
+mean exactly that and do not imply absence of test coverage.</p>
+</body>
+</html>
