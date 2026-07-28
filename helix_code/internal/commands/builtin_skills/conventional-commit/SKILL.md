@@ -27,4 +27,4 @@ Follow these rules exactly:
 4. Reference related issues in a footer such as `Refs: #123` when applicable.
 
 Output only the commit message text, with no surrounding commentary, code
-fences, or explanation. The authoritative specification is {{spec_url}}.
+fences, or explanation. The authoritative specification is {{ARG.spec_url}}.
