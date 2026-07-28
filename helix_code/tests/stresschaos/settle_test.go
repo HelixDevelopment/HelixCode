@@ -18,52 +18,133 @@ import (
 // writeLoop) exit ASYNCHRONOUSLY, independently of each other, and their exit
 // is scheduler-timed, not synchronous with Close() — so goroutines that take
 // longer than the fixed window to actually exit are still counted as
-// "leaked" at snapshot time. This test plants goroutines with STAGGERED exit
-// delays (60ms..160ms after release, in 20ms steps — the same
+// "leaked" at snapshot time. This test parks goroutines so that all of them
+// are provably present at the 50ms snapshot, then releases them to exit with
+// STAGGERED delays (20ms..120ms after release, in 20ms steps — the same
 // independently-timed-exit shape real persistConn teardown has, deliberately
 // NOT a simultaneous burst, which would let any stable-streak poll coincide
-// with the burst window) and proves the OLD single-fixed-sleep protocol still
-// counts every one of them as present at the 50ms mark (a false/flaky leak
-// signal, exactly the HXC-144 measurement-window artifact class; see
-// golang/go#25621, golang/go#9092).
+// with the burst window), and proves the OLD single-fixed-sleep protocol counts
+// every one of them as present at the 50ms mark (a false/flaky leak signal,
+// exactly the HXC-144 measurement-window artifact class; see golang/go#25621,
+// golang/go#9092).
+//
+// Determinism note (§11.4.50) — two wall-clock couplings removed, no assertion
+// weakened:
+//
+//  1. The baseline is sampled with settleGoroutines() instead of a bare
+//     runtime.GC(). The bare GC did not wait out asynchronous net/http
+//     persistConn teardown left over from pprof_diff_test.go:142, which runs
+//     immediately before this test in the same binary, so a contaminant could
+//     exit mid-window and deflate the delta.
+//  2. The planted goroutines are parked on a gate opened only AFTER the RED
+//     snapshot. Previously they were released BEFORE the snapshot with their
+//     smallest delay (60ms) beating the 50ms snapshot sleep by just 10ms;
+//     time.Sleep guarantees a lower bound only, so on a CPU-saturated host the
+//     snapshot sleep overshot and 2-3 planted goroutines exited before being
+//     counted (measured: before=2 after=6 delta=4, before=2 after=5 delta=3,
+//     failing 5/5 runs). `before` was a settled 2 throughout, which is what
+//     proves the early exits were PLANTED goroutines, not baseline
+//     contaminants.
+//
+// Both halves still assert exactly what they asserted before: RED that the old
+// protocol reports delta >= the planted count, GREEN that settleGoroutines()
+// brings the delta back within goroutineLeakTolerance. Neither threshold moved.
 //
 // GREEN: settleGoroutines() (the function RunConcurrent now uses) polls up to
 // settlePollBudget and correctly waits out every staggered exit, reporting
 // the TRUE post-settle count.
 func TestSettle_PollUntilStable_WaitsOutDelayedGoroutineExit(t *testing.T) {
+	// oldProtocolWindow is the single fixed sleep the pre-HXC-144 RunConcurrent
+	// settle step used, reproduced verbatim in the RED half below.
+	const oldProtocolWindow = 50 * time.Millisecond
+
 	// Staggered so each goroutine's exit is independently observable — the
-	// same shape real net/http connection teardown has (each persistConn
-	// exits on its own schedule, not in lockstep).
+	// same shape real net/http connection teardown has (each persistConn exits
+	// on its own schedule, not in lockstep). The delays are measured from the
+	// release gate, which opens immediately after the RED snapshot, so they
+	// describe the exit pattern GREEN's settleGoroutines() must wait out.
 	delays := []time.Duration{
+		20 * time.Millisecond,
+		40 * time.Millisecond,
 		60 * time.Millisecond,
 		80 * time.Millisecond,
 		100 * time.Millisecond,
 		120 * time.Millisecond,
-		140 * time.Millisecond,
-		160 * time.Millisecond,
 	}
 	delayedExitGoroutines := len(delays)
+	const stagger = 20 * time.Millisecond
 
-	runtime.GC()
-	before := runtime.NumGoroutine()
+	// Two fixture invariants that make the GREEN half meaningful, asserted
+	// STATICALLY rather than left to a wall-clock race (§11.4.50):
+	//
+	//  (1) The stagger must be strictly smaller than settlePollInterval. Every
+	//      poll interval therefore contains at least one exit while exits
+	//      remain, so no run of settleStableStreak equal samples can form
+	//      early — settleGoroutines() cannot "settle" before the last exit.
+	//      This is precisely the property it is being tested for, and it holds
+	//      independently of how far host load stretches the poll interval
+	//      (stretching it only puts MORE exits inside each interval).
+	//  (2) The longest delay must outlast oldProtocolWindow, so the exits GREEN
+	//      waits out are genuinely ones the old single-fixed-sleep protocol
+	//      would have missed.
+	if stagger >= settlePollInterval {
+		t.Fatalf("fixture self-inconsistent: stagger %v must be < settlePollInterval %v, otherwise a stable streak could form while exits are still pending and GREEN would prove nothing",
+			stagger, settlePollInterval)
+	}
+	for i, d := range delays {
+		if i > 0 && d-delays[i-1] != stagger {
+			t.Fatalf("fixture self-inconsistent: delays must be evenly staggered by %v, got %v after %v", stagger, d, delays[i-1])
+		}
+	}
+	if maxDelay := delays[len(delays)-1]; maxDelay <= oldProtocolWindow {
+		t.Fatalf("fixture self-inconsistent: longest planted delay %v must outlast the old fixed window %v, otherwise GREEN is not waiting out anything the old protocol missed",
+			maxDelay, oldProtocolWindow)
+	}
 
-	release := make(chan struct{})
+	// Sample the baseline only after the process-global goroutine population
+	// has genuinely SETTLED. A bare runtime.GC() does not wait out asynchronous
+	// net/http persistConn readLoop/writeLoop teardown left over from earlier
+	// tests in this same binary — pprof_diff_test.go:142
+	// (TestGoroutineLeakOracle_HTTPFlood_...) drives 16x40=640 requests through
+	// the shared http.DefaultTransport and runs immediately before this test in
+	// file order. Any such leftover that exits DURING the measurement window
+	// deflates the observed delta below the planted count. settleGoroutines()
+	// (stresschaos.go) closes idle HTTP connections and polls until the count is
+	// stable, so `before` is a real floor rather than a mid-teardown sample.
+	before := settleGoroutines()
+
+	// releaseAfterRedSnapshot parks every planted goroutine until the RED
+	// snapshot has been taken. A parked goroutine is still counted by
+	// runtime.NumGoroutine, so all six are present at the snapshot BY
+	// CONSTRUCTION rather than by winning a race.
+	//
+	// This replaces a release-before-the-snapshot form whose smallest planted
+	// delay (60ms) beat the 50ms snapshot sleep by only 10ms. time.Sleep
+	// guarantees a lower bound only, so under host load that sleep overshot and
+	// planted goroutines exited before being counted — MEASURED on a
+	// CPU-saturated 64-core host as before=2 after=6 delta=4 and before=2
+	// after=5 delta=3 (i.e. 2 and 3 planted goroutines gone early), failing 5/5
+	// runs. Note `before` was a settled 2 in every one of those runs, which is
+	// what identifies the early exits as PLANTED goroutines rather than
+	// baseline contaminants.
+	releaseAfterRedSnapshot := make(chan struct{})
 	var wg sync.WaitGroup
 	wg.Add(delayedExitGoroutines)
 	for _, d := range delays {
 		d := d
 		go func() {
 			defer wg.Done()
-			<-release
+			<-releaseAfterRedSnapshot
 			time.Sleep(d) // mimics asynchronous, independently-timed persistConn teardown
 		}()
 	}
-	close(release)
 
 	// --- RED: reproduce the exact OLD RunConcurrent settle protocol inline.
-	// All staggered delays (60ms..160ms) are still >= the old fixed 50ms
-	// window, so none have exited yet at the snapshot point. ---
-	time.Sleep(50 * time.Millisecond)
+	// Every planted goroutine is parked on releaseAfterRedSnapshot, so the old
+	// protocol necessarily counts all of them as present — which is exactly the
+	// false "leak" signal it produced for real persistConn teardown that had not
+	// finished inside its fixed window. ---
+	time.Sleep(oldProtocolWindow)
 	runtime.GC()
 	oldProtocolAfter := runtime.NumGoroutine()
 	oldProtocolDelta := oldProtocolAfter - before
@@ -77,6 +158,12 @@ func TestSettle_PollUntilStable_WaitsOutDelayedGoroutineExit(t *testing.T) {
 		t.Logf("RED CONFIRMED: old fixed-sleep protocol's delta (%d) exceeds goroutineLeakTolerance (%d) — this is the exact false-leak signal HXC-144 diagnosed",
 			oldProtocolDelta, goroutineLeakTolerance)
 	}
+
+	// Open the gate: from here the six goroutines exit asynchronously at
+	// 20ms..120ms in 20ms steps — deliberately NOT a simultaneous burst, and
+	// staggered more finely than settlePollInterval so settleGoroutines() below
+	// is forced to keep polling until the last one is gone.
+	close(releaseAfterRedSnapshot)
 
 	// --- GREEN: the current (fixed) poll-until-stable settle logic ---
 	stableAfter := settleGoroutines()

@@ -254,17 +254,36 @@ func TestConsensusManager_HeartbeatMechanism(t *testing.T) {
 		ElectionTimeout:   20 * time.Millisecond,
 	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	// The ctx budget bounds the lifetime of the run() goroutine (consensus.go:172
+	// starts it on a child of this ctx; consensus.go:305 returns on ctx.Done()).
+	// It MUST exceed the poll budget below, otherwise a run() goroutine that the
+	// host scheduler starts late is cancelled before it can ever fire the
+	// election timer — that was the actual failure mode of the previous
+	// 100ms-ctx / 50ms-fixed-sleep form.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	err := cm.Start(ctx)
 	require.NoError(t, err)
 	defer cm.Stop()
 
-	// Wait for leader election and some heartbeats
-	time.Sleep(50 * time.Millisecond)
+	// The assertion is state-shaped ("this peerless node elects itself"), so
+	// poll for the state transition instead of sleeping a fixed window. A fixed
+	// sleep asserts the far stronger and unintended claim "the transition
+	// happens within exactly 50ms of wall clock", which host load breaks while
+	// the code under test is correct (§11.4.50). The bounded poll fails only if
+	// leadership is never reached — the property actually under test — and it
+	// returns as soon as the transition is observed, so it is also faster on a
+	// quiet host. Same fixed-sleep→poll migration the package already applies in
+	// tests/stresschaos/stresschaos.go settleGoroutines() for HXC-144.
+	require.Eventually(t, cm.IsLeader, 2*time.Second, 2*time.Millisecond,
+		"a single-node (peerless) cluster must elect itself leader")
 
+	// Leadership is terminal for a peerless node: nothing can step it down, so
+	// these post-conditions are deterministic once Eventually has observed the
+	// transition.
 	assert.True(t, cm.IsLeader())
+	assert.Equal(t, "node-1", cm.GetLeader(), "a leader advertises its own node ID")
 }
 
 func TestConsensusManager_GetCurrentTerm(t *testing.T) {
