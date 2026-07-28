@@ -597,12 +597,21 @@ func (p *Provider) GenerateStream(ctx context.Context, request *llm.LLMRequest, 
 		toolCalls := parseRecvToolCalls(chunk.Choices[0].Delta.ToolCalls)
 
 		if delta != "" || len(toolCalls) > 0 {
-			ch <- llm.LLMResponse{
+			// ctx-guarded send (HXC-183): a bare `ch <- ...` parks this
+			// goroutine FOREVER once the caller cancels ctx and stops
+			// draining, leaking it and the open resp.Body it holds (the
+			// `defer resp.Body.Close()` above would never run). Same guard
+			// as the six sibling providers fixed in 905a0b0a.
+			select {
+			case ch <- llm.LLMResponse{
 				ID:        uuid.New(),
 				RequestID: request.ID,
 				Content:   delta,
 				ToolCalls: toolCalls,
 				CreatedAt: time.Now(),
+			}:
+			case <-ctx.Done():
+				return ctx.Err()
 			}
 		}
 
@@ -622,7 +631,12 @@ func (p *Provider) GenerateStream(ctx context.Context, request *llm.LLMRequest, 
 					TotalTokens:      chunk.Usage.TotalTokens,
 				}
 			}
-			ch <- final
+			// ctx-guarded send (HXC-183) — see the per-delta send above.
+			select {
+			case ch <- final:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 

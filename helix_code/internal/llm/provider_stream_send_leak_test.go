@@ -56,71 +56,45 @@ package llm
 // NewXProvider constructor, talking to a REAL local HTTP server — never a
 // hand-rolled replica of the parse loop.
 
+// HARNESS LOCATION (moved 2026-07-29, HXC-183): the probe/handler/driver
+// helpers below are now THIN DELEGATIONS to the shared, generic
+// dev.helix.code/internal/llm/streamleak package. They were hoisted out of this
+// file because providers/* sub-packages (which import internal/llm for the
+// shared Provider types) cannot be driven from a `package llm` test file — Go
+// rejects it with "import cycle not allowed in test" (verified empirically).
+// That wall is precisely why the 905a0b0a/97d5ad2b round left
+// providers/helixagent unguarded. The wrappers are kept at their original
+// names and signatures so every existing call site in this file, in
+// bedrock_provider_send_leak_test.go and in ensemble_provider_send_leak_test.go
+// is untouched; the harness BEHAVIOUR is now single-sourced and shared with
+// providers/helixagent/helixagent_send_leak_test.go.
+
 import (
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"runtime"
-	"strings"
 	"testing"
 	"time"
 
+	"dev.helix.code/internal/llm/streamleak"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
-// goroutineParkedInSend dumps every live goroutine's stack via
-// runtime.Stack(buf, all=true) and reports whether any goroutine is currently
-// parked (blocked) with a stack frame matching symbolPrefix AND in a
-// channel-send wait state. Mirrors the reference technique in
-// ollama_completestream_leak_test.go: a deterministic, unforgeable liveness
-// probe that does not rely on counting runtime.NumGoroutine() (polluted by
-// unrelated goroutines in the test binary).
-func goroutineParkedInSend(symbolPrefix string) bool {
-	buf := make([]byte, 1<<16)
-	for {
-		n := runtime.Stack(buf, true)
-		if n < len(buf) {
-			buf = buf[:n]
-			break
-		}
-		buf = make([]byte, 2*len(buf))
-	}
-	dump := string(buf)
-	for _, block := range strings.Split(dump, "\n\n") {
-		if strings.Contains(block, symbolPrefix) && strings.Contains(block, "chan send") {
-			return true
-		}
-	}
-	return false
-}
-
-// waitUntilParkedInSend polls goroutineParkedInSend until it reports true or
-// the deadline elapses. Early-exit-on-true is sound here: once an unguarded
-// send blocks a goroutine forever, the parked state never reverts on its own,
-// so observing true once is conclusive (mirrors waitUntilLeaked in the
-// reference ollama test).
+// waitUntilParkedInSend polls the shared stack probe until it reports a
+// goroutine parked in "chan send" state matching symbolPrefix, or the deadline
+// elapses. Delegates to streamleak; also used by
+// bedrock_provider_send_leak_test.go and ensemble_provider_send_leak_test.go.
 func waitUntilParkedInSend(symbolPrefix string, timeout time.Duration) bool {
-	deadline := time.Now().Add(timeout)
-	for {
-		if goroutineParkedInSend(symbolPrefix) {
-			return true
-		}
-		if time.Now().After(deadline) {
-			return false
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+	return streamleak.WaitUntilParkedInSend(symbolPrefix, timeout)
 }
 
-// notParkedInSendAfterSettling sleeps the full settle window (deliberately no
-// early exit — a momentary "not parked" reading taken before the goroutine
-// even attempts its send would falsely pass on genuinely broken code) and
-// then takes a single decisive snapshot.
+// notParkedInSendAfterSettling sleeps the full settle window and then takes a
+// single decisive snapshot. Delegates to streamleak; also used by
+// bedrock_provider_send_leak_test.go and ensemble_provider_send_leak_test.go.
 func notParkedInSendAfterSettling(symbolPrefix string, settle time.Duration) bool {
-	time.Sleep(settle)
-	return goroutineParkedInSend(symbolPrefix)
+	return streamleak.ParkedInSendAfterSettling(symbolPrefix, settle)
 }
 
 // streamForeverSSE writes valid SSE `data: <json>\n\n` frames (or, when
@@ -131,38 +105,8 @@ func notParkedInSendAfterSettling(symbolPrefix string, settle time.Duration) boo
 // emitting on its own — the only thing that stops the flow is the
 // client-side ctx cancellation under test.
 func streamForeverSSE(t *testing.T, encode func() []byte, rawSSE bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.WriteHeader(http.StatusOK)
-		flusher, _ := w.(http.Flusher)
-		for {
-			select {
-			case <-r.Context().Done():
-				return
-			default:
-			}
-			payload := encode()
-			if rawSSE {
-				if _, err := w.Write([]byte("data: ")); err != nil {
-					return
-				}
-				if _, err := w.Write(payload); err != nil {
-					return
-				}
-				if _, err := w.Write([]byte("\n\n")); err != nil {
-					return
-				}
-			} else {
-				if _, err := w.Write(payload); err != nil {
-					return
-				}
-			}
-			if flusher != nil {
-				flusher.Flush()
-			}
-			time.Sleep(2 * time.Millisecond)
-		}
-	}
+	t.Helper()
+	return streamleak.StreamForeverSSE(encode, rawSSE)
 }
 
 // driveProviderSendLeak is the shared harness: constructs the given real
@@ -172,58 +116,9 @@ func streamForeverSSE(t *testing.T, encode func() []byte, rawSSE bool) http.Hand
 // in "chan send" state matching symbolPrefix.
 func driveProviderSendLeak(t *testing.T, name, symbolPrefix string, provider Provider, req *LLMRequest) {
 	t.Helper()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	ch := make(chan LLMResponse, 2)
-	go func() {
-		_ = provider.GenerateStream(ctx, req, ch)
-	}()
-
-	// Prove the pipe is genuinely live before we stop draining — otherwise a
-	// request-setup failure could masquerade as "never parks", a false
-	// GREEN.
-	liveDeadline := time.After(2 * time.Second)
-	received := 0
-	for received < 2 {
-		select {
-		case _, ok := <-ch:
-			if !ok {
-				t.Fatalf("%s: channel closed before %d chunks were observed (got %d) — the fake "+
-					"server or provider setup is broken, not exercising the send-leak path under test",
-					name, 2, received)
-			}
-			received++
-		case <-liveDeadline:
-			t.Fatalf("%s: did not observe %d chunks within 2s — the pipe never became live", name, 2)
-		}
-	}
-
-	// STOP draining. The provider goroutine will decode further events and
-	// attempt to forward them; with nobody reading, ch's 2-slot buffer fills
-	// and the NEXT send blocks — pre-fix, unconditionally; post-fix, on the
-	// select's ch<- case (with ctx.Done() as the escape not yet ready).
-	time.Sleep(150 * time.Millisecond)
-
-	cancel()
-
-	const settle = 1500 * time.Millisecond
-	if redMode() {
-		parked := waitUntilParkedInSend(symbolPrefix, settle)
-		require.True(t, parked, "%s: RED expectation failed: no goroutine found parked in %s's "+
-			"closure (blocked in chan-send state) within %s of ctx cancellation on this artifact — "+
-			"the leak should be reproducible here. If this fails, the defect is already fixed; flip "+
-			"RED_MODE=0.", name, symbolPrefix, settle)
-		return
-	}
-
-	parked := notParkedInSendAfterSettling(symbolPrefix, settle)
-	require.False(t, parked, "%s: GREEN failed: a goroutine is still parked in %s's closure "+
-		"(blocked in chan-send state) %s after ctx cancellation with the channel never drained — an "+
-		"unguarded blocking send leaks a goroutine (and the open HTTP response body it holds) "+
-		"forever. Every send site must use "+
-		"`select { case ch <- resp: case <-ctx.Done(): return ctx.Err() }`.", name, symbolPrefix, settle)
+	streamleak.DriveSendLeak(t, name, symbolPrefix, func(ctx context.Context, ch chan<- LLMResponse) error {
+		return provider.GenerateStream(ctx, req, ch)
+	})
 }
 
 func TestProviderGenerateStream_NoGoroutineLeak_OnCtxCancelWithoutDrain(t *testing.T) {
