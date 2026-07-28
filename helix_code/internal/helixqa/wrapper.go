@@ -55,6 +55,47 @@ func (s *SessionState) MarshalJSON() ([]byte, error) {
 	return json.Marshal((*sessionStateJSON)(s))
 }
 
+// creationSnapshot returns a DETACHED copy of the session's field values as of
+// the moment of the call. The copy carries its own zero mutex and a nil
+// CancelFunc, so nothing the orchestrator goroutine subsequently writes to the
+// live session is visible through it, and nothing written to it can reach the
+// live session.
+//
+// This exists because StartSession used to hand its caller the LIVE session it
+// had just spawned a goroutine to mutate (HXC-154): the goroutine's first act
+// is `state.Mu.Lock(); state.Status = "running"`, so the value a caller read
+// back depended purely on which goroutine the scheduler ran first. That is a
+// race CONDITION, not a data race — MarshalJSON and the orchestrator both go
+// through state.Mu, so `-race` reports nothing — but it made the HTTP 201
+// Created body non-deterministic: measured on the pre-fix artifact, 2.6% of
+// responses reported "running" instead of "pending", and a few reported
+// "completed", i.e. a 201 Created announcing an already-finished resource.
+//
+// Slices are copied rather than aliased so a future mutation of the live
+// session's Platforms/Banks cannot reach a snapshot already handed out.
+func (s *SessionState) creationSnapshot() *SessionState {
+	s.Mu.RLock()
+	defer s.Mu.RUnlock()
+
+	cp := &SessionState{
+		ID:               s.ID,
+		Status:           s.Status,
+		Phase:            s.Phase,
+		PhaseProgress:    s.PhaseProgress,
+		Platforms:        append([]string(nil), s.Platforms...),
+		Banks:            append([]string(nil), s.Banks...),
+		StartTime:        s.StartTime,
+		Result:           s.Result,
+		AutonomousResult: s.AutonomousResult,
+		ReportPath:       s.ReportPath,
+	}
+	if s.EndTime != nil {
+		end := *s.EndTime
+		cp.EndTime = &end
+	}
+	return cp
+}
+
 // Engine is the singleton QA engine embedded in the HelixCode server.
 type Engine struct {
 	sessions    map[string]*SessionState
@@ -99,7 +140,18 @@ func (e *Engine) Enabled() bool {
 	return e.enabled
 }
 
-// StartSession begins a new QA session and returns its ID.
+// StartSession begins a new QA session.
+//
+// The returned *SessionState is a DETACHED snapshot of the session AS CREATED
+// (Status "pending", no EndTime, no CancelFunc) — NOT a live handle. It never
+// changes, so callers that render it (notably the HTTP 201 Created body) get a
+// deterministic answer instead of whatever the orchestrator goroutine happened
+// to have written by the time they looked (HXC-154).
+//
+// To observe a session's progress, or to cancel it, go through the engine:
+// GetSession(id) returns the live *SessionState (read its mutable fields under
+// state.Mu, or marshal it — MarshalJSON locks for you), and CancelSession(id)
+// cancels. Writing to the value returned here affects nothing.
 func (e *Engine) StartSession(ctx context.Context, id string, platforms, banks []string, autonomous bool) (*SessionState, error) {
 	if !e.enabled {
 		// CONST-046: tr() resolves the literal via the package-level
@@ -130,6 +182,13 @@ func (e *Engine) StartSession(ctx context.Context, id string, platforms, banks [
 	e.sessionMu.Lock()
 	e.sessions[id] = state
 	e.sessionMu.Unlock()
+
+	// Capture the creation snapshot BEFORE the orchestrator goroutine exists,
+	// so what we hand back is a stable record of the session AS CREATED rather
+	// than a live view the goroutine races us to change (HXC-154). Callers that
+	// need to observe the session's progress use GetSession(id) — see the
+	// doc comment on StartSession.
+	created := state.creationSnapshot()
 
 	e.activeWG.Add(1)
 	go func() {
@@ -188,7 +247,7 @@ func (e *Engine) StartSession(ctx context.Context, id string, platforms, banks [
 		state.PhaseProgress = 1.0
 	}()
 
-	return state, nil
+	return created, nil
 }
 
 // GetSession retrieves a session by ID.

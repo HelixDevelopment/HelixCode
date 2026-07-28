@@ -229,10 +229,36 @@ func TestCancelQASession_Existing(t *testing.T) {
 	assert.Equal(t, created.ID, resp["session_id"])
 }
 
+// TestGetQASessionReport_SessionNotCompleted covers getQASessionReport's
+// "session exists but has not completed" branch (409 + Retry-After).
+//
+// DETERMINISM (HXC-154 reconciliation, §11.4.120). This test used to create an
+// ORDINARY session and assume it would still be un-completed by the time the
+// report was requested. That premise is pure scheduling luck: the orchestrator
+// goroutine races the rest of the test, and when it won, the session WAS
+// completed, getQASessionReport correctly returned 200 with a real report, and
+// the test failed for no product reason. Measured at ~10% on the pre-HXC-154
+// artifact — the flake was latent all along, masked by accidental lock
+// contention: the handler used to marshal the LIVE session, so its
+// MarshalJSON RLock fought the orchestrator's state.Mu writes and throttled it.
+// HXC-154 removed that contention (the handler now renders a detached creation
+// snapshot), the orchestrator stopped being slowed down, and the latent flake
+// surfaced at ~55-85%.
+//
+// The fix is to stop depending on the race at all rather than to widen the
+// assertion: this session is started with an INVALID platform, so the
+// orchestrator goroutine fails ParsePlatforms and settles on "failed". Every
+// state it can possibly be observed in — pending, running, failed — is
+// != "completed", so the 409 branch is exercised with probability 1. It also
+// covers the realistic case of asking for the report of a session that died.
 func TestGetQASessionReport_SessionNotCompleted(t *testing.T) {
 	server, w, c, bankFile := setupQATestServer(t)
 	req := StartSessionRequest{
-		Platforms: []string{"web"},
+		// Not a valid helix_qa platform: the orchestrator goroutine's
+		// ParsePlatforms call fails, so this session can never reach
+		// "completed". Bank validation happens before the goroutine is
+		// spawned, so creation itself still succeeds with 201.
+		Platforms: []string{"hxc154-not-a-real-platform"},
 		Banks:     []string{bankFile},
 	}
 	body, _ := json.Marshal(req)
@@ -248,7 +274,17 @@ func TestGetQASessionReport_SessionNotCompleted(t *testing.T) {
 	c2.Params = gin.Params{{Key: "id", Value: created.ID}}
 	server.getQASessionReport(c2)
 
-	assert.Equal(t, http.StatusConflict, w2.Code)
+	require.Equal(t, http.StatusConflict, w2.Code,
+		"a session that can never complete must yield 409, not a report")
+	assert.Equal(t, "30", w2.Header().Get("Retry-After"),
+		"the 409 must tell the client when to retry")
+
+	var conflict map[string]interface{}
+	require.NoError(t, json.Unmarshal(w2.Body.Bytes(), &conflict))
+	assert.Equal(t, "session not completed", conflict["error"])
+	// The reported status must be the session's real one, never "completed".
+	assert.NotEqual(t, "completed", conflict["status"],
+		"the 409 body must report the session's genuine, non-completed status")
 }
 
 func TestGetQASessionScreenshot_NotFound(t *testing.T) {

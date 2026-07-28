@@ -63,22 +63,17 @@ func TestEngine_StartSession(t *testing.T) {
 	state, err := engine.StartSession(ctx, "test-session-1", []string{"web"}, []string{bankFile}, false)
 	require.NoError(t, err)
 	require.NotNil(t, state)
-	// state.ID / state.Platforms / state.Banks are assigned in the struct
-	// literal inside StartSession and never mutated, so they're safe to
-	// read without locking. state.Status is mutated by the orchestrator
-	// goroutine that StartSession launches BEFORE returning, so checking
-	// it for "pending" here is a true data race — the goroutine can
-	// advance it to "running" / "completed" before the test reads it.
-	// Read mutable fields through state.Mu (the type's own lock).
+	// HXC-154 reconciliation. StartSession used to return the LIVE session
+	// that the orchestrator goroutine was concurrently advancing, so this
+	// test could not pin Status at all — it had to accept any of the five
+	// states and read even that through state.Mu. It now returns a DETACHED
+	// snapshot of the session as created, so every field here is stable and
+	// the assertion can say what it always meant to say.
 	assert.Equal(t, "test-session-1", state.ID)
 	assert.Equal(t, []string{"web"}, state.Platforms)
 	assert.Equal(t, []string{bankFile}, state.Banks)
-	state.Mu.RLock()
-	status := state.Status
-	state.Mu.RUnlock()
-	// Status MUST be one of the known states. We do not pin it to
-	// "pending" because the goroutine may have already advanced it.
-	require.Contains(t, []string{"pending", "running", "completed", "failed", "cancelled"}, status)
+	require.Equal(t, "pending", state.Status,
+		"the snapshot returned by StartSession describes the session as created")
 
 	// Verify session is retrievable
 	s, ok := engine.GetSession("test-session-1")
@@ -206,6 +201,14 @@ func TestEngine_ListSessions(t *testing.T) {
 	}
 	engine, err := NewEngine(cfg)
 	require.NoError(t, err)
+	// Drain the orchestrator goroutines before the framework removes tmpDir.
+	// Without this the sessions started below outlive the test and write
+	// evidence into a half-deleted OutputDir, surfacing as
+	// "TempDir RemoveAll cleanup: unlinkat ...: directory not empty".
+	// Observed once under heavy host load during the HXC-154 discovery sweep;
+	// every other session-starting test here already does this (see
+	// TestEngine_CancelSession and the server package's setupQATestServer).
+	t.Cleanup(engine.Shutdown)
 
 	// Initially empty
 	sessions := engine.ListSessions()
@@ -224,19 +227,19 @@ func TestBuildQAConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	cfg := &config.Config{
 		QA: config.QAConfig{
-			Enabled:       true,
-			OutputDir:     tmpDir,
-			Platforms:     []string{"web", "android"},
-			BanksDir:      tmpDir,
-			CoverageTarget: 0.95,
-			ReportFormats: []string{"html"},
-			Autonomous:    true,
-			CuriosityEnabled: true,
-			VisionProvider: "ollama",
-			LLMProvider:   "openai",
-			LLMAPIKey:     "test-key",
+			Enabled:           true,
+			OutputDir:         tmpDir,
+			Platforms:         []string{"web", "android"},
+			BanksDir:          tmpDir,
+			CoverageTarget:    0.95,
+			ReportFormats:     []string{"html"},
+			Autonomous:        true,
+			CuriosityEnabled:  true,
+			VisionProvider:    "ollama",
+			LLMProvider:       "openai",
+			LLMAPIKey:         "test-key",
 			RecordScreenshots: true,
-			RecordVideo:   true,
+			RecordVideo:       true,
 		},
 		Logging: config.LoggingConfig{Level: "debug"},
 	}
