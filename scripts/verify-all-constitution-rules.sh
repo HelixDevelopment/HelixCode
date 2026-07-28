@@ -679,6 +679,38 @@ if want_gate G19; then
 fi
 
 # ---------------------------------------------------------------------------
+# G20 — §11.4.106/§11.4.157 superseded-generator naming
+#
+# The shell summary generators were superseded by the DB exporter, but ~20
+# governance manuals kept naming them as the canonical way to regenerate the
+# tracker summaries. That was not stale prose — it was actively harmful
+# instructions, and it caused real damage TWICE: a gate's own failure message
+# recommended running them (which would have rewritten 344 SQLite-derived items
+# down to 188, destroying 156 items of tracked state), and on 2026-07-29 an
+# agent followed that advice by hand and did exactly that before it was caught.
+#
+# The generators now refuse to run (exit 2, writing nothing), so the immediate
+# hazard is contained. This gate holds the DOCUMENTATION side: every reference
+# must name the DB exporter and mark the shell scripts SUPERSEDED, across all
+# five governance carriers in lockstep (§11.4.157 — GEMINI.md has silently
+# drifted 14 mandates behind before, so partial propagation is itself a
+# violation).
+#
+# Registered here because an unregistered gate enforces nothing (§11.4.227).
+# This is the fourth gate found standalone-only in this cycle.
+# ---------------------------------------------------------------------------
+if want_gate G20; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G20 — §11.4.106/§11.4.157 superseded-generator naming (CM-SUPERSEDED-GENERATOR-NAMING)"
+    if bash "$ROOT/scripts/gates/superseded_generator_naming_gate.sh" >/tmp/g20-sgn.out 2>&1; then
+        gate_pass G20 "$(grep -oE '[0-9]+ correctly-marked reference\(s\)' /tmp/g20-sgn.out | tail -1) — every reference names the DB exporter, five-carrier lockstep intact"
+    else
+        gate_fail G20 "a governance doc names the SUPERSEDED shell generators as canonical — following it destroys tracked items (see /tmp/g20-sgn.out)" \
+            "$(tail -6 /tmp/g20-sgn.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
