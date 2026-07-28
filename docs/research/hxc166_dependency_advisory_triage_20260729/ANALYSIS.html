@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HXC-166 — dependency advisory triage (helix_agent)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HXC-166 — dependency advisory triage
+(helix_agent)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a
+href="#hxc-166--dependency-advisory-triage-helix_agent--2026-07-29"
+id="toc-hxc-166--dependency-advisory-triage-helix_agent--2026-07-29">HXC-166
+— dependency advisory triage (helix_agent) — 2026-07-29</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#what-this-is-and-what-it-is-not"
+id="toc-what-this-is-and-what-it-is-not">What this is and what it is
+not</a></li>
+<li><a href="#how-the-numbers-were-obtained"
+id="toc-how-the-numbers-were-obtained">How the numbers were
+obtained</a></li>
+<li><a href="#headline-finding--the-deployment-surface-split"
+id="toc-headline-finding--the-deployment-surface-split">Headline finding
+— the deployment-surface split</a>
+<ul>
+<li><a href="#mcp-serversgitmcp--139-advisories-evidence-for-ground-a"
+id="toc-mcp-serversgitmcp--139-advisories-evidence-for-ground-a"><code>mcp-servers/GitMCP</code>
+— 139 advisories, evidence for Ground A</a></li>
+<li><a
+href="#mcp-serverspostgres-mcpingest--13-advisories-evidence-for-ground-a"
+id="toc-mcp-serverspostgres-mcpingest--13-advisories-evidence-for-ground-a"><code>mcp-servers/postgres-mcp/ingest</code>
+— 13 advisories, evidence for Ground A</a></li>
+<li><a
+href="#pluginsmcp-server--only-3-advisories-and-the-highest-priority-npm-cluster"
+id="toc-pluginsmcp-server--only-3-advisories-and-the-highest-priority-npm-cluster"><code>plugins/mcp-server</code>
+— only 3 advisories, and the highest-priority npm cluster</a></li>
+</ul></li>
+<li><a href="#two-reachability-oracles-and-what-each-can-prove"
+id="toc-two-reachability-oracles-and-what-each-can-prove">Two
+reachability oracles, and what each can prove</a></li>
+<li><a href="#ranked-triage" id="toc-ranked-triage">Ranked triage</a>
+<ul>
+<li><a
+href="#rank-1--reachable-high-severity-no-fix-exists-githubcomdockerdocker"
+id="toc-rank-1--reachable-high-severity-no-fix-exists-githubcomdockerdocker">Rank
+1 — reachable, high severity, <strong>no fix exists</strong>:
+<code>github.com/docker/docker</code></a></li>
+<li><a
+href="#rank-2--reachable-high-severity-fix-available-go-git--go-billy"
+id="toc-rank-2--reachable-high-severity-fix-available-go-git--go-billy">Rank
+2 — reachable, high severity, <strong>fix available</strong>:
+<code>go-git</code> / <code>go-billy</code></a></li>
+<li><a href="#rank-3--reachable-no-dependabot-alert-golangorgxtext"
+id="toc-rank-3--reachable-no-dependabot-alert-golangorgxtext">Rank 3 —
+reachable, no Dependabot alert: <code>golang.org/x/text</code></a></li>
+<li><a href="#rank-4--reachable-fixable-grpc-quic-go-otel"
+id="toc-rank-4--reachable-fixable-grpc-quic-go-otel">Rank 4 — reachable,
+fixable: <code>grpc</code>, <code>quic-go</code>,
+<code>otel</code></a></li>
+<li><a
+href="#rank-5--ours-and-deployed-but-reachability-unknown-pluginsmcp-server"
+id="toc-rank-5--ours-and-deployed-but-reachability-unknown-pluginsmcp-server">Rank
+5 — ours and deployed, but reachability unknown:
+<code>plugins/mcp-server</code></a></li>
+<li><a
+href="#rank-6--sdkweb-22-and-why-it-is-not-simply-dev-scope-ignore"
+id="toc-rank-6--sdkweb-22-and-why-it-is-not-simply-dev-scope-ignore">Rank
+6 — <code>sdk/web</code> (22), and why it is not simply "dev-scope,
+ignore"</a></li>
+<li><a href="#rank-7--t4t5-ground-a-only"
+id="toc-rank-7--t4t5-ground-a-only">Rank 7 — T4/T5, Ground A
+only</a></li>
+</ul></li>
+<li><a href="#the-five-critical-advisories"
+id="toc-the-five-critical-advisories">The five critical
+advisories</a></li>
+<li><a href="#go-proven-reachable-set"
+id="toc-go-proven-reachable-set">Go: proven-reachable set</a></li>
+<li><a href="#go-proven-not-reachable-set"
+id="toc-go-proven-not-reachable-set">Go: proven-NOT-reachable
+set</a></li>
+<li><a href="#cheap-wins" id="toc-cheap-wins">Cheap wins</a></li>
+<li><a href="#no-fix-available" id="toc-no-fix-available">No fix
+available</a></li>
+<li><a href="#transitive-only-advisories"
+id="toc-transitive-only-advisories">Transitive-only advisories</a></li>
+<li><a href="#what-could-not-be-determined"
+id="toc-what-could-not-be-determined">What could NOT be
+determined</a></li>
+<li><a href="#honest-boundaries" id="toc-honest-boundaries">Honest
+boundaries</a></li>
+<li><a href="#recommended-follow-up-items"
+id="toc-recommended-follow-up-items">Recommended follow-up
+items</a></li>
+<li><a href="#sources-verified-2026-07-29"
+id="toc-sources-verified-2026-07-29">Sources verified
+2026-07-29</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1
+id="hxc-166--dependency-advisory-triage-helix_agent--2026-07-29">HXC-166
+— dependency advisory triage (helix_agent) — 2026-07-29</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Item</td>
+<td>HXC-166 (Bug, Queued)</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td><code>submodules/helix_agent</code> @ <code>c740eaf1</code> — module
+<code>dev.helix.agent</code></td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td>204 open Dependabot advisories surfaced on publish</td>
+</tr>
+<tr>
+<td>Pass type</td>
+<td><strong>ANALYSIS ONLY — no dependency was upgraded, no
+<code>go.mod</code>/<code>go.sum</code> edited</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#what-this-is-and-what-it-is-not">What this is and what it
+is not</a></li>
+<li><a href="#how-the-numbers-were-obtained">How the numbers were
+obtained</a></li>
+<li><a href="#headline-finding--the-deployment-surface-split">Headline
+finding — the deployment-surface split</a></li>
+<li><a href="#two-reachability-oracles-and-what-each-can-prove">Two
+reachability oracles, and what each can prove</a></li>
+<li><a href="#ranked-triage">Ranked triage</a></li>
+<li><a href="#the-five-critical-advisories">The five critical
+advisories</a></li>
+<li><a href="#go-proven-reachable-set">Go: proven-reachable set</a></li>
+<li><a href="#go-proven-not-reachable-set">Go: proven-NOT-reachable
+set</a></li>
+<li><a href="#cheap-wins">Cheap wins</a></li>
+<li><a href="#no-fix-available">No fix available</a></li>
+<li><a href="#transitive-only-advisories">Transitive-only
+advisories</a></li>
+<li><a href="#what-could-not-be-determined">What could NOT be
+determined</a></li>
+<li><a href="#honest-boundaries">Honest boundaries</a></li>
+<li><a href="#recommended-follow-up-items">Recommended follow-up
+items</a></li>
+</ul>
+<h2 id="what-this-is-and-what-it-is-not">What this is and what it is
+not</h2>
+<p>This is a triage: a separation of the 204 advisories into those that
+plausibly reach code we deploy and those that do not, so that
+remediation effort can be spent where it changes our exposure.</p>
+<p><strong>It is not a clean bill of health.</strong> The component
+ships third-party code with known, publicly documented weaknesses. It
+still does after this pass. Triage changes what we know, not what we
+run.</p>
+<p>Two distinct grounds are used to lower an advisory's priority, and
+they are <strong>not</strong> interchangeable. Every ranking decision
+below states which one it rests on:</p>
+<ul>
+<li><strong>Ground A — not deployed.</strong> Evidence that the affected
+code is not built into, or copied into, any artifact we run. This is an
+evidence-backed claim about our deployment, verifiable from build
+files.</li>
+<li><strong>Ground B — not called.</strong> Evidence from static
+call-graph analysis that our code never reaches the vulnerable
+symbol.</li>
+</ul>
+<p>"Probably not exploitable" with neither Ground A nor Ground B behind
+it is a guess (§11.4.6) and is not used anywhere in this document. Where
+neither could be established, the advisory is listed as
+<strong>undetermined</strong>, not as low priority.</p>
+<h2 id="how-the-numbers-were-obtained">How the numbers were
+obtained</h2>
+<p><strong>Advisory list — GitHub Dependabot API</strong>, authenticated
+via <code>gh</code> (token scopes <code>repo</code>, which satisfies the
+endpoint's <code>security_events</code> requirement):</p>
+<pre><code>gh api --paginate &quot;repos/vasic-digital/HelixAgent/dependabot/alerts?state=open&amp;per_page=100&quot;</code></pre>
+<p>Returned <strong>exactly 204 open alerts</strong>, matching the
+reported counts:</p>
+<table>
+<thead>
+<tr>
+<th>Severity</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>critical</td>
+<td>5</td>
+</tr>
+<tr>
+<td>high</td>
+<td>80</td>
+</tr>
+<tr>
+<td>medium (reported as "moderate")</td>
+<td>100</td>
+</tr>
+<tr>
+<td>low</td>
+<td>19</td>
+</tr>
+<tr>
+<td><strong>total</strong></td>
+<td><strong>204</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Note on remotes: the alerts live on
+<strong><code>vasic-digital/HelixAgent</code></strong>. The same query
+against <code>HelixDevelopment/HelixAgent</code> returns <code>[]</code>
+— Dependabot is enabled on one mirror only. Anyone checking the other
+remote sees a clean list; that is a reporting artifact, not a different
+risk posture.</p>
+<p><strong>Reachability — <code>govulncheck</code></strong>, which was
+already installed at <code>/home/milos/go/bin/govulncheck</code> (no
+install, no root needed). This is the load-bearing tool for the Go side
+because it does <strong>call-graph reachability analysis against our
+actual source</strong>, not manifest version matching:</p>
+<pre><code>govulncheck ./...                  # symbol results
+govulncheck -show verbose ./...    # plus package/module-level (unreachable) results</code></pre>
+<p><code>govulncheck</code> covers Go only. <strong>There is no
+equivalent reachability oracle applied to the 171 npm and 13 pip
+advisories</strong> — see <a href="#what-could-not-be-determined">What
+could NOT be determined</a>.</p>
+<p><strong>Deployment surface — build files</strong>, read directly:
+<code>docker-compose.protocols.yml</code>, per-directory
+<code>Dockerfile</code>s, <code>package.json</code>
+(workspaces/scripts), presence of <code>node_modules</code>, and the Go
+import graph.</p>
+<h2 id="headline-finding--the-deployment-surface-split">Headline finding
+— the deployment-surface split</h2>
+<p>The 204 advisories are not distributed across our product. They are
+concentrated in in-tree copies of third-party projects that we do not
+build:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Location</th>
+<th style="text-align: right;">Total</th>
+<th style="text-align: right;">crit</th>
+<th style="text-align: right;">high</th>
+<th style="text-align: right;">med</th>
+<th style="text-align: right;">low</th>
+<th>Ground</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T4</td>
+<td><code>mcp-servers/GitMCP/**</code> — vendored upstream, not
+built</td>
+<td style="text-align: right;">139</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">76</td>
+<td style="text-align: right;">16</td>
+<td>A</td>
+</tr>
+<tr>
+<td>T3</td>
+<td><code>sdk/web/</code> — our SDK, build toolchain</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">2</td>
+<td>partial</td>
+</tr>
+<tr>
+<td>T1</td>
+<td><code>go.mod</code> — the shipped Go binary</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1</td>
+<td>B (per-advisory)</td>
+</tr>
+<tr>
+<td>T4</td>
+<td><code>mcp-servers/postgres-mcp/ingest/</code> — not copied into
+image</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td>A</td>
+</tr>
+<tr>
+<td>T5</td>
+<td><code>Website/</code> — static site</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td>A</td>
+</tr>
+<tr>
+<td>T3</td>
+<td><code>pkg/api</code>, <code>plugins/packages/transport/go</code> —
+Go sub-modules</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td>partial</td>
+</tr>
+<tr>
+<td>T2</td>
+<td><code>plugins/mcp-server/</code> — <strong>ours, containerised, in
+compose</strong></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td>none</td>
+</tr>
+<tr>
+<td>T5</td>
+<td><code>docs/research/go-elder-plinius-v3/**</code> — research
+artifact</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td>A</td>
+</tr>
+<tr>
+<td>T5</td>
+<td><code>ci/reporter/</code> — private CI helper</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td>A</td>
+</tr>
+</tbody>
+</table>
+<p><strong>161 of 204 (78%)</strong> sit in T4/T5 — code that is in the
+tree but not in anything we deploy.</p>
+<h3
+id="mcp-serversgitmcp--139-advisories-evidence-for-ground-a"><code>mcp-servers/GitMCP</code>
+— 139 advisories, evidence for Ground A</h3>
+<p>This directory is a vendored copy of the upstream
+<strong><code>git-mcp</code></strong> project (gitmcp.io), not code we
+authored:</p>
+<ul>
+<li><code>package.json</code> → <code>"name": "git-mcp"</code>,
+<code>"private": true</code>, <code>"license": "ISC"</code>, description
+<em>"GitMCP is a tool that allows you to get the documentation for a
+given repository."</em></li>
+<li>It carries its own <code>README.md</code> (with upstream
+<code>github.com/user-attachments</code> image URLs), its own
+<code>SECURITY.md</code>, and its own
+<code>.github/workflows/</code>.</li>
+<li>It is a <strong>Cloudflare Workers + React Router</strong> app —
+<code>wrangler.jsonc</code>, <code>react-router.config.ts</code>,
+<code>vite.config.ts</code>, <code>tsconfig.cloudflare.json</code>. Its
+dependency set (<code>wrangler</code>, <code>hono</code>,
+<code>react-router</code>, <code>@remix-run/*</code>, <code>vite</code>,
+<code>rollup</code>, <code>turbo-stream</code>) is that of a hosted web
+app, not of an MCP process our agent spawns.</li>
+<li>It uses <code>pnpm-lock.yaml</code> while every other JS directory
+in the submodule uses <code>package-lock.json</code> — a foreign-origin
+marker.</li>
+</ul>
+<p>Build wiring — the decisive evidence:</p>
+<ul>
+<li>There is <strong>no</strong> root <code>package.json</code>
+<code>workspaces</code> glob and <strong>no</strong>
+<code>Makefile</code> target referencing <code>mcp-servers</code>.</li>
+<li><code>mcp-servers/GitMCP/node_modules</code> is
+<strong>absent</strong> — the dependency tree the 139 advisories
+describe has never been installed in this checkout.</li>
+<li>The single piece of build wiring is compose service
+<code>mcp-gitmcp</code> in
+<code>docker-compose.protocols.yml:381-384</code>:</li>
+</ul>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mcp-gitmcp</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">build</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">context</span><span class="kw">:</span><span class="at"> ./mcp-servers/GitMCP</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">dockerfile</span><span class="kw">:</span><span class="at"> Dockerfile</span></span></code></pre></div>
+<p><strong><code>mcp-servers/GitMCP/Dockerfile</code> does not
+exist.</strong> Verified:
+<code>ls: cannot access 'mcp-servers/GitMCP/Dockerfile': No such file or directory</code>.
+The service cannot build; <code>docker compose build mcp-gitmcp</code>
+fails before any npm install happens.</p>
+<p>Runtime wiring: the only reference from Go is
+<code>cmd/helixagent/main.go:4334</code> →
+<code>cliagents.AgentGitMCP</code>, which is an <strong>enum
+member</strong> of an external catalogue package
+(<code>digital.vasic.llmsverifier/pkg/cliagents</code>), listed
+alongside <code>AgentGPTME</code>, <code>AgentOpenHands</code> etc. It
+names a known CLI agent type; it does not build, spawn, or import the
+vendored JavaScript.</p>
+<p><strong>Verdict: VENDORED-NOT-BUILT.</strong> These 139 advisories
+describe a dependency tree that is never installed and an artifact that
+cannot currently be produced. That is Ground A, and it is why they rank
+low — not because the CVEs are unimportant.</p>
+<p><em>Corollary defect:</em> a compose service pointing at a missing
+Dockerfile is itself broken and should be either fixed or removed. Filed
+as HXC-171.</p>
+<h3
+id="mcp-serverspostgres-mcpingest--13-advisories-evidence-for-ground-a"><code>mcp-servers/postgres-mcp/ingest</code>
+— 13 advisories, evidence for Ground A</h3>
+<p><code>mcp-servers/postgres-mcp</code> is a vendored copy of
+<code>@tigerdata/pg-aiguide</code>. Unlike GitMCP it <strong>is</strong>
+buildable and <strong>is</strong> in compose
+(<code>docker-compose.protocols.yml:224</code>). But all 13 advisories
+are against <code>ingest/uv.lock</code> — a Python docs-ingestion
+sub-tool — and its <code>Dockerfile</code> copies only:</p>
+<pre><code>COPY package.json bun.lock ./
+COPY tsconfig.json ./
+COPY src ./src
+COPY skills ./skills
+COPY skills.yaml ./</code></pre>
+<p><code>ingest/</code> is <strong>not copied into the image</strong>.
+The Python dependencies (<code>langsmith</code>,
+<code>langchain-core</code>, <code>scrapy</code>, <code>Twisted</code>,
+<code>urllib3</code>, <code>cryptography</code>, <code>pyasn1</code>,
+<code>soupsieve</code>) are not present at runtime in the shipped
+container.</p>
+<p><strong>Verdict: NOT-IN-IMAGE.</strong> Ground A. Note this is a
+<em>narrower</em> claim than GitMCP's: the container around it does
+ship, so if <code>ingest/</code> is ever added to the Dockerfile, all 13
+become live at once.</p>
+<h3
+id="pluginsmcp-server--only-3-advisories-and-the-highest-priority-npm-cluster"><code>plugins/mcp-server</code>
+— only 3 advisories, and the highest-priority npm cluster</h3>
+<p>This is the inversion the triage exists to surface.
+<code>plugins/mcp-server</code>:</p>
+<ul>
+<li>is <strong>ours</strong> —
+<code>"name": "@helixagent/mcp-server"</code></li>
+<li><strong>has</strong> a real <code>Dockerfile</code></li>
+<li><strong>is</strong> wired into
+<code>docker-compose.protocols.yml:22</code> as
+<code>helixagent-mcp-server</code></li>
+<li>has <code>node_modules</code> present (it is actually installed and
+built)</li>
+</ul>
+<p>Its 3 advisories carry <strong>no Ground A and no Ground B</strong>.
+By raw count it is 1.5% of the problem; by deployed surface it is the
+npm code most likely to be running.</p>
+<h2 id="two-reachability-oracles-and-what-each-can-prove">Two
+reachability oracles, and what each can prove</h2>
+<p><strong>Dependabot</strong> matches manifest version ranges. It
+proves "a vulnerable version is listed", never "we reach the vulnerable
+code".</p>
+<p><strong><code>govulncheck</code></strong> builds a call graph from
+our source to the vulnerable symbol. A <em>symbol-level</em> finding is
+strong evidence of reachability; absence of one is meaningful evidence
+of non-reachability (Ground B).</p>
+<p>Two caveats recorded so the traces below are not over-read:</p>
+<ol type="1">
+<li><strong>Not all <code>govulncheck</code> traces are equally
+strong.</strong> Many reported traces route through generic interface
+dispatch — e.g. <em>"<code>handlers.UnifiedHandler.Completions</code>
+calls <code>client.httpError.Error</code>"</em> or <em>"... calls
+<code>io.Copy</code>, which eventually calls
+<code>client.hijackedConn.Read</code>"</em>. These are artifacts of Go's
+method-set analysis: any <code>error.Error()</code> call site appears to
+reach every error type's <code>Error</code> method. Where a finding
+rests only on such traces, that is noted. Direct traces — e.g.
+<em>"<code>transport.Start</code> calls
+<code>http3.Server.ListenAndServe</code>"</em> — are strong.</li>
+<li><strong>The two tools disagree, and Dependabot is not a
+superset.</strong> <code>govulncheck</code> found a <em>reachable</em>
+vulnerability in <code>golang.org/x/text@v0.38.0</code>
+(<strong>GO-2026-5970</strong>, infinite loop on invalid input, fixed in
+<code>v0.39.0</code>) for which <strong>there is no Dependabot alert at
+all</strong>. Confirmed: no <code>golang.org/x/text</code> alert exists
+in the 204. A Dependabot-only view of Go risk is incomplete.</li>
+</ol>
+<h2 id="ranked-triage">Ranked triage</h2>
+<p>Ranked by (reachability x severity), not severity alone.</p>
+<h3
+id="rank-1--reachable-high-severity-no-fix-exists-githubcomdockerdocker">Rank
+1 — reachable, high severity, <strong>no fix exists</strong>:
+<code>github.com/docker/docker</code></h3>
+<p><code>go.mod</code> pins <code>v28.5.2+incompatible</code>. Four
+advisories, and <code>govulncheck</code> confirms we
+<strong>call</strong> the affected client surface directly. The call
+sites are real and specific —
+<code>internal/clis/openhands/sandbox.go</code> is a Docker-backed
+code-execution sandbox:</p>
+<pre><code>sandbox.go:158  Sandbox.Start     -&gt; client.Client.ContainerCreate
+sandbox.go:218  Sandbox.Execute   -&gt; client.Client.ContainerExecAttach
+sandbox.go:312  Sandbox.CopyFrom  -&gt; client.Client.CopyFromContainer
+sandbox.go:298  Sandbox.CopyTo    -&gt; client.Client.CopyToContainer
+sandbox.go:451  NewSandboxManager -&gt; client.NewClientWithOpts</code></pre>
+<p><code>CopyTo</code>/<code>CopyFrom</code> are exactly the
+<code>docker cp</code> API surface that three of the advisories
+concern:</p>
+<table>
+<thead>
+<tr>
+<th>GHSA</th>
+<th>CVE</th>
+<th>Sev</th>
+<th>Subject</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GHSA-rg2x-37c3-w2rh</td>
+<td>CVE-2026-42306</td>
+<td>high</td>
+<td>race in <code>docker cp</code> -&gt; bind-mount redirection to host
+path</td>
+<td><strong>none</strong></td>
+</tr>
+<tr>
+<td>GHSA-x86f-5xw2-fm2r</td>
+<td>CVE-2026-41567</td>
+<td>high</td>
+<td><code>PUT /containers/{id}/archive</code> executes container binary
+on host</td>
+<td><strong>none</strong></td>
+</tr>
+<tr>
+<td>GHSA-x744-4wpc-v9h2</td>
+<td>CVE-2026-34040</td>
+<td>high</td>
+<td>AuthZ plugin bypass on oversized bodies</td>
+<td>29.3.1</td>
+</tr>
+<tr>
+<td>GHSA-vp62-88p7-qqf5</td>
+<td>CVE-2026-41568</td>
+<td>medium</td>
+<td>race in <code>docker cp</code> -&gt; arbitrary empty files on
+host</td>
+<td><strong>none</strong></td>
+</tr>
+<tr>
+<td>GHSA-pxq6-2prw-chj9</td>
+<td>CVE-2026-33997</td>
+<td>medium</td>
+<td>off-by-one in plugin privilege validation</td>
+<td><strong>none</strong></td>
+</tr>
+</tbody>
+</table>
+<p>This is rank 1 because it is the only cluster that is
+<strong>reachable, high-severity, and mostly unfixable by
+upgrading</strong>. It needs a mitigation decision (is the OpenHands
+sandbox enabled in deployment? can
+<code>CopyTo</code>/<code>CopyFrom</code> be avoided or constrained? is
+the Docker socket exposed to untrusted input?), not a version bump.
+Filed as HXC-169.</p>
+<p>Caveat (§11.4.6): <code>govulncheck</code> proves the <em>client</em>
+symbols are called. Several of these CVEs are daemon-side or require
+attacker influence over copy paths; <strong>whether an attacker can
+influence those paths in our deployment was not determined here</strong>
+and needs the dedicated analysis in HXC-169.</p>
+<h3
+id="rank-2--reachable-high-severity-fix-available-go-git--go-billy">Rank
+2 — reachable, high severity, <strong>fix available</strong>:
+<code>go-git</code> / <code>go-billy</code></h3>
+<p>Called from two real call sites —
+<code>internal/checkpoints/checkpoint.go:57</code>
+(<code>git.PlainOpen</code>) and
+<code>internal/templates/resolver.go:202,205</code>
+(<code>git.Repository.Log</code>, commit iteration):</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Pinned</th>
+<th>GHSA</th>
+<th>Sev</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>go-git/go-billy/v5</code></td>
+<td>v5.8.0</td>
+<td>GHSA-qw64-3x98-g7q2 (CVE-2026-44973) path traversal</td>
+<td>high</td>
+<td>5.9.0</td>
+</tr>
+<tr>
+<td><code>go-git/go-billy/v5</code></td>
+<td>v5.8.0</td>
+<td>GHSA-m3xc-h892-ggx6 (CVE-2026-44740) symlink cycle -&gt; DoS</td>
+<td>medium</td>
+<td>5.9.0</td>
+</tr>
+<tr>
+<td><code>go-git/go-git/v5</code></td>
+<td>v5.18.0</td>
+<td>GHSA-389r-gv7p-r3rp (CVE-2026-45022) object parsing divergence</td>
+<td>high</td>
+<td>5.19.0</td>
+</tr>
+<tr>
+<td><code>go-git/go-git/v5</code></td>
+<td>v5.18.0</td>
+<td>GHSA-m7cr-m3pv-hgrp (CVE-2026-45570) SSH quote escaping</td>
+<td>low</td>
+<td>5.19.1</td>
+</tr>
+</tbody>
+</table>
+<p>Reachable <strong>and</strong> fixable by a minor bump within v5.
+Highest value-per-risk in the whole set. Part of the cheap-wins cluster
+(HXC-170).</p>
+<h3 id="rank-3--reachable-no-dependabot-alert-golangorgxtext">Rank 3 —
+reachable, no Dependabot alert: <code>golang.org/x/text</code></h3>
+<p><strong>GO-2026-5970</strong>, <code>v0.38.0</code> -&gt;
+<code>v0.39.0</code>. Reachable via
+<code>internal/security/guardrails.go:679</code>
+(<code>SystemPromptProtector.Check</code> -&gt;
+<code>digital.Normalize</code> -&gt; <code>norm.Form.String</code>) —
+i.e. on a <strong>security-guardrail input path that processes untrusted
+prompt text</strong>, which is the worst place to have an
+infinite-loop-on-invalid-input defect. Also reached via
+<code>internal/services/debate_service.go:682</code>.</p>
+<p>Ranked above several "high" advisories because it is reachable on an
+attacker-influenced path, trivially fixable, and <strong>invisible to
+the Dependabot list</strong> that the 204 figure comes from.</p>
+<h3 id="rank-4--reachable-fixable-grpc-quic-go-otel">Rank 4 — reachable,
+fixable: <code>grpc</code>, <code>quic-go</code>, <code>otel</code></h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Pinned</th>
+<th>Advisory</th>
+<th>Sev</th>
+<th>Fix</th>
+<th>Trace strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>google.golang.org/grpc</code></td>
+<td>v1.80.0</td>
+<td>GHSA-hrxh-6v49-42gf / GO-2026-6061 xDS RBAC + HTTP/2</td>
+<td>high</td>
+<td>1.82.1</td>
+<td>strong — <code>cmd/grpc-server/main.go:1204</code>
+<code>grpc.Server.Serve</code> -&gt;
+<code>transport.NewServerTransport</code></td>
+</tr>
+<tr>
+<td><code>quic-go/quic-go</code></td>
+<td>v0.59.0</td>
+<td>GHSA-vvgj-x9jq-8cj9 / GO-2026-5676 QPACK trailer memory
+exhaustion</td>
+<td>medium</td>
+<td>0.59.1</td>
+<td>strong — <code>internal/transport/http3.go:124</code>
+<code>Server.ListenAndServe</code>,
+<code>internal/router/quic_server.go:66</code>
+<code>ListenAndServeTLS</code></td>
+</tr>
+<tr>
+<td><code>otel .../otlptracehttp</code></td>
+<td>v1.40.0</td>
+<td>GHSA-w8rr-5gcm-pp58 / GO-2026-4985 unbounded response bodies</td>
+<td>medium</td>
+<td>1.43.0</td>
+<td>strong — <code>internal/observability/exporter.go:88</code>
+<code>otlptracehttp.New</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>grpc</code> is a genuine server-side listener;
+<code>quic-go</code> backs a real HTTP/3 server. Both fixable by
+patch/minor bumps.</p>
+<h3
+id="rank-5--ours-and-deployed-but-reachability-unknown-pluginsmcp-server">Rank
+5 — ours and deployed, but reachability unknown:
+<code>plugins/mcp-server</code></h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Advisory</th>
+<th>Sev</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@modelcontextprotocol/sdk</code></td>
+<td>GHSA-345p-7cg4-v4c7 — DNS rebinding protection not enabled by
+default</td>
+<td>high</td>
+<td>1.24.0 / 1.26.0</td>
+</tr>
+<tr>
+<td><code>ws</code></td>
+<td>memory-exhaustion DoS from tiny fragments</td>
+<td>high</td>
+<td>8.21.0</td>
+</tr>
+</tbody>
+</table>
+<p>No Ground A (it ships) and no Ground B (no JS reachability analysis
+was run). The MCP SDK advisory is configuration-shaped — it concerns a
+default that must be turned on — which makes it worth checking directly
+rather than assuming the upgrade fixes it. Filed as HXC-172.</p>
+<h3
+id="rank-6--sdkweb-22-and-why-it-is-not-simply-dev-scope-ignore">Rank 6
+— <code>sdk/web</code> (22), and why it is not simply "dev-scope,
+ignore"</h3>
+<p>19 of 22 are <code>development</code> scope — <code>handlebars</code>
+(1 critical + 4 high), <code>js-yaml</code>, <code>flatted</code>,
+<code>minimatch</code>. These are build-toolchain packages: they do not
+execute in a user's runtime.</p>
+<p>They are <strong>not</strong> dismissed, because <code>sdk/web</code>
+is <code>helixagent-sdk</code>, and <code>"private"</code> is
+<strong>not</strong> set — i.e. it is publishable. A code-injection
+defect in a <em>build</em> dependency of a package we publish is a
+supply-chain risk to consumers of the SDK, which is a different question
+from runtime exploitability. Ground A does not cleanly apply. Left as
+undetermined-but-tracked rather than ranked low.</p>
+<h3 id="rank-7--t4t5-ground-a-only">Rank 7 — T4/T5, Ground A only</h3>
+<p>GitMCP (139), postgres-mcp ingest (13), Website (6), research
+artifact (2), ci/reporter (1) — 161 advisories. Low priority <strong>on
+Ground A only</strong>: the affected trees are not built into anything
+we run (evidence above). No claim is made that these CVEs are harmless
+or unreachable in the abstract; if any of these directories is ever
+wired into a build, its advisories become live immediately and must be
+re-triaged.</p>
+<h2 id="the-five-critical-advisories">The five critical advisories</h2>
+<p>Severity alone put these at the top; reachability does not keep them
+there. Four of five are <strong>development</strong>-scope, and three of
+five are in the unbuilt GitMCP tree.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Package</th>
+<th>GHSA / CVE</th>
+<th>Manifest</th>
+<th>Scope</th>
+<th>Fix</th>
+<th>Assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>vitest</code></td>
+<td>GHSA-5xrq-8626-4rwp / CVE-2026-47429</td>
+<td><code>GitMCP/pnpm-lock.yaml</code></td>
+<td>development</td>
+<td>3.2.6</td>
+<td>Requires the Vitest <strong>UI server to be listening</strong> — a
+developer running <code>vitest --ui</code>. Not shipped. GitMCP deps
+never installed (Ground A).</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>vitest</code></td>
+<td>same, second manifest</td>
+<td><code>GitMCP/package.json</code></td>
+<td>development</td>
+<td>3.2.6</td>
+<td>Duplicate of #1 across two manifests in the same unbuilt tree.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>handlebars</code></td>
+<td>GHSA-2w6w-674q-4c4q / CVE-2026-33937</td>
+<td><code>sdk/web/package-lock.json</code></td>
+<td>development</td>
+<td>4.7.9</td>
+<td>JS injection via AST type confusion. Build-toolchain of a
+<strong>publishable</strong> SDK -&gt; supply-chain relevance (see Rank
+6). Transitive; no direct pin.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>@react-router/node</code></td>
+<td>GHSA-9583-h5hc-x8cw / CVE-2025-61686</td>
+<td><code>GitMCP/pnpm-lock.yaml</code></td>
+<td><strong>runtime</strong></td>
+<td>7.9.4</td>
+<td>Path traversal in file session storage. The <strong>only
+runtime-scope critical</strong>. Belongs to the vendored Cloudflare
+Workers app we do not build (Ground A).</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>form-data</code></td>
+<td>GHSA-fjxv-7rqg-78g4 / CVE-2025-7783</td>
+<td><code>GitMCP/pnpm-lock.yaml</code></td>
+<td>development</td>
+<td>4.0.4</td>
+<td>Unsafe random for multipart boundary. Unbuilt tree (Ground A).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Net: zero of the five criticals is currently reachable in a
+deployed artifact</strong>, each on Ground A or on documented scope —
+and none of that is a reason to leave them permanently unpatched,
+because the moment GitMCP is wired into a build, #1, #2, #4 and #5 go
+live together.</p>
+<h2 id="go-proven-reachable-set">Go: proven-reachable set</h2>
+<p><code>govulncheck</code> symbol-level: <strong>11 vulnerabilities
+across 7 modules are called by our code.</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>GO id</th>
+<th>Module</th>
+<th>Pinned</th>
+<th>Fix</th>
+<th>Sev (GHSA)</th>
+<th>Strongest trace</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>GO-2026-6061</td>
+<td><code>grpc</code></td>
+<td>1.80.0</td>
+<td>1.82.1</td>
+<td>high</td>
+<td><code>cmd/grpc-server/main.go:1204</code> -&gt;
+<code>Server.Serve</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>GO-2026-5970</td>
+<td><code>x/text</code></td>
+<td>0.38.0</td>
+<td>0.39.0</td>
+<td><em>no alert</em></td>
+<td><code>internal/security/guardrails.go:679</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>GO-2026-5676</td>
+<td><code>quic-go</code></td>
+<td>0.59.0</td>
+<td>0.59.1</td>
+<td>medium</td>
+<td><code>internal/transport/http3.go:124</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>GO-2026-5668</td>
+<td><code>docker</code></td>
+<td>28.5.2</td>
+<td>none</td>
+<td>medium</td>
+<td><code>sandbox.go:298</code> <code>CopyToContainer</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>GO-2026-5597</td>
+<td><code>go-billy</code></td>
+<td>5.8.0</td>
+<td>5.9.0</td>
+<td>high</td>
+<td><code>checkpoint.go:57</code> <code>git.PlainOpen</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>GO-2026-5496</td>
+<td><code>go-git</code></td>
+<td>5.18.0</td>
+<td>5.19.1</td>
+<td>low</td>
+<td><code>resolver.go:202</code> <code>Repository.Log</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>GO-2026-5490</td>
+<td><code>go-billy</code></td>
+<td>5.8.0</td>
+<td>5.9.0</td>
+<td>medium</td>
+<td><code>checkpoint.go:57</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>GO-2026-5074</td>
+<td><code>go-git</code></td>
+<td>5.18.0</td>
+<td>5.19.0</td>
+<td>high</td>
+<td><code>resolver.go:202/205</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>GO-2026-4985</td>
+<td><code>otel otlptracehttp</code></td>
+<td>1.40.0</td>
+<td>1.43.0</td>
+<td>medium</td>
+<td><code>exporter.go:88</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>GO-2026-4887</td>
+<td><code>docker</code></td>
+<td>28.5.2</td>
+<td>none</td>
+<td>high</td>
+<td><code>sandbox.go:158/218</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>GO-2026-4883</td>
+<td><code>docker</code></td>
+<td>28.5.2</td>
+<td>none</td>
+<td>medium</td>
+<td><code>sandbox.go:158/218</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="go-proven-not-reachable-set">Go: proven-NOT-reachable set</h2>
+<p><code>govulncheck -show verbose</code>: 3 imported-but-not-called, 4
+required-but-not-imported. This is Ground B — the strongest available
+basis for deprioritising a Go advisory.</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>GO id</th>
+<th>Module</th>
+<th>Pinned</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>imported, not called</td>
+<td>GO-2026-5841</td>
+<td><code>klauspost/compress</code></td>
+<td>1.18.5</td>
+<td>1.18.7</td>
+</tr>
+<tr>
+<td>imported, not called</td>
+<td>GO-2026-5693</td>
+<td><code>go-git/v5</code></td>
+<td>5.18.0</td>
+<td>5.19.1</td>
+</tr>
+<tr>
+<td>imported, not called</td>
+<td>GO-2026-5336</td>
+<td><code>go-git/v5</code></td>
+<td>5.18.0</td>
+<td>5.19.1</td>
+</tr>
+<tr>
+<td>required, not imported</td>
+<td>GO-2026-5932</td>
+<td><code>x/crypto</code></td>
+<td>0.53.0</td>
+<td>none</td>
+</tr>
+<tr>
+<td>required, not imported</td>
+<td>GO-2026-5746</td>
+<td><code>docker</code></td>
+<td>28.5.2</td>
+<td>none</td>
+</tr>
+<tr>
+<td>required, not imported</td>
+<td>GO-2026-5617</td>
+<td><code>docker</code></td>
+<td>28.5.2</td>
+<td>none</td>
+</tr>
+<tr>
+<td>required, not imported</td>
+<td>GO-2026-4945</td>
+<td><code>go-jose/v3</code></td>
+<td>3.0.4</td>
+<td>3.0.5</td>
+</tr>
+</tbody>
+</table>
+<p>Of note: <strong><code>go-jose/v3</code> GHSA-78h2-9frx-2jm8 (high,
+JWE decryption panics) is required-but-not-imported</strong> — a
+high-severity alert on the Dependabot list that Ground B places at the
+bottom. This is a case where the two oracles differ and the reachability
+answer is the more useful one.</p>
+<h2 id="cheap-wins">Cheap wins</h2>
+<p>Advisories fixed by a patch/minor bump within the same major version
+— no API break expected — grouped so they can land as a small number of
+reviewable changes. <strong>None of these were applied in this
+pass.</strong></p>
+<p><strong>Cluster A — Go, reachable, patch/minor only</strong> (the
+recommended first change, HXC-170). One <code>go get</code> batch, no
+major versions crossed:</p>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>From</th>
+<th>To</th>
+<th>Closes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>github.com/go-git/go-git/v5</code></td>
+<td>5.18.0</td>
+<td>5.19.1</td>
+<td>4 alerts (1 high, 1 low, 2 med) + 2 unreachable</td>
+</tr>
+<tr>
+<td><code>github.com/go-git/go-billy/v5</code></td>
+<td>5.8.0</td>
+<td>5.9.0</td>
+<td>2 alerts (1 high, 1 med)</td>
+</tr>
+<tr>
+<td><code>golang.org/x/text</code></td>
+<td>0.38.0</td>
+<td>0.39.0</td>
+<td>GO-2026-5970 (reachable, no alert)</td>
+</tr>
+<tr>
+<td><code>github.com/quic-go/quic-go</code></td>
+<td>0.59.0</td>
+<td>0.59.1</td>
+<td>1 med (reachable)</td>
+</tr>
+<tr>
+<td><code>google.golang.org/grpc</code></td>
+<td>1.80.0</td>
+<td>1.82.1</td>
+<td>1 high (reachable) x3 manifests</td>
+</tr>
+<tr>
+<td><code>go.opentelemetry.io/otel/exporters/.../otlptracehttp</code></td>
+<td>1.40.0</td>
+<td>1.43.0</td>
+<td>1 med (reachable)</td>
+</tr>
+<tr>
+<td><code>github.com/klauspost/compress</code></td>
+<td>1.18.5</td>
+<td>1.18.7</td>
+<td>1 (unreachable)</td>
+</tr>
+<tr>
+<td><code>github.com/go-jose/go-jose/v3</code></td>
+<td>3.0.4</td>
+<td>3.0.5</td>
+<td>1 high (unreachable)</td>
+</tr>
+</tbody>
+</table>
+<p>Covers <strong>all 11 reachable Go vulnerabilities except the 3
+unfixable Docker ones</strong>, plus the entire unreachable Go set bar
+Docker/x-crypto.</p>
+<p>Caveat: <code>grpc</code> 1.80.0 -&gt; 1.82.1 is a
+<strong>minor</strong> bump, not patch. It should still be low-risk but
+is the one entry in Cluster A warranting a compile-and-test check.
+<code>x/text</code> 0.38 -&gt; 0.39 is a golang.org/x pre-1.0 minor —
+conventionally backward-compatible, but likewise worth the check.</p>
+<p><strong>Cluster B — <code>plugins/mcp-server</code></strong> (ours,
+deployed; HXC-172): <code>ws</code> -&gt; 8.21.0 (patch/minor),
+<code>@modelcontextprotocol/sdk</code> -&gt; 1.24.0+. Small lockfile, 3
+alerts, genuinely shipped — best effort-to-exposure ratio on the npm
+side.</p>
+<p><strong>Not cheap wins, despite looking like it:</strong> the 139
+GitMCP advisories. A lockfile refresh there would be a large diff
+against a vendored upstream tree we do not build — high review cost,
+zero change to deployed exposure. The correct action is the vendoring
+decision (HXC-171), not a bump.</p>
+<h2 id="no-fix-available">No fix available</h2>
+<p>6 of 204 have <strong>no patched version</strong> — they cannot be
+closed by upgrading:</p>
+<table>
+<thead>
+<tr>
+<th>Sev</th>
+<th>Package</th>
+<th>GHSA</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>high</td>
+<td><code>github.com/docker/docker</code></td>
+<td>GHSA-rg2x-37c3-w2rh</td>
+<td><code>go.mod</code> — <strong>reachable</strong></td>
+</tr>
+<tr>
+<td>high</td>
+<td><code>github.com/docker/docker</code></td>
+<td>GHSA-x86f-5xw2-fm2r</td>
+<td><code>go.mod</code> — <strong>reachable</strong></td>
+</tr>
+<tr>
+<td>medium</td>
+<td><code>github.com/docker/docker</code></td>
+<td>GHSA-vp62-88p7-qqf5</td>
+<td><code>go.mod</code> — <strong>reachable</strong></td>
+</tr>
+<tr>
+<td>medium</td>
+<td><code>github.com/docker/docker</code></td>
+<td>GHSA-pxq6-2prw-chj9</td>
+<td><code>go.mod</code> — <strong>reachable</strong></td>
+</tr>
+<tr>
+<td>high</td>
+<td><code>scrapy</code></td>
+<td>GHSA-h7wm-ph43-c39p</td>
+<td>postgres-mcp <code>ingest/</code> — not in image</td>
+</tr>
+<tr>
+<td>low</td>
+<td><code>@ai-sdk/provider-utils</code></td>
+<td>GHSA-866g-f22w-33x8</td>
+<td>GitMCP — not built</td>
+</tr>
+</tbody>
+</table>
+<p>Plus <code>x/crypto</code> GO-2026-5932 (no fix, not imported).</p>
+<p>The four Docker entries are the residue that no upgrade campaign can
+clear, and they are the ones we actually reach. That is the substance of
+HXC-169.</p>
+<h2 id="transitive-only-advisories">Transitive-only advisories</h2>
+<p>Where we do not control the version directly
+(<code>relationship: transitive</code>), a fix requires the direct
+parent to move, or a lockfile override:</p>
+<ul>
+<li><strong>51 runtime-transitive + 43 development-transitive = 94 of
+204.</strong></li>
+<li>Go transitive-and-reachable: <code>go-billy/v5</code> (both
+advisories — pulled by <code>go-git</code>, so the Cluster A
+<code>go-git</code> bump should carry it; <strong>verify the resolved
+version after bumping rather than assuming</strong>),
+<code>go-jose/v3</code> (unreachable).</li>
+<li>npm criticals #3 (<code>handlebars</code>) and #5
+(<code>form-data</code>) are transitive; #4
+(<code>@react-router/node</code>) is transitive.</li>
+<li>16 alerts have <code>relationship: unknown</code> — including the
+<code>grpc</code> high across three manifests — so even the
+direct/transitive split is not fully known.</li>
+</ul>
+<h2 id="what-could-not-be-determined">What could NOT be determined</h2>
+<p>Stated plainly, because these are the gaps that matter more than the
+parts that resolved cleanly.</p>
+<ol type="1">
+<li><p><strong>No reachability analysis was performed for 184 of 204
+advisories</strong> (171 npm + 13 pip). <code>govulncheck</code> is
+Go-only. The npm/pip advisories were classified by <strong>deployment
+surface (Ground A) and declared scope</strong>, never by call-path.
+Specifically:</p>
+<ul>
+<li>The 139 GitMCP advisories are Ground A (not built).
+<strong>Not</strong> assessed for reachability. If the Dockerfile is
+ever added, we have no reachability data.</li>
+<li>The 22 <code>sdk/web</code> advisories: <strong>19 dev-scope, 3
+runtime</strong> — the 3 runtime ones were not reachability-assessed at
+all.</li>
+<li>The 3 <code>plugins/mcp-server</code> advisories — our genuinely
+shipped code — were <strong>not</strong> reachability-assessed. This is
+the most consequential gap, because it is the one place with neither
+Ground A nor Ground B.</li>
+<li>Tools that would close this (<code>npm audit --omit=dev</code>
+against an installed tree, <code>osv-scanner</code>, commercial
+reachability scanners) were <strong>not</strong> run.</li>
+</ul></li>
+<li><p><strong>Exploitability of the reachable Docker advisories was not
+established.</strong> <code>govulncheck</code> proves we call
+<code>CopyToContainer</code>/<code>CopyFromContainer</code>. Whether an
+attacker can influence the paths or archive contents those calls handle
+depends on how the OpenHands sandbox is exposed, and that analysis was
+not done.</p></li>
+<li><p><strong>Whether the OpenHands Docker sandbox is enabled in any
+real deployment</strong> was not determined. If it is compiled in but
+never enabled by configuration, the rank-1 cluster's practical severity
+drops considerably — but that is a configuration question this pass did
+not answer, and it is not safe to assume either way.</p></li>
+<li><p><strong><code>govulncheck</code> analysed the default
+build.</strong> Code behind build tags (e.g. <code>nogui</code>) or
+platform-specific files may add call paths not represented
+here.</p></li>
+<li><p><strong>Runtime/dev scope is Dependabot's classification, taken
+on trust.</strong> It was not independently verified against the
+installed trees.</p></li>
+<li><p><strong>Dependabot is enabled on one mirror only</strong>
+(<code>vasic-digital</code>, not <code>HelixDevelopment</code>). Whether
+other owned repos have similarly unreported advisory backlogs was not
+checked.</p></li>
+<li><p><strong><code>govulncheck</code> found one reachable
+vulnerability Dependabot did not report</strong> (<code>x/text</code>).
+This proves the 204 figure is not an upper bound on Go risk. <strong>No
+equivalent cross-check was possible for npm/pip</strong>, so the true
+npm/pip count may also exceed what Dependabot reports.</p></li>
+</ol>
+<h2 id="honest-boundaries">Honest boundaries</h2>
+<ul>
+<li><strong>This triage does not reduce our exposure by one
+advisory.</strong> Nothing was upgraded. 204 remain open.</li>
+<li><strong>The component is not free of known vulnerabilities.</strong>
+11 Go vulnerabilities are proven-called today, 4 of them with no
+available fix.</li>
+<li><strong>"Not deployed" is a statement about the current
+tree</strong>, verified at <code>c740eaf1</code>. It is invalidated by
+anyone adding a Dockerfile, a workspace glob, or a COPY line. The GitMCP
+and postgres-mcp-ingest conclusions in particular are one commit away
+from being wrong, which is why they are filed as decisions (HXC-171)
+rather than dismissals.</li>
+<li><strong>Absence of a <code>govulncheck</code> finding is good
+evidence, not proof.</strong> Reflection, <code>go:linkname</code>, cgo,
+and dynamic dispatch can defeat static call-graph analysis.</li>
+</ul>
+<h2 id="recommended-follow-up-items">Recommended follow-up items</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Type</th>
+<th>Sev</th>
+<th>Subject</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HXC-169</td>
+<td>Bug</td>
+<td>Critical</td>
+<td>Reachable, unfixable Docker <code>cp</code> advisories — mitigation
+decision</td>
+</tr>
+<tr>
+<td>HXC-170</td>
+<td>Task</td>
+<td>High</td>
+<td>Cheap-wins cluster: 8 Go modules, patch/minor, closes 11 of 18 Go
+advisories</td>
+</tr>
+<tr>
+<td>HXC-171</td>
+<td>Bug</td>
+<td>Medium</td>
+<td>GitMCP vendoring decision + broken <code>mcp-gitmcp</code> compose
+service</td>
+</tr>
+<tr>
+<td>HXC-172</td>
+<td>Task</td>
+<td>High</td>
+<td><code>plugins/mcp-server</code> — reachability-assess and patch the
+3 shipped npm advisories</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sources-verified-2026-07-29">Sources verified 2026-07-29</h2>
+<ul>
+<li>GitHub Dependabot Alerts REST API —
+<code>GET /repos/{owner}/{repo}/dependabot/alerts</code>, API version
+<code>2022-11-28</code> (response header
+<code>X-Github-Api-Version-Selected</code>).</li>
+<li><code>govulncheck</code> from the Go vulnerability database
+(<code>https://pkg.go.dev/vuln/</code>); per-advisory detail pages
+<code>https://pkg.go.dev/vuln/GO-2026-XXXX</code>.</li>
+<li>Advisory metadata (CVE ids, CWE ids, CVSS vectors, patched versions)
+as returned inline by the Dependabot API payload.</li>
+<li>Local build evidence read directly from the tree at
+<code>c740eaf1</code>: <code>docker-compose.protocols.yml</code>,
+<code>mcp-servers/postgres-mcp/Dockerfile</code>,
+<code>mcp-servers/GitMCP/package.json</code>,
+<code>cmd/helixagent/main.go</code>.</li>
+</ul>
+</body>
+</html>
