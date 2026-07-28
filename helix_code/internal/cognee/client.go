@@ -17,6 +17,7 @@ import (
 
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/logging"
+	"dev.helix.code/internal/netutil"
 )
 
 // API path constants for the cognee 1.1.x versioned, auth-required surface.
@@ -61,7 +62,12 @@ type Client struct {
 // against an auth-required server those requests surface the real 401, never
 // a fabricated success.
 func NewClient(cfg *config.CogneeConfig) *Client {
-	baseURL := fmt.Sprintf("http://%s:%d", cfg.Host, cfg.Port)
+	// HXC-185: cfg.Host is operator-supplied, so it can be a bare IPv6
+	// literal. An IPv6 literal is only valid in a URL authority when bracketed
+	// (RFC 3986 §3.2.2); under this module's go1.26 language version net/url
+	// rejects the unbracketed form with `invalid port "::1:8000" after host`,
+	// so every request built from this base URL failed before dialling.
+	baseURL := "http://" + netutil.JoinHostPort(cfg.Host, cfg.Port)
 	if cfg.RemoteAPI != nil && cfg.RemoteAPI.ServiceEndpoint != "" && cfg.Mode == "cloud" {
 		baseURL = cfg.RemoteAPI.ServiceEndpoint
 	}

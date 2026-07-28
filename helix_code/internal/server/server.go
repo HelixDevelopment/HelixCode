@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"dev.helix.code/internal/helixqa"
 	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/mcp"
+	"dev.helix.code/internal/netutil"
 	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/plugins"
 	"dev.helix.code/internal/project"
@@ -189,7 +189,11 @@ func New(cfg *config.Config, db *database.Database, rds *redis.Client) *Server {
 
 	// Create HTTP server
 	server.server = &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Address, cfg.Server.Port),
+		// HXC-185: cfg.Server.Address is operator-supplied and may be a bare
+		// IPv6 literal. "%s:%d" produced "::1:8080", which net.Listen rejects
+		// with "too many colons in address", so ListenAndServe never bound.
+		// Guarded by TestServerAddr_IPv6_Listens.
+		Addr:         netutil.JoinHostPort(cfg.Server.Address, cfg.Server.Port),
 		Handler:      router,
 		ReadTimeout:  time.Duration(cfg.Server.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.Server.WriteTimeout) * time.Second,

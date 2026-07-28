@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
+
+	"dev.helix.code/internal/netutil"
 )
 
 var (
@@ -309,15 +310,15 @@ func (hm *HealthMonitor) getStrategy(serviceName string) HealthCheckStrategy {
 }
 
 func (hm *HealthMonitor) checkTCP(serviceInfo *ServiceInfo) error {
-	// Create address with proper format for IPv6 compatibility
-	var address string
-	if strings.Contains(serviceInfo.Host, ":") {
-		// IPv6 address needs brackets
-		address = fmt.Sprintf("[%s]:%d", serviceInfo.Host, serviceInfo.Port)
-	} else {
-		// IPv4 address or hostname
-		address = fmt.Sprintf("%s:%d", serviceInfo.Host, serviceInfo.Port)
-	}
+	// HXC-185: the previous hand-rolled bracketing added a bracket pair
+	// whenever the host contained a colon — including a host that was ALREADY
+	// bracketed, producing "[[::1]]:<port>", which net.Dial rejects with
+	// "missing port in address". ServiceInfo.Host arrives in both shapes
+	// (net.SplitHostPort strips brackets, a URL authority carries them), so
+	// the join must normalise first. netutil.JoinHostPort brackets exactly
+	// once and is idempotent across both shapes.
+	// Guarded by TestHealthMonitor_checkTCP_IPv6.
+	address := netutil.JoinHostPort(serviceInfo.Host, serviceInfo.Port)
 
 	conn, err := net.DialTimeout("tcp", address, hm.config.CheckTimeout)
 	if err != nil {
@@ -329,7 +330,13 @@ func (hm *HealthMonitor) checkTCP(serviceInfo *ServiceInfo) error {
 }
 
 func (hm *HealthMonitor) checkHTTP(serviceInfo *ServiceInfo) error {
-	url := fmt.Sprintf("http://%s:%d/health", serviceInfo.Host, serviceInfo.Port)
+	// HXC-185: an IPv6 literal is only valid in a URL authority when bracketed
+	// (RFC 3986 §3.2.2). Under this module's go1.26 language version net/url
+	// REJECTS the unbracketed form outright:
+	//   parse "http://::1:34397/health": invalid port "::1:34397" after host
+	// so the health check never reached the service at all.
+	// Guarded by TestHealthMonitor_checkHTTP_IPv6.
+	url := fmt.Sprintf("http://%s/health", netutil.JoinHostPort(serviceInfo.Host, serviceInfo.Port))
 
 	client := &http.Client{
 		Timeout: hm.config.CheckTimeout,

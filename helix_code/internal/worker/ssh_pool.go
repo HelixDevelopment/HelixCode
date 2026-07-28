@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/netutil"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
 )
@@ -602,7 +603,10 @@ func (p *SSHWorkerPool) createSSHClient(config *SSHWorkerConfig) (*ssh.Client, e
 		},
 	}
 
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%d", config.Host, config.Port), sshConfig)
+	// HXC-185: config.Host is operator-supplied and may be a bare IPv6
+	// literal; "%s:%d" produced an address net.Dial rejects with "too many
+	// colons in address". Guarded by TestCreateSSHClient_IPv6_ReachesListener.
+	return ssh.Dial("tcp", netutil.JoinHostPort(config.Host, config.Port), sshConfig)
 }
 
 func (p *SSHWorkerPool) ensureSSHConnection(worker *SSHWorker) error {

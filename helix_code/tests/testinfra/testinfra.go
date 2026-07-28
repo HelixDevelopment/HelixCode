@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/netutil"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -133,33 +134,37 @@ func getEnv(key, defaultValue string) string {
 
 // PostgresURL returns the PostgreSQL connection URL
 func (c *Config) PostgresURL() string {
-	return fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
-		c.PostgresUser, c.PostgresPassword, c.PostgresHost, c.PostgresPort, c.PostgresDB)
+	// HXC-185: bracket IPv6 literals in the authority (RFC 3986 §3.2.2).
+	return fmt.Sprintf("postgresql://%s:%s@%s/%s?sslmode=disable",
+		c.PostgresUser, c.PostgresPassword,
+		netutil.JoinHostPortStr(c.PostgresHost, c.PostgresPort), c.PostgresDB)
 }
 
 // RedisURL returns the Redis connection URL
 func (c *Config) RedisURL() string {
-	return fmt.Sprintf("redis://:%s@%s:%s", c.RedisPassword, c.RedisHost, c.RedisPort)
+	// HXC-185: bracket IPv6 literals in the authority (RFC 3986 §3.2.2).
+	return fmt.Sprintf("redis://:%s@%s", c.RedisPassword,
+		netutil.JoinHostPortStr(c.RedisHost, c.RedisPort))
 }
 
 // CogneeURL returns the Cognee API URL
 func (c *Config) CogneeURL() string {
-	return fmt.Sprintf("http://%s:%s", c.CogneeHost, c.CogneePort)
+	return "http://" + netutil.JoinHostPortStr(c.CogneeHost, c.CogneePort)
 }
 
 // ChromaDBURL returns the ChromaDB API URL
 func (c *Config) ChromaDBURL() string {
-	return fmt.Sprintf("http://%s:%s", c.ChromaDBHost, c.ChromaDBPort)
+	return "http://" + netutil.JoinHostPortStr(c.ChromaDBHost, c.ChromaDBPort)
 }
 
 // QdrantURL returns the Qdrant API URL
 func (c *Config) QdrantURL() string {
-	return fmt.Sprintf("http://%s:%s", c.QdrantHost, c.QdrantPort)
+	return "http://" + netutil.JoinHostPortStr(c.QdrantHost, c.QdrantPort)
 }
 
 // OllamaURL returns the Ollama API URL
 func (c *Config) OllamaURL() string {
-	return fmt.Sprintf("http://%s:%s", c.OllamaHost, c.OllamaPort)
+	return "http://" + netutil.JoinHostPortStr(c.OllamaHost, c.OllamaPort)
 }
 
 // Infrastructure manages test infrastructure services
@@ -297,8 +302,8 @@ func (i *Infrastructure) runScript(ctx context.Context, args ...string) error {
 func (i *Infrastructure) isHealthy(ctx context.Context) bool {
 	// Check if core services are responding
 	services := map[string]string{
-		"chromadb": fmt.Sprintf("http://%s:%s/api/v1/heartbeat", i.config.ChromaDBHost, i.config.ChromaDBPort),
-		"qdrant":   fmt.Sprintf("http://%s:%s/healthz", i.config.QdrantHost, i.config.QdrantPort),
+		"chromadb": "http://" + netutil.JoinHostPortStr(i.config.ChromaDBHost, i.config.ChromaDBPort) + "/api/v1/heartbeat",
+		"qdrant":   "http://" + netutil.JoinHostPortStr(i.config.QdrantHost, i.config.QdrantPort) + "/healthz",
 	}
 
 	for name, url := range services {
@@ -375,7 +380,8 @@ func (i *Infrastructure) GetRedisClient(ctx context.Context) (*redis.Client, err
 	}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", i.config.RedisHost, i.config.RedisPort),
+		// HXC-185: bracket IPv6 literals so the resolver accepts the address.
+		Addr:     netutil.JoinHostPortStr(i.config.RedisHost, i.config.RedisPort),
 		Password: i.config.RedisPassword,
 		DB:       0,
 	})
@@ -419,10 +425,10 @@ func (i *Infrastructure) CheckService(ctx context.Context, service Service) erro
 		url = fmt.Sprintf("%s/api/tags", i.config.OllamaURL())
 
 	case ServicePrometheus:
-		url = fmt.Sprintf("http://%s:%s/-/healthy", i.config.PrometheusHost, i.config.PrometheusPort)
+		url = "http://" + netutil.JoinHostPortStr(i.config.PrometheusHost, i.config.PrometheusPort) + "/-/healthy"
 
 	case ServiceGrafana:
-		url = fmt.Sprintf("http://%s:%s/api/health", i.config.GrafanaHost, i.config.GrafanaPort)
+		url = "http://" + netutil.JoinHostPortStr(i.config.GrafanaHost, i.config.GrafanaPort) + "/api/health"
 
 	default:
 		return fmt.Errorf("unknown service: %s", service)

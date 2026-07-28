@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/netutil"
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/redis/go-redis/v9"
 )
@@ -545,8 +546,12 @@ func NewRedisMemoryProvider(config map[string]interface{}) (*RedisMemoryProvider
 		}
 		opts = parsed
 	} else {
+		// HXC-185: host comes from the provider config map and may be a bare
+		// IPv6 literal; "%s:%d" produced "::1:6379", rejected by the resolver
+		// with "too many colons in address".
+		// Guarded by TestNewRedisMemoryProvider_IPv6_ReachesListener.
 		opts = &redis.Options{
-			Addr:     fmt.Sprintf("%s:%d", host, port),
+			Addr:     netutil.JoinHostPort(host, port),
 			Password: password,
 			DB:       db,
 		}
@@ -865,7 +870,10 @@ func NewMemcachedMemoryProvider(config map[string]interface{}) (*MemcachedMemory
 	}
 
 	if len(servers) == 0 {
-		servers = []string{fmt.Sprintf("%s:%d", host, port)}
+		// HXC-185: bracket IPv6 literals — gomemcache hands the server string
+		// straight to net.ResolveTCPAddr, which rejects "::1:11211".
+		// Guarded by TestNewMemcachedMemoryProvider_IPv6_ReachesListener.
+		servers = []string{netutil.JoinHostPort(host, port)}
 	}
 
 	client := memcache.New(servers...)

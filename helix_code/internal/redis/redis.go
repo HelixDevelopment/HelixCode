@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"dev.helix.code/internal/config"
+	"dev.helix.code/internal/netutil"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -33,8 +34,12 @@ func NewClient(cfg *config.RedisConfig) (*Client, error) {
 		return nil, errors.New(tr(context.Background(), "internal_redis_empty_host", nil))
 	}
 
+	// HXC-185: cfg.Host is operator-supplied, so it can be a bare IPv6
+	// literal. "%s:%d" produced "::1:6379", which the resolver rejects with
+	// "too many colons in address" — the client never dialled at all.
+	// Guarded by TestNewClient_IPv6Host_ReachesRealListener.
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Addr:     netutil.JoinHostPort(cfg.Host, cfg.Port),
 		Password: cfg.Password,
 		DB:       cfg.Database,
 	})

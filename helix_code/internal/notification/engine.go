@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/netutil"
 	"github.com/google/uuid"
 )
 
@@ -477,7 +478,11 @@ func (c *EmailChannel) Send(ctx context.Context, notification *Notification) err
 		c.from, strings.Join(recipients, ", "), notification.Title, notification.Message)
 
 	auth := smtp.PlainAuth("", c.username, c.password, c.smtpServer)
-	addr := fmt.Sprintf("%s:%d", c.smtpServer, c.port)
+	// HXC-185: c.smtpServer is operator-supplied and may be a bare IPv6
+	// literal; "%s:%d" produced an address smtp.SendMail's net.Dial rejects
+	// with "too many colons in address".
+	// Guarded by TestEmailChannel_Send_IPv6_ReachesListener.
+	addr := netutil.JoinHostPort(c.smtpServer, c.port)
 
 	return smtp.SendMail(addr, auth, c.from, recipients, []byte(msg))
 }

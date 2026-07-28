@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/netutil"
 	"github.com/spf13/viper"
 )
 
@@ -1256,8 +1257,11 @@ func GetConfigInfo() (*ConfigInfo, error) {
 	}
 
 	return &ConfigInfo{
-		ConfigPath:    GetConfigPath(),
-		ServerAddress: fmt.Sprintf("%s:%d", cfg.Server.Address, cfg.Server.Port),
+		ConfigPath: GetConfigPath(),
+		// HXC-185: report the same bracketed authority the server actually
+		// binds (internal/server/server.go), so an IPv6 deployment's reported
+		// address is a valid, dialable authority rather than "::1:8080".
+		ServerAddress: netutil.JoinHostPort(cfg.Server.Address, cfg.Server.Port),
 		DatabaseHost:  cfg.Database.Host,
 		RedisEnabled:  cfg.Redis.Enabled,
 		LLMProvider:   cfg.LLM.DefaultProvider,

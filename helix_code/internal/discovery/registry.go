@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"dev.helix.code/internal/netutil"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -40,9 +41,16 @@ type ServiceInfo struct {
 	Healthy       bool              `json:"healthy"`
 }
 
-// Address returns the full address of the service
+// Address returns the full address of the service.
+//
+// HXC-185: Host is supplied by whoever registers the service (configuration,
+// discovery, an operator), so it can be a bare IPv6 literal. Joining that with
+// "%s:%d" produced "::1:8080", which net.Dial rejects with "too many colons in
+// address" and net/url rejects as a URL authority. netutil.JoinHostPort
+// brackets IPv6 literals exactly once, and is idempotent for a host that is
+// already bracketed. Guarded by TestServiceInfo_Address_BracketsIPv6.
 func (s *ServiceInfo) Address() string {
-	return fmt.Sprintf("%s:%d", s.Host, s.Port)
+	return netutil.JoinHostPort(s.Host, s.Port)
 }
 
 // IsExpired checks if the service registration has expired based on TTL
@@ -395,7 +403,9 @@ func (r *ServiceRegistry) checkHTTPHealth(ctx context.Context, service *ServiceI
 		scheme = "http"
 	}
 
-	url := fmt.Sprintf("%s://%s:%d%s", scheme, service.Host, service.Port, healthPath)
+	// HXC-185: bracket IPv6 literals so the authority is a valid URL component
+	// (RFC 3986 §3.2.2). Guarded by TestServiceRegistry_checkHTTPHealth_IPv6.
+	url := fmt.Sprintf("%s://%s%s", scheme, netutil.JoinHostPort(service.Host, service.Port), healthPath)
 
 	// Create HTTP client with timeout
 	client := &http.Client{
@@ -424,7 +434,9 @@ func (r *ServiceRegistry) checkHTTPHealth(ctx context.Context, service *ServiceI
 
 // checkGRPCHealth performs gRPC health check using standard health checking protocol
 func (r *ServiceRegistry) checkGRPCHealth(ctx context.Context, service *ServiceInfo) bool {
-	address := fmt.Sprintf("%s:%d", service.Host, service.Port)
+	// HXC-185: bracket IPv6 literals; grpc.DialContext hands the address to
+	// the same resolver that rejects "::1:8080" with "too many colons".
+	address := netutil.JoinHostPort(service.Host, service.Port)
 
 	// Create gRPC connection with timeout
 	conn, err := grpc.DialContext(
@@ -456,7 +468,9 @@ func (r *ServiceRegistry) checkGRPCHealth(ctx context.Context, service *ServiceI
 
 // checkTCPHealth performs TCP connection health check
 func (r *ServiceRegistry) checkTCPHealth(ctx context.Context, service *ServiceInfo) bool {
-	address := fmt.Sprintf("%s:%d", service.Host, service.Port)
+	// HXC-185: bracket IPv6 literals so net.Dialer accepts the address.
+	// Guarded by TestServiceRegistry_checkTCPHealth_IPv6.
+	address := netutil.JoinHostPort(service.Host, service.Port)
 
 	// Attempt to establish TCP connection
 	var d net.Dialer
