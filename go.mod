@@ -1,4 +1,4 @@
-module dev.helix.code
+module dev.helix.code/meta
 
 go 1.25.2
 
