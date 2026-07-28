@@ -95,6 +95,7 @@ each is reversible only by an explicit amendment to this specification.
 | D-4 | **Direction of the `helix_agent` edge** | **HelixAgent does NOT depend on HelixSkills.** HelixSkills already declares `helix_agent` as *its* dependency. HelixAgent becomes a **client** of a skills source (registered external tool source / MCP client), never an importer. | `02` §4.2: upstream `helix-deps.yaml` declares `HelixDevelopment/HelixAgent` as a dependency of HelixSkills. Inverting it risks a cycle; CONST-051(C) forbids the nested chain that would result. |
 | D-5 | **Fix `03` §7.1 / §7.2 first?** | **Yes — both are Phase P1 preconditions.** No exported `Skill` constructor blocks the loader seam; the discarded CLI dispatcher means auto-trigger is dead in the CLI surface where the runtime signature will be taken. | `03` §7.1 (`grep "func NewSkill\b"` → zero hits), §7.2 (`cmd/cli/main.go:1060` constructs and discards the dispatcher). |
 | D-6 | **Does the 1 174-file corpus migrate?** | **NO — not in this feature.** It stays `vendored`-tier, registered-but-**unactivated**. Moving or removing it is a §11.4.122 event requiring explicit operator confirmation, which this specification does **not** presume. | R-28 + R-19 + §11.4.122. Extracting the corpus removes a tree from HelixAgent; the operator must be asked *before*, not told after. |
+| **D-7** *(taken in P0, T-P0.03.2)* | **Which module identity does the skills seam bind to, given `dev.helix.code` is declared twice?** | **Rename the thin root module to `dev.helix.code/meta`. Bind the skills library to the inner module (`helix_code/`) and to `submodules/skill_registry` — never to the root.** Deferred, deliberately: whether the orphaned root stub is *deleted* (T-P0.03.4 forbids removal in this phase; the §11.4.124 record is captured so a later removal-only commit can cite it). | Measured, not inferred. The duplicate is a **live package collision**: `dev.helix.code/internal/theme` names two disjoint packages — a 204-byte, 5-constant stub at root vs the 52 KB real subsystem inner (`diff -rq` → **zero files in common**). Which one an importer gets depends only on which module directory the build starts from. The rename is safe because the root's *entire* package surface is that one stub and it has **zero importers**; and `git log` shows it is a survivor of `437714ac chore(meta): W7D — delete superseded zero-consumer root Go cluster (~2978 LOC)`, i.e. already-condemned code the sweep missed. Renaming the inner module instead would touch every import in the application. **Reversed by**: evidence that the root identity is load-bearing for a consumer outside the scope searched — no `go.work` exists anywhere and no importer was found, but `cli_agents/` (third-party, not ours to bind) was excluded. |
 
 ---
 
@@ -778,12 +779,98 @@ plausible-sounding design.
 | ~~**U-1**~~ | ~~Whether **L6 Helix LLM** runs as a systemd service on this host.~~ **RESOLVED 2026-07-29 → WIRED.** Enabled, active, running, listening on `:8443` as a systemd **user** service. The earlier "not on PATH" reading was a **false negative** caused by probing system scope only. | Settled by a user-scope probe. The trap is now encoded in FR-046 rather than left to memory. |
 | ~~**U-2**~~ | ~~Whether `HelixDevelopment/specifier` can fill the struck L5 execution role.~~ **NO LONGER LOAD-BEARING.** L5 is deleted rather than substituted (FR-047): the execution role is filled by Spec Kit + Superpowers + Claude Code's own skill/subagent machinery, all already WIRED. `specifier` remains unprobed and is now optional rather than blocking. | Would only need settling if the deletion decision were reversed. |
 | **U-3** | Whether the shadowing effect's **magnitude** on this corpus matches the published curve. The *effect* is established; the local magnitude is not. | FR-019's benchmark. **No threshold may be set before this exists.** |
-| **U-4** | Whether the GitLab `HelixDevelopment` group holds a skills-related repo the catalogue survey missed (the query shape failed). | Re-run the group enumeration with a corrected query. |
-| **U-5** | Whether HelixAgent's `Toolkit/` (own module, 50 Go files), its 693 `MCP/` files and 21 `mcp-servers/` dirs carry a **competing** skill or tool abstraction. Not surveyed. | A targeted survey of those trees before FR-032's seam is built. |
-| **U-6** | CONST-040 conformance: per-capability Skills/Plugins booleans could not be confirmed in the verifier client (only `CapabilityScore float64` was found), and HelixCode's embedded verifier states in a code comment that no runtime probe for Skills/Plugins exists. | Read the verifier `VerificationResult` schema and probe a live verifier response. |
+| ~~**U-4**~~ | ~~Whether the GitLab `HelixDevelopment` group holds a skills-related repo the catalogue survey missed (the query shape failed).~~ **RESOLVED 2026-07-29 → NOTHING MISSED.** The query failed because the GitLab group slug is **`helixdevelopment1`**, not `HelixDevelopment` (`groups/HelixDevelopment/projects` → `404 Group Not Found`; `groups?search=helix` → the real slug). Enumerated: 34 projects, exactly one skills-matching — `helixdevelopment1/helix_skills` — and `git ls-remote` shows **all 8 head SHAs byte-identical** to GitHub `HelixDevelopment/skills` (`main` = `315b56ce` on both). It is a **mirror**, not a second repo. `vasic-digital` (100 projects) yields only `caf-codex-skills`, already known and already excluded as a different repository. | Settled. |
+| ~~**U-5**~~ | ~~Whether HelixAgent's `Toolkit/`, its 693 `MCP/` files and 21 `mcp-servers/` dirs carry a **competing** skill or tool abstraction.~~ **RESOLVED 2026-07-29 → none of the three competes, but D-3 must still re-open.** `Toolkit/` = `unrelated` (a two-provider LLM SDK; registry/client/executor for *providers*, `Toolkit/pkg/toolkit/toolkit.go:8-11`; **no `.go` outside the module imports it**). `MCP/` = `unrelated` (44 vendored third-party repos; the only skills content is upstream **SEP-2640**, marked *"Status: not yet implemented"* at `MCP/submodules/python-sdk/examples/stories/skills/README.md:7`). `mcp-servers/` = `complementary` (**19** dirs, not 21 — see U-10; they *carry* skills as assets, serve none; five ship a `skill-adapter/` scaffold with zero executable files). **The competing abstraction is elsewhere**: `submodules/helix_agent/internal/skills/` already IS what D-3 proposes to build, and a skills→MCP projection already exists but is **unwired** (`internal/skills/protocol_adapter.go:46,124,173,203,627`). See the D-3 re-opening below. | Settled for the three trees; D-3 re-opened explicitly rather than routed around. |
+| ~~**U-6**~~ | ~~CONST-040 conformance: per-capability Skills/Plugins booleans could not be confirmed (only `CapabilityScore float64` was found), and HelixCode's embedded verifier comments that no runtime probe exists.~~ **RESOLVED 2026-07-29 → NO VIOLATION; flags exist and are sourced correctly.** Discrete booleans exist on both sides with identical JSON tags: `helix_code/internal/verifier/types.go:134-139` (`SupportsSkills`/`SupportsPlugins`) and upstream `llms_verifier/.../llmverifier/models.go:193-194`. They are populated by **real probes**, not defaults — `llmverifier/verifier.go:655-656` dispatching `TestSkills` (`:1551`) / `TestPlugins` (`:1586`), where `TestSkills` issues a live `ChatCompletion` and requires the model to reproduce a sentinel token. A **live verifier was captured**: `GET /api/models` → HTTP 200 carrying `"supports_skills"` / `"supports_plugins"` as first-class booleans (`qa-results/hxc159/const040/20260728T210957Z/verifier_response.json`), refuting the "only a float score" premise on the wire. `grep -rnE "Supports(Skills\|Plugins)\s*[:=]\s*true" --include=*.go . \| grep -v _test.go` → **zero hits**: no hardcoded flags in production code. The "no runtime probe" comment (`internal/verifier/embedded_server.go:153`) is **correctly scoped to the embedded fallback path only** and remains accurate; U-6 had lost that scoping. **HelixAgent has no Skills/Plugins capability sites at all** — a documented absence, not a violation. | Settled by schema read + live wire capture. One follow-on: stale doc comments at `types.go:45-53` and `types.go:124-133` now contradict the shipped code (see U-11). |
 | **U-7** | Whether the six unread Bridge documents (NANO_TASK_ENGINE, EXTENSION_DEVELOPMENT, TDD_INTEGRATION, CONSTITUTION_INTEGRATION, SECURITY, APPENDIX) impose obligations not reflected in FR-044…FR-048. | Read all six before the Bridge installer is authored. |
-| **U-8** | Whether the four remaining stale `skills` branches (`helix_skills`, three `worktree-agent-*`) contain anything not already in `main`. Each is measured 0 commits ahead, but their diffs were not read. | `git log main..<ref>` per ref — required by §11.4.124 before any retirement. |
-| **U-9** | The upstream module's true maturity. Its path says `research/mvp` while its content is production-shaped (Dockerfile, systemd unit, 12 migrations, deploy compose, gates). The naming and the maturity disagree. | An upstream decision recorded in the repo, not inferred by us. |
+| **U-8** | Whether the four remaining stale `skills` branches (`helix_skills`, three `worktree-agent-*`) contain anything not already in `main`. Each is measured 0 commits ahead, but their diffs were not read. **NARROWED 2026-07-29:** the full remote ref inventory is captured (`qa-results/hxc159/env_facts/20260728T211327Z/upstream_heads.txt`) and shows the **three `worktree-agent-*` refs share one identical SHA** (`25cb8ca0`), so this is **two** distinct diffs to read, not four: `25cb8ca0` and `helix_skills` @ `06d77bd8`, both against `main` @ `315b56ce`. Still open — no diff has been read. | `git log main..<ref>` for the two distinct SHAs — required by §11.4.124 before any retirement. Needs a fetch; not done in P0 because retirement is not a P0 action. |
+| ~~**U-9**~~ | ~~The upstream module's true maturity — its path says `research/mvp` while its content is production-shaped. The naming and the maturity disagree.~~ **RESOLVED 2026-07-29 → the framing inverts: `research/mvp` is ACCURATE, and the outlier is one stale README line.** U-9 asked for *"an upstream decision recorded in the repo"*, and one exists: `CONTINUATION.md` (repo root, HEAD, Rev 12, 2026-07-18) §1 — *"The MVP skill-graph system … is in **active development**"* — and the research-area `CONTINUATION.md` — *"**PHASE:** P0.5 critical remediation (security + correctness) before feature phases."* The path and upstream's governance docs **agree**; the only contradicting text is `README.md:11` (*"is a production-grade Go application"*) whose build badge points at a URL that is not this repo. **Work-shape verdict: `relocate-and-reconcile`, not `rewrite`** — measured in a `/tmp` clean room, never in the shared tree: `go build ./...` → rc=0 with empty output, `go vet` → rc=0, four binaries link (server 57 MB, worker 31 MB, cli 12 MB, tui 11 MB), and `go test ./...` → rc=0 across 27 of 29 packages. Anti-bluff on that green suite: `-json` per-test verdicts are **950 pass / 119 skip**, the skips explicitly infra-gated on a PostgreSQL that was not booted — green by passing, not by skipping. Module-path coupling is **mechanical**: 139 files / 264 import lines, and **zero** non-`.go` files (Makefile, Dockerfile, yaml, sh) carry the path, so the rename is a substitution rather than a semantic edit. All four corrected Phase-1 findings CONFIRMED (237 tracked `.go`, **0 outside `docs/`** — verified across all 60 refs; no root `go.mod`, and `git check-ignore` rc=1 closes the gitignored-file hypothesis; module `github.com/helixdevelopment/skill-system` differs from canonical `github.com/HelixDevelopment/skills` in **name and case**; **0 tags**, with `heads_count=8` as the connectivity proof that the empty tag list is a real absence and not a silently-failed query). | Settled. Two carry-overs below (U-13, U-14) and a repo-name correction: the local checkout's remote is `HelixDevelopment/**helix_skills**`, which `gh` canonicalises to `HelixDevelopment/**skills**` — same repository via rename-redirect. **Pin `.gitmodules` to the canonical `skills` URL** so the pin does not depend on a redirect surviving. |
+| **U-13** | Upstream's own gaps register is **internally stale**, so its headline cannot be quoted as fact. Its scope header (audit 2026-07-15) says *"53 `.go` files, 0 tests"* while HEAD (2026-07-18) has **237 `.go` and 145 test files**; its summary tables stack three mutually contradictory count blocks (`FIXED 155/TOTAL 157`, `FIXED 40/TOTAL 136`, `FIXED 43`), and G03 appears simultaneously as OPEN-CRITICAL and FIXED. The authoritative per-item `STATUS` lines show **all four CRITICALs closed** (G01 `FIXED 2026-07-18`, G02 `Fixed 2026-07-16`, G03 `FULLY LANDED 2026-07-17` — independently corroborated by importer counts, G04 refuted by direct measurement). **Do not cite "95 open / 2 CRITICAL" as a property of HEAD.** The 60+ HIGH items were not re-audited. | A per-item re-audit of the HIGH band against HEAD, before P3 treats any of them as open work. |
+| **U-14** | Whether upstream's passing suite is **bluff-free**. 950 tests genuinely execute and pass, but **no paired §1.1 mutations were run**, so it is unproven that those assertions *can* fail. Separately, 119 DB-gated tests never ran against a real PostgreSQL and the 12 migrations were never applied. Also unassessed: architectural fit of upstream's data model to the `pkg/skills/` contract — this probe measured buildability and reuse **cost**, not fit. Governance note: 23 bare `t.Skip()` carry no reason and would fail this repo's `make no-silent-skips`. | P3's acceptance gate: paired mutations over the upstream suite, plus a migration run against a booted PostgreSQL. |
+| **U-10** | The `mcp-servers/` count. The plan states **21** directories; a direct census (hidden entries included) measured **19**. Plausible-but-unverified reconciliation: the original count added `external/mcp-servers` + `docs/mcp-servers`. Nothing depends on the number, but an unreconciled count is a stale fact by §11.4.6. | The plan's own name list, or `git log --diff-filter=D -- mcp-servers/` to see whether two were deleted. |
+| **U-11** | HelixCode's verifier doc comments at `internal/verifier/types.go:45-53` and `types.go:124-133` assert *"no populator in this codebase sets these fields yet"* and *"client.go's VerifyModel does a bare `json.Unmarshal`"*. **Both clauses are contradicted by the shipped code** (`client.go:432-443` does a struct-embedded decode plus alias reconciliation) and by the live wire capture under U-6. A stale honesty-comment that *understates* real capability is the mirror image of a PASS-bluff and should not drift. | Nothing — this is settled enough to act on. It needs a low-severity documentation `Task`, not further probing. Deliberately **not** filed here: `docs/workable_items.db` is a shared SSoT with six concurrent writers and tracker regeneration is DEFERRED by the coordinator, so this is disclosed rather than written (§11.4.6 over convenience). |
+| **U-12** | `submodules/skill_registry`'s module identity cannot be fixed in isolation. Four names disagree: repo `vasic-digital/**SkillRegistry**`, module path `dev.helix.**agent**/skillregistry`, `helix_agent`'s replace key `digital.**vasic**.skillregistry` (`submodules/helix_agent/go.mod:279`), checkout path `submodules/skill_**registry**`. Reconciling the module path toward `digital.vasic.skillregistry` — which matches the org **and** every sibling replace in `helix_agent` — would repair `helix_agent`'s replace but simultaneously **break** `helix_llm`'s currently-*correct* one (`submodules/helix_llm/go.mod:108`). The two cannot be changed independently. | A coupled decision taken in the phase that adopts the module, editing both consumers' `go.mod` in one change. Not takeable in P0: it edits submodule source, and P0 is probes only. |
+
+### D-3 is re-opened (T-P0.02.4) — the seam it proposes to build largely exists
+
+P0 was asked to re-open D-3 explicitly if a competing abstraction turned up rather
+than silently route around it. One did — **twice**, and neither instance is in the
+three trees U-5 named.
+
+**(1) `submodules/helix_agent/internal/skills/` already is the abstraction.** It is
+not dormant: it is what backs the four live `/v1/skills` routes, through
+`router.go:1361` → `router.go:341` → `router.go:333-334` → `service.go:64` →
+`registry.go:79` → `parser.go:345`, which walks the tree for
+`strings.ToUpper(info.Name()) == "SKILL.MD"` and loads **1 174** `SKILL.md` files
+from `submodules/helix_agent/skills/` across 15 categories. Both of D-3's clauses
+are affected: it is `internal/`-scoped rather than the "thin pure-data `pkg/`
+loader", so either its pure-data half is lifted to `pkg/` or the seam is
+duplicated; and a **skills→MCP projection already exists but is unwired**
+(`internal/skills/protocol_adapter.go:46` `MCPSkillTool`, `:124`
+`registerSkillAsMCPTool`, plus `:173`, `:203`, `:627`). P6's attachment point is
+therefore plausibly *wire the existing adapter and repoint `SkillsDirectory`*,
+not *build a new seam*.
+
+D-3 also says "over the wire (MCP)" without saying **which** wire. That now needs
+stating: MCP's own skills proposal (**SEP-2640**, `skill://index.json`,
+`@skill`/`@skillDir`) is **unratified and unimplemented** upstream — blocked on
+SEP-2133's `extensions` capability map. What is actually available today is
+HelixAgent's skill-as-ordinary-MCP-tool projection. Building against SEP-2640
+would be building against a proposal.
+
+**(2) `submodules/skill_registry` is a working, tested skills module that nothing
+requires** — a §11.4.74 catalogue hit against P4's plan to build `pkg/skills` from
+scratch. `go test ./...` → `ok dev.helix.agent/skillregistry 0.121s`, exit 0,
+unmodified. It ships `SkillManager` (Register/Get/List/Search/Filter/Enable/Disable/
+Execute/**LoadFromDirectory**/**LoadFromFile**/metrics/handlers/hooks), `SkillExecutor`
+(handler registry, pre/post hooks, timeout, bounded concurrency), `SkillValidator`
+with dependency **cycle detection**, a `SkillStorage` interface with in-memory *and*
+PostgreSQL backends, and i18n. Its `loader.go:26-46` dispatches on format and, for a
+directory, looks for **uppercase `SKILL.md`** — precisely the D-1 canonical schema —
+then unmarshals YAML front-matter into a `Skill` whose tags are `name`,
+`description`, `version`, `category`, **`triggers`**, `tags`, `author`: the Agent
+Skills open standard **plus** HelixCode's `triggers` dialect, already carried as a
+first-class field. That is the D-1 union, already implemented.
+
+**(3) And `pkg/skills` does not exist upstream to be relocated.** `ls
+…/project/pkg` → no such file; zero tracked paths. Under U-9's
+`relocate-and-reconcile` verdict for the *service*, the plan's "consumable
+artefact" is the one genuinely **new-build** sliver — one small package out of 29
+— and it should be a thin façade over the ~1 416 already-exported declarations,
+not a re-implementation. Which sharpens the question P4 must answer: a façade over
+*upstream*, or adoption of `skill_registry`, which already exposes that surface
+and already passes its tests.
+
+**Consequence for the plan, stated plainly:** across the two consumers plus this
+module there are now **three** skills implementations that each parse `SKILL.md`.
+The incorporation is materially more *reconcile-and-wire* than *build*. P4's design
+must dispose of `skill_registry` explicitly — adopt, extend, or supersede with a
+recorded reason — because building `pkg/skills` beside it without that disposal is
+reimplementation where extension was available (§11.4.74). **No such disposal is
+taken here**: P0 is probes and decisions, and this decision belongs to the phase
+that owns the seam.
+
+**How `skill_registry` became unrequired** (§11.4.124 investigate-before-remove,
+recorded now so no later phase has to re-derive it — and note that **nothing is
+proposed for removal**): `helix_agent` commit `415e138a` — *"complete extraction of
+ToolSchema, SkillRegistry, ConversationContext modules"* — extracted it as
+`digital.vasic.skillregistry` and left behind
+`submodules/helix_agent/go.mod:279 replace digital.vasic.skillregistry => ../skill_registry`.
+The extracted repository's `go.mod:1` declares a **different** path,
+`dev.helix.agent/skillregistry`. A `replace` whose key matches no module path can
+never bind; no `require` was ever added either, so the directive is doubly inert. A
+second replace with the **correct** key exists at `submodules/helix_llm/go.mod:108`
+(from `9a98f5a`), also without a `require`, also inert — evidence that consumption
+was intended and that someone later got the key right. Meanwhile `helix_agent` kept
+its own `internal/skills/`, so nothing ever depended on the extracted module and
+nothing regressed. The extraction was simply never finished.
+
+**Two further §11.4.124-class findings, recorded not acted on:** `SkillLoader`
+(`internal/skills/loader.go:29`) has 7 call sites, **all inside `loader_test.go`** —
+the live path bypasses it; and `ProtocolSkillAdapter` is constructed only in
+`protocol_adapter_test.go` and a `doc.go:73` comment. Whether the adapter was ever
+wired and then unwired is **UNCONFIRMED** — no `git log -S` history search was run
+on it.
 
 ### Recorded contradiction — the work item's own environment facts are stale
 
@@ -798,6 +885,31 @@ Consequence for this specification: **no L2 initialisation task is planned** (FR
 Recorded here rather than silently reconciled, because a plan that re-planned a
 completed step would be doing work against a description instead of against the
 artifact — the same failure mode §11.4.6 exists to prevent.
+
+#### T-P0.01 re-measurement, 2026-07-29 — three more contradictions
+
+The contradiction above is now machine-checked rather than remembered, by a
+re-runnable probe: `scripts/probes/hxc159_env_facts.sh`, emitting
+`qa-results/hxc159/env_facts/<run-id>/facts.json` (11 rows, `{assertion, stated,
+measured, verdict, scope_searched, independent_methods}`). Re-run it at the start
+of every phase — facts decay (T-P0.01.5). The first run
+(`20260728T211327Z`, HEAD `833c8d51`) returns:
+
+| Verdict | Rows | Detail |
+|---|---|---|
+| `CONFIRMED` | 5 | `specify` binary present; upstream reachable over SSH (8 heads, **0 tags**, default `main`); `HelixDevelopment/skills` genuinely not a submodule; both consumers declare the stated module identities |
+| `STALE` | 3 | `.specify/` **PRESENT** (mtime 2026-07-29 00:31); `specs/` **PRESENT**; **10** `speckit-*` skills registered where the item implies zero |
+| `CONTRADICTED` | 1 | *"the only 'skills'-matching `.gitmodules` entry is `cli_agents/codex-skills`"* — there are **two**. The second is `[submodule "dependencies/vasic-digital/skill_registry"]` → `path = submodules/skill_registry`, `url = git@github.com:vasic-digital/SkillRegistry.git` (`.gitmodules:393-395`). The item's own fact block missed the most directly relevant existing asset in the repo — the module the D-3 re-opening above turns on. |
+| `GAP-IN-ITEM` | 1 | The item states the two consumers' module identities but is silent on the **thin root module**, which declares `dev.helix.code` — identical to the inner module (R-26). |
+| `PARTIAL` | 1 | U-8 branch inventory captured; per-ref diffs still unread |
+
+**A fourth contradiction, in this repo's own governance rather than in the item:**
+`CLAUDE.md` §3.2 states the root holds `internal/{fix,security,testing,theme}` and
+`cmd/security_test/`. Measured: the root holds **`internal/theme` only** — `fix` and
+`security` live in the inner module, `testing` exists in neither, and there is no
+root `cmd/` at all (`go list ./cmd/...` → `lstat ./cmd/: no such file or directory`).
+Recorded, not corrected: `CLAUDE.md` is shared governance with six concurrent
+agents live, and editing it is outside a probes-only phase.
 
 ### Disclosure — one file was written, not merely planned
 
