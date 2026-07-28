@@ -1,0 +1,2197 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HXC-159 06_risk_register</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HXC-159 06_risk_register</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#hxc-159--advance-risk-register"
+id="toc-hxc-159--advance-risk-register">HXC-159 — Advance Risk
+Register</a>
+<ul>
+<li><a href="#table-of-contents" id="toc-table-of-contents">Table of
+contents</a></li>
+<li><a href="#1-how-to-read-this-register"
+id="toc-1-how-to-read-this-register">1. How to read this
+register</a></li>
+<li><a href="#2-critical-risks" id="toc-2-critical-risks">2. Critical
+risks</a>
+<ul>
+<li><a
+href="#r-19--executing-the-task-as-literally-worded-would-make-both-agents-measurably-worse"
+id="toc-r-19--executing-the-task-as-literally-worded-would-make-both-agents-measurably-worse">R-19
+— Executing the task as literally worded would make both agents
+measurably WORSE</a></li>
+<li><a
+href="#r-01--the-tasks-premise-does-not-hold-helixskills-ships-nothing-to-incorporate"
+id="toc-r-01--the-tasks-premise-does-not-hold-helixskills-ships-nothing-to-incorporate">R-01
+— The task's premise does not hold: HelixSkills ships nothing to
+incorporate</a></li>
+<li><a
+href="#r-02--nested-own-org-submodule-chain-adding-skills-violates-const-051c"
+id="toc-r-02--nested-own-org-submodule-chain-adding-skills-violates-const-051c">R-02
+— Nested own-org submodule chain: adding <code>skills</code> violates
+CONST-051(C)</a></li>
+<li><a
+href="#r-03--live-46-commit-constitution-pin-skew-with-measurable-capability-loss"
+id="toc-r-03--live-46-commit-constitution-pin-skew-with-measurable-capability-loss">R-03
+— Live 46-commit constitution pin skew, with measurable capability
+loss</a></li>
+</ul></li>
+<li><a href="#3-high-risks" id="toc-3-high-risks">3. High risks</a>
+<ul>
+<li><a
+href="#r-04--three-disjoint-skills-corpora-with-zero-reconciliation-and-zero-name-overlap"
+id="toc-r-04--three-disjoint-skills-corpora-with-zero-reconciliation-and-zero-name-overlap">R-04
+— Three disjoint skills corpora with zero reconciliation and zero name
+overlap</a></li>
+<li><a
+href="#r-05--skill-filename-case-is-split-one-skill-has-no-document-at-all"
+id="toc-r-05--skill-filename-case-is-split-one-skill-has-no-document-at-all">R-05
+— Skill filename case is split; one skill has no document at
+all</a></li>
+<li><a
+href="#r-06--a-tracked-already-broken-skill-symlink-points-at-a-foreign-os-path"
+id="toc-r-06--a-tracked-already-broken-skill-symlink-points-at-a-foreign-os-path">R-06
+— A tracked, already-broken skill symlink points at a foreign-OS
+path</a></li>
+<li><a
+href="#r-07--cross-consumer-capability-parity-has-no-enforcing-mechanism"
+id="toc-r-07--cross-consumer-capability-parity-has-no-enforcing-mechanism">R-07
+— Cross-consumer capability parity has no enforcing mechanism</a></li>
+<li><a
+href="#r-08--test-surface-explosion-makes-114169-unaffordable-if-scoped-naively"
+id="toc-r-08--test-surface-explosion-makes-114169-unaffordable-if-scoped-naively">R-08
+— Test-surface explosion makes §11.4.169 unaffordable if scoped
+naively</a></li>
+</ul></li>
+<li><a href="#4-medium-risks" id="toc-4-medium-risks">4. Medium
+risks</a>
+<ul>
+<li><a
+href="#r-09--host-lacks-x11gl-headers-any-gui-adjacent-skill-surface-cannot-build-here"
+id="toc-r-09--host-lacks-x11gl-headers-any-gui-adjacent-skill-surface-cannot-build-here">R-09
+— Host lacks X11/GL headers; any GUI-adjacent skill surface cannot build
+here</a></li>
+<li><a
+href="#r-10--114228s-mandated-extensions-catalogue-does-not-exist-in-helixcode"
+id="toc-r-10--114228s-mandated-extensions-catalogue-does-not-exist-in-helixcode">R-10
+— §11.4.228's mandated extensions catalogue does not exist in
+HelixCode</a></li>
+<li><a
+href="#r-11--governance-load-per-new-submodule-is-real-and-easy-to-half-do"
+id="toc-r-11--governance-load-per-new-submodule-is-real-and-easy-to-half-do">R-11
+— Governance load per new submodule is real and easy to half-do</a></li>
+<li><a
+href="#r-12--mcpjson-hard-codes-constitution-skill-paths-re-coupling-the-consumer"
+id="toc-r-12--mcpjson-hard-codes-constitution-skill-paths-re-coupling-the-consumer">R-12
+— <code>.mcp.json</code> hard-codes constitution skill paths,
+re-coupling the consumer</a></li>
+<li><a
+href="#r-13--stale-branches-in-the-source-repo-invite-integrating-the-wrong-ref"
+id="toc-r-13--stale-branches-in-the-source-repo-invite-integrating-the-wrong-ref">R-13
+— Stale branches in the source repo invite integrating the wrong
+ref</a></li>
+<li><a
+href="#r-14--skill-content-is-executable-instruction-a-malicious-or-buggy-skill-is-a-live-attack-surface"
+id="toc-r-14--skill-content-is-executable-instruction-a-malicious-or-buggy-skill-is-a-live-attack-surface">R-14
+— Skill content is executable instruction: a malicious or buggy skill is
+a live attack surface</a></li>
+</ul></li>
+<li><a href="#5-bridge-integration-risks-added-rev-2-and-resolved-items"
+id="toc-5-bridge-integration-risks-added-rev-2-and-resolved-items">5.
+Bridge-integration risks (added Rev 2) and resolved items</a>
+<ul>
+<li><a
+href="#r-20--the-middle-of-the-speckitsuperpowers-bridge-is-designed-but-not-installed"
+id="toc-r-20--the-middle-of-the-speckitsuperpowers-bridge-is-designed-but-not-installed">R-20
+— The middle of the SpecKit↔︎Superpowers Bridge is designed but NOT
+installed</a></li>
+<li><a
+href="#r-21--red_circle-the-bridges-execution-layer-does-not-exist-and-two-of-the-three-remaining-layers-are-single-maintainer-hobby-projects"
+id="toc-r-21--red_circle-the-bridges-execution-layer-does-not-exist-and-two-of-the-three-remaining-layers-are-single-maintainer-hobby-projects">R-21
+— 🔴 The Bridge's execution layer DOES NOT EXIST, and two of the three
+remaining layers are single-maintainer hobby projects</a></li>
+<li><a
+href="#r-22b--namespace-collision-is-narrower-than-feared-but-the-biting-case-is-undocumented"
+id="toc-r-22b--namespace-collision-is-narrower-than-feared-but-the-biting-case-is-undocumented">R-22b
+— Namespace collision is narrower than feared, but the biting case is
+undocumented</a></li>
+<li><a
+href="#r-22--claudeskills-namespace-collision--now-real-and-silent"
+id="toc-r-22--claudeskills-namespace-collision--now-real-and-silent">R-22
+— <code>.claude/skills/</code> namespace collision — now REAL, and
+silent</a></li>
+<li><a
+href="#r-23--a-third-constitution-now-exists-in-this-repo-const-059-canonical-root-ambiguity"
+id="toc-r-23--a-third-constitution-now-exists-in-this-repo-const-059-canonical-root-ambiguity">R-23
+— A third constitution now exists in this repo (CONST-059 canonical-root
+ambiguity)</a></li>
+<li><a
+href="#r-24--114164-auto-propagation-is-only-half-wired-the-consumer-registrars-do-not-exist"
+id="toc-r-24--114164-auto-propagation-is-only-half-wired-the-consumer-registrars-do-not-exist">R-24
+— §11.4.164 auto-propagation is only half-wired: the consumer registrars
+do not exist</a></li>
+<li><a
+href="#r-25--replace-directives-are-ignored-outside-the-main-module-10-already-in-play"
+id="toc-r-25--replace-directives-are-ignored-outside-the-main-module-10-already-in-play">R-25
+— <code>replace</code> directives are ignored outside the main module
+(10 already in play)</a></li>
+<li><a href="#r-26--root-and-inner-modules-declare-the-same-module-path"
+id="toc-r-26--root-and-inner-modules-declare-the-same-module-path">R-26
+— Root and inner modules declare the SAME module path</a></li>
+<li><a
+href="#r-27--speckittaskstoissues-forks-the-workable-items-single-source-of-truth"
+id="toc-r-27--speckittaskstoissues-forks-the-workable-items-single-source-of-truth">R-27
+— <code>/speckit.taskstoissues</code> forks the workable-items single
+source of truth</a></li>
+<li><a href="#r-28--corpus-2-is-not-reusable-as-is-formerly-r-18"
+id="toc-r-28--corpus-2-is-not-reusable-as-is-formerly-r-18">R-28 —
+Corpus 2 is not reusable as-is (formerly R-18)</a></li>
+<li><a href="#resolved-from-rev-1" id="toc-resolved-from-rev-1">Resolved
+from Rev 1</a></li>
+</ul></li>
+<li><a href="#6-summary-table" id="toc-6-summary-table">6. Summary
+table</a></li>
+<li><a href="#7-honest-boundary" id="toc-7-honest-boundary">7. Honest
+boundary</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="hxc-159--advance-risk-register">HXC-159 — Advance Risk
+Register</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td><code>06_risk_register.md</code></td>
+</tr>
+<tr>
+<td><strong>Work item</strong></td>
+<td>HXC-159 (Task, In-progress, High)</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td>1b — advance risk detection (BEFORE implementation)</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>Last modified</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Author</strong></td>
+<td><code>(T1/main - claude1 - opus - xhigh)</code></td>
+</tr>
+<tr>
+<td><strong>Status summary</strong></td>
+<td><strong>29 risks</strong> enumerated. 27 EVIDENCED (measured this
+session), 2 ANTICIPATED. <strong>5 rated CRITICAL.</strong> Each carries
+a designed mitigation + proof plan. Rev 2 folds in the complete
+§11.4.150 research return (<code>04_deep_research.md</code>) and the
+mid-flight Bridge requirement.</td>
+</tr>
+<tr>
+<td><strong>Anchors</strong></td>
+<td>Operator mandate (gaps detected <em>in advance</em>, tackled with
+rock-solid risk-free solutions) · §11.4.6 · §11.4.28(C)/CONST-051(C) ·
+§11.4.169 · §11.4.157 · §11.4.31/CONST-054 · §11.4.36/CONST-056 ·
+§11.4.30 · §11.4.77 · §11.4.164 · §11.4.228 · CONST-059</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Revision 2 changes.</strong> Added R-19 (skill shadowing —
+now the single most dangerous risk) and R-20…R-28 (Bridge layers,
+namespace collision, third constitution, <code>replace</code> semantics,
+duplicate module path, registrar gap, tracker fork). Upgraded R-05 and
+R-14 from partial to fully EVIDENCED. Resolved R-15/R-16/R-17 from
+ANTICIPATED using cited research.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-how-to-read-this-register">How to read this
+register</a></li>
+<li><a href="#2-critical-risks">Critical risks</a></li>
+<li><a href="#3-high-risks">High risks</a></li>
+<li><a href="#4-medium-risks">Medium risks</a></li>
+<li><a href="#5-anticipated-risks-pending-research">Anticipated risks
+pending research</a></li>
+<li><a href="#6-summary-table">Summary table</a></li>
+<li><a href="#7-honest-boundary">Honest boundary</a></li>
+</ol>
+<hr />
+<h2 id="1-how-to-read-this-register">1. How to read this register</h2>
+<p>The operator's mandate is explicit that this is a
+<strong>planning</strong> deliverable:</p>
+<blockquote>
+<p>"Any gaps, shortcomings, weak spots, danger zones, issues, or any
+inconsistencies MUST BE detected in advance during the planning and
+implementation process and properly tackled with comprehensive
+rock-solid solutions implementations, risk-free and safe!"</p>
+</blockquote>
+<p>So every row carries four fields, and a row without a designed
+mitigation is not a row — it is an unfinished one.</p>
+<p>Each risk is labelled by evidence class, per §11.4.6:</p>
+<ul>
+<li><strong>EVIDENCED</strong> — measured in this session; the command
+and its output are shown. A fact.</li>
+<li><strong>ANTICIPATED</strong> — a structural consequence reasoned
+from evidenced facts, or a risk whose confirming research is still in
+flight. Explicitly <em>not</em> a fact.</li>
+</ul>
+<p>Nothing here is labelled from memory or assumption.</p>
+<hr />
+<h2 id="2-critical-risks">2. Critical risks</h2>
+<h3
+id="r-19--executing-the-task-as-literally-worded-would-make-both-agents-measurably-worse">R-19
+— Executing the task as literally worded would make both agents
+measurably WORSE</h3>
+<p><strong>Class:</strong> EVIDENCED (peer-reviewed measurement +
+measured local corpus size) · <strong>Severity:</strong> CRITICAL</p>
+<p><strong>What it is.</strong> This is the §11.4.150(C) "bigger
+underlying problem", and it is the most dangerous item in this register
+because it is <strong>invisible to every test that would be written for
+HXC-159</strong>.</p>
+<p>Databricks, <em>More Skills, Worse Agents? Skill Shadowing Degrades
+Performance When Expanding Skill Libraries</em> (arXiv:2605.24050v1,
+2026-05-21) — SkillsBench, 38 oracle (task, model) pairs, 2,545
+trajectories, Claude Haiku 4.5 + Sonnet 4.6:</p>
+<table>
+<thead>
+<tr>
+<th>Library size</th>
+<th>Pass-rate change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>52 skills</td>
+<td><strong>−8 %</strong></td>
+</tr>
+<tr>
+<td>102 skills</td>
+<td><strong>−14 %</strong></td>
+</tr>
+<tr>
+<td><strong>202 skills</strong></td>
+<td><strong>−21 %</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>"Skill shadowing accounts for up to <strong>68 %</strong> of
+degradation at maximum library size, while <strong>context overhead
+remains statistically indistinguishable from zero</strong>."</p>
+</blockquote>
+<p>Failure mode is model-dependent: Haiku <em>abandons</em> (selects no
+skill, −26 % at 202); Sonnet <em>mis-selects</em> (−15 %). Corroborated
+independently: tool-selection accuracy "drops from above 90 % with fewer
+than 30 candidates to 13.6 % with 11,100 options."</p>
+<p><strong>The local corpus is 5.8× past the worst point ever
+measured.</strong> <code>05_catalogue_survey.md</code> counted
+<strong>1174 <code>SKILL.md</code></strong> files in
+<code>submodules/helix_agent/skills/</code>. The study's worst case is
+202. The curve is monotonically worsening at every sampled point.</p>
+<p><strong>Blast radius if unaddressed.</strong> "Fully incorporate… all
+power-features, nothing left out", read as <em>register every skill into
+one namespace</em>, is <strong>precisely the configuration the
+literature says degrades the agent</strong>. Both consumers get worse at
+their jobs while every unit, integration and gate test stays green —
+pass-rate degradation of this kind only shows up in end-to-end task
+success. It is a false-green of exactly the class §11.4 exists to
+prevent, and no amount of test coverage on the <em>loader</em> would
+catch it.</p>
+<p>Critically, <strong>the intuitive mitigations fix the wrong
+variable.</strong> The instinctive worry is token cost; the measurement
+says token cost is statistically zero and the damage is <strong>semantic
+interference between competing <code>description</code> fields</strong>.
+Trimming prose, shortening SKILL.md bodies, or leaning on progressive
+disclosure does nothing — Level-1 descriptions are <em>always</em>
+loaded and <em>always</em> compete.</p>
+<p><strong>Mitigation (designed).</strong> Never mount the whole
+library. Four cooperating rules:</p>
+<ol type="1">
+<li><strong>Per-consumer opt-in subsets.</strong> Each consumer declares
+the skill <em>sets</em> it activates; the default is none. Registration
+is an explicit allowlist, not a directory walk.</li>
+<li><strong>Hard active-count ceiling</strong>, enforced at load time —
+the loader refuses to activate more than N skills and names the
+offender. N is <strong>calibrated on this project's own
+fixtures</strong> (§11.4.6 — never borrowed from the paper's 202).</li>
+<li><strong>Description-disambiguation gate.</strong> Compute pairwise
+similarity across active <code>description</code> fields; fail on any
+pair above the calibrated threshold, since overlapping descriptions are
+the measured shadowing mechanism.</li>
+<li><strong>Namespacing</strong>
+(<code>&lt;source&gt;.&lt;name&gt;</code>) so growth in one source
+cannot retroactively shadow another (composes with R-04).</li>
+</ol>
+<p><strong>Proof plan.</strong> This risk is uniquely one where a gate
+is <em>not</em> sufficient — the harm is behavioural, so the proof must
+be behavioural. Build a <strong>local SkillsBench analogue</strong>: a
+fixed task set with known-correct skill selection, run at increasing
+active-library sizes, recording pass-rate per size. That curve is the
+calibration evidence for the ceiling in (2) and the threshold in (3),
+and it is re-run as a performance-type test (§11.4.169) on every corpus
+change. Gate <code>CM-ACTIVE-SKILL-CEILING</code> enforces the
+calibrated ceiling; paired §1.1 mutation: raise the ceiling past the
+measured knee → the benchmark test MUST show the regression. Evidence at
+<code>qa-results/hxc159/shadowing_curve/&lt;run-id&gt;/</code>.</p>
+<p><strong>Honest boundary (§11.4.6).</strong> The study measures Haiku
+4.5 / Sonnet 4.6 on SkillsBench, not HelixCode on its own corpus. The
+<em>effect</em> is established; its <em>magnitude here</em> is not, and
+must be measured before any threshold is fixed. What is not in doubt is
+the direction, and that 1174 is far outside the measured range.</p>
+<hr />
+<h3
+id="r-01--the-tasks-premise-does-not-hold-helixskills-ships-nothing-to-incorporate">R-01
+— The task's premise does not hold: HelixSkills ships nothing to
+incorporate</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+CRITICAL</p>
+<p><strong>What it is.</strong> HXC-159 says "fully incorporate the
+HelixSkills System into HelixCode + HelixAgent — all power-features,
+nothing left out". Measured against
+<code>HelixDevelopment/skills@315b56ce</code> (complete recursive tree,
+<code>truncated: false</code>), there is no consumable artifact:</p>
+<table>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.go</code> files outside <code>docs/</code></td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>go.mod</code> at root</td>
+<td><strong>absent</strong> (only
+<code>docs/research/mvp/Agent_AI_Skill_Tree_Development/project/go.mod</code>)</td>
+</tr>
+<tr>
+<td><code>SKILL.md</code> files</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td><code>helix-deps.yaml</code> at root</td>
+<td><strong>absent</strong></td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>4 shell scripts, all <code>*constitution_inheritance*</code> — none
+test the skills system</td>
+</tr>
+<tr>
+<td>GitHub-detected language</td>
+<td><strong>Shell</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Its own README (Revision 3) states it installs seven skills, all of
+which live at <code>constitution/skills/&lt;name&gt;/</code> — and
+HelixCode already vendors that directory with exactly those seven
+entries.</p>
+<p><strong>Blast radius if unaddressed.</strong> An implementation plan
+written against the stated premise produces phases and tasks for a
+payload that does not exist. Work is declared done against a submodule
+pointer that adds no capability, while the real gap (no loader, no
+reconciliation, no format normalisation) is never scheduled. This is a
+§11.4 planning-layer bluff: green tasks, zero user-visible
+capability.</p>
+<p><strong>Mitigation (designed).</strong> Re-scope HXC-159 from
+<em>incorporate</em> to <strong>build-then-incorporate</strong>, in this
+order, and record the re-scope on the item itself so the premise change
+is visible rather than silently absorbed:</p>
+<ol type="1">
+<li><strong>Phase A — extend the source (§11.4.74 Verdict 1).</strong>
+Promote the research MVP out of <code>docs/research/…/project/</code>
+into a real root module in <code>HelixDevelopment/skills</code>; add a
+root <code>helix-deps.yaml</code> (CONST-054). Upstream this to the
+<code>skills</code> repo — never re-implement as a HelixCode-local
+helper.</li>
+<li><strong>Phase B — normalise the corpus</strong> (see R-05) so a
+loader has a well-defined input.</li>
+<li><strong>Phase C — build the loader</strong> (§11.4.74 Verdict 7
+<code>no-match</code>) <em>inside</em> the <code>skills</code>
+repo.</li>
+<li><strong>Phase D — incorporate</strong> into both consumers, at the
+root layout R-02 requires.</li>
+</ol>
+<p>An incorporation phase MUST NOT be scheduled before Phase C
+exists.</p>
+<p><strong>Proof plan.</strong> Pre-build gate
+<code>CM-HXC159-SOURCE-CONSUMABLE</code>: fails while
+<code>HelixDevelopment/skills</code> at the pinned SHA has no root
+<code>go.mod</code> <strong>and</strong> no
+<code>helix-deps.yaml</code>. Paired §1.1 mutation: point the gate at
+the pre-Phase-A SHA → gate MUST fail. Evidence: gate output at
+<code>qa-results/hxc159/source_consumable/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h3
+id="r-02--nested-own-org-submodule-chain-adding-skills-violates-const-051c">R-02
+— Nested own-org submodule chain: adding <code>skills</code> violates
+CONST-051(C)</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+CRITICAL</p>
+<p><strong>What it is.</strong> <code>HelixDevelopment/skills</code> has
+exactly one submodule, and it is <code>constitution</code>:</p>
+<pre><code>$ gh api repos/HelixDevelopment/skills/contents/.gitmodules | base64 -d
+[submodule &quot;constitution&quot;]
+    path = constitution
+    url = git@github.com:HelixDevelopment/HelixConstitution.git</code></pre>
+<p>HelixCode already carries <code>constitution/</code> at its own root.
+Adding <code>skills</code> as a submodule therefore places the
+<em>same</em> own-org dependency at two paths under one checkout, pinned
+independently — precisely what CONST-051(C) / §11.4.28(C) forbid:</p>
+<blockquote>
+<p>Nested own-org submodule chains are FORBIDDEN. Add the dependency at
+HelixCode's root; the consuming submodule reaches it via documented
+import/SDK/runtime resolver — never via its own nested
+<code>.gitmodules</code> entry.</p>
+</blockquote>
+<p><strong>Blast radius if unaddressed.</strong> Two
+<code>constitution</code> trees on disk; governance gates that glob
+<code>constitution/**</code> see two different rule sets; the §11.4.157
+five-carrier cascade has two targets to keep in lockstep and will drift;
+and R-03's skew becomes structural rather than incidental. It is also a
+release blocker on its own terms.</p>
+<p><strong>Mitigation (designed).</strong> Root-level sibling layout
+with the nested chain removed:</p>
+<pre><code>&lt;repo-root&gt;/
+├── constitution/          ← single source of truth, one pin
+└── submodules/skills/     ← nested constitution/ NOT initialised</code></pre>
+<p>Concretely: add <code>skills</code> at <code>submodules/skills</code>
+per the grouped layout already used by the other 20+ entries in
+<code>.gitmodules</code>; do <strong>not</strong> recurse its
+<code>constitution</code> submodule
+(<code>git submodule update --init</code> without
+<code>--recursive</code> for that path, and an explicit
+<code>submodule.submodules/skills/constitution.update = none</code>
+entry); and have <code>skills</code> resolve its constitution through a
+documented <strong>config-injected path</strong> (env var, e.g.
+<code>HELIX_CONSTITUTION_DIR</code>, defaulting to
+<code>../../constitution</code>) rather than a nested checkout. The
+config-injection form is required anyway by §11.4.28(B) —
+<code>skills</code> must stay project-not-aware.</p>
+<p>Upstream, the durable fix is to remove the nested pin from
+<code>skills</code> entirely and document the resolver, so no consumer
+has to special-case it.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-NO-NESTED-OWN-ORG-CHAIN</code>: walk every initialised
+submodule's <code>.gitmodules</code> for own-org URLs
+(<code>HelixDevelopment/*</code>, <code>vasic-digital/*</code>) that
+also appear at the root; any hit fails. Paired §1.1 mutation: initialise
+<code>submodules/skills/constitution</code> → gate MUST fail.
+Integration proof:
+<code>find . -name Constitution.md -path '*/constitution/*'</code>
+returns exactly one path. Evidence at
+<code>qa-results/hxc159/layout/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h3
+id="r-03--live-46-commit-constitution-pin-skew-with-measurable-capability-loss">R-03
+— Live 46-commit constitution pin skew, with measurable capability
+loss</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+CRITICAL</p>
+<p><strong>What it is.</strong> The two pins already disagree, today,
+before any work:</p>
+<pre><code>HelixCode  constitution pin: ce3331a1  (2026-07-28 15:19:07 +0500) = upstream tip
+skills     constitution pin: 68875c7a  (2026-07-18 03:42:37 +0500)
+
+$ git -C constitution log --oneline 68875c7a..ce3331a1 | wc -l
+46</code></pre>
+<p>And the skew is <strong>not cosmetic</strong> — it changes the skills
+payload:</p>
+<pre><code>$ git -C constitution diff --stat 68875c7a..ce3331a1 -- skills/
+ skills/reporting-workable-items/SKILL.docx | Bin 14458 -&gt; 14458 bytes
+ skills/reporting-workable-items/SKILL.pdf  | Bin 80490 -&gt; 80489 bytes
+ skills/workable-item-lifecycle/SKILL.docx  | Bin 0 -&gt; 14102 bytes
+ skills/workable-item-lifecycle/SKILL.html  | 496 +++++++++++++++++++++
+ skills/workable-item-lifecycle/SKILL.pdf   | Bin 0 -&gt; 79245 bytes
+ 5 files changed, 496 insertions(+)</code></pre>
+<p><code>workable-item-lifecycle</code>'s rendered documents <strong>do
+not exist at the pin HelixSkills carries</strong>. A consumer resolving
+through HelixSkills gets a demonstrably smaller skill set than one
+resolving through HelixCode.</p>
+<p><strong>Blast radius if unaddressed.</strong> Two consumers silently
+expose different skill sets; a skill "works" in HelixCode and is absent
+in HelixAgent with no error anywhere; validation passes against
+whichever tree the test happened to resolve. This is the §11.4.108
+SOURCE→RUNTIME gap at the dependency layer.</p>
+<p><strong>Mitigation (designed).</strong> R-02's single-root layout
+structurally removes the <em>second</em> pin — with one
+<code>constitution/</code>, skew becomes impossible by construction
+rather than by discipline. That is the rock-solid form and it is
+preferred.</p>
+<p>Where a second pin cannot yet be removed (during the transition), add
+a <strong>pin-equality gate</strong> that compares
+<code>git ls-tree HEAD constitution</code> across every consumer and
+fails on inequality, plus a scheduled
+<code>git submodule update --remote</code> that advances all consumers
+together in one commit.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-CONSTITUTION-PIN-SINGLE</code>: assert exactly one
+<code>constitution</code> gitlink in the whole tree; if a transition
+period requires two, assert their SHAs are byte-equal. Paired §1.1
+mutation: reset one pin back to <code>68875c7a</code> → gate MUST fail.
+Runtime proof (§11.4.108): the loader reports its resolved constitution
+SHA at startup, and a test asserts it equals
+<code>git ls-tree HEAD constitution</code>. Evidence at
+<code>qa-results/hxc159/pin_parity/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h2 id="3-high-risks">3. High risks</h2>
+<h3
+id="r-04--three-disjoint-skills-corpora-with-zero-reconciliation-and-zero-name-overlap">R-04
+— Three disjoint skills corpora with zero reconciliation and zero name
+overlap</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+HIGH</p>
+<p><strong>What it is.</strong> "Skills" is not one thing in this
+ecosystem:</p>
+<table>
+<thead>
+<tr>
+<th>Corpus</th>
+<th>Location</th>
+<th><code>SKILL.md</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Constitution skills</td>
+<td><code>constitution/skills/</code></td>
+<td><strong>3</strong> (of 7 dirs)</td>
+</tr>
+<tr>
+<td>HelixAgent skills</td>
+<td><code>submodules/helix_agent/skills/</code> (tree
+<code>78ebdc67</code>, 15 categories)</td>
+<td><strong>1174</strong></td>
+</tr>
+<tr>
+<td>"HelixSkills System"</td>
+<td><code>HelixDevelopment/skills</code></td>
+<td><strong>0</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>comm -12</code> over the sorted directory listings of corpora 1
+and 2 returns <strong>empty</strong> — zero shared names. Nothing
+reconciles them.</p>
+<p>The corpus with 1174 skills is the one <em>not</em> named in the
+task; the one named ships zero.</p>
+<p><strong>Blast radius if unaddressed.</strong> "Fully incorporate,
+nothing left out" is unsatisfiable without deciding which corpus is
+authoritative. Incorporating the named one adds a catalogue over a
+payload HelixCode already has, while 1174 skills stay invisible to
+HelixCode forever.</p>
+<p><strong>Mitigation (designed).</strong> Declare a <strong>single
+authoritative registry</strong> with typed sources rather than merging
+trees. In <code>HelixDevelopment/skills</code>, define a
+<code>sources:</code> manifest naming each corpus, its root, its format
+dialect, and its precedence; the loader enumerates all registered
+sources into one namespace and <strong>refuses to start on a name
+collision</strong> (fail-closed, never last-writer-wins). Corpus 2 is
+registered in place — it is a plain tracked tree inside HelixAgent
+(R-18), so it is referenced, not copied.</p>
+<p>Namespacing: qualify every skill as
+<code>&lt;source&gt;.&lt;name&gt;</code> so corpus growth can never
+retroactively collide.</p>
+<p><strong>Proof plan.</strong> Unit: collision fixture → loader returns
+a typed <code>ErrDuplicateSkill</code>, never silently resolves.
+Integration: enumerate all three sources; assert the union count equals
+the sum of per-source counts (no silent drops) — today that is 3 + 1174
++ 0. Paired §1.1 mutation: make the collision handler pick a winner
+instead of erroring → test MUST fail. Evidence at
+<code>qa-results/hxc159/registry_union/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h3
+id="r-05--skill-filename-case-is-split-one-skill-has-no-document-at-all">R-05
+— Skill filename case is split; one skill has no document at all</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+HIGH</p>
+<p><strong>What it is.</strong> Measured across the seven constitution
+skills on this case-sensitive Linux filesystem:</p>
+<pre><code>HAS SKILL.md : action-prefix-system
+NO  SKILL.md : media-validator        -&gt; ships skill.md (lowercase)
+NO  SKILL.md : multitrack             -&gt; ships register.sh ONLY — no skill doc at all
+HAS SKILL.md : reporting-workable-items
+NO  SKILL.md : scheduled-work-queue   -&gt; ships skill.md (lowercase)
+NO  SKILL.md : session-sync           -&gt; ships skill.md (lowercase)
+HAS SKILL.md : workable-item-lifecycle</code></pre>
+<p>A loader globbing <code>SKILL.md</code> finds 3 of 7. A loader
+globbing <code>skill.md</code> finds 3 <em>different</em> ones.
+<code>multitrack</code> is found by <strong>neither</strong>.</p>
+<p><strong>Upgraded in Rev 2 — this is not a style preference, it is
+non-conformance with a published standard.</strong> Agent Skills is now
+an open cross-vendor spec (<a
+href="https://agentskills.io/specification">https://agentskills.io/specification</a>,
+accessed 2026-07-29) whose normative rules include: the canonical file
+is <strong><code>SKILL.md</code></strong>, and <code>name</code>
+<strong>must match the parent directory name</strong>. The measured
+corpus violates both. A conformance validator already exists —
+<code>skills-ref validate ./my-skill</code> — so this is mechanically
+provable today, and conformance is what buys portability to Gemini CLI /
+Qwen Code / Codex, closing the §11.4.228 G1 gap.</p>
+<p><strong>Blast radius if unaddressed.</strong> A loader written
+against either convention silently loads under half the declared skills
+and reports success — the exact false-green class §11.4 forbids. It
+would also have been invisible on a case-insensitive filesystem (macOS),
+so it would ship and only break on Linux hosts and in containers.</p>
+<p><strong>Mitigation (designed).</strong> Normalise upstream in
+<code>constitution</code>, then enforce mechanically:</p>
+<ol type="1">
+<li><code>git mv</code> each lowercase <code>skill.md</code> →
+<code>SKILL.md</code> (uppercase is the Anthropic convention and the
+majority already-correct form), updating every reference in the same
+commit per §11.4.29's reference-integrity rule.</li>
+<li>Author the missing <code>multitrack/SKILL.md</code> — do not delete
+the skill (§11.4.124 investigate-before-remove; it has a
+<code>register.sh</code>, so it is wired, not dead).</li>
+<li>Loader is <strong>case-exact and fail-closed</strong>: it globs
+<code>SKILL.md</code> only, and any directory containing a
+<code>register.sh</code> but no <code>SKILL.md</code> is a hard error,
+not a skip. A silent skip here is what makes the defect invisible.</li>
+</ol>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SKILL-MANIFEST-COMPLETE</code>: for every directory under each
+registered source root, assert <code>SKILL.md</code> exists with exact
+case (<code>test -f</code>, plus an explicit
+<code>ls | grep -x 'SKILL.md'</code> so a case-insensitive FS cannot
+fake a pass). Paired §1.1 mutation: rename one back to
+<code>skill.md</code> → gate MUST fail. Integration: loader enumerates
+all 7 constitution skills — asserting the count, not merely "no error".
+Evidence at
+<code>qa-results/hxc159/manifest_complete/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h3
+id="r-06--a-tracked-already-broken-skill-symlink-points-at-a-foreign-os-path">R-06
+— A tracked, already-broken skill symlink points at a foreign-OS
+path</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+HIGH</p>
+<p><strong>What it is.</strong> HelixCode's own <code>skills/</code>
+directory contains exactly one entry, and it is a broken symlink —
+<strong>committed to git</strong>, so every clone gets it:</p>
+<pre><code>$ git ls-files -s skills/
+120000 7f326406b693365b6d1271b32acf477f38619863 0   skills/media-validator
+
+$ readlink skills/media-validator
+/Volumes/T7/Projects/helix_code/constitution/skills/media-validator
+
+$ readlink -e skills/media-validator
+(no output — BROKEN: target unresolvable)</code></pre>
+<p><code>/Volumes/T7/...</code> is a macOS mount path. It does not exist
+on this Linux host. The real directory is present at
+<code>constitution/skills/media-validator</code>, so the symlink is both
+broken <em>and</em> redundant. This is a concrete instance of the
+§11.4.228 G2 "symlinked skills" gap, and of §11.4.111 (bind by stable
+name, never by a host-specific absolute path).</p>
+<p><strong>Blast radius if unaddressed.</strong> Any loader that walks
+<code>skills/</code> gets <code>ENOENT</code> on its only entry. Worse,
+a loader that treats a broken link as "absent" reports a clean empty
+scan — a false green. It also breaks the host-portability the project
+already depends on (this repo is worked on from both macOS and
+Linux).</p>
+<p><strong>Mitigation (designed).</strong> Replace the absolute symlink
+with a <strong>repo-relative</strong> one
+(<code>../constitution/skills/media-validator</code>) or, better, delete
+it and let the registry (R-04) reference
+<code>constitution/skills/</code> as a registered source — no symlink at
+all. Absolute paths into <code>/Volumes/**</code>,
+<code>/Users/**</code>, <code>/home/**</code> are then banned by gate,
+because the same mistake will otherwise recur from the other OS.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-NO-ABSOLUTE-OR-BROKEN-SYMLINKS</code>: for every tracked
+symlink (<code>git ls-files -s | awk '$1==120000'</code>) assert (a)
+<code>readlink -e</code> resolves and (b) the target is not absolute.
+Paired §1.1 mutation: re-create the <code>/Volumes/T7/...</code> link →
+gate MUST fail. Evidence at
+<code>qa-results/hxc159/symlink_hygiene/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h3
+id="r-07--cross-consumer-capability-parity-has-no-enforcing-mechanism">R-07
+— Cross-consumer capability parity has no enforcing mechanism</h3>
+<p><strong>Class:</strong> EVIDENCED (asymmetry measured) ·
+<strong>Severity:</strong> HIGH</p>
+<p><strong>What it is.</strong> Two consumers, one library, and the two
+are already structurally asymmetric:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>HelixCode</th>
+<th>HelixAgent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Go module</td>
+<td><code>dev.helix.code</code>, go 1.26</td>
+<td><code>dev.helix.agent</code>, go 1.26</td>
+</tr>
+<tr>
+<td><code>constitution/</code> submodule</td>
+<td><strong>present</strong>, pinned <code>ce3331a1</code></td>
+<td><strong>absent</strong> — no <code>constitution</code> entry in its
+59-submodule <code>.gitmodules</code></td>
+</tr>
+<tr>
+<td>Own <code>skills/</code> corpus</td>
+<td>1 broken symlink</td>
+<td>1174 <code>SKILL.md</code></td>
+</tr>
+<tr>
+<td>MCP seam</td>
+<td><code>helix_code/internal/mcp</code></td>
+<td>(separate)</td>
+</tr>
+</tbody>
+</table>
+<p>The Go versions match (1.26 / 1.26), which removes one skew axis. But
+HelixAgent has <strong>no constitution submodule at all</strong>, so a
+skills system that resolves skills <em>through</em>
+<code>constitution/skills/</code> cannot resolve anything there.</p>
+<p><strong>Blast radius if unaddressed.</strong> A capability lands in
+one consumer and silently not the other — the exact failure the task
+flags. Because there is no parity gate, this is discovered by a user,
+not by a test.</p>
+<p><strong>Mitigation (designed).</strong> A <strong>shared conformance
+suite owned by the library, run by both consumers.</strong> The
+<code>skills</code> repo exports a capability manifest (the list of
+skills + the loader API surface it guarantees) plus an executable
+conformance test. Each consumer runs that suite in its own CI-equivalent
+local gate and publishes the resulting capability report. A parity gate
+diffs the two reports and fails on any asymmetry the manifest does not
+explicitly mark consumer-optional.</p>
+<p>For HelixAgent specifically, the missing <code>constitution/</code>
+must be resolved first — either add it at HelixAgent's root (same
+single-pin rule as R-02/R-03) or make the constitution source path
+config-injected so HelixAgent supplies its own.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-CROSS-CONSUMER-PARITY</code>: run the library conformance suite
+in both consumers, diff the capability reports, fail on unexplained
+asymmetry. Paired §1.1 mutation: register a skill in one consumer only →
+gate MUST fail. Evidence: both reports + the diff at
+<code>qa-results/hxc159/parity/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h3
+id="r-08--test-surface-explosion-makes-114169-unaffordable-if-scoped-naively">R-08
+— Test-surface explosion makes §11.4.169 unaffordable if scoped
+naively</h3>
+<p><strong>Class:</strong> ANTICIPATED (from evidenced counts) ·
+<strong>Severity:</strong> HIGH</p>
+<p><strong>What it is.</strong> §11.4.169 mandates 13 test types. R-04
+measured 1174 + 3 + 0 skills. Naive scoping — every test type against
+every skill — is 13 × 1177 ≈ 15 000 test units, on top of
+stress/chaos/DDoS/memory/race suites that each need infrastructure. That
+plan is not affordable, and an unaffordable plan gets quietly skipped,
+which is how §11.4.169 turns into a bluff.</p>
+<p><strong>Blast radius if unaddressed.</strong> Either the suite is
+written and never runs to completion, or coverage is silently narrowed
+while still claiming the full matrix. Both are §11.4 violations at the
+coverage layer.</p>
+<p><strong>Mitigation (designed).</strong> Scope the matrix by
+<strong>architectural surface, not by skill count</strong> — the 13
+types apply to the <em>loader and registry</em>, which is one component,
+while individual skills get a cheap uniform contract check:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Scope</th>
+<th>Types applied</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Loader / registry / resolver</td>
+<td>1 component</td>
+<td>all 13 (§11.4.169)</td>
+</tr>
+<tr>
+<td>Per-skill</td>
+<td>1177 skills</td>
+<td><strong>1</strong> parameterised contract test (schema-valid,
+discoverable, non-colliding), table-driven — one test function, N
+cases</td>
+</tr>
+<tr>
+<td>Representative skills</td>
+<td>a sampled tier (~5) covering each source dialect</td>
+<td>e2e + Challenge + HelixQA</td>
+</tr>
+</tbody>
+</table>
+<p>This is genuine full coverage — every skill IS tested — while the
+expensive types land once on the component that can actually fail in
+those ways. A skill cannot deadlock; the loader can.</p>
+<p><strong>Proof plan.</strong> The coverage ledger (§11.4.25/§11.4.52)
+records feature × type × evidence-state and is itself gated:
+<code>CM-MANDATORY-TEST-TYPES-COVERED</code> fails if any of the 13
+types is missing for the loader tier, or if any registered skill lacks
+its contract-test case. Paired §1.1 mutation: drop the race-detector row
+→ gate MUST fail. Evidence at
+<code>qa-results/hxc159/coverage_ledger/&lt;run-id&gt;/</code>.</p>
+<hr />
+<h2 id="4-medium-risks">4. Medium risks</h2>
+<h3
+id="r-09--host-lacks-x11gl-headers-any-gui-adjacent-skill-surface-cannot-build-here">R-09
+— Host lacks X11/GL headers; any GUI-adjacent skill surface cannot build
+here</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> Verified on this host:</p>
+<pre><code>MISSING /usr/include/X11/Xlib.h
+MISSING /usr/include/GL/gl.h
+pkg-config gl: MISSING</code></pre>
+<p>HelixCode ships a Fyne desktop application
+(<code>helix_code/applications/desktop/</code>), which needs both. Any
+skill surface reaching into the desktop app cannot be built or tested on
+this host.</p>
+<p><strong>Mitigation (designed).</strong> Keep the skills loader
+<strong>GUI-free by construction</strong> — it is a data/registry
+component and must not import Fyne or any GL-linked package, so the
+entire skills test suite runs headless. Enforce that with a
+forbidden-import gate rather than convention. Where a genuinely
+GUI-bound skill surface is required later, it goes behind a build tag
+with a headless path, and if neither is possible it is an honest §11.4.3
+SKIP-with-reason plus a tracked migration item — never a silent
+pass.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SKILLS-LOADER-HEADLESS</code>: <code>go list -deps</code> on
+the loader package asserts no Fyne/GL/X11 dependency. Paired §1.1
+mutation: add a Fyne import → gate MUST fail. Positive evidence: the
+full loader suite runs green on this header-less host — which is itself
+the proof. Evidence at
+<code>qa-results/hxc159/headless/&lt;run-id&gt;/</code>.</p>
+<h3
+id="r-10--114228s-mandated-extensions-catalogue-does-not-exist-in-helixcode">R-10
+— §11.4.228's mandated extensions catalogue does not exist in
+HelixCode</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> §11.4.228 requires per-extension
+documentation with a compatibility matrix, and cites
+<code>docs/extensions/EXTENSIONS_CATALOG.md</code> as the live artifact.
+In this repo:</p>
+<pre><code>$ test -f docs/extensions/EXTENSIONS_CATALOG.md &amp;&amp; echo PRESENT || echo ABSENT
+ABSENT</code></pre>
+<p>The directory <code>docs/extensions/</code> does not exist at all.
+Adding a skills system — which is by definition an extension mechanism —
+without this catalogue compounds an existing governance gap.</p>
+<p><strong>Mitigation (designed).</strong> Create
+<code>docs/extensions/EXTENSIONS_CATALOG.md</code> as part of Phase D,
+with the per-platform compatibility declaration §11.4.228 requires
+(which of Claude Code / OpenCode / HelixCode / Gemini CLI / Qwen Code
+loads each skill, and by what path), and register it in the docs-chain
+so it re-syncs automatically rather than by vigilance.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-EXTENSIONS-CATALOG-PRESENT-AND-COMPLETE</code>: file exists and
+every registered skill appears as a row with a non-empty per-platform
+column. Paired §1.1 mutation: register a skill without a catalogue row →
+gate MUST fail.</p>
+<h3
+id="r-11--governance-load-per-new-submodule-is-real-and-easy-to-half-do">R-11
+— Governance load per new submodule is real and easy to half-do</h3>
+<p><strong>Class:</strong> EVIDENCED (requirements are in force; state
+measured) · <strong>Severity:</strong> MEDIUM</p>
+<p><strong>What it is.</strong> Adding <code>skills</code> triggers a
+fixed governance checklist, each item independently a release
+blocker:</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Anchor</th>
+<th>Current state in <code>skills@315b56ce</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Five-carrier cascade</td>
+<td>§11.4.157</td>
+<td>CLAUDE/AGENTS/QWEN/GEMINI present at root; <strong>no
+<code>CONSTITUTION.md</code></strong> at root</td>
+</tr>
+<tr>
+<td><code>helix-deps.yaml</code></td>
+<td>§11.4.31 / CONST-054</td>
+<td><strong>absent at root</strong> (only inside the research MVP)</td>
+</tr>
+<tr>
+<td><code>install_upstreams</code></td>
+<td>§11.4.36 / CONST-056</td>
+<td><code>upstreams/</code> present with 4 recipes (GitHub, GitLab,
+GitFlic, GitVerse) — must be run on add</td>
+</tr>
+<tr>
+<td><code>.gitignore</code> + regeneration</td>
+<td>§11.4.30 / §11.4.77</td>
+<td><code>.gitignore</code> present; regeneration metadata
+unverified</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mitigation (designed).</strong> A single
+<strong>submodule-onboarding gate</strong> that runs on any
+<code>.gitmodules</code> change and asserts the whole checklist at once,
+so partial onboarding is impossible. Add the missing root
+<code>helix-deps.yaml</code> and <code>CONSTITUTION.md</code> to
+<code>skills</code> upstream during Phase A (they are needed anyway for
+R-01), and invoke <code>install_upstreams</code> from the repo root as
+part of the add, verified by <code>git remote -v | grep -c push</code>
+matching the recipe count.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SUBMODULE-ONBOARDING-COMPLETE</code> over every entry in
+<code>.gitmodules</code>. Paired §1.1 mutation: delete the new
+<code>helix-deps.yaml</code> → gate MUST fail. Evidence at
+<code>qa-results/hxc159/onboarding/&lt;run-id&gt;/</code>.</p>
+<h3
+id="r-12--mcpjson-hard-codes-constitution-skill-paths-re-coupling-the-consumer">R-12
+— <code>.mcp.json</code> hard-codes constitution skill paths,
+re-coupling the consumer</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> The existing registration seam embeds a
+literal path:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;media-validator&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;bash&quot;</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;constitution/skills/media-validator/media-validator.sh&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;env&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;MEDIA_VALIDATOR_EVIDENCE_DIR&quot;</span><span class="fu">:</span> <span class="st">&quot;qa-results/media-validator&quot;</span> <span class="fu">}</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Registration is per-skill and hand-maintained; there are 7
+<code>register.sh</code> scripts (one per constitution skill) and
+<strong>no central registrar</strong> in
+<code>constitution/scripts/</code>. Every new skill means another
+hand-edited literal path.</p>
+<p><strong>Blast radius.</strong> Adding a source root (R-04) or moving
+one breaks every hard-coded entry at once, silently — MCP servers that
+fail to start are easy to not notice. It also violates §11.4.28(B): the
+path is consumer-specific knowledge baked into a place that should be
+generated.</p>
+<p><strong>Mitigation (designed).</strong> Generate
+<code>.mcp.json</code> skill entries from the registry manifest (R-04)
+instead of hand-authoring them, with source roots supplied by config
+injection. The generator is idempotent and its output is diff-checked in
+a gate, so drift between manifest and <code>.mcp.json</code> cannot
+persist.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-MCP-ENTRIES-GENERATED</code>: re-run the generator,
+<code>diff</code> against the committed <code>.mcp.json</code>, fail on
+any difference. Runtime proof (§11.4.108): each generated server
+actually starts and answers a probe — path correctness is proven by
+execution, not by the string looking right. Paired §1.1 mutation:
+hand-edit one path → gate MUST fail.</p>
+<h3
+id="r-13--stale-branches-in-the-source-repo-invite-integrating-the-wrong-ref">R-13
+— Stale branches in the source repo invite integrating the wrong
+ref</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> <code>HelixDevelopment/skills</code>
+carries eight branches, including three identical stale agent
+worktrees:</p>
+<pre><code>feature/catalog-docs                dd1edaa5
+feature/deep-research               8c78272c
+feature/testing-infra               6d7306db
+helix_skills                        06d77bd8
+main                                315b56ce
+worktree-agent-a41ff2c21450bdf5c    25cb8ca0
+worktree-agent-abb59d8974644d7a9    25cb8ca0
+worktree-agent-adb9e192e0bc9275c    25cb8ca0</code></pre>
+<p><code>helix_skills</code> is a plausible-looking branch name that is
+<strong>not</strong> <code>main</code>.</p>
+<p><strong>Mitigation (designed).</strong> Pin the submodule to an
+explicit SHA on <code>main</code> (<code>315b56ce…</code>) with
+<code>branch = main</code> recorded in <code>.gitmodules</code>, never
+to a bare branch name. Reconcile <code>feature/*</code> branches into
+<code>main</code> per §11.4.181's merge-not-delete rule before Phase A,
+and retire the <code>worktree-agent-*</code> refs only after confirming
+<code>git log main..&lt;ref&gt;</code> is empty (§11.4.124 — no removal
+without proof).</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SUBMODULE-PIN-ON-MAIN</code>: assert the recorded gitlink SHA
+is an ancestor of the upstream <code>main</code> tip. Paired §1.1
+mutation: repoint to <code>helix_skills</code> → gate MUST fail.</p>
+<h3
+id="r-14--skill-content-is-executable-instruction-a-malicious-or-buggy-skill-is-a-live-attack-surface">R-14
+— Skill content is executable instruction: a malicious or buggy skill is
+a live attack surface</h3>
+<p><strong>Class:</strong> EVIDENCED (upgraded in Rev 2 — research
+returned) · <strong>Severity:</strong> <strong>HIGH</strong></p>
+<p><strong>What it is.</strong> Skills are instructions an agent
+follows, and several ship executable shell
+(<code>media-validator.sh</code>, <code>session-sync.sh</code>, 7 ×
+<code>register.sh</code>). Registering 1174 skills of mixed provenance
+(R-04, corpus 2 spans vendor-specific trees like <code>azure</code>,
+<code>github-copilot</code>, <code>openhands</code>) means a large
+volume of agent-directing content enters the trust boundary at once.</p>
+<p><strong>Rev 2 — the research makes this concrete and worse than
+assumed.</strong> Three cited facts (full citations in
+<code>04_deep_research.md</code> §A4):</p>
+<ol type="1">
+<li><strong>The ecosystem is already compromised.</strong> Snyk
+"ToxicSkills" scanned 3,984 published skills: <strong>36.82 % carried
+security flaws, 13.4 % critical, 36 % contained prompt injection, 76
+confirmed malicious payloads</strong> (8 still live at publication). The
+bar to publish was "a <code>SKILL.md</code> and a GitHub account that's
+one week old — <strong>no code signing, no security review, no sandbox
+by default</strong>."</li>
+<li><strong><code>allowed-tools</code> is a GRANT, not a
+sandbox</strong> — the most misread field in the format. Anthropic's own
+docs: it grants permission "<strong>without prompting you for
+approval</strong>… <strong>It does not restrict which tools are
+available: every tool remains callable.</strong>" A skill in a repo is a
+self-service privilege-escalation primitive.</li>
+<li><strong>Dynamic context executes shell <em>before</em> the model
+sees the skill.</strong> Datadog Security Labs: <code>!</code>-prefixed
+commands "execute immediately (<strong>before Claude sees
+anything</strong>)". Combined with (2):
+<code>allowed-tools: Bash(*)</code> plus a <code>!</code>-command is
+<strong>unprompted arbitrary RCE at file-read time</strong>.</li>
+</ol>
+<p>And the pattern to design against is documented:
+<code>postmark-mcp</code> shipped <strong>15 benign releases to build
+trust</strong>, then added a data-exfiltration backdoor in v1.0.16.
+<strong>Pinning a name is worthless; only pinning a content hash
+defends.</strong></p>
+<p>Structurally: unlike VS Code (process isolation) or Zed (WASM sandbox
++ versioned interface), Agent Skills have <strong>no isolation boundary
+of any kind</strong> — and the open spec contains <strong>no security
+section at all</strong>, where MCP ships RFC-2119 MUST-level
+requirements.</p>
+<p><strong>Mitigation (designed).</strong> Trust tiering plus a
+fail-closed capability declaration:</p>
+<ol type="1">
+<li>Every registered source is tagged <code>first-party</code> /
+<code>vendored</code> / <code>third-party</code>.</li>
+<li>Each skill declares required capabilities (filesystem, network,
+shell) in its front-matter; the loader enforces the declaration and
+<strong>refuses</strong> an undeclared capability rather than
+warning.</li>
+<li>Skills that ship executable scripts are enumerated explicitly in the
+catalogue (R-10) so the executable surface is reviewable as a set, not
+per-file.</li>
+<li>Provenance is pinned by <strong>content hash</strong> so a skill's
+text cannot change under a fixed pin — this is the specific defence
+against the <code>postmark-mcp</code> pattern.</li>
+<li><strong><code>"disableSkillShellExecution": true</code></strong> in
+managed settings, closing the dynamic-context RCE path (3) by default;
+any skill needing it is an explicit, reviewed exception.</li>
+<li><strong><code>allowed-tools</code> and
+<code>!</code>-dynamic-context are review-gated privileged
+constructs</strong> — a skill declaring either cannot register without
+an explicit allowlist entry, because per (2) the field grants rather
+than restricts.</li>
+<li>Corpus-2 skills (vendored, 1174 of them) default to the
+<strong><code>vendored</code></strong> tier and are <strong>not
+activated</strong> without opt-in — which composes with R-19's
+subsetting rule and means the security and shadowing mitigations
+reinforce each other.</li>
+</ol>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SKILL-CAPABILITY-DECLARED</code>: every registered skill has a
+capability block; any skill shipping <code>*.sh</code> without a
+declared <code>shell</code> capability fails. Security-type test
+(§11.4.169): a fixture skill attempting an undeclared network call MUST
+be refused — proving enforcement, not just declaration. Paired §1.1
+mutation: make the enforcement warn instead of refuse → test MUST
+fail.</p>
+<hr />
+<h2 id="5-bridge-integration-risks-added-rev-2-and-resolved-items">5.
+Bridge-integration risks (added Rev 2) and resolved items</h2>
+<h3
+id="r-20--the-middle-of-the-speckitsuperpowers-bridge-is-designed-but-not-installed">R-20
+— The middle of the SpecKit↔︎Superpowers Bridge is designed but NOT
+installed</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+HIGH</p>
+<p><strong>What it is.</strong> The operator requires HelixSkills to
+compose with the Bridge. The Bridge <em>design</em> is real and
+substantial — 8 Markdown documents with full
+<code>.html</code>/<code>.pdf</code>/<code>.docx</code> siblings at
+<code>constitution/docs/research/extensions/speckit_superpowers/implementation/</code>
+(<code>EXTENSION_DEVELOPMENT.md</code> alone is 92 KB). But probing the
+7 layers on this host in this checkout, 2026-07-29:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Probe</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L2 Spec-Kit Core</td>
+<td><code>specify --version</code></td>
+<td>✅ <strong><code>specify 0.13.5.dev0</code></strong>;
+<code>.specify/</code> present; <code>specs/</code> absent</td>
+</tr>
+<tr>
+<td><strong>L3 SuperSpec</strong></td>
+<td><code>command -v superspec</code></td>
+<td>❌ <strong>NOT INSTALLED</strong></td>
+</tr>
+<tr>
+<td><strong>L4 SuperB</strong></td>
+<td><code>command -v superb</code></td>
+<td>❌ <strong>NOT INSTALLED</strong></td>
+</tr>
+<tr>
+<td><strong>L5 SuperBridge MCP</strong></td>
+<td>grep <code>.mcp.json</code></td>
+<td>❌ <strong>ABSENT</strong></td>
+</tr>
+<tr>
+<td>L6 Helix LLM</td>
+<td><code>submodules/helix_llm</code></td>
+<td>✅ present</td>
+</tr>
+<tr>
+<td>L7 llama.cpp</td>
+<td><code>dependencies/LLama_CPP</code></td>
+<td>✅ present</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Layers 3, 4 and 5 — orchestration, discipline enforcement,
+and execution — are absent.</strong> The ends of the pipeline exist; the
+middle does not.</p>
+<p><strong>Blast radius if unaddressed.</strong> HelixSkills would be
+wired into a <strong>partially paper pipeline</strong>. Any plan phase
+that says "route through SuperBridge" is unexecutable today, and a task
+claiming Bridge integration is complete would be a §11.4.108
+SOURCE-vs-RUNTIME bluff: the design is committed, the runtime is not
+there.</p>
+<p><strong>Mitigation (designed).</strong> Treat the Bridge as
+<strong>two separable deliverables</strong>: the <em>artifact
+discipline</em> (SpecKit spec/plan/tasks, L2 — installed and usable
+<strong>now</strong>) and the <em>execution pipeline</em> (L3–L5 — not
+installed). HelixSkills integrates against L2 immediately and declares
+L3–L5 an explicit dependency with an <code>OPERATOR-BLOCKED</code>-class
+gate rather than a silent assumption. Every Bridge-dependent phase
+carries a <strong>layer-presence precondition</strong> checked at
+runtime, which fails loudly rather than degrading silently.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-BRIDGE-LAYER-PRESENCE</code>: probe each of the 7 layers and
+emit a machine-readable presence report; any phase declaring a
+dependency on an absent layer fails. Paired §1.1 mutation: declare a
+dependency on L5 while it is absent → gate MUST fail. Evidence: the
+presence report at
+<code>qa-results/hxc159/bridge_layers/&lt;run-id&gt;/</code>.</p>
+<p><strong>Honest boundary (§11.4.6).</strong> Absence from
+<code>PATH</code> proves not-installed-on-this-host. It does
+<strong>not</strong> prove the projects do not exist — that is R-21.</p>
+<h3
+id="r-21--red_circle-the-bridges-execution-layer-does-not-exist-and-two-of-the-three-remaining-layers-are-single-maintainer-hobby-projects">R-21
+— 🔴 The Bridge's execution layer DOES NOT EXIST, and two of the three
+remaining layers are single-maintainer hobby projects</h3>
+<p><strong>Class:</strong> EVIDENCED (research returned) ·
+<strong>Severity:</strong> <strong>CRITICAL</strong> (upgraded from
+HIGH)</p>
+<p><strong>What it is.</strong> The Bridge design assigns layer 5 to
+"SuperBridge MCP (execution)". <strong>There is no such
+project.</strong></p>
+<pre><code>$ api.github.com/search/repositories?q=superbridge+mcp
+total_count: 0</code></pre>
+<p>npm search <code>superbridge</code> returns 20 results, <strong>zero
+of them MCP servers</strong> (an Electron IPC bridge, a crypto
+superchain SDK, a questdk plugin). The <code>superpowers-bridge</code>
+CHANGELOG contains no occurrence of "MCP", "daemon", or "SuperBridge".
+And the name is not merely absent — it was <strong>explicitly
+rejected</strong>: the real project's docs record <em>"SuperBridge hides
+the product's relationship to Superpowers"</em> as the reason for not
+using it, corroborated first-hand by the v1.5.0 changelog's
+naming-hierarchy entry.</p>
+<p>Worse, <strong>layer 4 refuses the role the design assigns
+it.</strong> <code>superpowers-bridge</code>'s README, verbatim: <em>"It
+owns no plan, task store, execution lifecycle, completion state, or
+convergence command."</em></p>
+<p><strong>A 7-layer architecture whose execution tier is a non-existent
+MCP server is not an architecture — it is a diagram.</strong></p>
+<p>The remaining third-party layers, measured:</p>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Maintainers</th>
+<th>Last push</th>
+<th>Releases</th>
+<th>Pinnable?</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>obra/superpowers</code></td>
+<td>large, 987 watchers</td>
+<td>2026-07-28</td>
+<td>v6.2.0, monthly+</td>
+<td>Yes — official marketplace plugin</td>
+<td><strong>LOW</strong></td>
+</tr>
+<tr>
+<td>SuperB (<code>RbBtSn0w/spec-kit-extensions</code>)</td>
+<td><strong>1 human</strong> + 2 own bots</td>
+<td>2026-07-03</td>
+<td><strong>12</strong>, immutable <code>.zip</code></td>
+<td>Yes</td>
+<td><strong>MEDIUM</strong></td>
+</tr>
+<tr>
+<td>SuperSpec (<code>WangX0111/superspec</code>)</td>
+<td><strong>1 human, 10 lifetime commits</strong></td>
+<td>2026-06-02</td>
+<td>2 — <strong>v1.0.0 was broken</strong></td>
+<td>Weak — <strong>mutable tag archive</strong></td>
+<td><strong>HIGH</strong></td>
+</tr>
+<tr>
+<td><code>speckit-community</code> catalog</td>
+<td><strong>1 human</strong>, personal account styled as an org (org API
+→ <strong>404</strong>, 3 followers)</td>
+<td>2026-07-28</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><strong>MEDIUM</strong></td>
+</tr>
+<tr>
+<td><code>erophames/superpowers-mcp</code> (nearest real L5)</td>
+<td>9 commits, <strong>no LICENSE</strong></td>
+<td>2026-03-15 (~4.5 mo dead)</td>
+<td>none</td>
+<td>No</td>
+<td><strong>HIGH</strong> — <strong>auto-<code>git pull</code>s remote
+instructions daily, unsandboxed</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Two further facts that remove a false comfort:</p>
+<ul>
+<li><strong>SuperSpec's headline install command does not work</strong>
+on a default SpecKit install — it is not in the first-party
+<code>catalog.json</code>; installation requires an explicit
+<strong>mutable tag-archive URL</strong> with no checksum or
+signature.</li>
+<li><strong>Catalog listing is not an audit.</strong> SpecKit's own FAQ,
+verbatim: <em>"The Spec Kit maintainers do not review, audit, endorse,
+or support extension code."</em> "It's in spec-kit's catalog" is a
+formatting check being misread as a security review.</li>
+</ul>
+<p><strong>Blast radius if unaddressed.</strong> Any HXC-159 phase that
+routes work "through SuperBridge" is unimplementable — the component
+does not exist, so the phase can never honestly close. Building on it
+would produce a plan whose central integration step is a §11.4
+planning-layer bluff. Separately, installing SuperSpec by mutable
+archive URL, or <code>superpowers-mcp</code> with its daily unsandboxed
+instruction pull, would import exactly the R-14 supply-chain exposure
+into the execution path.</p>
+<p><strong>Mitigation (designed).</strong></p>
+<ol type="1">
+<li><strong>Strike layer 5 from the plan.</strong> It cannot be a
+dependency because it is not a thing. Either the execution role is
+filled by an <strong>own-org component</strong> (per §11.4.74 Verdict 2,
+<code>HelixDevelopment/specifier</code> is the candidate and must be
+probed first) or the Bridge is re-drawn honestly as the layers that
+exist. Amending the design is the correct action; papering over the gap
+is not.</li>
+<li><strong>Tier the survivors by measured health.</strong>
+<code>obra/superpowers</code> is the only dependency clearing an
+enterprise bar, and only because it ships through Anthropic's official
+marketplace — adopt it <em>via that channel</em>, plugin-namespaced.
+SuperB is acceptable pinned to an immutable release asset.
+<strong>SuperSpec is not adoptable as-is</strong>: require an org mirror
+(the <code>caf-*</code> pattern already mirrors ~60 CLI agents;
+<code>vasic-digital/caf-spec-kit</code> mirrors SpecKit itself) plus SHA
+pinning before any use.</li>
+<li><strong>Never <code>erophames/superpowers-mcp</code></strong> in its
+current state — unlicensed alone disqualifies it, and the daily unpinned
+instruction pull is the live form of the R-14 attack.</li>
+<li><strong>Record a bus-factor assessment per dependency</strong> as a
+tracked artifact, not a one-time note, since three of four are under
+four months old.</li>
+</ol>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-BRIDGE-DEPS-REAL-AND-PINNED</code>: every layer named in the
+plan resolves to an artifact that (a) exists, (b) has an org mirror or
+official-marketplace channel, (c) is pinned by SHA or immutable release
+asset, and (d) carries a recorded health assessment. Paired §1.1
+mutation: re-introduce <code>SuperBridge MCP</code> as a named
+dependency → gate MUST fail on (a). Evidence at
+<code>qa-results/hxc159/bridge_deps/&lt;run-id&gt;/</code>.</p>
+<h3
+id="r-22b--namespace-collision-is-narrower-than-feared-but-the-biting-case-is-undocumented">R-22b
+— Namespace collision is narrower than feared, but the biting case is
+undocumented</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong> MEDIUM
+(refines R-22)</p>
+<p><strong>Good news, cited.</strong> Claude Code docs, verbatim:
+<em>"<strong>Plugin skills use a <code>plugin-name:skill-name</code>
+namespace, so they cannot conflict with other levels.</strong>"</em>
+Since <code>obra/superpowers</code> installs as a
+<strong>plugin</strong> and SuperB installs as spec-kit
+<code>/speckit.superb.*</code> commands, neither lands bare in
+<code>.claude/skills/</code>. Only SuperSpec's optional symlink path
+touches the personal namespace, claiming one distinctive name. Symlinks
+also de-duplicate: <em>"if the same target is reachable from more than
+one location, Claude Code loads the skill once."</em></p>
+<p><strong>Bad news, also cited.</strong> Claude Code <strong>does not
+error and does not warn</strong> on a skill name collision — it resolves
+silently by precedence, so the failure mode is <em>silent
+shadowing</em>, not a diagnostic. And
+<code>anthropics/claude-code</code> issue <strong>#50486</strong>,
+asking for plugin-name prefixing of plugin skills, was <strong>CLOSED AS
+NOT PLANNED</strong> with no maintainer reply. Related reports #25209
+(project skills showing <em>both</em> instead of overriding — behaviour
+contradicting the documented rule) and #15065 remain open.</p>
+<p><strong>The case that actually bites here is undocumented:</strong>
+<code>NO external solution found — original work</code> (§11.4.8) for
+<strong>two independent installers both writing a directory of the same
+name into one <code>.claude/skills/</code> tree</strong>. That collision
+is resolved at the <em>filesystem</em> level before Claude Code ever
+reads it — last writer wins, or the second install fails on
+<code>EEXIST</code>, depending on installer.</p>
+<p><strong>Mitigation.</strong> Exactly R-22's rules (1)–(3): reserved
+prefixes, pre-write collision check that aborts rather than overwrites,
+and a tracked manifest driving deterministic regeneration. Prefer
+<strong>plugin packaging</strong> for anything shared, since the vendor
+guarantees plugin namespaces cannot conflict — that is the one collision
+class solved upstream rather than by us.</p>
+<p><strong>Proof plan.</strong> As R-22, plus an install-order
+determinism test: run both registrars in both orders, assert
+byte-identical results (§11.4.50).</p>
+<h3
+id="r-22--claudeskills-namespace-collision--now-real-and-silent">R-22 —
+<code>.claude/skills/</code> namespace collision — now REAL, and
+silent</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+HIGH</p>
+<p><strong>What it is.</strong> SpecKit distributes its own commands
+<strong>as skills</strong>, as plain Markdown, into per-agent
+directories — <code>.claude/skills</code> for Claude Code. During
+<em>this session</em> a sibling agent ran <code>specify init</code>, and
+that directory in this repo now holds <strong>exactly 10 speckit-*
+skills</strong> created at 00:31:</p>
+<pre><code>speckit-analyze  speckit-checklist  speckit-clarify  speckit-constitution
+speckit-converge speckit-implement  speckit-plan     speckit-specify
+speckit-tasks    speckit-taskstoissues</code></pre>
+<p>Earlier in this same session <code>.claude/</code> held only
+<code>settings.json</code>, <code>settings.local.json</code> and
+<code>worktrees/</code>. <strong>SpecKit now occupies the exact
+namespace a HelixSkills registrar would write into</strong>, and the
+collision is observable, not hypothetical.</p>
+<p><strong>And it is invisible to git:</strong></p>
+<pre><code>$ git check-ignore -v .claude/skills
+.gitignore:133:.claude/*    .claude/skills</code></pre>
+<p><strong>Blast radius if unaddressed.</strong> Two systems writing one
+ignored directory means (a) a name collision produces <strong>no diff in
+<code>git status</code></strong> — it is silent; (b) the registered set
+is <strong>host-local untracked state</strong>, so a fresh clone has
+zero skills and "the skills are installed" is unreproducible from the
+repository (a §11.4.77 regeneration gap); and (c) whichever registrar
+runs last wins, non-deterministically (§11.4.50).</p>
+<p><strong>Mitigation (designed).</strong> Three rules, all
+fail-closed:</p>
+<ol type="1">
+<li><strong>Disjoint prefixes by construction.</strong> SpecKit owns
+<code>speckit-*</code>; HelixSkills registers only under its own
+reserved prefix. The registrar <strong>refuses</strong> to write any
+name outside its prefix.</li>
+<li><strong>Pre-write collision check.</strong> The registrar enumerates
+the target directory and aborts on any existing name it did not itself
+write — never overwrites.</li>
+<li><strong>Declarative manifest + regeneration.</strong> A tracked
+manifest lists what <em>should</em> be registered; a
+<code>scripts/register_skills.sh</code> (see R-24) regenerates the
+ignored directory from it deterministically, making the host-local state
+reproducible and satisfying §11.4.77.</li>
+</ol>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SKILL-NAMESPACE-DISJOINT</code>: enumerate
+<code>.claude/skills/</code>, assert every entry maps to exactly one
+owning registrar via prefix, and assert the set equals the manifest.
+Paired §1.1 mutation: plant a colliding <code>speckit-plan</code> under
+the HelixSkills prefix → gate MUST fail. Integration proof: run both
+registrars in both orders and assert byte-identical results (§11.4.50).
+Evidence at
+<code>qa-results/hxc159/namespace/&lt;run-id&gt;/</code>.</p>
+<h3
+id="r-23--a-third-constitution-now-exists-in-this-repo-const-059-canonical-root-ambiguity">R-23
+— A third constitution now exists in this repo (CONST-059 canonical-root
+ambiguity)</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> <code>specify init</code> created
+<code>.specify/memory/constitution.md</code>. Measured:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Path</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Canonical root</td>
+<td><code>constitution/Constitution.md</code></td>
+<td>1,513,995 bytes</td>
+</tr>
+<tr>
+<td>Consumer extension</td>
+<td><code>CONSTITUTION.md</code></td>
+<td>352,111 bytes</td>
+</tr>
+<tr>
+<td><strong>SpecKit (new)</strong></td>
+<td><code>.specify/memory/constitution.md</code></td>
+<td><strong>2,346 bytes</strong></td>
+</tr>
+</tbody>
+</table>
+<p>None declares inheritance from another, and
+<code>/speckit.constitution</code> will rewrite the third without
+reference to the first two. There is no documented mechanism to point
+SpecKit at an existing external constitution.</p>
+<p><strong>A correction I owe (§11.4.6).</strong> The widely-repeated
+claim that SpecKit <em>imposes</em> a nine-article constitution with a
+"three projects maximum" cap is <strong>not true of the installed
+artifact</strong>. What <code>specify init</code> actually writes is a
+<strong>placeholder template</strong>
+(<code># [PROJECT_NAME] Constitution</code>,
+<code>[PRINCIPLE_1_NAME]</code>, …); the nine articles appear only as
+<strong>HTML-comment examples</strong>. The doctrinal risk is therefore
+much milder than the documentation implies. Reporting it as prescribed
+would have been a bluff, and the risk that remains is
+<strong>structural</strong> (a third un-inherited constitution file),
+not doctrinal.</p>
+<p><strong>Mitigation (designed).</strong> Fill
+<code>.specify/memory/constitution.md</code> with an explicit
+<strong>inheritance pointer</strong> to the canonical root — the
+CONST-059 pattern already used by <code>CLAUDE.md</code> — so it is
+unambiguously a consumer extension and never a competing source of
+truth. Add it to the §11.4.157 lockstep set so it cannot drift.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-CANONICAL-ROOT-CLARITY</code> extended to
+<code>.specify/memory/</code>: assert the file opens with the
+inheritance pointer. Paired §1.1 mutation: strip the pointer → gate MUST
+fail.</p>
+<h3
+id="r-24--114164-auto-propagation-is-only-half-wired-the-consumer-registrars-do-not-exist">R-24
+— §11.4.164 auto-propagation is only half-wired: the consumer registrars
+do not exist</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> §11.4.164 specifies that a constitution
+pull triggers <code>post_update_hook.sh</code>, which registers
+new/modified skills and MCP servers via the <em>consumer's</em>
+registrars. The hook exists; the registrars do not:</p>
+<pre><code>$ ls -la constitution/scripts/post_update_hook.sh
+-rwxr-xr-x 20975 bytes   ← EXISTS
+
+$ ls scripts/register_skills.sh scripts/register_mcp.sh
+ls: cannot access &#39;scripts/register_skills.sh&#39;: No such file or directory
+ls: cannot access &#39;scripts/register_mcp.sh&#39;: No such file or directory</code></pre>
+<p>So on a constitution pull, HelixCode has <strong>no consumer-side
+implementation to invoke</strong>. This is a pre-existing §11.4.164 gap
+that HXC-159 inherits — and it is the same missing component R-22's
+mitigation (3) requires.</p>
+<p><strong>Mitigation (designed).</strong> Author
+<code>scripts/register_skills.sh</code> and
+<code>scripts/register_mcp.sh</code> as the manifest-driven, idempotent,
+prefix-scoped registrars R-22 specifies. One component closes both
+gaps.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-CONSTITUTION-AUTO-PROPAGATION</code> (§11.4.164's own gate):
+hook present, registrars present and executable, and a dry-run registers
+a fixture skill. Paired §1.1 mutation: add a skill to
+<code>constitution/skills/</code> and assert the hook detects and
+registers it; remove the registrar → gate MUST fail.</p>
+<h3
+id="r-25--replace-directives-are-ignored-outside-the-main-module-10-already-in-play">R-25
+— <code>replace</code> directives are ignored outside the main module
+(10 already in play)</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong> MEDIUM
+(resolves former R-17)</p>
+<p><strong>What it is.</strong> Go Modules Reference, verbatim:
+"<code>replace</code> directives <strong>only apply in the main module's
+<code>go.mod</code> file and are ignored in other modules</strong>."
+Same for <code>exclude</code>. There is no lock file.</p>
+<p>This is <strong>the mechanism</strong> behind "a capability lands in
+one consumer and not the other", and it is already live here —
+<code>submodules/helix_agent/go.mod</code> carries <strong>at least
+10</strong> relative-path replaces:</p>
+<pre><code>replace dev.helix.dag              =&gt; ../dag_orchestrator
+replace digital.vasic.containers   =&gt; ../containers
+replace digital.vasic.challenges   =&gt; ../challenges
+replace digital.vasic.agentic      =&gt; ../agentic
+replace digital.vasic.llmops       =&gt; ../llm_ops
+replace digital.vasic.selfimprove  =&gt; ../self_improve
+replace digital.vasic.planning     =&gt; ../planning
+replace digital.vasic.benchmark    =&gt; ../benchmark
+replace digital.vasic.llmsverifier =&gt; ../llms_verifier/llm-verifier</code></pre>
+<p>Every one resolves <strong>only</strong> when
+<code>helix_agent</code> is the main module. And <code>go.work</code>
+does not save this: workspaces are local-development tools that CI must
+not use, so local-green and release-real diverge — a textbook §11.4.108
+SOURCE→ARTIFACT gap.</p>
+<p><strong>Mitigation (designed).</strong> Keep the shared skills
+library <strong>dependency-free of replace-requiring modules</strong> —
+which the pure-data shape (R-15, resolved) makes easy, since a markdown
+corpus has no Go dependencies at all. Where any Go code is shared, add a
+<strong>version-parity gate</strong> asserting every consumer's
+<code>require</code> on the shared library is byte-identical, plus the
+registry-completeness assertion from R-15 that fails the
+<em>consumer's</em> startup when an expected capability is absent.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-CONSUMER-VERSION-PARITY</code>: extract the shared-library
+<code>require</code> line from each consumer's <code>go.mod</code>; fail
+on inequality. Paired §1.1 mutation: bump one consumer only → gate MUST
+fail.</p>
+<h3 id="r-26--root-and-inner-modules-declare-the-same-module-path">R-26
+— Root and inner modules declare the SAME module path</h3>
+<p><strong>Class:</strong> EVIDENCED (flagged unverified by research;
+verified by me) · <strong>Severity:</strong> MEDIUM</p>
+<p><strong>What it is.</strong></p>
+<pre><code>go.mod:            module dev.helix.code   (go 1.25.2)
+helix_code/go.mod: module dev.helix.code   (go 1.26)</code></pre>
+<p>Two modules sharing one module path, on different Go versions, in one
+repository. This is not the diamond problem of R-25 but is its own
+resolution hazard, and it sits directly under any shared-library
+seam.</p>
+<p><strong>Mitigation (designed).</strong> Do not build the skills seam
+on top of this ambiguity. Either rename the thin root module to a
+distinct path (e.g. <code>dev.helix.code/meta</code>) or ensure the
+skills library is consumed <strong>only</strong> by the inner module,
+never the root. Decide explicitly and record it — do not let resolution
+order decide.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-UNIQUE-MODULE-PATHS</code>: collect every <code>module</code>
+line in the repo; fail on duplicates. Paired §1.1 mutation: re-introduce
+the duplicate → gate MUST fail.</p>
+<h3
+id="r-27--speckittaskstoissues-forks-the-workable-items-single-source-of-truth">R-27
+— <code>/speckit.taskstoissues</code> forks the workable-items single
+source of truth</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong>
+MEDIUM</p>
+<p><strong>What it is.</strong> SpecKit ships
+<code>/speckit.taskstoissues</code>, which pushes tasks into
+<strong>GitHub Issues</strong>. HelixCode's §11.4.93/§11.4.95 mandate a
+git-tracked SQLite DB (<code>docs/workable_items.db</code>) as the
+single source of truth for workable items. Both would hold task state,
+neither is authoritative over the other, and the skill is registered and
+invocable <strong>right now</strong> (R-22 lists it).</p>
+<p><strong>Mitigation (designed).</strong> Disable or re-target the
+command: either remove <code>speckit-taskstoissues</code> from the
+registered set (the R-22 manifest makes this a one-line declarative
+exclusion) or re-point it at the DB via the existing
+<code>workable-items</code> tooling. The DB stays authoritative; GitHub
+Issues, if used at all, is a derived view per §11.4.148's tracker-sync
+model.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-WORKABLE-ITEMS-SSOT-UNFORKED</code>: assert
+<code>speckit-taskstoissues</code> is absent from the registered
+manifest, or that its target is the DB. Paired §1.1 mutation:
+re-register it unmodified → gate MUST fail.</p>
+<h3 id="r-28--corpus-2-is-not-reusable-as-is-formerly-r-18">R-28 —
+Corpus 2 is not reusable as-is (formerly R-18)</h3>
+<p><strong>Class:</strong> EVIDENCED · <strong>Severity:</strong> MEDIUM
+— needs an explicit decision, not a default</p>
+<p><code>submodules/helix_agent/skills/</code> is a plain tracked tree
+(<code>78ebdc67</code>), not a submodule, so HelixCode cannot consume it
+without either lifting it into its own repo (invasive — and §11.4.122
+no-silent-removal applies to anything taken out of HelixAgent) or
+referencing it through HelixAgent (couples the two consumers, which
+§11.4.28 forbids).</p>
+<p><strong>Mitigation (designed).</strong> Extract the corpus into its
+own own-org repo at the consumer root (CONST-051(C) layout), leaving
+HelixAgent consuming it as a registered source rather than owning it.
+Because this <strong>removes</strong> a tree from HelixAgent, it is a
+§11.4.122 event: the operator must be asked before, not told after.
+Until that decision, corpus 2 stays <code>vendored</code>-tier and
+unactivated (R-14 mitigation 7), which is also what R-19 requires.</p>
+<p><strong>Proof plan.</strong> Gate
+<code>CM-SKILL-SOURCE-AT-ROOT</code>: every registered source resolves
+to a root-level path, never through another consumer. Paired §1.1
+mutation: register a source via
+<code>submodules/helix_agent/skills</code> → gate MUST fail.</p>
+<h3 id="resolved-from-rev-1">Resolved from Rev 1</h3>
+<ul>
+<li><strong>R-15 — Go extension mechanism. RESOLVED → pure-data
+skills.</strong> <code>plugin</code> is eliminated by its own
+documentation: "supported only on Linux, FreeBSD, and macOS, making them
+unsuitable for applications intended to be portable" (HelixCode's
+<code>make prod</code> cross-compiles Windows) and — decisively —
+"<strong>The application and its plugins must all be built together by a
+single person or component of a system</strong>", which is the negation
+of the two-independent-consumers requirement. SpecKit is the working
+existence proof of the alternative at 50-agent scale: skills are plain
+Markdown copied into per-agent directories, no ABI, no linker. Fallback
+ranking if code loading is ever genuinely needed: compile-time registry
+→ wazero/WASM (only option with true sandboxing <em>and</em> Windows, no
+CGO) → MCP-over-stdio → hashicorp/go-plugin.</li>
+<li><strong>R-16 — SpecKit constitution collision. RESOLVED, and milder
+than feared</strong> — see R-23. The installed artifact is a placeholder
+template, not a prescriptive nine-article document. Residual risk is
+structural (third un-inherited file), and brownfield adoption is
+empirically fine (spec-kit discussion #1119 reports minimal friction
+across a five-repo workspace).</li>
+<li><strong>R-17 — Go diamond dependency. RESOLVED → R-25.</strong> The
+real mechanism is <code>replace</code>/<code>exclude</code> being
+ignored outside the main module, not MVS version selection.</li>
+<li><strong>R-18 — renumbered to R-28</strong> for consistency with the
+Rev 2 ordering.</li>
+</ul>
+<hr />
+<h2 id="6-summary-table">6. Summary table</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Risk</th>
+<th>Class</th>
+<th>Severity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>R-19</strong></td>
+<td><strong>Skill shadowing — literal execution makes both agents
+measurably worse</strong></td>
+<td>EVIDENCED</td>
+<td><strong>CRITICAL</strong></td>
+</tr>
+<tr>
+<td>R-01</td>
+<td>HelixSkills ships nothing consumable — task premise fails</td>
+<td>EVIDENCED</td>
+<td><strong>CRITICAL</strong></td>
+</tr>
+<tr>
+<td>R-02</td>
+<td>Nested own-org submodule chain violates CONST-051(C)</td>
+<td>EVIDENCED</td>
+<td><strong>CRITICAL</strong></td>
+</tr>
+<tr>
+<td>R-03</td>
+<td>46-commit constitution pin skew with capability loss</td>
+<td>EVIDENCED</td>
+<td><strong>CRITICAL</strong></td>
+</tr>
+<tr>
+<td>R-04</td>
+<td>Three disjoint skills corpora, zero reconciliation</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-05</td>
+<td>Case split + <code>multitrack</code> undocumented = spec
+non-conformance</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-06</td>
+<td>Tracked broken symlink to a macOS path</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-07</td>
+<td>No cross-consumer parity mechanism; consumers asymmetric</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-08</td>
+<td>§11.4.169 test-surface explosion (~15 000 units if naive)</td>
+<td>ANTICIPATED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-14</td>
+<td>Skill content as attack surface (36.8 % of published skills
+flawed)</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td><strong>R-21</strong></td>
+<td>🔴 <strong>Bridge execution layer (SuperBridge MCP) DOES NOT
+EXIST</strong></td>
+<td>EVIDENCED</td>
+<td><strong>CRITICAL</strong></td>
+</tr>
+<tr>
+<td>R-20</td>
+<td>Bridge layers L3/L4/L5 designed but NOT installed</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-22</td>
+<td><code>.claude/skills/</code> namespace collision — real, silent,
+gitignored</td>
+<td>EVIDENCED</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>R-22b</td>
+<td>Collision narrower than feared; biting case undocumented</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-09</td>
+<td>X11/GL headers missing on host</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-10</td>
+<td>§11.4.228 extensions catalogue absent</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-11</td>
+<td>Submodule governance checklist easy to half-complete</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-12</td>
+<td><code>.mcp.json</code> hard-codes skill paths; no central
+registrar</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-13</td>
+<td>Stale/decoy branches in source repo</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-23</td>
+<td>Third constitution — CONST-059 canonical-root ambiguity</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-24</td>
+<td>§11.4.164 half-wired — consumer registrars absent</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-25</td>
+<td><code>replace</code> ignored outside main module (10 already in
+play)</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-26</td>
+<td>Root + inner modules share the path <code>dev.helix.code</code></td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-27</td>
+<td><code>/speckit.taskstoissues</code> forks the workable-items
+SSoT</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-28</td>
+<td>HelixAgent corpus not reusable as-is (§11.4.122 applies)</td>
+<td>EVIDENCED</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>R-15</td>
+<td>Go extension mechanism → <strong>RESOLVED: pure-data
+skills</strong></td>
+<td>RESOLVED</td>
+<td>—</td>
+</tr>
+<tr>
+<td>R-16</td>
+<td>SpecKit constitution collision → <strong>RESOLVED, milder</strong>
+(→ R-23)</td>
+<td>RESOLVED</td>
+<td>—</td>
+</tr>
+<tr>
+<td>R-17</td>
+<td>Go diamond dependency → <strong>RESOLVED</strong> (→ R-25)</td>
+<td>RESOLVED</td>
+<td>—</td>
+</tr>
+<tr>
+<td>R-18</td>
+<td>→ <strong>renumbered R-28</strong></td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>Counts: <strong>29 risks</strong>, of which <strong>27
+EVIDENCED</strong>, <strong>2 ANTICIPATED</strong> (R-08 and the
+calibration half of R-19), <strong>5 CRITICAL</strong>, <strong>3
+RESOLVED</strong> during Rev 2.</p>
+<p><strong>The three most dangerous, in order:</strong></p>
+<ol type="1">
+<li><strong>R-19 (skill shadowing)</strong> — because it is the only
+risk here that damages the product while every gate stays green, and
+because the corpus is <strong>5.8× past the worst point ever
+measured</strong>. Executing the task as literally worded — register
+every skill into one namespace — is the exact configuration the
+literature says degrades the agent. Mitigation: per-consumer opt-in
+subsets + a calibrated active ceiling + a description-similarity gate,
+proven by a <strong>local benchmark curve</strong>, not by a static
+gate, because the harm is behavioural.</li>
+<li><strong>R-21 (the execution layer does not exist)</strong> — because
+a plan phase that routes work through a non-existent component can never
+honestly close, and because it was believable enough to survive into a
+design document with 8 files and full four-format exports. Mitigation:
+strike layer 5, probe the own-org candidate
+(<code>HelixDevelopment/specifier</code>) first, and tier the surviving
+dependencies by measured health — never adopt SuperSpec by mutable
+archive URL or <code>superpowers-mcp</code> at all.</li>
+<li><strong>R-01 + R-02 + R-03 (empty premise, nested chain, 46-commit
+skew)</strong> — one cluster, because they share a fix. The premise gap
+converts the whole plan into work against an absent payload; the nested
+chain and pin skew are a single structural defect with observable
+capability loss <em>today</em>. Mitigation: re-scope to
+build-then-incorporate (no incorporation phase schedulable before the
+loader exists) on a single root <code>constitution/</code> with no
+nested pin — making the skew impossible by construction rather than by
+discipline.</li>
+</ol>
+<p><strong>The pattern across all three:</strong> each was invisible to
+the task as stated and became visible only by measuring the artifact
+rather than reading the description. That is the §11.4.6 discipline
+doing its job, and it is why this register is a planning deliverable
+rather than a post-hoc note.</p>
+<hr />
+<h2 id="7-honest-boundary">7. Honest boundary</h2>
+<p>Per §11.4.6, this register enumerates risks <strong>detectable in
+advance from static inspection and catalogue survey</strong>. It does
+not and cannot prove the set is complete — §11.4.118 is explicit that
+absence of evidence of looking is not evidence of absence. What is
+earned here is: "the enumerated inspection surface below was exercised,
+and these are its findings."</p>
+<p>Inspection surface actually exercised:
+<code>HelixDevelopment/skills</code> complete recursive tree + branches
++ README + <code>.gitmodules</code>;
+<code>HelixDevelopment/specifier</code> root tree; both GitHub org
+listings; the GitLab <code>vasic-digital</code> listing; HelixCode's
+local <code>constitution/</code>, <code>skills/</code>,
+<code>.claude/skills/</code>, <code>.specify/</code>,
+<code>.mcp.json</code>, <code>go.mod</code>,
+<code>helix_code/go.mod</code>,
+<code>helix_code/internal/{mcp,hooks}</code>; HelixAgent's
+<code>go.mod</code> (incl. <code>replace</code> directives),
+<code>.gitmodules</code>, <code>skills/</code> tree; the Bridge design
+corpus; the 7-layer runtime presence probe; host header availability.
+Plus four independent research angles against live external sources
+(<code>04_deep_research.md</code>).</p>
+<p><strong>Not exercised</strong> (honest gaps, each a tracked
+follow-up):</p>
+<ul>
+<li>the GitLab <code>HelixDevelopment</code> group — query-shape
+failure, see <code>05_catalogue_survey.md</code> §1;</li>
+<li>the <strong>runtime behaviour of any skill</strong> — nothing was
+executed;</li>
+<li><strong><code>specifier</code> as the layer-5 replacement
+candidate</strong> (R-21 mitigation 1) — named but unprobed; its actual
+capability is unverified;</li>
+<li><code>specifier</code>'s actual capability beyond its root
+tree;</li>
+<li>the contents of the 1174 HelixAgent skills beyond count and category
+names;</li>
+<li>the four remaining <code>skills</code> branches' diffs;</li>
+<li>the <strong>magnitude of R-19's shadowing effect on this project's
+own corpus</strong> — the effect is established in the literature, the
+local magnitude is not, and must be measured before any threshold is
+chosen.</li>
+</ul>
+<p>Two claims in this register were <strong>corrected against
+measurement rather than inherited from documentation</strong>, and both
+corrections mattered: SpecKit's installed constitution is a placeholder
+template, not a prescriptive nine-article document (R-23); and the 10
+registered speckit skills initially found on this host belonged to a
+<em>different project</em> before <code>specify init</code> created
+HelixCode's own set during this session (R-22). Both would have been
+plausible-sounding bluffs.</p>
+<p>No mitigation in this register has been implemented or proven yet —
+each carries a <em>designed</em> mitigation and a <em>planned</em>
+proof. Per §11.4.108 none of them is "done" until its runtime signature
+verifies on a clean target.</p>
+<p>No mitigation in this register has been implemented or proven yet —
+each carries a <em>designed</em> mitigation and a <em>planned</em>
+proof. Per §11.4.108 none of them is "done" until its runtime signature
+verifies on a clean target.</p>
+</body>
+</html>
