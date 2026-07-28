@@ -2,6 +2,7 @@ package shell
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -311,33 +312,36 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 		return nil, err
 	}
 
-	// Create pipes for streaming
-	stdoutPipe, err := execCmd.StdoutPipe()
-	if err != nil {
-		<-e.semaphore
-		return nil, err
-	}
-
-	stderrPipe, err := execCmd.StderrPipe()
+	// Create parent-owned pipes for streaming. This deliberately does NOT use
+	// execCmd.StdoutPipe()/StderrPipe() — see newStreamPipes for why.
+	pipes, err := newStreamPipes(execCmd)
 	if err != nil {
 		<-e.semaphore
 		return nil, err
 	}
 
 	// Create output streamer
-	streamer := NewOutputStreamer(stdoutPipe, stderrPipe)
+	streamer := NewOutputStreamer(pipes.stdoutR, pipes.stderrR)
 
 	// Apply sandbox
 	if err := e.sandbox.Apply(execCmd); err != nil {
+		pipes.closeAll()
 		<-e.semaphore
 		return nil, err
 	}
 
 	// Start command
 	if err := execCmd.Start(); err != nil {
+		pipes.closeAll()
 		<-e.semaphore
 		return nil, err
 	}
+
+	// Drop the parent's copies of the write ends now that the child has
+	// inherited them. Until every write end but the child's is closed the
+	// readers never observe EOF, so the scanners would hang after the command
+	// exits instead of finishing.
+	pipes.closeWriteEnds()
 
 	// Register for signal handling
 	pid := execCmd.Process.Pid
@@ -381,6 +385,10 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 	done := make(chan *ExecutionResult, 1)
 	go func() {
 		defer func() {
+			// Runs after the result has been published and after the scanners
+			// have finished, so closing the read ends here cannot truncate
+			// anything.
+			pipes.closeAll()
 			<-e.semaphore
 			e.signalHandler.Unregister(cmd.ID)
 			e.timeoutManager.Cancel(cmd.ID)
@@ -422,6 +430,27 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 			result.EndTime = time.Now()
 			result.Duration = result.EndTime.Sub(result.StartTime)
 			<-waitDone // Wait for process to actually exit
+
+			// The caller may have abandoned the output channels when it
+			// cancelled. Release any scanner parked on a channel send so the
+			// result below is still delivered.
+			streamer.Stop()
+		}
+
+		// Publish the result only once the scanners have finished. Every write
+		// end is closed by now (the child's on exit, ours right after Start),
+		// so the scanners drain the pipes to EOF and terminate on their own.
+		//
+		// This ordering is what makes "Done fired" mean "all output has already
+		// been delivered" instead of "output may still be in flight". It is the
+		// ordering guarantee, combined with the parent-owned pipes above, that
+		// replaces the previous race in which Cmd.Wait could tear the pipes
+		// down before the scanners had read a single byte.
+		<-streamer.Done()
+
+		if streamErr := streamer.Err(); streamErr != nil &&
+			result.Error == nil && !errors.Is(streamErr, ErrStreamStopped) {
+			result.Error = fmt.Errorf("output streaming failed: %w", streamErr)
 		}
 
 		done <- result
@@ -473,6 +502,94 @@ func (e *DefaultExecutor) ListExecutions() []*ExecutionStatus {
 		return true
 	})
 	return executions
+}
+
+// streamPipes holds the parent-owned ends of the pipes wired to a command's
+// stdout and stderr for streaming.
+type streamPipes struct {
+	stdoutR *os.File
+	stderrR *os.File
+	stdoutW *os.File
+	stderrW *os.File
+}
+
+// newStreamPipes wires execCmd's stdout and stderr to pipes owned by US.
+//
+// It deliberately does NOT use execCmd.StdoutPipe()/StderrPipe(). Those hand
+// the parent's read end to os/exec, which records it in Cmd.parentIOPipes
+// (go1.26 os/exec/exec.go:1095) and closes it inside Cmd.Wait
+// (exec.go:954, `closeDescriptors(c.parentIOPipes)`) the moment the process is
+// reaped. The stdlib states the constraint outright at exec.go:1077-1079:
+// "Cmd.Wait will close the pipe after seeing the command exit ... It is thus
+// incorrect to call Wait before all reads from the pipe have completed."
+//
+// ExecuteStream calls Wait from a goroutine that runs CONCURRENTLY with the
+// scanner goroutines, so nothing enforced that constraint. For a command that
+// exits almost immediately, Wait frequently won the race and closed the read
+// end before the scanner's first Read — the scanner then failed instantly, and
+// because bufio.Scanner reports a read error the same way it reports EOF, the
+// caller saw zero output alongside a perfectly correct exit code 0.
+//
+// Assigning an *os.File directly to Cmd.Stdout/Stderr removes the hazard
+// structurally rather than re-ordering around it: Cmd.writerDescriptor returns
+// an *os.File as-is (exec.go, `if f, ok := w.(*os.File); ok { return f, nil }`)
+// and appends it to NEITHER parentIOPipes NOR childIOFiles, so os/exec never
+// closes any of these four descriptors. Their lifetime is ours alone, and Wait
+// can no longer interfere with a read in progress.
+//
+// The caller MUST call closeWriteEnds after Start, and closeAll once streaming
+// has finished.
+func newStreamPipes(execCmd *exec.Cmd) (*streamPipes, error) {
+	stdoutR, stdoutW, err := os.Pipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdout pipe: %w", err)
+	}
+
+	stderrR, stderrW, err := os.Pipe()
+	if err != nil {
+		stdoutR.Close()
+		stdoutW.Close()
+		return nil, fmt.Errorf("failed to create stderr pipe: %w", err)
+	}
+
+	execCmd.Stdout = stdoutW
+	execCmd.Stderr = stderrW
+
+	return &streamPipes{
+		stdoutR: stdoutR,
+		stderrR: stderrR,
+		stdoutW: stdoutW,
+		stderrW: stderrW,
+	}, nil
+}
+
+// closeWriteEnds drops the parent's copies of the write ends. It MUST be called
+// after execCmd.Start(): while the parent still holds a write end open, the
+// pipe always has a live writer, so the reader never observes EOF even after
+// the child has exited.
+func (p *streamPipes) closeWriteEnds() {
+	if p.stdoutW != nil {
+		p.stdoutW.Close()
+		p.stdoutW = nil
+	}
+	if p.stderrW != nil {
+		p.stderrW.Close()
+		p.stderrW = nil
+	}
+}
+
+// closeAll releases every descriptor still held. Because os/exec does not own
+// these files, nothing else will. Safe to call more than once.
+func (p *streamPipes) closeAll() {
+	p.closeWriteEnds()
+	if p.stdoutR != nil {
+		p.stdoutR.Close()
+		p.stdoutR = nil
+	}
+	if p.stderrR != nil {
+		p.stderrR.Close()
+		p.stderrR = nil
+	}
 }
 
 // prepareCommand prepares an exec.Cmd from a Command

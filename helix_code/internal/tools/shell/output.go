@@ -3,10 +3,17 @@ package shell
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"sync"
 	"sync/atomic"
 )
+
+// ErrStreamStopped reports that streaming was abandoned via Stop before the
+// underlying reader reached EOF. It is an expected condition on the
+// cancel/timeout path, so callers should distinguish it from a genuine read
+// failure with errors.Is.
+var ErrStreamStopped = errors.New("output streaming stopped before EOF")
 
 // OutputStreamer streams command output in real-time
 type OutputStreamer struct {
@@ -16,6 +23,13 @@ type OutputStreamer struct {
 	stderrChan  chan string
 	maxLineSize int
 	done        chan struct{}
+	stop        chan struct{}
+	stopOnce    sync.Once
+	startOnce   sync.Once
+
+	mu        sync.Mutex
+	stdoutErr error
+	stderrErr error
 }
 
 // NewOutputStreamer creates a new output streamer
@@ -27,34 +41,48 @@ func NewOutputStreamer(stdout, stderr io.Reader) *OutputStreamer {
 		stderrChan:  make(chan string, 100),
 		maxLineSize: 4096,
 		done:        make(chan struct{}),
+		stop:        make(chan struct{}),
 	}
 }
 
-// Start starts streaming output
+// Start starts streaming output. It is idempotent: repeated calls do not spawn
+// additional scanners (which would double-close the output channels).
 func (os *OutputStreamer) Start() {
-	var wg sync.WaitGroup
+	os.startOnce.Do(func() {
+		var wg sync.WaitGroup
 
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		os.streamOutput(os.stdout, os.stdoutChan)
-	}()
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			os.streamOutput(os.stdout, os.stdoutChan, &os.stdoutErr)
+		}()
 
-	go func() {
-		defer wg.Done()
-		os.streamOutput(os.stderr, os.stderrChan)
-	}()
+		go func() {
+			defer wg.Done()
+			os.streamOutput(os.stderr, os.stderrChan, &os.stderrErr)
+		}()
 
-	go func() {
-		wg.Wait()
-		close(os.stdoutChan)
-		close(os.stderrChan)
-		close(os.done)
-	}()
+		go func() {
+			wg.Wait()
+			close(os.stdoutChan)
+			close(os.stderrChan)
+			close(os.done)
+		}()
+	})
+}
+
+// Stop abandons streaming, unblocking scanners that are parked trying to hand a
+// line to a consumer that has stopped reading. Without it a caller that walks
+// away from the output channels would wedge the scanners forever, since done is
+// only closed once both scanners have returned.
+func (os *OutputStreamer) Stop() {
+	os.stopOnce.Do(func() {
+		close(os.stop)
+	})
 }
 
 // streamOutput streams output from a reader to a channel
-func (os *OutputStreamer) streamOutput(reader io.Reader, ch chan<- string) {
+func (os *OutputStreamer) streamOutput(reader io.Reader, ch chan<- string, errOut *error) {
 	scanner := bufio.NewScanner(reader)
 	scanner.Buffer(make([]byte, os.maxLineSize), os.maxLineSize)
 
@@ -62,10 +90,40 @@ func (os *OutputStreamer) streamOutput(reader io.Reader, ch chan<- string) {
 		line := scanner.Text()
 		select {
 		case ch <- line:
-		case <-os.done:
+		case <-os.stop:
+			os.setErr(errOut, ErrStreamStopped)
 			return
 		}
 	}
+
+	// A scanner error is NOT a clean EOF. Recording it is what stops a
+	// truncated or failed read from masquerading as "the command produced no
+	// output": bufio.Scanner reports both as a plain end of iteration, so
+	// discarding scanner.Err() turns a hard I/O failure into a silent,
+	// perfectly green empty result.
+	if err := scanner.Err(); err != nil {
+		os.setErr(errOut, err)
+	}
+}
+
+// setErr records the first error observed on a stream.
+func (os *OutputStreamer) setErr(errOut *error, err error) {
+	os.mu.Lock()
+	defer os.mu.Unlock()
+	if *errOut == nil {
+		*errOut = err
+	}
+}
+
+// Err returns the first error observed while streaming, or nil if both streams
+// were read cleanly to EOF. It is only meaningful once Done is closed.
+func (os *OutputStreamer) Err() error {
+	os.mu.Lock()
+	defer os.mu.Unlock()
+	if os.stdoutErr != nil {
+		return os.stdoutErr
+	}
+	return os.stderrErr
 }
 
 // GetStdout returns the stdout channel
