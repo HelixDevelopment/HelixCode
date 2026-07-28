@@ -7,6 +7,46 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# The Go application lives in the inner module dir, NOT at the meta-repo root
+# (CLAUDE.md §3.2.1). Directory name is lowercase snake_case per CONST-052.
+INNER_MODULE_DIR="$PROJECT_ROOT/helix_code"
+
+# ==============================================================================
+# §11.4.119 — SINGLE-RESOURCE-OWNER: PORT-BINDING SWEEPS ARE **NOT** PARALLELISABLE
+# ------------------------------------------------------------------------------
+# DO NOT make module sweeps run concurrently. Partition parallelism by RESOURCE,
+# not by repository. The host ephemeral port range is ONE exclusive resource
+# shared by every checkout/track on this host.
+#
+# CAPTURED FORENSIC EVIDENCE (FACT, 2026-07-27):
+#   /proc/sys/net/ipv4/ip_local_port_range = 32768 60999   (one shared range)
+#   Two sweeps launched ~2 SECONDS apart contended for it:
+#     qa-results/full_retest/helix_agent_20260727T133218Z.log
+#     qa-results/full_retest/helix_code_inner_20260727T133220Z.log
+#   Measured fallout:
+#     - 112x "dial tcp: connect: cannot assign requested address" (helix_agent log)
+#     - FAIL dev.helix.code/internal/discovery (10.728s), 7 top-level failures:
+#         "no ports available in configured range" (port_allocator_test.go:375)
+#         "listen tcp :0: bind: address already in use"
+#         TestAllocatePort_RangeExhausted_WithEphemeral, TestConcurrentAllocations,
+#         TestConcurrentReleases, TestCheckHTTPHealth,
+#         TestCheckHTTPHealth_CustomEndpoint, TestCheckTCPHealth,
+#         TestPerformHealthChecks_Integration
+#   Counter-evidence the CODE is fine: the same package passes on a quiet host
+#   ("ok  dev.helix.code/internal/discovery", captured in qa-results).
+#
+# => Concurrent port-binding sweeps MANUFACTURE PHANTOM CODE DEFECTS. A red
+#    result produced under port contention is evidence of nothing (§11.4.119).
+#
+# The mutex below is an flock held for the whole process lifetime, so even two
+# INDEPENDENT invocations of this script (different shells, different checkouts,
+# different tracks) cannot overlap. Lint/build phases do not bind ports and are
+# deliberately left OUTSIDE the lock — that is the resource partition, not an
+# oversight. See scripts/lib/port_sweep_lock.sh for the full rationale.
+# ==============================================================================
+# shellcheck source=lib/port_sweep_lock.sh
+. "$SCRIPT_DIR/lib/port_sweep_lock.sh"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -23,14 +63,21 @@ log() {
     echo -e "${BLUE}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
 
+# NOTE: arithmetic MUST NOT use ((VAR++)). Under `set -e` (line 2) the
+# post-increment of a zero-valued counter evaluates to 0, which bash reports as
+# exit status 1, killing the script on the FIRST error()/success() call.
+# Captured repro:
+#   $ bash -c 'set -e; N=0; ((N++)); echo "reached: N=$N"'; echo "exit=$?"
+#   exit=1          # "reached" never printed
+# $((VAR + 1)) assignment always returns 0.
 error() {
     echo -e "${RED}[ERROR]${NC} $1" >&2
-    ((FAILED_TESTS++))
+    FAILED_TESTS=$((FAILED_TESTS + 1))
 }
 
 success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
-    ((PASSED_TESTS++))
+    PASSED_TESTS=$((PASSED_TESTS + 1))
 }
 
 warning() {
@@ -52,8 +99,13 @@ run_package_tests() {
 
     log "Running tests for $package_name..."
 
-    if [ -d "$package_path" ]; then
-        cd "$PROJECT_ROOT/$package_path"
+    # Package paths are relative to the INNER Go module (CLAUDE.md §3.2.1), and
+    # the existence check must be absolute — a relative check resolves against
+    # whatever cwd the previous package left behind.
+    local abs_package_path="$INNER_MODULE_DIR/$package_path"
+
+    if [ -d "$abs_package_path" ]; then
+        cd "$abs_package_path"
 
         if go test -v ./... -timeout 60s; then
             success "$package_name tests passed"
@@ -69,7 +121,7 @@ run_package_tests() {
 run_unit_tests() {
     log "Running all unit tests..."
 
-    cd "$PROJECT_ROOT/HelixCode"
+    cd "$INNER_MODULE_DIR"
 
     # Run tests for all packages
     run_package_tests "." "main"
@@ -99,7 +151,7 @@ run_unit_tests() {
 run_integration_tests() {
     log "Running integration tests..."
 
-    cd "$PROJECT_ROOT/HelixCode"
+    cd "$INNER_MODULE_DIR"
 
     # Run integration tests (marked with Integration in test name)
     if go test -v ./... -run Integration -timeout 120s; then
@@ -113,7 +165,7 @@ run_integration_tests() {
 run_e2e_tests() {
     log "Running end-to-end tests..."
 
-    cd "$PROJECT_ROOT/HelixCode"
+    cd "$INNER_MODULE_DIR"
 
     if [ -d "test/e2e" ]; then
         if go test -v ./test/e2e/... -timeout 300s; then
@@ -130,7 +182,7 @@ run_e2e_tests() {
 run_coverage() {
     log "Generating comprehensive coverage report..."
 
-    cd "$PROJECT_ROOT/HelixCode"
+    cd "$INNER_MODULE_DIR"
 
     # Run coverage for all packages
     go test -coverprofile="$PROJECT_ROOT/coverage.out" -covermode=atomic ./...
@@ -156,7 +208,7 @@ run_coverage() {
 run_linting() {
     log "Running linting checks..."
 
-    cd "$PROJECT_ROOT/HelixCode"
+    cd "$INNER_MODULE_DIR"
 
     if command -v golangci-lint &> /dev/null; then
         if golangci-lint run ./...; then
@@ -173,7 +225,7 @@ run_linting() {
 run_build_checks() {
     log "Running build checks..."
 
-    cd "$PROJECT_ROOT/HelixCode"
+    cd "$INNER_MODULE_DIR"
 
     # Try to build all applications
     applications=("terminal-ui" "desktop" "aurora-os" "symphony-os" "server")
@@ -196,6 +248,18 @@ main() {
     log "Test type: $test_type"
 
     check_environment
+
+    # --- §11.4.119 resource partition -----------------------------------------
+    # Phases that BIND PORTS must own the host ephemeral range exclusively.
+    # Phases that do not bind ports (lint, build) stay outside the mutex so
+    # genuine parallelism is preserved where it is actually safe.
+    # The lock is released automatically on ANY exit path (EXIT trap installed
+    # by helix_portlock_acquire; flock is additionally kernel-released on death).
+    case "$test_type" in
+        unit|integration|e2e|coverage|all)
+            helix_portlock_acquire "run-all-tests.sh $test_type"
+            ;;
+    esac
 
     case "$test_type" in
         "unit")
