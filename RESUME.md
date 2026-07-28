@@ -1,11 +1,19 @@
 # RESUME — HelixCode Session Handoff
 
-**Revision:** 9
+**Revision:** 10
 **Created:** 2026-07-08
-**Last modified:** 2026-07-28T18:03Z (round-2 review corrections, §11.4.131/§12.10)
+**Last modified:** 2026-07-29T01:35Z (rev 10 — paused at session limit with 12 streams in flight)
 **Status:** active
 **Maintainer:** CLI-agent main work stream
 **Authority:** §11.4.131 Session-resumption file — point a fresh agent here. Composes §11.4.127 / §12.10 / §11.4.65 / §11.4.44.
+
+> **Revision 10 (2026-07-29T01:35Z) — session-limit pause with 12 streams in flight, then resumed on a fresh alias.**
+> **State at the pause (verified live, not remembered):** main repo `bbd236c9`, **66 unpushed / 0 behind** (clean fast-forward, base `0a4eb8d0`). Both submodules are FULLY PUBLISHED and at 0 unpushed: `submodules/helix_agent` = `c740eaf1` (live on all four remotes), `submodules/debate_orchestrator` = `354635f`. Workable-items DB: 173 Fixed / 95 Implemented / 81 Completed / 3 Obsolete / 8 Queued (`HXC-159..166`).
+> **All 12 subagents were killed mid-flight by the limit, then resumed from their own transcripts** (SendMessage resume preserves accumulated context; a fresh dispatch would not). Post-kill §11.4.84 quiescence check passed: NO mutation residue in tracked non-test source, empty index, no `index.lock`, and both modules compile (`go build` / `go vet` exit 0) — verified behaviourally, not by marker grep, because the one live mutation found earlier in this repo carried no marker comment.
+> **Partial work preserved, not discarded** (§11.4.147): `submodules/helix_agent/tests/stress/latency_report_test.go` is an untracked in-progress file belonging to the HXC-165 stream. The detached compile-integrity sweep (PID 3635487, worktree `/tmp/.private/milos/cci-gate.iehNRx/`) SURVIVED the kill and kept running — it was launched against the older 64-commit HEAD, so it does not cover the two newest commits.
+> **Deliberate deferral:** tracker doc regeneration (`docs/Issues.md`, `docs/Fixed.md`, both summaries) is HELD until the DB-writing streams drain. Direction MUST be **db-to-md** — the SQLite DB is the SSoT (§11.4.95) and the docs are behind it. Do NOT follow `workable_items_sync_gate.sh`'s own remedy text, which advises `md-to-db`; that pushes stale docs INTO the source of truth, and a sibling remedy in this repo would have destroyed 156 tracked items.
+> **Release-tag blockers** (`helix-code-1.2.0-dev-0.0.1`): the 66-commit push, gated on a four-dimension delta review (test-genuineness, secret-leak, correctness, per-commit compile); the §11.4.40 full-suite retest, which needs a QUIESCENT host; and §11.4.185 operator manual-QA, which cannot be self-certified.
+> **Open operator-facing finding:** the SpecKit→Superpowers **Bridge is design-only** — 2 of 7 layers present, both install scripts and `constitution/scripts/extensions/` absent, and layer 5 (SuperBridge MCP) does not exist as software at all. The operator explicitly requires the Bridge, so authoring the installer is tracked work, not a detail.
 
 > **Revision 9 (2026-07-28T18:03Z) — corrections from an independent round-2 review of `bf1ce692` + `c2b6945e`.** That review reproduced this session's four-quadrant RED/GREEN matrix cell-for-cell and confirmed `bf1ce692` clean; it also raised three defects in the rev-8 doc edit, ALL corrected here.
 > **(i) ATTRIBUTION FIXED — rev-8 and rev-9 findings were spliced INTO the Revision 7 banner below, not given their own.** The "REPAIRED in `bf1ce692`", bisect-skip, and N2-closure text now sitting inside Revision 7's paragraph was written in RESUME rev 8 / CONTINUATION rev 20-21, NOT by the Revision 7 / Revision 19 doc-refresh pass — so Revision 7's own self-description ("this pass touched none of them") does NOT cover that text. Read it as rev-8-or-later. It is left in place rather than surgically un-spliced (moving it risks losing content); this banner is the correction.
