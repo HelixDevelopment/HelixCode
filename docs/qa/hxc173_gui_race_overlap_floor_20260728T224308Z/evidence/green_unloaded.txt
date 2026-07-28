@@ -1,0 +1,19 @@
+# GREEN — post-fix, unloaded: all three guards PASS with real overlap
+# (proves this is NOT a guard that always skips)
+$ uptime
+ 03:43:08 up 17:43,  2 users,  load average: 15.92, 27.43, 16.55
+$ go test -tags=ci -race -count=1 -v -run ThreadSafe ./applications/aurora_os/ ./applications/harmony_os/
+=== RUN   TestAuroraLLMTab_BackgroundWidgetMutationsAreUIThreadSafe
+    gui_thread_race_test.go:528: drove 12 production chat-send workers across 1 adaptive round(s) against 18 concurrent software renders of the real LLM tab in 7.424s; chat history holds 12 turns (1536 chars)
+--- PASS: TestAuroraLLMTab_BackgroundWidgetMutationsAreUIThreadSafe (8.05s)
+=== RUN   TestAuroraDashboardTab_TickerWidgetMutationsAreUIThreadSafe
+    gui_thread_race_test.go:651: ran the real dashboard stats ticker across 1 adaptive round(s) against 11 concurrent software renders over 3.796s; system-stats label advanced from "CPU: 0.0%\nMemory: 0.0%\nDisk: 0.0%\nNetwork: Active" to "CPU: 42.5%\nMemory: 63.2%\nDisk: 77.8%\nNetwork: Active"
+--- PASS: TestAuroraDashboardTab_TickerWidgetMutationsAreUIThreadSafe (4.26s)
+PASS
+ok  	dev.helix.code/applications/aurora_os	13.535s
+=== RUN   TestHarmonyLLMTab_BackgroundWidgetMutationsAreUIThreadSafe
+    gui_thread_race_test.go:501: drove 12 production chat-send workers across 1 adaptive round(s) against 18 concurrent software renders of the real LLM tab in 7.942s; chat history holds 12 turns (780 chars)
+--- PASS: TestHarmonyLLMTab_BackgroundWidgetMutationsAreUIThreadSafe (8.61s)
+PASS
+ok  	dev.helix.code/applications/harmony_os	9.834s
+EXIT=0

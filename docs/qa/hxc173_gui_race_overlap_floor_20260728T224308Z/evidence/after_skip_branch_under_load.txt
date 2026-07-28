@@ -1,0 +1,24 @@
+# (B) POST-FIX SKIP branch — the inconclusive verdict, under load.
+#
+# Reaching SKIP with the default 30s deadline requires starving a host so hard
+# that 30s of adaptive rounds still cannot land 2 repaints. The deadline knob
+# GUI_RACE_OVERLAP_DEADLINE_MS makes the branch demonstrable without that. It
+# can only make the harness give up SOONER — it can never turn a FAIL into a
+# PASS, nor a real data race into a clean run.
+#
+# LOAD: 160 spawned busy-loop workers on 64 CPUs.
+#
+# $ uptime
+#  03:39:36 up 17:40,  2 users,  load average: 16.00, 6.70, 6.41
+# $ runnable: 176/6416
+# $ GUI_RACE_OVERLAP_DEADLINE_MS=1 /tmp/aurora_fixed.test -test.run TestAuroraDashboardTab_TickerWidgetMutationsAreUIThreadSafe -test.v
+
+    gui_thread_race_test.go:666: INCONCLUSIVE — not a failure: the renderer completed only 1 repaints (floor 2) across 1 adaptive round(s) in 16.3s, exhausting the 1ms overlap deadline. The host was too contended for this guard to observe meaningful renderer/worker overlap, so a clean -race result here would prove nothing. The production stats ticker itself ran and was verified above; only the race window is unproven. Re-run on a less contended host.
+--- SKIP: TestAuroraDashboardTab_TickerWidgetMutationsAreUIThreadSafe (38.10s)
+PASS
+EXIT_B=0
+
+# SKIP, not FAIL, exit 0 — the verdict change HXC-173 asked for. Note the
+# message states the production ticker itself ran and was verified: the
+# real-defect assertions execute BEFORE the overlap verdict and keep FAIL
+# polarity, so a genuine defect is never masked by a busy host.

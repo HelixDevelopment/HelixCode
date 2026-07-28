@@ -1,0 +1,25 @@
+# RED — §11.4.115 reproduction on the BROKEN (pre-fix) artifact, under load
+#
+# PROVENANCE: the pre-fix versions of both guard files were restored in place
+# from HEAD (commit b78b531e) with `git show HEAD:<path> > <path>`, the test
+# binary was compiled from them, and the fixed versions were restored
+# immediately afterwards (verified by sha256sum -c). No git checkout/reset/clean
+# was used on the shared tree.
+#
+# LOAD: 160 spawned busy-loop workers on a 64-CPU host, all bounded by
+# `timeout 70` and matched on a private marker so only my own processes were
+# ever signalled (§11.4.174). The 1-minute load average LAGS a short window, so
+# the real-time contention signal is the runnable-task count from /proc/loadavg.
+#
+# $ uptime
+#  03:35:58 up 17:36,  3 users,  load average: 2.73, 5.78, 6.42
+# $ runnable: 178/6499          <-- 178 runnable tasks on 64 CPUs
+# $ /tmp/aurora_prefix.test -test.run TestAuroraDashboardTab_TickerWidgetMutationsAreUIThreadSafe -test.v
+
+    gui_thread_race_test.go:482: renderer completed only 1 repaints during the drive — too little renderer/worker overlap for this guard to be meaningful
+--- FAIL: TestAuroraDashboardTab_TickerWidgetMutationsAreUIThreadSafe (31.48s)
+FAIL
+TEST_EXIT=1
+
+# This is the defect: the guard reports FAIL because the HOST was busy. The
+# production ticker under test was fine — the same guard passes unloaded.

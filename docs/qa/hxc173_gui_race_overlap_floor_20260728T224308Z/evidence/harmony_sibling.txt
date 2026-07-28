@@ -1,0 +1,35 @@
+# THE SIBLING — applications/harmony_os/gui_thread_race_test.go
+#
+# The sibling carried the SAME defect (an inline render loop with
+# `if renderCount < 2 { t.Fatalf(...) }` at :332) and received the SAME fix.
+#
+# 1) PASS under heavy load — no false failure:
+#
+# $ uptime
+#  03:41:13 up 17:41,  2 users,  load average: 77.96, 38.24, 18.18
+# $ runnable: 183/6370
+# $ GUI_RACE_OVERLAP_DEADLINE_MS=1 /tmp/harmony_fixed.test -test.run TestHarmonyLLMTab_... -test.v
+--- PASS: TestHarmonyLLMTab_BackgroundWidgetMutationsAreUIThreadSafe (68.06s)
+PASS
+EXIT=0
+#
+# Its round-0 window inherently spans many repaints (12 driven sends, each
+# costing about one repaint), so even at load 77.96 it still cleared the floor
+# and PASSed. Good behaviour — but it means this run did NOT exercise its SKIP
+# branch, so that branch is proven separately below rather than left unproven.
+#
+# 2) §1.1 PAIRED MUTATION — harmony's SKIP branch fires and is well-formed.
+#    Mutation: harmonyOverlapFloor 2 -> 1000000 (unreachable), then restored.
+#
+# $ GUI_RACE_OVERLAP_DEADLINE_MS=1 go test -tags=ci -race -count=1 -v -run TestHarmonyLLMTab_... ./applications/harmony_os/
+    gui_thread_race_test.go:516: INCONCLUSIVE — not a failure: the renderer completed only 18 repaints (floor 1000000) across 1 adaptive round(s) in 7.831s, exhausting the 1ms overlap deadline. ... The production send path itself ran and was verified above; only the race window is unproven. Re-run on a less contended host.
+--- SKIP: TestHarmonyLLMTab_BackgroundWidgetMutationsAreUIThreadSafe (8.49s)
+ok  	dev.helix.code/applications/harmony_os	9.717s
+EXIT=0
+#
+# SKIP, not FAIL, exit 0. Restored byte-identically afterwards:
+# $ git diff --stat -- helix_code/applications/harmony_os/gui_thread_race_test.go
+# (empty)
+# $ grep -n "^const harmonyOverlapFloor" ...
+# 215:const harmonyOverlapFloor = 2
+# No mutation residue persists (§11.4.84).
