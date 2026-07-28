@@ -96,6 +96,15 @@ check_environment() {
 run_package_tests() {
     local package_path="$1"
     local package_name="$2"
+    # $3 — extra `go test` flags, space-separated (e.g. "-tags=ci -race").
+    # $4 — timeout override; the 60s default is too short for -race runs.
+    local extra_flags_raw="${3:-}"
+    local pkg_timeout="${4:-60s}"
+
+    local -a extra_flags=()
+    if [ -n "$extra_flags_raw" ]; then
+        read -r -a extra_flags <<< "$extra_flags_raw"
+    fi
 
     log "Running tests for $package_name..."
 
@@ -107,7 +116,7 @@ run_package_tests() {
     if [ -d "$abs_package_path" ]; then
         cd "$abs_package_path"
 
-        if go test -v ./... -timeout 60s; then
+        if go test -v ${extra_flags[@]+"${extra_flags[@]}"} ./... -timeout "$pkg_timeout"; then
             success "$package_name tests passed"
         else
             error "$package_name tests failed"
@@ -142,9 +151,33 @@ run_unit_tests() {
 
     # Run tests for applications
     run_package_tests "applications/terminal_ui" "terminal-ui"
-    run_package_tests "applications/desktop" "desktop"
-    run_package_tests "applications/aurora_os" "aurora-os"
-    run_package_tests "applications/symphony-os" "symphony-os"
+
+    # Fyne GUI applications — MUST carry -tags=ci and -race.
+    #
+    # -tags=ci selects Fyne's non-GL driver. Without it these packages do not
+    # COMPILE on a host lacking X11/GL dev headers (`fatal error: X11/Xlib.h`),
+    # so `desktop` and `aurora-os` — listed here since 2025-11 — have never
+    # actually had their tests executed by this suite. The entries looked like
+    # coverage while producing none.
+    #
+    # -race is not optional either: applications/{harmony_os,aurora_os}/
+    # gui_thread_race_test.go and applications/desktop/main_racefix_test.go
+    # exist to detect data races from off-main-goroutine Fyne widget mutation.
+    # Without the detector they still exercise the code but cannot observe the
+    # thing they were written to catch — a green run would mean nothing. These
+    # guards measured 415 / 495 races on the pre-fix artifact and 0 on HEAD.
+    #
+    # 600s because a -race run of these packages takes ~60s each (~160s at
+    # -count=3); the 60s default would time out and report a false failure
+    # (§11.4.201: a false-positive failure is as damaging as a false pass).
+    run_package_tests "applications/desktop"    "desktop"    "-tags=ci -race" "600s"
+    run_package_tests "applications/aurora_os"  "aurora-os"  "-tags=ci -race" "600s"
+    # harmony_os: symphony-os was RENAMED to harmony_os in 866dec8f
+    # (2025-11-07 — the same commit deleted symphony-os/main.go and added
+    # harmony_os/main.go). This suite kept naming the old path, so for nine
+    # months it silently skipped ("directory not found") while harmony_os was
+    # covered by nothing. Restoring the reference, not deleting it (§11.4.124).
+    run_package_tests "applications/harmony_os" "harmony-os" "-tags=ci -race" "600s"
 }
 
 # Run integration tests
