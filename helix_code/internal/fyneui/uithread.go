@@ -50,6 +50,26 @@
 //   - Perform the whole read-modify-write inside ONE closure. Splitting it
 //     (reading widget state outside, writing inside) leaves the read racing.
 //   - Do NOT nest these calls: uiMu is not reentrant.
+//
+// # Known limitation: DoAndWait across driver shutdown
+//
+// HONESTY (§11.4.6): under glfw, DoAndWait enqueues fn onto the driver's
+// func-queue and blocks on a done signal that only the main loop sends. That
+// loop's shutdown path drains the pending entries — releasing their waiters
+// WITHOUT running them — then sets a `drained` flag and closes the queue; once
+// that flag is visible, later calls run fn INLINE on the caller rather than
+// queueing it (internal/driver/glfw/loop.go: runOnMainWithWait). So the plain
+// "called after shutdown" case is already handled by the driver. The residual
+// exposure is the interleaving where an enqueue lands after the drain has
+// emptied the queue but before the enqueuing goroutine observes `drained`:
+// nothing will ever apply that entry or signal its done channel, so the caller
+// parks forever. Do never waits, so it cannot park; its entry is simply
+// discarded. Impact in THIS repository today is nil — the front-ends stop their
+// worker goroutines via stopUpdate before teardown, and process exit reaps
+// anything still parked. It would matter for a long-lived multi-window app that
+// tears down one window while the process keeps running, where such a worker
+// would leak for the remaining process lifetime. No guard is implemented here
+// because a correct one needs a shutdown signal this package does not own.
 package fyneui
 
 import (

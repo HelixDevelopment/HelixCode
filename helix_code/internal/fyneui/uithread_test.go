@@ -167,13 +167,25 @@ func TestTickOrStop_NilStopNeverStops(t *testing.T) {
 }
 
 // TestSyncSerializesAgainstDo proves the claim the whole package rests on: a
-// background goroutine dispatching through Do is mutually exclusive with a
-// renderer calling Sync. Under `-race` an unsynchronized implementation trips
-// the detector on the shared counter; without `-race` a lost update still
-// fails the final count.
+// background goroutine dispatching through DoAndWait is mutually exclusive with
+// a renderer calling Sync.
 //
 // This runs on the fyne TEST driver, which is precisely the driver that offers
 // no serialization of its own — so it is the case that actually needs proving.
+//
+// WHAT PINS THIS TEST: `-race`, and ONLY `-race` (§11.4.6). The final-count
+// assertion CANNOT catch a lost update, and no longer claims to. Every increment
+// runs on the SINGLE worker goroutine — under the test driver DoAndWait invokes
+// the closure inline on the caller, see the package doc — so `shared` has
+// exactly one writer, and wg.Wait() establishes a happens-before edge to the
+// final read. `shared == rounds` therefore holds even with uiMu deleted
+// outright. Measured by paired mutation on this file's subject: with the
+// locking stripped from Do/DoAndWait/Sync this test PASSES 5/5 at `-count=5`
+// WITHOUT `-race`, and FAILS under `-race` (1 WARNING: DATA RACE — the worker's
+// write inside DoAndWait against this goroutine's read inside Sync).
+//
+// The count assertion is retained for the OTHER failure it does catch: a
+// DoAndWait/Sync that silently drops the closure instead of running it.
 func TestSyncSerializesAgainstDo(t *testing.T) {
 	newTestAppForUIThread(t)
 
@@ -197,6 +209,65 @@ func TestSyncSerializesAgainstDo(t *testing.T) {
 
 	Sync(func() { observed = shared })
 	if observed != rounds {
-		t.Fatalf("shared counter = %d, want %d — Do/Sync did not serialize", observed, rounds)
+		t.Fatalf("shared counter = %d, want %d — DoAndWait/Sync did not serialize", observed, rounds)
+	}
+}
+
+// TestDoSerializesAgainstSync covers Do's lock path, which nothing else in this
+// package exercises directly: TestSyncSerializesAgainstDo dispatches through
+// DoAndWait, so Do's uiMu.Lock() is reached only transitively via production
+// call sites and is pinned by no assertion here.
+//
+// DETERMINISM — why there is no sleep (§11.4.6). Do is fire-and-forget in
+// PRODUCTION (glfw queues the closure and returns immediately), but under the
+// fyne TEST driver it is not asynchronous at all: DoFromGoroutine "ignores the
+// wait flag as our threading is simple" (fyne/v2/test/driver.go) and delegates
+// to internal/async.EnsureNotMain, which — off the main goroutine — invokes the
+// closure INLINE on the caller. Each Do below therefore completes before the
+// worker's next iteration, so wg.Wait() is a REAL completion signal, not a
+// "probably finished by now" guess. A time.Sleep here would be invented
+// evidence for a synchronisation this driver already provides.
+//
+// WHAT THIS PROVES: under `-race`, that the body dispatched through Do is
+// mutually exclusive with a renderer concurrently inside Sync. It is a genuine
+// pin, not a passenger: with the locking stripped from Do/Sync this test FAILS
+// under `-race` (verified by paired mutation, same experiment as on
+// TestSyncSerializesAgainstDo).
+//
+// WHAT THIS DOES NOT PROVE — two distinct limits, both load-bearing:
+//   - Nothing about Do's PRODUCTION behaviour. Its asynchrony and its FIFO
+//     ordering guarantee live in the glfw func-queue, which the test driver
+//     never touches; here Do is effectively DoAndWait. Do NOT read a pass here
+//     as evidence that queued appends land in order under glfw.
+//   - The final count does not pin the lock. `shared` has a single writer and
+//     wg.Wait() orders the final read, so the count holds even with uiMu
+//     removed (measured — identical falsification to the DoAndWait test).
+//     Without `-race` this degrades to a liveness check: Do must actually run
+//     its closure rather than drop it.
+func TestDoSerializesAgainstSync(t *testing.T) {
+	newTestAppForUIThread(t)
+
+	const rounds = 500
+	shared := 0
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < rounds; i++ {
+			Do(func() { shared++ })
+		}
+	}()
+
+	observed := 0
+	for i := 0; i < rounds; i++ {
+		Sync(func() { observed = shared })
+	}
+	wg.Wait()
+
+	Sync(func() { observed = shared })
+	if observed != rounds {
+		t.Fatalf("shared counter = %d, want %d — Do dropped a closure, or Do/Sync "+
+			"did not serialize", observed, rounds)
 	}
 }

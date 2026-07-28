@@ -153,7 +153,14 @@ func newRecordingApp(t *testing.T) (*DesktopApp, fyne.Theme) {
 	// constructors and previously ran forever: one was observed still repainting
 	// labels after its own test had finished, racing a later test's app
 	// construction. Closing stopUpdate is exactly what production Close() does.
-	t.Cleanup(func() { close(da.stopUpdate) })
+	//
+	// Route through stopOnce rather than closing the channel directly, mirroring
+	// Close()'s own guard. This app is hand-built and never calls Close(), so a
+	// bare close() is harmless TODAY — but it is one edit away from a panic: the
+	// moment any test here also calls da.Close(), the second close of the same
+	// channel panics. Going through the same sync.Once makes the teardown
+	// idempotent and order-independent, exactly as production is.
+	t.Cleanup(func() { da.stopOnce.Do(func() { close(da.stopUpdate) }) })
 
 	// A virtual AppTabs so the Dashboard "Quick Actions" closures (which call
 	// da.tabs.SelectIndex) have a non-nil target. We never tap those; this is
