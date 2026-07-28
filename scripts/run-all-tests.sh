@@ -132,8 +132,21 @@ run_unit_tests() {
 
     cd "$INNER_MODULE_DIR"
 
-    # Run tests for all packages
-    run_package_tests "." "main"
+    # Run tests for all packages.
+    #
+    # The "." entry is `go test ./...` over the WHOLE inner module — which
+    # INCLUDES applications/*, since there is no nested go.mod. Without
+    # -tags=ci those Fyne packages do not COMPILE on a host lacking X11/GL
+    # headers, so this entry failed on every run regardless of code health —
+    # a §11.4.201 false-positive failure. An earlier repair fixed the three
+    # per-app entries below and MISSED this one: the same
+    # reconciliation-in-one-place-not-its-siblings shape it was fixing.
+    #
+    # -tags=ci is safe module-wide: it selects only Fyne's non-GL driver, and
+    # no first-party file under applications/ internal/ cmd/ carries a `ci`
+    # build tag, so our own code is byte-identical under it.
+    # 900s because this is the whole module, not one package.
+    run_package_tests "." "main" "-tags=ci" "900s"
     run_package_tests "internal/auth" "auth"
     run_package_tests "internal/config" "config"
     run_package_tests "internal/database" "database"
@@ -147,7 +160,12 @@ run_unit_tests() {
     run_package_tests "internal/session" "session"
     run_package_tests "internal/task" "task"
     run_package_tests "internal/worker" "worker"
-    run_package_tests "shared/mobile-core" "mobile-core"
+    # Directory is shared/mobile_core (snake_case per §11.4.29). The old
+    # hyphenated path did not exist, so this silently "skipped" with a WARNING
+    # rather than an error — the same dead-reference class as the symphony-os
+    # entry below, and invisible for the same reason: a missing directory is a
+    # warning, never a failure.
+    run_package_tests "shared/mobile_core" "mobile-core"
 
     # Run tests for applications
     run_package_tests "applications/terminal_ui" "terminal-ui"
@@ -217,21 +235,44 @@ run_coverage() {
 
     cd "$INNER_MODULE_DIR"
 
-    # Run coverage for all packages
-    go test -coverprofile="$PROJECT_ROOT/coverage.out" -covermode=atomic ./...
+    # Run coverage for all packages.
+    #
+    # Two defects fixed here, both silent:
+    #  1. Missing -tags=ci meant `./...` could not COMPILE applications/* on a
+    #     host without X11/GL headers — so this always failed.
+    #  2. These were BARE statements under `set -e` (line 2), so that failure
+    #     killed the script instantly: `coverage` and `all` exited non-zero
+    #     having printed no summary at all, and the reason was never shown.
+    # Now explicitly guarded, so a genuine coverage failure is REPORTED and the
+    # summary block below still runs.
+    if ! go test -tags=ci -coverprofile="$PROJECT_ROOT/coverage.out" -covermode=atomic ./...; then
+        error "module-wide coverage run failed (profile may be partial)"
+    fi
 
     # Run coverage for task package specifically
-    go test -coverprofile="$PROJECT_ROOT/task-coverage.out" -covermode=atomic ./internal/task/...
+    if ! go test -coverprofile="$PROJECT_ROOT/task-coverage.out" -covermode=atomic ./internal/task/...; then
+        error "internal/task coverage run failed"
+    fi
 
-    # Display coverage summary
+    # Display coverage summary. `go tool cover` failure was masked by the pipe
+    # to tail (the pipeline's status is tail's, which is ~always 0), so a
+    # corrupt or empty profile printed nothing and read as success.
     if [ -f "$PROJECT_ROOT/coverage.out" ]; then
         log "Overall coverage summary:"
-        go tool cover -func="$PROJECT_ROOT/coverage.out" | tail -1
+        if ! go tool cover -func="$PROJECT_ROOT/coverage.out" > /tmp/cover-all.txt 2>&1; then
+            error "go tool cover failed on coverage.out"
+        else
+            tail -1 /tmp/cover-all.txt
+        fi
     fi
 
     if [ -f "$PROJECT_ROOT/task-coverage.out" ]; then
         log "Task package coverage summary:"
-        go tool cover -func="$PROJECT_ROOT/task-coverage.out" | tail -1
+        if ! go tool cover -func="$PROJECT_ROOT/task-coverage.out" > /tmp/cover-task.txt 2>&1; then
+            error "go tool cover failed on task-coverage.out"
+        else
+            tail -1 /tmp/cover-task.txt
+        fi
     fi
 
     success "Coverage report generated"
@@ -260,12 +301,38 @@ run_build_checks() {
 
     cd "$INNER_MODULE_DIR"
 
-    # Try to build all applications
-    applications=("terminal-ui" "desktop" "aurora-os" "symphony-os" "server")
+    # Build every application from the path it ACTUALLY lives at.
+    #
+    # This loop built `./cmd/<app>` for all five names, but only `server`
+    # exists under cmd/ — the GUI apps live under applications/. So `build`
+    # and `all` reported FOUR phantom failures and exited 1 on every run even
+    # when everything real was green (§11.4.201: a false-positive failure is
+    # as damaging as a false pass — it trains people to ignore the result).
+    # `2>/dev/null` hid the "no such package" error that would have revealed it.
+    #
+    # symphony-os was RENAMED to harmony_os in 866dec8f (2025-11-07 — the same
+    # commit deleted symphony-os/main.go and added harmony_os/main.go); the
+    # reference was never updated. Restored, not dropped (§11.4.124).
+    #
+    # Format is "<label>:<package-path>:<extra-flags>". The Fyne apps need
+    # -tags=ci or they do not compile on a host without X11/GL headers.
+    applications=(
+        "server:./cmd/server:"
+        "terminal-ui:./applications/terminal_ui:-tags=ci"
+        "desktop:./applications/desktop:-tags=ci"
+        "aurora-os:./applications/aurora_os:-tags=ci"
+        "harmony-os:./applications/harmony_os:-tags=ci"
+    )
 
-    for app in "${applications[@]}"; do
-        log "Building $app..."
-        if go build -o "/tmp/$app" "./cmd/$app" 2>/dev/null; then
+    for entry in "${applications[@]}"; do
+        app="${entry%%:*}"
+        rest="${entry#*:}"
+        pkg="${rest%%:*}"
+        app_flags="${rest#*:}"
+        log "Building $app ($pkg)..."
+        # stderr is NOT suppressed: a build failure must show its reason, or a
+        # wrong package path is indistinguishable from broken code.
+        if go build ${app_flags:+$app_flags} -o "$(mktemp -d)/$app" "$pkg"; then
             success "$app build successful"
         else
             error "$app build failed"
