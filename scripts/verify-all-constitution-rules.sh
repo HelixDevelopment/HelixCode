@@ -633,6 +633,52 @@ if want_gate G18; then
 fi
 
 # ---------------------------------------------------------------------------
+# G19 — §11.4.108 per-commit compile integrity (recent window)
+#
+# Binds `verify-compile-tests` to each COMMIT rather than the working tree.
+# The gap it closes: an author whose tree carries an uncommitted symbol sees a
+# truthfully-green working-tree gate and ships a commit that compiles for
+# nobody else. Exactly that shipped THREE non-compiling commits in this delta
+# (3fd55a4d/3c8197cf/905a0b0a — a test referencing a struct field committed
+# only later). `go build` never sees _test.go files, so only a test-COMPILING
+# check catches it.
+#
+# WHY BOUNDED TO --last 3, stated honestly rather than hidden: the check costs
+# ~50-80s per compile-relevant commit, so sweeping a 67-commit delta is ~30min
+# — too expensive for a sweep run this often. The gate's author therefore left
+# it deliberately unwired, which an independent review correctly raised as
+# Critical: a gate invoked by nothing enforces nothing, and this one exists
+# specifically to stop a failure that already happened (§11.4.227).
+#
+# A bounded window is the honest middle: it enforces on the commits where new
+# breakage actually appears, at proportional cost. It does NOT prove the whole
+# delta compiles — run the full sweep explicitly for that:
+#   bash scripts/gates/commit_compile_integrity_gate.sh --range <base>..HEAD
+# Deliberately NOT wired into pre-push: a multi-minute blocking hook would
+# violate §11.4.234 (the commit/push mechanism must always stay unblocked).
+#
+# Further honest boundaries inherited from the gate: -tags=nogui is pinned (no
+# X11/GL headers here), so the three !nogui GUI packages are NOT compile-
+# verified; and submodules/ is held at live working-tree state, so this proves
+# main-repo delta integrity, not main x submodule pin-pair integrity.
+# ---------------------------------------------------------------------------
+if want_gate G19; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G19 — §11.4.108 per-commit compile integrity, last 3 (CM-COMMIT-COMPILE-INTEGRITY)"
+    if bash "$ROOT/scripts/gates/commit_compile_integrity_gate.sh" --last 3 >/tmp/g19-cci.out 2>&1; then
+        # Surface the compile-checked COUNT, never a bare "compiles". A window
+        # of docs-only commits legitimately checks ZERO, and a pass message that
+        # says "each of the last 3 compiles" would then be a bluff at the
+        # registration layer — indistinguishable from a window that really did
+        # type-check three commits (§11.4 / §11.4.1).
+        gate_pass G19 "$(grep -oE 'commits in range: [0-9]+ \| compile-checked: [0-9]+ \| skipped \(no inner Go\): [0-9]+' /tmp/g19-cci.out | tail -1) — no non-compiling commit in the bounded window (see gate comment for what this does NOT cover)"
+    else
+        gate_fail G19 "a recent commit does NOT compile — it is broken for every checkout but the author's (see /tmp/g19-cci.out)" \
+            "$(tail -8 /tmp/g19-cci.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
