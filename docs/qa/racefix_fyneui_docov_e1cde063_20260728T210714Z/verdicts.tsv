@@ -1,0 +1,22 @@
+result	case_id	assertion	expected	observed	evidence
+PASS	host_context	host context captured as a recorded fact (not a pass/fail criterion)	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/host_context.http
+PASS	tree_clean	no uncommitted local edit to the files under test (§11.4.108: tested source == shipped source)	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/tree_clean.http
+PASS	sig_limitation	runtime signature present in the shipped tracked source: the package doc records the DoAndWait/shutdown limitation instead of implying none	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/sig_limitation.http
+PASS	sig_limitation	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/sig_limitation.http
+PASS	sig_docoverage	runtime signature present in the shipped tracked source: the Do lock path now has its own direct guard	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/sig_docoverage.http
+PASS	sig_docoverage	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/sig_docoverage.http
+PASS	sig_stoponce	runtime signature present in the shipped tracked source: the desktop test teardown now routes through the same sync.Once Close() uses	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/sig_stoponce.http
+PASS	sig_stoponce	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/sig_stoponce.http
+PASS	absent_bypass	removed pattern is genuinely absent (git grep finds nothing): no test closes stopUpdate directly, bypassing the sync.Once in Close()	not 0	1	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/absent_bypass.http
+PASS	absent_bypass	no file:line hit line was printed for the removed pattern	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/absent_bypass.http
+PASS	guard_uithread	guard tests exit 0 under -race -count=2	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/guard_uithread.http
+PASS	guard_uithread	guard TestDoSerializesAgainstSync genuinely RAN and passed (not an empty -run filter exiting 0)	--- PASS: TestDoSerializesAgainstSync	present	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/guard_uithread.http
+PASS	guard_uithread	guard TestSyncSerializesAgainstDo genuinely RAN and passed (not an empty -run filter exiting 0)	--- PASS: TestSyncSerializesAgainstDo	present	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/guard_uithread.http
+PASS	guard_uithread	race detector reported no data race	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/guard_uithread.http
+PASS	guard_uithread	the -run filter matched at least one test	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/guard_uithread.http
+PASS	suite_fyneui	full package suite exits 0 under -race	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/suite_fyneui.http
+PASS	suite_fyneui	race detector reported no data race across the package	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/suite_fyneui.http
+PASS	suite_fyneui	no test in the package failed	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/suite_fyneui.http
+PASS	suite_desktop	full package suite exits 0 under -race	0	0	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/suite_desktop.http
+PASS	suite_desktop	race detector reported no data race across the package	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/suite_desktop.http
+PASS	suite_desktop	no test in the package failed	absent	absent	docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/transcripts/suite_desktop.http

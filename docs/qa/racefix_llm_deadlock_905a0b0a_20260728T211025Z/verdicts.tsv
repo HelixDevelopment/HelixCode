@@ -1,0 +1,15 @@
+result	case_id	assertion	expected	observed	evidence
+PASS	host_context	host context captured as a recorded fact (not a pass/fail criterion)	0	0	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/host_context.http
+PASS	tree_clean	no uncommitted local edit to the files under test (§11.4.108: tested source == shipped source)	0	0	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/tree_clean.http
+PASS	sig_anthropic	runtime signature present in the shipped tracked source: the Anthropic stream parser is a ctx-aware function, not an inline send loop	0	0	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/sig_anthropic.http
+PASS	sig_anthropic	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/sig_anthropic.http
+PASS	sig_azure	runtime signature present in the shipped tracked source: the Azure SSE stream parser carries the same ctx-aware shape	0	0	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/sig_azure.http
+PASS	sig_azure	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/sig_azure.http
+PASS	guard_deadlock	guard tests exit 0 under -race -count=2	0	0	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/guard_deadlock.http
+PASS	guard_deadlock	guard TestStreamWithTools_ManyChunks_DoesNotDeadlock genuinely RAN and passed (not an empty -run filter exiting 0)	--- PASS: TestStreamWithTools_ManyChunks_DoesNotDeadlock	present	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/guard_deadlock.http
+PASS	guard_deadlock	guard TestProviderGenerateStream_NoGoroutineLeak_OnCtxCancelWithoutDrain genuinely RAN and passed (not an empty -run filter exiting 0)	--- PASS: TestProviderGenerateStream_NoGoroutineLeak_OnCtxCancelWithoutDrain	present	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/guard_deadlock.http
+PASS	guard_deadlock	race detector reported no data race	absent	absent	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/guard_deadlock.http
+PASS	guard_deadlock	the -run filter matched at least one test	absent	absent	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/guard_deadlock.http
+PASS	suite_llm	full package suite exits 0 under -race	0	0	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/suite_llm.http
+PASS	suite_llm	race detector reported no data race across the package	absent	absent	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/suite_llm.http
+PASS	suite_llm	no test in the package failed	absent	absent	docs/qa/racefix_llm_deadlock_905a0b0a_20260728T211025Z/transcripts/suite_llm.http
