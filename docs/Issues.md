@@ -96,24 +96,6 @@ A QA-session test checks that a freshly started session reports the status 'pend
 
 The server package's regression guards each support a switch that flips them between reproducing an old defect and guarding against its return, but the switch is spelled four different ways across the files and is read through three different helper styles. Having several names is genuinely useful, because each guard corresponds to a different historical fix and testers need to flip them one at a time rather than all at once, so the goal is not to collapse them into one variable. The problem is that the inconsistency has already caused real defects twice: one file shipped with its default set the wrong way round so its verification checks never ran, and another shipped with a comment describing the opposite of what its code did. Both were fixed, but the drift that produced them remains. This work is to agree one naming pattern and one helper shape, apply it to every guard in the package, and record the convention in a single place so the next guard author copies something correct. Done means every switch follows the documented pattern, every default is the safe standing-guard direction, and a check exists that would catch a future file breaking the convention.
 
-## HXC-156 — harmony_os background system monitor used an unsynchronised on/off flag as its stop signal, racing application shutdown
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-**Created-By:** Claude
-
-The Harmony OS desktop application runs a background system monitor that samples processor and memory usage every few seconds. To decide whether to keep going, that monitor repeatedly read a plain on/off marker, while the application's shutdown routine switched the very same marker off from a different execution thread — with nothing coordinating the two. Two threads touching the same value at the same moment with no coordination is a data race: the shutdown signal can be missed entirely, leaving the monitor running and still writing to shared state after the application believes it has torn itself down, and on some machines the value read is not guaranteed to be either the old or the new one. This was not theoretical; it surfaced as a reproducible test failure, with the Harmony OS test suite failing on its cleanup test on every single run once race detection was enabled. To reproduce it, run the Harmony OS test package with the Go race detector switched on; the report names the monitor loop and the cleanup routine as the two conflicting parties. The same audit found a second, quieter instance of the same problem in the same component: the measured processor, memory, temperature and power figures were written by the monitor thread while the system-monitoring screen read them for display, again with no coordination, which could paint a screen mixing numbers from two different sampling rounds. The fix makes the monitor stop on the same shutdown channel the rest of the application already uses, protects the shared figures and the status marker with a lock, and makes shutdown wait for the monitor to confirm it has genuinely finished before proceeding. Acceptance: the Harmony OS test package completes with zero races over repeated consecutive runs under the race detector, and deliberately restoring the old code makes the identical race reappear, proving the guard is real and not merely agreeable.
-
-## HXC-157 — harmony_os and aurora_os changed on-screen elements directly from background threads, which the Fyne UI toolkit forbids
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-**Created-By:** Claude
-
-The Harmony OS and Aurora OS desktop front-ends both perform slow work in the background — asking a language model for an answer, polling provider health, refreshing dashboard statistics, starting the server — and each of those background workers wrote its result straight into an on-screen element. The user interface toolkit this product uses does not permit that: on-screen elements may only be changed from the single thread that draws them, and any other thread must hand its update over to be applied there. Doing it directly means the drawing code can be reading an element at the exact moment a background worker rewrites it, which is a data race that can corrupt what the user sees or crash the application outright. The problem was disguised rather than hidden: in both applications the offending line sat directly beneath a comment stating 'Update UI on main thread', which was simply untrue — it is the identical false comment already removed from the desktop front-end when this same defect class was fixed there. Two further aggravating factors were found by auditing every background worker in both files rather than only the reported line: several of these workers also read on-screen elements to decide what to do, which races just as surely as writing them, and several ran on endless timers with no way to stop, so they kept modifying elements belonging to a window that had already been closed and leaked for the lifetime of the process. The fix routes every such update through the shared dispatch helper introduced for the desktop front-end, keeps each read-and-then-write pair inside a single handover so the read cannot be left behind, moves the reads that happen at dispatch time onto the drawing thread where they belong, corrects the false comments in place so a later edit is not invited to undo the fix on their authority, and makes the endless timers stop when the application shuts down. Acceptance: both packages build and pass with the race detector enabled over repeated runs, no background worker in either file touches an on-screen element without going through the helper, and the desktop front-end's behaviour is unchanged.
-
 ## HXC-158 — No test builds the harmony_os or aurora_os screens, so their widget-threading fixes rest on code review rather than captured runtime proof
 
 **Status:** Queued
@@ -122,4 +104,73 @@ The Harmony OS and Aurora OS desktop front-ends both perform slow work in the ba
 **Created-By:** Claude
 
 The Harmony OS and Aurora OS front-ends were just corrected so that background workers no longer modify on-screen elements directly. That correction is, however, only partly backed by evidence. No test in either package ever constructs the application's screens, so the background workers that paint them are never started while the tests run, and the race detector therefore never gets the opportunity to observe the very code paths that were changed. Concretely, running the Aurora OS package under the race detector reported zero races both before and after the fix — not because the defect was absent, but because nothing under test reaches it; the corresponding Harmony OS failure that was reproduced and fixed came from a different component, the background system monitor, which tests do start. The practical risk is that a future edit could silently reintroduce a direct on-screen write from a background worker in either file and every test would stay green, exactly the situation the anti-bluff policy exists to prevent, since a green suite would then be certifying behaviour nobody has actually exercised. Closing this requires a test that builds the tabs and drives those workers — the chat worker, the provider-health poller and the dashboard and resource timers — with the race detector on, so the fix is proven by observation rather than by inspection, together with a deliberately-broken variant proving the new test genuinely fails when the direct write is put back. Acceptance: a test in each package starts the previously-unexercised background workers against real widgets, passes with zero races over repeated runs, and demonstrably fails when the dispatch helper is removed from any one of those sites. Until that exists, the fixes for those specific sites should be described as review-justified, not runtime-proven.
+
+## HXC-159 — Fully incorporate the HelixSkills System into HelixCode + HelixAgent (all power-features, SpecKit-driven)
+
+**Status:** Queued
+**Type:** Task
+**Severity:** High
+**Created-By:** Operator
+
+**Reported-Via:** §11.4.202 reporting directive `task` on 2026-07-28T19:26:22Z
+**Reported-By:** Operator
+
+**What (the report, verbatim):**
+Feature description (verbatim):
+Fully incorporate the HelixSkills System (git@github.com:HelixDevelopment/skills.git) into BOTH HelixCode and HelixAgent, covering ALL of its power-features with nothing left out.
+
+VERBATIM OPERATOR REQUIREMENTS (2026-07-29):
+"Fully incorporate into HelixCode and HelixAgent the HelixSkills System for all work with Skills: git@github.com:HelixDevelopment/skills.git , we MUST fully incorporate all HelixSkills power-features fully without nothing leftout! Full exhaustive implementation plan divided into phases, tasks and subtasks with exhaustive amount of data with all details MUST BE prepared! Full coverage with ll supported test types, challenges and HelixQA test banks (suites) is mandatory! Extend and update all existing documentation, user manuals, guides, FAQs, create stunning illustrations, graphs and diagrams and incorporate them in all materials! Any gaps, shortcomings, weak spots, danger zones, issues, or any inconsistencies MUST BE detected in advance during the planning and implementation process and properly tackled with comprehensive rock-solid solutions implementations, risk-free and safe! Track all progress through the constinuation docs, memory, knowledge and remebering mechanisms we have! Use GitHub SpecKit for all phases of incorporating with bridge to Superpowers used for the implementation and subagents driven development mechanism!"
+
+PRE-VERIFIED ENVIRONMENT FACTS (established 2026-07-29, not assumed — §11.4.6):
+- GitHub SpecKit IS installed at /home/milos/.local/bin/specify. It is NOT yet initialized in this repo (no .specify/ and no specs/ directory present). Initialization is therefore an explicit early task, not an assumption.
+- git@github.com:HelixDevelopment/skills.git IS reachable via SSH. `git ls-remote --heads` returns branches including feature/catalog-docs, feature/deep-research, feature/testing-infra. The default branch and full branch/tag inventory MUST be re-derived at research time rather than inferred from this partial listing.
+- The repository is NOT currently a submodule of this project. `.gitmodules` contains no HelixDevelopment/skills entry; the only 'skills'-matching entry is cli_agents/codex-skills -> vasic-digital/caf-codex-skills.git, which is a DIFFERENT repository and must not be confused with it.
+- Both consumers exist in-tree: the inner Go module helix_code/ (module dev.helix.code) and the submodule submodules/helix_agent (module dev.helix.agent).
+
+MANDATORY DELIVERY CONSTRAINTS:
+- SpecKit-first: use GitHub SpecKit for ALL phases of the incorporation, bridged to Superpowers for implementation, executed subagent-driven (§11.4.70 / §11.4.20).
+- Exhaustive plan structured as phases -> tasks -> subtasks, with an exhaustive level of detail (down to lines-of-code and micro-POCs where the design is load-bearing).
+- Complete test coverage per §11.4.169: unit, integration, e2e, full-automation, Challenges (vasic-digital/challenges), HelixQA banks (HelixDevelopment/helix_qa) with autonomous sessions, DDoS, security, stress + chaos, concurrency/atomicity, race/deadlock, memory, benchmarking. Every PASS carries captured evidence (§11.4.5 / §11.4.69); every guard ships a paired §1.1 mutation.
+- Documentation: extend AND update every existing doc, user manual, guide and FAQ — not only new ones. Produce illustrations, graphs and diagrams and incorporate them into all materials. Four-format export discipline per §11.4.65 / §11.4.153. Every doc reachable from the main README per §11.4.212.
+- Risk work is a PLANNING deliverable, not a post-hoc note: every gap, shortcoming, weak spot, danger zone, issue and inconsistency MUST be detected DURING planning and each one paired with a comprehensive, rock-solid, risk-free and safe solution (§11.4.102 systematic-debugging over all gathered data).
+- Reuse before rewrite (§11.4.74 / §11.4.28): survey the vasic-digital and HelixDevelopment catalogues on GitHub AND GitLab first; extend owned submodules in place rather than duplicating, keeping them project-agnostic and decoupled. HelixSkills itself must be incorporated as a properly-laid-out dependency per §11.4.28(C) / CONST-051(C) — root-level or submodules/<name>, never a nested own-org chain.
+- Cross-consumer parity: HelixCode and HelixAgent must BOTH receive the full feature set; a capability landing in one and not the other is an incompleteness to be tracked, not silently accepted.
+- Progress tracked through the continuation docs, the memory/knowledge/remembering mechanisms, and the workable-items SSoT (§12.10 / §11.4.131 / §11.4.93 / §11.4.95).
+
+ACCEPTANCE CRITERIA:
+1. A SpecKit specification exists and is initialized in-repo, covering every HelixSkills power-feature, with an explicit feature inventory proven complete against the upstream repository (an enumerated list, not a sample — §11.4.118).
+2. A phase/task/subtask implementation plan exists at the stated depth, with each risk item paired to a concrete mitigation.
+3. Every planned capability is wired and end-user-reachable in BOTH consumers, proven by §11.4.108 runtime signatures on a clean target — not merely compiled.
+4. The full §11.4.169 test-type matrix is green with captured evidence, Challenges and HelixQA banks included.
+5. All documentation is updated and exported, with the produced diagrams/illustrations incorporated, and reachable from README.
+6. Independent code review reaches a zero-finding GO per §11.4.125 / §11.4.134 / §11.4.142.
+7. No capability is claimed without runtime evidence — the anti-bluff covenant governs every closure (§11.4 / §11.4.1 / §11.4.123).
+
+§11.4.213 FEATURE research-and-planning WORK PROGRAM (scheduled, not yet executed):
+
+(a) Deep web-research series (articles / guides / scientific papers / open-source projects+codebases / real-world examples) on the best way to incorporate this feature into the project (§11.4.8 / §11.4.99 / §11.4.150).
+(b) Systematic-debug (§11.4.102) of ALL data obtained to enumerate EVERY weak spot / gap / danger-zone / inconsistency / imperfection, and design a risk-free, rock-solid solution for EACH one found.
+(c) The design MUST ALWAYS be enterprise-grade, bleeding-edge, and innovative -- never less.
+(d) MANDATORY exhaustive documentation: many technical documents, an implementation plan down to lines-of-code + micro-proof-of-concepts, diagrams / schemes / graphs, illustrations, SQL definitions, templates, and every other relevant material (§11.4.65 / §11.4.73).
+(e) Investigate + plan REUSE of existing vasic-digital + HelixDevelopment submodules/components BEFORE proposing a rewrite; extend them freely where genuinely needed while keeping them fully decoupled / project-not-aware / reusable (§11.4.28 / §11.4.74 / §11.4.177).
+(f) Plan from the TESTING point of view from day one: every supported test type, the Challenges submodule, and full HelixQA bank coverage (§11.4.27 / §11.4.169).
+(g) Divide the work into phases / tasks / subtasks, fine-grained and nano-detailed enough to drive integration / implementation / wiring / testing / scaling directly.
+(h) Plan explicitly for enterprise scalability and maximal performance.
+(i) When the feature has a UI/UX surface, produce full wireframes / diagrams / design files (Figma / PSD / PDF, or whatever the project mandates) authored via OpenDesign (§11.4.162 / §11.4.190).
+(j) Plan full CodeGraph integration with regular / real-time index synchronisation (§11.4.78 / §11.4.79 / §11.4.80).
+(k) Create fully-detailed follow-on workable items (every detail + reference + attachment) synced in REAL TIME to the SQLite single-source-of-truth (§11.4.93 / §11.4.95) + every derived workable-items document + every related project doc/component + every connected external work-tracking system (§11.4.148 D5) -- honestly SKIPPING any absent tracker with a machine-readable reason (credentials_absent / tracker_client_absent, §11.4.10) rather than EVER faking a push.
+
+Research-doc destination (to be populated when this item is worked): docs/research/fully_incorporate_the_helixskills_system_into_helixcode_heli_20260728T192622Z_2557683/
+
+Execution model (§11.4.213 clauses 1-2): this item is SCHEDULED, not yet executed. The multi-day research/planning/documentation work above is performed LATER by the project's standing autonomous loop (§11.4.87 / §11.4.94 / §11.4.97 / §11.4.103 / §11.4.126) when it claims this item, and MUST be driven to a genuinely COMPLETED-and-wired or explicitly evidence-backed CLOSED terminal state under §11.4.197 -- this item MUST NOT be left sitting un-wired in the backlog.
+
+**Affected scope / file-scope manifest:**
+Feature research/planning -- destination: docs/research/fully_incorporate_the_helixskills_system_into_helixcode_heli_20260728T192622Z_2557683/
+
+**Reproduction / context:**
+UNKNOWN: not stated in the report — a reproduction MUST be established before any fix (§11.4.102 / §11.4.146 / §11.4.199)
+
+**Acceptance criteria:**
+The full research-doc tree exists under docs/research/fully_incorporate_the_helixskills_system_into_helixcode_heli_20260728T192622Z_2557683/, every enumerated weak-spot/gap/danger-zone carries a designed risk-free solution, an implementation plan down to lines-of-code exists, the planned follow-on workable items are created, and the whole effort is validated per §11.4.197 (never left un-wired).
 

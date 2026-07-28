@@ -1,0 +1,66 @@
+2026/07/29 00:13:07 Harmony data sync NOT performed: harmony_os: distributed sync has not been wired to the real Harmony OS distributed-data SDK — performSync previously only stamped lastSync=time.Now() and logged success, reporting 'Synced Devices: 0' forever regardless of actual cluster state (§11.4 CRITICAL: helix-harmony distributed sync is a no-op). Implement against the Harmony OS distributed data manager API (KVManager / SingleKVStore / DeviceKVStore) and inject via (*HarmonyDataSync).SetDistributedSDK, or remove the command and document non-support (lastSync timestamp NOT advanced)
+2026/07/29 00:13:07 Harmony data sync NOT performed: harmony_os: distributed sync has not been wired to the real Harmony OS distributed-data SDK — performSync previously only stamped lastSync=time.Now() and logged success, reporting 'Synced Devices: 0' forever regardless of actual cluster state (§11.4 CRITICAL: helix-harmony distributed sync is a no-op). Implement against the Harmony OS distributed data manager API (KVManager / SingleKVStore / DeviceKVStore) and inject via (*HarmonyDataSync).SetDistributedSDK, or remove the command and document non-support (lastSync timestamp NOT advanced)
+2026/07/29 00:13:07 Harmony data sync FAILED via injected SDK: harmony_os: injected SDK SyncData: simulated harmony binding transport failure (lastSync timestamp NOT advanced)
+2026/07/29 00:13:07 Harmony data sync FAILED via injected SDK: harmony_os: injected SDK SyncData: transient failure (lastSync timestamp NOT advanced)
+2026/07/29 00:13:07 Harmony OS application cleaned up successfully
+2026/07/29 00:13:07 Harmony OS application cleaned up successfully
+2026/07/29 00:13:07 Harmony OS application cleaned up successfully
+2026/07/29 00:13:07 Harmony OS application cleaned up successfully
+2026/07/29 00:13:07 Harmony OS features initialized successfully
+2026/07/29 00:13:07 Harmony OS features initialized successfully
+2026/07/29 00:13:07 Harmony OS features initialized successfully
+2026/07/29 00:13:07 Harmony OS features initialized successfully
+2026/07/29 00:13:07 Harmony OS features initialized successfully
+2026/07/29 00:13:07 Harmony OS application cleaned up successfully
+==================
+WARNING: DATA RACE
+Read at 0x00c0000615d0 by goroutine 147:
+  dev.helix.code/applications/harmony_os.(*HarmonyApp).monitorSystem()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main.go:686 +0x10b
+  dev.helix.code/applications/harmony_os.(*HarmonyApp).initializeHarmonyComponents.gowrap1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main.go:675 +0x2e
+
+Previous write at 0x00c0000615d0 by goroutine 142:
+  dev.helix.code/applications/harmony_os.(*HarmonyApp).Cleanup()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main.go:1764 +0x2da
+  dev.helix.code/applications/harmony_os.TestCleanup.func1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main_test.go:260 +0x2e
+  github.com/stretchr/testify/assert.didPanic()
+      /home/milos/go/pkg/mod/github.com/stretchr/testify@v1.11.1/assert/assertions.go:1291 +0xd3
+  github.com/stretchr/testify/assert.NotPanics()
+      /home/milos/go/pkg/mod/github.com/stretchr/testify@v1.11.1/assert/assertions.go:1362 +0xa4
+  dev.helix.code/applications/harmony_os.TestCleanup()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main_test.go:259 +0xb1
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 147 (running) created at:
+  dev.helix.code/applications/harmony_os.(*HarmonyApp).initializeHarmonyComponents()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main.go:675 +0xaa4
+  dev.helix.code/applications/harmony_os.TestCleanup()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/harmony_os/main_test.go:256 +0x33
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 142 (running) created at:
+  testing.(*T).Run()
+      /usr/lib/golang/src/testing/testing.go:2101 +0xb12
+  testing.runTests.func1()
+      /usr/lib/golang/src/testing/testing.go:2585 +0x84
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.runTests()
+      /usr/lib/golang/src/testing/testing.go:2583 +0x9e9
+  testing.(*M).Run()
+      /usr/lib/golang/src/testing/testing.go:2443 +0xf4b
+  main.main()
+      _testmain.go:120 +0x164
+==================
+FAIL
+FAIL	dev.helix.code/applications/harmony_os	0.260s
+FAIL
+EXIT=1
