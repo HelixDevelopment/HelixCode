@@ -187,6 +187,22 @@ type LLMResponse struct {
 	CreatedAt        time.Time              `json:"created_at"`
 	ProviderMetadata map[string]interface{} `json:"provider_metadata"`
 
+	// Model is the model the PROVIDER actually served this response with, as
+	// reported by the provider itself — NOT the model string the caller asked
+	// for. The two differ whenever the caller uses an alias ("default",
+	// "local", a routing name): the backend resolves the alias to a concrete
+	// model and reports that concrete identity back.
+	//
+	// Without this field the wire facade could only echo the REQUEST's model,
+	// so an OpenAI-wire client was told `"model":"default"` while a
+	// Qwen3-Coder gguf actually served the request — a model identity that is
+	// not the real one (CONST-036 / CONST-037: model metadata shown to users
+	// is provider/verifier-sourced, never a placeholder or a request echo).
+	//
+	// Empty when the provider reports no model; callers MUST then fall back to
+	// the requested model rather than emitting an empty identity.
+	Model string `json:"model,omitempty"`
+
 	// Err carries a partial-error or non-fatal warning surfaced by the LLM
 	// provider (e.g., truncation, content-filter block, mid-stream parse
 	// error). nil when the response succeeded cleanly. Round 46 added this
@@ -224,6 +240,7 @@ type llmResponseJSON struct {
 	ProcessingTime   time.Duration          `json:"processing_time"`
 	CreatedAt        time.Time              `json:"created_at"`
 	ProviderMetadata map[string]interface{} `json:"provider_metadata"`
+	Model            string                 `json:"model,omitempty"`
 	Err              *llmErrorEnvelope      `json:"err,omitempty"`
 }
 
@@ -256,6 +273,7 @@ func (r LLMResponse) MarshalJSON() ([]byte, error) {
 		ProcessingTime:   r.ProcessingTime,
 		CreatedAt:        r.CreatedAt,
 		ProviderMetadata: r.ProviderMetadata,
+		Model:            r.Model,
 	}
 	if r.Err != nil {
 		envelope.Err = &llmErrorEnvelope{
@@ -283,6 +301,7 @@ func (r *LLMResponse) UnmarshalJSON(data []byte) error {
 	r.ProcessingTime = envelope.ProcessingTime
 	r.CreatedAt = envelope.CreatedAt
 	r.ProviderMetadata = envelope.ProviderMetadata
+	r.Model = envelope.Model
 	if envelope.Err != nil {
 		r.Err = sentinelForLLMErrType(envelope.Err.Type, envelope.Err.Message)
 	}

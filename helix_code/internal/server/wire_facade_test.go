@@ -41,6 +41,14 @@ type wireFacadeFakeProvider struct {
 	toolCalls []llm.ToolCall
 	finish    string
 	usage     llm.Usage
+
+	// servedModel is the concrete model this fake reports as having served the
+	// request, mirroring a real backend that resolves an alias ("default") to a
+	// concrete model and reports it back. Zero value means "provider reports no
+	// model", which is the shape every provider produced before CONST-036/037
+	// propagation existed — so leaving it unset keeps every pre-existing test's
+	// expectations byte-identical.
+	servedModel string
 }
 
 func (p *wireFacadeFakeProvider) GetType() llm.ProviderType              { return llm.ProviderTypeOllama }
@@ -65,6 +73,7 @@ func (p *wireFacadeFakeProvider) Generate(ctx context.Context, req *llm.LLMReque
 		ToolCalls:    p.toolCalls,
 		Usage:        p.usage,
 		FinishReason: p.finish,
+		Model:        p.servedModel,
 		CreatedAt:    time.Now(),
 	}, nil
 }
@@ -76,7 +85,7 @@ func (p *wireFacadeFakeProvider) GenerateStream(ctx context.Context, req *llm.LL
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case ch <- llm.LLMResponse{ID: uuid.New(), Content: p.content, CreatedAt: time.Now()}:
+		case ch <- llm.LLMResponse{ID: uuid.New(), Content: p.content, Model: p.servedModel, CreatedAt: time.Now()}:
 		}
 	}
 	return nil

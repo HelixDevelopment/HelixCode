@@ -538,11 +538,21 @@ func llmResponseToOpenAI(resp *llm.LLMResponse, model string) openAIChatCompleti
 			},
 		})
 	}
+	// Report the model the provider ACTUALLY served. The `model` parameter is
+	// the caller's REQUESTED string, which is an alias ("default", "local", a
+	// routing name) whenever the backend resolved it to a concrete model —
+	// echoing it back tells the client a model identity that never served the
+	// request (CONST-036 / CONST-037). Fall back to the requested model only
+	// when the provider reported none, so the field is never empty.
+	servedModel := model
+	if resp.Model != "" {
+		servedModel = resp.Model
+	}
 	return openAIChatCompletionResponse{
 		ID:      "chatcmpl-" + uuid.New().String(),
 		Object:  "chat.completion",
 		Created: time.Now().Unix(),
-		Model:   model,
+		Model:   servedModel,
 		Choices: []openAIChatChoice{{
 			Index:        0,
 			Message:      msg,
@@ -576,11 +586,19 @@ func llmResponseToAnthropic(resp *llm.LLMResponse, model string) anthropicMessag
 	if len(blocks) == 0 {
 		blocks = []anthropicContentBlockOut{{Type: "text", Text: ""}}
 	}
+	// Same model-identity rule as the OpenAI facade: report what the provider
+	// ACTUALLY served, never the requested alias (CONST-036 / CONST-037). The
+	// Anthropic surface is a second client-visible wire, so echoing here would
+	// leave the identical defect one function away from the fixed one.
+	servedModel := model
+	if resp.Model != "" {
+		servedModel = resp.Model
+	}
 	return anthropicMessagesResponse{
 		ID:         "msg_" + uuid.New().String(),
 		Type:       "message",
 		Role:       "assistant",
-		Model:      model,
+		Model:      servedModel,
 		Content:    blocks,
 		StopReason: normalizeFinishReasonAnthropic(resp.FinishReason, len(resp.ToolCalls) > 0),
 		Usage: anthropicUsage{
@@ -728,12 +746,18 @@ func (s *Server) streamOpenAIChatCompletion(c *gin.Context, provider llm.Provide
 	id := "chatcmpl-" + uuid.New().String()
 	created := time.Now().Unix()
 
+	// Same model-identity rule as the non-stream path: report what the provider
+	// ACTUALLY served, not the requested alias (CONST-036 / CONST-037). Seeded
+	// with the request so early frames are never empty, then upgraded as soon
+	// as a chunk reports the concrete model.
+	servedModel := llmReq.Model
+
 	writeChunk := func(delta openAIChatDelta, finishReason *string) {
 		frame := openAIChatCompletionChunk{
 			ID:      id,
 			Object:  "chat.completion.chunk",
 			Created: created,
-			Model:   llmReq.Model,
+			Model:   servedModel,
 			Choices: []openAIChatChunkChoice{{Index: 0, Delta: delta, FinishReason: finishReason}},
 		}
 		b, err := json.Marshal(frame)
@@ -762,6 +786,11 @@ func (s *Server) streamOpenAIChatCompletion(c *gin.Context, provider llm.Provide
 				// SSE stream has already been (partially) written so the
 				// status code cannot change at this point).
 				return
+			}
+			// Upgrade to the provider-reported model before emitting the frame,
+			// so the very first content chunk already carries the real identity.
+			if chunk.Model != "" {
+				servedModel = chunk.Model
 			}
 			if chunk.Content != "" {
 				writeChunk(openAIChatDelta{Content: chunk.Content}, nil)
@@ -804,6 +833,21 @@ func (s *Server) streamAnthropicMessages(c *gin.Context, provider llm.Provider, 
 	flusher, _ := c.Writer.(interface{ Flush() })
 	msgID := "msg_" + uuid.New().String()
 
+	// HONEST BOUNDARY (§11.4.6) — model identity on the Anthropic stream.
+	// Everywhere else the facade now reports the model the provider ACTUALLY
+	// served (CONST-036 / CONST-037). Here it cannot: the Anthropic wire
+	// requires `message_start` to be the FIRST event, and nothing has been
+	// served yet — no chunk has arrived, so the concrete model is genuinely
+	// unknown at this point. Emitting the requested model is therefore the
+	// only non-fabricated value available.
+	//
+	// Deferring `message_start` until the first chunk WOULD yield the served
+	// identity, but it delays the event behind first-token latency and changes
+	// the timing contract Anthropic clients rely on — a behavioural change not
+	// worth making silently. Documented as a known limitation rather than
+	// hidden: an Anthropic-wire client that passed an alias sees that alias in
+	// `message_start`. The non-stream Anthropic path (llmResponseToAnthropic)
+	// and both OpenAI paths do report the served model.
 	anthropicSSEEvent(c, flusher, "message_start", gin.H{
 		"type": "message_start",
 		"message": gin.H{

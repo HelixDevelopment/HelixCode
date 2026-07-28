@@ -459,10 +459,15 @@ func (p *OpenAICompatibleProvider) convertToOpenAIRequest(request *LLMRequest) *
 
 func (p *OpenAICompatibleProvider) convertFromOpenAIResponse(response *OpenAICompatibleResponse, requestID uuid.UUID, processingTime time.Duration) *LLMResponse {
 	llmResponse := &LLMResponse{
-		ID:             uuid.New(),
-		RequestID:      requestID,
-		Content:        "",
-		Usage:          Usage{},
+		ID:        uuid.New(),
+		RequestID: requestID,
+		Content:   "",
+		Usage:     Usage{},
+		// The backend reports which concrete model served the request. Carry it
+		// through so callers surface the REAL identity instead of echoing the
+		// requested alias (CONST-036 / CONST-037). Empty when the backend omits
+		// it — consumers fall back to the requested model.
+		Model:          response.Model,
 		ProcessingTime: processingTime,
 		CreatedAt:      time.Now(),
 	}
@@ -612,6 +617,14 @@ func (p *OpenAICompatibleProvider) makeStreamingRequest(ctx context.Context, req
 					ID:        uuid.New(),
 					RequestID: requestID,
 					Content:   choice.Delta.Content,
+					// Carry the backend-reported model on EVERY chunk. Without
+					// it the wire facade's streaming path has nothing to
+					// upgrade from and keeps echoing the requested alias, so a
+					// `stream:true` request reports "default" while a concrete
+					// model serves it — the same CONST-036 / CONST-037 defect
+					// the non-stream path fixes. Empty when the backend omits
+					// it; the facade then keeps the requested model.
+					Model:     streamResponse.Model,
 					CreatedAt: time.Now(),
 				}
 
@@ -644,6 +657,7 @@ func (p *OpenAICompatibleProvider) makeStreamingRequest(ctx context.Context, req
 							ID:           uuid.New(),
 							RequestID:    requestID,
 							FinishReason: choice.FinishReason,
+							Model:        streamResponse.Model,
 							CreatedAt:    time.Now(),
 							Err:          errSentinel,
 						}:
