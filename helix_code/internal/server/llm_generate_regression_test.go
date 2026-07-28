@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -21,9 +21,12 @@ import (
 // two REAL reproduced server defects, each authored RED-on-the-broken-artifact
 // with a single RED_MODE polarity switch (§11.4.115):
 //
-//   - RED_MODE=1 reproduces the historical defect on a faithful replica of the
-//     pre-fix code path and asserts the defect IS present (the proof the guard
-//     is real — run against the OLD logic it captures a panic / the Ollama mask).
+//   - RED_MODE=1 reproduces the historical defect by driving the SHIPPED code
+//     path and asserting the defect IS present. Run against a pre-fix artifact
+//     it PASSES (it captures the crash / the Ollama mask); run against the fixed
+//     artifact it FAILS. That falsifiability is what makes it a real baseline —
+//     a RED branch that reconstructs the old logic locally would behave the same
+//     on every artifact ever built and could never fail (§11.4.1 / §11.4.115).
 //   - RED_MODE=0 (default) is the standing GREEN guard asserting the defect is
 //     ABSENT in the shipped handler.
 //
@@ -57,14 +60,14 @@ type closingFakeProvider struct {
 	chunks []string
 }
 
-func (f *closingFakeProvider) GetType() llm.ProviderType            { return llm.ProviderTypeOllama }
-func (f *closingFakeProvider) GetName() string                      { return "fake-closing" }
-func (f *closingFakeProvider) GetModels() []llm.ModelInfo           { return nil }
+func (f *closingFakeProvider) GetType() llm.ProviderType              { return llm.ProviderTypeOllama }
+func (f *closingFakeProvider) GetName() string                        { return "fake-closing" }
+func (f *closingFakeProvider) GetModels() []llm.ModelInfo             { return nil }
 func (f *closingFakeProvider) GetCapabilities() []llm.ModelCapability { return nil }
-func (f *closingFakeProvider) IsAvailable(ctx context.Context) bool { return true }
-func (f *closingFakeProvider) GetContextWindow() int                { return 4096 }
-func (f *closingFakeProvider) CountTokens(text string) (int, error) { return len(text) / 4, nil }
-func (f *closingFakeProvider) Close() error                         { return nil }
+func (f *closingFakeProvider) IsAvailable(ctx context.Context) bool   { return true }
+func (f *closingFakeProvider) GetContextWindow() int                  { return 4096 }
+func (f *closingFakeProvider) CountTokens(text string) (int, error)   { return len(text) / 4, nil }
+func (f *closingFakeProvider) Close() error                           { return nil }
 
 func (f *closingFakeProvider) GetHealth(ctx context.Context) (*llm.ProviderHealth, error) {
 	return &llm.ProviderHealth{Status: "healthy", LastCheck: time.Now()}, nil
@@ -96,53 +99,101 @@ func withFakeResolver(t *testing.T, p llm.Provider) {
 	t.Cleanup(func() { llmProviderResolver = prev })
 }
 
-// oldStreamPumpReplica replicates the PRE-FIX streamLLM producer goroutine: the
-// CONSUMER also closes the channel (`defer close(chunkChan)`) on top of the
-// provider's own `defer close(ch)`. Used only in RED_MODE to prove the historic
-// double-close genuinely panics. Returns the recovered panic value (nil if no
-// panic), captured from inside the spawned goroutine (where gin.Recovery cannot
-// reach it — which is exactly why the real bug killed the process).
-func oldStreamPumpReplica(p llm.Provider) (recovered interface{}) {
-	chunkChan := make(chan llm.LLMResponse, 100)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer func() { recovered = recover() }()
-		// OLD consumer-side close (the bug): the provider ALSO closes chunkChan.
-		defer close(chunkChan)
-		_ = p.GenerateStream(context.Background(), &llm.LLMRequest{}, chunkChan)
-	}()
-	// Drain so GenerateStream's sends do not block.
-	for range chunkChan {
+// streamCrashProbeEnv turns this test binary into the one-shot child probe that
+// the RED branch of TestStreamLLM_NoDoubleCloseCrash_RegressionGuard re-executes.
+const streamCrashProbeEnv = "HELIX_STREAM_DOUBLECLOSE_PROBE"
+
+// streamProbeJoinWindow is how long the child probe waits after ServeHTTP for
+// the handler's producer goroutine to run its deferred close. ServeHTTP can
+// return before that goroutine finishes, and without the wait a pre-fix artifact
+// could let the probe exit 0 before the panic lands — a false GREEN. Generous
+// relative to an in-memory channel pump (microseconds), and paid only in RED_MODE.
+const streamProbeJoinWindow = 2 * time.Second
+
+// streamProbeTimeout bounds the child probe so a hang cannot wedge the suite.
+const streamProbeTimeout = 90 * time.Second
+
+// TestStreamLLM_DoubleCloseProbe is the CHILD half of the RED branch below. It
+// is not a standalone guard: it is skipped unless re-executed by that parent
+// with streamCrashProbeEnv set.
+//
+// It drives the REAL streamLLM handler with a SENDER-closes provider IN THIS
+// PROCESS. On a pre-fix artifact the handler's own producer goroutine also
+// closes chunkChan, panicking ("close of closed channel") inside a goroutine
+// that gin.Recovery cannot reach — so THIS PROCESS DIES. That process death is
+// exactly the observable the parent asserts on, and it is why the defect was
+// CRITICAL: a single client request killed the whole server. On the fixed
+// artifact the request completes and this process exits 0.
+//
+// A child process is REQUIRED: an unrecovered panic in a spawned goroutine
+// cannot be caught in-process by recover() or require.NotPanics — it takes the
+// whole test binary down with it. Observing the crash therefore means observing
+// a process, which is what makes this RED branch falsifiable instead of a
+// self-fulfilling local replica (§11.4.1 / §11.4.115).
+func TestStreamLLM_DoubleCloseProbe(t *testing.T) {
+	if os.Getenv(streamCrashProbeEnv) != "1" {
+		t.Skip("SKIP-OK: child-process probe, driven only by the RED branch of " +
+			"TestStreamLLM_NoDoubleCloseCrash_RegressionGuard; it is not a standalone guard")
 	}
-	wg.Wait()
-	return recovered
+
+	fake := &closingFakeProvider{chunks: []string{"Hello", " world"}}
+	withFakeResolver(t, fake)
+	gin.SetMode(gin.TestMode)
+	srv := &Server{}
+	router := gin.New()
+	router.Use(gin.Recovery()) // mirrors production — and provably cannot save us here
+	router.POST("/api/v1/llm/stream", srv.streamLLM)
+
+	w := httptest.NewRecorder()
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/llm/stream",
+		strings.NewReader(`{"prompt":"hi"}`))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+
+	time.Sleep(streamProbeJoinWindow) // join the producer goroutine's deferred close
+	t.Logf("probe survived: handler streamed %d bytes with no double-close", w.Body.Len())
 }
 
 // TestStreamLLM_NoDoubleCloseCrash_RegressionGuard — Defect #5 guard.
 //
-// RED_MODE=1: drive the OLD double-close replica with a SENDER-closes provider
-// and assert it panics with "close of closed channel" (the historic crash).
+// BOTH polarities drive the REAL streamLLM handler over the same SENDER-closes
+// provider; only the observation point and the assertion flip (§11.4.115
+// one-source-two-roles). RED observes the handler from a child process (the only
+// way to see a goroutine panic, which is process death); GREEN observes it
+// in-process, where a crash would take this binary down and fail the test just
+// as loudly.
 //
-// RED_MODE=0 (default, GREEN guard): drive the REAL streamLLM handler over a
-// real gin engine + httptest recorder with the same SENDER-closes provider, and
-// assert the request completes with a real SSE body (data: ... + [DONE]) and NO
-// panic — proving the consumer no longer double-closes.
+// RED_MODE=1: re-execute this binary as a probe child and assert it DIES with
+// "close of closed channel". True on a pre-fix artifact; false on the fixed one,
+// where the child exits 0.
+//
+// RED_MODE=0 (default, GREEN guard): assert the request completes with a real
+// SSE body (data: ... + [DONE]) and no crash — the consumer no longer
+// double-closes.
 func TestStreamLLM_NoDoubleCloseCrash_RegressionGuard(t *testing.T) {
 	fake := &closingFakeProvider{chunks: []string{"Hello", " world"}}
 
 	if redMode(t) {
-		recovered := oldStreamPumpReplica(fake)
-		require.NotNil(t, recovered,
-			"RED expectation: the pre-fix consumer-also-closes path MUST double-close and panic")
-		msg, _ := recovered.(error)
-		if msg != nil {
-			assert.Contains(t, msg.Error(), "close of closed channel",
-				"RED: the panic must be the double-close crash this guard exists to prevent")
-		} else {
-			assert.Contains(t, toString(recovered), "close of closed channel")
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), streamProbeTimeout)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, os.Args[0],
+			"-test.run=^TestStreamLLM_DoubleCloseProbe$", "-test.v=true")
+		cmd.Env = append(os.Environ(), streamCrashProbeEnv+"=1")
+		out, runErr := cmd.CombinedOutput()
+
+		require.NoError(t, ctx.Err(),
+			"the child probe must terminate on its own, not hit the %s timeout.\nchild output:\n%s",
+			streamProbeTimeout, out)
+		require.Error(t, runErr,
+			"RED expectation: driving the REAL streamLLM handler on a PRE-FIX artifact MUST kill the "+
+				"probe process (unrecovered double-close panic in the producer goroutine). A clean exit "+
+				"means the consumer no longer double-closes, so the defect is absent and this RED "+
+				"baseline no longer characterises anything.\nchild output:\n%s", out)
+		require.Contains(t, string(out), "close of closed channel",
+			"RED: the child must die from the double-close crash this guard exists to prevent, not "+
+				"from an unrelated failure.\nchild output:\n%s", out)
+		t.Logf("RED reproduced: the real streamLLM handler killed the probe process (%v)", runErr)
 		return
 	}
 
@@ -160,8 +211,10 @@ func TestStreamLLM_NoDoubleCloseCrash_RegressionGuard(t *testing.T) {
 	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 
-	// If the goroutine double-closes, the process would normally die; in-test the
-	// panic surfaces here. ServeHTTP must return cleanly.
+	// A double-close panics in the handler's producer goroutine, which no
+	// recover() can reach — it kills this process outright, so this test fails
+	// hard rather than reporting a caught panic. NotPanics still covers the
+	// in-handler synchronous paths.
 	require.NotPanics(t, func() { router.ServeHTTP(w, req) },
 		"streamLLM must not panic — a double channel-close would crash the server process")
 
@@ -174,8 +227,17 @@ func TestStreamLLM_NoDoubleCloseCrash_RegressionGuard(t *testing.T) {
 // TestResolveLLMProvider_UnknownProviderNoSilentOllamaFallback_RegressionGuard
 // — Defect #4 guard.
 //
-// RED_MODE=1: assert the OLD behaviour — an unknown named provider resolved to
-// the Ollama default (provider.GetName() == "ollama"), masking the typo.
+// Both polarities drive the SAME real shipped resolveLLMProvider over the SAME
+// unknown provider name; only the assertion flips (§11.4.115
+// one-source-two-roles). The RED branch deliberately does NOT reconstruct the
+// pre-fix fall-through locally — a local replica (constructing an Ollama
+// provider by hand and asserting its name is "ollama") is true on EVERY artifact
+// ever built, so it could never fail and would prove nothing (§11.4.1).
+//
+// RED_MODE=1: assert the OLD behaviour — the real resolver swallows the unknown
+// name and hands back the Ollama default with NO error, masking the typo. True
+// on a pre-fix artifact; false on the fixed one (errUnknownProvider, nil
+// provider).
 //
 // RED_MODE=0 (default, GREEN guard): assert the FIXED behaviour — an unknown
 // named provider yields errUnknownProvider (no provider), and the handler
@@ -183,24 +245,28 @@ func TestStreamLLM_NoDoubleCloseCrash_RegressionGuard(t *testing.T) {
 func TestResolveLLMProvider_UnknownProviderNoSilentOllamaFallback_RegressionGuard(t *testing.T) {
 	t.Setenv("HELIX_LLM_PROVIDER", "") // ensure only the request-named provider matters
 
+	// SHARED drive path — the REAL shipped resolver, both polarities.
+	prov, err := resolveLLMProvider("definitely-not-a-real-provider", "")
+	if prov != nil {
+		defer func() { _ = prov.Close() }()
+	}
+
 	if redMode(t) {
-		// Replicate the OLD resolution: on llm.Select failure, fall through to
-		// the local Ollama default (the masking bug).
-		sel := llm.SelectorInput{Flag: "definitely-not-a-real-provider"}
-		_, selErr := llm.Select(sel)
-		require.Error(t, selErr, "an unknown provider name must not resolve")
-		oldFallback, err := llm.NewOllamaProvider(llm.OllamaConfig{
-			DefaultModel: "llama3.2", BaseURL: "http://localhost:11434", StreamEnabled: true,
-		})
-		require.NoError(t, err)
-		defer func() { _ = oldFallback.Close() }()
-		assert.Equal(t, "ollama", oldFallback.GetName(),
+		// RED: the defect's exact observable on the pre-fix artifact — llm.Select
+		// fails for the unknown name, the resolver falls through to the local
+		// Ollama default and returns it with NO error, so the user's typo
+		// surfaced later as a misleading Ollama 404 instead of a clear 400.
+		require.NoError(t, err,
+			"RED expectation: the PRE-FIX resolver silently swallowed the unknown provider name. "+
+				"An error here (%v) means the unknown-provider rejection is present, so the defect "+
+				"is absent and this RED baseline no longer characterises anything", err)
+		require.NotNil(t, prov, "RED expectation: the PRE-FIX resolver returned a provider anyway")
+		assert.Equal(t, "ollama", prov.GetName(),
 			"RED expectation: the pre-fix path silently returned the Ollama default for an unknown provider")
 		return
 	}
 
 	// GREEN guard 1: resolveLLMProvider rejects the unknown provider, no fallback.
-	prov, err := resolveLLMProvider("definitely-not-a-real-provider", "")
 	require.Error(t, err, "an explicitly-named unknown provider must NOT silently fall back to Ollama")
 	assert.Nil(t, prov, "no provider must be constructed for an unknown provider name")
 	assert.ErrorIs(t, err, errUnknownProvider, "the error must be the unknown-provider sentinel")
@@ -233,14 +299,4 @@ func TestResolveLLMProvider_NoProviderNamedStillFallsBackToOllama(t *testing.T) 
 	defer func() { _ = prov.Close() }()
 	assert.Equal(t, "ollama", prov.GetName(),
 		"zero-config default must remain the local Ollama provider")
-}
-
-func toString(v interface{}) string {
-	if s, ok := v.(string); ok {
-		return s
-	}
-	if e, ok := v.(error); ok {
-		return e.Error()
-	}
-	return ""
 }

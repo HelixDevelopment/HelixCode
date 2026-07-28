@@ -58,8 +58,8 @@ type modelRecordingProvider struct {
 }
 
 func (p *modelRecordingProvider) GetType() llm.ProviderType              { return p.ptype }
-func (p *modelRecordingProvider) GetName() string                       { return p.name }
-func (p *modelRecordingProvider) GetModels() []llm.ModelInfo            { return p.catalog }
+func (p *modelRecordingProvider) GetName() string                        { return p.name }
+func (p *modelRecordingProvider) GetModels() []llm.ModelInfo             { return p.catalog }
 func (p *modelRecordingProvider) GetCapabilities() []llm.ModelCapability { return nil }
 func (p *modelRecordingProvider) IsAvailable(ctx context.Context) bool   { return true }
 func (p *modelRecordingProvider) GetContextWindow() int                  { return 128000 }
@@ -96,22 +96,23 @@ func deepseekLiveCatalog() []llm.ModelInfo {
 	}
 }
 
-// oldResolveDefaultModelReplica replicates the PRE-FIX handler behaviour: the
-// request's model is passed through UNCHANGED — there was no catalog-backed
-// default resolution, so an omitted model stayed empty. Used only in RED_MODE
-// to prove the historic defect genuinely produced an empty wire model.
-func oldResolveDefaultModelReplica(_ llm.Provider, requested string) string {
-	return requested // the bug: no default resolution at all
-}
-
 // TestDefaultModelResolution_PolaritySwitch is the §11.4.115 RED/GREEN guard at
-// the handler layer. It drives the REAL generateLLM handler with a provider
-// that records the model it received, for a request that OMITS the model.
+// the handler layer. BOTH polarities drive the SAME real generateLLM handler
+// over the SAME fixture — a request that OMITS the model, answered by a provider
+// that records the model it was actually asked for. Only the final assertion
+// flips (§11.4.115 one-source-two-roles).
 //
-//   - RED_MODE=1: substitute the pre-fix resolution (pass-through). The handler
-//     passes an EMPTY model to Generate — the defect IS present.
-//   - RED_MODE=0 (default, GREEN): the shipped handler resolves the empty model
-//     to a verified-available catalog model — the defect is ABSENT.
+//   - RED_MODE=1: assert the provider received an EMPTY model. That is TRUE on a
+//     pre-fix artifact (no catalog-backed resolution existed, so the omitted
+//     model reached the wire empty — the captured DeepSeek 400) and FALSE on the
+//     fixed artifact, where the handler resolves a verified-available model.
+//   - RED_MODE=0 (default, GREEN): assert the provider received a
+//     verified-available catalog model — the defect is ABSENT.
+//
+// The RED branch deliberately does NOT reconstruct the pre-fix resolution
+// locally: a local replica would assert against a copy of the old code, which
+// behaves identically on every artifact ever built, so it could never fail and
+// would prove nothing (§11.4.1 / §11.4.115).
 func TestDefaultModelResolution_PolaritySwitch(t *testing.T) {
 	rec := &modelRecordingProvider{
 		name:    "DeepSeek",
@@ -120,28 +121,30 @@ func TestDefaultModelResolution_PolaritySwitch(t *testing.T) {
 	}
 	withFakeResolver(t, rec)
 
-	if redMode(t) {
-		// Reproduce the defect against the pre-fix logic on the SAME inputs:
-		// an omitted model resolves to "" (pass-through), proving the empty
-		// model would reach the provider/wire (the captured DeepSeek 400).
-		got := oldResolveDefaultModelReplica(rec, "")
-		require.Equal(t, "", got,
-			"RED expectation: pre-fix logic passes the omitted model through unchanged (empty) — the defect")
-		t.Logf("RED reproduced: pre-fix resolution yields empty model %q (would 400 upstream)", got)
-		return
-	}
-
-	// GREEN: drive the real handler with an omitted-model request.
+	// SHARED drive path — the REAL handler, both polarities.
 	srv := &Server{}
 	w, body := postJSON(t, "/api/v1/llm/generate", srv.generateLLM,
 		`{"prompt":"What is 2+2? Reply with only the number."}`)
 
 	require.Equal(t, http.StatusOK, w.Code,
-		"GREEN: an omitted-model generate must succeed (not 502); body=%v", body)
+		"the omitted-model generate must reach the provider (not fail early); body=%v", body)
 	assert.Equal(t, "success", body["status"])
 
-	// The defect's exact observable: the model the handler passed to the
-	// provider MUST be a verified-available catalog model, never empty.
+	if redMode(t) {
+		// RED: the defect's exact observable on the pre-fix artifact — the
+		// handler forwarded the omitted model to the provider UNCHANGED, i.e.
+		// empty, which is what DeepSeek rejected upstream with the captured 400.
+		require.Equal(t, "", rec.gotModel,
+			"RED expectation: the PRE-FIX handler passes the omitted model through to the provider "+
+				"unchanged (empty) — the defect. A non-empty %q means the catalog-backed default "+
+				"resolution is present, so the defect is absent and this RED baseline no longer "+
+				"characterises anything", rec.gotModel)
+		t.Logf("RED reproduced: handler sent empty model %q to the provider (would 400 upstream)", rec.gotModel)
+		return
+	}
+
+	// GREEN: the model the handler passed to the provider MUST be a
+	// verified-available catalog model, never empty.
 	require.NotEmpty(t, rec.gotModel,
 		"GREEN: handler must resolve the omitted model to a verified-available catalog model, got empty (the defect)")
 	catalogNames := modelNames(rec.catalog)
@@ -158,6 +161,10 @@ func TestDefaultModelResolution_PolaritySwitch(t *testing.T) {
 
 // TestDefaultModelResolution_Stream_PolaritySwitch proves the streaming handler
 // carries the identical fix (the streamLLM path passed req.Model verbatim too).
+// Same one-source-two-roles shape as the non-streaming guard above: BOTH
+// polarities drive the REAL streamLLM handler and read the SAME observable —
+// the model the provider was actually asked for — with only the assertion
+// flipping.
 func TestDefaultModelResolution_Stream_PolaritySwitch(t *testing.T) {
 	rec := &modelRecordingProvider{
 		name:    "DeepSeek",
@@ -166,15 +173,18 @@ func TestDefaultModelResolution_Stream_PolaritySwitch(t *testing.T) {
 	}
 	withFakeResolver(t, rec)
 
+	// SHARED drive path — the REAL streaming handler, both polarities.
+	srv := &Server{}
+	w, _ := postJSON(t, "/api/v1/llm/stream", srv.streamLLM, `{"prompt":"hi"}`)
+	require.Equal(t, http.StatusOK, w.Code, "streamLLM with an omitted model must not error out at resolution")
+
 	if redMode(t) {
-		require.Equal(t, "", oldResolveDefaultModelReplica(rec, ""),
-			"RED expectation: pre-fix streaming logic also passes the omitted model through empty")
+		require.Equal(t, "", rec.gotModel,
+			"RED expectation: the PRE-FIX streaming handler also forwards the omitted model to the "+
+				"provider empty — the defect. Got %q, which means the fix is present", rec.gotModel)
 		return
 	}
 
-	srv := &Server{}
-	w, _ := postJSON(t, "/api/v1/llm/stream", srv.streamLLM, `{"prompt":"hi"}`)
-	require.Equal(t, http.StatusOK, w.Code, "GREEN: streamLLM with omitted model must not error out at resolution")
 	require.NotEmpty(t, rec.gotModel, "GREEN: streamLLM must resolve the omitted model to a catalog model")
 	assert.Contains(t, modelNames(rec.catalog), rec.gotModel)
 }
