@@ -50,6 +50,11 @@ type modelRecordingProvider struct {
 	ptype    llm.ProviderType
 	catalog  []llm.ModelInfo
 	gotModel string // the Model the handler passed to Generate/Stream
+	// respModel, when non-empty, is echoed back as LLMResponse.Model — the
+	// backend's ACTUAL served-model identity, which may legitimately differ
+	// from the requested alias (gotModel). Zero value ("") preserves prior
+	// behaviour for every existing test in this file that does not set it.
+	respModel string
 }
 
 func (p *modelRecordingProvider) GetType() llm.ProviderType              { return p.ptype }
@@ -67,7 +72,7 @@ func (p *modelRecordingProvider) GetHealth(ctx context.Context) (*llm.ProviderHe
 
 func (p *modelRecordingProvider) Generate(ctx context.Context, req *llm.LLMRequest) (*llm.LLMResponse, error) {
 	p.gotModel = req.Model
-	return &llm.LLMResponse{ID: uuid.New(), Content: "4"}, nil
+	return &llm.LLMResponse{ID: uuid.New(), Content: "4", Model: p.respModel}, nil
 }
 
 func (p *modelRecordingProvider) GenerateStream(ctx context.Context, req *llm.LLMRequest, ch chan<- llm.LLMResponse) error {
