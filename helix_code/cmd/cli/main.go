@@ -241,6 +241,7 @@ type CLI struct {
 	sessionMgr         *session.Manager
 	toolRegistry       *tools.ToolRegistry
 	commandRegistry    *commands.Registry
+	skillDispatcher    *agent.SkillDispatcher // F10: routes plain-language input to a matching skill
 	mcpManager         *mcp.Manager
 	browserManager     *browser.BrowserManager       // F23: cline-style single-session browser façade
 	memoryRegistry     *projectmemory.MemoryRegistry // F24: codex-style project memory + hot-reload
@@ -1057,7 +1058,13 @@ func (c *CLI) buildSubsystems(ctx context.Context) error {
 		go skillWatcher.Run(ctx)
 		c.addCleanup(func() { _ = skillWatcher.Close() })
 	}
-	_ = agent.NewSkillDispatcher(skillReg, nil) // wired into baseAgent in a follow-up
+	// HXC-162: the dispatcher is stored on the CLI so the interactive REPL can
+	// consult it for every plain-language line. It was previously constructed
+	// and immediately discarded into `_`, which made skill auto-trigger dead in
+	// the CLI even though the registry, loader and watcher above all worked.
+	// The wiring mirrors the terminal-UI front-end, which has routed input
+	// through a dispatcher this way since F10 landed.
+	c.skillDispatcher = agent.NewSkillDispatcher(skillReg, nil)
 	if regErr := cmdRegistry.Register(commands.NewSkillsCommand(skillLoader, skillReg)); regErr != nil {
 		log.Printf("skills: register slash failed: %v", regErr)
 	}
@@ -2538,6 +2545,19 @@ func (c *CLI) handleInteractive(ctx context.Context) error {
 		// prompt. Tokens that don't resolve to a file stay verbatim
 		// (no scary error — the LLM sees them as-is).
 		promptToSend := input
+
+		// F10 / HXC-162: agent-invoked Skills. A plain-language line that
+		// matches a registered skill's trigger is rewritten into that skill's
+		// rendered body (with named captures substituted) before it becomes the
+		// LLM prompt. No match leaves the input untouched, so this is a no-op
+		// for ordinary prompts. Mirrors the terminal-UI front-end.
+		if c.skillDispatcher != nil {
+			if rendered, matched := agent.DispatchSkill(c.skillDispatcher, promptToSend); matched {
+				promptToSend = rendered
+				fmt.Println(tr(ctx, "cli_repl_skill_applied", nil))
+			}
+		}
+
 		if attached := expandAtMentions(&promptToSend); len(attached) > 0 {
 			for _, p := range attached {
 				fmt.Printf("  📎 attached: %s\n", p)
