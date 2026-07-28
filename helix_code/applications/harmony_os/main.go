@@ -1518,12 +1518,18 @@ func (app *HarmonyApp) createLLMTab() fyne.CanvasObject {
 		// Clear input immediately
 		app.chatInput.SetText("")
 
+		// Widget reads hoisted OUT of the goroutine (§11.4.115): .Selected and
+		// .Text were read INSIDE the worker below, racing the renderer exactly
+		// like the write did. Read here — this callback runs on the UI
+		// goroutine — and pass the values in, which is also what
+		// applications/desktop does with its provider selection.
+		providerName := app.llmProviderSel.Selected
+		modelName := modelNameEntry.Text
+
 		// Make LLM call in goroutine to not block UI
 		// In Harmony OS, this could leverage distributed AI capabilities across devices
-		go func(msg string) {
+		go func(msg, providerName, modelName string) {
 			var responseMsg string
-			providerName := app.llmProviderSel.Selected
-			modelName := modelNameEntry.Text
 
 			if app.llmManager != nil {
 				// Get provider from manager using provider type
@@ -1561,9 +1567,23 @@ func (app *HarmonyApp) createLLMTab() fyne.CanvasObject {
 				})
 			}
 
-			// Update UI on main thread
-			app.chatHistory.SetText(app.chatHistory.Text + responseMsg)
-		}(userMessage)
+			// THREAD-AFFINITY FIX (§11.4.115). The comment that stood here
+			// claimed "Update UI on main thread" — it was FALSE: this body
+			// runs on the worker goroutine, and the bare SetText raced the
+			// renderer. It is the identical falsehood purged from
+			// applications/desktop by commit e879702c; it is corrected rather
+			// than merely deleted so a future edit is not invited to
+			// re-introduce the bare call on its authority.
+			//
+			// DoAndWait (not Do) because this is the one-shot terminal append
+			// that ends the turn: when this goroutine returns, the UI has
+			// provably been updated. The read and the write are in the SAME
+			// closure — `chatHistory.Text + responseMsg` reads the widget, so
+			// wrapping only the write would leave the read racing.
+			fyneui.DoAndWait(func() {
+				app.chatHistory.SetText(app.chatHistory.Text + responseMsg)
+			})
+		}(userMessage, providerName, modelName)
 	})
 
 	clearButton := widget.NewButton(app.tr("harmony_os_gui_button_clear_chat", nil), func() {
@@ -1593,14 +1613,24 @@ func (app *HarmonyApp) createLLMTab() fyne.CanvasObject {
 	// Provider health status
 	healthLabel := widget.NewLabel(app.tr("harmony_os_gui_health_checking", nil))
 
-	// Start health check goroutine
+	// Start health check goroutine.
+	//
+	// THREAD-AFFINITY + LIFECYCLE FIX (§11.4.115), mirroring the provider-health
+	// ticker fixed in applications/desktop by commit e879702c — a site that was
+	// likewise absent from the original defect report and found only by auditing
+	// every goroutine in the file. Both SetText calls live INSIDE checkHealth so
+	// the eager pre-loop invocation is covered too: it also runs on this worker
+	// goroutine, so dispatching only inside the loop would have left the very
+	// first paint racing. DoAndWait matches desktop's choice for these one-shot
+	// status updates.
 	go func() {
 		ticker := time.NewTicker(10 * time.Second)
 		defer ticker.Stop()
 
 		checkHealth := func() {
 			if app.llmManager == nil {
-				healthLabel.SetText(app.tr("harmony_os_gui_health_no_manager", nil))
+				noManager := app.tr("harmony_os_gui_health_no_manager", nil)
+				fyneui.DoAndWait(func() { healthLabel.SetText(noManager) })
 				return
 			}
 			ctx := context.Background()
@@ -1612,11 +1642,15 @@ func (app *HarmonyApp) createLLMTab() fyne.CanvasObject {
 			if len(health) == 0 {
 				healthText += app.tr("harmony_os_gui_health_no_providers", nil)
 			}
-			healthLabel.SetText(healthText)
+			fyneui.DoAndWait(func() { healthLabel.SetText(healthText) })
 		}
 
+		// LIFECYCLE: this was `for range ticker.C`, which can never terminate —
+		// the goroutine outlived the window it painted into and leaked for the
+		// process lifetime, still mutating healthLabel after teardown. It now
+		// honours the app's existing stopUpdate channel (closed by Cleanup()).
 		checkHealth()
-		for range ticker.C {
+		for fyneui.TickOrStop(ticker.C, app.stopUpdate) {
 			checkHealth()
 		}
 	}()
@@ -1780,10 +1814,18 @@ func (app *HarmonyApp) createSettingsTab() fyne.CanvasObject {
 	// Server controls
 	serverLabel := widget.NewLabel(app.tr("harmony_os_gui_label_server_controls", nil))
 	startServerBtn := widget.NewButton(app.tr("harmony_os_gui_button_start_server", nil), func() {
+		// THREAD-AFFINITY FIX (§11.4.115): app.server.Start() blocks, so this
+		// error path runs on the worker goroutine long after the click that
+		// spawned it — the bare statusBar.SetText raced the renderer. Every
+		// OTHER statusBar.SetText in this file (including the two flanking this
+		// button's handler) sits directly in a widget callback, i.e. already on
+		// the UI goroutine, and is correctly left bare; this was the only one
+		// inside a goroutine.
 		go func() {
 			if err := app.server.Start(); err != nil {
 				log.Printf("Server error: %v", err)
-				app.statusBar.SetText(app.tr("harmony_os_gui_status_server_error_fmt", map[string]any{"Error": fmt.Sprintf("%v", err)}))
+				serverErr := app.tr("harmony_os_gui_status_server_error_fmt", map[string]any{"Error": fmt.Sprintf("%v", err)})
+				fyneui.DoAndWait(func() { app.statusBar.SetText(serverErr) })
 			}
 		}()
 		app.statusBar.SetText(app.tr("harmony_os_gui_status_server_started", nil))

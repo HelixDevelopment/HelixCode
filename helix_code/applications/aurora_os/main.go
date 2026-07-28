@@ -22,6 +22,7 @@ import (
 	"dev.helix.code/applications/aurora_os/i18n"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/fyneui"
 	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/project"
@@ -647,17 +648,34 @@ func (auroraApp *AuroraApp) createAuroraDashboardTab() fyne.CanvasObject {
 	workerCard := widget.NewCard(auroraApp.t("aurora_os_card_workers"), "", workerStatsLabel)
 	taskCard := widget.NewCard(auroraApp.t("aurora_os_card_tasks"), "", taskStatsLabel)
 
-	// Start a goroutine to update stats
+	// Start a goroutine to update stats.
+	//
+	// THREAD-AFFINITY FIX (§11.4.115): this is a background goroutine, so every
+	// label mutation below MUST be dispatched onto the UI goroutine via
+	// fyneui.Do — a bare SetText here raced the renderer, which reads the same
+	// widget fields from the main goroutine (Fyne widgets are NOT
+	// goroutine-safe; see the fyneui package doc). Mirrors the identical fix in
+	// applications/desktop. The domain data is gathered and the string
+	// formatted OUTSIDE the closure — and, for the system stats, INSIDE the
+	// systemMonitor read-lock, which is RELEASED BEFORE the dispatch — so a
+	// domain lock is never held across a UI hop and the UI goroutine never
+	// touches a manager while this one is mid-read.
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
-		for range ticker.C {
+		// LIFECYCLE FIX (§11.4.115): this loop used to be `for range ticker.C`,
+		// which can never terminate — the goroutine outlived the window it
+		// painted into, kept mutating labels after teardown, and leaked for the
+		// lifetime of the process. It now honours the app's existing stopUpdate
+		// channel (closed exactly once by Close() via stopOnce).
+		for fyneui.TickOrStop(ticker.C, auroraApp.stopUpdate) {
 			// Update system stats
 			auroraApp.systemMonitor.mu.RLock()
-			systemStatsLabel.SetText(fmt.Sprintf(auroraApp.t("aurora_os_stat_system_fmt"),
-				auroraApp.systemMonitor.cpuUsage, auroraApp.systemMonitor.memoryUsage, auroraApp.systemMonitor.diskUsage))
+			systemText := fmt.Sprintf(auroraApp.t("aurora_os_stat_system_fmt"),
+				auroraApp.systemMonitor.cpuUsage, auroraApp.systemMonitor.memoryUsage, auroraApp.systemMonitor.diskUsage)
 			auroraApp.systemMonitor.mu.RUnlock()
+			fyneui.Do(func() { systemStatsLabel.SetText(systemText) })
 
 			// Update worker stats
 			if auroraApp.workerManager != nil {
@@ -672,14 +690,16 @@ func (auroraApp *AuroraApp) createAuroraDashboardTab() fyne.CanvasObject {
 						healthy++
 					}
 				}
-				workerStatsLabel.SetText(fmt.Sprintf(auroraApp.t("aurora_os_stat_worker_fmt"), len(workers), active, healthy))
+				workerText := fmt.Sprintf(auroraApp.t("aurora_os_stat_worker_fmt"), len(workers), active, healthy)
+				fyneui.Do(func() { workerStatsLabel.SetText(workerText) })
 			}
 
 			// Update task stats
 			if auroraApp.taskManager != nil {
 				stats := auroraApp.taskManager.GetStats()
-				taskStatsLabel.SetText(fmt.Sprintf(auroraApp.t("aurora_os_stat_task_fmt"),
-					stats.TotalTasks, stats.CompletedTasks, stats.RunningTasks))
+				taskText := fmt.Sprintf(auroraApp.t("aurora_os_stat_task_fmt"),
+					stats.TotalTasks, stats.CompletedTasks, stats.RunningTasks)
+				fyneui.Do(func() { taskStatsLabel.SetText(taskText) })
 			}
 		}
 	}()
@@ -719,20 +739,31 @@ func (auroraApp *AuroraApp) createAuroraSystemTab() fyne.CanvasObject {
 	resourcesLabel := widget.NewLabel(auroraApp.t("aurora_os_label_loading"))
 	resourcesCard := widget.NewCard(auroraApp.t("aurora_os_card_system_resources"), "", resourcesLabel)
 
-	// Update resources display
+	// Update resources display.
+	//
+	// THREAD-AFFINITY FIX (§11.4.115): background goroutine ⇒ the label
+	// mutation is dispatched onto the UI goroutine via fyneui.Do rather than
+	// written bare, which raced the renderer. The stats are read and the string
+	// formatted inside the systemMonitor read-lock, which is RELEASED BEFORE
+	// the dispatch so the domain lock is never held across the UI hop.
 	go func() {
 		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()
 
-		for range ticker.C {
+		// LIFECYCLE FIX (§11.4.115): was `for range ticker.C` — unstoppable,
+		// so the goroutine outlived the window it painted into and leaked for
+		// the lifetime of the process. It now honours stopUpdate (closed by
+		// Close()).
+		for fyneui.TickOrStop(ticker.C, auroraApp.stopUpdate) {
 			auroraApp.systemMonitor.mu.RLock()
 			var m runtime.MemStats
 			runtime.ReadMemStats(&m)
-			resourcesLabel.SetText(fmt.Sprintf(
+			resourcesText := fmt.Sprintf(
 				auroraApp.t("aurora_os_resources_fmt"),
 				auroraApp.systemMonitor.cpuUsage, auroraApp.systemMonitor.memoryUsage, auroraApp.systemMonitor.diskUsage,
-				runtime.NumGoroutine(), float64(m.Alloc)/1024/1024, float64(m.Sys)/1024/1024, m.NumGC))
+				runtime.NumGoroutine(), float64(m.Alloc)/1024/1024, float64(m.Sys)/1024/1024, m.NumGC)
 			auroraApp.systemMonitor.mu.RUnlock()
+			fyneui.Do(func() { resourcesLabel.SetText(resourcesText) })
 		}
 	}()
 
@@ -1653,18 +1684,33 @@ func (auroraApp *AuroraApp) createLLMTab() fyne.CanvasObject {
 		userMsg := fmt.Sprintf(auroraApp.t("aurora_os_chat_user_message_fmt"), userMessage)
 		auroraApp.chatHistory.SetText(currentHistory + userMsg)
 
+		// Resolve the provider + model at DISPATCH time. `.Selected` and
+		// `.Text` are widget READS, and this button callback already runs on
+		// the UI goroutine — reading them from the worker goroutine below
+		// would race the renderer exactly as a bare write would. Captured
+		// up-front and passed in as parameters so the worker observes a stable
+		// snapshot (mirrors applications/desktop's `selectedLabel := …` hoist).
+		providerName := auroraApp.llmProviderSel.Selected
+		modelName := modelNameEntry.Text
+
 		// Log the interaction
 		auroraApp.securityManager.AddAuditEntry("llm_chat", "user",
-			fmt.Sprintf(auroraApp.t("aurora_os_audit_message_sent_fmt"), auroraApp.llmProviderSel.Selected, modelNameEntry.Text), "info")
+			fmt.Sprintf(auroraApp.t("aurora_os_audit_message_sent_fmt"), providerName, modelName), "info")
 
 		// Clear input immediately
 		auroraApp.chatInput.SetText("")
 
-		// Make LLM call in goroutine to not block UI
-		go func(msg string) {
+		// Make LLM call in goroutine to not block UI.
+		//
+		// THREAD-AFFINITY FIX (§11.4.115): this whole body runs OFF the UI
+		// goroutine, so the terminal auroraApp.chatHistory append below is
+		// dispatched via fyneui.DoAndWait — the blocking flavour, because this
+		// is a one-shot terminal update and callers (or a test) synchronising
+		// on the turn ending must see the final text. The read and the write
+		// live in the SAME closure: `auroraApp.chatHistory.Text + …` READS the
+		// widget, so wrapping only the write would leave the read racing.
+		go func(msg, providerName, modelName string) {
 			var responseMsg string
-			providerName := auroraApp.llmProviderSel.Selected
-			modelName := modelNameEntry.Text
 
 			if auroraApp.llmManager != nil {
 				// Get provider from manager using provider type
@@ -1700,9 +1746,17 @@ func (auroraApp *AuroraApp) createLLMTab() fyne.CanvasObject {
 					providerName, modelName)
 			}
 
-			// Update UI on main thread
-			auroraApp.chatHistory.SetText(auroraApp.chatHistory.Text + responseMsg)
-		}(userMessage)
+			// Update the UI ON the UI goroutine.
+			//
+			// The comment that stood here previously claimed "Update UI on
+			// main thread" while doing the exact opposite — a bare mutation
+			// from this worker goroutine. It is corrected rather than merely
+			// deleted: leaving the false claim in place is what invites the
+			// fix to be reverted.
+			fyneui.DoAndWait(func() {
+				auroraApp.chatHistory.SetText(auroraApp.chatHistory.Text + responseMsg)
+			})
+		}(userMessage, providerName, modelName)
 	})
 
 	clearButton := widget.NewButton(auroraApp.t("aurora_os_btn_clear_chat"), func() {
@@ -1732,14 +1786,23 @@ func (auroraApp *AuroraApp) createLLMTab() fyne.CanvasObject {
 	// Provider health status
 	healthLabel := widget.NewLabel(auroraApp.t("aurora_os_health_checking"))
 
-	// Start health check goroutine
+	// Start health check goroutine.
+	//
+	// THREAD-AFFINITY FIX (§11.4.115): every healthLabel mutation below runs
+	// off the UI goroutine and is therefore dispatched via fyneui.DoAndWait —
+	// the blocking flavour, matching the provider-health sites in
+	// applications/desktop, since these are one-shot status updates rather than
+	// a high-frequency stream. The dispatch lives INSIDE checkHealth so BOTH
+	// call sites are covered: the eager pre-loop call (which also runs on this
+	// worker goroutine) and every subsequent tick.
 	go func() {
 		ticker := time.NewTicker(10 * time.Second)
 		defer ticker.Stop()
 
 		checkHealth := func() {
 			if auroraApp.llmManager == nil {
-				healthLabel.SetText(auroraApp.t("aurora_os_health_no_manager"))
+				noManager := auroraApp.t("aurora_os_health_no_manager")
+				fyneui.DoAndWait(func() { healthLabel.SetText(noManager) })
 				return
 			}
 			ctx := context.Background()
@@ -1751,11 +1814,14 @@ func (auroraApp *AuroraApp) createLLMTab() fyne.CanvasObject {
 			if len(health) == 0 {
 				healthText += auroraApp.t("aurora_os_health_no_providers")
 			}
-			healthLabel.SetText(healthText)
+			fyneui.DoAndWait(func() { healthLabel.SetText(healthText) })
 		}
 
 		checkHealth()
-		for range ticker.C {
+		// LIFECYCLE FIX (§11.4.115): was `for range ticker.C` — unstoppable, so
+		// the goroutine kept polling providers and mutating healthLabel after
+		// teardown. It now honours stopUpdate (closed by Close()).
+		for fyneui.TickOrStop(ticker.C, auroraApp.stopUpdate) {
 			checkHealth()
 		}
 	}()
