@@ -1,8 +1,8 @@
 # HelixCode Release Changelog — helix-code-1.2.0-dev-0.0.1
 
-**Revision:** 1
-**Last modified:** 2026-07-28T13:11:20Z
-**Maintainer:** HelixCode release engineering (documentation draft, AI-agent authored)
+**Revision:** 2
+**Last modified:** 2026-07-28T15:21:59Z
+**Maintainer:** HelixCode release engineering (documentation draft, AI-agent authored; independently reviewed per §11.4.142/§11.4.194 — see "Independent review" section below)
 
 ---
 
@@ -103,6 +103,7 @@ re-litigated or treated as unexplained drift.
 | `8cec90b` | tool_schema *(pinned)* | Translation bundles are `go:embed`-ed, so `tr()` lookups no longer depend on the process's current working directory. Previously any consumer calling in from outside this module's own root got raw key strings back instead of translations. |
 | `69a5ab8d` | helix_agent **(committed, NOT yet pinned — see Known gaps)** | Fixes a goroutine leak in the Ollama provider's `CompleteStream`: 4 of 6 channel-send sites had no `ctx.Done()` escape hatch, so a caller that cancelled its context and stopped draining left the background goroutine parked forever. RED/GREEN regression guard added, driven via a real stuck-HTTP-response scenario and a live goroutine-stack inspection. |
 | `a345c551` | helix_agent **(committed, NOT yet pinned — see Known gaps)** | Two `tests/unit` test defects fixed (product behavior was correct in both cases): `TestCompletionHandler_Models` now wires a real model source instead of asserting on an intentionally-empty list; `TestCompletionHandler_Stream` now distinguishes an honest empty response (client-gone, request-timeout path) from an actual failure, instead of treating the httptest recorder's default `200` as an unconditional pass signal. |
+| `dd3c0c3b` | main | Closes the third confirmed instance of an "unprioritized `select`" race this session: `autoSaveLoop`'s per-tick `select` between `<-ticker.C` and `<-stop` had no priority ordering, so a coincidentally-pending tick could still fire one more `SaveAll()` after `DisableAutoSave()` had already closed `stop` — the cause of `TestAutoSaveLifecycle_ReEnableTicks`'s "disabled auto-save must not tick" flake. Fixed by extracting the per-iteration select into `autoSaveTick(tickerC, stop)` with a non-blocking priority pre-check on `stop`. Full RED/GREEN/pre-fix/post-fix polarity evidence captured (§11.4.115): 2488/5000 forced-race hits pre-fix with the priority check disabled, 0/5000 post-fix. **Found missing from this changelog's original draft during independent review — added in revision 2; see "Independent review" section below.** |
 
 ## Added
 
@@ -141,9 +142,14 @@ re-litigated or treated as unexplained drift.
 
 ## Per-repo commit inventory
 
-### main (this repo) — 18 commits since `helix-code-1.1.0-dev-0.0.3` (`5ab97d8c`)
+### main (this repo) — 19 commits since `helix-code-1.1.0-dev-0.0.3` (`5ab97d8c`)
+
+*(Revision 2: corrected from 18 to 19 — `dd3c0c3b` was omitted from the original
+draft despite being this changelog's own direct parent commit. See "Independent
+review" below.)*
 
 ```
+dd3c0c3b fix(persistence): close unprioritized-select race in autoSaveLoop (3rd instance)
 c29e1dcc docs(qa): LIVE proof for the Anthropic wire and the i18n cwd fix
 a5462e35 docs(qa): LIVE proof that stream:true reports the served model
 e952f4d1 docs(qa): §11.4.83 evidence for the three non-feature commits — G7 reaches 0
@@ -267,6 +273,63 @@ underlying work is. None of these were papered over.
    exception is item 4 above, which is explicitly attributed to
    `docs/CONTINUATION.md` rather than re-run, and is labeled unconfirmed for
    exactly that reason.
+
+10. **`helix_agent` has moved further since this draft's stated pin
+    (`69a5ab8d`), adding a third sibling to the same defect class this
+    document already tracks.** Commit `e2f42b12`
+    (`fix(llm,database): prioritize cancellation in racy select statements`)
+    fixes exactly the two "sibling" locations `dd3c0c3b`'s commit message
+    names as instances of the same unprioritized-`select` pattern —
+    `internal/llm/lazy_provider.go`'s `createProviderWithContext` and
+    `internal/database/debate_log_repository.go`'s `StartCleanupWorker` — with
+    the same RED/GREEN polarity-evidence discipline (§11.4.115). It is real,
+    committed work, but as of this revision it is **not yet part of this
+    release's pinned artifact**: main's gitlink for `submodules/helix_agent`
+    still points at `3268fd73`, four commits behind `helix_agent`'s own
+    current `HEAD` (`3268fd73` → `a345c551` → `69a5ab8d` → `e2f42b12`). This
+    compounds Known gap 5 rather than replacing it — do not treat `69a5ab8d`
+    as the current unpinned tip; re-derive `submodules/helix_agent`'s actual
+    `HEAD` before citing it, per this document's own opening warning.
+
+## Independent review
+
+Per constitution §11.4.142 (every change gets an independent review, no
+exception) and §11.4.194 (exhaustive all-scenario review), this document
+received a full independent review after its original commit (`8bdac5b0`)
+landed. The authoring agent had been killed by an API session limit
+immediately after committing and never reported, so this changelog had zero
+review until now.
+
+**Method:** every cited short SHA in the Fixed / Added / Changed /
+Infrastructure tables and the per-repo commit inventories was checked to
+exist and to actually do what its entry claims, via `git show --stat` and
+full `git show` against this repository, `submodules/helix_agent`, and
+`submodules/tool_schema` — not accepted on the strength of the subject line
+alone. Quantitative claims (assertion counts, PASS/FAIL tallies, live scores,
+frame counts) were spot-checked against the cited commits' own bodies.
+`git log --oneline 8bdac5b0..HEAD` was run in this repo (empty — main has not
+moved) and, using the changelog's own stated submodule pins as the base,
+in `submodules/helix_agent` (one further commit, `e2f42b12` — see Known gap
+10) and `submodules/tool_schema` (none). The `.env` `HELIX_RELEASE_PREFIX`
+resolution, the §11.4.44 revision header, and the "3 desktop packages fail to
+build" claim (`applications/desktop`, `applications/aurora_os`,
+`applications/harmony_os` — confirmed all three import the Fyne stack, so
+all three are genuinely covered by `go build ./applications/...` and by the
+stated X11/OpenGL failure) were all independently re-verified rather than
+taken on trust.
+
+**Finding (blocking, now fixed in revision 2):** commit `dd3c0c3b` — this
+changelog's own direct parent commit, committed roughly 90 seconds before
+`8bdac5b0` — was completely absent from every section of the original draft
+despite being real, substantive, in-scope work covered by the document's own
+stated data-collection window. It has been added to the Fixed table, the
+per-repo commit inventory, and cross-referenced against its `helix_agent`
+sibling fix (Known gap 10).
+
+**Verdict:** no invented history was found anywhere in this document — every
+other cited SHA, quantitative claim, and Known-gaps disclosure checked out
+exactly as stated. With the one finding above corrected, this document is
+independently confirmed accurate as of this revision (2026-07-28T15:21:59Z).
 
 ## Sources verified
 
