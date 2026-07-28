@@ -946,7 +946,7 @@ func (auroraApp *AuroraApp) optimizePerformance() {
 	var after runtime.MemStats
 	runtime.ReadMemStats(&after)
 
-	freed := float64(before.Alloc-after.Alloc) / 1024 / 1024
+	freed := memFreedMB(before.Alloc, after.Alloc)
 
 	// Set GOMAXPROCS
 	runtime.GOMAXPROCS(runtime.NumCPU())

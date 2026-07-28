@@ -880,7 +880,7 @@ func (cliApp *CLIApp) runOptimization() error {
 	runtime.GC()
 	var after runtime.MemStats
 	runtime.ReadMemStats(&after)
-	freed := float64(before.Alloc-after.Alloc) / 1024 / 1024
+	freed := memFreedMB(before.Alloc, after.Alloc)
 	fmt.Printf(cliApp.t("aurora_os_cli_memory_freed")+"\n", freed)
 
 	// Optimize GOMAXPROCS
