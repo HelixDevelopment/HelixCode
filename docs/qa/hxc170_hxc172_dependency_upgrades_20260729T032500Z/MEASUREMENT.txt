@@ -1,0 +1,158 @@
+HXC-170 / HXC-172 — dependency upgrade evidence
+Run id : hxc170_hxc172_dependency_upgrades_20260729T032500Z
+Date   : 2026-07-29
+Scope  : submodules/helix_agent (module dev.helix.agent) + plugins/mcp-server
+Source : docs/research/hxc166_dependency_advisory_triage_20260729/ANALYSIS.md
+
+Plain-text (not .md) deliberately: these are raw captured tool artifacts, not a
+narrative document, so they carry no §11.4.65 HTML/PDF export obligation.
+
+================================================================================
+1. GO ADVISORIES — MEASURED BEFORE / AFTER  (tool: govulncheck, exit 3 = found)
+================================================================================
+
+Both runs are `govulncheck ./...` and `govulncheck -show verbose ./...` against
+the same module, same machine, before and after the two HXC-170 commits.
+
+                                        BEFORE      AFTER     CLOSED
+  reachable (symbol-level, called)          11          3          8
+  imported, not called                       3          0          3
+  required, not imported                     4          3          1
+  ------------------------------------------------------------------
+  TOTAL                                     18          6         12
+
+  BEFORE: "Your code is affected by 11 vulnerabilities from 7 modules."
+  AFTER : "Your code is affected by 3 vulnerabilities from 1 module."
+
+The 12 closed (present in govulncheck_before_verbose.txt, absent in
+govulncheck_after_verbose.txt):
+
+  GO-2026-4945  GO-2026-4985  GO-2026-5074  GO-2026-5336
+  GO-2026-5490  GO-2026-5496  GO-2026-5597  GO-2026-5676
+  GO-2026-5693  GO-2026-5841  GO-2026-5970  GO-2026-6061
+
+New findings introduced by the upgrades: NONE (set difference after\before is
+empty).
+
+Note: the HXC-170 item text predicted "eleven of the eighteen". The measured
+figure is TWELVE. The extra one is go-jose/v3 GO-2026-4945, which the triage
+counted in the unreachable set.
+
+================================================================================
+2. WHAT REMAINS — ALL SIX HAVE NO VENDOR FIX
+================================================================================
+
+  reachable, called by our code:
+    GO-2026-5668  github.com/docker/docker   no fix   sandbox.go:298 CopyToContainer
+    GO-2026-4887  github.com/docker/docker   no fix   sandbox.go:158/218
+    GO-2026-4883  github.com/docker/docker   no fix   sandbox.go:158/218
+  required, not imported:
+    GO-2026-5932  golang.org/x/crypto        no fix
+    GO-2026-5746  github.com/docker/docker   no fix
+    GO-2026-5617  github.com/docker/docker   no fix
+
+HXC-170 therefore closed everything that was closable by upgrading. The residue
+is exactly the unfixable set — the substance of HXC-169, which needs a
+mitigation decision, not a version bump.
+
+================================================================================
+3. BUILD / VET / TEST — EXIT CODES CAPTURED DIRECTLY
+================================================================================
+
+  batch 1 (7 modules, applied and built ONE AT A TIME for attribution)
+    go get         exit 0  x7
+    go build ./... exit 0  x7   (after each individual module)
+    go vet ./...   exit 0
+    go test ./internal/{checkpoints,templates,security,transport,router,
+                        observability}/...            exit 0  (7 packages ok)
+
+  batch 2 (grpc 1.80.0 -> 1.82.1, isolated)
+    go get                              exit 0
+    go build ./...                      exit 0
+    go vet ./...                        exit 0
+    go test (all 4 packages importing grpc)  exit 0
+    determinism: re-derived go.mod/go.sum byte-IDENTICAL to the first run
+
+  parent inner module reconciliation (helix_code/, module dev.helix.code)
+    BEFORE  go build ./internal/agentbridge/...  exit 1
+            "go: updates to go.mod needed; to update it: go mod tidy"
+    AFTER   go build ./internal/agentbridge/...  exit 0
+            go build ./internal/...              exit 0
+
+================================================================================
+4. NPM (HXC-172) — REACHABILITY ESTABLISHED, WHICH THE TRIAGE HAD NOT
+================================================================================
+
+The triage recorded that NO reachability analysis existed for any of the 184
+npm/pip advisories. For plugins/mcp-server specifically, Ground B is now
+established by import-graph inspection:
+
+  the shipped dist/ requires ONLY "./tools" and "./transport"
+  src/ imports only fs, ./transport, ./tools
+       plus dynamic import() of node builtins http and readline
+
+  => neither `ws` nor `@modelcontextprotocol/sdk` is EVER imported.
+     Both are installed into the image but never loaded.
+
+Corroboration: after bumping ws, a fresh tsc build produced all six .js/.d.ts
+outputs BYTE-IDENTICAL to the tracked dist/ (only .map sourceRoot paths differ,
+an artifact of building to a temp outDir). ws is not linked into the output.
+
+  advisory                                        pkg      fixed-in   status
+  GHSA-96hv-2xvq-fx4p  high    memory-exhaust DoS  ws        8.21.0    CLOSED (8.21.1)
+  GHSA-58qx-3vcg-4xpx  medium  uninit mem disclose ws        8.20.1    CLOSED (8.21.1)
+  GHSA-w48q-cv73-mx4w  high    DNS rebinding       mcp-sdk   1.24.0    OPEN — see §5
+
+Runtime confirmation after the ws bump (stdio transport, real process):
+  initialize  -> serverInfo helixagent-mcp-server, protocolVersion 2024-11-05
+  tools/list  -> 11 tools (helixagent_debate, _ensemble, _task, _rag, ...)
+
+================================================================================
+5. THE DNS-REBINDING SETTING — VERIFIED EXPLICITLY, NOT ASSUMED
+================================================================================
+
+HXC-172 asked for the protective setting to be "explicitly verified as enabled
+in our configuration rather than assumed". Verified, and the finding is negative
+in an instructive way:
+
+  (a) The SDK is never imported, so its DNS-rebinding-protection default does
+      not exist in our runtime. It cannot be "turned on". Upgrading to 1.24.0+
+      would close the Dependabot alert while changing nothing we actually run.
+
+  (b) Our SSE path does not use the SDK transport at all — src/index.ts
+      runSSE() hand-rolls http.createServer, and sets
+      'Access-Control-Allow-Origin': '*' at lines 145 and 169 with NO Origin
+      validation and NO Host validation anywhere. That is the same
+      vulnerability class the advisory describes, in OUR code, where no SDK
+      upgrade reaches it.
+
+  (c) runSSE() is not reachable as deployed. Dockerfile CMD is
+      ["node","dist/index.js"] with no args; the code reads NO environment
+      variables at all (so ENV MCP_PORT=9100 is inert); defaultConfig.transport
+      is 'stdio'; and compose adds no command/entrypoint override. SSE is only
+      reachable via an explicit --transport sse argument that nothing supplies.
+
+  Consequence worth its own item: the container publishes 9100 and HEALTHCHECKs
+  wget http://localhost:9100/health, but nothing ever listens there — the
+  healthcheck cannot pass. Even in SSE mode the port would default to 7062,
+  because MCP_PORT is never read.
+
+================================================================================
+6. HONEST BOUNDARY
+================================================================================
+
+This does NOT make the component free of known vulnerabilities.
+
+  - 204 Dependabot advisories were open at the start; this pass closes 2 of them
+    (the ws pair). The Go delta above is measured by govulncheck, which is a
+    DIFFERENT and partly non-overlapping oracle — e.g. x/text GO-2026-5970 was
+    reachable and had no Dependabot alert at all.
+  - 6 Go vulnerabilities remain, 3 of them reachable and called, and ALL 6 have
+    no vendor fix available.
+  - 182 npm/pip advisories still have NO reachability analysis. Ground B was
+    established here for plugins/mcp-server only (3 advisories). The other 181
+    remain classified by deployment surface and declared scope alone.
+  - "govulncheck found nothing" is good evidence, not proof: reflection,
+    go:linkname, cgo and dynamic dispatch can defeat static call-graph analysis.
+  - govulncheck analysed the default build; code behind build tags may add call
+    paths not represented here.

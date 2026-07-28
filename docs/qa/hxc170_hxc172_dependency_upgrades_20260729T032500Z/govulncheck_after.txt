@@ -1,0 +1,181 @@
+=== Symbol Results ===
+
+Vulnerability #1: GO-2026-5668
+    Docker: Race condition in docker cp allows creation of arbitrary empty files
+    on the host via symlink swap in github.com/docker/docker
+  More info: https://pkg.go.dev/vuln/GO-2026-5668
+  Module: github.com/docker/docker
+    Found in: github.com/docker/docker@v28.5.2+incompatible
+    Fixed in: N/A
+    Example traces found:
+      #1: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls api.init
+      #2: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls blkiodev.init
+      #3: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls build.init
+      #4: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls checkpoint.init
+      #5: internal/services/cognee_service.go:1940:28: services.CogneeService.SeedInitialData calls http.Client.Do, which eventually calls client.CheckRedirect
+      #6: internal/clis/openhands/sandbox.go:158:40: openhands.Sandbox.Start calls client.Client.ContainerCreate
+      #7: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach
+      #8: internal/clis/openhands/sandbox.go:212:48: openhands.Sandbox.Execute calls client.Client.ContainerExecCreate
+      #9: internal/clis/openhands/sandbox.go:231:48: openhands.Sandbox.Execute calls client.Client.ContainerExecInspect
+      #10: internal/clis/openhands/sandbox.go:373:37: openhands.Sandbox.Stop calls client.Client.ContainerRemove
+      #11: internal/clis/openhands/sandbox.go:173:36: openhands.Sandbox.Start calls client.Client.ContainerStart
+      #12: internal/clis/openhands/sandbox.go:366:35: openhands.Sandbox.Stop calls client.Client.ContainerStop
+      #13: internal/clis/openhands/sandbox.go:312:47: openhands.Sandbox.CopyFrom calls client.Client.CopyFromContainer
+      #14: internal/clis/openhands/sandbox.go:298:37: openhands.Sandbox.CopyTo calls client.Client.CopyToContainer
+      #15: internal/clis/openhands/sandbox.go:109:44: openhands.Sandbox.Start calls client.Client.ImageInspectWithRaw
+      #16: internal/clis/openhands/sandbox.go:112:41: openhands.Sandbox.Start calls client.Client.ImagePull
+      #17: internal/transport/http3_client.go:217:43: transport.HTTP3Client.doAttempt calls otelhttp.Transport.RoundTrip, which calls client.NewClientWithOpts
+      #18: internal/clis/openhands/sandbox.go:451:38: openhands.NewSandboxManager calls client.NewClientWithOpts
+      #19: internal/clis/openhands/sandbox.go:451:87: openhands.NewSandboxManager calls client.WithAPIVersionNegotiation
+      #20: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.emptyIDError.Error
+      #21: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.errConnectionFailed.Error
+      #22: internal/messaging/errors.go:282:14: messaging.GetBrokerError calls errors.As, which eventually calls client.errConnectionFailed.Unwrap
+      #23: internal/mcp/servers/filesystem_adapter.go:542:22: servers.FilesystemAdapter.CopyFile calls io.Copy, which eventually calls client.hijackedConn.Read
+      #24: internal/transport/http3_client.go:217:43: transport.HTTP3Client.doAttempt calls otelhttp.Transport.RoundTrip, which calls client.hijackedConn.RoundTrip
+      #25: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.httpError.Error
+      #26: internal/services/user_service.go:379:15: services.UserService.GetSession calls errors.Is, which eventually calls client.httpError.Is
+      #27: internal/messaging/errors.go:282:14: messaging.GetBrokerError calls errors.As, which eventually calls client.httpError.Unwrap
+      #28: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init
+      #29: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls common.init
+      #30: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init
+      #31: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls events.init
+      #32: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls filters.init
+      #33: internal/clis/openhands/sandbox.go:16:2: openhands.init calls image.init
+      #34: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls mount.init
+      #35: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls network.init
+      #36: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls registry.init
+      #37: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which eventually calls runtime.init
+      #38: internal/clis/openhands/sandbox.go:16:2: openhands.init calls image.init, which calls storage.init
+      #39: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls strslice.init
+      #40: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls swarm.init
+      #41: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls system.init
+      #42: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls time.init
+      #43: internal/clis/openhands/sandbox.go:222:2: openhands.Sandbox.Execute calls types.HijackedResponse.Close
+      #44: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach, which eventually calls types.NewHijackedResponse
+      #45: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls types.init
+      #46: internal/clis/openhands/sandbox.go:158:40: openhands.Sandbox.Start calls client.Client.ContainerCreate, which calls versions.GreaterThanOrEqualTo
+      #47: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach, which calls versions.LessThan
+      #48: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls versions.init
+      #49: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls volume.init
+
+Vulnerability #2: GO-2026-4887
+    Moby has AuthZ plugin bypass when provided oversized request bodies in
+    github.com/docker/docker
+  More info: https://pkg.go.dev/vuln/GO-2026-4887
+  Module: github.com/docker/docker
+    Found in: github.com/docker/docker@v28.5.2+incompatible
+    Fixed in: N/A
+    Example traces found:
+      #1: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls api.init
+      #2: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls blkiodev.init
+      #3: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls build.init
+      #4: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls checkpoint.init
+      #5: internal/services/cognee_service.go:1940:28: services.CogneeService.SeedInitialData calls http.Client.Do, which eventually calls client.CheckRedirect
+      #6: internal/clis/openhands/sandbox.go:158:40: openhands.Sandbox.Start calls client.Client.ContainerCreate
+      #7: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach
+      #8: internal/clis/openhands/sandbox.go:212:48: openhands.Sandbox.Execute calls client.Client.ContainerExecCreate
+      #9: internal/clis/openhands/sandbox.go:231:48: openhands.Sandbox.Execute calls client.Client.ContainerExecInspect
+      #10: internal/clis/openhands/sandbox.go:373:37: openhands.Sandbox.Stop calls client.Client.ContainerRemove
+      #11: internal/clis/openhands/sandbox.go:173:36: openhands.Sandbox.Start calls client.Client.ContainerStart
+      #12: internal/clis/openhands/sandbox.go:366:35: openhands.Sandbox.Stop calls client.Client.ContainerStop
+      #13: internal/clis/openhands/sandbox.go:312:47: openhands.Sandbox.CopyFrom calls client.Client.CopyFromContainer
+      #14: internal/clis/openhands/sandbox.go:298:37: openhands.Sandbox.CopyTo calls client.Client.CopyToContainer
+      #15: internal/clis/openhands/sandbox.go:109:44: openhands.Sandbox.Start calls client.Client.ImageInspectWithRaw
+      #16: internal/clis/openhands/sandbox.go:112:41: openhands.Sandbox.Start calls client.Client.ImagePull
+      #17: internal/transport/http3_client.go:217:43: transport.HTTP3Client.doAttempt calls otelhttp.Transport.RoundTrip, which calls client.NewClientWithOpts
+      #18: internal/clis/openhands/sandbox.go:451:38: openhands.NewSandboxManager calls client.NewClientWithOpts
+      #19: internal/clis/openhands/sandbox.go:451:87: openhands.NewSandboxManager calls client.WithAPIVersionNegotiation
+      #20: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.emptyIDError.Error
+      #21: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.errConnectionFailed.Error
+      #22: internal/messaging/errors.go:282:14: messaging.GetBrokerError calls errors.As, which eventually calls client.errConnectionFailed.Unwrap
+      #23: internal/mcp/servers/filesystem_adapter.go:542:22: servers.FilesystemAdapter.CopyFile calls io.Copy, which eventually calls client.hijackedConn.Read
+      #24: internal/transport/http3_client.go:217:43: transport.HTTP3Client.doAttempt calls otelhttp.Transport.RoundTrip, which calls client.hijackedConn.RoundTrip
+      #25: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.httpError.Error
+      #26: internal/services/user_service.go:379:15: services.UserService.GetSession calls errors.Is, which eventually calls client.httpError.Is
+      #27: internal/messaging/errors.go:282:14: messaging.GetBrokerError calls errors.As, which eventually calls client.httpError.Unwrap
+      #28: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init
+      #29: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls common.init
+      #30: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init
+      #31: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls events.init
+      #32: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls filters.init
+      #33: internal/clis/openhands/sandbox.go:16:2: openhands.init calls image.init
+      #34: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls mount.init
+      #35: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls network.init
+      #36: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls registry.init
+      #37: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which eventually calls runtime.init
+      #38: internal/clis/openhands/sandbox.go:16:2: openhands.init calls image.init, which calls storage.init
+      #39: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls strslice.init
+      #40: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls swarm.init
+      #41: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls system.init
+      #42: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls time.init
+      #43: internal/clis/openhands/sandbox.go:222:2: openhands.Sandbox.Execute calls types.HijackedResponse.Close
+      #44: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach, which eventually calls types.NewHijackedResponse
+      #45: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls types.init
+      #46: internal/clis/openhands/sandbox.go:158:40: openhands.Sandbox.Start calls client.Client.ContainerCreate, which calls versions.GreaterThanOrEqualTo
+      #47: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach, which calls versions.LessThan
+      #48: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls versions.init
+      #49: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls volume.init
+
+Vulnerability #3: GO-2026-4883
+    Moby has an Off-by-one error in its plugin privilege validation in
+    github.com/docker/docker
+  More info: https://pkg.go.dev/vuln/GO-2026-4883
+  Module: github.com/docker/docker
+    Found in: github.com/docker/docker@v28.5.2+incompatible
+    Fixed in: N/A
+    Example traces found:
+      #1: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls api.init
+      #2: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls blkiodev.init
+      #3: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls build.init
+      #4: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls checkpoint.init
+      #5: internal/services/cognee_service.go:1940:28: services.CogneeService.SeedInitialData calls http.Client.Do, which eventually calls client.CheckRedirect
+      #6: internal/clis/openhands/sandbox.go:158:40: openhands.Sandbox.Start calls client.Client.ContainerCreate
+      #7: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach
+      #8: internal/clis/openhands/sandbox.go:212:48: openhands.Sandbox.Execute calls client.Client.ContainerExecCreate
+      #9: internal/clis/openhands/sandbox.go:231:48: openhands.Sandbox.Execute calls client.Client.ContainerExecInspect
+      #10: internal/clis/openhands/sandbox.go:373:37: openhands.Sandbox.Stop calls client.Client.ContainerRemove
+      #11: internal/clis/openhands/sandbox.go:173:36: openhands.Sandbox.Start calls client.Client.ContainerStart
+      #12: internal/clis/openhands/sandbox.go:366:35: openhands.Sandbox.Stop calls client.Client.ContainerStop
+      #13: internal/clis/openhands/sandbox.go:312:47: openhands.Sandbox.CopyFrom calls client.Client.CopyFromContainer
+      #14: internal/clis/openhands/sandbox.go:298:37: openhands.Sandbox.CopyTo calls client.Client.CopyToContainer
+      #15: internal/clis/openhands/sandbox.go:109:44: openhands.Sandbox.Start calls client.Client.ImageInspectWithRaw
+      #16: internal/clis/openhands/sandbox.go:112:41: openhands.Sandbox.Start calls client.Client.ImagePull
+      #17: internal/transport/http3_client.go:217:43: transport.HTTP3Client.doAttempt calls otelhttp.Transport.RoundTrip, which calls client.NewClientWithOpts
+      #18: internal/clis/openhands/sandbox.go:451:38: openhands.NewSandboxManager calls client.NewClientWithOpts
+      #19: internal/clis/openhands/sandbox.go:451:87: openhands.NewSandboxManager calls client.WithAPIVersionNegotiation
+      #20: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.emptyIDError.Error
+      #21: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.errConnectionFailed.Error
+      #22: internal/messaging/errors.go:282:14: messaging.GetBrokerError calls errors.As, which eventually calls client.errConnectionFailed.Unwrap
+      #23: internal/mcp/servers/filesystem_adapter.go:542:22: servers.FilesystemAdapter.CopyFile calls io.Copy, which eventually calls client.hijackedConn.Read
+      #24: internal/transport/http3_client.go:217:43: transport.HTTP3Client.doAttempt calls otelhttp.Transport.RoundTrip, which calls client.hijackedConn.RoundTrip
+      #25: internal/handlers/openai_compatible.go:2273:101: handlers.UnifiedHandler.Completions calls client.httpError.Error
+      #26: internal/services/user_service.go:379:15: services.UserService.GetSession calls errors.Is, which eventually calls client.httpError.Is
+      #27: internal/messaging/errors.go:282:14: messaging.GetBrokerError calls errors.As, which eventually calls client.httpError.Unwrap
+      #28: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init
+      #29: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls common.init
+      #30: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init
+      #31: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls events.init
+      #32: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls filters.init
+      #33: internal/clis/openhands/sandbox.go:16:2: openhands.init calls image.init
+      #34: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls mount.init
+      #35: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls network.init
+      #36: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls registry.init
+      #37: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which eventually calls runtime.init
+      #38: internal/clis/openhands/sandbox.go:16:2: openhands.init calls image.init, which calls storage.init
+      #39: internal/clis/openhands/sandbox.go:15:2: openhands.init calls container.init, which calls strslice.init
+      #40: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls swarm.init
+      #41: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls system.init
+      #42: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls time.init
+      #43: internal/clis/openhands/sandbox.go:222:2: openhands.Sandbox.Execute calls types.HijackedResponse.Close
+      #44: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach, which eventually calls types.NewHijackedResponse
+      #45: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls types.init
+      #46: internal/clis/openhands/sandbox.go:158:40: openhands.Sandbox.Start calls client.Client.ContainerCreate, which calls versions.GreaterThanOrEqualTo
+      #47: internal/clis/openhands/sandbox.go:218:50: openhands.Sandbox.Execute calls client.Client.ContainerExecAttach, which calls versions.LessThan
+      #48: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls versions.init
+      #49: internal/clis/openhands/sandbox.go:17:2: openhands.init calls client.init, which calls volume.init
+
+Your code is affected by 3 vulnerabilities from 1 module.
+This scan also found 0 vulnerabilities in packages you import and 3
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
