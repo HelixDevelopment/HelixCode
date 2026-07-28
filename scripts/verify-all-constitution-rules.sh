@@ -711,6 +711,40 @@ if want_gate G20; then
 fi
 
 # ---------------------------------------------------------------------------
+# G21 — §11.4.10/CONST-042 QA-transcript redaction, fail-closed
+#
+# The security regression guard for HXC-167. Recorded QA transcripts are
+# scrubbed of secrets before being committed; that control had TWO independent
+# ways to let a secret through while reporting success:
+#   (a) the secret was interpolated into sed AS A REGEX with only `|` escaped,
+#       so a key containing an unbalanced `[` made sed fail — and the error was
+#       swallowed by `2>/dev/null || true`. Measured on the pre-fix artifact:
+#       the secret SURVIVED at rc=0.
+#   (b) a greedy `.*` extracted only the LAST credential on a line, silently
+#       leaving every earlier one in place.
+#
+# It was NOT registered when it first landed, deliberately: its own check (0)
+# was fail-open by the very defect class it guards — `sed | grep -qF` returns
+# sed's 141 under pipefail because `grep -q` SIGPIPEs its producer, so a
+# PRESENT construct read as absent and RED_MODE SKIPped (rc=2), meaning the
+# half that proves the gate can DETECT was not running. It hid because the
+# interactive shell it was first tested in resolves `grep` to a ugrep shim that
+# drains input, while the gate runs as a script where GNU grep does not.
+# Registering it then would have wired a gate whose falsifiability proof did
+# not execute. Both polarities now reach real verdicts, so it is wired here.
+# ---------------------------------------------------------------------------
+if want_gate G21; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G21 — §11.4.10/CONST-042 QA-transcript redaction fail-closed (CM-QA-TRANSCRIPT-REDACTION-FAIL-CLOSED)"
+    if bash "$ROOT/scripts/gates/qa_transcript_redaction_gate.sh" >/tmp/g21-red.out 2>&1; then
+        gate_pass G21 "transcript redaction is literal, loud on failure, and post-write-scanned for server-originated secrets"
+    else
+        gate_fail G21 "transcript redaction can leak a secret while reporting success — a captured credential may reach a public remote (see /tmp/g21-red.out)" \
+            "$(tail -8 /tmp/g21-red.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
