@@ -66,7 +66,7 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>16</td>
+<td>19</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -74,7 +74,8 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-07-27T18:55:00Z</td>
+<td>2026-07-28T18:20:00Z (dedicated doc-refresh pass,
+§11.4.131/§12.10)</td>
 </tr>
 <tr>
 <td>Status</td>
@@ -82,24 +83,184 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 </tr>
 <tr>
 <td>Status summary</td>
-<td><strong>2026-07-27 evening (session <code>helix-code</code>) —
-PLATFORM STOPPED + systemd-DISABLED; sweep NOT green; tag still
-blocked.</strong> Operator ended the session with an explicit shutdown
-directive. All six user units stopped AND
-<code>systemctl --user disable</code>d (<code>helix.target</code>,
-<code>helixagent</code>, <code>helixcode-server</code>,
-<code>helixcode-infra</code>, <code>helixllm-gateway</code>,
-<code>helixllm-coder</code>, + generated
-<code>helix-{pg,redis}-data-volume</code>), verified
-<code>active=inactive enabled=disabled</code>; ports
-7061/8081/8100/15432/16379/18081/5433/6380/11434/18434/8001 all
-confirmed unbound; this project’s containers stopped. Other projects on
-the shared host deliberately UNTOUCHED per §11.4.174
-(<code>helixterm-*</code>, <code>penpot-*</code>,
-<code>helix_sonarqube*</code>, and <code>atmosphere-aosp-build</code>
-which was RUNNING at shutdown). LANDED: the §11.4.174/§11.4.201
-PORT_CONFLICT ownership fix in <code>tests/precondition/</code> with
-captured RED→GREEN (<code>RED_MODE=1</code> reproduces the legacy blind
+<td><strong>REVISION 19 CORRECTION (2026-07-28T18:20Z) — produced by a
+dedicated doc-refresh pass scoped to <code>RESUME.md</code> + this file
+only</strong> (four OTHER streams were concurrently active in
+<code>helix_code/internal/llm/</code>,
+<code>helix_code/applications/</code>,
+<code>submodules/helix_agent/internal/agents/</code>, and
+<code>submodules/debate_orchestrator</code> — untouched by this pass).
+Rev 18’s numbers are STALE; independently re-derived (§11.4.6), nothing
+copied forward: <strong>(E1) Meta-repo HEAD moved
+<code>c29e1dcc</code>→<code>99ff7d8e</code>, 12 more commits,
+<code>main</code> now 20 commits ahead of all 4 remotes</strong> (was
+8). The new commits include a self-inflicted, self-caught §11.4.108
+SOURCE→ARTIFACT gap: <code>3fd55a4d</code> recovered an orphaned
+regression guard whose composite literal referenced a struct field that
+did not exist in the committed tree — <code>internal/server</code> did
+NOT compile at
+<code>3fd55a4d</code>/<code>3c8197cf</code>/<code>905a0b0a</code>,
+caught by independent review and fixed in <code>34e264e1</code>.
+<code>3fd55a4d</code>‘s own message additionally discloses its
+<code>RED_MODE=1</code> branch is itself a bluff (asserts on a local
+replica of pre-fix behaviour, cannot fail) — tracked, still open, not
+repaired. <code>c7484cc7</code> (scaling-harness signal-to-noise fix,
+<code>Trials</code> 3→5, confirmed in source) and <code>640db264</code>
+(aurora_os uint64-underflow fix) both carry pasted verification in their
+own messages. The newest commit <code>99ff7d8e</code> reviewed
+<code>3c8197cf</code>’s new <code>*_racefix_test.go</code> files by
+READING alone (host lacks X11/GL headers to build them) and found +
+fixed a deterministic nil-pointer panic in the harmony_os file — proof
+the “authored but never executed” GUI-test gap (below) can hide real
+defects. <strong>(E2) <code>helix_agent</code> moved
+<code>a345c551</code>→<code>f451d342</code>, 9 more commits, now 11
+ahead</strong> (was 2); this pass verified BY DIFF that a Critical
+review finding described elsewhere as “remediation in flight” (Dreamer
+<code>memoryMu</code> not covering <code>cleanupPhase</code>’s unlocked
+<code>MEMORY.md</code> write) has actually LANDED in
+<code>f451d342</code> — <code>cleanupPhase</code> now shares the same
+<code>beginMemoryWrite()</code>/<code>end()</code> helper as
+<code>saveMemories()</code>. Independent review of <code>f451d342</code>
+and <code>129094b0</code> (landed after the reported 9-commit/3-round
+CLEAN GO) could NOT be confirmed from any git-visible artefact — treat
+as open. <strong>(E3) <code>tool_schema</code> is now FULLY
+PUSHED</strong> (0 ahead, was 1). <strong>(E4)
+<code>debate_orchestrator</code> is tracked here for the first
+time</strong> — <code>b6c90e7</code>, fully pushed, but only ONE remote
+(github) configured vs siblings’ 4-remote fan-out; flagged for the
+operator, not fixed unilaterally (out of this pass’s scope).
+<strong>(E5) The working tree carries 73 porcelain entries</strong> (46
+untracked + 27 modified; was ~68), overwhelmingly more
+<code>docs/qa/&lt;run-id&gt;/</code> evidence from a concurrent stream’s
+ongoing G7 work. <strong>(E6) The constitution-gate-sweep GREEN result,
+G7 resolution, constitution-pin match, and platform-up state from rev 18
+were all reconfirmed live during this pass and are UNCHANGED</strong> —
+this pass did not re-run the constitution-gate sweep itself (doc-only
+scope) but re-checked the constitution pin, carrier ceilings, tags, and
+systemd/port state directly, all matching rev 18. <strong>(E7) Two NEW
+open items surfaced this pass, not present in rev 18:</strong> the three
+<code>main_racefix_test.go</code> files (desktop/harmony_os/aurora_os)
+remain authored-but-never-executed on this host, and no
+<code>-count&gt;=10</code> stability sweep exists for
+<code>tests/scaling</code> at its shipped <code>Trials=5</code> (a
+reported hung-at-0.3%-CPU run from the dispatching brief could not be
+independently corroborated by this pass from any log/process/docs-qa
+artefact — carried forward as unconfirmed, not resolved and not ruled
+out). <strong>(E8) Hard-won lesson worth stating plainly: a RED test
+asserting against a local replica of old behaviour rather than driving
+the real code path is a bluff gate that can never fail</strong> — this
+surfaced at least twice this session (<code>3fd55a4d</code> here; per
+the dispatching brief, <code>debate_orchestrator</code>’s
+<code>protocol_convenience_form_red_test.go</code>, repaired in
+<code>b0655d3</code>, not independently re-verified by this pass). Full
+detail in <code>RESUME.md</code> rev 7, which this revision keeps in
+lockstep. Everything below this line, including the full REVISION 18
+text it supersedes, is PRESERVED for provenance — do not treat
+superseded numbers as current, see E1-E8 above instead.** REVISION 18
+CORRECTION (2026-07-28T12:34:54Z, read-only audit) — supersedes rev 17’s
+“sweep NOT green; only G7 fails” claim: the constitution gate sweep is
+now FULLY GREEN (16 gates, 15 PASS + 1 honest SKIP, ZERO FAIL; G7
+independently re-verified at 0 violations, was 13) and the constitution
+pin + §11.4.157 carrier-lockstep gap rev 17 called open are BOTH
+RESOLVED. Tag is STILL blocked, but for different reasons: (a) HEAD
+moved past <code>0a4eb8d0</code> — local <code>main</code> is now 8
+commits ahead of every configured remote, not “nothing unpushed”; (b)
+the §11.4.40 Go-test component of the full sweep has not concluded on a
+quiet host (the one available <code>helix_agent</code> run, on a
+contended host, produced 18 ambient-suspect FAIL packages, not confirmed
+defects); (c) §11.4.185 manual QA-team confirmation has no record in
+this repo; (d) the target tag <code>helix-code-1.2.0-dev-0.0.1</code> is
+an unexplained minor-version jump past the
+<code>1.1.0-dev-0.0.{1,2,3}</code> sequence. Full detail in the
+“Revision 18” paragraph below and in <code>RESUME.md</code> rev 6.
+Platform remains UP + systemd-ENABLED (re-verified, unchanged from rev
+17).** Everything below this point in this cell is rev 17’s ORIGINAL,
+now-partially-superseded text, preserved for provenance — do not treat
+its “sweep NOT green” / “G7 fails” / “constitution pin 6 behind” /
+“§11.4.157 lockstep gap open” clauses as current; see the corrections
+above instead. Revision 17 corrects five claims that revision 16 carried
+as current and that were FALSE at read time (§11.4.131/§12.10 — a stale
+handoff doc makes the next session act on wrong state). <strong>(C1)
+PLATFORM IS UP, NOT DOWN.</strong> Rev 16 stated the platform was
+stopped and <code>systemctl --user disable</code>d with all ports
+unbound. Verified 2026-07-28: <code>helixagent</code>,
+<code>helixcode-server</code>, <code>helixllm-gateway</code> are
+<strong>enabled + active (running)</strong>;
+<code>helixcode-infra</code>, <code>helixllm-coder</code>
+<strong>enabled + active (exited)</strong> (oneshots);
+<code>helix.target</code> enabled but inactive; ports
+<strong>7061</strong> (helixagent), <strong>8081</strong> (helixcode),
+<strong>8100</strong> (llm-verifier), <strong>8443</strong> (helixllm)
+are BOUND. Do not blindly boot infra — check
+<code>systemctl --user is-active</code> + <code>ss -ltnp</code> first.
+<strong>(C2) EVERYTHING COMMITTED IS PUSHED.</strong> Meta-repo HEAD is
+<code>0a4eb8d0</code> (not <code>66d6fb29</code>);
+<code>git log @{u}..HEAD</code> is EMPTY; the working tree holds
+<strong>~26 porcelain entries</strong> — in-flight work, not “~470
+uncommitted files” and not a backlog of unpushed commits (the count is
+VOLATILE: it drifted 21 → 26 during this revision as the main stream
+landed more work, so re-derive it rather than quoting it). Submodules:
+helix_agent <code>0165ab1d</code>, helix_qa <code>88ef0579</code>,
+challenges <code>072724af</code>. <strong>(C3) GATES: ONLY G7
+FAILS.</strong> Rev 16’s “6 failing → 5” and “G1, G7, G13, G11” are
+superseded.
+<code>qa-results/full_retest/verify_rules_20260727T184002Z.log</code>:
+16 gates, <strong>1 failure</strong> —
+G1/G2/G3/G4/G5/G6/G8/G9/G10/G11/G12/G13/G15/G16 all PASS, G14 SKIP
+(docs_chain engine absent, SKIP-OK), <strong>G7 FAIL</strong>. G7 is
+further improved: its former <strong>Class C (6 commits) is
+FIXED</strong> (all six now report <code>ok</code>), and the freshest
+detail output lists <strong>13</strong> violations (the 23:40 log’s
+RESULT line says 18; the original three-way analysis said 24) —
+regenerate <code>/tmp/g7-qa.out</code> by re-running the sweep, it is
+volatile. <strong>(C4) HXC-107/108/112 ARE CLOSED.</strong> Rev 16
+recorded all three as <code>Operator-blocked (§11.4.21)</code>; the SSoT
+DB (<code>docs/workable_items.db</code>) shows all three
+<code>Completed (→ Fixed.md)</code>, Type <code>Task</code>.
+<strong>(C5) CONSTITUTION PIN IS 6 BEHIND, NOT 79 — and NOT
+equal.</strong> Pin <code>731bf1d3</code>, checkout
+<code>32d75788</code> (<code>M constitution</code>); the operator’s
+2026-07-27 decision to advance it in this release is still OUTSTANDING.
+NEW VERIFIED FINDINGS: <strong>(N1) DETERMINISM — the 5 suspect packages
+are CLEAN.</strong>
+<code>qa-results/full_retest/determinism_20260728T093338Z.log</code>:
+<code>internal/tools/shell</code>, <code>internal/verifier</code>,
+<code>internal/worker</code>, <code>tests/scaling</code>,
+<code>tests/stresschaos</code> each ran <strong>3× on a quiet host,
+15/15 <code>exit=0</code></strong> — contention artefacts (§11.4.119),
+NOT code defects; do not file defect items against them. <strong>(N2)
+§11.4.157 LOCKSTEP GAP (open).</strong>
+<code>constitution/Constitution.md</code> defines
+<strong>§11.4.235</strong> (line 11035) but all six root carriers
+(CLAUDE/AGENTS/QWEN/GEMINI/CONSTITUTION/CRUSH) top out at
+<strong>§11.4.234</strong> — a real propagation gap, compounded by C5
+(the pin predates the merge that brought §11.4.235). <strong>(N3)
+TRACK-1 TRUNK RULE.</strong> Operator mandate 2026-07-28: work on trunk
+is ALWAYS Track 1, labelled <code>(T1/main - &lt;alias&gt;)</code>,
+never <code>(T?/…)</code>; landed in
+<code>constitution/Constitution.md</code> §11.4.182 TRUNK RULE, checkout
+in sync with all 8 upstreams (ahead=0/behind=0 per remote-tracking ref,
+as of last fetch). <strong>OPERATOR DECISIONS 2026-07-28:</strong> (1)
+<code>helixcode-infra</code> becomes the SOLE infra owner —
+<code>HELIX_AUTOBOOT_INFRA=false</code> (honoured at
+<code>helix_code/internal/infraboot/infraboot.go:118-125</code>) +
+corrected <code>helix_code/config/replica-8081.yaml</code>, resolving
+the competing-orchestrator blocker; (2) G7 cleared by REAL retrospective
+QA runs, <strong>the 3 security commits first</strong>
+(<code>4727a9d0</code> CORS, <code>9c876819</code> CSWSH
+<code>/ws</code>, <code>2ff55c31</code> wire-facade 401 — all still
+violating), not a baseline bump; (3) <code>helixcode-server</code>
+secret env names reconciled; (4) <strong>tag ONLY when genuinely
+green</strong>. See <code>RESUME.md</code> rev 5 for the full handoff. —
+PRIOR (2026-07-27 evening, superseded where it conflicts with the
+above): operator ended that session with a shutdown directive and the
+units were stopped + disabled at that time; other projects on the shared
+host deliberately UNTOUCHED per §11.4.174 (<code>helixterm-*</code>,
+<code>penpot-*</code>, <code>helix_sonarqube*</code>, and
+<code>atmosphere-aosp-build</code> which was RUNNING at shutdown).
+LANDED: the §11.4.174/§11.4.201 PORT_CONFLICT ownership fix in
+<code>tests/precondition/</code> with captured RED→GREEN
+(<code>RED_MODE=1</code> reproduces the legacy blind
 <code>{port,port+10000}</code> probe flagging a foreign listener as our
 duplicate; <code>RED_MODE=0</code> GREEN; 3/3 both polarities) — it
 repaired TWO opposite defects: a fail-closed probe AND a fail-open
@@ -112,8 +273,9 @@ they pass on a quiet host (<code>ok … 0.013s</code>), the 1332Z run
 launched the helix_code and helix_agent sweeps 2s apart and
 ephemeral-port saturation produced them (independent confirmation of the
 §11.4.119 contamination already recorded as Correction 1 in RESUME.md).
-NEW ARCHITECTURAL BLOCKER (unresolved, operator decision pending): two
-orchestrators compete for the same containers —
+ARCHITECTURAL BLOCKER — <strong>RESOLVED 2026-07-28 by operator decision
+(1) above; it was “unresolved, decision pending” only as of
+2026-07-27</strong>: two orchestrators compete for the same containers —
 <code>helixagent.service</code>’s adapter recreates
 <code>helixagent-postgres</code> from <code>docker-compose.yml</code>,
 which has NO <code>ports:</code> section, so 15432 is never published,
@@ -126,16 +288,19 @@ pass while the service runs.
 health-checking
 <code>${DB_PORT:-15432}</code>/<code>${REDIS_PORT:-16379}</code> while
 booting the default compose — it cannot satisfy its own health check.
-Recommended (evidence-determined, reversible, NOT applied): point the
-infra boot at <code>docker-compose.test.yml</code> for postgres/redis.
-See <code>RESUME.md</code> rev 4 for the full handoff. Prior: 2026-07-12
-(session claude2 conductor): (A) Multi-track System SWITCHED ON
-(§11.4.187) — <code>config/multitrack/the-factory.yaml</code> (4 tracks
-/mnt/track1-4 coexisting with atmosphere+helix_ota §11.4.178,
-conductor=claude2 §11.4.177, no device pool), bootstrap exit 0, resolver
-validated, commit <code>79e611b5</code>. (B) EVERYTHING MERGED TO MAIN +
-pushed to ALL upstreams (operator directive, §11.4.113 no-force, no lost
-commits): helix_code main=<code>79e611b5</code>; helix_agent
+The 2026-07-27 recommendation was to point the infra boot at
+<code>docker-compose.test.yml</code> for postgres/redis;
+<strong>SUPERSEDED</strong> by the 2026-07-28 decision to make
+<code>helixcode-infra</code> the sole owner via
+<code>HELIX_AUTOBOOT_INFRA=false</code>. See <code>RESUME.md</code> rev
+5 for the full handoff. Prior: 2026-07-12 (session claude2 conductor):
+(A) Multi-track System SWITCHED ON (§11.4.187) —
+<code>config/multitrack/the-factory.yaml</code> (4 tracks /mnt/track1-4
+coexisting with atmosphere+helix_ota §11.4.178, conductor=claude2
+§11.4.177, no device pool), bootstrap exit 0, resolver validated, commit
+<code>79e611b5</code>. (B) EVERYTHING MERGED TO MAIN + pushed to ALL
+upstreams (operator directive, §11.4.113 no-force, no lost commits):
+helix_code main=<code>79e611b5</code>; helix_agent
 main=<code>82f2fb21</code> (union, clean — markers were edit-block/skill
 content); helix_llm main=<code>a44bd611</code> (ff); llms_verifier
 main=<code>13d9ac50</code> (gofmt-vs-logic conflict on 3 files resolved
@@ -193,6 +358,151 @@ verifier-catalog default-model resolution (CONST-036/037, TDD,
 </tr>
 </tbody>
 </table>
+<p><em>Revision 17 (2026-07-28) is a CORRECTION revision, not a progress
+revision — <strong>no new engineering work is claimed by it</strong>. It
+reconciles this document and <code>RESUME.md</code> against the live
+system after an audit found both carried claims that were false at read
+time (§11.4.131 / §12.10: a stale handoff doc is a violation because the
+next session acts on wrong state). Corrected here: (C1) the platform is
+UP + systemd-ENABLED, not stopped/disabled; (C2) HEAD is
+<code>0a4eb8d0</code> with nothing unpushed and 21 working-tree entries,
+not <code>66d6fb29</code> with “~470 uncommitted”; (C3) only G7 fails —
+not “G1, G7, G13, G11” / “6 → 5”; (C4) HXC-107/108/112 are
+<code>Completed (→ Fixed.md)</code>, not <code>Operator-blocked</code>;
+(C5) the constitution pin is 6 commits behind, not 79 and not equal.
+Newly recorded as verified: the 5 suspect packages pass 15/15 on a quiet
+host (contention, not defects); a §11.4.157 carrier lockstep gap at
+§11.4.235; the Track-1 TRUNK RULE; and the four operator decisions of
+2026-07-28. Every value was re-derived from the live system (git,
+systemd/ss, the cited logs, the SSoT DB) — none copied forward
+(§11.4.6). Dated historical sections below are PRESERVED as the record
+of their own date and carry explicit SUPERSEDED banners where a resuming
+agent could otherwise mistake them for current state.</em></p>
+<p><em><strong>Revision 18 (2026-07-28T12:34:54Z) is a CORRECTION
+revision produced by a read-only release-readiness audit</strong> (main
+repo +
+<code>helix_agent</code>/<code>helix_qa</code>/<code>challenges</code>/<code>tool_schema</code>
+submodules; no tests run in <code>helix_code/</code> or
+<code>submodules/helix_agent/</code> per the audit’s own scope — two
+other streams were actively measuring those). No new engineering work is
+claimed. Corrections to rev 17, each independently re-derived (§11.4.6),
+not copied forward: <strong>(D1) G7 now PASSES — 0 violations, not
+13.</strong>
+<code>bash scripts/verify_qa_evidence.sh --enforce --since 925169c98945ca0fee1e84dae53ad494e4897832</code>
+→ 28 commits evaluated, 0 violations, 0 opt-outs. <strong>(D2) The full
+constitution gate sweep is GREEN, not “NOT green.”</strong>
+<code>bash scripts/verify-all-constitution-rules.sh</code> → 16 gates,
+15 PASS + 1 honest SKIP (G14, docs_chain absent, SKIP-OK), <strong>zero
+FAIL</strong>, exit 0. <strong>(D3) The constitution pin is RESOLVED,
+not 6 behind.</strong> Meta-repo index and constitution checkout are
+both <code>ce3331a1</code> — identical. <strong>(D4) The §11.4.157
+carrier-lockstep gap is effectively RESOLVED, not open.</strong>
+CLAUDE.md/AGENTS.md/QWEN.md/GEMINI.md/CONSTITUTION.md are committed at
+HEAD reaching §11.4.235 (matching the constitution submodule’s own
+ceiling); CRUSH.md is committed at §11.4.234 but its uncommitted
+working-tree edit already reaches §11.4.235 — one commit from full
+lockstep. <strong>(D5) HEAD has moved and <code>main</code> is NOT fully
+pushed.</strong> Rev 17’s <code>0a4eb8d0</code>/“nothing unpushed” was
+accurate only at that commit. As of this audit HEAD is
+<code>c29e1dcc</code> (moved 3 times —
+<code>0a4eb8d0</code>→<code>e952f4d1</code>→<code>a5462e35</code>→<code>c29e1dcc</code>
+— during the ~10 minutes this audit observed it) and <strong>local
+<code>main</code> is 8 commits ahead of every configured remote</strong>
+(github/gitlab/origin/upstream). The working tree carries ~68 porcelain
+entries (was ~26), overwhelmingly new
+<code>docs/qa/&lt;run-id&gt;/</code> evidence directories from the very
+G7-clearing work in D1 — expected, not drift-to-worry-about.
+<strong>(D6) <code>helix_agent</code> is 2 commits ahead of its remotes
+with a DIRTY working tree (14 modified + 4 untracked)</strong>, and
+<code>tool_schema</code> (previously untracked in this document) is 1
+commit ahead of its remotes with a clean tree — neither noted in rev 17.
+<strong>(D7) The tag remains blocked, but not for rev 17’s
+reason.</strong> §11.4.40’s Go-test component has not concluded on a
+quiet host: the only available <code>helix_agent</code> full-suite run
+(<code>go test -count=1 -timeout=900s ./...</code>, contended host —
+this audit’s own git activity plus other concurrent work was in
+progress) produced 360 ok / 18 FAIL packages, matching this project’s
+own documented ambient-contention signature (Correction 1 in
+<code>RESUME.md</code>), not a confirmed defect list; a companion
+wait-wrapper for the <code>helix_code</code> inner-module sweep has been
+polling since 14:21 without concluding, apparently stuck on a
+<code>pgrep</code> self-match (the exact class of bug
+<code>RESUME.md</code>’s own “Traps” section warns about) rather than a
+still-running test. §11.4.185 manual QA-team confirmation has no record
+anywhere in this repository. <strong>(D8) The stated target tag
+<code>helix-code-1.2.0-dev-0.0.1</code> is prefix-consistent (§11.4.151
+resolves to <code>helix-code</code> from <code>.env</code>) but is an
+unexplained MINOR-version bump</strong> past the existing
+<code>helix-code-1.1.0-dev-0.0.{1,2,3}</code> sequence — no CHANGELOG
+entry or other in-repo rationale for skipping
+<code>-1.1.0-dev-0.0.4</code> was found; flagged for explicit operator
+confirmation, not changed unilaterally. Full detail, evidence commands,
+and the ranked tag-blocker list are in <code>RESUME.md</code> rev 6,
+which this revision keeps in lockstep. Historical sections below (rev
+1-17 and the dated catch-up log) are UNCHANGED and PRESERVED — none of
+D1-D8 required touching them; they remain the record of their own
+dates.</em></p>
+<p><em><strong>Revision 19 (2026-07-28T18:20Z) is a CORRECTION revision
+produced by a dedicated doc-refresh pass</strong> — scope was
+<code>RESUME.md</code> + this file ONLY, per an explicit task brief with
+a scope fence excluding <code>helix_code/internal/llm/</code>,
+<code>helix_code/applications/</code>,
+<code>submodules/helix_agent/internal/agents/</code>, and
+<code>submodules/debate_orchestrator</code> (all four had other streams
+actively working in them at the time). No new engineering work is
+claimed; every number was independently re-derived against live
+git/systemd/ss state, not copied forward from rev 18 or from the task
+brief that kicked off this pass (§11.4.6 — the brief itself was verified
+fact-by-fact, and at least two of its details needed correction: see E2
+and E7 below). Corrections to rev 18, summarised (full detail in the
+metadata-table Status-summary cell above as E1-E8, and in
+<code>RESUME.md</code> rev 7): <strong>(E1)</strong> meta-repo HEAD
+advanced <code>c29e1dcc</code>→<code>99ff7d8e</code> (12 more commits);
+<code>main</code> is 20 commits ahead of all 4 remotes, not 8. The new
+range includes a self-inflicted, self-caught §11.4.108 SOURCE→ARTIFACT
+compile-break (<code>3fd55a4d</code>, fixed one commit later by
+<code>34e264e1</code>) and a self-disclosed RED-bluff in that same
+commit’s F1 regression guard (<code>RED_MODE=1</code> asserts on a local
+replica, cannot fail — still unrepaired). <strong>(E2)</strong>
+<code>helix_agent</code> advanced
+<code>a345c551</code>→<code>f451d342</code> (9 more commits, now 11
+ahead, not 2); <strong>this pass corrects the dispatching brief’s claim
+that a Critical review finding (Dreamer <code>memoryMu</code> not
+covering <code>cleanupPhase</code>‘s MEMORY.md write) was “remediation
+in flight”** — it verified by reading the actual diff that the fix
+LANDED, in <code>f451d342</code>. Independent review of that commit and
+the one before it (<code>129094b0</code>) remains unconfirmed from any
+git-visible artefact. <strong>(E3)</strong> <code>tool_schema</code> is
+now fully pushed (0 ahead, was 1). <strong>(E4)</strong>
+<code>debate_orchestrator</code> is documented here for the first time —
+fully pushed, but single-remote (github only) versus its siblings’
+4-remote fan-out, flagged for the operator rather than changed.
+</strong>(E5)** the working tree carries 73 porcelain entries (was ~68),
+continuing the same expected pattern of accumulating
+<code>docs/qa/&lt;run-id&gt;/</code> evidence from a concurrent stream.
+<strong>(E6)</strong> the constitution-gate-sweep GREEN result, G7
+resolution, constitution-pin match, and platform-up state from rev 18
+were spot-checked (pin, carrier ceilings, tags, systemd units, bound
+ports) and reconfirmed unchanged — the gate sweep itself was NOT re-run
+(out of this pass’s doc-only scope). <strong>(E7)</strong> this pass
+could <strong>not</strong> corroborate the dispatching brief’s specific
+claim of a scaling-test run “hung at 0.3% CPU and killed without
+diagnosis” from any log, process, or docs/qa artefact — carried forward
+honestly as unconfirmed rather than either accepted or dismissed; the
+broader gap it points at (no durable <code>-count&gt;=10</code>
+stability sweep for <code>tests/scaling</code> at its current
+<code>Trials=5</code>) IS independently confirmed absent. The three
+<code>main_racefix_test.go</code> files (desktop/harmony_os/aurora_os)
+remain authored-but-never-executed on this host (no X11/GL dev headers)
+— newly worth flagging because the harmony_os one was just proven, by
+reading alone, to hide a real nil-pointer panic (fixed in
+<code>99ff7d8e</code> without ever running the test).
+<strong>(E8)</strong> the session’s hard-won, plainly-stated lesson: a
+§11.4.115 RED test that asserts against a local replica of old behaviour
+instead of driving the real production code path is a bluff gate that
+can never fail — found at least twice this session in this shape.
+Historical sections below (rev 1-18 and the dated catch-up log) are
+UNCHANGED and PRESERVED; none of E1-E8 required touching them.</em></p>
 <p><em>Revision 1 establishes the CONST-064 metadata table at the
 document head, replacing the prior multi-round accreted
 <code>Last updated:</code> prose preamble (a single ~32k-token line).
@@ -3258,8 +3568,25 @@ files.</p>
 <p>Non-zero exit = sync violation → blocking pre-push.</p>
 <hr />
 <h2 id="resume-prompt">Resume Prompt</h2>
-<p>Copy-paste this verbatim into a new CLI-agent session to
-continue:</p>
+<blockquote>
+<p>⚠️ <strong>SUPERSEDED (rev 19, 2026-07-28T18:20Z) — the block below
+cites a path that no longer exists on this host</strong>
+(<code>/run/media/milosvasic/DATA4TB/Projects/helix_code/</code> — the
+current checkout is elsewhere; per CONST-064/§11.4.131 a resuming agent
+should never hardcode a host path it hasn’t verified). It also predates
+<code>RESUME.md</code> (§11.4.131’s standing session-resumption file),
+which is now the canonical entry point and should be read FIRST.
+Preserved below for provenance; use the corrected prompt instead.</p>
+</blockquote>
+<p>Corrected, host-path-neutral prompt (paste into a new CLI-agent
+session):</p>
+<pre><code>Read RESUME.md (repo root) then docs/CONTINUATION.md, run `git fetch --all --prune --tags`,
+and continue. Use subagent-driven-development (§11.4.70) by default. Every change needs
+independent review before commit/build (§11.4.142); force-push is absolutely forbidden,
+no exception (§11.4.113) — integrate by merging onto latest main, push fast-forward only.
+Push each submodule + the meta-repo to all its configured remotes (verify with ls-remote)
+when a work package or feature closes out.</code></pre>
+<p>Original (historical, path since gone stale):</p>
 <pre><code>Read /run/media/milosvasic/DATA4TB/Projects/helix_code/docs/CONTINUATION.md and continue all work. Use subagent-driven-development. Skip approval gates per the project&#39;s auto-approve memory. Push all submodules + meta-repo to all configured remotes (non-force only) when each work package or feature is closed out.</code></pre>
 <hr />
 <h2 id="document-version-log">Document version log</h2>
@@ -7648,13 +7975,27 @@ fixed + governance contexts + a direct Issues_Summary export.</li>
 </ul></li>
 </ul>
 <h3 id="state-10">State</h3>
+<blockquote>
+<p>⚠️ <strong>SUPERSEDED — historical record of 2026-06-22 only. Do NOT
+act on this gate list.</strong> Current gate state (verified 2026-07-28
+against
+<code>qa-results/full_retest/verify_rules_20260727T184002Z.log</code>):
+<strong>16 gates, 1 failure — G7 alone.</strong> G1, G8, G11, G12 and
+G13 <strong>all PASS</strong>; G14 is a SKIP-OK (docs_chain engine
+absent). The G11 DB divergence recorded below was resolved (G11 now
+reports “committed DB validates + md⟷db byte-identical in sync”). See
+the Status summary at the head of this document and
+<code>RESUME.md</code> rev 5.</p>
+</blockquote>
 <ul>
 <li><strong>Sweep delta: 6 failing gates → 5</strong> (G8 + G12 now
-PASS, no regression from the semgrep removal).</li>
+PASS, no regression from the semgrep removal). <em>(figure as of
+2026-06-22)</em></li>
 <li><strong>Remaining failing gates</strong> (all operator-gated / out
 of scope for this batch): G1 (fleet cascade, out of scope), G7 (docs/qa
 evidence backlog), G13 (Sources-verified footers), G11 (the
-newly-surfaced DB divergence below).</li>
+newly-surfaced DB divergence below). <em>(as of 2026-06-22 — G1/G11/G13
+have since PASSED; only G7 still fails)</em></li>
 <li><strong>G11 DISCOVERED (operator-gated, NOT touched):</strong>
 <code>docs/workable_items.db</code> has a large PRE-EXISTING
 bidirectional divergence from
@@ -7665,12 +8006,21 @@ Resolution direction is an operator decision; the tracked SSoT DB was
 left pristine.</li>
 </ul>
 <h3 id="next-10">Next</h3>
+<blockquote>
+<p>⚠️ <strong>SUPERSEDED — these “next” items are from 2026-06-22 and
+are mostly DONE.</strong> G11 was reconciled (gate PASSes, DB ⟷ md
+byte-identical); G13 PASSes at 82/82; G1 PASSes. Only
+<strong>G7</strong> remains, and its disposition is now DECIDED
+(operator, 2026-07-28): clear it by real retrospective QA runs, the 3
+security commits first — not a baseline bump.</p>
+</blockquote>
 <ul>
 <li><strong>Operator decision needed (G11):</strong> choose the
 reconciliation direction for <code>docs/workable_items.db</code> ↔︎
 <code>Issues.md</code>/<code>Fixed.md</code> (incl. the HXC-036 type
-conflict) before any sync runs.</li>
-<li>G7 / G13 / G1 remain operator-gated.</li>
+conflict) before any sync runs. <em>(RESOLVED — G11 PASSes)</em></li>
+<li>G7 / G13 / G1 remain operator-gated. <em>(G13 + G1 now PASS; G7
+decided 2026-07-28)</em></li>
 <li><strong>In flight (separate background stream):</strong> container
 distribution config update per CONST-045 — <code>thinker.local</code> +
 <code>amber.local</code> enrolled, <code>nezha.local</code>
@@ -7680,13 +8030,30 @@ distribution-disabled.</li>
 <h2 id="test-suite-remediation-cycle-paused-mid-flight-operator-session-limit">2026-07-27
 — Test-suite remediation cycle (PAUSED mid-flight, operator session
 limit)</h2>
-<p><strong>Base:</strong> meta <code>66d6fb29</code> · helix_agent
-<code>36597718</code> · helix_qa <code>a729b51</code> · constitution
-checked-out <code>b00ab1c</code> (pin <code>7295a189</code>, 79 behind).
-<strong>Everything below is UNCOMMITTED in the working tree.</strong>
-Nothing committed, nothing tagged, nothing pushed. <strong>Canonical
-resumption entry point:</strong> <code>RESUME.md</code> (rev 2).
-<strong>Captured evidence:</strong>
+<blockquote>
+<p>⚠️ <strong>SUPERSEDED HEADER — the state line below describes
+2026-07-27 mid-cycle, NOT today.</strong> Verified 2026-07-28: meta HEAD
+is <strong><code>0a4eb8d0</code></strong> (not <code>66d6fb29</code>),
+<code>git log @{u}..HEAD</code> is <strong>EMPTY</strong> — the work
+described here <strong>was committed and pushed</strong>. helix_agent
+<code>0165ab1d</code>, helix_qa <code>88ef0579</code>, challenges
+<code>072724af</code>. Constitution checkout
+<strong><code>32d75788</code></strong>, pin
+<strong><code>731bf1d3</code></strong> — <strong>6 commits behind, not
+79</strong>. The working tree holds <strong>~26 porcelain
+entries</strong> (volatile) of newer in-flight work. Read the Status
+summary at the head of this document and <code>RESUME.md</code> rev 5
+for live state.</p>
+</blockquote>
+<p><strong>Base (as of 2026-07-27):</strong> meta <code>66d6fb29</code>
+· helix_agent <code>36597718</code> · helix_qa <code>a729b51</code> ·
+constitution checked-out <code>b00ab1c</code> (pin
+<code>7295a189</code>, 79 behind). <strong>Everything below was
+UNCOMMITTED at the time of writing (2026-07-27).</strong> It has since
+been committed and pushed — see the banner above. <strong>Canonical
+resumption entry point:</strong> <code>RESUME.md</code> (<strong>now rev
+5</strong>; was rev 2 when this section was written). <strong>Captured
+evidence:</strong>
 <code>docs/qa/test_remediation_20260727T124352Z/README.{md,html,pdf}</code>.</p>
 <h3 id="done">Done</h3>
 <ul>
@@ -7764,15 +8131,31 @@ CONDITIONAL on green.</li>
 </ol>
 <h3 id="operator-decisions-blocking-closure">Operator decisions blocking
 closure</h3>
+<blockquote>
+<p>⚠️ <strong>PARTIALLY SUPERSEDED.</strong> Four decisions were taken
+on 2026-07-28 (see the Status summary): <code>helixcode-infra</code>
+becomes sole infra owner (<code>HELIX_AUTOBOOT_INFRA=false</code>); G7
+cleared by real retrospective QA runs, security commits first;
+<code>helixcode-server</code> secret env names reconciled; tag only when
+genuinely green. The pin figure below is also stale — it is <strong>6
+behind, not 79</strong>.</p>
+</blockquote>
 <ul>
 <li><strong>Port collision:</strong> registry says HelixAgent owns 8100;
 <code>configs/development.yaml</code> says 7061; LLMsVerifier occupies
 8100. Beyond tests —
 <code>helixagent --generate-agent-config=opencode</code> emits
 <code>baseURL: http://localhost:8100/v1</code>, so shipped CLI-agent
-configs point users at the wrong service.</li>
+configs point users at the wrong service. <em>(STILL OPEN — verified
+2026-07-28: <code>llm-verifier</code> holds :8100 and
+<code>helixagent</code> holds :7061, exactly as described.)</em></li>
 <li><strong>Constitution pin</strong> 79 commits behind (clean FF) —
-advancing needs a commit.</li>
+advancing needs a commit. <em>(STALE FIGURE — now <code>731bf1d3</code>
+vs checkout <code>32d75788</code> = <strong>6 behind</strong>. Still
+open: the 2026-07-27 decision to advance it in this release is not yet
+executed. Note the pin predates the merge that brought §11.4.235, which
+is why the six root carriers still top out at §11.4.234 — an open
+§11.4.157 lockstep gap.)</em></li>
 <li><strong>Canon defect:</strong> §11.4.64 / §11.4.205 / §11.4.206
 cited but never defined in
 <code>constitution/Constitution.md</code>.</li>
