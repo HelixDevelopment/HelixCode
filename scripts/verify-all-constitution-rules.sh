@@ -475,7 +475,7 @@ if want_gate G12; then
     if bash "$ROOT/scripts/gates/summary_sync_gate.sh" >/tmp/g12-summary.out 2>&1; then
         gate_pass G12 "$(tail -1 /tmp/g12-summary.out | sed 's/^CM-SUMMARY-SYNC: //')"
     else
-        gate_fail G12 "summary docs drifted from the SQLite SSoT (docs/workable_items.db) — regenerate via the §11.4.93 binary: (cd constitution/scripts/workable-items && go run ./cmd/workable-items) export --db docs/workable_items.db --out-dir docs (see /tmp/g12-summary.out)" \
+        gate_fail G12 "summary docs drifted from the SQLite SSoT (docs/workable_items.db) — regenerate via the §11.4.93 binary: go run -C constitution/scripts/workable-items ./cmd/workable-items export --db docs/workable_items.db --out-dir docs (see /tmp/g12-summary.out)" \
             "$(tail -6 /tmp/g12-summary.out)"
     fi
 fi

@@ -64,7 +64,7 @@ generate_fixed_summary.sh: REFUSING TO RUN — superseded and data-destroying.
 
   Use the canonical DB exporter instead:
 
-    (cd constitution/scripts/workable-items && go run ./cmd/workable-items) \
+    go run -C constitution/scripts/workable-items ./cmd/workable-items \
         export --db docs/workable_items.db --out-dir docs
 
   Then verify:  bash scripts/gates/summary_sync_gate.sh

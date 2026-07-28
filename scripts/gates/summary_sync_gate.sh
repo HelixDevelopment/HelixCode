@@ -96,7 +96,7 @@ if ! "$BIN" export --db "$TMP/out/committed.db" --out-dir "$TMP/out" --no-format
     fail "workable-items export failed: $(tail -3 "$TMP/export.out" | tr '\n' ' ')"
 fi
 
-REMEDY="regenerate from the DB: (cd $WI_SRC && go run ./cmd/workable-items) export --db $DB --out-dir docs"
+REMEDY="regenerate from the DB: go run -C $WI_SRC ./cmd/workable-items export --db $DB --out-dir docs"
 
 rc=0
 for pair in "$ISSUES_SUMMARY:Issues_Summary.md:CM-ISSUES-SUMMARY-SYNC" \
