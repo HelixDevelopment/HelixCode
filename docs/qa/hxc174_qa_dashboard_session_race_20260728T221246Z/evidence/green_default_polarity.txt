@@ -1,0 +1,10 @@
+# GREEN — post-fix, default polarity (standing regression guard)
+$ uptime
+ 03:12:46 up 17:13,  3 users,  load average: 8.63, 7.35, 6.04
+$ go test -tags=ci -race -count=1 -v -run TestShowQA_SessionReadsAreRaceFree ./applications/terminal_ui/
+=== RUN   TestShowQA_SessionReadsAreRaceFree
+    qa_dashboard_race_test.go:126: drove 40 QA dashboard reads across 1 rounds in 3ms; 1 batches bracketed a live orchestrator status transition, so the reads under test genuinely overlapped the writer
+--- PASS: TestShowQA_SessionReadsAreRaceFree (0.00s)
+PASS
+ok  	dev.helix.code/applications/terminal_ui	1.203s
+EXIT=0

@@ -1,0 +1,64 @@
+# RED — §11.4.115 reproduction on the BROKEN (pre-fix) artifact
+#
+# PROVENANCE: captured 2026-07-29 03:07 (+05) with the guard test present but
+# BEFORE the fix was applied, i.e. against the working tree at commit a7d8dbb5
+# (the parent of the fix commit 2775493). showQA still called
+# Engine.ListSessions() and read the live pointers' fields unguarded.
+#
+# $ uptime
+#  03:07:10 up 17:07,  3 users,  load average: 17.58, 8.22, 5.50
+# $ go test -tags=ci -race -count=1 -run TestShowQA_SessionReadsAreRaceFree ./applications/terminal_ui/
+
+==================
+WARNING: DATA RACE
+Write at 0x00c000836830 by goroutine 77:
+  dev.helix.code/internal/helixqa.(*Engine).StartSession.func1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper.go:198 +0x15e
+
+Previous read at 0x00c000836830 by goroutine 73:
+  dev.helix.code/applications/terminal_ui.(*TerminalUI).showQA()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/terminal_ui/main.go:2787 +0x42eb
+  dev.helix.code/applications/terminal_ui.driveQADashboardRead()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/terminal_ui/qa_dashboard_race_test.go:149 +0x64
+  dev.helix.code/applications/terminal_ui.TestShowQA_SessionReadsAreRaceFree()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/terminal_ui/qa_dashboard_race_test.go:107 +0x424
+
+Goroutine 77 (running) created at:
+  dev.helix.code/internal/helixqa.(*Engine).StartSession()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper.go:194 +0x92d
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c000836840 by goroutine 77:
+  dev.helix.code/internal/helixqa.(*Engine).StartSession.func1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper.go:199 +0x1a4
+
+Previous read at 0x00c000836840 by goroutine 73:
+  dev.helix.code/applications/terminal_ui.(*TerminalUI).showQA()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/applications/terminal_ui/main.go:2767 +0x5b66
+==================
+
+--- FAIL: TestShowQA_SessionReadsAreRaceFree (0.01s)
+FAIL
+FAIL	dev.helix.code/applications/terminal_ui	0.234s
+FAIL
+EXIT=1
+
+# Distinct racy READ sites the detector attributed to showQA across the run,
+# collected with: ... 2>&1 | grep -oE "main\.go:[0-9]+" | sort -u
+#   main.go:2745   s.Status        (status colour switch)
+#   main.go:2756   s.EndTime       (check)
+#   main.go:2757   s.EndTime/.Sub  (use — the check-then-use pair)
+#   main.go:2763   s.PhaseProgress
+#   main.go:2766   s.Status        (table cell)
+#   main.go:2767   s.Phase
+#   main.go:2787   s.Status        (stats-panel tally)
+#
+# This is EXACTLY the line set cited on HXC-174, confirmed independently by the
+# race detector rather than by re-reading the citation.
+#
+# NOT reported racy, and honestly so: main.go:2765 (s.ID), :2769 (s.Platforms),
+# :2770 (s.Banks). Those fields are written once at session creation and never
+# mutated by the orchestrator goroutine, so no concurrent write exists to race
+# with. They were unguarded reads, but they were not racing. They are
+# snapshotted by the fix anyway, for a consistent per-row view.
