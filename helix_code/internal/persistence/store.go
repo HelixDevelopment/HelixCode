@@ -176,14 +176,56 @@ func (s *Store) autoSaveLoop(interval time.Duration, stop <-chan struct{}) {
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
-			if err := s.SaveAll(); err != nil {
-				s.triggerError(err)
-			}
-		case <-stop:
+		if !s.autoSaveTick(ticker.C, stop) {
 			return
 		}
+	}
+}
+
+// autoSaveTick runs exactly one iteration of the auto-save loop's select
+// logic. Extracted from autoSaveLoop (identical behaviour, same select
+// statement) so the §11.4.115 "unprioritized select" regression guard
+// (TestAutoSaveTick_StopAlwaysWinsOverPendingTick) can force the race
+// deterministically — pre-buffering a tick AND pre-closing stop before the
+// select ever runs — instead of depending on real wall-clock ticker timing or
+// scheduler luck.
+//
+// ANTI-BLUFF FIX (§11.4.115 unprioritized-select race, third confirmed
+// instance in this codebase after helix_agent's lazy_provider.go
+// createProviderWithContext and debate_log_repository.go
+// StartCleanupWorker): Go's `select` chooses UNIFORMLY AT RANDOM among ALL
+// cases ready at the instant it is evaluated. A naked
+// `select { case <-ticker.C: ...; case <-stop: return }` can therefore still
+// pick the ticker.C branch and run one more SaveAll() even when stop was
+// ALREADY closed before the select was reached — if the goroutine was
+// scheduler-delayed long enough for a tick to also land in ticker.C by the
+// time it finally runs. The non-blocking priority pre-check below closes
+// that gap: it runs FIRST, on every loop iteration, and returns immediately
+// whenever stop is already closed, so the caller's disable decision is never
+// second-guessed by a coincidentally-pending tick in the blocking select
+// that follows.
+//
+// Returns false when the loop must stop (stop was signalled — checked FIRST,
+// non-blocking, and again in the blocking select below), true when a tick
+// was processed and the loop should continue.
+func (s *Store) autoSaveTick(tickerC <-chan time.Time, stop <-chan struct{}) bool {
+	// Priority pre-check: if stop is already closed, return immediately
+	// without ever entering the blocking select below, where an
+	// also-ready ticker.C could otherwise be picked instead.
+	select {
+	case <-stop:
+		return false
+	default:
+	}
+
+	select {
+	case <-tickerC:
+		if err := s.SaveAll(); err != nil {
+			s.triggerError(err)
+		}
+		return true
+	case <-stop:
+		return false
 	}
 }
 
