@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"sync"
 	"sync/atomic"
@@ -102,7 +103,24 @@ func (os *OutputStreamer) streamOutput(reader io.Reader, ch chan<- string, errOu
 	// discarding scanner.Err() turns a hard I/O failure into a silent,
 	// perfectly green empty result.
 	if err := scanner.Err(); err != nil {
-		os.setErr(errOut, err)
+		select {
+		case <-os.stop:
+			// Streaming was deliberately abandoned — the caller cancelled, or
+			// the reader was torn down when the drain grace expired with a
+			// descendant still holding the pipe write ends open. The read failed
+			// because WE closed it, so it is classified as the expected
+			// ErrStreamStopped rather than as a genuine I/O defect. The
+			// underlying cause stays wrapped and reachable via errors.Is/As.
+			//
+			// Honest scope note (§11.4.6): once Stop has been requested a real
+			// I/O failure racing the teardown is indistinguishable from the
+			// teardown itself, so it is absorbed here. exec.Cmd.awaitGoroutines
+			// takes the same position, discarding the error outright on the
+			// WaitDelay path; this at least preserves it.
+			os.setErr(errOut, fmt.Errorf("%w: %w", ErrStreamStopped, err))
+		default:
+			os.setErr(errOut, err)
+		}
 	}
 }
 

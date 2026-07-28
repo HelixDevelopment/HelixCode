@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+// streamDrainGrace bounds how long ExecuteStream waits for the output scanners
+// to reach EOF AFTER the direct child has already been reaped.
+//
+// It is not a command timeout — by the time it starts, the command has exited.
+// The only work left is draining what is already sitting in the kernel pipe
+// buffers, which is capped at the pipe capacity (64 KiB per stream on Linux):
+// milliseconds of work. Two seconds is therefore a very wide margin even on a
+// heavily loaded host, while still bounding the failure mode it exists for — a
+// grandchild that inherited the write ends and holds them open indefinitely.
+const streamDrainGrace = 2 * time.Second
+
 // ExecutionState represents the state of an execution
 type ExecutionState int
 
@@ -57,6 +68,17 @@ type ExecutionResult struct {
 	Killed     bool
 	TimedOut   bool
 	OutputSize int64
+
+	// OutputIncomplete reports that streaming was cut short before the readers
+	// reached EOF, so Stdout/Stderr (for ExecuteStream, the output channels) may
+	// be missing trailing data the command's descendants had not yet written.
+	//
+	// It is set only by ExecuteStream, and only when the drain grace period
+	// expired with a descendant still holding the pipe write ends open. It is
+	// deliberately NOT an Error: the command itself may have succeeded, and
+	// reporting it as a failure would misclassify a healthy exit. Callers that
+	// need "all output or nothing" must check this flag.
+	OutputIncomplete bool
 }
 
 // AsyncExecution represents an asynchronous command execution
@@ -68,7 +90,27 @@ type AsyncExecution struct {
 	Cancel    context.CancelFunc
 }
 
-// StreamingExecution provides real-time output streaming
+// StreamingExecution provides real-time output streaming.
+//
+// CONSUMER CONTRACT — drain before Done, or Cancel.
+//
+// Stdout and Stderr are buffered 100 lines each. The scanners feeding them park
+// once a buffer is full, so a consumer that waits on Done BEFORE draining the
+// channels stalls the scanners as soon as either stream exceeds 100 lines, and
+// Done cannot fire because it is published only after the scanners finish.
+//
+// Consume it one of these two ways:
+//
+//   - drain Stdout/Stderr concurrently (e.g. from their own goroutines) and read
+//     Done from another — this is the intended usage and the only one that
+//     guarantees complete output; or
+//   - call Cancel to abandon the execution, which releases the parked scanners.
+//
+// Waiting on Done first is safe only while the total output stays under the
+// buffer size. It no longer deadlocks if it does not: the drain grace period
+// (see streamDrainGrace) bounds the wait, after which the result is delivered
+// with OutputIncomplete set. That is a truncation, not a hang — but it is still
+// a truncation, so prefer draining concurrently.
 type StreamingExecution struct {
 	ID        string
 	Command   string
@@ -437,16 +479,39 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 			streamer.Stop()
 		}
 
-		// Publish the result only once the scanners have finished. Every write
-		// end is closed by now (the child's on exit, ours right after Start),
-		// so the scanners drain the pipes to EOF and terminate on their own.
-		//
-		// This ordering is what makes "Done fired" mean "all output has already
-		// been delivered" instead of "output may still be in flight". It is the
-		// ordering guarantee, combined with the parent-owned pipes above, that
-		// replaces the previous race in which Cmd.Wait could tear the pipes
+		// Publish the result only once the scanners have finished. That ordering
+		// is what makes "Done fired" mean "all output has already been
+		// delivered" instead of "output may still be in flight", and it is the
+		// ordering guarantee — combined with the parent-owned pipes above —
+		// that replaced the earlier race in which Cmd.Wait could tear the pipes
 		// down before the scanners had read a single byte.
-		<-streamer.Done()
+		//
+		// The wait MUST be bounded, though. The scanners finish on EOF, and a
+		// pipe reaches EOF only once EVERY write end is closed — including the
+		// copies a GRANDCHILD inherited. `sleep 300 & echo started`, or any
+		// daemonising command, leaves those open long after the direct child is
+		// reaped, so an unbounded wait here parks indefinitely, never reaches
+		// the deferred cleanup above, and permanently consumes a semaphore slot
+		// shared with Execute (HXC-184).
+		//
+		// So: give the scanners a bounded grace period to drain, then tear the
+		// readers down. This mirrors exec.Cmd.WaitDelay, whose timer likewise
+		// starts when Wait observes the process exit and which on expiry calls
+		// closeDescriptors(c.parentIOPipes) to release reads still parked
+		// (os/exec/exec.go, Cmd.awaitGoroutines).
+		//
+		// Closing the read ends is the load-bearing half of that teardown:
+		// Stop only releases a scanner parked handing a line to an abandoned
+		// channel — it cannot interrupt one parked in Read on the pipe itself.
+		select {
+		case <-streamer.Done():
+			// Clean EOF on both streams: every byte has been delivered.
+		case <-time.After(streamDrainGrace):
+			result.OutputIncomplete = true
+			streamer.Stop()
+			pipes.closeReadEnds()
+			<-streamer.Done()
+		}
 
 		if streamErr := streamer.Err(); streamErr != nil &&
 			result.Error == nil && !errors.Is(streamErr, ErrStreamStopped) {
@@ -578,10 +643,18 @@ func (p *streamPipes) closeWriteEnds() {
 	}
 }
 
-// closeAll releases every descriptor still held. Because os/exec does not own
-// these files, nothing else will. Safe to call more than once.
-func (p *streamPipes) closeAll() {
-	p.closeWriteEnds()
+// closeReadEnds drops the parent's read ends, unblocking any goroutine parked
+// in Read on them (os.File.Close is safe against a concurrent Read: the runtime
+// poller wakes the reader with ErrClosed).
+//
+// This is the streaming analogue of closeDescriptors(c.parentIOPipes) in
+// exec.Cmd.awaitGoroutines, and it is the ONLY way to release a scanner blocked
+// reading a pipe whose write end a grandchild still holds. Callers must have
+// already given the scanners their full drain grace: closing early truncates
+// output that is still in flight.
+//
+// Safe to call more than once, and safe to call before closeAll.
+func (p *streamPipes) closeReadEnds() {
 	if p.stdoutR != nil {
 		p.stdoutR.Close()
 		p.stdoutR = nil
@@ -590,6 +663,13 @@ func (p *streamPipes) closeAll() {
 		p.stderrR.Close()
 		p.stderrR = nil
 	}
+}
+
+// closeAll releases every descriptor still held. Because os/exec does not own
+// these files, nothing else will. Safe to call more than once.
+func (p *streamPipes) closeAll() {
+	p.closeWriteEnds()
+	p.closeReadEnds()
 }
 
 // prepareCommand prepares an exec.Cmd from a Command
