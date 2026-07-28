@@ -1,0 +1,26 @@
+### case: red_hxc184
+### label: RED_MODE=1 on the FIXED artifact — both HXC-184 guards must FAIL, proving they are not blind
+### time: 2026-07-28T23:29:21Z
+### command: env RED_MODE=1 go test -race -count=1 -v -timeout=20m -run ^TestExecuteStream(ReturnsWhenGrandchildHoldsPipes|HangDoesNotWedgeTheExecutor)$ ./internal/tools/shell
+### cwd: /home/milos/Factory/projects/tools_and_research/helix_code/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+=== RUN   TestExecuteStreamReturnsWhenGrandchildHoldsPipes
+    stream_grandchild_grace_test.go:125: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/stream_grandchild_grace_test.go:125
+        	Error:      	Expected nil, but got: &shell.ExecutionResult{ID:"hxc184-grandchild-holds-pipes", Command:"sleep 12 & echo started", ExitCode:0, Stdout:"", Stderr:"", Duration:1766842, StartTime:time.Date(2026, time.July, 29, 4, 29, 21, 502928166, time.Local), EndTime:time.Date(2026, time.July, 29, 4, 29, 21, 504695008, time.Local), Error:error(nil), Killed:false, TimedOut:false, OutputSize:0, OutputIncomplete:true}
+        	Test:       	TestExecuteStreamReturnsWhenGrandchildHoldsPipes
+        	Messages:   	RED_MODE: expected the BROKEN behaviour (Done never fires while the grandchild holds the inherited pipe write ends) but Done fired after 2.007268229s — defect NOT reproduced on this artifact
+--- FAIL: TestExecuteStreamReturnsWhenGrandchildHoldsPipes (2.01s)
+=== RUN   TestExecuteStreamHangDoesNotWedgeTheExecutor
+    stream_grandchild_grace_test.go:194: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/stream_grandchild_grace_test.go:194
+        	Error:      	An error is expected but got nil.
+        	Test:       	TestExecuteStreamHangDoesNotWedgeTheExecutor
+        	Messages:   	RED_MODE: expected the BROKEN behaviour (the executor is wedged because the hung stream never returned its slot) but Execute completed in 2.01532755s — defect NOT reproduced on this artifact
+--- FAIL: TestExecuteStreamHangDoesNotWedgeTheExecutor (2.02s)
+FAIL
+FAIL	dev.helix.code/internal/tools/shell	4.040s
+FAIL
+
+--- exit code: 1 ---

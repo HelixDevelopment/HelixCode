@@ -1,0 +1,35 @@
+### case: guard_testinfra
+### label: every testinfra URL/dial builder reaches a live IPv6 server, -race -count=2
+### time: 2026-07-28T23:30:58Z
+### command: go test -race -count=2 -v -timeout=20m -run ^TestConfig(URLBuilders|DialURLs)_IPv6$ ./tests/testinfra
+### cwd: /home/milos/Factory/projects/tools_and_research/helix_code/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+=== RUN   TestConfigURLBuilders_IPv6
+=== RUN   TestConfigURLBuilders_IPv6/bare_ipv6
+    hxc185_ipv6_addr_test.go:137: positive sink-side evidence: all 4 URL builders reached the live IPv6 server at "[::1]:45899"
+=== RUN   TestConfigURLBuilders_IPv6/already_bracketed_ipv6
+    hxc185_ipv6_addr_test.go:137: positive sink-side evidence: all 4 URL builders reached the live IPv6 server at "[::1]:45899"
+--- PASS: TestConfigURLBuilders_IPv6 (0.00s)
+    --- PASS: TestConfigURLBuilders_IPv6/bare_ipv6 (0.00s)
+    --- PASS: TestConfigURLBuilders_IPv6/already_bracketed_ipv6 (0.00s)
+=== RUN   TestConfigDialURLs_IPv6
+    hxc185_ipv6_addr_test.go:169: RedisURL() -> "redis://REDACTED@[::1]:37557" (authority "[::1]:37557" resolvable)
+    hxc185_ipv6_addr_test.go:169: PostgresURL() -> "postgresql://REDACTED@[::1]:37557/d?sslmode=disable" (authority "[::1]:37557" resolvable)
+--- PASS: TestConfigDialURLs_IPv6 (0.00s)
+=== RUN   TestConfigURLBuilders_IPv6
+=== RUN   TestConfigURLBuilders_IPv6/bare_ipv6
+    hxc185_ipv6_addr_test.go:137: positive sink-side evidence: all 4 URL builders reached the live IPv6 server at "[::1]:34711"
+=== RUN   TestConfigURLBuilders_IPv6/already_bracketed_ipv6
+    hxc185_ipv6_addr_test.go:137: positive sink-side evidence: all 4 URL builders reached the live IPv6 server at "[::1]:34711"
+--- PASS: TestConfigURLBuilders_IPv6 (0.00s)
+    --- PASS: TestConfigURLBuilders_IPv6/bare_ipv6 (0.00s)
+    --- PASS: TestConfigURLBuilders_IPv6/already_bracketed_ipv6 (0.00s)
+=== RUN   TestConfigDialURLs_IPv6
+    hxc185_ipv6_addr_test.go:169: PostgresURL() -> "postgresql://REDACTED@[::1]:44993/d?sslmode=disable" (authority "[::1]:44993" resolvable)
+    hxc185_ipv6_addr_test.go:169: RedisURL() -> "redis://REDACTED@[::1]:44993" (authority "[::1]:44993" resolvable)
+--- PASS: TestConfigDialURLs_IPv6 (0.00s)
+PASS
+ok  	dev.helix.code/tests/testinfra	1.022s
+
+--- exit code: 0 ---

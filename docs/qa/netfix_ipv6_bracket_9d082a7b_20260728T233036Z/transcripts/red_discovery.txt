@@ -1,0 +1,29 @@
+### case: red_discovery
+### label: RED_MODE=1 on the FIXED artifact — the discovery guards must FAIL, proving they are not blind
+### time: 2026-07-28T23:31:00Z
+### command: env RED_MODE=1 go test -race -count=1 -v -timeout=20m -run ^TestServiceInfo_Address_BracketsIPv6$ ./internal/discovery
+### cwd: /home/milos/Factory/projects/tools_and_research/helix_code/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+=== RUN   TestServiceInfo_Address_BracketsIPv6
+=== RUN   TestServiceInfo_Address_BracketsIPv6/ipv4
+    hxc185_ipv6_addr_test.go:159: SKIP-OK HXC-185: pre-fix composition already correct for "127.0.0.1"
+=== RUN   TestServiceInfo_Address_BracketsIPv6/hostname
+    hxc185_ipv6_addr_test.go:159: SKIP-OK HXC-185: pre-fix composition already correct for "localhost"
+=== RUN   TestServiceInfo_Address_BracketsIPv6/ipv6_bare
+    hxc185_ipv6_addr_test.go:162: RED_MODE=1: expected Address() = "[::1]:8080" to be REJECTED by the resolver, but it was accepted — defect did not reproduce
+=== RUN   TestServiceInfo_Address_BracketsIPv6/ipv6_bracketed
+    hxc185_ipv6_addr_test.go:159: SKIP-OK HXC-185: pre-fix composition already correct for "[::1]"
+=== RUN   TestServiceInfo_Address_BracketsIPv6/ipv6_full_bare
+    hxc185_ipv6_addr_test.go:162: RED_MODE=1: expected Address() = "[2001:db8::1]:8080" to be REJECTED by the resolver, but it was accepted — defect did not reproduce
+--- FAIL: TestServiceInfo_Address_BracketsIPv6 (0.00s)
+    --- SKIP: TestServiceInfo_Address_BracketsIPv6/ipv4 (0.00s)
+    --- SKIP: TestServiceInfo_Address_BracketsIPv6/hostname (0.00s)
+    --- FAIL: TestServiceInfo_Address_BracketsIPv6/ipv6_bare (0.00s)
+    --- SKIP: TestServiceInfo_Address_BracketsIPv6/ipv6_bracketed (0.00s)
+    --- FAIL: TestServiceInfo_Address_BracketsIPv6/ipv6_full_bare (0.00s)
+FAIL
+FAIL	dev.helix.code/internal/discovery	0.018s
+FAIL
+
+--- exit code: 1 ---

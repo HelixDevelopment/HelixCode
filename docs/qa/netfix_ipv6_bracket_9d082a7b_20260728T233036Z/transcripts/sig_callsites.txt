@@ -1,0 +1,36 @@
+### case: sig_callsites
+### label: the production call sites route through the shared helper rather than composing addresses themselves
+### time: 2026-07-28T23:30:37Z
+### command: git -C /home/milos/Factory/projects/tools_and_research/helix_code grep -n -F -e netutil.JoinHostPort -- helix_code/internal/cognee/client.go helix_code/internal/config/config.go helix_code/internal/discovery/health_monitor.go helix_code/internal/discovery/registry.go helix_code/internal/memory/memory_manager.go helix_code/internal/notification/engine.go helix_code/internal/redis/redis.go helix_code/internal/server/server.go helix_code/internal/worker/ssh_pool.go helix_code/tests/testinfra/testinfra.go
+### cwd: /home/milos/Factory/projects/tools_and_research/helix_code/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+helix_code/internal/cognee/client.go:70:	baseURL := "http://" + netutil.JoinHostPort(cfg.Host, cfg.Port)
+helix_code/internal/config/config.go:1264:		ServerAddress: netutil.JoinHostPort(cfg.Server.Address, cfg.Server.Port),
+helix_code/internal/discovery/health_monitor.go:318:	// the join must normalise first. netutil.JoinHostPort brackets exactly
+helix_code/internal/discovery/health_monitor.go:321:	address := netutil.JoinHostPort(serviceInfo.Host, serviceInfo.Port)
+helix_code/internal/discovery/health_monitor.go:339:	url := fmt.Sprintf("http://%s/health", netutil.JoinHostPort(serviceInfo.Host, serviceInfo.Port))
+helix_code/internal/discovery/registry.go:49:// address" and net/url rejects as a URL authority. netutil.JoinHostPort
+helix_code/internal/discovery/registry.go:53:	return netutil.JoinHostPort(s.Host, s.Port)
+helix_code/internal/discovery/registry.go:408:	url := fmt.Sprintf("%s://%s%s", scheme, netutil.JoinHostPort(service.Host, service.Port), healthPath)
+helix_code/internal/discovery/registry.go:439:	address := netutil.JoinHostPort(service.Host, service.Port)
+helix_code/internal/discovery/registry.go:473:	address := netutil.JoinHostPort(service.Host, service.Port)
+helix_code/internal/memory/memory_manager.go:554:			Addr:     netutil.JoinHostPort(host, port),
+helix_code/internal/memory/memory_manager.go:876:		servers = []string{netutil.JoinHostPort(host, port)}
+helix_code/internal/notification/engine.go:485:	addr := netutil.JoinHostPort(c.smtpServer, c.port)
+helix_code/internal/redis/redis.go:42:		Addr:     netutil.JoinHostPort(cfg.Host, cfg.Port),
+helix_code/internal/server/server.go:196:		Addr:         netutil.JoinHostPort(cfg.Server.Address, cfg.Server.Port),
+helix_code/internal/worker/ssh_pool.go:609:	return ssh.Dial("tcp", netutil.JoinHostPort(config.Host, config.Port), sshConfig)
+helix_code/tests/testinfra/testinfra.go:140:		netutil.JoinHostPortStr(c.PostgresHost, c.PostgresPort), c.PostgresDB)
+helix_code/tests/testinfra/testinfra.go:147:		netutil.JoinHostPortStr(c.RedisHost, c.RedisPort))
+helix_code/tests/testinfra/testinfra.go:152:	return "http://" + netutil.JoinHostPortStr(c.CogneeHost, c.CogneePort)
+helix_code/tests/testinfra/testinfra.go:157:	return "http://" + netutil.JoinHostPortStr(c.ChromaDBHost, c.ChromaDBPort)
+helix_code/tests/testinfra/testinfra.go:162:	return "http://" + netutil.JoinHostPortStr(c.QdrantHost, c.QdrantPort)
+helix_code/tests/testinfra/testinfra.go:167:	return "http://" + netutil.JoinHostPortStr(c.OllamaHost, c.OllamaPort)
+helix_code/tests/testinfra/testinfra.go:305:		"chromadb": "http://" + netutil.JoinHostPortStr(i.config.ChromaDBHost, i.config.ChromaDBPort) + "/api/v1/heartbeat",
+helix_code/tests/testinfra/testinfra.go:306:		"qdrant":   "http://" + netutil.JoinHostPortStr(i.config.QdrantHost, i.config.QdrantPort) + "/healthz",
+helix_code/tests/testinfra/testinfra.go:384:		Addr:     netutil.JoinHostPortStr(i.config.RedisHost, i.config.RedisPort),
+helix_code/tests/testinfra/testinfra.go:428:		url = "http://" + netutil.JoinHostPortStr(i.config.PrometheusHost, i.config.PrometheusPort) + "/-/healthy"
+helix_code/tests/testinfra/testinfra.go:431:		url = "http://" + netutil.JoinHostPortStr(i.config.GrafanaHost, i.config.GrafanaPort) + "/api/health"
+
+--- exit code: 0 ---

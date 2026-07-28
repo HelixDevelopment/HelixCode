@@ -1,0 +1,24 @@
+result	case_id	assertion	expected	observed	evidence
+PASS	host_context	host context captured as a recorded fact (not a pass/fail criterion)	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/host_context.http
+PASS	tree_clean	no uncommitted local edit to the files under test (§11.4.108: tested source == shipped source)	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/tree_clean.http
+PASS	sig_snapshots	runtime signature present in the shipped tracked source: the detached point-in-time accessor exists on the engine	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/sig_snapshots.http
+PASS	sig_snapshots	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/sig_snapshots.http
+PASS	sig_render	runtime signature present in the shipped tracked source: the dashboard renders from snapshots	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/sig_render.http
+PASS	sig_render	a real file:line hit line was printed — the match is in a tracked file, not just in the command echo	.go:	present	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/sig_render.http
+PASS	absent_livepointers	removed pattern is genuinely absent (git grep finds nothing): no dashboard render path still reads off the LIVE session pointers	not 0	1	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/absent_livepointers.http
+PASS	absent_livepointers	no file:line hit line was printed for the removed pattern	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/absent_livepointers.http
+PASS	guard_qarace	guard tests exit 0 under -race	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/guard_qarace.http
+PASS	guard_qarace	guard TestShowQA_SessionReadsAreRaceFree genuinely RAN and passed (not an empty -run filter exiting 0, and not a SKIP)	--- PASS: TestShowQA_SessionReadsAreRaceFree	present	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/guard_qarace.http
+PASS	guard_qarace	race detector reported no data race	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/guard_qarace.http
+PASS	guard_qarace	the -run filter matched at least one test	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/guard_qarace.http
+PASS	red_qarace	RED_MODE=1 FAILS on the fixed artifact — the guard is falsifiable, not blind (§11.4.115)	not 0	1	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/red_qarace.http
+PASS	red_qarace	guard TestShowQA_SessionReadsAreRaceFree genuinely RAN and reported FAIL under RED_MODE=1 (not a compile error masquerading as a reproduction)	--- FAIL: TestShowQA_SessionReadsAreRaceFree	present	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/red_qarace.http
+PASS	red_qarace	the -run filter matched at least one test	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/red_qarace.http
+PASS	red_qarace	the non-zero exit came from the guard, not from a build failure	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/red_qarace.http
+PASS	red_qarace	the RED_MODE=1 failure is a genuine detector report, not an assertion the test merely wrote itself (§11.4.107(10))	DATA RACE	present	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/red_qarace.http
+PASS	suite_terminalui	full package suite exits 0 under -race	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/suite_terminalui.http
+PASS	suite_terminalui	race detector reported no data race across the package	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/suite_terminalui.http
+PASS	suite_terminalui	no test in the package failed	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/suite_terminalui.http
+PASS	suite_helixqa	full package suite exits 0 under -race	0	0	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/suite_helixqa.http
+PASS	suite_helixqa	race detector reported no data race across the package	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/suite_helixqa.http
+PASS	suite_helixqa	no test in the package failed	absent	absent	docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/transcripts/suite_helixqa.http

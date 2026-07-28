@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 # capture_racefix_wave.sh <case-key>
 #
-# §11.4.83 QA evidence capture for the 2026-07-28/29 concurrency-defect wave —
-# the eleven feature-shipping commits that the §11.4.83 release gate
+# §11.4.83 QA evidence capture for the 2026-07-28/29 gate-remediation wave —
+# the feature-shipping commits that the §11.4.83 release gate
 # (scripts/gates/qa_evidence_gate.sh) reported as carrying no docs/qa evidence.
 #
-# WHY A SHARED SCRIPT AND NOT ELEVEN
+#   BATCH 1 (2026-07-28, 11 keys): the concurrency-defect wave.
+#   BATCH 2 (2026-07-29,  4 keys): the four commits the gate still reported
+#     after batch 1 landed — three more concurrency fixes (two rounds of the
+#     tools/shell drain grace, the terminal_ui QA-dashboard read race) and ONE
+#     NON-RACE correctness fix (net_ipv6, HXC-185 IPv6 authority bracketing).
+#     The script name says "racefix" because batch 1 was all races; batch 2
+#     stretches that name by exactly one case. Named honestly here (§11.4.6)
+#     rather than silently, because the alternative — a second script — would
+#     have duplicated the ~200 lines of helpers below (§11.4.74).
+#
+# WHY A SHARED SCRIPT AND NOT ONE PER COMMIT
 #   Every commit in this wave has the SAME evidence shape: a concurrency /
 #   correctness defect in Go production code, closed by a named regression
 #   guard test. The deliverable is therefore COMMAND-shaped (a real compiler +
@@ -14,7 +24,7 @@
 #   it is spelled out per commit, never generated, so each run's assertions are
 #   specific to the defect that commit actually fixed. One run-id directory is
 #   produced per commit (this script is invoked once per key) — deliberately
-#   NOT one blanket ledger enumerating eleven SHAs, which is the documented
+#   NOT one blanket ledger enumerating every SHA, which is the documented
 #   residual risk in scripts/verify_qa_evidence.sh's RULE 3 header.
 #
 # WHAT EVERY RUN PROVES (nothing here is asserted from a commit message)
@@ -262,6 +272,70 @@ suite() {
     assert_cmd_output_not_contains "$case_id" "FAIL" "no test in the package failed"
 }
 
+# red_polarity <case-id> <label> <pkg> <tags|""> <run-regex> <TestName...>
+#   §11.4.115 polarity proof, run on the FIXED artifact.
+#
+#   A guard that only ever passes proves nothing about its own sensitivity: a
+#   test asserting `true == true` is green forever. These packages carry an
+#   explicit RED_MODE polarity switch, so the falsifiability check is a real
+#   execution rather than an argument — RED_MODE=1 re-drives the PRE-FIX
+#   behaviour (the defect's own shape) against today's shipped source and MUST
+#   fail. If it passed, the guard would be blind and its GREEN verdict
+#   worthless.
+#
+#   Asserted: non-zero exit AND a `--- FAIL: <name>` line for EVERY named test.
+#   The exit code alone is insufficient — a compile error also exits non-zero,
+#   and would otherwise be indistinguishable from a genuine reproduction.
+#
+#   RED_MODE is passed via `env` because qa_cmd execs the argv directly (no
+#   shell), so a `VAR=x cmd` prefix would be parsed as a command name.
+red_polarity() {
+    local case_id="$1" label="$2" pkg="$3" tags="$4" runre="$5"; shift 5
+    local -a cmd=(env RED_MODE=1 go test -race -count=1 -v -timeout=20m)
+    [ -n "$tags" ] && cmd+=("-tags=${tags}")
+    cmd+=(-run "$runre" "$pkg")
+    qa_cmd "$case_id" "$label" -- "${cmd[@]}"
+    assert_cmd_rc_not "$case_id" 0 "RED_MODE=1 FAILS on the fixed artifact — the guard is falsifiable, not blind (§11.4.115)"
+    local t
+    for t in "$@"; do
+        assert_cmd_output_contains "$case_id" "--- FAIL: ${t}" \
+            "guard ${t} genuinely RAN and reported FAIL under RED_MODE=1 (not a compile error masquerading as a reproduction)"
+    done
+    assert_cmd_output_not_contains "$case_id" "no tests to run" "the -run filter matched at least one test"
+    assert_cmd_output_not_contains "$case_id" "[build failed]" "the non-zero exit came from the guard, not from a build failure"
+}
+
+# guard_skippable <case-id> <label> <pkg> <tags|""> <run-regex> <skip-needle> <TestName>
+#   Same as guard(), for a guard that declares its OWN run inconclusive when a
+#   precondition it cannot control is unmet — here the QA-dashboard race guard,
+#   which SKIPs (per §11.4.3) when no orchestrator status transition happened to
+#   land inside a rendering batch, because a clean -race result over a window
+#   the writer never touched would prove nothing.
+#
+#   A self-declared-inconclusive run is recorded as a SKIP-with-reason and makes
+#   the whole run INCOMPLETE (exit 2) — never a pass, and never blamed on the
+#   commit. Any OTHER non-zero outcome is a real FAIL.
+guard_skippable() {
+    local case_id="$1" label="$2" pkg="$3" tags="$4" runre="$5" skipneedle="$6"; shift 6
+    local -a cmd=(go test -race -count=1 -v -timeout=20m)
+    [ -n "$tags" ] && cmd+=("-tags=${tags}")
+    cmd+=(-run "$runre" "$pkg")
+    qa_cmd "$case_id" "$label" -- "${cmd[@]}"
+    local t
+    if [ "$QA_LAST_RC" = "0" ] && grep -qF -- "$skipneedle" "$QA_LAST_TRANSCRIPT"; then
+        qa_skip "$case_id" "$label" \
+            "the guard declared its own run INCONCLUSIVE ('${skipneedle}') — the precondition it needs (a writer-vs-render overlap) did not occur in this run, so a clean -race result would certify nothing. Recorded as SKIP per §11.4.3, never as a pass. Host load for this run is in transcripts/host_context.txt; re-run to convert this SKIP into a verdict."
+        return
+    fi
+    assert_cmd_rc "$case_id" 0 "guard tests exit 0 under -race"
+    for t in "$@"; do
+        assert_cmd_output_contains "$case_id" "--- PASS: ${t}" \
+            "guard ${t} genuinely RAN and passed (not an empty -run filter exiting 0, and not a SKIP)"
+    done
+    assert_cmd_output_not_contains "$case_id" "DATA RACE" "race detector reported no data race"
+    assert_cmd_output_not_contains "$case_id" "no tests to run" "the -run filter matched at least one test"
+}
+
 # notes <text...> — an accurate, run-shaped companion to the shared
 # EVIDENCE.md preamble (which is worded for the HTTP-shaped harness).
 notes() {
@@ -313,7 +387,15 @@ usage() {
     cat <<'EOF'
 Usage: scripts/qa/capture_racefix_wave.sh <case-key>
 
-Case keys (one per §11.4.83-gate violation in the 2026-07-28/29 wave):
+Case keys (one per §11.4.83-gate violation in the 2026-07-28/29 wave).
+
+BATCH 2 (2026-07-29):
+  shell_grace          fa1b52b3  shell drain grace = no-progress window
+  shell_bounds         0c2f4940  shell abandoned-consumer bound + M2/M3 guards
+  net_ipv6             9d082a7b  HXC-185 IPv6 authority bracketing (netutil)
+  qa_dashboard         27754934  terminal_ui QA dashboard read race (HXC-174)
+
+BATCH 1 (2026-07-28):
   persist_selectprio   dd3c0c3b  persistence autoSaveLoop select priority
   fable3               ed0cdcb8  3 defects from the independent Fable review
   aurora_underflow     640db264  aurora_os uint64 memory-freed underflow
@@ -845,6 +927,332 @@ Honest note carried forward from the commit: `-race`, and only `-race`, is what
 pins these locks. The count assertion alone still passes with the locking
 stripped, because every increment runs on a single worker goroutine under the
 Fyne test driver. That is stated in the test itself rather than papered over.
+EON
+    finish
+    ;;
+
+# ---------------------------------------------------------------------------
+# BATCH 2 (2026-07-29) — the four commits the §11.4.83 gate still reported
+# after batch 1 landed.
+# ---------------------------------------------------------------------------
+
+shell_grace)
+    qa_init "racefix_shell_grace" "fa1b52b32992d9ae0dac86643f9e0e28a55f252a" \
+        "tools/shell: the drain grace is a no-progress window, not a total output budget"
+    cd "$APPDIR" || exit 2
+    hostctx
+    clean_tree tree_clean helix_code/internal/tools/shell/executor.go \
+        helix_code/internal/tools/shell/output.go
+    sig sig_progress "OutputStreamer exposes a monotonic Progress() counter — the signal the drain loop rearms on" \
+        'func (os *OutputStreamer) Progress() uint64' \
+        helix_code/internal/tools/shell/output.go
+    sig sig_rearm "the drain deadline is REARMED while lines are still moving (the window is no longer a total budget)" \
+        'drainDeadline.Reset(streamDrainGrace)' \
+        helix_code/internal/tools/shell/executor.go
+    sig sig_flagderived "OutputIncomplete is DERIVED from what the scanners observed, not from which select branch won (M1/M3)" \
+        'result.OutputIncomplete = streamer.Err() != nil' \
+        helix_code/internal/tools/shell/executor.go
+    sig sig_errpriority "Err() prefers a genuine failure over the ErrStreamStopped teardown sentinel (M2)" \
+        'if err != nil && !errors.Is(err, ErrStreamStopped) {' \
+        helix_code/internal/tools/shell/output.go
+    guard guard_notruncate "the commit's own I1 guard — a slow-but-draining consumer receives ALL output, -race -count=2" \
+        ./internal/tools/shell "" '^TestExecuteStreamDoesNotTruncateASlowButDrainingConsumer$' \
+        TestExecuteStreamDoesNotTruncateASlowButDrainingConsumer
+    guard guard_hxc184 "the HXC-184 guards this fix must not regress — grandchild bound + executor slot recovery, -race -count=2" \
+        ./internal/tools/shell "" \
+        '^TestExecuteStream(ReturnsWhenGrandchildHoldsPipes|HangDoesNotWedgeTheExecutor|DoneBeforeDrainIsBoundedNotDeadlocked)$' \
+        TestExecuteStreamReturnsWhenGrandchildHoldsPipes \
+        TestExecuteStreamHangDoesNotWedgeTheExecutor \
+        TestExecuteStreamDoneBeforeDrainIsBoundedNotDeadlocked
+    red_polarity red_hxc184 "RED_MODE=1 on the FIXED artifact — both HXC-184 guards must FAIL, proving they are not blind" \
+        ./internal/tools/shell "" \
+        '^TestExecuteStream(ReturnsWhenGrandchildHoldsPipes|HangDoesNotWedgeTheExecutor)$' \
+        TestExecuteStreamReturnsWhenGrandchildHoldsPipes \
+        TestExecuteStreamHangDoesNotWedgeTheExecutor
+    suite suite_shell "full internal/tools/shell package under -race" ./internal/tools/shell ""
+    notes <<'EON'
+# What this run certifies
+
+`fa1b52b3` corrected the drain grace introduced by `a7d8dbb5` (HXC-184). That
+grace was a TOTAL budget: once the direct child was reaped, `ExecuteStream`
+waited a fixed window and then tore the readers down. The reasoning behind it
+("at most a pipe's worth of already-buffered data, milliseconds of work") held
+only when the CONSUMER kept up, not when the kernel did — a command with no
+grandchild can exit instantly with a full pipe, so a consumer following the
+documented concurrent-drain contract at ~ms/line was cut off mid-stream. That
+is output loss on a perfectly healthy command.
+
+The fix makes the grace a NO-PROGRESS window: `OutputStreamer` counts completed
+sends (`Progress()`), and the drain loop rearms its timer whenever delivery
+advanced during the window, so only a FULL window with nothing moving counts as
+stuck. It also stops deriving `OutputIncomplete` from which `select` branch won
+(a timer/Done tie could flag a complete run as truncated) and stops letting a
+teardown sentinel on stdout mask a genuine stderr failure.
+
+Captured here (real command execution; `transcripts/` holds every byte):
+
+* all four mechanisms are present in the tracked source that ships today —
+  the `Progress()` counter, the rearm, the derived flag, the error priority;
+* the commit's own I1 guard RAN and passed twice under `-race` (asserted on its
+  `--- PASS:` line, not merely on exit 0);
+* the three HXC-184 guards this fix had to preserve — grandchild-held pipes
+  bounded, the `MaxConcurrent=1` executor slot recovered, Done-before-drain
+  bounded rather than deadlocked — all still pass, so the rearm did not
+  resurrect the wedge it was constrained by;
+* RED_MODE=1 on this same fixed artifact FAILS both HXC-184 guards, which is
+  what proves those guards can still detect the defect (§11.4.115 polarity —
+  a guard that passes in both polarities certifies nothing);
+* the whole package is race-clean.
+
+Not certified: the exact throughput figures quoted in the commit message. This
+run asserts the guard's OWN pass/fail contract, which is what the guard was
+written to enforce; it does not independently re-measure line counts.
+EON
+    finish
+    ;;
+
+shell_bounds)
+    qa_init "racefix_shell_bounds" "0c2f4940e4e40234ab4e0c1cd3331cf363480bb2" \
+        "tools/shell: the abandoned-consumer bound corrected, and M2/M3 pinned by standing guards"
+    cd "$APPDIR" || exit 2
+    hostctx
+    clean_tree tree_clean helix_code/internal/tools/shell/executor.go \
+        helix_code/internal/tools/shell/output.go
+    sig sig_bound "the drain loop states the REAL abandoned-consumer bound (~(headroom+1) x grace), not the two-window claim it replaced" \
+        '(headroom + 1) x grace' \
+        helix_code/internal/tools/shell/executor.go
+    sig sig_contract "StreamingExecution names abandoning-without-Cancel as the pattern to avoid" \
+        'Abandoning the channels without calling Cancel is the one pattern to avoid' \
+        helix_code/internal/tools/shell/executor.go
+    sig sig_progressdoc "Progress() no longer claims to prove a consumer exists" \
+        'It is NOT a proof that a consumer exists.' \
+        helix_code/internal/tools/shell/output.go
+    guard guard_bounded "the new abandoned-consumer bound guard, -race -count=2" \
+        ./internal/tools/shell "" '^TestExecuteStreamAbandonedConsumerStaysBoundedWhileProducerTrickles$' \
+        TestExecuteStreamAbandonedConsumerStaysBoundedWhileProducerTrickles
+    guard guard_m2 "the two M2 guards — a genuine stderr failure survives a stdout teardown, -race -count=2" \
+        ./internal/tools/shell "" \
+        '^(TestOutputStreamerErrPrefersGenuineFailureOverTeardown|TestExecuteStreamSurfacesStderrFailureDespiteStdoutTeardown)$' \
+        TestOutputStreamerErrPrefersGenuineFailureOverTeardown \
+        TestExecuteStreamSurfacesStderrFailureDespiteStdoutTeardown
+    guard guard_m3 "the two M3 guards — OutputIncomplete is TRUE on a truncating cancel and FALSE after a clean EOF, -race -count=2" \
+        ./internal/tools/shell "" \
+        '^TestExecuteStreamCancel(MidStreamMarksOutputIncomplete|AfterCleanEOFKeepsOutputComplete)$' \
+        TestExecuteStreamCancelMidStreamMarksOutputIncomplete \
+        TestExecuteStreamCancelAfterCleanEOFKeepsOutputComplete
+    suite suite_shell "full internal/tools/shell package under -race" ./internal/tools/shell ""
+    notes <<'EON'
+# What this run certifies
+
+`0c2f4940` is a docs-and-tests follow-up to `fa1b52b3` with no behaviour change,
+and it exists because two things in that commit were wrong or unguarded.
+
+The overstatement: `fa1b52b3` claimed an abandoned consumer "fills its 100-slot
+channel ... and the teardown fires within two windows". That is false. A send
+completes — and therefore counts as progress — either because a consumer
+received the line OR because there was still buffer headroom to absorb it, so
+progress does NOT imply an active consumer. The real bound is roughly
+(headroom + 1) x grace. The conclusion survived (still finite, the semaphore
+slot still returns, HXC-184 does not recur); the stated mechanism did not.
+
+The coverage gap: M2 (a genuine stderr failure must outrank the stdout teardown
+sentinel) and M3 (`OutputIncomplete` must be true when a cancel drops in-flight
+lines) shipped in `fa1b52b3` with no standing guard — reverting M2 left the
+whole in-tree suite green, which is exactly the §11.4.135 silent-recurrence
+vector.
+
+Captured here: the three corrected statements are present in the tracked source
+that ships today, and all five guards RAN and passed twice under `-race`
+(asserted per test on their `--- PASS:` lines) — the corrected bound pinned by
+a real measurement rather than by prose, both M2 guards, and both M3 guards
+including the negative case that must stay FALSE.
+
+Not certified: the specific timings quoted in the commit message. The bound
+guard asserts the property (exceeds one window, still terminates), which is
+what makes the two-window claim unable to return.
+EON
+    finish
+    ;;
+
+net_ipv6)
+    qa_init "netfix_ipv6_bracket" "9d082a7be78a073391e0492d90537557c310b5cf" \
+        "HXC-185: IPv6 authorities bracketed via a shared netutil helper, proven at the sink"
+    cd "$APPDIR" || exit 2
+    hostctx
+    clean_tree tree_clean \
+        helix_code/internal/netutil/netutil.go \
+        helix_code/internal/cognee/client.go \
+        helix_code/internal/config/config.go \
+        helix_code/internal/discovery/health_monitor.go \
+        helix_code/internal/discovery/registry.go \
+        helix_code/internal/memory/memory_manager.go \
+        helix_code/internal/notification/engine.go \
+        helix_code/internal/redis/redis.go \
+        helix_code/internal/server/server.go \
+        helix_code/internal/worker/ssh_pool.go \
+        helix_code/tests/testinfra/testinfra.go
+    sig sig_join "the shared integer-port join helper exists — the single replacement for fmt.Sprintf(\"%s:%d\")" \
+        'func JoinHostPort(host string, port int) string' \
+        helix_code/internal/netutil/netutil.go
+    sig sig_unbracket "UnbracketHost normalises an already-bracketed host, so the join cannot produce the [[::1]] double-bracket form" \
+        'func UnbracketHost(host string) string' \
+        helix_code/internal/netutil/netutil.go
+    sig sig_callsites "the production call sites route through the shared helper rather than composing addresses themselves" \
+        'netutil.JoinHostPort' \
+        helix_code/internal/cognee/client.go helix_code/internal/config/config.go \
+        helix_code/internal/discovery/health_monitor.go helix_code/internal/discovery/registry.go \
+        helix_code/internal/memory/memory_manager.go helix_code/internal/notification/engine.go \
+        helix_code/internal/redis/redis.go helix_code/internal/server/server.go \
+        helix_code/internal/worker/ssh_pool.go helix_code/tests/testinfra/testinfra.go
+    guard guard_netutil "the netutil helper's own guards, driven through the REAL resolver, -race -count=2" \
+        ./internal/netutil "" \
+        '^(TestJoinHostPort_ProducesResolvableAddress|TestJoinHostPort_NoDoubleBracket|TestUnbracketHost)$' \
+        TestJoinHostPort_ProducesResolvableAddress TestJoinHostPort_NoDoubleBracket TestUnbracketHost
+    guard guard_discovery "discovery call sites reach a real IPv6 listener, -race -count=2" \
+        ./internal/discovery "" '^Test(ServiceInfo_Address_BracketsIPv6|HealthMonitor_check(TCP|HTTP)_IPv6|ServiceRegistry_check(TCP|HTTP)Health_IPv6)$' \
+        TestServiceInfo_Address_BracketsIPv6 TestHealthMonitor_checkTCP_IPv6 \
+        TestHealthMonitor_checkHTTP_IPv6 TestServiceRegistry_checkTCPHealth_IPv6 \
+        TestServiceRegistry_checkHTTPHealth_IPv6
+    assert_cmd_output_contains guard_discovery "positive sink-side evidence:" \
+        "the discovery guards recorded POSITIVE SINK-SIDE evidence (a real listener's accept/serve count), not a string comparison (§11.4.69)"
+    guard guard_clients "cognee / memory / notification / redis / server / worker call sites reach real IPv6 listeners, -race -count=2" \
+        ./internal/cognee ""  '^TestNewClient_IPv6Host_BaseURLReachesServer$' \
+        TestNewClient_IPv6Host_BaseURLReachesServer
+    guard guard_memory "memory providers reach real IPv6 listeners, -race -count=2" \
+        ./internal/memory "" '^TestNew(Redis|Memcached)MemoryProvider_IPv6_ReachesListener$' \
+        TestNewRedisMemoryProvider_IPv6_ReachesListener TestNewMemcachedMemoryProvider_IPv6_ReachesListener
+    assert_cmd_output_contains guard_memory "positive sink-side evidence:" \
+        "the memory guards recorded POSITIVE SINK-SIDE evidence (a real listener's accept count), not a string comparison (§11.4.69)"
+    guard guard_notification "the email channel reaches a real IPv6 SMTP listener, -race -count=2" \
+        ./internal/notification "" '^TestEmailChannel_Send_IPv6_ReachesListener$' \
+        TestEmailChannel_Send_IPv6_ReachesListener
+    guard guard_redis "the redis client reaches a real IPv6 listener, -race -count=2" \
+        ./internal/redis "" '^TestNewClient_IPv6Host_ReachesRealListener$' \
+        TestNewClient_IPv6Host_ReachesRealListener
+    guard guard_server "the server BINDS a real IPv6 socket at the composed address, -race -count=2" \
+        ./internal/server "" '^TestServerAddr_IPv6_Listens$' \
+        TestServerAddr_IPv6_Listens
+    guard guard_worker "the SSH pool reaches a real IPv6 listener, -race -count=2" \
+        ./internal/worker "" '^TestCreateSSHClient_IPv6_ReachesListener$' \
+        TestCreateSSHClient_IPv6_ReachesListener
+    guard guard_testinfra "every testinfra URL/dial builder reaches a live IPv6 server, -race -count=2" \
+        ./tests/testinfra "" '^TestConfig(URLBuilders|DialURLs)_IPv6$' \
+        TestConfigURLBuilders_IPv6 TestConfigDialURLs_IPv6
+    red_polarity red_discovery "RED_MODE=1 on the FIXED artifact — the discovery guards must FAIL, proving they are not blind" \
+        ./internal/discovery "" '^TestServiceInfo_Address_BracketsIPv6$' \
+        TestServiceInfo_Address_BracketsIPv6
+    suite suite_netutil "full internal/netutil package under -race" ./internal/netutil ""
+    notes <<'EON'
+# What this run certifies
+
+`9d082a7b` closed HXC-185: an IPv6 literal contains colons, so joining it to a
+port with `fmt.Sprintf("%s:%d", host, port)` produces an authority that is both
+unparseable per RFC 3986 §3.2.2 and rejected outright by the Go resolver. Any
+host arriving from configuration, service discovery, or an environment variable
+can legitimately be a bare IPv6 literal, so every such join had to bracket. The
+fix routes all of them through one shared helper, which also closes the
+double-bracket trap: `net.JoinHostPort` brackets unconditionally when the host
+contains a colon, including a host that is ALREADY bracketed, and `[[::1]]:80`
+is rejected just as hard as the unbracketed form. Hosts arrive in both shapes
+here (`net.SplitHostPort` strips brackets; a URL authority carries them), so the
+helper normalises before joining and is idempotent for either.
+
+Captured here (real command execution; `transcripts/` holds every byte):
+
+* both helper entry points and the rerouted production call sites are present
+  in the tracked source that ships today;
+* every guard listed in the verdict table RAN and passed twice under `-race`
+  (asserted per test on its `--- PASS:` line, never on exit 0 alone);
+* the guards are SINK-SIDE, not string comparisons: each stands up a real
+  listener on `::1`, drives the production code path at it, and asserts the
+  listener actually accepted the connection or served the request. The
+  discovery and memory transcripts are additionally asserted to contain the
+  `positive sink-side evidence:` line those tests emit with the observed
+  accept/serve count, so this run cannot pass on a test that merely compared
+  two strings (§11.4.69);
+* RED_MODE=1 on this same fixed artifact FAILS the discovery guard, proving it
+  still detects the defect shape (§11.4.115).
+
+Honest boundary (§11.4.6) — the polarity switch is NOT uniform across these
+guards, and this run does not pretend it is. `internal/netutil`'s own RED_MODE
+branch characterises stdlib behaviour (that a naive join is rejected and a
+double-bracketed one too), so it passes on ANY artifact by design and is
+therefore useless as a falsifiability proof; the RED polarity case above
+deliberately targets `internal/discovery`, whose RED_MODE branch asserts the
+DEFECT is present and so can only pass on a pre-fix artifact.
+
+Also not certified: whole-package suites for cognee / discovery / memory /
+notification / redis / server / worker. Those packages carry integration tests
+that need real infrastructure, and running them here would report the
+infrastructure's state rather than this commit's. The call sites this commit
+changed are certified by their NAMED sink-side guards; `internal/netutil`, the
+package this commit introduced, IS covered by its full suite.
+EON
+    finish
+    ;;
+
+qa_dashboard)
+    qa_init "racefix_qa_dashboard" "27754934832412879c5ef6d1551c70217c9bed6a" \
+        "terminal_ui: the QA dashboard renders from snapshots, not live session pointers (HXC-174)"
+    cd "$APPDIR" || exit 2
+    hostctx
+    clean_tree tree_clean helix_code/applications/terminal_ui/main.go \
+        helix_code/internal/helixqa/wrapper.go
+    sig sig_snapshots "the detached point-in-time accessor exists on the engine" \
+        'func (e *Engine) ListSessionSnapshots() []*SessionState' \
+        helix_code/internal/helixqa/wrapper.go
+    sig sig_render "the dashboard renders from snapshots" \
+        'tui.qaEngine.ListSessionSnapshots()' \
+        helix_code/applications/terminal_ui/main.go
+    absent absent_livepointers "no dashboard render path still reads off the LIVE session pointers" \
+        'sessions := tui.qaEngine.ListSessions()' \
+        helix_code/applications/terminal_ui/main.go
+    guard_skippable guard_qarace "the commit's own race guard driving the REAL production showQA, -race" \
+        ./applications/terminal_ui ci '^TestShowQA_SessionReadsAreRaceFree$' \
+        'inconclusive: no QA session status transition was observed' \
+        TestShowQA_SessionReadsAreRaceFree
+    red_polarity red_qarace "RED_MODE=1 golden-bad self-validation (§11.4.107(10)) — the guard must still detect the unguarded read shape" \
+        ./applications/terminal_ui ci '^TestShowQA_SessionReadsAreRaceFree$' \
+        TestShowQA_SessionReadsAreRaceFree
+    assert_cmd_output_contains red_qarace "DATA RACE" \
+        "the RED_MODE=1 failure is a genuine detector report, not an assertion the test merely wrote itself (§11.4.107(10))"
+    suite suite_terminalui "full applications/terminal_ui package under -race" ./applications/terminal_ui ci
+    suite suite_helixqa "full internal/helixqa package under -race" ./internal/helixqa ci
+    notes <<'EON'
+# What this run certifies
+
+`27754934` closed HXC-174. `showQA` rendered straight off the LIVE
+`*SessionState` pointers returned by `Engine.ListSessions()`, reading Status /
+Phase / PhaseProgress / EndTime / StartTime / Platforms / Banks with no lock
+held, while the orchestrator goroutine spawned by `StartSession` writes exactly
+those fields under `state.Mu`. A lock held on one side alone establishes no
+happens-before edge, so this was a genuine data race rather than merely a race
+condition — its sharpest instance being the duration cell's check-then-use on
+`EndTime`, which could observe a non-nil pointer to a not-yet-published value.
+The TUI was the only unguarded reader in the tree; every other consumer already
+went through the lock.
+
+Captured here (real command execution; `transcripts/` holds every byte):
+
+* the detached accessor and the rerouted render path are present in the tracked
+  source that ships today, and the live-pointer read is provably GONE from the
+  dashboard (`git grep` finds no surviving occurrence);
+* the commit's own guard, which drives the REAL production `showQA` against
+  live sessions, ran under `-race` with `-tags=ci`;
+* RED_MODE=1 re-drives the legacy unguarded pattern on this same fixed artifact
+  and is asserted BOTH to fail AND to carry a `DATA RACE` detector report —
+  that second assertion is what makes it a golden-bad self-validation
+  (§11.4.107(10)) rather than a test agreeing with itself: it proves the
+  harness still SEES this defect shape and is not blind;
+* both affected packages are race-clean.
+
+Honest boundary (§11.4.3 / §11.4.201): this guard is load-sensitive by
+construction. It brackets each batch of renders with a lock-guarded status
+vector so that a clean `-race` result cannot come from a window the writer never
+touched, and if no orchestrator status transition lands inside a rendering batch
+it SKIPs with a reason rather than claiming a pass over an empty window. If the
+verdict table below records that SKIP, this run is INCOMPLETE, not green — the
+host load that produced it is in `transcripts/host_context.txt`.
 EON
     finish
     ;;

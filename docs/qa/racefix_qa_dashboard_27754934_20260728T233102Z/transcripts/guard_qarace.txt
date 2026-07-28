@@ -1,0 +1,14 @@
+### case: guard_qarace
+### label: the commit's own race guard driving the REAL production showQA, -race
+### time: 2026-07-28T23:31:02Z
+### command: go test -race -count=1 -v -timeout=20m -tags=ci -run ^TestShowQA_SessionReadsAreRaceFree$ ./applications/terminal_ui
+### cwd: /home/milos/Factory/projects/tools_and_research/helix_code/helix_code
+
+--- COMBINED STDOUT+STDERR (real command execution, captured verbatim) ---
+=== RUN   TestShowQA_SessionReadsAreRaceFree
+    qa_dashboard_race_test.go:126: drove 40 QA dashboard reads across 1 rounds in 4ms; 1 batches bracketed a live orchestrator status transition, so the reads under test genuinely overlapped the writer
+--- PASS: TestShowQA_SessionReadsAreRaceFree (0.00s)
+PASS
+ok  	dev.helix.code/applications/terminal_ui	1.207s
+
+--- exit code: 0 ---
