@@ -275,6 +275,29 @@ type DesktopApp struct {
 	stopUpdate   chan struct{}
 	stopOnce     sync.Once
 
+	// updateDone is closed by the startDataUpdates goroutine immediately
+	// before it returns (whether returning via the priority stop pre-check or
+	// the ticker case's inner re-check). Close() waits on it (bounded) BEFORE
+	// tearing down da.db / da.agenticTools, so teardown never races a
+	// still-running refreshData() call. nil until startDataUpdates runs (a
+	// Close() called without a prior startDataUpdates is therefore a no-op
+	// wait, never a hang on a channel nothing will ever close). See
+	// updateLoopTick's doc comment for the teardown-race this closes.
+	updateDone chan struct{}
+
+	// updateLoopTickRaceHook is a test seam (nil in production, never set
+	// outside _test.go files): when non-nil, updateLoopTick invokes it
+	// immediately after the non-blocking priority pre-check observes
+	// stopUpdate still open, but BEFORE the blocking select that follows is
+	// evaluated. This is precisely the residual race window described on
+	// updateLoopTick's doc comment -- a close(stopUpdate) landing here,
+	// concurrently with an already-buffered tick, leaves Go's uniform-random
+	// select pick free to choose either case. Production code never sets
+	// this hook; it exists so a §11.4.115 test can land a close(stopUpdate)
+	// deterministically inside that exact window instead of depending on
+	// scheduler luck to hit a nanosecond-wide gap.
+	updateLoopTickRaceHook func()
+
 	// translator resolves CONST-046 user-facing message IDs. Defaults
 	// to i18n.NoopTranslator{} (loud message-ID echo) when nil — set
 	// by helix_code at boot via SetTranslator to a real
@@ -417,23 +440,112 @@ func (da *DesktopApp) Initialize() error {
 	return nil
 }
 
-// startDataUpdates starts periodic background data refresh
+// startDataUpdates starts periodic background data refresh.
+//
+// JOIN: updateDone is created fresh here and closed by the goroutine
+// immediately before it returns (either exit path below). Close() waits on
+// it (bounded) before tearing down da.db / da.agenticTools -- see the
+// updateDone field doc comment and Close's doc comment for the
+// use-after-close race this closes.
 func (da *DesktopApp) startDataUpdates() {
 	da.updateTicker = time.NewTicker(5 * time.Second)
+	da.updateDone = make(chan struct{})
 	go func() {
+		defer close(da.updateDone)
+
 		// Initial data load
 		da.refreshData()
 
 		for {
-			select {
-			case <-da.updateTicker.C:
-				da.refreshData()
-			case <-da.stopUpdate:
+			if !da.updateLoopTick(da.updateTicker.C, da.stopUpdate) {
 				da.updateTicker.Stop()
 				return
 			}
 		}
 	}()
+}
+
+// updateLoopTick runs exactly one iteration of the background data-update
+// loop's select logic. Extracted from startDataUpdates (identical
+// behaviour, same select statement) so the §11.4.115 regression guard
+// (main_racefix_test.go) can force the "unprioritized select" race
+// deterministically -- pre-buffering a tick AND pre-closing stop before the
+// select ever runs -- instead of depending on real wall-clock ticker timing
+// or scheduler luck.
+//
+// ANTI-BLUFF FIX (§11.4.115 unprioritized-select race -- mirrors
+// internal/persistence/store.go autoSaveTick, one of four confirmed
+// instances of this defect class audited this session): Go's select
+// chooses UNIFORMLY AT RANDOM among ALL cases ready at the instant it is
+// evaluated. A naked `select { case <-ticker.C: refreshData(); case
+// <-stopUpdate: return }` can therefore still pick the ticker.C branch and
+// run one more refreshData() even when stopUpdate was ALREADY closed before
+// the select was reached -- if this goroutine was scheduler-delayed long
+// enough for a tick to also land in ticker.C by the time it finally runs.
+// The non-blocking priority pre-check below closes that WIDE window: it
+// runs FIRST, on every loop iteration, and returns immediately whenever
+// stopUpdate is already closed BEFORE this call is even invoked.
+//
+// RESIDUAL WINDOW (closed by the inner re-check below): the pre-check only
+// proves stopUpdate was open at the instant it ran. If close(stopUpdate)
+// lands in the narrow gap BETWEEN the pre-check returning and the blocking
+// select below being evaluated, and a tick is already buffered on tickerC,
+// both cases are ready when the blocking select fires and Go's
+// uniform-random pick can still choose the tickerC branch -- one stray
+// refreshData() after Close() has already returned to its caller. The inner
+// non-blocking re-check inside the tickerC case closes this too.
+//
+// HONESTY (§11.4.6): this is the strongest ordering guarantee a plain
+// channel select can offer. It is NOT a claim the race is closed to zero
+// width -- under Go's async goroutine preemption (>=1.14) this goroutine can
+// still be preempted between the final re-check and the refreshData() call
+// that follows it while a close(stopUpdate) lands concurrently, an
+// unavoidable, unobservable race no select-based implementation can
+// provably eliminate. What IS delivered: cancellation observed at the final
+// decision point always wins, AND (via the updateDone join in Close, a
+// SEPARATE mechanism) the caller never tears down da.db / da.agenticTools
+// while this goroutine could still be mid-refreshData() -- the join
+// guarantees the loop has RETURNED before teardown begins, which the
+// select-priority fix alone does not.
+//
+// Returns false when the loop must stop (stopUpdate was signalled --
+// checked FIRST, non-blocking, and again in the blocking select below),
+// true when a tick was processed and the loop should continue.
+func (da *DesktopApp) updateLoopTick(tickerC <-chan time.Time, stop <-chan struct{}) bool {
+	// Priority pre-check: if stop is already closed, return immediately
+	// without ever entering the blocking select below, where an
+	// also-ready ticker.C could otherwise be picked instead.
+	select {
+	case <-stop:
+		return false
+	default:
+	}
+
+	// Test seam (§11.4.115 residual-window guard): fires only when a test
+	// has set it, giving the test a deterministic hook to land
+	// close(stopUpdate) exactly here -- after the pre-check above, before
+	// the blocking select below. Always nil in production.
+	if da.updateLoopTickRaceHook != nil {
+		da.updateLoopTickRaceHook()
+	}
+
+	select {
+	case <-tickerC:
+		// Re-check: a stop-close landing in the window between the
+		// pre-check above and this blocking select being evaluated can
+		// still leave the tickerC branch "randomly" chosen even though
+		// stop is now closed. Catch it here, non-blocking, before running
+		// refreshData.
+		select {
+		case <-stop:
+			return false
+		default:
+		}
+		da.refreshData()
+		return true
+	case <-stop:
+		return false
+	}
 }
 
 // refreshData updates cached data from managers
@@ -1487,15 +1599,55 @@ func (da *DesktopApp) Run() {
 	da.mainWindow.ShowAndRun()
 }
 
+// closeJoinTimeout bounds how long Close() waits for the background
+// data-update loop to observe stopUpdate and return before proceeding with
+// teardown regardless. Chosen well above the loop's own decision latency
+// (a non-blocking select-pair, effectively instant) so it only ever fires on
+// a genuinely wedged goroutine, never on ordinary shutdown.
+const closeJoinTimeout = 5 * time.Second
+
 // Close cleans up resources. It is idempotent: the stopUpdate channel is closed
 // at most once via stopOnce, so a second Close call is a clean no-op rather than
 // a "close of closed channel" panic.
+//
+// TEARDOWN-RACE FIX (§11.4.115 / §11.4.108, mirrors the priority-select fix
+// on updateLoopTick): closing stopUpdate only signals the background loop to
+// stop -- it does NOT wait for the loop to have actually observed the signal
+// and returned. Without a join, this function could proceed to close da.db /
+// da.agenticTools while the loop goroutine was still mid-refreshData() (or
+// about to start one after the priority-select race described on
+// updateLoopTick), racing a live DB handle / MCP-LSP child process against
+// its own teardown -- a genuine use-after-close hazard, not merely a stray
+// extra refresh. The wait below blocks until updateDone closes (the loop's
+// own confirmation that it has returned) or closeJoinTimeout elapses,
+// whichever comes first.
+//
+// HONESTY (§11.4.6): this guarantees the loop goroutine has RETURNED before
+// teardown begins -- it does not and cannot prove no other goroutine ever
+// touches da.db/da.agenticTools after Close (out of scope for this fix), nor
+// does it make updateLoopTick's own select-priority race provably zero-width
+// (see that method's doc comment). The bounded timeout intentionally trades
+// an unbounded hang (if the loop is genuinely wedged) for proceeding with
+// teardown anyway, logged, rather than making shutdown hang forever.
 func (da *DesktopApp) Close() error {
 	// Stop background updates
 	if da.stopUpdate != nil {
 		da.stopOnce.Do(func() {
 			close(da.stopUpdate)
 		})
+	}
+
+	// JOIN: wait for the update loop goroutine to have fully returned
+	// before tearing down da.db / da.agenticTools below. updateDone is nil
+	// when startDataUpdates was never called (e.g. Close invoked on a
+	// partially-constructed app in a test), so this is a no-op in that case
+	// rather than a hang on a channel nothing will ever close.
+	if da.updateDone != nil {
+		select {
+		case <-da.updateDone:
+		case <-time.After(closeJoinTimeout):
+			log.Printf("Close: timed out after %s waiting for background update loop to stop; proceeding with teardown anyway", closeJoinTimeout)
+		}
 	}
 
 	// Release the agentic capability sub-managers (MCP child processes, LSP

@@ -153,12 +153,84 @@ func (c *DiscoveryClient) DiscoverWithTimeout(serviceName string, timeout time.D
 		}
 	}()
 
+	return c.discoverTimeoutSelect(resultChan, errorChan, time.After(timeout), serviceName, timeout)
+}
+
+// discoverTimeoutSelect implements DiscoverWithTimeout's select decision.
+// Extracted (identical behaviour) from DiscoverWithTimeout so the §11.4.115
+// regression guard (client_racefix_test.go) can force the race
+// deterministically -- pre-buffering a real result/error onto
+// resultChan/errorChan AND pre-firing timeoutC BEFORE this function (and its
+// internal select) is ever invoked, so both are provably ready at the exact
+// instant the select is evaluated, on every single trial, with zero timing
+// dependency.
+//
+// ANTI-BLUFF FIX (§11.4.115 unprioritized-select race, fourth confirmed
+// instance in this codebase this session, after
+// internal/persistence/store.go autoSaveTick, helix_agent's
+// lazy_provider.go createProviderWithContext, and the applications/{desktop,
+// harmony_os,aurora_os} background-update-loop teardown races): Go's select
+// chooses UNIFORMLY AT RANDOM among ALL cases ready at the instant it is
+// evaluated. A naked
+// `select { case result := <-resultChan: ...; case err := <-errorChan: ...;
+// case <-time.After(timeout): return timeout-error }`
+// can therefore discard a REAL discovered result (or a real discovery error)
+// in favour of a spurious timeout error, if the discovery goroutine's answer
+// becomes ready at (scheduler-)nearly the same instant the timeout fires --
+// a narrower, single-instant version of the loop-teardown races fixed
+// elsewhere in this batch (one decision, not a repeated select), but the same
+// random-pick hazard applies. The non-blocking priority pre-check below
+// closes the wide window: it runs FIRST, before the blocking select, and
+// returns the real answer immediately whenever it is already available.
+//
+// RESIDUAL WINDOW (closed by the inner re-check inside the timeout case):
+// the pre-check only proves the channels were empty at the instant it ran.
+// If the discovery goroutine's send lands in the gap BETWEEN the pre-check
+// returning and the blocking select below being evaluated -- and the timeout
+// has ALSO already fired -- both cases are ready when the blocking select
+// runs, and Go's uniform-random pick can still choose the timeout branch.
+// The inner re-check inside the timeout case catches this: any real
+// result/error observed there is returned instead of the timeout error.
+//
+// HONESTY (§11.4.6): this is the strongest ordering guarantee a plain
+// channel select can offer -- it is NOT a guarantee the race is closed to
+// zero width. Under Go's async goroutine preemption (>=1.14) this goroutine
+// can still be preempted between the final re-check and the `return` that
+// follows it while, in principle, an alternative outcome becomes available a
+// nanosecond later -- an unobservable, unavoidable race no select-based
+// implementation can provably eliminate. What IS delivered: a real
+// result/error observed at the final decision point ALWAYS wins over the
+// timeout; a genuinely-not-yet-produced answer at that same instant
+// legitimately times out.
+func (c *DiscoveryClient) discoverTimeoutSelect(resultChan <-chan *DiscoveryResult, errorChan <-chan error, timeoutC <-chan time.Time, serviceName string, timeout time.Duration) (*DiscoveryResult, error) {
+	// Priority pre-check: a real answer already sitting on either channel
+	// MUST win over a timeout -- even one that has also already fired.
 	select {
 	case result := <-resultChan:
 		return result, nil
 	case err := <-errorChan:
 		return nil, err
-	case <-time.After(timeout):
+	default:
+	}
+
+	select {
+	case result := <-resultChan:
+		return result, nil
+	case err := <-errorChan:
+		return nil, err
+	case <-timeoutC:
+		// Re-check: a result/error can become ready in the window between
+		// the pre-check above and this blocking select being evaluated,
+		// leaving the timeout branch "randomly" chosen even though a real
+		// answer now exists. Catch it here, non-blocking, before discarding
+		// it in favour of a spurious timeout error.
+		select {
+		case result := <-resultChan:
+			return result, nil
+		case err := <-errorChan:
+			return nil, err
+		default:
+		}
 		return nil, fmt.Errorf("%s", tr(context.Background(), "internal_discovery_timeout_after_for_service", map[string]any{"Timeout": timeout.String(), "ServiceName": serviceName}))
 	}
 }
