@@ -26,6 +26,7 @@ import (
 	"dev.helix.code/applications/harmony_os/i18n"
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
+	"dev.helix.code/internal/fyneui"
 	"dev.helix.code/internal/hardware"
 	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/monitoring"
@@ -180,6 +181,16 @@ type HarmonyApp struct {
 	// the teardown-race this closes.
 	updateDone chan struct{}
 
+	// monitorDone is closed by the monitorSystem goroutine immediately
+	// before it returns, and Cleanup() waits on it (bounded) the same way
+	// it waits on updateDone. Without the join, Cleanup() returning proved
+	// nothing about whether the monitor goroutine had actually stopped
+	// touching app.systemMonitor. nil until initializeHarmonyComponents
+	// spawns the monitor, so Cleanup() on a partially-constructed app
+	// (the minimal-construction pattern used by main_doubleclose_test.go
+	// and main_racefix_test.go) is a no-op rather than a hang.
+	monitorDone chan struct{}
+
 	// updateLoopTickRaceHook is a test seam (nil in production, never set
 	// outside _test.go files): when non-nil, updateLoopTick invokes it
 	// immediately after the non-blocking priority pre-check observes
@@ -248,8 +259,20 @@ type HarmonySystemAPI struct {
 // toolchain. See distributed.go for the canonical definitions plus
 // the round-67 HarmonyDistributedSDK injection point.
 
-// HarmonySystemMonitor monitors Harmony OS system resources and performance
+// HarmonySystemMonitor monitors Harmony OS system resources and performance.
+//
+// CONCURRENCY (§11.4.115): every field below except updateInterval is written
+// by the monitorSystem goroutine (updateSystemMetrics) and read by the UI
+// goroutine (createHarmonySystemTab), so all of them are guarded by mu. This
+// mirrors the sibling AuroraSystemMonitor, which already carried exactly such
+// a mutex; harmony_os was the odd one out and its fields raced.
+//
+// updateInterval is deliberately NOT guarded: it is set once during
+// initializeHarmonyComponents, before the monitor goroutine is spawned, and is
+// never written again — so it is published by the `go` statement's own
+// happens-before edge and only ever read afterwards.
 type HarmonySystemMonitor struct {
+	mu             sync.RWMutex
 	cpuUsage       float64
 	memoryUsage    float64
 	gpuUsage       float64
@@ -259,6 +282,20 @@ type HarmonySystemMonitor struct {
 	powerUsage     float64
 	updateInterval time.Duration
 	monitoring     bool
+}
+
+// setMonitoring records whether the system monitor is running.
+func (m *HarmonySystemMonitor) setMonitoring(v bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.monitoring = v
+}
+
+// isMonitoring reports whether the system monitor is running.
+func (m *HarmonySystemMonitor) isMonitoring() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.monitoring
 }
 
 // HarmonyResourceManager manages system resources and optimization
@@ -671,28 +708,77 @@ func (app *HarmonyApp) initializeHarmonyComponents() error {
 		},
 	}
 
-	// Start system monitoring
+	// Start system monitoring.
+	//
+	// JOIN (§11.4.115): monitorDone is created HERE, before the `go`
+	// statement, so Cleanup() can never observe a nil monitorDone for a
+	// monitor goroutine that is already running.
+	app.monitorDone = make(chan struct{})
 	go app.monitorSystem()
 
 	log.Println("Harmony OS features initialized successfully")
 	return nil
 }
 
-// monitorSystem continuously monitors system resources
+// monitorSystem continuously monitors system resources until the app's
+// stopUpdate channel is closed by Cleanup().
+//
+// LIFECYCLE + DATA-RACE FIX (§11.4.115). The loop used to be:
+//
+//	for app.systemMonitor.monitoring {
+//	    select {
+//	    case <-ticker.C:
+//	        app.updateSystemMetrics()
+//	    }
+//	}
+//
+// which carried TWO distinct defects.
+//
+//  1. DATA RACE (the reproducing failure). `monitoring` is a plain bool used
+//     as a cross-goroutine stop flag with NO synchronisation: this goroutine
+//     read it on every iteration while Cleanup() wrote `monitoring = false`
+//     from the caller's goroutine. `go test -race ./applications/harmony_os/`
+//     reported it deterministically as a read in monitorSystem against a
+//     write in Cleanup via TestCleanup. This is the SAME CLASS as the
+//     goroutine-lifecycle defect fixed in applications/desktop by commit
+//     e879702c, but NOT the same instance: desktop's tickers had no stop
+//     check at all (`for range ticker.C`), whereas this loop had one and
+//     implemented it with an unsynchronised bool. The stop signal is now the
+//     app's existing stopUpdate channel, which carries a proper
+//     happens-before edge, via the shared fyneui.TickOrStop primitive.
+//
+//  2. UNSTOPPABLE FOR A FULL TICK. The `select` had a single case, so the
+//     flag was only re-read after ticker.C fired — teardown lagged by up to
+//     one whole updateInterval (5s in production). TickOrStop selects on the
+//     stop channel too, so a close is observed immediately, and its priority
+//     pre-check guarantees an already-closed stop never loses to a pending
+//     tick (Go's select picks uniformly at random among ready cases).
+//
+// `monitoring` survives as the monitor's published STATUS (asserted by
+// TestCleanup); it is no longer the loop's control variable, and it is now
+// accessed only through the mutex-guarded accessors.
 func (app *HarmonyApp) monitorSystem() {
+	// JOIN: closed immediately before returning so Cleanup() can prove this
+	// goroutine has stopped touching app.systemMonitor before it returns.
+	defer close(app.monitorDone)
+
 	ticker := time.NewTicker(app.systemMonitor.updateInterval)
 	defer ticker.Stop()
 
-	for app.systemMonitor.monitoring {
-		select {
-		case <-ticker.C:
-			// Update system metrics
-			app.updateSystemMetrics()
-		}
+	for fyneui.TickOrStop(ticker.C, app.stopUpdate) {
+		// Update system metrics
+		app.updateSystemMetrics()
 	}
 }
 
-// updateSystemMetrics updates current system metrics from real system data
+// updateSystemMetrics updates current system metrics from real system data.
+//
+// DATA-RACE FIX (§11.4.115): this runs on the monitorSystem goroutine while
+// createHarmonySystemTab reads the same fields on the UI goroutine, so every
+// store below is made under systemMonitor.mu. The formatted log line at the
+// end reads back COPIES captured inside the critical section rather than
+// re-reading the fields after unlocking, which would reintroduce the race it
+// is meant to close.
 func (app *HarmonyApp) updateSystemMetrics() {
 	// Get memory statistics from runtime
 	var memStats runtime.MemStats
@@ -709,10 +795,13 @@ func (app *HarmonyApp) updateSystemMetrics() {
 	if estimatedCPUUsage > 100 {
 		estimatedCPUUsage = 100
 	}
+	memoryUsageMB := float64(memStats.Alloc) / (1024 * 1024)
+
+	app.systemMonitor.mu.Lock()
 	app.systemMonitor.cpuUsage = estimatedCPUUsage
 
 	// Memory usage from runtime (convert to MB)
-	app.systemMonitor.memoryUsage = float64(memStats.Alloc) / (1024 * 1024)
+	app.systemMonitor.memoryUsage = memoryUsageMB
 
 	// GPU usage - would need platform-specific implementation
 	// For Harmony OS, this would use HarmonyOS NPU/GPU APIs
@@ -732,11 +821,13 @@ func (app *HarmonyApp) updateSystemMetrics() {
 	// Power usage - would need platform-specific implementation
 	// For Harmony OS, this would use power management APIs
 	app.systemMonitor.powerUsage = 0
+	app.systemMonitor.mu.Unlock()
 
-	// Log metrics for debugging (optional)
+	// Log metrics for debugging (optional). Uses the locals captured above,
+	// NOT a re-read of the (now unlocked) fields.
 	log.Printf("System metrics updated - CPU: %.1f%%, Memory: %.1fMB, Goroutines: %d, CPUs: %d, Arch: %s",
-		app.systemMonitor.cpuUsage,
-		app.systemMonitor.memoryUsage,
+		estimatedCPUUsage,
+		memoryUsageMB,
 		numGoroutines,
 		profile.CPU.Cores,
 		profile.OS.Arch)
@@ -1547,11 +1638,25 @@ func (app *HarmonyApp) createHarmonySystemTab() fyne.CanvasObject {
 	// System metrics
 	metricsLabel := widget.NewLabel(app.tr("harmony_os_gui_label_system_metrics", nil))
 
-	cpuLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_cpu_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", app.systemMonitor.cpuUsage)}))
-	memLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_memory_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.0f", app.systemMonitor.memoryUsage)}))
-	gpuLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_gpu_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", app.systemMonitor.gpuUsage)}))
-	tempLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_temperature_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", app.systemMonitor.temperature)}))
-	powerLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_power_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", app.systemMonitor.powerUsage)}))
+	// DATA-RACE FIX (§11.4.115): these five fields are written by the
+	// monitorSystem goroutine (updateSystemMetrics), so snapshot them under
+	// the read lock rather than dereferencing them inline five times. The
+	// snapshot also makes the five labels mutually consistent — inline reads
+	// could straddle a metrics update and paint values from two different
+	// sampling rounds.
+	app.systemMonitor.mu.RLock()
+	cpuUsage := app.systemMonitor.cpuUsage
+	memoryUsage := app.systemMonitor.memoryUsage
+	gpuUsage := app.systemMonitor.gpuUsage
+	temperature := app.systemMonitor.temperature
+	powerUsage := app.systemMonitor.powerUsage
+	app.systemMonitor.mu.RUnlock()
+
+	cpuLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_cpu_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", cpuUsage)}))
+	memLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_memory_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.0f", memoryUsage)}))
+	gpuLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_gpu_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", gpuUsage)}))
+	tempLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_temperature_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", temperature)}))
+	powerLabel := widget.NewLabel(app.tr("harmony_os_gui_metric_power_usage_fmt", map[string]any{"Value": fmt.Sprintf("%.1f", powerUsage)}))
 
 	metricsCard := widget.NewCard(
 		app.tr("harmony_os_gui_card_monitoring_title", nil),
@@ -1760,8 +1865,27 @@ func (app *HarmonyApp) Cleanup() {
 		}
 	}
 
-	// Stop system monitoring
-	app.systemMonitor.monitoring = false
+	// JOIN: wait for the system-monitor goroutine to have fully returned.
+	// It observes the same stopUpdate close above. monitorDone is nil when
+	// initializeHarmonyComponents never ran (the minimal-construction
+	// pattern used by main_doubleclose_test.go / main_racefix_test.go), so
+	// this is a no-op there rather than a hang.
+	if app.monitorDone != nil {
+		select {
+		case <-app.monitorDone:
+		case <-time.After(closeJoinTimeout):
+			log.Printf("Cleanup: timed out after %s waiting for the system monitor to stop; proceeding with teardown anyway", closeJoinTimeout)
+		}
+	}
+
+	// Stop system monitoring.
+	//
+	// DATA-RACE FIX (§11.4.115): this was a bare `monitoring = false` store
+	// racing monitorSystem's unsynchronised loop-condition read — the defect
+	// the race detector reported. monitorSystem no longer reads the flag at
+	// all (it stops on stopUpdate), and the flag itself is now mutex-guarded,
+	// so the status stays truthful for TestCleanup without racing anyone.
+	app.systemMonitor.setMonitoring(false)
 
 	// Stop distributed engine
 	if app.harmonyIntegration != nil && app.harmonyIntegration.distributedEngine != nil {

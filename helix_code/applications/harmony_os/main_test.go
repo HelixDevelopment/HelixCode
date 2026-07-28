@@ -260,6 +260,9 @@ func TestCleanup(t *testing.T) {
 		app.Cleanup()
 	})
 
-	// Verify monitoring is stopped
-	assert.False(t, app.systemMonitor.monitoring)
+	// Verify monitoring is stopped. Read through the accessor: the flag is
+	// mutex-guarded since the §11.4.115 monitorSystem lifecycle fix, and the
+	// bare field read this replaced was the READ half of the data race that
+	// fix closed.
+	assert.False(t, app.systemMonitor.isMonitoring())
 }
