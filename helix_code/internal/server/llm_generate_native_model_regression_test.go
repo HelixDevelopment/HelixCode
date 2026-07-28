@@ -24,27 +24,23 @@ import (
 // model was told "default" back — the identical CONST-036/037 defect on a
 // third client-visible JSON surface.
 //
-//   - RED_MODE=1 replicates the pre-fix response construction and asserts
-//     the requested alias is echoed back unchanged (the defect).
-//   - RED_MODE=0 (default) drives the REAL generateLLM handler and asserts
-//     the response's "model" field carries the provider's ACTUAL served
-//     model, never the requested alias.
+// Both polarities drive the SAME real handler over the SAME fixture — only
+// the final assertion flips (§11.4.115 one-source-two-roles):
+//
+//   - RED_MODE=1 asserts the response's "model" is the REQUESTED alias. That
+//     holds on a pre-fix artifact (where generateLLM emitted
+//     `"model": llmReq.Model`), so the test PASSES there and reproduces the
+//     defect; on the fixed artifact it FAILS, and that failure is the proof
+//     the fix is genuinely present in the binary under test.
+//   - RED_MODE=0 (default) asserts the response's "model" carries the
+//     provider's ACTUAL served model, never the requested alias.
+//
+// The RED branch deliberately does NOT reconstruct the pre-fix expression
+// locally: a local replica would assert against a copy of the old code and
+// pass on every artifact ever built, proving nothing (§11.4.1 bluff-gate).
 func TestGenerateLLM_ResponseModel_ServedNotRequested(t *testing.T) {
 	const requestedAlias = "default"
 	const servedModel = "/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"
-
-	if redMode(t) {
-		// Faithful replica of the pre-fix response construction: the
-		// "model" field was llmReq.Model verbatim, never resp.Model, so the
-		// requested alias always comes back unchanged regardless of what
-		// actually served the request.
-		got := requestedAlias // pre-fix: gin.H{..., "model": llmReq.Model, ...}
-		require.Equal(t, requestedAlias, got,
-			"RED expectation: pre-fix code echoes the requested alias back unchanged — the defect")
-		t.Logf("RED reproduced: pre-fix response would report requested alias %q instead of served model %q",
-			got, servedModel)
-		return
-	}
 
 	rec := &modelRecordingProvider{
 		name:      "llamacpp",
@@ -58,8 +54,20 @@ func TestGenerateLLM_ResponseModel_ServedNotRequested(t *testing.T) {
 	w, body := postJSON(t, "/api/v1/llm/generate", srv.generateLLM,
 		`{"prompt":"hi","model":"`+requestedAlias+`"}`)
 
-	require.Equal(t, http.StatusOK, w.Code, "GREEN: generate must succeed; body=%v", body)
+	require.Equal(t, http.StatusOK, w.Code, "generate must succeed; body=%v", body)
 	assert.Equal(t, "success", body["status"])
+	require.Equal(t, requestedAlias, rec.gotModel,
+		"fixture sanity: the handler must have asked the provider for the requested alias")
+
+	if redMode(t) {
+		assert.Equal(t, requestedAlias, body["model"],
+			"RED expectation: the PRE-FIX handler echoes the requested alias %q back unchanged — the defect. "+
+				"On the FIXED artifact this assertion FAILS (the response now carries the served model %q), "+
+				"and that failure is the proof the fix reached the binary.",
+			requestedAlias, servedModel)
+		return
+	}
+
 	assert.Equal(t, servedModel, body["model"],
 		"GREEN: response 'model' must report the model the provider ACTUALLY served (%q), never the requested alias (%q) — CONST-036/037",
 		servedModel, requestedAlias)
