@@ -857,6 +857,20 @@ func TestRound53_ProvidersWired(t *testing.T) {
 // scheme) and a port. NewLlamaCPPProvider's Generate method composes
 // the URL as `serverHost:serverPort/...`, so we feed it ServerHost
 // "http://127.0.0.1" and ServerPort 12345 separately.
+//
+// IPv6 correctness (regression guard: TestMustSplitHostPort_BracketsIPv6).
+// httptest.NewServer binds 127.0.0.1:0 and, when that bind fails (e.g. the
+// host's IPv4 ephemeral range is exhausted), falls back to tcp6 "[::1]:0"
+// (see net/http/httptest.newLocalListener). server.URL is then
+// "http://[::1]:44047". net.SplitHostPort STRIPS the brackets from an IPv6
+// literal ("[::1]" -> "::1"), so re-joining with plain concatenation yields
+// "http://::1", and the provider's `fmt.Sprintf("%s:%d", host, port)`
+// composition produces "http://::1:44047" — which url.Parse rejects with
+// `invalid port "::1:44047" after host`, failing the test for an
+// environmental reason unrelated to the behaviour under test.
+// net.JoinHostPort re-applies the brackets exactly when the host is an IPv6
+// literal; the empty port argument leaves a trailing ":" that we trim, so
+// the caller gets a host the provider can safely append ":<port>" to.
 func mustSplitHostPort(t *testing.T, rawURL string) (string, int) {
 	t.Helper()
 	u, err := url.Parse(rawURL)
@@ -866,7 +880,53 @@ func mustSplitHostPort(t *testing.T, rawURL string) (string, int) {
 	port := 0
 	_, scanErr := fmt.Sscanf(portStr, "%d", &port)
 	require.NoError(t, scanErr)
-	return u.Scheme + "://" + host, port
+	hostForURL := strings.TrimSuffix(net.JoinHostPort(host, ""), ":")
+	return u.Scheme + "://" + hostForURL, port
+}
+
+// TestMustSplitHostPort_BracketsIPv6 is the permanent regression guard for
+// the IPv6-bracket defect that made the round-53 Llama.cpp tests fail in the
+// 2026-07-27 full-retest sweep with:
+//
+//	failed to create request: parse "http://::1:44047/v1/completions": invalid port "::1:44047" after host
+//
+// It is deterministic and needs no network: it drives the exact chain the
+// provider drives — mustSplitHostPort -> fmt.Sprintf("%s:%d", host, port) ->
+// http.NewRequestWithContext — for both an IPv4 and an IPv6 httptest-shaped
+// URL, and asserts the composed URL is parseable and round-trips to the
+// original authority. Reverting mustSplitHostPort to plain concatenation
+// makes the IPv6 case FAIL here.
+func TestMustSplitHostPort_BracketsIPv6(t *testing.T) {
+	cases := []struct {
+		name          string
+		serverURL     string
+		wantHost      string
+		wantAuthority string
+	}{
+		{"ipv4", "http://127.0.0.1:44047", "http://127.0.0.1", "127.0.0.1:44047"},
+		{"ipv6_loopback", "http://[::1]:44047", "http://[::1]", "[::1]:44047"},
+		{"ipv6_full", "http://[fe80::1]:8080", "http://[fe80::1]", "[fe80::1]:8080"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			host, port := mustSplitHostPort(t, tc.serverURL)
+			assert.Equal(t, tc.wantHost, host,
+				"IPv6 literals MUST keep their brackets (net.JoinHostPort)")
+
+			// Exact composition performed by LlamaCPPProvider.Generate and
+			// GenerateStream.
+			baseURL := fmt.Sprintf("%s:%d", host, port)
+			req, err := http.NewRequestWithContext(
+				context.Background(), "POST", baseURL+"/v1/completions", nil)
+			require.NoError(t, err,
+				"composed provider URL MUST be parseable; unbracketed IPv6 produces "+
+					`invalid port "…" after host`)
+			require.NotNil(t, req,
+				"a nil *http.Request here is what panicked GenerateStream in the sweep")
+			assert.Equal(t, tc.wantAuthority, req.URL.Host,
+				"composed URL MUST round-trip to the original server authority")
+		})
+	}
 }
 
 // silence the unused-import linter when no bufio reference survives a
