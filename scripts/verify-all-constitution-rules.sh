@@ -601,6 +601,38 @@ if want_gate G17; then
 fi
 
 # ---------------------------------------------------------------------------
+# G18 — §11.4.12/§11.4.120 Fixed-summary item visibility
+#
+# CM-FIXED-SUMMARY-ITEM-VISIBILITY (formerly CM-FIXED-H2-PIPE-ROW-PARITY).
+# Asserts every Fixed.md closure — H2 section, ticket-id pipe row, and every
+# Obsolete item — is present in Fixed_Summary.md. Ids are bounded-matched so
+# ATM-97 is not satisfied by ATM-970.
+#
+# Why it was reconciled rather than retired: the OLD invariant demanded both
+# representations per item, which was a proxy for the pipe-table-only legacy
+# generator. That generator was superseded (it now exits 2 and writes nothing)
+# by a representation-agnostic DB-derived renderer, so the proxy went stale
+# while its PURPOSE — no closed item missing from the summary — went unguarded.
+# Measured against 0a4df699, the commit that actually corrupted the summary and
+# dropped 156 items: the OLD invariant flagged 0 visibility failures (its exit 1
+# was pipe-row noise), the reconciled one flags 246. A permanently-red gate does
+# not merely fail to help — it MASKS the real failure (§11.4.120).
+#
+# Registered here because an unregistered gate enforces nothing; this is the
+# second gate found standalone-only today (§11.4.227).
+# ---------------------------------------------------------------------------
+if want_gate G18; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G18 — §11.4.12/§11.4.120 Fixed-summary item visibility (CM-FIXED-SUMMARY-ITEM-VISIBILITY)"
+    if bash "$ROOT/scripts/gates/fixed_h2_pipe_row_parity_gate.sh" >/tmp/g18-fsv.out 2>&1; then
+        gate_pass G18 "$(grep -oE 'checked [0-9]+ H2 closure section\(s\), [0-9]+ ticket-id pipe row\(s\), [0-9]+ Obsolete item\(s\)' /tmp/g18-fsv.out | tail -1) — all present in Fixed_Summary.md"
+    else
+        gate_fail G18 "a Fixed.md closure is MISSING from Fixed_Summary.md — a closed item is invisible in the summary (see /tmp/g18-fsv.out)" \
+            "$(tail -6 /tmp/g18-fsv.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
