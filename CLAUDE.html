@@ -1393,11 +1393,13 @@ drawn from this 3-element closed map:</p>
 <p>The <code>(→ Fixed.md)</code> suffix is preserved across all three so
 the existing migration-discipline tooling (atomic Issues.md → Fixed.md
 move per §11.4.19) keeps working without per-Type branching. Generators
-(<code>generate_issues_summary.sh</code>,
-<code>generate_fixed_summary.sh</code>, the §11.4.23 colorizer) MUST
-treat the three terminal values as semantically equivalent (all “closed,
-positive evidence captured”) while preserving the literal in the emitted
-document.</p>
+(in HelixCode: the §11.4.93 <code>workable-items export</code> DB
+exporter — which SUPERSEDES the markdown-derived
+<code>generate_issues_summary.sh</code> /
+<code>generate_fixed_summary.sh</code>, both of which now REFUSE to run
+— and the §11.4.23 colorizer) MUST treat the three terminal values as
+semantically equivalent (all “closed, positive evidence captured”) while
+preserving the literal in the emitted document.</p>
 <p>Closing a <code>Feature</code> with <code>Fixed (→ Fixed.md)</code>
 or a <code>Task</code> with <code>Implemented (→ Fixed.md)</code> is a
 CONST-057 violation. Gate <code>CM-CLOSURE-VOCAB-TYPE-AWARE</code> walks
@@ -2490,10 +2492,13 @@ PROBLEM/GOAL. Forbidden one-liner anti-patterns: section labels
 (<code>Composes with</code>, <code>Closure criteria</code>,
 <code>Fix direction</code>, etc.); bare metadata fragments
 (<code>Critical</code>, <code>Bug</code>, <code>In progress</code>,
-etc.); section-marker echoes; a §-letter alone. Generators
-(<code>generate_issues_summary.sh</code> /
-<code>generate_fixed_summary.sh</code> /
-<code>update_readme_doc_links.sh</code> /
+etc.); section-marker echoes; a §-letter alone. Generators (in
+HelixCode: the §11.4.93 <code>workable-items export</code> DB exporter —
+which renders BOTH tracker summaries from the SQLite
+single-source-of-truth <code>docs/workable_items.db</code>, and which
+SUPERSEDES the markdown-derived <code>generate_issues_summary.sh</code>
+/ <code>generate_fixed_summary.sh</code>, both of which now REFUSE to
+run; plus <code>update_readme_doc_links.sh</code> /
 <code>generate_status_summary.sh</code>) MUST extract from the H1/H2
 heading line per the §11.4.54 ATM-NNN convention, NEVER from arbitrary
 downstream text, and MUST refuse anti-pattern rows — emitting a
@@ -6735,600 +6740,28 @@ to EVERY agent/subagent label + operator-facing reference) / §11.4.29 /
 §11.4.119 / §11.4.116 / §11.4.147. Propagation gate
 <code>CM-COVENANT-114-182-PROPAGATION</code> (literal
 <code>11.4.182</code>) + recommended gate
-<code>CM-TRACK-BRANCH-LABEL</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.182. Non-compliance is a release blocker. No escape hatch — no
-<code>--skip-track-label</code>, <code>--unlabeled-agent-OK</code>,
-<code>--bare-work-stream-reference</code>,
-<code>--no-track-branch-prefix</code>, <code>--label-from-memory</code>
-flag.</p>
-<p><strong>§11.4.166 — REPEALED (operator decision,
-2026-06-22).</strong> The Universal Semgrep static-analysis mandate is
-REPEALED — Semgrep is NO LONGER a mandatory requirement for projects
-governed by this Constitution. Static analysis / security scanning
-remains <em>encouraged</em> and may be re-adopted per project, but is
-NOT mandated, NOT a release blocker, NOT cascaded. Removed with the
-repeal: <code>scripts/semgrep/</code>,
-<code>scripts/hooks/semgrep_precommit.sh</code>, the
-<code>submodules/semgrep</code> submodule, the MCP/pre-commit/PATH
-wiring, the <code>.docs_chain/contexts/semgrep_status.yaml</code>
-context, and the <code>CM-COVENANT-114-166-PROPAGATION</code> /
-<code>CM-SEMGREP-WIRED</code> gates. Anchor number <code>11.4.166</code>
-is RETIRED (not reused); repealed before full fleet cascade — consuming
-projects never received it as a binding mandate. <strong>Canonical
-authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.166.</p>
-<p><strong>§11.4.167 — Big-work-item feature work-stream lifecycle (own
-CoW project copy + own branch/tags + per-feature builds,
-no-merge-until-approved, trunk-merged-into-every-stream) (User mandate,
-2026-06-23).</strong> Every BIG work item (new feature OR drastic/large
-fix) MUST be developed as its own isolated feature work-stream (ALL
-hold): (A) one big item = one feature work-stream in a sibling project
-copy (<code>&lt;project&gt;_&lt;slug&gt;</code>, slug lowercase
-§11.4.29; small changes stay on the trunk); (B) disk-feasible
-duplication MANDATORY (reflink/CoW clone on btrfs/XFS/ZFS/APFS, or
-<code>git worktree</code> + externalized build output) — a naive full
-deep copy / <code>git clone</code> per stream that would exhaust free
-space is FORBIDDEN, ~0-disk cost verified as captured evidence
-(§11.4.69/§11.4.6); per-stream <code>out/</code>, one shared compiler
-cache; (C) own <code>feature/&lt;slug&gt;</code> branch + own feature
-tags (<code>&lt;base&gt;-feat-&lt;slug&gt;[-&lt;iter&gt;]</code>,
-greppable §11.4.151), NEVER merged to trunk until the operator MANUALLY
-approves after §11.4.40 GREEN + §11.4.41 merge-first + §11.4.113
-ff-only; (D) trunk merged INTO every live stream frequently (≥ after
-every trunk tag / daily, <code>git merge</code> never rebase) or flagged
-stale; (E) feature branch+tag cascades to EVERY touched submodule at the
-same HEAD, ff-only-pushed, untouched submodules stay trunk-pinned; (F)
-single-builder FIFO build queue + finite-device exclusive test queue
-(§11.4.119 / §11.4.58 L1 / §12.7 / §12.8), GC idle streams’ regenerable
-output (§11.4.77); (G) every change crosses the full review +
-impact-research + anti-bluff gauntlet (§11.4.142 / §11.4.125 / §11.4.134
-/ §11.4.145) — a stream is NOT a quality carve-out; (H) resumable,
-data-safe lifecycle via a stream registry (§11.4.116 / §11.4.147),
-atomic-on-success clone, §9.2 pre-op backup on retire (unmerged work
-blocks auto-deletion), §12 / §12.6 bounds. Honest boundary (§11.4.6):
-guarantees isolation / disk-feasibility / greppable identity /
-controlled trunk↔︎feature merge — NOT any stream’s correctness (still
-§11.4.108 + §11.4.40). Classification: universal (§11.4.17). Propagation
-gate <code>CM-COVENANT-114-167-PROPAGATION</code> (literal
-<code>11.4.167</code>) + recommended gates
-<code>CM-FEATURE-WORKSTREAM-COW-CLONE</code> /
-<code>CM-FEATURE-WORKSTREAM-NO-MERGE-UNTIL-APPROVED</code> /
-<code>CM-FEATURE-WORKSTREAM-TRUNK-SYNC-CADENCE</code> /
-<code>CM-FEATURE-WORKSTREAM-SUBMODULE-CASCADE</code> + paired §1.1
-mutations. <strong>Canonical authority:</strong> constitution submodule
-<a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.167. Non-compliance is a release blocker. No escape hatch — no
-<code>--full-clone-per-feature</code>, <code>--deep-copy-stream</code>,
-<code>--skip-cow-clone</code>,
-<code>--merge-feature-without-approval</code>,
-<code>--no-trunk-sync</code>, <code>--skip-submodule-cascade</code>,
-<code>--unbounded-parallel-builds</code>,
-<code>--shared-device-no-lock</code>,
-<code>--retire-unmerged-stream</code>,
-<code>--feature-stream-quality-carveout</code> flag.</p>
-<p><strong>§11.4.168 — Exported-document independent content + textual +
-full-visual validation mandate (User mandate, 2026-06-23).</strong>
-Forensic FACT (2026-06-23): a “green” Mermaid export shipped RAW
-gantt-diagram source
-(<code>gantt</code>/<code>title</code>/<code>dateFormat</code>/<code>section</code>/<code>:done,</code>)
-as plain body text into user-facing PDFs; validation grepped the HTML
-for <code>class=&quot;mermaid&quot;</code> but NEVER opened the exported PDF — the
-§11.4.108 SOURCE→ARTIFACT gap at the doc-export layer. Every
-generated/exported document (HTML/PDF/DOCX, §11.4.65 scope + §11.4.153
-four-format set) MUST pass INDEPENDENT validation by a reviewer
-structurally separate from the generator (§11.4.70 / §11.4.20 /
-§11.4.142; NEVER generator self-check, §11.4.92 precedes never
-satisfies), run on BOTH source Markdown AND every exported artifact,
-across THREE layers ALL of which MUST hold: (1) CONTENT — nothing
-dropped/truncated/reordered/garbled, every
-section/table/list/figure/link present + complete (the §11.4.5/§11.4.69
-quality bar, not presence-only); (2) TEXTUAL — NO raw markup / diagram
-source
-(<code>mermaid</code>/<code>gantt</code>/<code>graph</code>/<code>flowchart</code>/<code>sequenceDiagram</code>/…
-/<code>:done,</code> task lines) / unrendered code-fence body leaking as
-readable text, detected by reading the exported artifact as text
-(<code>pdftotext</code> / rendered-DOM / DOCX-text); (3) FULL VISUAL —
-diagrams render as IMAGES not source, layout intact (no
-overlap/clip/cut-off/collapsed/blank), verified by RENDERING
-(<code>pdftotext</code> + <code>pdfimages</code> image-enumeration +
-<code>pdftoppm</code>→OCR §11.4.117 / §11.4.107(12) confidence + ROI).
-(4) Anti-bluff — validator self-validated golden-good/golden-bad
-(§11.4.107(10): a golden-bad seeded with raw gantt body text + a
-truncated table MUST FAIL), iterates to a clean GO per §11.4.134. Honest
-boundary (§11.4.6): confirms the exported artifact a reader opens is
-faithful + readable + visually-rendered — NOT that source content is
-itself correct, and does NOT replace the §11.4.65 mtime-parity freshness
-gate (§11.4.168 is the READABILITY/FIDELITY layer the mtime gate cannot
-see). Classification: universal (§11.4.17). Propagation gate
-<code>CM-COVENANT-114-168-PROPAGATION</code> (literal
-<code>11.4.168</code>) + recommended gate
-<code>CM-EXPORTED-DOC-VISUALLY-VALIDATED</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.168. Non-compliance is a release blocker. No escape hatch — no
-<code>--skip-visual-validation</code>,
-<code>--raw-source-in-pdf-ok</code>,
-<code>--textual-check-suffices</code>,
-<code>--self-validate-export</code>,
-<code>--diagram-source-as-text-ok</code> flag.</p>
-<p><strong>§11.4.169 — Mandatory comprehensive test-type coverage with
-anti-bluff captured evidence (User mandate, 2026-06-25).</strong>
-Verbatim (2026-06-25): “MANDATORY test types EACH project MUST have with
-coverage aiming to 100%… unit, integration, e2e, full automation,
-challenges, helix qa, ddos, security, stress and chaos, concurrency
-(atomicy), race conditions or deadlocks, memory, bechmarking.” Every
-project MUST be covered by this CLOSED ENUMERATED test-type set, each
-driven to as-close-to-100% as the domain permits, every PASS backed by
-rock-solid captured PHYSICAL evidence (§11.4.5 / §11.4.69 / §11.4.107),
-zero false results / zero bluff (§11.4 / §11.4.1 / §11.4.6) — the strict
-enumerated expansion of §11.4.27. The set (each REQUIRED where the
-domain warrants; only an honest §11.4.3 SKIP-with-reason for
-genuinely-absent topology/hardware/credential is permitted, NEVER a
-silent gap): (1) Unit (ONLY layer mocks/stubs/fakes permitted
-§11.4.27(A)); (2) Integration (real components, infra on-demand via the
-containers submodule §11.4.76 / §11.4.161 rootless); (3) e2e; (4)
-Full-automation (autonomous, re-runnable, no manual intervention
-§11.4.25 / §11.4.52 / §11.4.98, deterministic §11.4.50); (5) Challenges
-(<code>vasic-digital/challenges</code> anti-bluff banks); (6) HelixQA
-(<code>helix_qa</code> submodule test banks + fully-autonomous QA
-sessions); (7) DDoS / load-flood; (8) Security (authn/authz,
-injection/taint, secret-leak §11.4.10, crypto, CVEs, default-deny;
-security submodule); (9) Stress + Chaos (§11.4.85); (10) Concurrency /
-atomicity; (11) Race-condition / deadlock (race detector + lock-order);
-(12) Memory (leak census / soak, peak-RSS ceilings); (13) Benchmarking /
-performance (p50/p95/p99 vs baseline). Four-layer §11.4.4(b) enforcement
-of the suite + per-type paired §1.1 mutation; the coverage ledger
-(§11.4.25 / §11.4.52) classifies every feature × type × evidence-state —
-a missing required type or an <code>OPERATOR_ATTENDED_ONLY</code> row is
-a release blocker until promoted or honestly SKIP-justified.
-Classification: universal (§11.4.17). Propagation gate
-<code>CM-COVENANT-114-169-PROPAGATION</code> (literal
-<code>11.4.169</code>) + recommended gate
-<code>CM-MANDATORY-TEST-TYPES-COVERED</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.169. Non-compliance is a release blocker. No escape hatch — no
-<code>--skip-test-type</code>, <code>--partial-coverage-ok</code>,
-<code>--evidence-optional</code>,
-<code>--challenges-not-applicable</code>, <code>--skip-helixqa</code>,
-<code>--no-chaos</code>, <code>--no-ddos</code>,
-<code>--skip-memory-test</code>, <code>--skip-race-detector</code>,
-<code>--bench-optional</code> flag.</p>
-<p><strong>§11.4.170 — Device-independent host-side rendered-UI
-visual-proof mandate (User mandate, 2026-06-25).</strong> Every change
-to any user-facing UI surface (screen/component/view/widget/layout/theme
-on any platform — Android-Compose, iOS-SwiftUI/UIKit, web, desktop, TUI)
-MUST be proven by DEVICE-INDEPENDENT host-side RENDERED PIXELS before it
-may be claimed correct: the actual component rendered to a PNG ON THE
-HOST (NO device, NO emulator, NO running app;
-Compose→Roborazzi/Paparazzi, web→Playwright/Storybook,
-SwiftUI→snapshot-testing, equiv per stack) for EVERY
-<code>screen × state × {light,dark}</code> theme, dual-validated by (i)
-golden image-diff AND (ii) an OCR/vision oracle reading rendered text +
-labels + control bounds (NO overlap / label-over-label / clipping /
-off-screen / collapsed-or-giant-unbounded widget — the §11.4.162 layout
-invariants PROVEN on real pixels). Forbidden bluff (forensic FACT
-2026-06-25): UI “validated” by VALUE/token/property-equality unit tests
-(a hex colour string, an sp/dp integer, a design-token field == a
-constant) that NEVER RENDERED A PIXEL stayed GREEN while the operator
-opened a broken giant-button screen — value/token/property-equality UI
-tests are FORBIDDEN as the PROOF a UI is correct (may SUPPLEMENT, NEVER
-SUBSTITUTE the rendered-pixel proof); a green UI suite with no
-rendered-pixel artefact for the changed surface is a §11.4 PASS-bluff.
-ALL hold: rendered-pixel proof per screen×state×theme, run on EVERY
-commit with zero hardware; dual oracle both required, each PASS citing
-the captured PNG + diff (§11.4.5/§11.4.69); a value-only UI claim is a
-§11.4.4 finding → render → fix → re-render GREEN; self-validated
-analyzer golden-good/golden-bad (§11.4.107(10)), thresholds on the
-project’s OWN fixtures (§11.4.6); “device offline” is NEVER a valid skip
-(host-render IS the device-independent path); genuine
-no-host-render-harness ⇒ honest §11.4.3 SKIP + tracked migration item,
-never a value-only fallback. Honest boundary (§11.4.6): host-render
-proves the component renders correctly device-independently on every
-commit — it COMPLEMENTS not replaces
-§11.4.153/§11.4.158/§11.4.159/§11.4.160 live-device recording +
-§11.4.162 OpenDesign tokens + §11.4.168 exported-doc visual validation.
-Classification: universal (§11.4.17). Propagation gate
-<code>CM-COVENANT-114-170-PROPAGATION</code> (literal
-<code>11.4.170</code>) + recommended gate
-<code>CM-HOST-RENDERED-UI-VISUAL-PROOF</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.170. Non-compliance is a release blocker. No escape hatch — no
-<code>--value-assertion-proves-ui</code>,
-<code>--skip-rendered-pixel-proof</code>,
-<code>--token-equality-suffices</code>,
-<code>--device-offline-skip-visual</code>,
-<code>--single-theme-only</code>,
-<code>--unvalidated-image-diff-OK</code>,
-<code>--no-ocr-layout-oracle</code> flag.</p>
-<p><strong>§11.4.171 — Mandatory comprehensive human-readable
-workable-item descriptions (User mandate, 2026-06-29).</strong> Every
-workable item (ATM-NNN ticket) in the project’s workable-items database,
-Issues.md, Fixed.md, Issues_Summary.md, Fixed_Summary.md, and ALL
-derived documents MUST carry a comprehensive human-readable description
-in plain, non-technical language suitable for non-developers (project
-managers, stakeholders, team leads, business partners) — ≥ 5-7 sentences
-covering (a) WHAT it is (feature/fix/task in simple terms); (b) WHY it
-matters (user/business value); (c) HOW it works (mechanism, no code
-references); (d) WHO benefits; (e) the expected measurable outcome.
-Jargon, unexpanded acronyms, code references, and implementation details
-are FORBIDDEN as the primary explanation (technical detail may appear as
-supplementary context AFTER the plain-language explanation). An item
-without a human-readable description is a §11.4 documentation-layer
-violation. The <code>description</code> column in the SQLite DB
-(<code>docs/workable_items.db</code>) is the SINGLE SOURCE OF TRUTH; all
-derived documents carry the SAME description text. Gate
-<code>CM-HUMAN-READABLE-DESCRIPTION</code> (when implemented) asserts
-every item’s <code>description</code> exists, non-empty, ≥ 50
-characters; paired §1.1 mutation strips a description → gate FAILs.
-Classification: universal (§11.4.17). Composes §11.4.15 / §11.4.16 /
-§11.4.19 / §11.4.91 / §11.4.93 / §11.4.148 / §11.4.65. Propagation gate
-<code>CM-COVENANT-114-171-PROPAGATION</code> (literal
-<code>11.4.171</code>) + paired §1.1 mutation. <strong>Canonical
-authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.171. Non-compliance is a release blocker.</p>
-<p><strong>§11.4.172 — Mandatory production-readiness planning with
-realistic timeline projection (User mandate, 2026-06-29).</strong> Every
-project under this Constitution MUST maintain a living
-production-readiness planning document that: (a) provides REALISTIC
-timeline projections for all milestones (MVP, beta, production-ready)
-based on actual development velocity data (items completed per week,
-reopening rate, blocking dependencies); (b) identifies ALL danger zones,
-weaknesses, and risk areas with mitigation strategies; (c) accounts for
-HW-delivery timelines, licensing delays, and external-dependency risks;
-(d) defines the critical path and which items can slip without affecting
-MVP; (e) includes workstation/build-capacity analysis + optimization
-recommendations; (f) is updated at least monthly or whenever the item
-count changes by ≥ 10%; (g) is cross-referenced against the
-workable-items database for accuracy. The document lives at
-<code>docs/research/production_planning_&lt;YYYYMMDD&gt;/ANALYSIS.md</code>
-with HTML+PDF exports per §11.4.65. Honest boundary (§11.4.6):
-projections are velocity-based estimates — they guarantee sound
-methodology, NOT that specific dates will be met. Classification:
-universal (§11.4.17). Composes §11.4.6 / §11.4.40 / §11.4.42 / §11.4.93
-/ §11.4.108. Propagation gate
-<code>CM-COVENANT-114-172-PROPAGATION</code> (literal
-<code>11.4.172</code>) + paired §1.1 mutation. <strong>Canonical
-authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.172. Non-compliance is a release blocker.</p>
-<p><strong>§11.4.173 — Containerized + distributed build mandate (User
-mandate, 2026-06-29).</strong> EVERY build of EVERY component (source
-compile, artifact/package/installer/container-image production, codegen,
-asset render — for ANY language/platform: Go, Android/Gradle, desktop,
-web, native, firmware) MUST run INSIDE a specialized build container
-provisioned via the <code>digital.vasic.containers</code> submodule
-(§11.4.76) — NEVER on the bare host. The build containers MUST be
-DISTRIBUTED to the designated remote build host(s) via the SAME
-containers-submodule distribution mechanism (remote compose over SSH
-§11.4.76, rootless §11.4.161) so the build EXECUTES on the remote host
-(offloading the developer/main host); once complete the produced
-artifacts MUST be brought BACK to the originating host (scp/rsync/volume
-copy) for use/flashing/distribution. Building outside a container, or on
-the bare host, is FORBIDDEN — a release blocker (the “works on my
-machine” / unreproducible-build class). Build-host target +
-build-container definitions are config-injected (§11.4.28, never
-hardcoded in the submodule); a missing build-container capability is
-added by EXTENDING the containers submodule upstream (§11.4.74), never
-an ad-hoc host build. Honest boundary (§11.4.6): the containerized +
-distributed build guarantees reproducibility + host-isolation + capacity
-offload — it does NOT replace the §11.4.40 full-suite retest, §11.4.108
-artifact→runtime verification, or §11.4.38 installable-asset evidence on
-the brought-back artifact. Classification: universal (§11.4.17).
-Composes §11.4.76 / §11.4.161 / §11.4.74 / §11.4.28 / §11.4.24 /
-§11.4.82 / §11.4.121 / §11.4.38 / §11.4.108 / §12.6. Propagation gate
-<code>CM-COVENANT-114-173-PROPAGATION</code> (literal
-<code>11.4.173</code>) + recommended gate
-<code>CM-CONTAINERIZED-DISTRIBUTED-BUILD</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.173. Non-compliance is a release blocker. No escape hatch — no
-<code>--build-on-host</code>, <code>--skip-container-build</code>,
-<code>--local-build-ok</code>, <code>--no-distributed-build</code>,
-<code>--bare-host-build</code> flag.</p>
-<p><strong>§11.4.174 — Shared-host process-ownership verification
-mandate (User mandate, 2026-06-29).</strong> Verbatim operator mandate:
-“Make sure that processes we are checking are always OURS! … on every
-host there may be other work being done!” On ANY host where concurrent
-work from other projects / users / agents may run (the normal case — a
-shared developer workstation), EVERY inspection of, conclusion about, or
-action on a process, build, daemon, port, lock-file, or system-state
-signal MUST FIRST positively VERIFY the target is OURS before drawing a
-diagnosis or acting. A diagnosis based on another project’s process is a
-§11.4.6 guessing error; KILLING / signalling / restarting / altering a
-process that is NOT positively ours is a §12 + §11.4.133 safety
-violation (operator-workload destruction) — forbidden. Forensic FACT
-(2026-06-29): a 200%-CPU <code>java</code> + <code>gradlew</code> on the
-shared host was nearly mis-attributed to our build but was a separate
-<code>catalogizer</code> project’s gradle test
-(<code>cwd=Projects/catalogizer</code>); a naive
-<code>pgrep java</code>/<code>gradle</code> would have matched it as
-“ours.” ALL hold: (a) positive-ownership discriminator REQUIRED —
-attribute to us ONLY via a strong signal: <code>cwd</code> resolving
-inside THIS project’s tree, <code>argv</code> naming our
-scripts/artifacts/repo path, a PID we launched + recorded (§11.4.147
-registry), or a lock/port/socket path under our tree; a loose name match
-(<code>pgrep java</code>/<code>gradle</code>/<code>node</code>/<code>python</code>/<code>podman</code>/<code>zig</code>)
-is NEVER sufficient; (b) NEVER kill/signal/restart a process not
-positively ours — other projects’ daemons/pods are off-limits; the §12.8
-<code>pkill -f GradleDaemon</code> remediation MUST be scoped to OUR
-daemons (cwd/argv under our tree), never host-wide; (c) contention →
-surface, don’t break (§11.4.66 / §11.4.101), keep progressing
-non-blocked work; (d) every <code>pgrep</code>/<code>ps</code> filter
-MUST exclude the checking command’s OWN argv AND other-project matches,
-preferring our absolute repo path; (e) applies to ALL state (ports, lock
-files, caches, pods, tmux sessions, temp files), not just processes.
-Honest boundary (§11.4.6): ownership-verified inspection prevents
-mis-attribution + cross-project damage — it does not itself prove our
-process is healthy. Classification: universal (§11.4.17). Composes
-§11.4.6 / §11.4.101 / §11.4.66 / §11.4.147 / §12 / §12.8 / §11.4.133.
-Propagation gate <code>CM-COVENANT-114-174-PROPAGATION</code> (literal
-<code>11.4.174</code>) + recommended gate
-<code>CM-PROCESS-OWNERSHIP-VERIFIED</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.174. Non-compliance is a release blocker. No escape hatch — no
-<code>--assume-process-ours</code>, <code>--loose-pgrep-ok</code>,
-<code>--kill-any-matching-process</code>,
-<code>--skip-ownership-check</code> flag.</p>
-<p><strong>§11.4.176 — Conflict-free multi-track work-division +
-exactly-once claim registry + capability-aware deadlock-proof
-device-lock (User mandate, 2026-07-02).</strong> When a project runs
-multiple concurrent work-STREAM tracks (§11.4.167 / §11.4.58 /
-§11.4.103) sharing (a) a common pool of workable items and (b) a scarce
-pool of exclusive hardware/resources, TWO cooperating arbitration layers
-are MANDATORY, both conflict-free BY CONSTRUCTION: <strong>(A) work-item
-layer — exactly-once claim registry</strong> — every workable item OR
-logical GROUP of items sharing files/subsystem/feature/schema is
-assigned to AT MOST ONE track at a time via a lock-arbitrated
-append-only claim registry (extends §11.4.147 + §11.4.116);
-claim-before-touch, a second claim on an already-claimed item is DENIED;
-logical groups are claimed WHOLE (disjoint file-scope §11.4.58 L3 +
-per-track worktree/CoW §11.4.167 = tracks physically cannot touch the
-same bytes); no codebase loss (§9.2 backups / §11.4.113
-ff-only-merge-onto-latest-main NEVER force-push / §11.4.84 quiescence /
-§11.4.41 merge-first); results ALWAYS produced (abandoned claim
-TTL-expires back to the pool). <strong>(B) hardware layer —
-capability-aware deadlock-proof device-lock</strong> — when N tracks
-outnumber M exclusive devices, exactly ONE track owns each device
-(§11.4.119); a track leases ONE OR MORE devices selected by required
-CAPABILITY (not merely identity); the arbiter is DEADLOCK-FREE by
-breaking all four Coffman conditions (hold-and-wait eliminated —
-multi-device acquire is ALL-OR-NOTHING in one critical section;
-circular-wait eliminated — acquire is NON-BLOCKING, wins the whole set
-or returns EBUSY; no-preemption relaxed — lease TTL + heartbeat + reap
-so a crashed holder’s lease auto-expires §11.4.147; the only lock held
-is a short bounded flock over the atomic check-and-claim); registry =
-append-only JSONL + atomically-rewritten snapshot (§11.4.116).
-<strong>(C) universal decoupling + evidence-based
-resource-tuning</strong> — both layers
-universal/decoupled/project-not-aware (§11.4.17/§11.4.28/§11.4.35);
-resource-tuning decisions (stream count, per-stream memory §12.6, lease
-breadth, queue depth §11.4.167) MUST be EVIDENCE-BASED (§11.4.24 /
-§11.4.5), never guessed (§11.4.6). Classification: universal (§11.4.17).
-Composes
-§11.4.6/§11.4.17/§11.4.24/§11.4.28/§11.4.35/§11.4.41/§11.4.58/§11.4.84/§11.4.85/§11.4.103/§11.4.113/§11.4.116/§11.4.119/§11.4.147/§11.4.167/§12.6/§9.2.
-Propagation gate <code>CM-COVENANT-114-176-PROPAGATION</code> (literal
-<code>11.4.176</code>) + recommended gates
-<code>CM-WORK-DIVISION-EXCLUSIVE-CLAIM</code> /
-<code>CM-NO-CROSS-TRACK-SCOPE-OVERLAP</code> /
-<code>CM-LOGICAL-GROUP-COHESION</code> /
-<code>CM-DEVICE-LOCK-DEADLOCK-FREE</code> + paired §1.1 mutations.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.176. Non-compliance is a release blocker. No escape hatch — no
-<code>--allow-cross-track-overlap</code>,
-<code>--skip-claim-registry</code>, <code>--split-logical-group</code>,
-<code>--blocking-device-acquire</code>,
-<code>--allow-partial-device-hold</code>,
-<code>--tune-resources-by-guess</code> flag.</p>
-<p><strong>§11.4.177 — Developer-tooling project-decoupling +
-invocation-directory operation (User mandate, 2026-07-04).</strong> No
-project-specific script / hook / alias / binary may be wired — copied,
-symlinked, PATH-exported, or aliased — into a global or shared
-developer-tooling PATH; shared tooling MUST be project-agnostic and
-operate on the INVOCATION directory (cwd, or an explicit path/config
-argument), NEVER a hardcoded project path. A project-specific helper
-lives in + runs from its own repo; a genuinely-reusable helper is
-promoted to the shared toolkit ONLY after being stripped of every
-project-specific assumption (paths, device serials, package names,
-region endpoints) and taking its target from the invocation context. A
-project script reachable on the global/shared PATH is a decoupling
-violation of equal severity to importing project-specific code into a
-shared submodule (§11.4.28). Forensic FACT (2026-07-04): a project
-cwd-hook symlinked into the global Claude-Toolkit PATH re-coupled every
-alias to one hardcoded checkout. Honest boundary (§11.4.6): decoupling
-guarantees the tool is project-agnostic — NOT that it is correct (that
-still needs the tool’s own tests). Classification: universal (§11.4.17).
-Composes §11.4.28 / §11.4.29 / §11.4.35 / §11.4.11 / §11.4.6.
-Propagation gate <code>CM-COVENANT-114-177-PROPAGATION</code> (literal
-<code>11.4.177</code>) + recommended gate
-<code>CM-TOOLING-PROJECT-DECOUPLED</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.177. Non-compliance is a release blocker. No escape hatch — no
-<code>--global-symlink-ok</code>, <code>--hardcode-project-path</code>,
-<code>--wire-into-shared-path</code> flag.</p>
-<p><strong>§11.4.178 — Track-qualified identity for parallel work
-streams (session-name collision ban) (User mandate,
-2026-07-04).</strong> Parallel work streams that share hardware, a git
-backing store, a tmux/session namespace, a lock namespace, or any
-single-owner resource MUST be addressed by a TRACK-QUALIFIED identity
-(<code>&lt;project&gt;__&lt;track&gt;__&lt;role&gt;</code>), NEVER a
-bare directory basename. Multiple checkouts/clones/worktrees sharing
-basename <code>atmosphere</code> collapse into one session/lock/log key
-and cross-wire tmux targets, lock files, device claims, and log
-directories (the observed collision, 2026-07-04). Every registry row,
-session name, lock path, log directory, and device claim MUST carry the
-track-qualified key; a bare-basename identity for a resource with ≥ 2
-concurrent claimants is a violation. Honest boundary (§11.4.6): a unique
-identity prevents cross-wiring — it does not itself arbitrate ownership
-(that is §11.4.119 + §11.4.176, the multi-track work-division +
-exactly-once-claim + device-lock arbitration anchor). Classification:
-universal (§11.4.17). Composes §11.4.111 / §11.4.119 / §11.4.176 /
-§11.4.29 / §11.4.58. Propagation gate
-<code>CM-COVENANT-114-178-PROPAGATION</code> (literal
-<code>11.4.178</code>) + recommended gate
-<code>CM-TRACK-QUALIFIED-IDENTITY</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.178. Non-compliance is a release blocker. No escape hatch — no
-<code>--bare-basename-ok</code>, <code>--skip-track-qualifier</code>,
-<code>--shared-session-name</code> flag.</p>
-<p><strong>§11.4.179 — Corruption-isolated parallel git streams
-(own-.git independent clones, not shared-common-dir worktrees) (User
-mandate, 2026-07-04).</strong> When corruption-isolation is a
-requirement, parallel git work streams MUST each be an isolated
-repository with its OWN <code>.git</code> (own object store, own index,
-own lock namespace), NOT <code>git worktree</code> checkouts sharing one
-common <code>.git</code>. A shared common-dir is a single point of
-failure: one stale <code>index.lock</code> /
-<code>.commit_all.lock</code> / <code>.push_all.lock</code> freezes
-EVERY stream at once (the observed 9-h all-track freeze, 2026-07-04),
-and one corrupted object store loses every stream. Each stream’s
-<code>git rev-parse --git-common-dir</code> MUST resolve INSIDE the
-stream’s own tree; a common-dir resolving to a shared parent is a
-violation. Where CoW/reflink disk-feasibility is the constraint, use the
-§11.4.167 reflink-clone-with-own-<code>.git</code> path (a
-btrfs/XFS/ZFS/APFS reflink shares extents on disk while keeping a
-per-stream <code>.git</code>, so isolation and disk-feasibility both
-hold). Honest boundary (§11.4.6): own-<code>.git</code> isolation
-contains lock/corruption blast radius — it does NOT remove per-repo
-stale-lock reaping (§11.4.180) nor ff-only no-force integration
-(§11.4.113). Classification: universal (§11.4.17). Composes §11.4.167 /
-§11.4.119 / §11.4.176 / §11.4.58 / §9.2. Propagation gate
-<code>CM-COVENANT-114-179-PROPAGATION</code> (literal
-<code>11.4.179</code>) + recommended gate
-<code>CM-GIT-STREAMS-OWN-COMMON-DIR</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.179. Non-compliance is a release blocker. No escape hatch — no
-<code>--shared-common-git</code>,
-<code>--worktree-when-isolation-required</code>,
-<code>--skip-git-isolation</code> flag.</p>
-<p><strong>§11.4.180 — Commit/push (single-writer) wrappers MUST
-auto-reap provably-stale locks before acquiring (User mandate,
-2026-07-04).</strong> Every commit / push / single-writer wrapper MUST,
-before acquiring its own lock, auto-reap any PROVABLY-stale git lock —
-one whose recorded holder PID is DEAD (<code>kill -0</code> fails), OR
-(no PID recorded) older than a defined threshold AND with no live
-wrapper/git process holding that repo. The reap covers the wrapper’s own
-lock plus the git-internal existence-based locks
-(<code>index.lock</code>, <code>HEAD.lock</code>,
-<code>refs/**/*.lock</code>) that git does NOT auto-release on holder
-death. It MUST NEVER remove a lock whose holder is ALIVE (removing a
-live-held lock corrupts a concurrent writer — §9.2). Each reap decision
-(REAPED / KEPT + reason) is logged as captured evidence (§11.4.6 —
-liveness PROVEN via <code>kill -0</code>, never assumed). A wrapper that
-blocks indefinitely on a dead-holder lock (the observed 9-h freeze,
-2026-07-04) is a violation. Honest boundary (§11.4.6): reaping clears
-dead-holder deadlock — it does NOT substitute for the
-own-<code>.git</code> isolation of §11.4.179 (which shrinks the blast
-radius from all-streams to one). Classification: universal (§11.4.17).
-Composes §11.4.84 / §11.4.88 / §11.4.6 / §9.2 / §11.4.116 / §11.4.179.
-Propagation gate <code>CM-COVENANT-114-180-PROPAGATION</code> (literal
-<code>11.4.180</code>) + recommended gate
-<code>CM-WRAPPER-STALE-LOCK-AUTO-REAP</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.180. Non-compliance is a release blocker. No escape hatch — no
-<code>--skip-stale-lock-reap</code>,
-<code>--force-remove-live-lock</code>,
-<code>--block-on-dead-holder</code> flag.</p>
-<p><strong>§11.4.181 — Consistent controlled feature-branch naming: one
-feature/logic-group ⇒ exactly ONE canonical branch name across the main
-repo + all owned submodules (User mandate, 2026-07-05).</strong>
-Verbatim (2026-07-05): “System MUST pay attention not to create multiple
-feat. branches with different names for one same feature or group of
-workable items / features! Naming MUST BE consistent and carefully
-controlled!” One feature / logical group of workable items MUST map to
-EXACTLY ONE canonical branch name, used IDENTICALLY on the main repo AND
-every touched owned submodule — NEVER two differently-named branches for
-one feature/group, NEVER per-repo naming drift. ALL hold: (1)
-<strong>single canonical name per group</strong> minted ONCE per the
-§11.4.167 D scheme (<code>feature/&lt;slug&gt;</code> branch +
-<code>&lt;prefix&gt;-&lt;base&gt;-feat-&lt;slug&gt;</code> tag,
-<code>&lt;slug&gt;</code> lowercase snake/kebab §11.4.29), used
-identically across the main repo + every branched submodule (an
-untouched submodule stays on its base branch, NOT force-branched); (2)
-<strong>single source of truth</strong> — the canonical name is recorded
-ONCE in the §11.4.176 exactly-once claim registry / the §11.4.93
-workable-items <code>logic_group → branch</code> mapping and LOOKED UP,
-never re-invented (creating a branch whose name ≠ the group’s registered
-canonical name, OR minting a 2nd name for a group that already has one,
-is a §11.4.6 no-guessing violation); (3) <strong>mechanical
-enforcement</strong> (§11.4.75) — gate
-<code>CM-BRANCH-NAME-CONSISTENCY</code> FAILs on an unregistered
-feature-branch name / two divergent names for one group / a submodule
-branch diverging from the group’s main-repo canonical name, paired §1.1
-mutation (register one group under two divergent names → gate FAILs);
-(4) <strong>risk-free reconciliation</strong> (§9.2 / §11.4.113 /
-§11.4.84) — a mis-named/duplicate branch is reconciled by MERGING its
-commits onto the canonical branch (union, no
-<code>-s ours</code>/rebase/reset that drops commits,
-<code>git log &lt;canonical&gt;..&lt;misnamed&gt;</code> empty after
-merge, no conflict markers), ff-only push to all upstreams (NEVER
-force-push), retiring the mis-named branch only after the merge is
-confirmed on all mirrors (delete-before-merge forbidden). Honest
-boundary (§11.4.6): “probably the same feature” is NOT a determination —
-bind the branch to a group via the registry, never guess.
-Classification: universal (§11.4.17). Composes §11.4.167 / §11.4.176 /
-§11.4.178 / §11.4.179 / §11.4.28 / §11.4.29 / §11.4.93 / §11.4.113 /
-§11.4.84 / §11.4.6 / §11.4.75 / §9.2. Propagation gate
-<code>CM-COVENANT-114-181-PROPAGATION</code> (literal
-<code>11.4.181</code>) + recommended gate
-<code>CM-BRANCH-NAME-CONSISTENCY</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
-§11.4.181. Non-compliance is a release blocker. No escape hatch — no
-<code>--allow-divergent-branch-names</code>,
-<code>--skip-branch-registry</code>,
-<code>--rename-branch-freely</code>,
-<code>--per-repo-branch-name-OK</code>,
-<code>--two-names-one-feature-OK</code> flag.</p>
-<p><strong>§11.4.182 — Track+branch work-stream identity label
-<code>(T&lt;N&gt;/&lt;branch&gt; - &lt;alias&gt;)</code> on every
-agent/subagent label + every operator-facing work-stream reference (User
-mandate, 2026-07-05).</strong> Operator mandate (2026-07-05): “EVERY
-agent/subagent/work-stream label AND every operator-facing report
-reference to a work stream MUST carry a
-<code>(T&lt;N&gt;/&lt;branch&gt; - &lt;alias&gt;)</code> prefix
-identifying the track + git branch + the claude-toolkit alias in use —
-e.g. <code>(T1/main - claude1) ATM-312 MPV drm_prime investigation</code>,
-<code>(T2/feat/mistiq-vader - deepseek) SPK-XXX ...</code>.” In a
-multi-track layout (parallel checkouts each on a distinct branch and
-potentially driven by a distinct claude-toolkit alias —
-e.g. <code>/mnt/track1..4</code>) a bare work-stream label does not say
-WHICH track/branch/alias produced it, so cross-track dispatches, status
-reports, and progress lines collide and mislead. ALL hold: (1)
-<strong>universal label form</strong> — every agent / subagent /
-work-stream label AND every operator-facing reference (agent-dispatch
-descriptions, status reports, resume/handoff docs, progress lines) MUST
-START with a <code>(T&lt;N&gt;/&lt;branch&gt; - &lt;alias&gt;)</code>
-prefix; (2) <strong>deterministic derivation, never guessed</strong>
-(§11.4.6) — <code>&lt;N&gt;</code> from the checkout path
-(<code>/mnt/track&lt;N&gt;/…</code>; honest <code>?</code> when not
-under a numbered track, never a guessed number),
-<code>&lt;branch&gt;</code> from
-<code>git rev-parse --abbrev-ref HEAD</code>, <code>&lt;alias&gt;</code>
-from the <code>CLAUDE_CONFIG_DIR</code> basename
-<code>.claude-&lt;alias&gt;</code> → <code>&lt;alias&gt;</code> (honest
-<code>?</code> when unset/non-matching, never a guessed name) (reference
-labeler <code>scripts/multitrack/track_branch_label.sh</code>); (3)
-<strong>mechanical enforcement</strong> (§11.4.75 / §11.4.109-class) — a
-PreToolUse guard hook
-(<code>constitution/scripts/hooks/guard-track-branch-label.sh</code>,
-inherited BY REFERENCE per §11.4.177, never copied) BLOCKS any
-Agent/Task/TaskCreate dispatch whose <code>description</code> (or
-<code>subagent</code> label) does not START with
-<code>^\(T[0-9]+/[^ )]+ - [^ )]+\)</code> (branch AND alias both
-required, both non-empty), non-agent tools untouched; pre-build gate
-<code>CM-TRACK-BRANCH-LABEL</code> asserts labeler + hook
-exist/executable/parseable, hook wired in runtime settings, convention
-doc exists; (4) <strong>honest boundary</strong> (§11.4.6) — a
-<code>?</code> in the track field OR the alias field is a valid honest
-label (unknown track / no git repo / no matching
-<code>CLAUDE_CONFIG_DIR</code>), never a bluff; the enforced format
-surfaces (blocks) an off-track dispatch or a dispatch missing its alias
-segment rather than silently mislabeling it. Classification: universal
-(§11.4.17). Composes §11.4.178 (the label-prefix instantiation applied
-to EVERY agent/subagent label + operator-facing reference) / §11.4.29 /
-§11.4.75 / §11.4.109 / §11.4.177 / §11.4.6 / §11.4.58 / §11.4.103 /
-§11.4.119 / §11.4.116 / §11.4.147. Propagation gate
-<code>CM-COVENANT-114-182-PROPAGATION</code> (literal
-<code>11.4.182</code>) + recommended gate
-<code>CM-TRACK-BRANCH-LABEL</code> + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+<code>CM-TRACK-BRANCH-LABEL</code> + paired §1.1 mutation. <strong>TRUNK
+RULE (operator mandate, 2026-07-28):</strong> work performed on the
+canonical trunk (<code>main</code>/<code>master</code>) is
+<strong>ALWAYS Track 1</strong> — the label reads
+<code>(T1/main - …)</code>, NEVER <code>(T?/main - …)</code>, regardless
+of checkout path. Precedence is deliberate: the BRANCH decides first and
+the checkout path decides only for non-trunk branches, so a trunk
+checkout living outside <code>/mnt/track&lt;N&gt;</code> — or inside a
+differently-numbered one — is still Track 1; the identity that matters
+is which STREAM the work belongs to, not which directory it happens to
+sit in. Rationale: §11.4.182 labels are how concurrent streams are told
+apart, so an unnumbered <code>T?</code> on trunk work makes it
+indistinguishable from a genuinely-unknown track in every dispatch,
+report and progress line — and the trunk is a well-known, singular
+stream that is never unknown. Reference implementation:
+<code>scripts/multitrack/track_branch_label.sh</code> derives the branch
+BEFORE the track number and maps <code>main|master -&gt; 1</code>.
+Labels MUST be re-derived from that script at dispatch time and kept in
+real-time sync with the live branch/alias/model/effort — a remembered or
+stale label is itself a §11.4.182 violation (§11.4.6: live identity is
+not knowable from memory). <strong>Canonical authority:</strong>
+constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
 §11.4.182. Non-compliance is a release blocker. No escape hatch — no
 <code>--skip-track-label</code>, <code>--unlabeled-agent-OK</code>,
 <code>--bare-work-stream-reference</code>,
@@ -8362,6 +7795,62 @@ gate <code>CM-COVENANT-114-234-PROPAGATION</code> (literal
 <code>11.4.234</code>) + paired §1.1 mutation. <strong>Canonical
 authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
 §11.4.234 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<h2 id="cascaded-anchor-backfill-11.4.235-2026-07-28">Cascaded anchor
+backfill — §11.4.235 (2026-07-28)</h2>
+<p>Continues the cascade above. The canonical
+<code>constitution/Constitution.md</code> advanced past §11.4.234 after
+that backfill closed: §11.4.235 was minted in constitution commit
+<code>fce304d</code> and its clause (B) extended in <code>bbbbdb5</code>
+(constitution HEAD at cascade time: <code>32d7578</code>). This entry
+restores five-carrier lockstep (§11.4.157) for the new anchor. Form and
+authority are unchanged from the entries above — the compact cascade
+reference carries the literal anchor token the propagation gates match
+on, and the canonical text remains the sole authority (CONST-059 /
+§11.4.35).</p>
+<p><strong>§11.4.235 — Build-and-deploy the moment source fixes are
+proven-correct (test-side hardening is a parallel stage, never a build
+gate) + post-deploy version increment (operator mandate,
+2026-07-27).</strong> Cascade reference (short form): (A) the moment a
+batch’s SOURCE fixes are done AND proven-correct — proven-correct = the
+mandatory independent SOURCE-correctness review has returned a clean GO
+(§11.4.125/§11.4.142/§11.4.194 on the source diff, on the §11.4.209
+Fable-‘xhigh’ substrate, iterated to zero-finding/zero-warning GO per
+§11.4.134) — the build MUST be triggered, pre-build + post-build tests
+EXECUTED (§11.4.108 layer-1 before, layer-2 after), and the artifact
+deployed; gate-instrumentation hardening + new-gate authoring
+(§11.4.110), paired §1.1 mutations + four-layer §11.4.4(b) coverage +
+HelixQA Challenges, ‘gates and checks of all kinds’ (§11.4.96), and the
+re-review of THAT test-instrumentation work all run IN PARALLEL with the
+build AND the §11.4.185 manual-QA session, NEVER gating the build
+(§11.4.230(A)) — the build’s GO-SIGNAL is source-correctness alone, and
+holding the build sequentially for the test-instrumentation buildout
+when the source is already proven-correct is a §11.4.235(A) violation.
+(B) the moment image(s)/artifact(s) deploy the version code/version is
+INCREMENTED so every deployed artifact carries a distinct, monotonic,
+greppable id (§11.4.151/§11.4.108/§11.4.200; two deployments sharing one
+version id defeats per-deploy artifact identity), and — extended
+2026-07-28 — EVERY deployment of a release FOR MANUAL QA TESTING
+(§11.4.185) is a DEVELOPMENT-CYCLE BOUNDARY that CLOSES the outgoing
+cycle and STARTS a new one at the NEXT monotonic version, ALWAYS and by
+standing default, so fixes for QA findings against the deployed artifact
+land in the NEW cycle on the NEW version id and are never patched onto
+the already-QA-deployed version id. (C) STANDING DEFAULT
+(§11.4.126/§11.4.230/§11.4.103), never a per-request opt-in. Honest
+boundary (§11.4.6): this relocates the TEST-INSTRUMENTATION re-review +
+gate/check hardening OFF the build critical path and weakens NO
+substantive gate — the SOURCE-correctness review still PRECEDES and
+gates the build, pre/post-build tests still run at their §11.4.108 L1-2
+seams, and §11.4.185 / §11.4.129 / §11.4.40 are un-weakened; ‘test-side
+work is parallel, never a build gate’ is bounded to future-regression
+instrumentation, because a check that proves the SHIPPED artifact wrong
+is a source/artifact-correctness gate (§11.4.108 L1-2) and stays on the
+critical path. Propagation gate
+<code>CM-COVENANT-114-235-PROPAGATION</code> (literal
+<code>11.4.235</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.235 — the full mandate text is canonical there and is inherited by
 reference (CONST-059 / §11.4.35). Non-compliance is a release
 blocker.</p>
 </body>

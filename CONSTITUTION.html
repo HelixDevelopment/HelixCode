@@ -1405,11 +1405,13 @@ drawn from this 3-element closed map:</p>
 <p>The <code>(→ Fixed.md)</code> suffix is preserved across all three so
 the existing migration-discipline tooling (atomic Issues.md → Fixed.md
 move per §11.4.19) keeps working without per-Type branching. Generators
-(<code>generate_issues_summary.sh</code>,
-<code>generate_fixed_summary.sh</code>, the §11.4.23 colorizer) MUST
-treat the three terminal values as semantically equivalent (all “closed,
-positive evidence captured”) while preserving the literal in the emitted
-document.</p>
+(in HelixCode: the §11.4.93 <code>workable-items export</code> DB
+exporter — which SUPERSEDES the markdown-derived
+<code>generate_issues_summary.sh</code> /
+<code>generate_fixed_summary.sh</code>, both of which now REFUSE to run
+— and the §11.4.23 colorizer) MUST treat the three terminal values as
+semantically equivalent (all “closed, positive evidence captured”) while
+preserving the literal in the emitted document.</p>
 <p>Closing a <code>Feature</code> with <code>Fixed (→ Fixed.md)</code>
 or a <code>Task</code> with <code>Implemented (→ Fixed.md)</code> is a
 CONST-057 violation. Gate <code>CM-CLOSURE-VOCAB-TYPE-AWARE</code> walks
@@ -2502,10 +2504,13 @@ PROBLEM/GOAL. Forbidden one-liner anti-patterns: section labels
 (<code>Composes with</code>, <code>Closure criteria</code>,
 <code>Fix direction</code>, etc.); bare metadata fragments
 (<code>Critical</code>, <code>Bug</code>, <code>In progress</code>,
-etc.); section-marker echoes; a §-letter alone. Generators
-(<code>generate_issues_summary.sh</code> /
-<code>generate_fixed_summary.sh</code> /
-<code>update_readme_doc_links.sh</code> /
+etc.); section-marker echoes; a §-letter alone. Generators (in
+HelixCode: the §11.4.93 <code>workable-items export</code> DB exporter —
+which renders BOTH tracker summaries from the SQLite
+single-source-of-truth <code>docs/workable_items.db</code>, and which
+SUPERSEDES the markdown-derived <code>generate_issues_summary.sh</code>
+/ <code>generate_fixed_summary.sh</code>, both of which now REFUSE to
+run; plus <code>update_readme_doc_links.sh</code> /
 <code>generate_status_summary.sh</code>) MUST extract from the H1/H2
 heading line per the §11.4.54 ATM-NNN convention, NEVER from arbitrary
 downstream text, and MUST refuse anti-pattern rows — emitting a
@@ -5584,8 +5589,28 @@ identifying the track + git branch — e.g. ‘(T1/main) ATM-312 MPV
 drm_prime investigation’, ‘(T2/feat/mistiq-vader) SPK-XXX …’.” In a
 multi-track layout (parallel checkouts each on a distinct branch —
 e.g. … Propagation gate <code>CM-COVENANT-114-182-PROPAGATION</code>
-(literal <code>11.4.182</code>) + paired §1.1 mutation.
-<strong>Canonical authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+(literal <code>11.4.182</code>) + paired §1.1 mutation. <strong>TRUNK
+RULE (operator mandate, 2026-07-28):</strong> work performed on the
+canonical trunk (<code>main</code>/<code>master</code>) is
+<strong>ALWAYS Track 1</strong> — the label reads
+<code>(T1/main - …)</code>, NEVER <code>(T?/main - …)</code>, regardless
+of checkout path. Precedence is deliberate: the BRANCH decides first and
+the checkout path decides only for non-trunk branches, so a trunk
+checkout living outside <code>/mnt/track&lt;N&gt;</code> — or inside a
+differently-numbered one — is still Track 1; the identity that matters
+is which STREAM the work belongs to, not which directory it happens to
+sit in. Rationale: §11.4.182 labels are how concurrent streams are told
+apart, so an unnumbered <code>T?</code> on trunk work makes it
+indistinguishable from a genuinely-unknown track in every dispatch,
+report and progress line — and the trunk is a well-known, singular
+stream that is never unknown. Reference implementation:
+<code>scripts/multitrack/track_branch_label.sh</code> derives the branch
+BEFORE the track number and maps <code>main|master -&gt; 1</code>.
+Labels MUST be re-derived from that script at dispatch time and kept in
+real-time sync with the live branch/alias/model/effort — a remembered or
+stale label is itself a §11.4.182 violation (§11.4.6: live identity is
+not knowable from memory). <strong>Canonical authority:</strong>
+constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
 §11.4.182 — the full mandate text is canonical there and is inherited by
 reference (CONST-059 / §11.4.35). Non-compliance is a release
 blocker.</p>
@@ -6420,6 +6445,62 @@ gate <code>CM-COVENANT-114-234-PROPAGATION</code> (literal
 <code>11.4.234</code>) + paired §1.1 mutation. <strong>Canonical
 authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
 §11.4.234 — the full mandate text is canonical there and is inherited by
+reference (CONST-059 / §11.4.35). Non-compliance is a release
+blocker.</p>
+<h2 id="cascaded-anchor-backfill-11.4.235-2026-07-28">Cascaded anchor
+backfill — §11.4.235 (2026-07-28)</h2>
+<p>Continues the cascade above. The canonical
+<code>constitution/Constitution.md</code> advanced past §11.4.234 after
+that backfill closed: §11.4.235 was minted in constitution commit
+<code>fce304d</code> and its clause (B) extended in <code>bbbbdb5</code>
+(constitution HEAD at cascade time: <code>32d7578</code>). This entry
+restores five-carrier lockstep (§11.4.157) for the new anchor. Form and
+authority are unchanged from the entries above — the compact cascade
+reference carries the literal anchor token the propagation gates match
+on, and the canonical text remains the sole authority (CONST-059 /
+§11.4.35).</p>
+<p><strong>§11.4.235 — Build-and-deploy the moment source fixes are
+proven-correct (test-side hardening is a parallel stage, never a build
+gate) + post-deploy version increment (operator mandate,
+2026-07-27).</strong> Cascade reference (short form): (A) the moment a
+batch’s SOURCE fixes are done AND proven-correct — proven-correct = the
+mandatory independent SOURCE-correctness review has returned a clean GO
+(§11.4.125/§11.4.142/§11.4.194 on the source diff, on the §11.4.209
+Fable-‘xhigh’ substrate, iterated to zero-finding/zero-warning GO per
+§11.4.134) — the build MUST be triggered, pre-build + post-build tests
+EXECUTED (§11.4.108 layer-1 before, layer-2 after), and the artifact
+deployed; gate-instrumentation hardening + new-gate authoring
+(§11.4.110), paired §1.1 mutations + four-layer §11.4.4(b) coverage +
+HelixQA Challenges, ‘gates and checks of all kinds’ (§11.4.96), and the
+re-review of THAT test-instrumentation work all run IN PARALLEL with the
+build AND the §11.4.185 manual-QA session, NEVER gating the build
+(§11.4.230(A)) — the build’s GO-SIGNAL is source-correctness alone, and
+holding the build sequentially for the test-instrumentation buildout
+when the source is already proven-correct is a §11.4.235(A) violation.
+(B) the moment image(s)/artifact(s) deploy the version code/version is
+INCREMENTED so every deployed artifact carries a distinct, monotonic,
+greppable id (§11.4.151/§11.4.108/§11.4.200; two deployments sharing one
+version id defeats per-deploy artifact identity), and — extended
+2026-07-28 — EVERY deployment of a release FOR MANUAL QA TESTING
+(§11.4.185) is a DEVELOPMENT-CYCLE BOUNDARY that CLOSES the outgoing
+cycle and STARTS a new one at the NEXT monotonic version, ALWAYS and by
+standing default, so fixes for QA findings against the deployed artifact
+land in the NEW cycle on the NEW version id and are never patched onto
+the already-QA-deployed version id. (C) STANDING DEFAULT
+(§11.4.126/§11.4.230/§11.4.103), never a per-request opt-in. Honest
+boundary (§11.4.6): this relocates the TEST-INSTRUMENTATION re-review +
+gate/check hardening OFF the build critical path and weakens NO
+substantive gate — the SOURCE-correctness review still PRECEDES and
+gates the build, pre/post-build tests still run at their §11.4.108 L1-2
+seams, and §11.4.185 / §11.4.129 / §11.4.40 are un-weakened; ‘test-side
+work is parallel, never a build gate’ is bounded to future-regression
+instrumentation, because a check that proves the SHIPPED artifact wrong
+is a source/artifact-correctness gate (§11.4.108 L1-2) and stays on the
+critical path. Propagation gate
+<code>CM-COVENANT-114-235-PROPAGATION</code> (literal
+<code>11.4.235</code>) + paired §1.1 mutation. <strong>Canonical
+authority:</strong> constitution submodule <a href="constitution/Constitution.md"><code>Constitution.md</code></a>
+§11.4.235 — the full mandate text is canonical there and is inherited by
 reference (CONST-059 / §11.4.35). Non-compliance is a release
 blocker.</p>
 </body>
