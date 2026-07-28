@@ -38,7 +38,7 @@ mapfile -t CANDIDATES < <(
     printf '%s\n' README.md
     find docs -type f -name '*.md' 2>/dev/null
   } | grep -vE '(^|/)(Issues|Issues_Summary|Fixed|Fixed_Summary|CONTINUATION)\.md$' \
-    | grep -vE '^docs/(audits|qa|qa_evidence|helix_qa|research|improvements|bluff_proofing|superpowers|codegraph|llms_verifier|adr|materials|architecture|testdata|coverage|exports|scripts|distribution)/' \
+    | grep -vE '^docs/(audits|qa|qa_evidence|helix_qa|research|improvements|bluff_proofing|superpowers|codegraph|llms_verifier|adr|materials|architecture|testdata|coverage|exports|scripts|distribution|requests)/' \
     | grep -vE '(^|/)(Status|Status_Summary)\.md$' \
     | sort -u
 )
