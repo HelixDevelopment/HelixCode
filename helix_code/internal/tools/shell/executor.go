@@ -120,11 +120,15 @@ type AsyncExecution struct {
 // a truncation, so prefer draining concurrently.
 //
 // A concurrently-draining consumer is not cut off for being SLOW: the grace is
-// a no-progress window and is rearmed while lines are still being delivered
-// (see the drain loop in ExecuteStream). It can still be cut short if delivery
-// stops entirely for a full window — which is what an abandoned consumer looks
-// like. Whenever output may have been lost, OutputIncomplete is set; check it
-// rather than assuming any usage pattern guarantees completeness.
+// a no-progress window and is rearmed while lines are still moving (see the
+// drain loop in ExecuteStream). It is cut short only if nothing moves at all
+// for a full window. Whenever output may have been lost, OutputIncomplete is
+// set; check it rather than assuming any usage pattern guarantees completeness.
+//
+// Abandoning the channels without calling Cancel is the one pattern to avoid:
+// buffered lines keep the drain loop rearming until the buffers fill, so the
+// execution can hold its slot for far longer than one grace period before it
+// finally releases. Cancel returns it immediately.
 type StreamingExecution struct {
 	ID        string
 	Command   string
@@ -527,14 +531,28 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 		// delivered since the last check, and only a FULL window with nothing
 		// delivered counts as stuck.
 		//
-		// That cannot resurrect the HXC-184 wedge, because progress requires an
-		// ACTIVE consumer: an abandoned one fills its 100-slot channel, the
-		// scanner parks on send, delivery stops, and the teardown fires within
-		// two windows. The one case that can extend indefinitely is a live
-		// consumer draining a descendant that keeps producing — a genuinely
-		// alive stream, whose caller is by definition still engaged and holds
-		// Cancel. Bounding that would mean truncating output someone is actively
-		// reading, which is the failure this clause exists to prevent.
+		// This does not resurrect the HXC-184 wedge, but the bound is looser than
+		// one window, so be precise about it. A send completes — and so counts as
+		// progress — either because a consumer received the line OR because there
+		// was still channel headroom to absorb it. The consequences:
+		//
+		//   - Silent descendant (the HXC-184 shape): nothing is ever delivered,
+		//     so the first window fires. Bounded by one grace.
+		//   - Abandoned consumer, trickling descendant: each line lands in
+		//     headroom and rearms the timer, until the 200 combined slots are
+		//     full and sends stop completing. Bounded by roughly
+		//     (headroom + 1) x grace, i.e. ~400s worst case — measured at 15s for
+		//     a descendant emitting 1 line/s. Long, but finite: the slot returns.
+		//     Only callers that walk away WITHOUT calling Cancel — violating the
+		//     StreamingExecution contract — reach this.
+		//   - Live consumer, producing descendant: unbounded by design. That is a
+		//     genuinely alive stream whose caller is still engaged and holds
+		//     Cancel; bounding it would mean truncating output someone is
+		//     actively reading, which is the failure this clause exists to
+		//     prevent.
+		//
+		// What is NOT possible is the original defect: an execution parked
+		// forever with nothing flowing and no way out.
 		drainDeadline := time.NewTimer(streamDrainGrace)
 		defer drainDeadline.Stop()
 		lastProgress := streamer.Progress()

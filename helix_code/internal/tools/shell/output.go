@@ -135,14 +135,18 @@ func (os *OutputStreamer) setErr(errOut *error, err error) {
 	}
 }
 
-// Progress reports how many lines have been successfully handed to a consumer
-// across both streams. It only advances on a completed channel send, so it
-// measures END-TO-END delivery, not merely bytes read: a scanner parked on a
-// full channel (no consumer) does not advance it, while a consumer that is
-// draining slowly does.
+// Progress reports how many lines have been accepted by the output channels
+// across both streams. It is monotonic, so callers can compare two samples.
 //
-// That distinction is what lets ExecuteStream tell "still draining, just slow"
-// apart from "wedged", and it is monotonic, so callers can compare two samples.
+// It advances on a COMPLETED SEND, which is not the same as end-to-end
+// delivery: a send completes either because a consumer received the line or
+// because there was still buffer headroom to absorb it. So an idle consumer
+// still shows progress until its channel fills — only once the buffers are
+// full does an absent consumer stop advancing this.
+//
+// What it does reliably distinguish is "lines are still moving" from "nothing
+// is moving at all", which is what ExecuteStream needs to tell a slow-but-live
+// stream apart from a stalled one. It is NOT a proof that a consumer exists.
 func (os *OutputStreamer) Progress() uint64 {
 	return os.progress.Load()
 }

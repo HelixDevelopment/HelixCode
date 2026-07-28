@@ -1,11 +1,14 @@
 package shell
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -363,6 +366,211 @@ func TestExecuteStreamDoneBeforeDrainIsBoundedNotDeadlocked(t *testing.T) {
 	assert.Equal(t, "1", lines[0], "delivery starts at the beginning of the stream")
 	assert.Less(t, len(lines), lineCount,
 		"this case is only meaningful if the output genuinely exceeded the buffer")
+}
+
+// TestOutputStreamerErrPrefersGenuineFailureOverTeardown is the standing guard
+// for M2.
+//
+// Err() used to return stdoutErr unconditionally, so a grace-path
+// ErrStreamStopped on stdout masked a real stderr failure — and because callers
+// filter ErrStreamStopped as expected, that real failure was then dropped
+// entirely rather than reported. Review measured that reverting the fix left the
+// whole in-tree suite passing, so nothing detected it: this is that missing
+// detector.
+//
+// Deterministic: stderr fails on its first Read; stdout has more lines than its
+// 100-slot buffer with nobody draining, so its scanner cannot reach EOF and is
+// released by Stop with ErrStreamStopped.
+//
+// Paired §1.1 mutation: restore the stdout-first Err() and this FAILS.
+func TestOutputStreamerErrPrefersGenuineFailureOverTeardown(t *testing.T) {
+	genuine := errors.New("stderr read exploded")
+
+	var payload strings.Builder
+	for i := 0; i < 250; i++ { // >> the 100-slot buffer
+		fmt.Fprintf(&payload, "line-%d\n", i)
+	}
+
+	streamer := NewOutputStreamer(strings.NewReader(payload.String()), iotest.ErrReader(genuine))
+	streamer.Start()
+
+	// The genuine failure must be recorded BEFORE the stream is abandoned, which
+	// is the real ordering: a scanner dies on its own early, and the teardown
+	// happens later when the grace expires. Abandoning first would be a
+	// different case entirely — an error racing the teardown is deliberately
+	// ATTRIBUTED to it (see streamOutput), because the two are indistinguishable
+	// once Stop has been requested.
+	require.Eventually(t, func() bool { return streamer.Err() != nil },
+		5*time.Second, time.Millisecond,
+		"the stderr scanner must record its genuine failure before we abandon the stream")
+
+	streamer.Stop() // abandon: stdout records ErrStreamStopped
+	<-streamer.Done()
+
+	require.ErrorIs(t, streamer.Err(), genuine,
+		"a genuine stream failure must outrank the deliberate-teardown sentinel, "+
+			"whichever stream each came from")
+	assert.NotErrorIs(t, streamer.Err(), ErrStreamStopped,
+		"reporting the teardown here would let callers filter it and lose the real failure")
+}
+
+// TestExecuteStreamSurfacesStderrFailureDespiteStdoutTeardown is the end-to-end
+// half of the M2 guard: it proves the priority actually changes what a CALLER
+// sees, not merely what Err() returns.
+//
+// A single >4096-byte stderr line trips bufio.ErrTooLong — a genuine failure —
+// while a grandchild holds stdout open with nothing to say, so stdout's scanner
+// is torn down by the grace. Pre-M2 the stdout teardown won, the executor
+// filtered it as expected, and the result carried NO error at all despite a real
+// stream failure having occurred.
+//
+// (The ErrTooLong behaviour itself is pre-existing and tracked separately; this
+// guard depends on it only as a convenient real failure.)
+func TestExecuteStreamSurfacesStderrFailureDespiteStdoutTeardown(t *testing.T) {
+	executor := NewShellExecutor(DefaultConfig())
+
+	execution, err := executor.ExecuteStream(context.Background(), &Command{
+		ID: "hxc184-stderr-failure-vs-stdout-teardown",
+		Command: fmt.Sprintf(
+			`sleep %d & head -c 5000 /dev/zero | tr '\0' 'x' >&2`,
+			int(grandchildLifetime.Seconds())),
+	})
+	require.NoError(t, err)
+
+	go func() {
+		for range execution.Stdout { //nolint:revive // drained; stdout stays silent here
+		}
+	}()
+
+	var result *ExecutionResult
+	select {
+	case result = <-execution.Done:
+	case <-time.After(graceDecisionDeadline):
+		t.Fatal("the grace must release the execution even with a failed stderr scanner")
+	}
+
+	require.Error(t, result.Error,
+		"a genuine stderr failure must reach the caller even though stdout was "+
+			"deliberately torn down by the grace")
+	assert.ErrorIs(t, result.Error, bufio.ErrTooLong)
+	assert.True(t, result.OutputIncomplete, "neither stream reached a clean EOF")
+}
+
+// TestExecuteStreamCancelMidStreamMarksOutputIncomplete is the standing guard
+// for the first half of M3: Cancel drops in-flight lines via Stop, and that must
+// be disclosed rather than reported as a complete stream.
+//
+// Deterministic: the test waits until the stdout buffer is FULL before
+// cancelling, which means the scanner is provably parked on a send with lines
+// still to come — cancelling earlier could race a clean EOF.
+func TestExecuteStreamCancelMidStreamMarksOutputIncomplete(t *testing.T) {
+	executor := NewShellExecutor(DefaultConfig())
+
+	execution, err := executor.ExecuteStream(context.Background(), &Command{
+		ID: "hxc184-cancel-mid-stream",
+		// Emit far more than the buffer holds, then linger so the process is
+		// still alive and killable when Cancel lands.
+		Command: fmt.Sprintf("seq 1 500; sleep %d", int(grandchildLifetime.Seconds())),
+	})
+	require.NoError(t, err)
+
+	require.Eventually(t, func() bool { return len(execution.Stdout) == 100 },
+		graceDecisionDeadline, 5*time.Millisecond,
+		"the stdout buffer must fill so the scanner is parked with lines still in flight")
+
+	execution.Cancel()
+
+	select {
+	case result := <-execution.Done:
+		assert.True(t, result.Killed, "Cancel kills the process")
+		assert.True(t, result.OutputIncomplete,
+			"lines were still in flight when Cancel dropped them; that must not be silent")
+		assert.NoError(t, result.Error,
+			"a caller-requested cancel is ErrStreamStopped-class, not a stream failure")
+	case <-time.After(graceDecisionDeadline):
+		t.Fatal("Cancel must release the execution promptly")
+	}
+}
+
+// TestExecuteStreamCancelAfterCleanEOFKeepsOutputComplete is the second half of
+// the M3 guard, and the sharper direction: the flag must be honest when nothing
+// was lost, or it becomes noise nobody trusts.
+//
+// The command emits its output, CLOSES both streams (so the scanners reach a
+// genuine EOF), then lingers so it is still killable. Draining stdout to closure
+// is the synchronisation point: the channels are closed only after BOTH scanners
+// have returned, so by the time Cancel lands both streams are provably at EOF.
+func TestExecuteStreamCancelAfterCleanEOFKeepsOutputComplete(t *testing.T) {
+	executor := NewShellExecutor(DefaultConfig())
+
+	execution, err := executor.ExecuteStream(context.Background(), &Command{
+		ID: "hxc184-cancel-after-clean-eof",
+		Command: fmt.Sprintf("echo hi; exec sleep %d >/dev/null 2>/dev/null",
+			int(grandchildLifetime.Seconds())),
+	})
+	require.NoError(t, err)
+
+	var lines []string
+	for line := range execution.Stdout {
+		lines = append(lines, line)
+	}
+	require.Equal(t, []string{"hi"}, lines)
+
+	execution.Cancel()
+
+	select {
+	case result := <-execution.Done:
+		assert.True(t, result.Killed, "the process was still alive and was killed")
+		assert.False(t, result.OutputIncomplete,
+			"both streams reached a clean EOF before Cancel, so nothing was lost "+
+				"and the flag must stay clear")
+	case <-time.After(graceDecisionDeadline):
+		t.Fatal("Cancel must release the execution promptly")
+	}
+}
+
+// TestExecuteStreamAbandonedConsumerStaysBoundedWhileProducerTrickles pins the
+// TRUE bound for an abandoned consumer, correcting a claim I got wrong.
+//
+// I originally documented that an abandoned consumer is torn down "within two
+// windows", reasoning that its channel fills and delivery stops. Review broke
+// that with a probe: a descendant trickling 1 line/s keeps landing lines in the
+// 200 slots of combined headroom, and each landing rearms the timer — so a send
+// completing means "delivered OR buffered", not "a consumer is reading". The
+// measured instance ran 15.05s with no consumer at all; the worst case is
+// roughly (headroom + 1) x grace.
+//
+// This guard asserts what is actually true and load-bearing: the execution
+// EXCEEDS one grace window (so nobody re-asserts the two-window claim) yet still
+// terminates on its own (so HXC-184 does not recur through this path).
+func TestExecuteStreamAbandonedConsumerStaysBoundedWhileProducerTrickles(t *testing.T) {
+	const trickleSeconds = 6
+
+	executor := NewShellExecutor(DefaultConfig())
+
+	execution, err := executor.ExecuteStream(context.Background(), &Command{
+		ID: "hxc184-abandoned-consumer-trickling-producer",
+		// The grandchild outlives the direct child and emits one line per
+		// second — few enough to fit the headroom the whole way.
+		Command: fmt.Sprintf("for i in $(seq 1 %d); do echo $i; sleep 1; done & echo started",
+			trickleSeconds),
+	})
+	require.NoError(t, err)
+
+	// Deliberately abandon the channels: never drain, never Cancel.
+	start := time.Now()
+	select {
+	case <-execution.Done:
+	case <-time.After(60 * time.Second):
+		t.Fatal("an abandoned consumer must still terminate — the bound is long, not infinite")
+	}
+	elapsed := time.Since(start)
+
+	assert.Greater(t, elapsed, streamDrainGrace,
+		"buffered lines rearm the timer, so this case genuinely outlives a single "+
+			"grace window — the 'bounded by one window' reading is wrong")
+	t.Logf("abandoned consumer released after %s (grace=%s, ~%ds of trickled output)",
+		elapsed, streamDrainGrace, trickleSeconds)
 }
 
 // TestExecuteStreamDeliversLargeOutputCompletely proves the HXC-184 fix does not
