@@ -117,14 +117,62 @@ text-decoration: line-through;
 </header>
 <h1 id="resume-helixcode-session-handoff">RESUME — HelixCode Session
 Handoff</h1>
-<p><strong>Revision:</strong> 8 <strong>Created:</strong> 2026-07-08
-<strong>Last modified:</strong> 2026-07-28T17:45Z (RED-polarity repair +
-bisect guidance, §11.4.131/§12.10) <strong>Status:</strong> active
+<p><strong>Revision:</strong> 9 <strong>Created:</strong> 2026-07-08
+<strong>Last modified:</strong> 2026-07-28T18:03Z (round-2 review
+corrections, §11.4.131/§12.10) <strong>Status:</strong> active
 <strong>Maintainer:</strong> CLI-agent main work stream
 <strong>Authority:</strong> §11.4.131 Session-resumption file — point a
 fresh agent here. Composes §11.4.127 / §12.10 / §11.4.65 / §11.4.44.</p>
 <blockquote>
-<p><strong>Revision 7 (2026-07-28T18:20Z) is a CORRECTION revision
+<p><strong>Revision 9 (2026-07-28T18:03Z) — corrections from an
+independent round-2 review of <code>bf1ce692</code> +
+<code>c2b6945e</code>.</strong> That review reproduced this session’s
+four-quadrant RED/GREEN matrix cell-for-cell and confirmed
+<code>bf1ce692</code> clean; it also raised three defects in the rev-8
+doc edit, ALL corrected here. <strong>(i) ATTRIBUTION FIXED — rev-8 and
+rev-9 findings were spliced INTO the Revision 7 banner below, not given
+their own.</strong> The “REPAIRED in <code>bf1ce692</code>”,
+bisect-skip, and N2-closure text now sitting inside Revision 7’s
+paragraph was written in RESUME rev 8 / CONTINUATION rev 20-21, NOT by
+the Revision 7 / Revision 19 doc-refresh pass — so Revision 7’s own
+self-description (“this pass touched none of them”) does NOT cover that
+text. Read it as rev-8-or-later. It is left in place rather than
+surgically un-spliced (moving it risks losing content); this banner is
+the correction. <strong>(ii) TIMESTAMP FIXED — Revision 7’s banner stamp
+was 43 minutes in the FUTURE of its own commit.</strong>
+<code>dc9e4caa</code> committed at <code>2026-07-28T17:37:47Z</code> but
+stamped itself <code>18:20Z</code>, which made rev 8
+(<code>17:45Z</code>) read as “modified before” rev 7. The Revision 7
+stamp below is corrected to its true commit time. Forward-fix only — no
+history rewrite (§11.4.113). <strong>(iii) ANCHORS REFRESHED — Revision
+7’s snapshot numbers are STALE and MUST NOT be quoted.</strong> Live as
+of this revision: meta-repo HEAD <strong><code>683205eb</code></strong>,
+<strong>25</strong> commits ahead of all remotes (Revision 7 says
+<code>99ff7d8e</code>/20 — superseded). <code>helix_agent</code>
+<strong><code>5b88aea6</code>, FULLY PUSHED (0 ahead)</strong> — its
+13-commit delta reached a CLEAN GO on review round 3 and is published;
+the meta pin was bumped to match in <code>683205eb</code>.
+<code>debate_orchestrator</code> <strong><code>2a9485e</code>, 2 ahead,
+still UNPUSHED</strong> — round-2 review returned Ready-to-merge=Yes
+with one optional Minor, which is being closed before push; its pin is
+deliberately NOT bumped while unpushed (a pin to an unpushed commit
+dangles for any clone). <code>tool_schema</code> <code>8cec90b</code>,
+pushed. <strong>Re-derive these rather than quoting them</strong> — four
+subagent streams were committing concurrently as this was written, so
+the numbers drift by design. <strong>(iv) STILL OPEN, carried forward
+honestly:</strong> an independent review found the replica-RED bluff
+class STILL LIVE in two sibling files
+(<code>internal/server/llm_default_model_regression_test.go:103,127,170</code>
+— <code>oldResolveDefaultModelReplica</code> reduces to
+<code>&quot;&quot; == &quot;&quot;</code>; and
+<code>llm_generate_regression_test.go:187-198</code>). Conversion is in
+flight. Note the discipline point: <code>3fd55a4d</code>’s claim that
+its own bluff was a “tracked follow-up” was verified UNBACKED — zero
+matching items in <code>docs/workable_items.db</code> or
+<code>docs/Issues.md</code> (§11.4.148). Prose is not tracking.</p>
+</blockquote>
+<blockquote>
+<p><strong>Revision 7 (2026-07-28T17:37Z) is a CORRECTION revision
 produced by a dedicated doc-refresh pass</strong> (scope: this file +
 <code>docs/CONTINUATION.md</code> only, dispatched while four OTHER
 streams actively worked <code>helix_code/internal/llm/</code>,
@@ -278,7 +326,7 @@ paste, first sentence)</h2>
 run <code>git fetch --all --prune --tags</code>, and continue on
 <code>main</code> (Track 1 — §11.4.182 TRUNK RULE: trunk work is ALWAYS
 <code>(T1/main - &lt;alias&gt;)</code>). HEAD is <code>99ff7d8e</code>
-as of 2026-07-28T18:20Z (re-derived this pass — this repo has moved fast
+as of 2026-07-28T17:37Z (re-derived this pass — this repo has moved fast
 every time it has been checked; re-derive again with
 <code>git rev-parse HEAD</code> before trusting this number).
 <strong><code>main</code> is 20 commits ahead</strong> of every
@@ -330,7 +378,7 @@ any earlier summary.</p>
 <code>git fetch --all --prune --tags</code> and
 <code>git log --oneline HEAD..@{u}</code> (expect empty — the risk is
 the reverse direction, <code>@{u}..HEAD</code>, see below).</p>
-<p><strong>State (as of 2026-07-28T18:20Z, doc-refresh pass — RE-DERIVE,
+<p><strong>State (as of 2026-07-28T17:37Z, doc-refresh pass — RE-DERIVE,
 do not trust, this repo moves fast):</strong> meta-repo
 <code>main</code> @ <code>99ff7d8e</code>, <strong>20 commits
 ahead</strong> of all 4 configured remotes
@@ -413,7 +461,7 @@ in ~10 minutes of observation).</p>
 <tr>
 <td><strong>Meta-repo HEAD</strong></td>
 <td>⚠️ <strong>rev 6 row superseded — re-derived rev 7
-(2026-07-28T18:20Z, doc-refresh pass):</strong> <code>99ff7d8e</code>
+(2026-07-28T17:37Z, doc-refresh pass):</strong> <code>99ff7d8e</code>
 (branch <code>main</code>) — <strong>20 commits ahead</strong> of ALL 4
 configured remotes (github/gitlab/origin/upstream), 0 behind (was
 <code>c29e1dcc</code>/8-ahead at rev 6, 12 more commits landed since —
@@ -1149,7 +1197,7 @@ defining §11.4.235 while carriers topped out at §11.4.234, compounded by
 the pin <code>731bf1d3</code> predating checkout <code>32d75788</code>.
 Both are fixed at current HEAD.)</li>
 </ul>
-<p><strong>NEW this revision (rev 7, 2026-07-28T18:20Z — found while
+<p><strong>NEW this revision (rev 7, 2026-07-28T17:37Z — found while
 re-deriving live state, not fixed in this pass, doc-only
 scope):</strong></p>
 <ul>
@@ -1221,7 +1269,7 @@ Re-derived status:</p>
 <ol type="1">
 <li>Independent review (§11.4.142) of the llamacpp fix + its RED test —
 <strong>NOT VERIFIED.</strong> No review artefact located this revision.
-Treat as outstanding; re-dispatch. Re-checked rev 7 (2026-07-28T18:20Z):
+Treat as outstanding; re-dispatch. Re-checked rev 7 (2026-07-28T17:37Z):
 still no matching artefact found under <code>docs/qa/</code>;
 unchanged.</li>
 <li>G7 Class-C matching-bug reconciliation + paired mutation —
@@ -1254,7 +1302,7 @@ work in the tree (snapshot 2026-07-28 — VOLATILE, re-derive)</h2>
 <p>Not a backlog of unpushed commits — in-flight working-tree state.
 Account for every file before any <code>git add</code> (§11.4.84); never
 <code>git add -A</code>.</p>
-<p>⚠️ <strong>SUPERSEDED COUNT AGAIN (rev 7, 2026-07-28T18:20Z): 73
+<p>⚠️ <strong>SUPERSEDED COUNT AGAIN (rev 7, 2026-07-28T17:37Z): 73
 porcelain entries (46 untracked + 27 modified), not ~68.</strong>
 Re-derived fresh via <code>git status --porcelain | wc -l</code>.
 Continuing the same pattern rev 6 already described: mostly more new
