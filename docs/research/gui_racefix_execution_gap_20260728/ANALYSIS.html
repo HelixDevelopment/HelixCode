@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ANALYSIS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ANALYSIS</h1>
+</header>
+<h1 id="gui-racefix-execution-gap-closed-and-what-it-was-hiding">GUI
+racefix execution gap — CLOSED, and what it was hiding</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-07-28</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-07-28</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Outcome</td>
+<td>Gap CLOSED (not bounded); one real shipped defect found</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#result">Result</a></li>
+<li><a href="#per-package-build-status">Per-package build
+status</a></li>
+<li><a href="#execution--all-nine-tests">Execution — all nine
+tests</a></li>
+<li><a href="#defect-found-137-data-races-in-shipped-desktop-chat">Defect
+found: 137 data races in shipped desktop chat</a></li>
+<li><a href="#guard-strength-finding--one-mutation-survived">Guard-strength
+finding — one mutation SURVIVED</a></li>
+<li><a href="#secondary-bluff-surface">Secondary bluff surface</a></li>
+<li><a href="#dependency-list-for-the-operator">Dependency list for the
+operator</a></li>
+<li><a href="#honest-gaps">Honest gaps</a></li>
+</ul>
+<h2 id="result">Result</h2>
+<p>Three <code>main_racefix_test.go</code> files (desktop / harmony_os /
+aurora_os) had been <strong>authored but never executed</strong> on this
+host. The recorded reason — “no X11/GL dev headers” — is
+<strong>factually correct but not binding</strong>: Fyne v2.7.0 ships a
+<code>ci</code> build tag that selects a non-GL driver.</p>
+<p><strong>All nine racefix tests now execute and PASS</strong> at
+<code>-race -count=3</code>. No dependency was installed; no production
+code changed to achieve it.</p>
+<p>Why routine checks missed the gap: all three test files carry
+<code>//go:build !nogui</code>, and
+<code>make verify-compile-tests</code> runs
+<code>go test -tags=nogui -run=&#39;^$&#39;</code> — so the files were never
+compiled, let alone run. The code under test
+(<code>updateLoopTick</code>, <code>startDataUpdates</code>,
+<code>Close</code>/<code>Cleanup</code>) lives entirely in each
+<code>main.go</code>, which is itself <code>!nogui</code>; there is no
+nogui counterpart to test instead.</p>
+<h2 id="per-package-build-status">Per-package build status</h2>
+<p>All three fail <strong>identically</strong> by default — the packages
+do not differ:</p>
+<pre><code>$ go vet ./applications/{desktop,harmony_os,aurora_os}/...   # identical for each
+# [pkg-config --cflags -- gl gl]   No package &#39;gl&#39; found
+# github.com/go-gl/glfw/v3.3/glfw
+./glfw/src/x11_platform.h:33:10: fatal error: X11/Xlib.h: No such file or directory</code></pre>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Package</th>
+<th><code>go vet</code> default</th>
+<th><code>go vet -tags=ci</code></th>
+<th>racefix <code>-race -count=3</code></th>
+<th>full suite <code>-race</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>desktop</code></td>
+<td>FAIL (no X11/GL)</td>
+<td><strong>PASS</strong></td>
+<td><strong>3/3 PASS</strong></td>
+<td>FAIL — 137 data races</td>
+</tr>
+<tr>
+<td><code>harmony_os</code></td>
+<td>FAIL (no X11/GL)</td>
+<td><strong>PASS</strong></td>
+<td><strong>3/3 PASS</strong></td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td><code>aurora_os</code></td>
+<td>FAIL (no X11/GL)</td>
+<td><strong>PASS</strong></td>
+<td><strong>3/3 PASS</strong></td>
+<td><strong>PASS</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Probes —
+<code>gl, x11, xrandr, xcursor, xinerama, xi, xxf86vm, xkbcommon, wayland-client, egl</code>
+all MISSING; <code>/usr/include/X11/Xlib.h</code> and
+<code>/usr/include/GL/gl.h</code> MISSING;
+<code>xvfb-run</code>/<code>Xvfb</code> not on PATH. <strong>Xvfb is
+irrelevant</strong> — the failure is at COMPILE time, not
+runtime-for-want-of-a-display.</p>
+<h2 id="execution-all-nine-tests">Execution — all nine tests</h2>
+<p><code>-tags=ci</code> changes <strong>only Fyne’s driver</strong>.
+Verified our code is byte-identical under it (<code>grep</code> for a
+<code>ci</code> build tag across
+<code>applications/ internal/ cmd/</code> → zero matches). The functions
+under test are pure channel/goroutine logic with no GUI calls, so this
+is full-strength evidence, not a weakened proxy.</p>
+<pre><code>ok  dev.helix.code/applications/desktop     5.107s   EXIT=0   (x3, all PASS)
+ok  dev.helix.code/applications/harmony_os  1.496s   EXIT=0   (x3, all PASS)
+ok  dev.helix.code/applications/aurora_os   1.242s   EXIT=0   (x3, all PASS)</code></pre>
+<p>No nil-deref, no leak, no hang. The <code>99ff7d8e</code> defect
+class is <strong>absent from these paths</strong> — proven by execution,
+which beats the read-based review that was the fallback.</p>
+<h2 id="defect-found-137-data-races-in-shipped-desktop-chat">Defect
+found: 137 data races in shipped desktop chat</h2>
+<p>Running the newly-unlocked desktop suite under <code>-race</code>
+produced <strong>137 <code>WARNING: DATA RACE</code></strong>. Exactly
+one production frame appears in all 137:</p>
+<pre><code>Write at 0x00c000402388 by goroutine 336:
+  fyne.io/fyne/v2/widget.(*Entry).SetText()   entry.go:496
+  dev.helix.code/applications/desktop.streamDesktopChat()
+      applications/desktop/main.go:73
+Previous read at 0x00c000402388 by goroutine 73:
+  fyne.io/fyne/v2/widget.(*textRenderer).Layout()  richtext.go:550
+  fyne.io/fyne/v2/driver/software.RenderCanvas()   render.go:13</code></pre>
+<p><strong>Root cause (§11.4.102, established before any fix).</strong>
+<code>helix_code/applications/desktop/main.go:57-64</code> asserts:</p>
+<blockquote>
+<p><code>(*widget.Entry).SetText is goroutine-safe in Fyne, so calling it from the caller&#39;s worker goroutine is correct.</code></p>
+</blockquote>
+<p><strong>That is FALSE for Fyne ≥ 2.6.</strong> Upstream
+<code>fyne.io/fyne/v2@v2.7.0/thread.go</code> states verbatim:
+<em>“DoAndWait is used to execute a specified function in the main Fyne
+runtime context. <strong>This is required when a background process
+wishes to adjust graphical elements of a running app.</strong> … Since:
+2.6”</em>.</p>
+<p><code>streamDesktopChat</code> is called at <code>main.go:1402</code>
+from inside a <code>go func(…)</code> worker (closed at
+<code>main.go:1408</code>) and mutates <code>da.chatHistory</code>
+directly — as do bare <code>SetText</code> calls at
+<code>main.go:1333, 1381, 1389, 1403, 1406</code>. And
+<code>grep -rn &#39;fyne\.Do|fyne\.DoAndWait&#39; applications/</code> →
+<strong>zero matches anywhere</strong>.</p>
+<p><strong>Deliberately not fixed in the discovering pass.</strong>
+<code>history.SetText(history.Text + content)</code> both reads and
+writes the widget, so a correct fix must move read <em>and</em> write
+inside one closure; <code>fyne.Do</code> is async while
+<code>DoAndWait</code> blocks, so the choice changes ordering/latency in
+the token-by-token streaming path this function exists to provide; it
+touches ≥6 call sites; and §11.4.125/§11.4.142 require independent
+review for a production concurrency change. The stale comment must be
+corrected in the same change.</p>
+<p>Per §11.4.120: the desktop <code>-race</code> failure is the detector
+<strong>correctly catching a real defect</strong> and must NOT be
+suppressed. Without <code>-race</code>, desktop is 45/45 PASS.</p>
+<h2 id="guard-strength-finding-one-mutation-survived">Guard-strength
+finding — one mutation SURVIVED</h2>
+<p>Three paired §1.1 mutations on <code>harmony_os/main.go</code>
+<code>updateLoopTick</code>, each restored (sha256 identical,
+<code>git diff</code> empty, no marker residue):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mutation</th>
+<th>Guard</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A — remove <strong>priority pre-check</strong> only</td>
+<td><code>StopAlwaysWins…</code></td>
+<td><strong>SURVIVED — test still PASSED</strong></td>
+</tr>
+<tr>
+<td>B — remove <strong>inner re-check</strong> only</td>
+<td><code>ResidualWindow…</code></td>
+<td>FAILED, 2497/5000 (≈49.9%)</td>
+</tr>
+<tr>
+<td>C — remove <strong>both</strong> (naked select)</td>
+<td><code>StopAlwaysWins…</code></td>
+<td>FAILED, 2559/5000 (≈51.2%)</td>
+</tr>
+</tbody>
+</table>
+<p>B and C confirm real teeth, matching the ~50% the fix commit
+predicted. But <strong>A is a genuine guard gap</strong>: with the
+pre-check deleted the inner re-check still catches the closed
+<code>stop</code>, so <code>tickWon</code> stays 0 and the test passes.
+A future refactor could delete half of the documented fix and <strong>no
+test would notice</strong>. Shipped code is correct; the <em>guard</em>
+is under-specified.</p>
+<h2 id="secondary-bluff-surface">Secondary bluff surface</h2>
+<p><code>TestRecordDesktopGUILLMChat</code> made a real DeepSeek call
+that returned <code>status 402: Insufficient Balance</code>, and the
+test <strong>still logged</strong>
+<code>RECORD-OK: … real deepseek/deepseek-v4-pro reply captured</code>.
+It certifies <em>bytes appeared in the widget</em>, not that the feature
+worked. It should assert the reply is not a provider-error shape and
+SKIP-with-reason (§11.4.3) when out of credit.</p>
+<h2 id="dependency-list-for-the-operator">Dependency list for the
+operator</h2>
+<p><strong>No installation is needed to run these tests</strong> —
+<code>-tags=ci</code> suffices and is the recommended headless path.
+Installation is only needed for the <strong>real GLFW GUI
+binaries</strong> (<code>make desktop</code> / <code>aurora-os</code> /
+<code>harmony-os</code>, which do not pass <code>-tags=ci</code>).</p>
+<p>Host is ALT Workstation 11.1 (<code>apt-get</code> +
+<code>rpm</code>); runtime GL libs already present, only
+<code>-devel</code> missing. All confirmed available via read-only
+<code>apt-cache show</code>:</p>
+<pre><code>apt-get install -y libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel \
+                   libXi-devel libXxf86vm-devel libXext-devel libGL-devel \
+                   libGLU-devel xorg-proto-devel</code></pre>
+<p>Requires root — <strong>deliberately not attempted</strong>. Note
+<code>libGLX-devel</code> does not exist under that name here;
+<code>libGL-devel</code> provides the <code>gl.pc</code> that
+<code>go-gl/gl</code> looks for.</p>
+<h2 id="honest-gaps">Honest gaps</h2>
+<ul>
+<li><code>-tags=ci</code> does not exercise the real
+<strong>GLFW</strong> driver. Immaterial for the nine racefix tests (no
+GUI calls); GLFW-specific rendering defects remain unmeasured on this
+host.</li>
+<li><strong><code>harmony_os</code> and <code>aurora_os</code> are NOT
+proven free of the same Fyne-threading defect</strong> — they pass only
+because neither has a GUI-record test driving a widget from a worker
+goroutine (5 and 6 <code>go func</code> blocks respectively in their
+<code>main.go</code>). Absence of a failing test is not absence of the
+defect (§11.4.118).</li>
+<li>The mutation battery ran on <strong><code>harmony_os</code>
+only</strong>; the mutation-A guard gap is <em>expected</em> in the
+other two by structural identity, but was not separately measured.</li>
+<li>Single host, Go <code>go1.26.4-X:nodwarf5 linux/amd64</code>. No
+claim about <code>make desktop</code> / <code>aurora-os</code> /
+<code>harmony-os</code>, which were not built.</li>
+</ul>
+</body>
+</html>

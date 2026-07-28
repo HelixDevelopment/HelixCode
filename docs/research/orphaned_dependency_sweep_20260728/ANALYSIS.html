@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ANALYSIS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ANALYSIS</h1>
+</header>
+<h1 id="orphaned-dependency-sweep-2026-07-28">Orphaned-dependency sweep
+— 2026-07-28</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-07-28</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-07-28</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Trigger</td>
+<td>§11.4.108(5) — three “fixed-but-not-working” discoveries in one
+cycle</td>
+</tr>
+</tbody>
+</table>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#why-this-sweep-exists">Why this sweep exists</a></li>
+<li><a href="#the-real-architectural-finding">The real architectural
+finding</a></li>
+<li><a href="#detector-1--per-commit-compile-integrity">Detector 1 —
+per-commit compile integrity</a></li>
+<li><a href="#detector-2--stale-comment-premises">Detector 2 — stale
+comment premises</a></li>
+<li><a href="#detector-3--mutation-protocols">Detector 3 — mutation
+protocols</a></li>
+<li><a href="#detector-4--untested-guards">Detector 4 — untested
+guards</a></li>
+<li><a href="#detector-5--moved-symbols-in-fixtures">Detector 5 — moved
+symbols in fixtures</a></li>
+<li><a href="#the-gate">The gate</a></li>
+<li><a href="#honest-gaps">Honest gaps</a></li>
+</ul>
+<h2 id="why-this-sweep-exists">Why this sweep exists</h2>
+<p>§11.4.108(5): <em>“≥ 3 ‘fixed-but-not-working’ discoveries in one
+cycle signal an architectural VERIFICATION flaw, NOT three independent
+bugs; on the 3rd, STOP patching symptoms and fix the VERIFICATION
+pipeline.”</em></p>
+<p>Three instances surfaced in one remediation cycle, all the same shape
+— <strong>a change moves or renames something, and a dependent artefact
+elsewhere is left pointing at the old world</strong>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Instance</th>
+<th>Closed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>respModel</code> — a test’s composite literal referenced a
+struct field that existed only in the author’s working tree, never in
+the committed tree</td>
+<td><code>34e264e1</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>helix_agent</code> — a refactor moved <code>memoryMu</code>’s
+lock into <code>beginMemoryWrite()</code>; a sibling test’s mutation
+protocol still named <code>saveMemories()</code></td>
+<td><code>5b88aea6</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>debate_orchestrator</code> — a dedup fix reconciled the
+test-side comment but left the production comment asserting the fixed
+defect in present tense, and un-fed the guard’s fixture</td>
+<td><code>2a9485e1</code></td>
+</tr>
+</tbody>
+</table>
+<p>Existing gates miss this class because <strong>they check the CHANGED
+file, never the artefacts that DEPEND on what changed.</strong></p>
+<h2 id="the-real-architectural-finding">The real architectural
+finding</h2>
+<p><strong>The checker already existed.</strong>
+<code>helix_code/Makefile:355</code> ships:</p>
+<pre class="make"><code>verify-compile-tests: ## Compile-check ALL test code under -tags=nogui (go build skips _test.go)</code></pre>
+<p>which runs <code>go test -tags=nogui -run=&#39;^$&#39; -count=1 ./...</code>
+— this <em>does</em> compile test files and <em>would</em> have caught
+instance 1.</p>
+<p><strong>The gap was never a missing checker. It is that the checker
+is only ever bound to the WORKING TREE.</strong> An author whose tree
+carries an uncommitted symbol sees a truthfully-green gate and ships a
+commit that compiles for nobody else. The pasted <code>ok 0.018s</code>
+in instance 1 was not fabricated — it accurately described a tree that
+was never committed.</p>
+<p>So the fix is binding the existing checker to each
+<strong>commit</strong>.</p>
+<h2 id="detector-1-per-commit-compile-integrity">Detector 1 — per-commit
+compile integrity</h2>
+<p>All 14 commits of the meta-repo delta swept. <strong>Exactly three
+non-compiling commits — the three already known. No new
+ones.</strong></p>
+<p>FAIL: <code>3fd55a4d</code>, <code>3c8197cf</code>,
+<code>905a0b0a</code> PASS: <code>8bdac5b0</code> (baseline),
+<code>614353fb</code>, <code>c7484cc7</code>, <code>640db264</code>,
+<code>ed0cdcb8</code>, <code>34e264e1</code>, <code>97d5ad2b</code>,
+<code>99ff7d8e</code>, <code>dc9e4caa</code>, <code>bf1ce692</code>,
+<code>c2b6945e</code></p>
+<p>All three fail with a <strong>byte-identical</strong> error —
+<code>3c8197cf</code>/<code>905a0b0a</code> fail by inheritance, not as
+independent defects:</p>
+<pre><code>internal/server/llm_generate_native_model_regression_test.go:53:3:
+  unknown field respModel in struct literal of type modelRecordingProvider
+FAIL    dev.helix.code/internal/server [build failed]</code></pre>
+<p><strong>Key mechanism:</strong> <code>respModel</code> is a field on
+a <em>test-only</em> struct referenced from a <em>second test file</em>.
+<code>go build</code> never sees it. Only a test-compiling check
+works.</p>
+<h2 id="detector-2-stale-comment-premises">Detector 2 — stale comment
+premises</h2>
+<p>Two NEW findings, both HIGH.</p>
+<p><strong><code>helix_agent/internal/router/router.go:481-482</code></strong>
+— comment claims <em>“Emitting the identity field here closes that
+false-GREEN vector at the source.”</em> The <strong>next commit</strong>
+<code>0367570e</code> states verbatim that <em>“that claim was
+INCORRECT”</em> — and never touched <code>router.go</code>, so the
+refuted claim survives at HEAD. A maintainer could weaken
+<code>checkHelixAgentHealth</code> on that false premise, reopening the
+mock-matching false-GREEN vector.</p>
+<p><strong>Stale claims in the §11.4.131 handoff docs.</strong>
+<code>bf1ce692</code> genuinely repaired the F1 RED branch, but
+<code>c2b6945e</code> — dispatched to correct the status — changed only
+~6 lines per document, leaving the claim alive at
+<code>RESUME.md:55</code> (inside the paste-ready resumption prompt),
+<code>:67</code>, <code>:260</code> (under “NOT yet fixed”), and
+<code>docs/CONTINUATION.md:15</code>. A fresh session was instructed to
+repair something already repaired. Closed by <code>25e54521</code>.</p>
+<p>Enumerated negatives: main-repo Go source <strong>ZERO</strong>
+across 10 commits / ~20 files; <code>debate_orchestrator</code>
+<strong>ZERO</strong>.</p>
+<h2 id="detector-3-mutation-protocols">Detector 3 — mutation
+protocols</h2>
+<p>Two NEW, low severity.</p>
+<p><strong>LOW</strong> —
+<code>helix_agent/internal/services/protocol_monitor_cpu_percent_test.go</code>
+cites lock calls at <code>protocol_monitor.go</code> lines
+183/245/255/265/294/683. All six checked: <strong>none contains a
+lock</strong> (183 = func signature, 245 = <code>return result</code>,
+255/265 = field assignments, 294 = <code>})</code>, 683 =
+<code>strconv.ParseInt</code>). The RED_MODE instruction itself is
+accurate; only the line citations drifted.</p>
+<p><strong>COSMETIC</strong> —
+<code>debate_log_repository_select_priority_test.go:46</code> cites line
+“252-ish”, actual 275; guard string verified present.</p>
+<p>Harvest: <code>helix_code</code> 39 <code>paired mutation</code> / 61
+<code>§1.1</code> / 764 <code>RED_MODE</code> lines;
+<code>helix_agent</code> 13/21/215; <code>debate_orchestrator</code>
+3/5/47. Every <em>target-naming</em> protocol verified correct.</p>
+<h2 id="detector-4-untested-guards">Detector 4 — untested guards</h2>
+<p><strong>HIGH —
+<code>helix_agent/.../ollama/ollama.go</code>:</strong>
+<code>69a5ab8d</code> added ctx-guards at <strong>four</strong> send
+sites; the dedicated test drives <strong>only</strong> the
+<code>httpClient.Do</code> site. The other three are reached by no test
+— deleting them fails zero tests. The meta-repo closed the identical gap
+for vertexai/groq/bedrock/ensemble in <code>97d5ad2b</code>;
+<strong>ollama was left behind</strong> — the same
+reconciliation-in-one-place pattern.</p>
+<p><strong>HIGH —
+<code>helix_agent/internal/agents/dream/dreamer.go:934-957</code>
+<code>atomicWriteFile</code>:</strong> grep of the whole dream test
+corpus for <code>atomicWriteFile</code> / <code>loadMemories</code> /
+<code>orientationPhase</code> returns <strong>zero hits</strong>. The
+concurrency tests assert only <code>memoryWritersPeak</code>, unaffected
+by write atomicity. Reverting to <code>os.WriteFile</code> fails zero
+tests.</p>
+<p><strong>MEDIUM — the three
+<code>applications/*/main_racefix_test.go</code>:</strong>
+correctly-shaped tests existed but all carry
+<code>//go:build !nogui</code>, and <code>verify-compile-tests</code>
+runs <code>-tags=nogui</code> — so they were never even compiled.
+<strong>Superseded</strong>: a follow-on investigation found Fyne’s
+<code>ci</code> build tag runs them headlessly; all nine now execute and
+pass, and doing so exposed 137 real data races. See the sibling document
+<code>docs/research/gui_racefix_execution_gap_20260728/ANALYSIS.md</code>.</p>
+<h2 id="detector-5-moved-symbols-in-fixtures">Detector 5 — moved symbols
+in fixtures</h2>
+<p><strong>EMPTY.</strong> Every removed
+<code>func</code>/<code>type</code>/<code>const</code>/<code>var</code>
+across 24 commits enumerated and grepped at HEAD. Only the known
+<code>respModel</code> instance. Specifically clean: the
+<code>ctx</code>-parameter signature changes in <code>905a0b0a</code>
+have zero stale call sites; <code>runCleanupWorkerRaceHelper</code> has
+zero remaining references.</p>
+<h2 id="the-gate">The gate</h2>
+<p><code>scripts/gates/commit_compile_integrity_gate.sh</code> — binds
+the existing <code>verify-compile-tests</code> checker to each COMMIT
+rather than the working tree. Modes: default <code>@{u}..HEAD</code>,
+<code>--range</code>, <code>--last N</code>, <code>--advisory</code>,
+<code>--tags</code>, <code>--self-test</code>. Throwaway detached
+worktrees only, live <code>submodules/</code> symlinked in, skips
+commits touching no inner Go, <code>EXIT/INT/TERM</code> trap removes
+every worktree and prunes.</p>
+<p>§1.1 paired-mutation self-test — the load-bearing artefact:</p>
+<pre><code>expect DOES-NOT-COMPILE on known-bad 3fd55a4d:
+  3fd55a4d  DOES-NOT-COMPILE  61s
+      internal/server/llm_generate_native_model_regression_test.go:53:3:
+        unknown field respModel in struct literal of type modelRecordingProvider
+  =&gt; PASS: gate correctly FAILED the known-bad commit
+expect COMPILES on known-good 34e264e1:
+  34e264e1  COMPILES     50s
+  =&gt; PASS: gate correctly PASSED the known-good commit
+SELF-TEST PASS: gate can both fail and pass — §1.1 pairing intact</code></pre>
+<p><strong>Measured cost (honest):</strong> ~50 s per compile-relevant
+commit warm-cache; ~20 s when failing fast. Full 14-commit sweep ~11
+min, ~790% CPU, peak RSS ~940 MB, ~0 disk. Cheap enough for pre-push
+over a delta; <strong>too expensive for
+<code>verify-all-constitution-rules.sh</code></strong> (~50 s × N on a
+frequently-run sweep). <strong>Deliberately NOT wired into the
+aggregator</strong> — that is a separate reviewable decision with a real
+cost budget.</p>
+<p><strong>What it does NOT cover:</strong> Detectors 1 and 5 only.
+Detectors 2/3/4 are not type-checkable. Two bounded follow-ons, both
+suggested by remediations already in-tree:
+<code>CM-MUTATION-PROTOCOL-TARGET-EXISTS</code> (assert symbols named in
+mutation prose still exist) and
+<code>CM-DEFENCE-IN-DEPTH-CITES-TEST</code> (require a guard comment to
+name a test, assert it exists — exactly what <code>2a9485e1</code> did
+by hand; mechanising it would have flagged both HIGH Detector-4
+findings).</p>
+<h2 id="honest-gaps">Honest gaps</h2>
+<ul>
+<li><strong><code>!nogui</code> GUI sources are compile-unverified by
+this gate on this host.</strong> Exactly 3 first-party packages sit
+behind that boundary. Without <code>-tags=nogui</code> the run fails on
+missing X11/GL headers alone; reporting that as FAIL would be a
+§11.4.201 FAIL-bluff, hence the pinned tag.</li>
+<li><strong>The sweep holds <code>submodules/</code> at live
+working-tree state</strong>, not each commit’s pinned SHAs — it proves
+main-repo delta integrity, not main×submodule pin-pair integrity.</li>
+<li><strong><code>helix_agent</code> / <code>debate_orchestrator</code>
+were NOT compile-swept</strong> (outside Detector-1 scope).
+<code>helix_agent</code>’s delta is <strong>pushed</strong> — if any
+commit does not compile, that is live in a published submodule.
+Follow-on dispatched.</li>
+<li><strong>Detector-4 verdicts rest on reading call sites, not executed
+mutation.</strong> “Deleting this fails zero tests” is a strong
+read-based inference, not a captured mutation run.</li>
+<li><strong>HEAD moved four times mid-sweep</strong>
+(<code>bf1ce692</code>→<code>c2b6945e</code>→<code>683205eb</code>→<code>5300a4e6</code>);
+Detectors 2-4 were gathered against a moving tree.</li>
+</ul>
+<h2 id="structural-observation">Structural observation</h2>
+<p>The same shape recurred at <strong>four layers in one cycle</strong>
+— source, test prose, production comment, and the session-handoff
+documents themselves. The unifying signature is <em>a reconciliation
+applied in one place and not its siblings</em>.</p>
+<p><code>2a9485e1</code> demonstrates the correct remediation: fix the
+premise <strong>and</strong> name the test that holds it.</p>
+</body>
+</html>
