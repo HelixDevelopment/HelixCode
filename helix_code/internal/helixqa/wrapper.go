@@ -324,13 +324,60 @@ func isTerminalStatus(status string) bool {
 	}
 }
 
-// ListSessions returns all session states.
+// ListSessions returns all session states as LIVE pointers.
+//
+// The returned sessions are the very objects the orchestrator goroutine
+// spawned by StartSession keeps mutating under state.Mu. A caller that reads
+// their fields MUST therefore either hold s.Mu itself or go through a
+// lock-aware path such as MarshalJSON — reading s.Status / s.Phase /
+// s.PhaseProgress / s.EndTime directly off these pointers is a data race, and
+// a lock held only by the writer establishes no happens-before edge that would
+// make it safe.
+//
+// Callers that just want to RENDER a session (a dashboard, a report, a log
+// line) should prefer ListSessionSnapshots, which hands back detached copies
+// and cannot be misused this way. This function remains for callers that need
+// session IDENTITY — e.g. to pair a listing with a later CancelSession call.
 func (e *Engine) ListSessions() []*SessionState {
 	e.sessionMu.RLock()
 	defer e.sessionMu.RUnlock()
 	out := make([]*SessionState, 0, len(e.sessions))
 	for _, s := range e.sessions {
 		out = append(out, s)
+	}
+	return out
+}
+
+// ListSessionSnapshots returns a DETACHED copy of every session state as of
+// the moment of the call, each taken under that session's own read lock.
+//
+// This is the read-only counterpart to ListSessions and exists because the
+// terminal UI's QA dashboard used to render straight off the live pointers,
+// reading Status / Phase / PhaseProgress / EndTime / StartTime / Platforms /
+// Banks with no lock while the orchestrator goroutine wrote exactly those
+// fields under state.Mu (HXC-174). Its sharpest instance was the duration
+// cell's `if s.EndTime != nil { s.EndTime.Sub(s.StartTime) }` — a
+// check-then-use against a pointer the writer publishes, so the reader could
+// observe a non-nil pointer to a not-yet-published value. The race detector
+// reported it on the pre-fix artifact at seven distinct read sites.
+//
+// Each element is produced by creationSnapshot, which is the established
+// point-in-time detach in this package (added for HXC-154): it copies under
+// s.Mu.RLock, carries its own zero mutex and a nil CancelFunc, and copies the
+// Platforms/Banks slices rather than aliasing them, so a later mutation of the
+// live session cannot reach a snapshot already handed out.
+//
+// Snapshots are consistent PER SESSION, not across the set — sessions are
+// snapshotted one after another, so two sessions in one result may reflect
+// slightly different instants. That is the correct granularity for rendering
+// a list, and no caller needs a globally atomic view.
+//
+// Ordering follows ListSessions (Go map iteration order, i.e. unspecified).
+func (e *Engine) ListSessionSnapshots() []*SessionState {
+	live := e.ListSessions()
+	out := make([]*SessionState, 0, len(live))
+	for _, s := range live {
+		out = append(out, s.creationSnapshot())
 	}
 	return out
 }

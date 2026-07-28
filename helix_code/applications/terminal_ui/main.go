@@ -2734,7 +2734,15 @@ func (tui *TerminalUI) showQA() {
 			SetAlign(tview.AlignCenter).
 			SetSelectable(false))
 	} else {
-		sessions := tui.qaEngine.ListSessions()
+		// HXC-174: snapshots, NOT the live pointers. Every field read below
+		// (Status / Phase / PhaseProgress / StartTime / EndTime / Platforms /
+		// Banks) is concurrently written by the orchestrator goroutine under
+		// state.Mu; reading them off ListSessions() here was a data race, with
+		// the EndTime check-then-use able to observe a non-nil pointer to a
+		// not-yet-published value. ListSessionSnapshots detaches each session
+		// under its own read lock, so the rows below are formatted from a
+		// stable copy nothing else can touch.
+		sessions := tui.qaEngine.ListSessionSnapshots()
 		if len(sessions) == 0 {
 			sessionTable.SetCell(1, 0, tview.NewTableCell(tui.t("terminal_ui_qa_no_sessions")).
 				SetAlign(tview.AlignCenter).
@@ -2781,7 +2789,9 @@ func (tui *TerminalUI) showQA() {
 
 	var statsBuilder strings.Builder
 	if tui.qaEngine != nil && tui.qaEngine.Enabled() {
-		sessions := tui.qaEngine.ListSessions()
+		// HXC-174: snapshots for the same reason as the session table above —
+		// this tally reads s.Status while the orchestrator goroutine writes it.
+		sessions := tui.qaEngine.ListSessionSnapshots()
 		var running, completed, failed int
 		for _, s := range sessions {
 			switch s.Status {
