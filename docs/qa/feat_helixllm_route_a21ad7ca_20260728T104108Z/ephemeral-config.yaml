@@ -1,0 +1,340 @@
+# HelixCode Server Configuration - FIXED
+
+server:
+  address: "127.0.0.1"
+  port: 53541
+  read_timeout: 30
+  write_timeout: 30
+  idle_timeout: 300
+  shutdown_timeout: 30
+
+# INFRA OWNERSHIP (operator decision, 2026-07-28): helixcode-infra.service is the
+# SOLE owner of this server's datastores. The unit sets HELIX_AUTOBOOT_INFRA=false
+# so internal/infraboot no longer overwrites the values below.
+#
+# History — why these lines were dead: infraboot.EnsureInfra used to rewrite
+# cfg.Database.* and cfg.Redis.* UNCONDITIONALLY (infraboot.go:247-257) with its
+# own 55432/56379 defaults, booting a SECOND postgres+redis pair while this unit
+# declared Wants=helixcode-infra.service and ignored it. Captured runtime line:
+#   "Infra auto-boot: endpoints already healthy (postgres:55432 redis:56379)"
+# Every value here was therefore inert. The autoboot DB held 15 tables and ZERO
+# rows (schema only), so the switch cost no data; the schema was dumped
+# (qa-results/db_backups/) and restored into helixcode_test before the cutover.
+#
+# The defaults below are the REAL infra endpoints, not container hostnames:
+# compose.helixcode-infra.yml publishes postgres 5433->5432 (user helixcode,
+# db helixcode_test) and redis 6380->6379 with NO requirepass.
+database:
+  host: "localhost"
+  port: 5433
+  user: "${HELIX_DATABASE_USER:helixcode}"
+  password: "${HELIX_DATABASE_PASSWORD}"  # from .env (mode 0600) — CONST-042
+  dbname: "${HELIX_DATABASE_NAME:helixcode_test}"
+  sslmode: "disable"
+
+redis:
+  # NOT "redis" — that is a container hostname, unresolvable from a host-native
+  # process. infra redis publishes 6380 on localhost and requires no password.
+  host: "${HELIX_REDIS_HOST:localhost}"
+  port: 6380
+  password: "${HELIX_REDIS_PASSWORD}"  # empty: infra redis runs without requirepass
+  db: 0
+  enabled: true
+
+auth:
+  jwt_secret: "${HELIX_AUTH_JWT_SECRET}"  # REQUIRED: Set via environment variable - never commit real secrets
+  token_expiry: 86400
+  session_expiry: 604800
+  bcrypt_cost: 12
+
+workers:
+  health_check_interval: 30
+  health_ttl: 120
+  max_concurrent_tasks: 10
+
+tasks:
+  max_retries: 3
+  checkpoint_interval: 300
+  cleanup_interval: 3600
+
+llm:
+  default_provider: "local"
+  max_tokens: 4096
+  temperature: 0.7
+  timeout: 30
+  max_retries: 3
+  
+  providers:
+    # Local providers with proper structure
+    local:
+      type: local
+      endpoint: "http://localhost:11434"
+      enabled: true
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        
+    ollama:
+      type: ollama
+      endpoint: "http://localhost:11434"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        
+    llamacpp:
+      type: llamacpp
+      endpoint: "http://localhost:8080"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+    
+    # Cloud providers with proper structure
+    openai:
+      type: openai
+      endpoint: "https://api.openai.com/v1"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via OPENAI_API_KEY
+        
+    anthropic:
+      type: anthropic
+      endpoint: "https://api.anthropic.com/v1"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via ANTHROPIC_API_KEY
+        
+    gemini:
+      type: gemini
+      endpoint: "https://generativelanguage.googleapis.com/v1"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via GEMINI_API_KEY
+        
+    xai:
+      type: xai
+      endpoint: "https://api.x.ai/v1"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via XAI_API_KEY
+        
+    copilot:
+      type: copilot
+      endpoint: "https://api.githubcopilot.com/v1"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via GITHUB_TOKEN
+        
+    openrouter:
+      type: openrouter
+      endpoint: "https://openrouter.ai/api/v1"
+      enabled: false
+      parameters:
+        timeout: 30.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via OPENROUTER_API_KEY
+    
+    # HelixAgent providers
+    #
+    # BOTH are DISABLED deliberately. Do not flip these back to `true` without
+    # first fixing the two defects documented below — an enabled provider that
+    # cannot be constructed, pointed at the wrong service, is worse than an
+    # honestly disabled one (CONST-035 / Article XI §11.9 anti-bluff).
+    #
+    # DEFECT 1 — provider type is not implemented.
+    #   `helix-llm` and `helix-debate` are NOT registered ProviderType
+    #   constants in helix_code/internal/llm (the full list is grep-able via
+    #   `ProviderType = "..."`; the nearest real one is "helix-agent-ensemble").
+    #   Any attempt to construct them falls through to
+    #   helix_code/internal/llm/factory.go:101
+    #     default: return nil, fmt.Errorf("unsupported provider type: %s", ...)
+    #   NOTE: the identifiers `helix-llm` / `helix-debate` DO exist in
+    #   submodules/.../LLMsVerifier/llm-verifier/pkg/cliagents/helixcode.go as
+    #   *model IDs* for CLI-agent routing — a different namespace. They are not
+    #   HelixCode LLM provider types.
+    #
+    # DEFECT 2 — the endpoints below were wrong AND never expanded.
+    #   helix_code/internal/config/config.go:456-481 (expandShellDefaults)
+    #   expands `${VAR:default}` for EXACTLY five fields — Redis.Host,
+    #   Database.Host, Database.User, Database.DBName, Server.Address. LLM
+    #   provider endpoints are NOT in that list, so a `${...}` value here is
+    #   consumed as a RAW LITERAL string, not as a URL.
+    #   Even had it expanded, both defaults pointed at the wrong process:
+    #     - helix-llm  -> :8081 is helixcode-server ITSELF (self-referential).
+    #                     The real HelixLLM gateway is https://localhost:8443
+    #                     (TLS) per setup.sh:159; the local coder is
+    #                     http://localhost:18434 per setup.sh:162 and
+    #                     helix_code/internal/server/llm_generate.go:502.
+    #     - helix-debate -> :8082 is ChromaDB, a vector database, per
+    #                     compose.helixcode-infra.yml:171-175 ("8082:8000")
+    #                     and setup.sh:164. There is no debate service in the
+    #                     platform port table at all.
+    #   The literal endpoints are removed here rather than "corrected": with the
+    #   type unsupported (DEFECT 1) any endpoint value would be dead config, and
+    #   a plausible-looking URL would imply a working route that does not exist.
+    #
+    # The live local-coder route that DOES work is not configured here at all —
+    # it is resolved in code by resolveHelixLLMLocalProvider()
+    # (helix_code/internal/server/llm_generate.go:513-540) from the
+    # HELIX_LLM_LOCAL_OPENAI_ENDPOINT env var.
+    helix-llm:
+      type: helix-llm
+      enabled: false
+      parameters:
+        timeout: 60.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via HELIX_LLM_API_KEY
+
+    helix-debate:
+      type: helix-debate
+      enabled: false
+      parameters:
+        timeout: 120.0
+        max_retries: 3
+        streaming_support: true
+        api_key: "" # Set via HELIX_DEBATE_API_KEY
+  
+  # Provider selection preferences
+  selection:
+    strategy: "performance"  # performance, cost, availability, round-robin
+    fallback_enabled: true
+    health_check_interval: 30
+
+# LLMsVerifier integration — CONST-036 / CONST-037 / CONST-038.
+#
+# WHY THIS BLOCK MUST EXIST: without it, every key below falls back to the
+# defaults in helix_code/internal/config/config.go:558-564, and TWO of those
+# defaults are actively wrong for this deployment:
+#   - config.go:559  verifier.enabled  = false  -> the integration the
+#                    constitution mandates as the single source of truth for
+#                    model/provider metadata is simply OFF.
+#   - config.go:561  verifier.endpoint = "http://localhost:8081" -> that is
+#                    helixcode-server ITSELF (see server.port above), not
+#                    llmsverifier. Pointing the verifier client at the process
+#                    it is meant to verify is a self-referential loop.
+# Do not delete this block to "restore defaults" — the defaults are the bug.
+#
+# Schema authority: helix_code/internal/config/verifier_config.go (VerifierConfig).
+# Keys here are exactly its mapstructure tags; no invented keys.
+verifier:
+  enabled: true
+  mode: "remote"               # config.go:701 accepts only "remote" | "embedded"
+
+  # :8100 is llmsverifier per the platform port table in setup.sh:161
+  # ("llmsverifier :8100 LLMsVerifier model/provider scoring API").
+  # Verified live: GET http://localhost:8100/api/scores -> 200 with real data.
+  # A plain literal, NOT "${VAR:default}" — expandShellDefaults
+  # (config.go:456-481) only expands 5 fields and verifier.endpoint is not one
+  # of them, so a ${...} value here would be consumed as a raw literal string.
+  # Per-environment override is via the env binding at config.go:394
+  # (HELIX_VERIFIER_ENDPOINT), which takes precedence over this file.
+  endpoint: "http://localhost:8100"
+
+  api_key: ""                  # Set via HELIX_VERIFIER_API_KEY (config.go:395)
+
+  timeout: "30s"               # time.Duration; validated indirectly by callers
+  cache_ttl: "5m"              # config.go:710 requires >= 1s
+
+  # CONST-038 requires model status to reflect verifier state within 60s, so
+  # the poll interval must be <= 60s. config.go:707 also requires >= 10s.
+  polling_interval: "60s"
+
+  scoring:
+    # config.go:715-722 rejects startup unless these sum to exactly 1.0
+    # (tolerance 0.001). 0.40+0.20+0.20+0.15+0.05 = 1.00. Mirrors the
+    # LLMsVerifier weights per config.go:566-571 — change both together.
+    weights:
+      code_capability: 0.40
+      responsiveness: 0.20
+      reliability: 0.20
+      feature_richness: 0.15
+      value_proposition: 0.05
+    min_acceptable_score: 6.0
+    models_dev_enabled: true
+    models_dev_endpoint: "https://api.models.dev"
+
+  # health.* and events.* are intentionally omitted: the defaults at
+  # config.go:576-587 are already correct for this deployment (30s check
+  # interval, circuit breaker enabled, events on, websocket off).
+
+logging:
+  level: "info"
+  format: "text"
+  output: "stdout"
+
+notifications:
+  enabled: true
+
+  # Notification rules - map events to channels
+  rules:
+    - name: "Critical Task Failures"
+      condition: "type==error"
+      channels: ["slack", "email", "telegram"]
+      priority: urgent
+      enabled: true
+
+    - name: "Worker Health Alerts"
+      condition: "type==alert"
+      channels: ["slack", "telegram"]
+      priority: high
+      enabled: true
+
+    - name: "Workflow Completions"
+      condition: "type==success"
+      channels: ["slack"]
+      priority: medium
+      enabled: true
+
+  # Channel configurations
+  channels:
+    slack:
+      enabled: false  # Set to true and configure webhook to enable
+      webhook_url: ""  # Set via HELIX_SLACK_WEBHOOK_URL environment variable
+      channel: "#helix-notifications"
+      username: "HelixCode Bot"
+      timeout: 10
+
+    telegram:
+      enabled: false  # Set to true and configure bot to enable
+      bot_token: ""  # Set via HELIX_TELEGRAM_BOT_TOKEN environment variable
+      chat_id: ""  # Set via HELIX_TELEGRAM_CHAT_ID environment variable
+      timeout: 10
+
+    email:
+      enabled: false  # Set to true and configure SMTP to enable
+      smtp:
+        server: ""  # Set via HELIX_EMAIL_SMTP_SERVER
+        port: 587  # Set via HELIX_EMAIL_SMTP_PORT
+        username: ""  # Set via HELIX_EMAIL_USERNAME
+        password: ""  # Set via HELIX_EMAIL_PASSWORD
+        from: ""  # Set via HELIX_EMAIL_FROM
+        tls: true
+      recipients:
+        default: []  # Set via HELIX_EMAIL_RECIPIENTS (comma-separated)
+      timeout: 30
+
+    discord:
+      enabled: false  # Set to true and configure webhook to enable
+      webhook_url: ""  # Set via HELIX_DISCORD_WEBHOOK_URL environment variable
+      timeout: 10
