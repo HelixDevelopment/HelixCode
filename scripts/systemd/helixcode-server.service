@@ -10,6 +10,14 @@ Wants=network-online.target helixcode-infra.service helixllm-coder.service
 PartOf=helix.target
 
 [Service]
+# INFRA OWNERSHIP (operator decision, 2026-07-28): helixcode-infra.service is the
+# SOLE owner of this server's datastores. Without this, internal/infraboot
+# EnsureInfra rewrites cfg.Database.*/cfg.Redis.* UNCONDITIONALLY
+# (infraboot.go:247-257) with its own 55432/56379 defaults and boots a SECOND
+# postgres+redis pair -- while this unit declares Wants=helixcode-infra.service
+# and then ignores it, making every DB/Redis line in replica-8081.yaml dead config.
+Environment=HELIX_AUTOBOOT_INFRA=false
+
 Type=simple
 # podman is required by the server's infraboot (auto-boots its Postgres+Redis).
 Environment=PATH=/usr/local/bin:/usr/bin:/bin

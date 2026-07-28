@@ -19,10 +19,26 @@ Environment=HELIX_HOST=0.0.0.0
 Environment=HELIX_PORT=8443
 # Reuse the infra stack rather than the default localhost:6379/6333, which
 # belong to unrelated containers on this host.
-Environment=HELIX_CACHE_REDIS_HOST=localhost
-Environment=HELIX_CACHE_REDIS_PORT=6380
+#
+# NAMES MATTER: the binary reads these via envconfig struct tags in
+# submodules/helix_llm/internal/shared/config/config.go. A previous revision set
+# HELIX_CACHE_REDIS_HOST/PORT, which config.go NEVER reads (it declares
+# HELIX_REDIS_HOST / HELIX_REDIS_PORT at lines 121-122). The intent above was
+# therefore silently inert: RedisPort fell back to its default 6379, nothing
+# listens there, and the gateway logged on every start:
+#   "dial tcp 127.0.0.1:6379: connect: connection refused"
+#   "KV cache: Redis unreachable, falling back to in-memory"
+# Verified 2026-07-28 by diffing every Environment= name in this unit against
+# every env tag in config.go: these two were the only mismatches.
+Environment=HELIX_REDIS_HOST=localhost
+Environment=HELIX_REDIS_PORT=6380
 Environment=HELIX_VECTOR_DB_HOST=localhost
 Environment=HELIX_VECTOR_DB_PORT=6333
+# config.go:70 defaults ModelsDir to "/models" — a CONTAINER path. Running
+# natively as a user service that produced
+#   "downloader: create models dir /models: mkdir /models: permission denied"
+# for every auto-download. %h/models is the host's existing model store.
+Environment=HELIX_MODELS_DIR=%h/models
 # LLMsVerifier is the single source of truth for provider/model scoring
 # (CONST-036); llmsverifier.service binds this address.
 Environment=HELIX_LLM_VERIFIER_URL=http://localhost:8100

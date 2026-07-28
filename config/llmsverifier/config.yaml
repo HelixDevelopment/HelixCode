@@ -13,9 +13,25 @@ api:
   enable_cors: true
   port: '8100'
   rate_limit: 100
-  # jwt_secret intentionally omitted: supplied via LLM_VERIFIER_API_JWT_SECRET
-  # from .env (mode 0600, gitignored) per CONST-042 / §12.1. Never inline a
-  # secret in a tracked config file.
+  # Secret comes from LLM_VERIFIER_API_JWT_SECRET in .env (mode 0600, gitignored)
+  # per CONST-042 / §12.1. Never inline a secret in a tracked config file.
+  #
+  # The ${VAR} placeholder is LOAD-BEARING — do not "simplify" it back to an
+  # omitted key. Omitting it does NOT pick the env var up:
+  #   llmverifier/config_loader.go:66-67 calls viper.AutomaticEnv() +
+  #   SetEnvPrefix("LLM_VERIFIER") with NO SetEnvKeyReplacer, so viper maps the
+  #   key api.jwt_secret to the env name "LLM_VERIFIER_API.JWT_SECRET" (dot
+  #   preserved) — not LLM_VERIFIER_API_JWT_SECRET. With the key absent, the
+  #   value fell through to the committed placeholder default at
+  #   config_loader.go:190, and the service logged on every start:
+  #     "WARNING: Using default JWT secret. Please set
+  #      LLM_VERIFIER_API_JWT_SECRET environment variable in production."
+  #   i.e. the secret WAS set in .env and was silently never read.
+  # An explicit ${VAR} value IS handled: expandEnvVar (config_loader.go:278-288)
+  # substitutes only when the value is literally ${VAR}. Verified 2026-07-28.
+  # The structural fix (adding SetEnvKeyReplacer) belongs upstream in the
+  # llms_verifier submodule.
+  jwt_secret: "${LLM_VERIFIER_API_JWT_SECRET}"
 
 database:
   # Relative to the unit's WorkingDirectory (the llm-verifier module root), so
