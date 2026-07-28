@@ -1,0 +1,26 @@
+=== RUN   TestStartQASession_CreatedResponseStatusIsDeterministic_Concurrent
+2026/07/29 00:51:39 ✅ helix_qa engine initialized (output: /tmp/.private/milos/TestStartQASession_CreatedResponseStatusIsDeterministic_Concurre3229527129/001)
+    qa_session_created_status_test.go:196: HXC-154 concurrent: 64 clients x 8 requests = 512 responses, status distribution: completed=2 pending=406 running=104
+    qa_session_created_status_test.go:206: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/server/qa_session_created_status_test.go:206
+        	Error:      	Not equal: 
+        	            	expected: map[string]int{"pending":512}
+        	            	actual  : map[string]int{"completed":2, "pending":406, "running":104}
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1,3 +1,5 @@
+        	            	-(map[string]int) (len=1) {
+        	            	- (string) (len=7) "pending": (int) 512
+        	            	+(map[string]int) (len=3) {
+        	            	+ (string) (len=9) "completed": (int) 2,
+        	            	+ (string) (len=7) "pending": (int) 406,
+        	            	+ (string) (len=7) "running": (int) 104
+        	            	 }
+        	Test:       	TestStartQASession_CreatedResponseStatusIsDeterministic_Concurrent
+        	Messages:   	every concurrently-created session's 201 body must report exactly 'pending' — contention must not leak orchestrator progress into a creation response. Observed: completed=2 pending=406 running=104
+--- FAIL: TestStartQASession_CreatedResponseStatusIsDeterministic_Concurrent (0.11s)
+FAIL
+FAIL	dev.helix.code/internal/server	0.267s
+FAIL

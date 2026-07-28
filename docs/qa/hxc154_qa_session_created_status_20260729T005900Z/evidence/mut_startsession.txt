@@ -1,0 +1,43 @@
+==================
+WARNING: DATA RACE
+Write at 0x00c000360010 by goroutine 10:
+  dev.helix.code/internal/helixqa.(*Engine).StartSession.func1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper.go:199 +0x15e
+
+Previous read at 0x00c000360010 by goroutine 9:
+  dev.helix.code/internal/helixqa.TestEngine_StartSession()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper_test.go:75 +0x769
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 10 (running) created at:
+  dev.helix.code/internal/helixqa.(*Engine).StartSession()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper.go:195 +0x929
+  dev.helix.code/internal/helixqa.TestEngine_StartSession()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/helixqa/wrapper_test.go:63 +0x52b
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 9 (running) created at:
+  testing.(*T).Run()
+      /usr/lib/golang/src/testing/testing.go:2101 +0xb12
+  testing.runTests.func1()
+      /usr/lib/golang/src/testing/testing.go:2585 +0x84
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.runTests()
+      /usr/lib/golang/src/testing/testing.go:2583 +0x9e9
+  testing.(*M).Run()
+      /usr/lib/golang/src/testing/testing.go:2443 +0xf4b
+  main.main()
+      _testmain.go:82 +0x164
+==================
+--- FAIL: TestEngine_StartSession (0.10s)
+    testing.go:1712: race detected during execution of test
+FAIL
+FAIL	dev.helix.code/internal/helixqa	0.126s
+FAIL

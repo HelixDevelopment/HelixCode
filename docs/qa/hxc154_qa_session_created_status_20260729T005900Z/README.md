@@ -82,8 +82,8 @@ switch uses the umbrella).
 | Pre-fix | **PASS** (defect present) | **FAIL** (guard falsifiable) |
 | Fixed | **FAIL** (polarity flips) | **PASS** |
 
-- `logs/engine_red1.log`, `logs/engine_red0.log`, `logs/server_red1.log`, `logs/server_red0.log` — pre-fix
-- `logs/engine_green.log`, `logs/server_green.log`, `logs/concurrent_green.log` — fixed
+- `evidence/engine_red1.txt`, `evidence/engine_red0.txt`, `evidence/server_red1.txt`, `evidence/server_red0.txt` — pre-fix
+- `evidence/engine_green.txt`, `evidence/server_green.txt`, `evidence/concurrent_green.txt` — fixed
 
 The engine-level guard is **deterministic in both polarities**: `Shutdown()` blocks on the
 engine WaitGroup and every exit path of the orchestrator commits a terminal status, so the
@@ -105,9 +105,9 @@ still compiles — a *behavioural*, not a compile, mutation):
 
 | Guard | Mutated (fix reverted) |
 |---|---|
-| engine, GREEN polarity | **FAIL** (`logs/mut_engine.log`) |
-| server serial, GREEN | **FAIL** — `pending=1947 running=53` (`logs/mut_server.log`) |
-| server concurrent, GREEN | **FAIL** — `pending=406 running=104 completed=2` (`logs/mut_concurrent.log`) |
+| engine, GREEN polarity | **FAIL** (`evidence/mut_engine.txt`) |
+| server serial, GREEN | **FAIL** — `pending=1947 running=53` (`evidence/mut_server.txt`) |
+| server concurrent, GREEN | **FAIL** — `pending=406 running=104 completed=2` (`evidence/mut_concurrent.txt`) |
 | both, RED polarity | **PASS** (defect reproduces again) |
 
 A first mutation attempt was discarded because it broke compilation (unused variable) — a
@@ -133,7 +133,7 @@ requested — pure scheduling luck. It now starts the session with an **invalid 
 so `ParsePlatforms` fails and the session settles on `"failed"`; every state it can be
 observed in is `!= "completed"`, so the 409 branch is exercised with probability 1.
 **40/40 deterministic**, and still falsifiable: disabling the handler's 409 branch makes it
-FAIL (`logs/mut_409.log`).
+FAIL (`evidence/mut_409.txt`).
 
 ### 7b. `TestEngine_ListSessions` — NOT caused by this fix
 
@@ -153,7 +153,7 @@ five states and read even that under `state.Mu`, with a comment stating that pin
 `"pending"` "is a true data race". With the fix that is no longer true, so the assertion
 now says what it always meant (`require.Equal(t, "pending", state.Status)`) and the stale
 comment is corrected. Falsifiable: reverting the fix makes it FAIL
-(`logs/mut_startsession.log`).
+(`evidence/mut_startsession.txt`).
 
 ## 8. Verification
 

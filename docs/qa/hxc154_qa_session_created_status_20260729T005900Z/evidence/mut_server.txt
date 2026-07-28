@@ -1,0 +1,24 @@
+2026/07/29 00:49:00 ✅ helix_qa engine initialized (output: /tmp/.private/milos/TestStartQASession_CreatedResponseStatusIsDeterministic1365550106/001)
+--- FAIL: TestStartQASession_CreatedResponseStatusIsDeterministic (0.24s)
+    qa_session_created_status_test.go:113: HXC-154: 2000 POST /api/v1/qa/session responses, status distribution: pending=1947 running=53
+    qa_session_created_status_test.go:125: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/server/qa_session_created_status_test.go:125
+        	Error:      	Not equal: 
+        	            	expected: map[string]int{"pending":2000}
+        	            	actual  : map[string]int{"pending":1947, "running":53}
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1,3 +1,4 @@
+        	            	-(map[string]int) (len=1) {
+        	            	- (string) (len=7) "pending": (int) 2000
+        	            	+(map[string]int) (len=2) {
+        	            	+ (string) (len=7) "pending": (int) 1947,
+        	            	+ (string) (len=7) "running": (int) 53
+        	            	 }
+        	Test:       	TestStartQASession_CreatedResponseStatusIsDeterministic
+        	Messages:   	every 201 Created body must report exactly 'pending': the creation response describes the session AS CREATED and must not leak the orchestrator goroutine's concurrent progress. Observed: pending=1947 running=53
+FAIL
+FAIL	dev.helix.code/internal/server	0.285s
+FAIL
