@@ -485,22 +485,37 @@ func (app *HarmonyApp) refreshData() {
 
 	ctx := context.Background()
 
-	// Try to fetch tasks from API first, fallback to local
-	tasks, err := app.fetchTasksFromAPI()
-	if err != nil {
-		// Fallback to local task manager
-		log.Printf("API tasks unavailable, using local: %v", err)
-	} else {
-		app.tasks = tasks
-	}
+	// Guarded by apiClient != nil so a HarmonyApp constructed without a
+	// live API client (a partial-construction path -- e.g. a test that
+	// drives startDataUpdates()/updateLoopTick in isolation without going
+	// through the full Initialize() sequence, or any future error-recovery
+	// path that builds a HarmonyApp before the API client is wired)
+	// degrades to the same "no tasks/workers from API, fall back to
+	// local" behaviour this function already applies to every OTHER
+	// optional dependency below (projectManager, sessionManager,
+	// llmManager), instead of a nil-pointer panic in this background
+	// goroutine. Brings this function into structural parity with the
+	// identically-shaped refreshData() in applications/desktop and
+	// applications/aurora_os, neither of which has an API client field at
+	// all -- apiClient was the sole unguarded optional dependency here.
+	if app.apiClient != nil {
+		// Try to fetch tasks from API first, fallback to local
+		tasks, err := app.fetchTasksFromAPI()
+		if err != nil {
+			// Fallback to local task manager
+			log.Printf("API tasks unavailable, using local: %v", err)
+		} else {
+			app.tasks = tasks
+		}
 
-	// Try to fetch workers from API first, fallback to local
-	workers, err := app.fetchWorkersFromAPI()
-	if err != nil {
-		// Fallback to local worker manager
-		log.Printf("API workers unavailable, using local: %v", err)
-	} else {
-		app.workers = workers
+		// Try to fetch workers from API first, fallback to local
+		workers, err := app.fetchWorkersFromAPI()
+		if err != nil {
+			// Fallback to local worker manager
+			log.Printf("API workers unavailable, using local: %v", err)
+		} else {
+			app.workers = workers
+		}
 	}
 
 	// Refresh projects from local manager

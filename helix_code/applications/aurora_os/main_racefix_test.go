@@ -71,7 +71,22 @@ func redMode() bool {
 }
 
 func TestAuroraApp_UpdateLoopTick_StopAlwaysWinsOverPendingTick(t *testing.T) {
-	auroraApp := &AuroraApp{stopUpdate: make(chan struct{})}
+	// systemMonitor must be non-nil: under the documented RED_MODE manual
+	// reproduction protocol (priority pre-check removed by hand, see the
+	// doc comment above), the tickerC branch calls refreshData() (safe --
+	// nil-guarded) followed unconditionally by refreshSystemInfo(), which
+	// does auroraApp.systemMonitor.mu.Lock() -- a nil *AuroraSystemMonitor
+	// there panics the whole test binary instead of reproducing the race.
+	// Under the DEFAULT RED_MODE=0 path this field is never touched (the
+	// priority pre-check returns false before either refresh call runs),
+	// so this addition changes nothing about the standing GREEN guard --
+	// it only makes the documented RED_MODE=1 protocol actually runnable.
+	// See main_doubleclose_test.go for the established
+	// minimal-construction pattern this mirrors.
+	auroraApp := &AuroraApp{
+		stopUpdate:    make(chan struct{}),
+		systemMonitor: &AuroraSystemMonitor{},
+	}
 
 	const trials = 5000
 	tickWon := 0
@@ -105,7 +120,16 @@ func TestAuroraApp_UpdateLoopTick_StopAlwaysWinsOverPendingTick(t *testing.T) {
 // between updateLoopTick's pre-check and its blocking select, via the
 // updateLoopTickRaceHook test seam.
 func TestAuroraApp_UpdateLoopTick_ResidualWindowStopRaceDuringBlockingSelect(t *testing.T) {
-	auroraApp := &AuroraApp{stopUpdate: make(chan struct{})}
+	// systemMonitor must be non-nil for the same reason as in
+	// TestAuroraApp_UpdateLoopTick_StopAlwaysWinsOverPendingTick above:
+	// the documented RED_MODE=1 manual protocol (inner re-check removed by
+	// hand) reaches refreshSystemInfo(), which unconditionally locks
+	// auroraApp.systemMonitor.mu. Under the DEFAULT RED_MODE=0 path this
+	// field is never touched, so the standing GREEN guard is unaffected.
+	auroraApp := &AuroraApp{
+		stopUpdate:    make(chan struct{}),
+		systemMonitor: &AuroraSystemMonitor{},
+	}
 
 	const trials = 5000
 	strayApplies := 0
