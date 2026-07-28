@@ -112,10 +112,39 @@ Zero unguarded sends in the sibling sub-packages, so the item's scope claim hold
 cerebras: 0    cohere: 0    huggingface: 0    replicate: 0    together: 0
 ```
 
-## Honest gaps (§11.4.6)
+## Harness self-validation (§11.4.107(10)) — gap closed in `d375f602`
 
-- `internal/llm/streamleak` has **no test files of its own**. It is exercised transitively
-  by all seven guards that call it, and its ability to fail is proven by cell 2 above, but
-  it carries no dedicated unit test.
+The first revision of this document recorded, as an honest gap, that
+`internal/llm/streamleak` had no test of its own — meaning all seven provider guards
+rested on the unverified assumption that `ParkedInSend` can distinguish an unguarded
+send from a ctx-guarded one. That gap is now closed by
+`internal/llm/streamleak/streamleak_test.go`, which pins the probe against a
+golden-BAD / golden-GOOD fixture pair plus the `RED_MODE` env contract:
+
+```
+$ go test -count=1 -race ./internal/llm/streamleak/
+--- PASS: TestParkedInSend_SelfValidation/golden_bad_unguarded_send_IS_detected
+--- PASS: TestParkedInSend_SelfValidation/golden_good_guarded_send_is_NOT_detected
+--- PASS: TestRedMode_ReadsEnvContract
+ok  	dev.helix.code/internal/llm/streamleak	1.697s
+SELFVAL_EXIT=0
+```
+
+§1.1 paired mutation — `return false` injected at the top of `ParkedInSend`:
+
+```
+--- FAIL: TestParkedInSend_SelfValidation/golden_bad_unguarded_send_IS_detected
+    SELF-VALIDATION FAILED: the probe did NOT detect a goroutine parked on a bare
+    unguarded send. The probe is blind, so every provider guard that calls it is
+    reporting GREEN on faith rather than on evidence.
+MUTANT_EXIT=1
+```
+
+File restored immediately; `git diff` empty, zero mutation markers remaining (§11.4.84).
+
+## Remaining honest gaps (§11.4.6)
+
 - The guard proves the goroutine no longer parks. It does **not** separately assert that
   `resp.Body` was closed; body closure is inferred from the `defer` now being reached.
+- The guard exercises the SSE `data:`-framed path. The `[DONE]` terminator and the
+  malformed-frame `continue` branches are not separately driven by this test.
