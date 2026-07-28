@@ -1,50 +1,69 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# HelixCode Constitution — inheritance pointer (NOT a source of truth)
 
-## Core Principles
+> **This file is a POINTER, not a constitution.** It exists because GitHub SpecKit
+> requires a file at this path and reads it during `/speckit-plan`'s
+> "Constitution Check" gate. It deliberately carries **no principles of its own**.
+>
+> Authoring principles here would create a **third** constitution in this
+> repository, which **CONST-059** (canonical-root inheritance clarity) forbids.
+> Tracked as risk **R-23** in
+> `docs/research/fully_incorporate_the_helixskills_system_into_helixcode_heli_20260728T192622Z_2557683/06_risk_register.md`.
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## INHERITED FROM constitution/Constitution.md
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+The canonical governance corpus for this repository is, in precedence order:
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+1. **`constitution/Constitution.md`** — the HelixConstitution submodule. The single
+   source of truth for every universal rule (§11.4.x anchors, CONST-0NN mandates).
+   Its sibling carriers `constitution/{CLAUDE,AGENTS,QWEN,GEMINI}.md` are the
+   five-carrier lockstep set (§11.4.157).
+2. **`<repo-root>/CLAUDE.md`** (and `AGENTS.md` / `QWEN.md` / `GEMINI.md` /
+   `CRUSH.md`) — HelixCode's consumer extensions. Project-specific rules only;
+   they extend and never weaken the canonical root (§11.4.35 / CONST-059).
+3. **This file** — a pointer. Zero independent authority.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Where this file appears to disagree with either of the above, **both of the above
+win**. There is no case in which a rule stated only here is binding.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+## What the SpecKit "Constitution Check" gate MUST evaluate against
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+When `/speckit-plan` reaches its Constitution Check gate, it evaluates the plan
+against the anchors in `constitution/Constitution.md` — **not** against this file.
+The anchors that gate essentially every plan in this repository:
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+| Anchor | What it gates |
+|---|---|
+| §11.4 / §11.4.1 / §11.4.123 | Anti-bluff: no PASS without captured runtime evidence |
+| §11.4.6 | No guessing — `UNCONFIRMED:` / `UNKNOWN:` rather than plausible fill-in |
+| §11.4.108 | Four-layer verification; a change is done only when its **runtime signature** verifies on a clean target — never a source grep |
+| §11.4.169 | Mandatory test-type coverage (13 enumerated types) |
+| §11.4.125 / §11.4.134 / §11.4.142 | Independent code review, iterated to a zero-finding GO |
+| §11.4.224 | Test-first (TDD) for all work; ≥ 85 % coverage floor |
+| §11.4.74 / §11.4.28 | Reuse-before-rewrite; owned submodules stay project-agnostic |
+| CONST-051(C) / §11.4.28(C) | No nested own-org submodule chains |
+| §11.4.65 / §11.4.212 | Four-format doc exports; every doc reachable from README |
+| §1.1 | Every gate ships a paired mutation that makes it FAIL |
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Do not "fill this in"
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Running `/speckit-constitution` against this file would overwrite this pointer with
+generated principles and re-open R-23. If a SpecKit workflow demands a populated
+constitution, the correct action is to point it at `constitution/Constitution.md`,
+never to author principles here.
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+Planned mechanical enforcement (see
+`specs/001-helixskills-incorporation/tasks.md`, task **T-P1.06**): gate
+`CM-CANONICAL-ROOT-CLARITY` extended to assert this file opens with the
+`## INHERITED FROM constitution/Constitution.md` heading; paired §1.1 mutation
+strips the heading → gate MUST fail.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+---
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+| Field | Value |
+|---|---|
+| **Version** | 1.0.0 |
+| **Ratified** | 2026-07-29 |
+| **Last amended** | 2026-07-29 |
+| **Authority** | none — pointer only (CONST-059) |
+| **Canonical root** | `constitution/Constitution.md` |
+| **Replaces** | SpecKit stock template (2 346 B placeholder installed by `specify init`, commit `019dcc86`). The unmodified template remains at `.specify/templates/constitution-template.md`. |
