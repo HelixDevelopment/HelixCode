@@ -60,6 +60,45 @@
 #       * flat transcript  : docs/qa/<name>.md
 #     docs/qa/README.md is the CONVENTION document, not evidence — excluded.
 #
+#   RULE 3 — CITATION (proof, §11.4.120 reconciliation 2026-07-28):
+#     A TRACKED docs/qa/ evidence file cites this commit's SHA (full or
+#     abbreviated, >=8 hex chars) in its content. Matched with `git grep`,
+#     which searches TRACKED files only — an untracked file dropped into
+#     the working tree can NOT clear the gate (verified by negative
+#     control). docs/qa/README.md is excluded as the convention doc.
+#
+#   Why RULE 3 exists (the second false-positive class this reconciles):
+#     The project's normal workflow is a PAIR of commits: the feature
+#     commit ships the code, and a following `close(HXC-NNN): … (→ Fixed.md)`
+#     commit lands docs/qa/<run-id>/EVIDENCE.md and moves the tracker item.
+#     RULE 1 only inspects the commit's OWN tree, so it cannot see evidence
+#     that landed in the paired close commit; RULE 2 cannot see it either,
+#     because the subject says "HXC-119" while the run-id directory is
+#     "hxc119_20260712T193000Z" (case + timestamp suffix differ). Five such
+#     commits were false-positives before this reconciliation — each with a
+#     tracked EVIDENCE.md that names its fix commit SHA verbatim:
+#       fbfffd7d -> docs/qa/hxc119_20260712T193000Z/EVIDENCE.md
+#       0e3bb747 -> docs/qa/hxc145_147_20260712T190000Z/EVIDENCE.md
+#       6efadd15 -> docs/qa/hxc148_20260712T173000Z/EVIDENCE.md
+#       225cdf77 -> docs/qa/hxc118_20260712T151500Z/EVIDENCE.md
+#       aa6b20b4 -> docs/qa/hxc117_20260712T140900Z/EVIDENCE.md
+#     A SHA citation is PROOF, not a guess: the evidence document names the
+#     exact commit it documents, so the binding is machine-checkable and
+#     cannot be satisfied by coincidence the way RULE 2 can.
+#
+#   Honest boundary for RULE 3 (§11.4.6 — stated, not papered over):
+#     RULE 3 asserts an evidence file EXISTS and is BOUND to this commit.
+#     It does NOT assert the evidence is deep enough to satisfy §11.4.83's
+#     bidirectional-transcript bar — that remains a human/QA judgement.
+#     Residual risk: a single ledger-style document enumerating many commit
+#     SHAs would clear every commit it lists. This is NOT mechanically
+#     capped here (any cap would be an invented threshold, §11.4.6); instead
+#     the gate PRINTS THE CITING FILE PATH on every RULE 3 pass, so a
+#     reviewer can tell a per-feature transcript from a blanket ledger at a
+#     glance. No such ledger exists in docs/qa today (verified 2026-07-28:
+#     each of the five matches resolved to exactly one ticket-scoped
+#     EVIDENCE.md, and the 13 remaining violations matched nothing).
+#
 #   RULE 2 — LEGACY subject-substring heuristic (fallback, retained):
 #     The commit subject contains the basename of an existing
 #     docs/qa/<run-id>/ directory (e.g. subject mentions "HXC-019" and
@@ -78,9 +117,13 @@
 #     pure coincidence) and is labelled as such in the report output, so a
 #     reader can tell proof from guess at a glance.
 #
-#   RULE 1 is strictly ADDITIVE — it can only clear commits that genuinely
-#   committed evidence. A feature commit that adds NO docs/qa/ path and
-#   whose subject names no existing run-id is still a VIOLATION.
+#   RULES 1 and 3 are strictly ADDITIVE — they can only clear commits whose
+#   evidence genuinely exists in the repository (committed by the commit
+#   itself, or committed by its paired close commit and citing its SHA). A
+#   feature commit that adds NO docs/qa/ path, is cited by NO tracked
+#   evidence file, and whose subject names no existing run-id is still a
+#   VIOLATION. Evaluation order is PROOF FIRST, GUESS LAST:
+#   RULE 1 (own tree) -> RULE 3 (SHA citation) -> RULE 2 (subject guess).
 #
 # Usage:
 #   scripts/verify_qa_evidence.sh [N]
@@ -250,6 +293,37 @@ qa_evidence_added_by_commit() {
 		| head -1
 }
 
+# qa_evidence_citing_commit <sha>
+#   RULE 3 (CITATION, proof). Prints the docs/qa/ evidence file whose TRACKED
+#   content cites this commit's SHA — path relative to docs/qa/, e.g.
+#   "hxc119_20260712T193000Z/EVIDENCE.md" — or nothing.
+#   - Uses `git grep`, which searches TRACKED files ONLY: an untracked file
+#     dropped into docs/qa/ can NOT clear the gate.
+#   - Tries the full 40-char SHA first, then the abbreviated form; never a
+#     needle shorter than 8 hex chars (collision floor).
+#   - docs/qa/README.md is the convention doc, not evidence — excluded.
+#   - Prints the citing FILE (not just the run-id) so a reviewer can see at a
+#     glance whether the citation came from a per-feature transcript or from
+#     a blanket ledger (the documented residual risk in the header).
+qa_evidence_citing_commit() {
+	sha_full="$(git rev-parse "$1" 2>/dev/null || true)"
+	# The needle is the FIRST 8 CHARS of the full SHA — deliberately NOT
+	# `git rev-parse --short`, whose width is repo-dependent (git auto-scales
+	# it with object count; core.abbrev can override it). Because every
+	# abbreviation of a SHA is a PREFIX of it, this single 8-char needle
+	# substring-matches a citation of ANY length >= 8, including the full
+	# 40-char form. Using --short instead silently stopped matching in a repo
+	# that abbreviates to 7 (caught by the paired fixture mutation, §1.1).
+	# 8 hex chars is the collision floor: shorter citations are NOT honoured.
+	[ "${#sha_full}" -ge 8 ] || return 0
+	needle="${sha_full:0:8}"
+	hit="$(git grep -l -F "$needle" -- "$QA_DIR" ":!$QA_DIR/README.md" 2>/dev/null | head -1)"
+	if [ -n "$hit" ]; then
+		echo "${hit#"$QA_DIR"/}"
+	fi
+	return 0
+}
+
 # --------- Determine the commit window ---------
 # Advisory  : last N commits (default 20) reachable from HEAD.
 # Enforcing : commits in <since>..HEAD (descendants of the baseline), so the
@@ -327,9 +401,18 @@ for sha in $commits; do
 	matched="$(qa_evidence_added_by_commit "$sha")"
 	match_kind="added by this commit (exact)"
 
+	# RULE 3 (CITATION): is there a TRACKED docs/qa evidence file that cites
+	# this commit's SHA? Catches the normal two-commit workflow where the
+	# feature commit ships code and its paired close commit lands the
+	# evidence. Proof, not a guess — the evidence names the commit.
+	if [ -z "$matched" ]; then
+		matched="$(qa_evidence_citing_commit "$sha")"
+		[ -n "$matched" ] && match_kind="cites this commit's SHA (exact)"
+	fi
+
 	# RULE 2 (LEGACY heuristic): does the subject name an existing run-id
-	# directory? Only consulted when RULE 1 found nothing. This is a GUESS,
-	# not proof — reported as such so it is never mistaken for evidence.
+	# directory? Only consulted when RULES 1 and 3 found nothing. This is a
+	# GUESS, not proof — reported as such so it is never mistaken for evidence.
 	if [ -z "$matched" ]; then
 		match_kind="named in commit subject (legacy heuristic — not proof)"
 		for rid in $existing_runids; do
@@ -346,10 +429,10 @@ for sha in $commits; do
 		violation_count=$((violation_count + 1))
 		if [ "$MODE_ENFORCE" -eq 1 ]; then
 			echo "  VIOL   ${short}  ${subject}" >&2
-			echo "         -> commit adds no docs/qa/ evidence path, and its subject names no existing run-id" >&2
+			echo "         -> no docs/qa evidence: commit adds none, none cites its SHA, subject names no run-id" >&2
 		else
 			echo "  WARN   ${short}  ${subject}"
-			echo "         -> commit adds no docs/qa/ evidence path, and its subject names no existing run-id"
+			echo "         -> no docs/qa evidence: commit adds none, none cites its SHA, subject names no run-id"
 		fi
 	fi
 done

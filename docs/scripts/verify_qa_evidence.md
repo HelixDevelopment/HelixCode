@@ -1,7 +1,7 @@
 # `verify_qa_evidence.sh` — companion guide
 
-**Revision:** 2
-**Last modified:** 2026-05-28T00:00:00Z
+**Revision:** 3
+**Last modified:** 2026-07-28T00:00:00Z
 
 | Field | Value |
 |---|---|
@@ -124,9 +124,40 @@ always fails the enforcing gate.
    uses `git diff-tree --no-commit-id --name-only -r` (robust across git
    versions).
 5. A commit carrying `[no-qa-evidence]` is reported `exempt` and skipped.
-6. For each remaining feature commit, checks whether its subject
-   references a known run-id directory; prints `ok` / `WARN` (advisory)
-   or `ok` / `VIOL` (enforcing).
+6. For each remaining feature commit, looks for its evidence using three
+   rules, evaluated **proof first, guess last** — the first that matches
+   wins, and the report names which rule fired so a reader can tell proof
+   from guess at a glance:
+
+   | Rule | Question | Strength |
+   |---|---|---|
+   | **RULE 1** | Did *this commit's own tree* add/change a `docs/qa/` path that still exists? Both shapes count: `docs/qa/<run-id>/<file>` and a flat `docs/qa/<name>.md`. | proof — read from the commit's own `git diff-tree` |
+   | **RULE 3** | Does a **tracked** `docs/qa/` file *cite this commit's SHA*? Matched with `git grep` (tracked files only), needle = the first 8 chars of the full SHA. | proof — the evidence names the commit |
+   | **RULE 2** | Does the commit *subject* contain the basename of an existing `docs/qa/<run-id>/` directory? | **guess** — can match by coincidence; retained only so no previously-passing commit regresses |
+
+   RULE 3 exists because the project's normal workflow is a **pair** of
+   commits: the feature commit ships the code, and a following
+   `close(HXC-NNN): … (→ Fixed.md)` commit lands
+   `docs/qa/<run-id>/EVIDENCE.md`. RULE 1 cannot see that evidence (wrong
+   tree) and RULE 2 cannot either (the subject says `HXC-119` while the
+   run-id is `hxc119_20260712T193000Z`). Five commits were false
+   violations for exactly this reason before RULE 3 was added.
+
+   The needle is deliberately **not** `git rev-parse --short`, whose width
+   is repo-dependent; because every abbreviation is a prefix of the full
+   SHA, one 8-char needle substring-matches any citation of length ≥ 8,
+   including the full 40-char form. Citations shorter than 8 hex chars are
+   not honoured (collision floor).
+
+   Prints `ok` / `WARN` (advisory) or `ok` / `VIOL` (enforcing).
+
+   **Honest boundary (§11.4.6):** RULE 3 proves an evidence file *exists*
+   and is *bound to this commit*. It does **not** judge whether that
+   evidence meets §11.4.83's bidirectional-transcript depth bar — that
+   stays a human/QA judgement. A ledger-style document listing many SHAs
+   would clear every commit it names; this is not mechanically capped
+   (any cap would be an invented threshold), so the gate prints the citing
+   file path on every RULE 3 pass for reviewer inspection.
 7. Advisory: prints a summary and ALWAYS exits 0. Enforcing: exits 1 if
    any `VIOL` was recorded, else 0.
 
@@ -145,6 +176,12 @@ pre-push hooks:
   meta-test in a throwaway temp git repo, asserting the gate FAILs when
   evidence is missing, PASSes when present, and honours the
   `[no-qa-evidence]` opt-out and the mandatory `--since` baseline.
+  Also covers RULE 3 with three paired mutations: evidence landed by a
+  paired close commit citing the feature SHA → PASS; the same file left
+  on disk but **untracked** → FAIL; the file tracked but citing a
+  **different** SHA → FAIL; genuine citation restored → PASS. Those
+  mutations are what stop RULE 3 degenerating into an "any evidence
+  exists" tautology.
 
 ## Related scripts
 

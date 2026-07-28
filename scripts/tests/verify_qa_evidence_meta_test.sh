@@ -142,6 +142,51 @@ git commit -q -m "feat(auth): add PublicSeam (untagged, no evidence)"
 rc="$(run_enforce)"
 assert_eq "(C-neg) untagged feature commit, no evidence → exit 1" "1" "$rc"
 
+# --------- Assertion (F): RULE 3 — evidence lands in the PAIRED close commit
+# and cites the feature commit's SHA. This is the project's normal two-commit
+# workflow (feature commit ships code; `close(...)` commit lands
+# docs/qa/<run-id>/EVIDENCE.md). RULE 1 cannot see it (wrong tree) and RULE 2
+# cannot see it (the run-id is a timestamped slug absent from the subject), so
+# this exercises RULE 3 in isolation. The (C-neg) feature commit above is
+# still outstanding — satisfying it here is what flips the gate green.
+feat_sha="$(git log -1 --format='%H' --grep='add PublicSeam')"
+feat_sha8="$(printf '%s' "$feat_sha" | cut -c1-8)"
+meta_runid="publicseam_meta_20260728T000000Z"
+mkdir -p "docs/qa/$meta_runid"
+printf '# PublicSeam — QA evidence\n\n**Fix commit:** %s\n\nsent: x\nrecv: y\n' \
+	"$feat_sha8" > "docs/qa/$meta_runid/EVIDENCE.md"
+git add "docs/qa/$meta_runid/EVIDENCE.md"
+git commit -q -m "close(meta): land PublicSeam evidence [no-qa-evidence]"
+rc="$(run_enforce)"
+assert_eq "(F) RULE 3 — paired close commit cites feature SHA → exit 0" "0" "$rc"
+
+# Mutation 1 for (F): the SAME evidence file stays ON DISK but becomes
+# UNTRACKED. RULE 3 matches with `git grep`, which searches tracked files
+# only, so an untracked drop-in MUST NOT clear the gate.
+git rm -q --cached "docs/qa/$meta_runid/EVIDENCE.md"
+git commit -q -m "mutate(meta): untrack the evidence file [no-qa-evidence]"
+rc="$(run_enforce)"
+assert_eq "(F-mut1) RULE 3 — untracked evidence must NOT pass → exit 1" "1" "$rc"
+
+# Mutation 2 for (F): tracked again, but citing a DIFFERENT SHA. Proves
+# RULE 3 binds to THIS commit — it is not a blanket "some evidence exists"
+# pass, which would be the tautology this rule must never become.
+printf '# unrelated evidence\n\n**Fix commit:** deadbeefcafe1234\n' \
+	> "docs/qa/$meta_runid/EVIDENCE.md"
+git add -f "docs/qa/$meta_runid/EVIDENCE.md"
+git commit -q -m "mutate(meta): cite a different SHA [no-qa-evidence]"
+rc="$(run_enforce)"
+assert_eq "(F-mut2) RULE 3 — evidence citing another SHA must NOT pass → exit 1" "1" "$rc"
+
+# Restore the genuine citation, then assert the gate recovers — the paired
+# mutation is only meaningful if the un-mutated state is provably green.
+printf '# PublicSeam — QA evidence\n\n**Fix commit:** %s\n\nsent: x\nrecv: y\n' \
+	"$feat_sha8" > "docs/qa/$meta_runid/EVIDENCE.md"
+git add -f "docs/qa/$meta_runid/EVIDENCE.md"
+git commit -q -m "restore(meta): genuine evidence citation [no-qa-evidence]"
+rc="$(run_enforce)"
+assert_eq "(F-restore) RULE 3 — genuine citation restored → exit 0" "0" "$rc"
+
 # --------- Assertion (D): --enforce without --since is misuse ---------
 bash "$SCANNER" --enforce >/dev/null 2>&1
 rc="$?"
