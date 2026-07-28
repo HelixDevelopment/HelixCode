@@ -1,0 +1,29 @@
+# §1.1 PAIRED MUTATION — proof the guard's inconclusive branch really SKIPs (never FAILs)
+#
+# A guard whose skip path is never exercised could be broken. This mutation makes the
+# overlap floor unreachable (overlapFloor 1 -> 1000000, hardDeadline 30s -> 3s) so the
+# inconclusive branch MUST fire, then the guard is restored byte-identically.
+#
+# Expected: --- SKIP with a reason, exit 0. NOT --- FAIL.
+
+$ uptime
+ 03:23:25 up 17:23,  3 users,  load average: 4.29, 5.54, 6.18
+
+## mutated run
+    qa_dashboard_race_test.go:120: inconclusive: no QA session status transition was observed across 73 rendering batches (2920 renders over 73 rounds in 3.045s, deadline 3s) — the orchestrator goroutines retired before any render overlapped them, so a clean -race result here would prove nothing about the reads under test
+--- SKIP: TestShowQA_SessionReadsAreRaceFree (3.05s)
+PASS
+ok  	dev.helix.code/applications/terminal_ui	4.252s
+exit=0
+
+## restore verification (§11.4.84 — no mutation residue may persist)
+$ git diff --stat -- helix_code/applications/terminal_ui/qa_dashboard_race_test.go
+(empty — restored byte-identical to the committed guard)
+
+## post-restore run (the floor is reachable again, so the guard must PASS, not SKIP)
+=== RUN   TestShowQA_SessionReadsAreRaceFree
+    qa_dashboard_race_test.go:126: drove 40 QA dashboard reads across 1 rounds in 4ms; 1 batches bracketed a live orchestrator status transition, so the reads under test genuinely overlapped the writer
+--- PASS: TestShowQA_SessionReadsAreRaceFree (0.00s)
+PASS
+ok  	dev.helix.code/applications/terminal_ui	1.210s
+EXIT=0

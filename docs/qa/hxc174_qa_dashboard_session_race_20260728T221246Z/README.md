@@ -70,6 +70,7 @@ load is stated with every measurement per §11.4.201.
 | GREEN post-fix, default polarity | [`evidence/green_default_polarity.txt`](evidence/green_default_polarity.txt) | `--- PASS`, overlap proven | 0 | see file |
 | Golden-bad harness self-validation | [`evidence/goldenbad_red_mode.txt`](evidence/goldenbad_red_mode.txt) | `DATA RACE` in `readSessionsUnguarded`, `--- FAIL` | 1 | see file |
 | Regression, touched packages | [`evidence/regression_touched_packages.txt`](evidence/regression_touched_packages.txt) | all `ok` | 0 | see file |
+| §1.1 paired mutation — skip branch | [`evidence/paired_mutation_skip_branch.txt`](evidence/paired_mutation_skip_branch.txt) | `--- SKIP` with reason (not FAIL), then `--- PASS` after byte-identical restore | 0 | see file |
 
 The RED run's racy read sites — 2745, 2756, 2757, 2763, 2766, 2767, 2787 — are exactly
 the line set cited on the item, confirmed **independently by the race detector** rather
@@ -80,6 +81,12 @@ shape and still reports a data race **after** the fix. That is what proves the g
 result above means something: the guard is not blind to this defect class.
 
 The default-polarity guard was additionally stable at `-count=5` (exit 0).
+
+A §1.1 paired mutation raises the overlap floor out of reach (1 → 1000000, deadline 30s → 3s)
+and confirms the inconclusive branch really `SKIP`s with a reason and exit 0 rather than
+failing — HXC-173's defect applied to this guard itself. The guard is then restored
+byte-identically (`git diff` empty against the committed file) and PASSes again, so no
+mutation residue persists per §11.4.84.
 
 ## Honest boundaries
 
