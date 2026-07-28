@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -79,7 +80,11 @@ func (v *FunctionalValidator) validateNotesProject(ctx context.Context, resultDi
 	defer serverCancel()
 
 	port := "8081" // Use different port to avoid conflicts
-	serverURL := fmt.Sprintf("http://localhost:%s", port)
+	// net.JoinHostPort (not "%s:%s") so this stays correct if the host ever
+	// becomes configurable and can carry an IPv6 literal, which is only valid
+	// in a URL authority when bracketed (RFC 3986 §3.2.2). Output is
+	// byte-identical for the current literal host.
+	serverURL := "http://" + net.JoinHostPort("localhost", port)
 
 	// Start server
 	started, cleanup := v.startServer(serverCtx, resultDir, port)

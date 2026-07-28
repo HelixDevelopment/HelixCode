@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -67,8 +69,26 @@ type helixCodeGenerateResponse struct {
 
 // helixCodeServerBaseURL builds the configured HelixCode server's base URL
 // from the ChallengeConfig fields (previously dead configuration).
+//
+// The host and port MUST be joined with net.JoinHostPort rather than a plain
+// "%s:%d" format: an IPv6 literal is only valid in a URL authority when
+// bracketed (RFC 3986 §3.2.2). httptest.newLocalListener falls back to
+// "[::1]:0" when it cannot bind IPv4 loopback, and net.SplitHostPort (used by
+// the test helper that populates HelixCodeHost) strips those brackets, so
+// HelixCodeHost legitimately arrives as the bare "::1". Formatting that
+// unbracketed produced "http://::1:<port>", which url.Parse rejects with
+// `invalid port "::1:<port>" after host`. Guarded by
+// TestHelixCodeServerBaseURL_BracketsIPv6.
+//
+// A host supplied in the already-bracketed URL form ("[::1]") is unwrapped
+// first, because net.JoinHostPort brackets unconditionally on seeing a colon
+// and would otherwise emit the equally-invalid "[[::1]]:<port>".
 func (e *ChallengeExecutor) helixCodeServerBaseURL() string {
-	return fmt.Sprintf("http://%s:%d", e.config.HelixCodeHost, e.config.HelixCodePort)
+	host := e.config.HelixCodeHost
+	if len(host) >= 2 && host[0] == '[' && host[len(host)-1] == ']' {
+		host = host[1 : len(host)-1]
+	}
+	return "http://" + net.JoinHostPort(host, strconv.Itoa(e.config.HelixCodePort))
 }
 
 // checkHelixCodeServerReachable performs a bounded GET /health probe against
