@@ -58,7 +58,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.30.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.30.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.43.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.40.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.30.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.40.0
 	go.opentelemetry.io/otel/metric v1.44.0
@@ -71,9 +71,9 @@ require (
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.21.0
 	golang.org/x/term v0.44.0
-	golang.org/x/text v0.38.0
+	golang.org/x/text v0.39.0
 	golang.org/x/time v0.14.0
-	google.golang.org/grpc v1.80.0
+	google.golang.org/grpc v1.82.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	mvdan.cc/sh/v3 v3.13.1
@@ -167,7 +167,7 @@ require (
 	github.com/prometheus/common v0.67.5 // indirect
 	github.com/prometheus/procfs v0.20.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.59.0 // indirect
+	github.com/quic-go/quic-go v0.59.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rymdport/portal v0.4.2 // indirect
@@ -194,15 +194,15 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/image v0.42.0 // indirect
 	golang.org/x/mobile v0.0.0-20260611195102-4dd8f1dbf5d2 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/tools v0.46.0 // indirect
+	golang.org/x/tools v0.47.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260414002931-afd174a4e478 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
 	modernc.org/libc v1.67.6 // indirect
