@@ -736,8 +736,19 @@ fi
 if want_gate G21; then
     GATES_RUN=$((GATES_RUN + 1))
     gate_header "G21 — §11.4.10/CONST-042 QA-transcript redaction fail-closed (CM-QA-TRANSCRIPT-REDACTION-FAIL-CLOSED)"
-    if bash "$ROOT/scripts/gates/qa_transcript_redaction_gate.sh" >/tmp/g21-red.out 2>&1; then
+    bash "$ROOT/scripts/gates/qa_transcript_redaction_gate.sh" >/tmp/g21-red.out 2>&1
+    g21_rc=$?
+    if [[ "$g21_rc" -eq 0 ]]; then
         gate_pass G21 "transcript redaction is literal, loud on failure, and post-write-scanned for server-originated secrets"
+    elif [[ "$g21_rc" -eq 2 ]]; then
+        # Exit 2 is the gate's §11.4.3 environment SKIP (e.g. the pre-fix
+        # artifact is unreachable from history), NOT a detected leak. Reporting
+        # it with the leak wording would be a false alarm about a credential
+        # reaching a public remote — and a gate that cries wolf gets disabled,
+        # which is worse than none (§11.4.201). Still a FAIL, because a
+        # security guard that cannot run has not certified anything.
+        gate_fail G21 "redaction gate could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is not a detected leak (see /tmp/g21-red.out)" \
+            "resolve the environment blocker so the gate executes, then re-run"
     else
         gate_fail G21 "transcript redaction can leak a secret while reporting success — a captured credential may reach a public remote (see /tmp/g21-red.out)" \
             "$(tail -8 /tmp/g21-red.out)"
