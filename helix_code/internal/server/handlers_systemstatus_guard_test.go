@@ -35,6 +35,7 @@ import (
 	"os"
 	"testing"
 
+	"dev.helix.code/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -99,25 +100,69 @@ func TestGuard_GetSystemStatus_NilDB(t *testing.T) {
 }
 
 // TestGuard_GetSystemStatus_WithDB_StillReports proves the fix did not break
-// the database-present path: a non-nil db whose HealthCheck succeeds must
-// still report "healthy" (regression guard for the §11.4.120 reconciliation —
+// the database-present path: with a NON-NIL db wired, the handler must take
+// the `s.db != nil` branch and surface the REAL HealthCheck verdict, never
+// collapse to "disabled" (regression guard for the §11.4.120 reconciliation —
 // the new nil-guard must not swallow the real health check).
+//
+// HXC-153: an earlier revision of this test carried this name while building
+// a `&Server{}` with NO database at all and asserting only `w.Code == 200`.
+// That re-ran the nil-db case its sibling above already covers, so the
+// database-PRESENT path this name advertises had no coverage from it — a
+// name-versus-behaviour defect of the same class as HXC-152. The fix is a
+// real seam, not a rename: `&database.Database{Pool: nil}` is a genuinely
+// non-nil *Database whose HealthCheck returns an error (database.go:307
+// guards a nil Pool), so it drives the `s.db != nil` branch end-to-end with
+// zero infrastructure. Asserting "unhealthy" — a value the nil-db branch can
+// NEVER produce — is what makes this test earn its name: it is falsifiable by
+// any change that lets the nil-guard swallow the health check.
+//
+// Honest boundary (§11.4.6): this covers db-present + HealthCheck-FAILS
+// ("unhealthy"). The db-present + HealthCheck-SUCCEEDS ("healthy") arm needs
+// a live pool and is exercised by the integration suite against real
+// PostgreSQL; it is deliberately NOT claimed here.
 func TestGuard_GetSystemStatus_WithDB_StillReports(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	// We cannot construct a real *database.Database with a live pool here
-	// without infrastructure, so this case is covered by the existing
-	// handler tests that wire a real/seeded DB. This guard documents the
-	// contract and asserts the nil-db branch is the ONLY branch that yields
-	// "disabled": with no db wired, the value is "disabled"; the presence of
-	// a db flips it to a real health verdict (exercised by handlers_test.go).
-	s := &Server{}
+	// Non-nil *Database with no pool: HealthCheck() returns an error, so the
+	// db-present branch must report the real verdict "unhealthy".
+	s := &Server{db: &database.Database{Pool: nil}}
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/system/status", nil)
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("getSystemStatus panicked with a db wired: %v", r)
+		}
+	}()
+
 	s.getSystemStatus(c)
 
 	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", w.Code)
+		t.Fatalf("expected 200, got %d (body=%s)", w.Code, w.Body.String())
+	}
+
+	var body struct {
+		Status string `json:"status"`
+		System struct {
+			Database string `json:"database"`
+		} `json:"system"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("response is not valid JSON: %v (body=%s)", err, w.Body.String())
+	}
+	if body.Status != "success" {
+		t.Fatalf("expected status \"success\", got %q", body.Status)
+	}
+	// The load-bearing assertion: a wired db MUST yield a real health verdict.
+	// "disabled" here would mean the nil-guard swallowed the health check.
+	if body.System.Database == "disabled" {
+		t.Fatalf("db-present path reported \"disabled\" — the nil-guard swallowed " +
+			"the real HealthCheck; \"disabled\" must be reachable ONLY when s.db == nil")
+	}
+	if body.System.Database != "unhealthy" {
+		t.Fatalf("expected database \"unhealthy\" for a wired db whose HealthCheck "+
+			"fails (nil pool), got %q", body.System.Database)
 	}
 }
