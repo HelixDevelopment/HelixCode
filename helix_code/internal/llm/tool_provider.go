@@ -236,16 +236,25 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 			Stream:      true,
 		}
 
+		// ANTI-BLUFF FIX (deterministic deadlock, not a race): the Provider
+		// interface's documented contract (doc.go:83-93) requires
+		// GenerateStream be invoked in its OWN goroutine so the caller can
+		// drain the channel CONCURRENTLY while it streams. The prior code
+		// called GenerateStream INLINE (synchronously) and only started
+		// draining streamCh AFTER it returned. streamCh is buffered at 100;
+		// any response exceeding 100 chunks made the provider's internal
+		// `ch <- LLMResponse{...}` block FOREVER on a channel nobody was
+		// draining yet — a guaranteed hang for any non-trivial generation,
+		// not a probabilistic race. Fix: launch GenerateStream in its own
+		// goroutine and begin draining immediately, per the documented
+		// contract. genErrCh is buffered at 1 so the producer goroutine's
+		// final send never blocks even if this function has already
+		// returned via some other exit path (defensive; today it doesn't).
 		streamCh := make(chan LLMResponse, 100)
-		err := p.baseProvider.GenerateStream(ctx, streamReq, streamCh)
-		if err != nil {
-			ch <- ToolStreamChunk{
-				ID:    uuid.New(),
-				Error: fmt.Sprintf("Failed to start streaming: %v", err),
-				Done:  true,
-			}
-			return
-		}
+		genErrCh := make(chan error, 1)
+		go func() {
+			genErrCh <- p.baseProvider.GenerateStream(ctx, streamReq, streamCh)
+		}()
 
 		var fullResponse string
 		var toolCalls []ToolCall
@@ -299,6 +308,26 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 			}
 		}
 
+		// Surface a hard GenerateStream failure (distinct from a per-chunk
+		// partial error carried on resp.Err and handled above) ONLY AFTER
+		// the drain loop has forwarded every chunk the provider emitted
+		// before failing — never before, so partial content is never
+		// silently discarded the way a pre-drain synchronous check would.
+		// genErrCh is guaranteed to have exactly one value by the time
+		// streamCh closes: every GenerateStream implementation in this
+		// package closes its ch via `defer close(ch)` as its very first
+		// deferred statement, so streamCh's close always happens no later
+		// than the genErrCh send that immediately follows GenerateStream's
+		// return in the producer goroutine above.
+		if genErr := <-genErrCh; genErr != nil {
+			ch <- ToolStreamChunk{
+				ID:    uuid.New(),
+				Error: fmt.Sprintf("Failed to start streaming: %v", genErr),
+				Done:  true,
+			}
+			return
+		}
+
 		// Parse tool calls after streaming completes
 		toolCalls, reasoning = p.extractToolCallsAndReasoning(fullResponse)
 
@@ -322,16 +351,18 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 				Stream:      true,
 			}
 
+			// Same deadlock class as the initial stream above (§11.4.115 /
+			// doc.go:83-93 contract): GenerateStream MUST be invoked in its
+			// own goroutine so the drain loop below runs CONCURRENTLY with
+			// it, never after. finalStreamCh is buffered at 100 exactly
+			// like streamCh above — a final response over 100 chunks would
+			// deadlock this goroutine forever under the pre-fix synchronous
+			// call-then-drain ordering.
 			finalStreamCh := make(chan LLMResponse, 100)
-			err = p.baseProvider.GenerateStream(ctx, finalStreamReq, finalStreamCh)
-			if err != nil {
-				ch <- ToolStreamChunk{
-					ID:    uuid.New(),
-					Error: fmt.Sprintf("Failed to stream final response: %v", err),
-					Done:  true,
-				}
-				return
-			}
+			finalGenErrCh := make(chan error, 1)
+			go func() {
+				finalGenErrCh <- p.baseProvider.GenerateStream(ctx, finalStreamReq, finalStreamCh)
+			}()
 
 			for resp := range finalStreamCh {
 				// Round-46 LLMResponse.Err honoring (CONST-035 /
@@ -354,6 +385,18 @@ func (p *ToolCallingProvider) StreamWithTools(ctx context.Context, req ToolGener
 					chunk.Error = resp.Err.Error()
 				}
 				ch <- chunk
+			}
+
+			// Surface a hard GenerateStream failure AFTER every pre-error
+			// chunk has already been forwarded above (same rationale as
+			// the initial-stream genErrCh check).
+			if err := <-finalGenErrCh; err != nil {
+				ch <- ToolStreamChunk{
+					ID:    uuid.New(),
+					Error: fmt.Sprintf("Failed to stream final response: %v", err),
+					Done:  true,
+				}
+				return
 			}
 		} else {
 			// No tool calls, send final chunk

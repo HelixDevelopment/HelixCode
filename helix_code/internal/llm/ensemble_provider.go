@@ -869,13 +869,35 @@ func excerpt(s string, n int) string {
 // complete responses) and emits the voted result as a single chunk. This is a
 // real result, not a placeholder: it is the same combined response Generate
 // returns.
+//
+// Two anti-bluff fixes applied here (same-signal audit alongside the
+// StreamWithTools deadlock + the anthropic/azure/gemini/bedrock/groq/vertexai
+// unguarded-send fixes in this package):
+//
+//  1. defer close(ch) — the prior code only called close(ch) on the SUCCESS
+//     path (after the send); an e.Generate error returned WITHOUT ever
+//     closing ch. Every caller in this codebase drains via `for resp := range
+//     ch`, so a never-closed channel left that drain loop blocked forever —
+//     a goroutine leak on every ensemble Generate failure. defer guarantees
+//     ch is closed on every return path, matching every other provider's
+//     GenerateStream in this package (each uses `defer close(ch)` as its
+//     first statement).
+//  2. select-guarded send — ch is caller-supplied and may be unbuffered or
+//     already abandoned (consumer cancelled ctx and stopped draining); an
+//     unguarded `ch <- *resp` could block this goroutine forever. Guarding
+//     with ctx.Done() mirrors the pattern already used by
+//     ollama_provider.go / openai_compatible_provider.go in this package.
 func (e *EnsembleProvider) GenerateStream(ctx context.Context, request *LLMRequest, ch chan<- LLMResponse) error {
+	defer close(ch)
 	resp, err := e.Generate(ctx, request)
 	if err != nil {
 		return err
 	}
-	ch <- *resp
-	close(ch)
+	select {
+	case ch <- *resp:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 	return nil
 }
 

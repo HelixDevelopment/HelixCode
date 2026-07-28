@@ -710,11 +710,16 @@ func (vp *VertexAIProvider) generateGeminiStream(ctx context.Context, request *L
 	}
 
 	// Parse SSE stream
-	return vp.parseSSEStream(httpResp.Body, ch, request.ID)
+	return vp.parseSSEStream(ctx, httpResp.Body, ch, request.ID)
 }
 
-// parseSSEStream parses Server-Sent Events stream
-func (vp *VertexAIProvider) parseSSEStream(reader io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
+// parseSSEStream parses Server-Sent Events stream. ctx is honored via a
+// select-based guard on every channel send: without it, a caller that
+// cancels ctx and stops draining ch (an HTTP client disconnect mid-stream)
+// leaves this goroutine — and the open response body it holds — blocked/
+// leaked forever on an unguarded send. Mirrors the pattern already used by
+// ollama_provider.go / openai_compatible_provider.go in this package.
+func (vp *VertexAIProvider) parseSSEStream(ctx context.Context, reader io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
 	scanner := bufio.NewScanner(reader)
 	var contentBuilder strings.Builder
 
@@ -747,11 +752,15 @@ func (vp *VertexAIProvider) parseSSEStream(reader io.Reader, ch chan<- LLMRespon
 					contentBuilder.WriteString(text)
 
 					// Send incremental response
-					ch <- LLMResponse{
+					select {
+					case ch <- LLMResponse{
 						ID:        uuid.New(),
 						RequestID: requestID,
 						Content:   text,
 						CreatedAt: time.Now(),
+					}:
+					case <-ctx.Done():
+						return ctx.Err()
 					}
 				}
 			}
@@ -784,7 +793,11 @@ func (vp *VertexAIProvider) parseSSEStream(reader io.Reader, ch chan<- LLMRespon
 				}
 			}
 
-			ch <- finalResponse
+			select {
+			case ch <- finalResponse:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 

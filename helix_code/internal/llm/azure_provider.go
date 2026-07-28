@@ -623,7 +623,7 @@ func (ap *AzureProvider) GenerateStream(ctx context.Context, request *LLMRequest
 	}
 
 	// Parse SSE stream
-	return ap.parseSSEStream(httpResp.Body, ch, request.ID)
+	return ap.parseSSEStream(ctx, httpResp.Body, ch, request.ID)
 }
 
 // buildAzureRequest builds an Azure OpenAI request
@@ -742,8 +742,13 @@ func (ap *AzureProvider) parseAzureResponse(body []byte, requestID uuid.UUID, st
 	return response, nil
 }
 
-// parseSSEStream parses a Server-Sent Events stream
-func (ap *AzureProvider) parseSSEStream(reader io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
+// parseSSEStream parses a Server-Sent Events stream. ctx is honored via a
+// select-based guard on every channel send: without it, a caller that
+// cancels ctx and stops draining ch (an HTTP client disconnect mid-stream)
+// leaves this goroutine — and the open response body it holds — blocked/
+// leaked forever on an unguarded send. Mirrors the pattern already used by
+// ollama_provider.go / openai_compatible_provider.go in this package.
+func (ap *AzureProvider) parseSSEStream(ctx context.Context, reader io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
 	scanner := bufio.NewScanner(reader)
 	var contentBuilder strings.Builder
 
@@ -783,11 +788,15 @@ func (ap *AzureProvider) parseSSEStream(reader io.Reader, ch chan<- LLMResponse,
 			contentBuilder.WriteString(delta)
 
 			// Send incremental response
-			ch <- LLMResponse{
+			select {
+			case ch <- LLMResponse{
 				ID:        uuid.New(),
 				RequestID: requestID,
 				Content:   delta,
 				CreatedAt: time.Now(),
+			}:
+			case <-ctx.Done():
+				return ctx.Err()
 			}
 		}
 
@@ -807,13 +816,17 @@ func (ap *AzureProvider) parseSSEStream(reader io.Reader, ch chan<- LLMResponse,
 					}
 				}
 			}
-			ch <- LLMResponse{
+			select {
+			case ch <- LLMResponse{
 				ID:           uuid.New(),
 				RequestID:    requestID,
 				Content:      contentBuilder.String(),
 				FinishReason: chunk.Choices[0].FinishReason,
 				CreatedAt:    time.Now(),
 				Err:          sentinel,
+			}:
+			case <-ctx.Done():
+				return ctx.Err()
 			}
 		}
 	}

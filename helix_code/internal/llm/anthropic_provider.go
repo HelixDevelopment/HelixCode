@@ -845,11 +845,17 @@ func (ap *AnthropicProvider) makeStreamingRequest(ctx context.Context, request *
 	}
 
 	// Parse streaming response
-	return ap.parseStreamingResponse(httpResp.Body, ch, requestID)
+	return ap.parseStreamingResponse(ctx, httpResp.Body, ch, requestID)
 }
 
-// parseStreamingResponse parses SSE streaming response
-func (ap *AnthropicProvider) parseStreamingResponse(body io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
+// parseStreamingResponse parses SSE streaming response. ctx is honored via a
+// select-based guard on every channel send: without it, a caller that
+// cancels ctx and stops draining ch (exactly what happens when an HTTP
+// client disconnects mid-generation) leaves this goroutine — and the open
+// httpResp.Body it holds — blocked/leaked forever on an unguarded send.
+// Mirrors the pattern already used by ollama_provider.go /
+// openai_compatible_provider.go in this package.
+func (ap *AnthropicProvider) parseStreamingResponse(ctx context.Context, body io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
 	decoder := json.NewDecoder(body)
 	var currentContent strings.Builder
 	var currentToolCalls []ToolCall
@@ -874,11 +880,15 @@ func (ap *AnthropicProvider) parseStreamingResponse(body io.Reader, ch chan<- LL
 				currentContent.WriteString(event.Delta.Text)
 
 				// Send incremental response
-				ch <- LLMResponse{
+				select {
+				case ch <- LLMResponse{
 					ID:        uuid.New(),
 					RequestID: requestID,
 					Content:   event.Delta.Text,
 					CreatedAt: time.Now(),
+				}:
+				case <-ctx.Done():
+					return ctx.Err()
 				}
 			}
 
@@ -926,7 +936,11 @@ func (ap *AnthropicProvider) parseStreamingResponse(body io.Reader, ch chan<- LL
 				}
 			}
 
-			ch <- finalResponse
+			select {
+			case ch <- finalResponse:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 
 			// Record completion time on stream end so the next caller can
 			// consult CacheAwareness.IsCacheLikelyCold() before sending the

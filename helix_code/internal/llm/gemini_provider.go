@@ -599,11 +599,16 @@ func (gp *GeminiProvider) makeStreamingRequest(ctx context.Context, model string
 	}
 
 	// Parse streaming response
-	return gp.parseStreamingResponse(httpResp.Body, ch, requestID)
+	return gp.parseStreamingResponse(ctx, httpResp.Body, ch, requestID)
 }
 
-// parseStreamingResponse parses SSE streaming response
-func (gp *GeminiProvider) parseStreamingResponse(body io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
+// parseStreamingResponse parses SSE streaming response. ctx is honored via a
+// select-based guard on every channel send: without it, a caller that
+// cancels ctx and stops draining ch (an HTTP client disconnect mid-stream)
+// leaves this goroutine — and the open response body it holds — blocked/
+// leaked forever on an unguarded send. Mirrors the pattern already used by
+// ollama_provider.go / openai_compatible_provider.go in this package.
+func (gp *GeminiProvider) parseStreamingResponse(ctx context.Context, body io.Reader, ch chan<- LLMResponse, requestID uuid.UUID) error {
 	decoder := json.NewDecoder(body)
 	var currentContent strings.Builder
 
@@ -629,11 +634,15 @@ func (gp *GeminiProvider) parseStreamingResponse(body io.Reader, ch chan<- LLMRe
 					currentContent.WriteString(text)
 
 					// Send incremental response
-					ch <- LLMResponse{
+					select {
+					case ch <- LLMResponse{
 						ID:        uuid.New(),
 						RequestID: requestID,
 						Content:   text,
 						CreatedAt: time.Now(),
+					}:
+					case <-ctx.Done():
+						return ctx.Err()
 					}
 				}
 			}
@@ -664,7 +673,11 @@ func (gp *GeminiProvider) parseStreamingResponse(body io.Reader, ch chan<- LLMRe
 			// distinguish a clean stop from a partial-error stop.
 			finalResponse.Err = mapGeminiFinishReasonToErr(candidate.FinishReason)
 
-			ch <- finalResponse
+			select {
+			case ch <- finalResponse:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 

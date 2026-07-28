@@ -505,7 +505,7 @@ func (bp *BedrockProvider) GenerateStream(ctx context.Context, request *LLMReque
 	reader := output.GetStream()
 	defer reader.Close()
 
-	return bp.processEventStream(reader, ch, request.ID, modelFamily)
+	return bp.processEventStream(ctx, reader, ch, request.ID, modelFamily)
 }
 
 // getModelFamily determines the model family from the model ID
@@ -876,8 +876,13 @@ func (bp *BedrockProvider) parseLlamaResponse(body []byte, requestID uuid.UUID, 
 	}, nil
 }
 
-// processEventStream processes the Bedrock event stream
-func (bp *BedrockProvider) processEventStream(reader bedrockruntime.ResponseStreamReader, ch chan<- LLMResponse, requestID uuid.UUID, family bedrockModelFamily) error {
+// processEventStream processes the Bedrock event stream. ctx is honored via a
+// select-based guard on every channel send: without it, a caller that
+// cancels ctx and stops draining ch (an HTTP client disconnect mid-stream)
+// leaves this goroutine — and the open event-stream reader it holds —
+// blocked/leaked forever on an unguarded send. Mirrors the pattern already
+// used by ollama_provider.go / openai_compatible_provider.go in this package.
+func (bp *BedrockProvider) processEventStream(ctx context.Context, reader bedrockruntime.ResponseStreamReader, ch chan<- LLMResponse, requestID uuid.UUID, family bedrockModelFamily) error {
 	var contentBuilder strings.Builder
 	// Round-54 §11.4 anti-bluff: track the last observed stop_reason across
 	// per-chunk frames so the terminal frame can carry the right Err sentinel
@@ -910,11 +915,15 @@ func (bp *BedrockProvider) processEventStream(reader bedrockruntime.ResponseStre
 				contentBuilder.WriteString(delta)
 
 				// Send incremental response
-				ch <- LLMResponse{
+				select {
+				case ch <- LLMResponse{
 					ID:        uuid.New(),
 					RequestID: requestID,
 					Content:   delta,
 					CreatedAt: time.Now(),
+				}:
+				case <-ctx.Done():
+					return ctx.Err()
 				}
 			}
 
@@ -936,13 +945,17 @@ func (bp *BedrockProvider) processEventStream(reader bedrockruntime.ResponseStre
 	if terminalReason == "" {
 		terminalReason = "stop"
 	}
-	ch <- LLMResponse{
+	select {
+	case ch <- LLMResponse{
 		ID:           uuid.New(),
 		RequestID:    requestID,
 		Content:      contentBuilder.String(),
 		FinishReason: terminalReason,
 		CreatedAt:    time.Now(),
 		Err:          mapBedrockStopReasonToErr(family, lastStopReason),
+	}:
+	case <-ctx.Done():
+		return ctx.Err()
 	}
 
 	return nil

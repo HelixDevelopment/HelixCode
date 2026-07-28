@@ -521,10 +521,16 @@ func (gp *GroqProvider) makeGroqStreamRequest(ctx context.Context, request *Groq
 	}
 
 	// Parse SSE stream with metrics tracking
-	return gp.parseSSEStreamWithMetrics(resp.Body, ch, requestID, startTime)
+	return gp.parseSSEStreamWithMetrics(ctx, resp.Body, ch, requestID, startTime)
 }
 
-func (gp *GroqProvider) parseSSEStreamWithMetrics(reader io.Reader, ch chan<- LLMResponse, requestID uuid.UUID, startTime time.Time) error {
+// parseSSEStreamWithMetrics parses a Groq SSE stream. ctx is honored via a
+// select-based guard on every channel send: without it, a caller that
+// cancels ctx and stops draining ch (an HTTP client disconnect mid-stream)
+// leaves this goroutine — and the open response body it holds — blocked/
+// leaked forever on an unguarded send. Mirrors the pattern already used by
+// ollama_provider.go / openai_compatible_provider.go in this package.
+func (gp *GroqProvider) parseSSEStreamWithMetrics(ctx context.Context, reader io.Reader, ch chan<- LLMResponse, requestID uuid.UUID, startTime time.Time) error {
 	scanner := bufio.NewScanner(reader)
 	var contentBuilder strings.Builder
 	var firstTokenReceived bool
@@ -567,11 +573,15 @@ func (gp *GroqProvider) parseSSEStreamWithMetrics(reader io.Reader, ch chan<- LL
 			tokenCount++
 
 			// Send incremental response
-			ch <- LLMResponse{
+			select {
+			case ch <- LLMResponse{
 				ID:        uuid.New(),
 				RequestID: requestID,
 				Content:   delta,
 				CreatedAt: time.Now(),
+			}:
+			case <-ctx.Done():
+				return ctx.Err()
 			}
 		}
 
@@ -616,7 +626,11 @@ func (gp *GroqProvider) parseSSEStreamWithMetrics(reader io.Reader, ch chan<- LL
 				}
 			}
 
-			ch <- finalResponse
+			select {
+			case ch <- finalResponse:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 
 			// Record metrics
 			gp.latencyMetrics.RecordRequest(firstTokenTime, totalTime, tokensPerSecond)
