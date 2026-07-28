@@ -43,17 +43,21 @@ import (
 const MinThroughputGainAtMaxN = 1.5
 
 // ScalingStep is one row of the §11.4.85-style throughput sweep at a fixed worker
-// count N.
+// count N. ThroughputTPS is the MEDIAN across MeasureTrialsPerStep interleaved
+// trials (see that const's doc comment); ThroughputTrialsTPS carries the raw
+// per-trial samples the median was computed from, so the evidence artefact is
+// self-auditing (§11.4.5/§11.4.69 — the aggregate is never opaque).
 type ScalingStep struct {
-	NWorkers        int     `json:"n_workers"`
-	TotalTasks      int     `json:"total_tasks"`
-	AssignedTasks   int64   `json:"assigned_tasks"`
-	ThroughputTPS   float64 `json:"throughput_tps"`
-	P50Ms           float64 `json:"p50_ms"`
-	P95Ms           float64 `json:"p95_ms"`
-	P99Ms           float64 `json:"p99_ms"`
-	PoolUtilization float64 `json:"pool_utilization"`
-	DurationMs      float64 `json:"duration_ms"`
+	NWorkers            int       `json:"n_workers"`
+	TotalTasks          int       `json:"total_tasks"`
+	AssignedTasks       int64     `json:"assigned_tasks"`
+	ThroughputTPS       float64   `json:"throughput_tps"`
+	ThroughputTrialsTPS []float64 `json:"throughput_trials_tps"`
+	P50Ms               float64   `json:"p50_ms"`
+	P95Ms               float64   `json:"p95_ms"`
+	P99Ms               float64   `json:"p99_ms"`
+	PoolUtilization     float64   `json:"pool_utilization"`
+	DurationMs          float64   `json:"duration_ms"`
 }
 
 // ScalingReport is the closed-set scaling_throughput.json evidence shape.
@@ -63,6 +67,7 @@ type ScalingReport struct {
 	GainAtMaxN        float64       `json:"gain_at_max_n"`
 	MinGainThreshold  float64       `json:"min_gain_threshold"`
 	MonotonicNonDegrd bool          `json:"monotonic_non_degraded"`
+	Trials            int           `json:"trials"`
 	Timestamp         string        `json:"timestamp"`
 }
 
@@ -100,6 +105,93 @@ type PoolDriver interface {
 // negligible against the service window, so the N-worker concurrency is the
 // dominant throughput factor and real scale-out is observable.
 const ServiceTime = 2 * time.Millisecond
+
+// MeasureTrialsPerStep is the default number of independent measurement trials
+// taken per worker-count N, INTERLEAVED across all N values in the sweep
+// (trial-major loop order: for each trial, measure N=1,2,4,8 in turn, then
+// repeat) — never all repeats of one N back-to-back. The per-N reported
+// ThroughputTPS is the MEDIAN across these trials.
+//
+// Root-cause background (§11.4.6 — confirmed by direct measurement, not
+// assumed): TestMeta_RunScaleSweep_DetectsFlatThroughput failed once during a
+// full-module sweep with "RunScaleSweep did NOT detect flat throughput ...
+// harness is a bluff". A single wall-clock sample per N is fragile under real
+// host contention (concurrent builds / other test suites sharing the box): a
+// transient scheduling delay that happens to land on the FIRST (smallest-N,
+// "base") measurement — and NOT on the later (largest-N, "max") measurement —
+// inflates the apparent gain = maxN/baseN and can spuriously clear
+// MinThroughputGainAtMaxN even for a driver that ignores added workers
+// entirely (serialPoolDriver in scaling_meta_test.go), defeating the harness's
+// own §1.1 anti-bluff guarantee. This was reproduced directly with a throwaway
+// in-process investigation harness (not committed — measured live, evidence
+// captured in the commit message instead): under real heavy host contention
+// (an AOSP build + concurrent Go test suites already saturating the box), a
+// burst of competing work
+// correlated with the base-N window can make measured "gain" arbitrarily
+// unreliable in EITHER direction — not just skew it high enough to defeat
+// detection, but in the extreme case stall the measurement itself for
+// minutes. Under lighter/ambient real contention (~30-45% of a 64-core host,
+// the steady-state load observed while diagnosing this), the ORIGINAL
+// single-sample harness in fact passed 8/8 direct reruns — the failure mode
+// is a function of the TEMPORAL correlation between a transient slowdown and
+// WHICH step is being measured, not merely "any load exists".
+//
+// Mitigation (does NOT weaken MinThroughputGainAtMaxN itself, §11.4.120): take
+// several independent samples per N, spread the repeats of the SAME N across
+// the ENTIRE sweep's wall-clock duration (interleaved, not back-to-back), and
+// aggregate via the MEDIAN. A transient burst can now corrupt at most a
+// minority of any one N's samples, and — critically — because the N values are
+// interleaved, a burst that happens to land during "the early part of the
+// sweep" hits ALL N's first-trial measurements about equally, not just N=1's;
+// it can no longer selectively inflate the base/max ratio the way a single
+// back-to-back per-N measurement order could. This is the standard robust-
+// benchmarking mitigation for exactly this failure mode (Go's own testing.B
+// -count flag and Criterion-style outlier-robust estimation both use repeated-
+// trial aggregation over single-shot wall-clock samples for the same reason).
+//
+// Trade-off: MeasureTrialsPerStep multiplies the sweep's wall-clock cost by
+// roughly this factor (e.g. TestScaling_WorkerPool_RealSweep goes from ~1.2s
+// to ~4-5s at the default of 5; TestMeta_RunScaleSweep_DetectsFlatThroughput
+// from ~2.5s to ~7-9s) in exchange for materially reduced flakiness under real
+// contention — an acceptable price for a paired-mutation meta-test whose whole
+// purpose is proving the harness itself cannot bluff.
+//
+// 2026-07-28 re-verification (§11.4.6 — measured live, not assumed): with
+// Trials=3 this package was re-run directly (`go test ./tests/scaling/...
+// -count=5`) under REAL heavy ambient host contention (other concurrent
+// work-stream tracks measuring their own timing-sensitive work on the same
+// shared host, load average ~18-26 on a 64-core box) and ONE of five runs
+// FAILED — both TestMeta_RunScaleSweep_DetectsFlatThroughput (harness failed
+// to detect the planted flat-throughput driver: two of three interleaved
+// trials at one N were corrupted low enough to pull the median down and
+// spuriously widen the apparent gain) and TestMeta_PositivePathWritesEvidence
+// (the REAL pool's own median at N=4 was corrupted below its N=2 median,
+// tripping the monotonic-non-degradation check on genuinely-working code).
+// Re-run immediately after under lighter contention (load ~4.5-6.3, other
+// tracks' bursts having subsided) passed 3/3 direct reruns at Trials=3,
+// confirming the residual flakiness is contention-magnitude-dependent, not a
+// logic defect. Trials raised 3 -> 5 (median-of-5 requires 3 of 5 samples to
+// be corrupted, not 2 of 3, to flip the aggregate) as an additional,
+// non-threshold-weakening (§11.4.120) safety margin for exactly this
+// documented failure mode; MinThroughputGainAtMaxN is unchanged.
+const MeasureTrialsPerStep = 5
+
+// median returns the median of vs (nil/empty -> 0). Used to aggregate
+// MeasureTrialsPerStep interleaved trial samples per N into a single
+// contention-robust throughput figure (see that const's doc comment).
+func median(vs []float64) float64 {
+	if len(vs) == 0 {
+		return 0
+	}
+	sorted := make([]float64, len(vs))
+	copy(sorted, vs)
+	sort.Float64s(sorted)
+	mid := len(sorted) / 2
+	if len(sorted)%2 == 1 {
+		return sorted[mid]
+	}
+	return (sorted[mid-1] + sorted[mid]) / 2
+}
 
 // runID / evidence helpers mirror the stresschaos write+re-read contract so a
 // hollow artefact can never stand as a PASS (§11.4.5/§11.4.69).
@@ -266,6 +358,90 @@ type SweepConfig struct {
 	TasksPerStep int
 	// Parallelism is the concurrent-submitter count (>= stresschaos.MinParallelism).
 	Parallelism int
+	// Trials is the number of interleaved measurement trials per worker-count N,
+	// median-aggregated for contention-robustness. Defaults to
+	// MeasureTrialsPerStep; see that const's doc comment for the rationale.
+	Trials int
+}
+
+// stepSample is one trial's raw wall-clock measurement at a fixed N. Multiple
+// stepSamples per N (see MeasureTrialsPerStep) are aggregated (median
+// throughput, concatenated latencies, peak utilization, summed duration/
+// assigned/actual-tasks) into the single ScalingStep the evidence reports.
+type stepSample struct {
+	actualTasks int
+	assigned    int64
+	throughput  float64
+	latencies   []float64
+	peakUtil    float64
+	durationMs  float64
+}
+
+// measureStep runs ONE trial: `par` concurrent submitters drive `tasks` total
+// ProcessTask calls through driver (already SetupN'd by the caller for the
+// current N), timed via wall-clock elapsed. This is the exact per-step
+// measurement block RunScaleSweep used to run once per N before
+// MeasureTrialsPerStep; it is now invoked that many times per N, interleaved
+// across the N values (see that const's doc comment for why).
+func measureStep(driver PoolDriver, tasks, par int) stepSample {
+	perG := tasks / par
+	if perG < 1 {
+		perG = 1
+	}
+	actualTasks := perG * par
+
+	latencies := make([]float64, actualTasks)
+	var assigned int64
+	var peakUtil float64
+	var utilMu sync.Mutex
+
+	var wg sync.WaitGroup
+	wg.Add(par)
+	var idx int64 = -1
+	startGate := make(chan struct{})
+	start := time.Now()
+	for g := 0; g < par; g++ {
+		go func() {
+			defer wg.Done()
+			<-startGate
+			for it := 0; it < perG; it++ {
+				my := atomic.AddInt64(&idx, 1)
+				callStart := time.Now()
+				ok := driver.ProcessTask(context.Background())
+				elapsedMs := float64(time.Since(callStart).Microseconds()) / 1000.0
+				if my >= 0 && int(my) < len(latencies) {
+					latencies[my] = elapsedMs
+				}
+				if ok {
+					atomic.AddInt64(&assigned, 1)
+					// sample utilization while work is in flight
+					if u := driver.Utilization(); u > 0 {
+						utilMu.Lock()
+						if u > peakUtil {
+							peakUtil = u
+						}
+						utilMu.Unlock()
+					}
+				}
+			}
+		}()
+	}
+	close(startGate)
+	wg.Wait()
+	elapsed := time.Since(start)
+
+	secs := elapsed.Seconds()
+	if secs <= 0 {
+		secs = 1e-9
+	}
+	return stepSample{
+		actualTasks: actualTasks,
+		assigned:    atomic.LoadInt64(&assigned),
+		throughput:  float64(actualTasks) / secs,
+		latencies:   latencies,
+		peakUtil:    peakUtil,
+		durationMs:  float64(elapsed.Microseconds()) / 1000.0,
+	}
 }
 
 // RunScaleSweep drives driver across the worker-count sweep, measures per-N
@@ -292,8 +468,11 @@ func RunScaleSweep(t testing.TB, name string, driver PoolDriver, cfg SweepConfig
 	if par < stresschaos.MinParallelism {
 		t.Fatalf("scaling: parallelism=%d below §11.4.85 floor %d", par, stresschaos.MinParallelism)
 	}
+	trials := cfg.Trials
+	if trials <= 0 {
+		trials = MeasureTrialsPerStep
+	}
 
-	steps := make([]ScalingStep, 0, len(nValues))
 	maxN := 0
 	for _, n := range nValues {
 		if n > maxN {
@@ -301,86 +480,70 @@ func RunScaleSweep(t testing.TB, name string, driver PoolDriver, cfg SweepConfig
 		}
 	}
 
+	// samplesByN accumulates every trial's raw measurement per N. The outer loop
+	// is TRIAL-major (for each trial: measure N=1,2,4,8 in turn) — i.e.
+	// INTERLEAVED across N — never all repeats of one N back-to-back. See
+	// MeasureTrialsPerStep's doc comment for why this ordering matters.
+	samplesByN := make(map[int][]stepSample, len(nValues))
 	for _, n := range nValues {
-		teardown := driver.SetupN(t, n)
+		samplesByN[n] = make([]stepSample, 0, trials)
+	}
+	for trial := 0; trial < trials; trial++ {
+		for _, n := range nValues {
+			teardown := driver.SetupN(t, n)
+			s := measureStep(driver, tasks, par)
+			samplesByN[n] = append(samplesByN[n], s)
+			teardown()
+		}
+	}
 
-		latencies := make([]float64, tasks)
-		var assigned int64
+	steps := make([]ScalingStep, 0, len(nValues))
+	for _, n := range nValues {
+		samples := samplesByN[n]
+
+		trialTPS := make([]float64, len(samples))
+		var allLatencies []float64
+		var assignedTotal int64
+		var actualTasksTotal int
 		var peakUtil float64
-		var utilMu sync.Mutex
-
-		// Distribute the fixed workload across `par` concurrent submitters so a
-		// real multi-worker pool can actually parallelise the assigns.
-		perG := tasks / par
-		if perG < 1 {
-			perG = 1
+		var durationTotalMs float64
+		for i, s := range samples {
+			trialTPS[i] = s.throughput
+			allLatencies = append(allLatencies, s.latencies...)
+			assignedTotal += s.assigned
+			actualTasksTotal += s.actualTasks
+			durationTotalMs += s.durationMs
+			if s.peakUtil > peakUtil {
+				peakUtil = s.peakUtil
+			}
 		}
-		actualTasks := perG * par
+		medianTPS := median(trialTPS)
 
-		var wg sync.WaitGroup
-		wg.Add(par)
-		var idx int64 = -1
-		startGate := make(chan struct{})
-		start := time.Now()
-		for g := 0; g < par; g++ {
-			go func() {
-				defer wg.Done()
-				<-startGate
-				for it := 0; it < perG; it++ {
-					my := atomic.AddInt64(&idx, 1)
-					callStart := time.Now()
-					ok := driver.ProcessTask(context.Background())
-					elapsedMs := float64(time.Since(callStart).Microseconds()) / 1000.0
-					if my >= 0 && int(my) < len(latencies) {
-						latencies[my] = elapsedMs
-					}
-					if ok {
-						atomic.AddInt64(&assigned, 1)
-						// sample utilization while work is in flight
-						if u := driver.Utilization(); u > 0 {
-							utilMu.Lock()
-							if u > peakUtil {
-								peakUtil = u
-							}
-							utilMu.Unlock()
-						}
-					}
-				}
-			}()
-		}
-		close(startGate)
-		wg.Wait()
-		elapsed := time.Since(start)
-
-		used := latencies[:actualTasks]
-		sorted := make([]float64, len(used))
-		copy(sorted, used)
+		sorted := make([]float64, len(allLatencies))
+		copy(sorted, allLatencies)
 		sort.Float64s(sorted)
 
-		secs := elapsed.Seconds()
-		if secs <= 0 {
-			secs = 1e-9
-		}
 		step := ScalingStep{
-			NWorkers:        n,
-			TotalTasks:      actualTasks,
-			AssignedTasks:   atomic.LoadInt64(&assigned),
-			ThroughputTPS:   float64(actualTasks) / secs,
-			P50Ms:           percentile(sorted, 50),
-			P95Ms:           percentile(sorted, 95),
-			P99Ms:           percentile(sorted, 99),
-			PoolUtilization: peakUtil,
-			DurationMs:      float64(elapsed.Microseconds()) / 1000.0,
+			NWorkers:            n,
+			TotalTasks:          actualTasksTotal,
+			AssignedTasks:       assignedTotal,
+			ThroughputTPS:       medianTPS,
+			ThroughputTrialsTPS: trialTPS,
+			P50Ms:               percentile(sorted, 50),
+			P95Ms:               percentile(sorted, 95),
+			P99Ms:               percentile(sorted, 99),
+			PoolUtilization:     peakUtil,
+			DurationMs:          durationTotalMs,
 		}
 		steps = append(steps, step)
-		t.Logf("scaling: %q N=%d throughput=%.0f tps assigned=%d p50=%.3fms p99=%.3fms peakUtil=%.1f%%",
-			name, n, step.ThroughputTPS, step.AssignedTasks, step.P50Ms, step.P99Ms, step.PoolUtilization)
-
-		teardown()
+		t.Logf("scaling: %q N=%d trials=%d throughput(median)=%.0f tps (samples=%v) assigned=%d p50=%.3fms p99=%.3fms peakUtil=%.1f%%",
+			name, n, trials, step.ThroughputTPS, trialTPS, step.AssignedTasks, step.P50Ms, step.P99Ms, step.PoolUtilization)
 	}
 
 	// Compute scale-out gain (max-N throughput / smallest-N throughput) + monotonic-
 	// non-degradation (throughput never drops >40% below the previous step as N grows).
+	// Both are computed from the already median-aggregated per-N ThroughputTPS, so a
+	// single trial's transient noise cannot by itself flip either verdict.
 	var baseTPS, maxTPS float64
 	minN := nValues[0]
 	for _, n := range nValues {
@@ -413,6 +576,7 @@ func RunScaleSweep(t testing.TB, name string, driver PoolDriver, cfg SweepConfig
 		GainAtMaxN:        gain,
 		MinGainThreshold:  MinThroughputGainAtMaxN,
 		MonotonicNonDegrd: monotonic,
+		Trials:            trials,
 		Timestamp:         time.Now().UTC().Format(time.RFC3339Nano),
 	}
 
