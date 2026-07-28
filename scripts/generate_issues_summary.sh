@@ -27,6 +27,51 @@
 # callers (HXC-038 pattern, mirroring scripts/generate_fixed_summary.sh).
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# SUPERSEDED — THIS SCRIPT REFUSES TO RUN (§11.4.106 / §11.4.93 / §11.4.95 /
+# §11.4.75). The body below is retained UNCHANGED for forensics; this is a
+# refusal guard, NOT a removal (§11.4.124). Retirement is tracked as HXC-160.
+# ---------------------------------------------------------------------------
+# docs/Issues_Summary.md is DERIVED FROM docs/workable_items.db (the tracked
+# SQLite single source of truth), NOT from docs/Issues.md. The canonical
+# generator is the constitution submodule's Go exporter (renderIssuesSummary in
+# cmd/workable-items/export.go), which emits the committed "regenerated from the
+# SQLite single-source-of-truth (§11.4.12)" header.
+#
+# THIS script derives the summary from the MARKDOWN — the inverse of the
+# §11.4.93 db-to-md direction — and emits a differently-SHAPED document
+# (a hand-rolled ID/Title/Type/Status/Discovered/Notes table) that the
+# DB projection does not contain.
+#
+# MEASURED REGRESSION (commit 0a4df699, 2026-07-29): a hand invocation of this
+# script overwrote the DB-derived summary; CM-ISSUES-SUMMARY-SYNC then failed
+# against the SQLite single source of truth. Its sibling
+# generate_fixed_summary.sh did far worse in the same commit, rewriting the
+# closed-item tally 344 -> 188.
+#
+# .docs_chain/contexts/issues.yaml de-wired this script as a docs_chain
+# transform on 2026-07-28 and recorded "must not be re-attached" in a comment.
+# A hand invocation re-broke the document the NEXT DAY. Comment-only de-wiring
+# is vigilance, not enforcement (§11.4.75) — hence this in-script refusal.
+cat >&2 <<'REFUSED'
+generate_issues_summary.sh: REFUSING TO RUN — superseded.
+
+  docs/Issues_Summary.md is derived from docs/workable_items.db, NOT
+  docs/Issues.md. This script emits a differently-shaped, Markdown-derived
+  document and drifts the doc off the SQLite single source of truth
+  (measured 2026-07-29, commit 0a4df699).
+
+  Use the canonical DB exporter instead:
+
+    (cd constitution/scripts/workable-items && go run ./cmd/workable-items) \
+        export --db docs/workable_items.db --out-dir docs
+
+  Then verify:  bash scripts/gates/summary_sync_gate.sh
+
+  Retirement of this script is tracked as HXC-160.
+REFUSED
+exit 2
+
 # --- Argument mode parsing -------------------------------------------------
 # Recognize --check / --stdout anywhere in the args; collect the remaining
 # positional args (docs_chain passes <input_files...> <output_file> [extra]).

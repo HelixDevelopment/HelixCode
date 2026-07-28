@@ -69,15 +69,6 @@ For submodules not listed above, default to the first 3 letters of the submodule
 
 ---
 
-## HXC-153 — TestGuard_GetSystemStatus_WithDB_StillReports is named for a database-present case it never exercises
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** Medium
-**Created-By:** Claude
-
-A regression test in the server package is named as though it proves the system-status endpoint behaves correctly when a real database IS attached, but the test actually builds a server with no database at all and then only checks that the response code is 200. That means it silently re-runs the same no-database case a neighbouring test already covers, and the database-present path it advertises has no coverage from it whatsoever. This matters because the name is what a reader trusts when deciding whether a behaviour is guarded: anyone scanning the suite would reasonably conclude the with-database path is protected when it is not. It is the same documentation-versus-reality defect class as HXC-152, where a file's comment disagreed with its code, and it was surfaced by the independent reviewer of that batch. The test's own comment does honestly defer coverage to another file, so nothing is being falsely asserted about the product — the defect is confined to the misleading name. Done means the test either is renamed to describe what it genuinely checks, or is given a fake-database seam so it earns the name it already has, with the choice backed by a captured run.
-
 ## HXC-154 — TestStartQASession_Success asserts on a session field a background goroutine is concurrently changing
 
 **Status:** Queued
@@ -86,15 +77,6 @@ A regression test in the server package is named as though it proves the system-
 **Created-By:** Claude
 
 A QA-session test checks that a freshly started session reports the status 'pending', but the value it reads is one that a background worker is racing to change to 'running' at that very moment. The server hands the JSON encoder the same live session object the worker mutates, so whether the response says 'pending' or 'running' depends purely on which goroutine wins, and under load or with the race detector enabled the worker can win. The result is a test that usually passes and occasionally fails for reasons unrelated to any real product defect, which erodes trust in the suite and trains readers to dismiss red runs. It was observed failing once during unrelated work, then passed eleven consecutive full-package race runs afterwards, so it is genuinely rare rather than broken outright. The underlying product behaviour is not necessarily wrong — a caller may legitimately see either state — so the likely correct outcome is to make the assertion accept either value or to observe the status through a synchronised read instead. Done means the test no longer depends on goroutine scheduling, proven by repeated runs under the race detector, with the reproduction captured first.
-
-## HXC-155 — Standardise the divergent polarity-switch environment variable convention across the server test package
-
-**Status:** Queued
-**Type:** Task
-**Severity:** Low
-**Created-By:** Claude
-
-The server package's regression guards each support a switch that flips them between reproducing an old defect and guarding against its return, but the switch is spelled four different ways across the files and is read through three different helper styles. Having several names is genuinely useful, because each guard corresponds to a different historical fix and testers need to flip them one at a time rather than all at once, so the goal is not to collapse them into one variable. The problem is that the inconsistency has already caused real defects twice: one file shipped with its default set the wrong way round so its verification checks never ran, and another shipped with a comment describing the opposite of what its code did. Both were fixed, but the drift that produced them remains. This work is to agree one naming pattern and one helper shape, apply it to every guard in the package, and record the convention in a single place so the next guard author copies something correct. Done means every switch follows the documented pattern, every default is the safe standing-guard direction, and a check exists that would catch a future file breaking the convention.
 
 ## HXC-158 — No test builds the harmony_os or aurora_os screens, so their widget-threading fixes rest on code review rather than captured runtime proof
 
@@ -173,4 +155,91 @@ UNKNOWN: not stated in the report — a reproduction MUST be established before 
 
 **Acceptance criteria:**
 The full research-doc tree exists under docs/research/fully_incorporate_the_helixskills_system_into_helixcode_heli_20260728T192622Z_2557683/, every enumerated weak-spot/gap/danger-zone carries a designed risk-free solution, an implementation plan down to lines-of-code exists, the planned follow-on workable items are created, and the whole effort is validated per §11.4.197 (never left un-wired).
+
+=== ADDENDUM — BINDING OPERATOR REQUIREMENT (2026-07-29, added after scheduling) ===
+
+VERBATIM: "Make sure that SpecKit and Superpowers are used with Bridge extension and with all extensons we have created derrived from constitution Submodule!"
+
+This is not optional colour on the SpecKit mandate — it names specific existing assets that this work MUST compose with rather than duplicate (§11.4.74 extend-don't-reimplement).
+
+THE BRIDGE EXTENSION (verified to exist, 2026-07-29):
+constitution/docs/research/extensions/speckit_superpowers/implementation/ — the
+"Helix Constitution-Powered SpecKit-Superpowers Bridge". Eight documents, each in
+.md/.html/.pdf/.docx: README, IMPLEMENTATION_PLAN, NANO_TASK_ENGINE,
+EXTENSION_DEVELOPMENT, TDD_INTEGRATION, CONSTITUTION_INTEGRATION, SECURITY, APPENDIX.
+
+It defines a SEVEN-LAYER architecture:
+  1 Developer Workstation
+  2 Spec-Kit Core                (governance)
+  3 SuperSpec bridge             (orchestration — github.com/WangX0111/superspec)
+  4 SuperB extension             (discipline enforcement — speckit-community.github.io/extensions/superb)
+  5 SuperBridge MCP              (execution)
+  6 Helix LLM                    (inference — github.com/HelixDevelopment/helix_llm)
+  7 Distributed host cluster     (llama.cpp RPC)
+
+CONSTITUTION-DERIVED EXTENSIONS THAT MUST BE IN SCOPE (inherited BY REFERENCE per
+§11.4.228 — never copied locally, a copy diverges silently):
+  constitution/skills/   (7) action-prefix-system, media-validator, multitrack,
+                             reporting-workable-items, scheduled-work-queue,
+                             session-sync, workable-item-lifecycle
+  constitution/mcp/      (2) media-validator-mcp.json, scheduled-work-mcp.json
+  constitution/plugins/  (2) helix, scheduled-work
+  constitution/actions/      registry.yaml (§11.4.140 action system), subagent_tiering.yaml
+  constitution/scripts/hooks/ (7 live) action_prefix_expand.sh, credential_scan_lib.sh,
+                             guard-branch-consistency.sh, guard-forbidden-commands.sh,
+                             guard-track-branch-label.sh, guard-work-track-binding.sh,
+                             post-merge
+
+ALREADY PRESENT LOCALLY — do not re-create:
+  .claude/skills/  10 registered speckit-* skills (analyze, checklist, clarify,
+                   constitution, converge, implement, plan, specify, tasks, taskstoissues)
+  .specify/        workflows/speckit/workflow.yml, integrations/{claude,speckit}.manifest.json,
+                   scripts/bash/, templates/, memory/
+
+ADDED ACCEPTANCE CRITERIA:
+  8. Every constitution-derived extension above has an explicit disposition — reused,
+     extended, or orthogonal-with-reason. Silence is not an answer (§11.4.118).
+  9. Each of the 7 Bridge layers is classified WIRED vs DESIGNED-ONLY with a captured
+     probe. A design document existing is NOT evidence a layer is installed — that is
+     precisely the §11.4.108 SOURCE-vs-RUNTIME gap, and reporting a documented layer as
+     an available one would be a §11.4 bluff.
+ 10. The skill-namespace collision risk is addressed with a designed mitigation:
+     HelixSkills is itself a skills system, while §11.4.164's post_update_hook.sh already
+     registers constitution skills into .claude/skills/. Two systems registering into one
+     namespace needs defined precedence and clash handling, not discovery at runtime.
+ 11. SuperSpec and SuperB are THIRD-PARTY, non-own-org dependencies (§11.4.74 vendor
+     path) — their health, maintenance status and supply-chain exposure must be assessed,
+     not assumed from the design doc referencing them.
+
+## HXC-160 — Governance manuals still name the superseded shell summary generators as the canonical tracker-summary generators
+
+**Status:** Queued
+**Type:** Task
+**Created-By:** Claude
+
+The project's agent manuals — CONSTITUTION.md, CLAUDE.md, AGENTS.md, QWEN.md, GEMINI.md and CRUSH.md at the repository root, their copies under helix_code/ and github_pages_website/, and the cascaded copies inside the formatters, plugins and models submodules — still tell every reader that docs/Issues_Summary.md and docs/Fixed_Summary.md are produced by the shell scripts scripts/generate_issues_summary.sh and scripts/generate_fixed_summary.sh. That has not been true since the workable-items SQLite database became the single source of truth: both summaries are now generated from that database by the constitution submodule's Go exporter, while the shell scripts derive them from the Markdown trackers instead, which silently drops every item recorded as a heading section rather than a table row. The practical harm is that an agent doing exactly what the manual says destroys tracked state: on 2026-07-29 a hand invocation rewrote the closed-item tally from 344 to 188, corrupted every per-type count, and replaced the full per-item table with aggregate counts only, before the sync gate caught it. The scripts themselves have now been changed to refuse to run, so the immediate danger is closed, but the manuals still point at them, so every new agent is still given the wrong instruction and discovers the refusal only by tripping over it. Fixing this means updating the CONST-057 and section 11.4.91 anchor text in every carrier so it names the database exporter as the generator, which spans roughly twenty files including copies inside submodules that other repositories own, and must keep all five carriers in lockstep per section 11.4.157. Who benefits: any agent or engineer who reads a manual to learn how to regenerate a tracker summary, and everyone relying on those summaries to see true project state. Reproduce by opening any listed manual and searching for generate_fixed_summary.sh — the surrounding sentence presents it as the current generator with no mention of supersession. Acceptance: every carrier names the DB exporter, no carrier presents the shell scripts as current, the five root carriers stay in lockstep, and a check exists that would fail if a manual reintroduced the stale naming.
+
+## HXC-161 — Fixed.md H2-section-to-pipe-row parity gate fails on 58 items because the DB emits each item in only one representation
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The guard at scripts/gates/fixed_h2_pipe_row_parity_gate.sh checks that every closed item written in docs/Fixed.md as a detail section also appears as a row in that file's summary table. It currently reports 58 failures, and it was already failing before this batch — the same failures are reproducible against the last committed version of the file, so this is a standing red gate rather than something a recent change broke. The cause is a change in how the file is produced. The tracker is now generated from the workable-items database, and the database records for each item which single surface form it takes: some items are written as table rows and others as detail sections, never both. The guard was written earlier, when the table was maintained by hand and every item was expected to appear in both places, so it is now asserting a relationship the data model deliberately no longer provides. Two outcomes are possible and they must not be guessed between: either the guard is stale and should be rewritten to assert what the generator actually guarantees, or the generator is genuinely dropping rows that ought to exist and the guard is correctly catching real data loss. Deciding which requires reading the exporter's representation handling and confirming against the database, so this is deliberately not resolved here — weakening or deleting a failing guard without that investigation is exactly the suppression the constitution forbids. Who benefits: anyone relying on this guard to catch items vanishing from the closed-items summary, which is the precise failure it was created to prevent after one item went missing twice over. Reproduce by running bash scripts/gates/fixed_h2_pipe_row_parity_gate.sh from the repository root and observing 58 failures naming sections such as HXC-013 and HXC-119. Acceptance: the correct branch is chosen with captured evidence, the guard passes for the right reason rather than by being softened, its paired mutation still makes it fail when the invariant is broken, and if the generator was at fault the affected items are restored.
+
+## HXC-162 — Skill auto-trigger is dead in the interactive CLI: the dispatcher is built then thrown away
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+When a user types a request in the HelixCode interactive command-line client, the feature that is supposed to notice the request matches a known skill and run it automatically never fires. The code that decides which skill applies is created correctly and then immediately discarded without ever being connected to anything, so it can never act on what the user types. To the user this looks like the skills feature simply does not exist in the CLI, even though the underlying machinery is present, correct and documented. This matters because skills are how the product is meant to turn a plain-language request into real work without the user learning any commands. Anyone reading the source would reasonably conclude the feature is implemented, which is why this went unnoticed. The fix is to connect the dispatcher to the place where user input is handled, and prove it with a test that types a matching request and observes the skill actually run. Reported at cmd/cli/main.go:1060 by SOURCE-layer inspection; still needs runtime confirmation per 11.4.108.
+
+## HXC-163 — None of the seven shared governance skills are registered, so none of them can ever run
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The project ships seven ready-made skills that come from the shared governance component and are meant to be available to every project that uses it. In practice none of the seven is registered with the running system, so not one of them can be triggered by a user or by an agent. The effect is that work the organisation already paid for and maintains sits unused, and each project quietly re-solves problems these skills already solve. Separately, one entry in the skills folder points at a storage location that only exists on a Mac, so on this Linux machine it is a broken link that resolves to nothing. These two problems compound: the catalogue looks populated from the outside while being empty in practice. Closing this means registering the seven skills through the supported mechanism, repairing or removing the broken link, and adding a check that fails if a shipped skill is present on disk but unreachable at runtime.
 

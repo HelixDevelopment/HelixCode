@@ -27,6 +27,52 @@
 # script/gate callers; the docs_chain contract is honored only under --stdout.
 set -euo pipefail
 
+# ---------------------------------------------------------------------------
+# SUPERSEDED — THIS SCRIPT REFUSES TO RUN (§11.4.106 / §11.4.93 / §11.4.95 /
+# §11.4.75). The body below is retained UNCHANGED for forensics; this is a
+# refusal guard, NOT a removal (§11.4.124). Retirement is tracked as HXC-160.
+# ---------------------------------------------------------------------------
+# docs/Fixed_Summary.md is DERIVED FROM docs/workable_items.db (the tracked
+# SQLite single source of truth), NOT from docs/Fixed.md. The canonical
+# generator is the constitution submodule's Go exporter (renderFixedSummary in
+# cmd/workable-items/export.go).
+#
+# THIS script derives the summary from the MARKDOWN — the inverse of the
+# §11.4.93 db-to-md direction — and its awk predicate matches only pipe rows
+# whose column 1 is a date, so every item carried as an H2 section is INVISIBLE
+# to it.
+#
+# MEASURED DATA LOSS (commit 0a4df699, 2026-07-29): a hand invocation of this
+# script overwrote the DB-derived summary, rewriting the closed-item tally
+# 344 -> 188 (156 items of tracked state dropped), corrupting every per-type
+# count (Bug 166->79, Feature 95->79, Task 83->30, Obsolete 3->1) and replacing
+# the full per-item table with aggregate counts only. The false counts were
+# committed and exported to .html/.pdf/.docx before CM-FIXED-SUMMARY-SYNC
+# caught them.
+#
+# .docs_chain/contexts/fixed.yaml de-wired this script as a docs_chain
+# transform on 2026-07-28 and recorded "must not be re-attached" in a comment.
+# A hand invocation re-broke the document the NEXT DAY. Comment-only de-wiring
+# is vigilance, not enforcement (§11.4.75) — hence this in-script refusal.
+cat >&2 <<'REFUSED'
+generate_fixed_summary.sh: REFUSING TO RUN — superseded and data-destroying.
+
+  docs/Fixed_Summary.md is derived from docs/workable_items.db, NOT docs/Fixed.md.
+  This script sees only Fixed.md's pipe rows and silently drops every
+  H2-section item (measured 2026-07-29: 344 closed items -> 188, all
+  per-type counts corrupted, per-item table replaced by bare aggregates).
+
+  Use the canonical DB exporter instead:
+
+    (cd constitution/scripts/workable-items && go run ./cmd/workable-items) \
+        export --db docs/workable_items.db --out-dir docs
+
+  Then verify:  bash scripts/gates/summary_sync_gate.sh
+
+  Retirement of this script is tracked as HXC-160.
+REFUSED
+exit 2
+
 # --- Argument mode parsing -------------------------------------------------
 # Recognize --check / --stdout anywhere in the args; collect the remaining
 # positional args (docs_chain passes <input_files...> <output_file> [extra]).
