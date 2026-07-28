@@ -32,7 +32,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"dev.helix.code/internal/database"
@@ -47,7 +46,7 @@ func TestGuard_GetSystemStatus_NilDB(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/system/status", nil)
 
-	if os.Getenv("HELIX_RED_MODE") == "1" {
+	if redModeFor(t, "HELIX_RED_MODE") {
 		// RED reproduction: drive the REAL shipped handler. On the pre-fix
 		// artifact its unguarded s.db.HealthCheck() dereferences the nil
 		// *Database receiver and panics. If it does NOT panic, the defect is

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -68,8 +67,7 @@ const (
 // false ⇒ standing GREEN guard.
 func idorRedMode(t *testing.T) bool {
 	t.Helper()
-	v := strings.TrimSpace(getenvDefault("RED_PROJECT_IDOR", "0"))
-	return v == "1"
+	return redModeFor(t, "RED_PROJECT_IDOR")
 }
 
 // authQuerySQL is the exact SQL GetUserByID issues (auth_db.go).
@@ -334,10 +332,5 @@ func TestProjectIDOR_SameOwnerStillWorks(t *testing.T) {
 	require.Contains(t, body, "project")
 }
 
-// getenvDefault is a tiny local helper to keep the polarity switch readable.
-func getenvDefault(key, def string) string {
-	if v, ok := os.LookupEnv(key); ok && v != "" {
-		return v
-	}
-	return def
-}
+// getenvDefault retired by HXC-155: its only callers were the four polarity
+// switches, which now read through redModeFor (red_polarity_convention_test.go).

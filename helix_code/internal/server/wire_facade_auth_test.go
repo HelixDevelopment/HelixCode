@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"dev.helix.code/internal/config"
@@ -60,7 +59,7 @@ import (
 
 func wireFacadeAuthRedMode(t *testing.T) bool {
 	t.Helper()
-	return strings.TrimSpace(getenvDefault("RED_WIRE_FACADE_AUTH", "0")) == "1"
+	return redModeFor(t, "RED_WIRE_FACADE_AUTH")
 }
 
 const wireFacadeTestAPIKey = "test-only-wire-facade-key-not-a-real-secret"

@@ -3,7 +3,6 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"dev.helix.code/internal/config"
@@ -25,11 +24,12 @@ import (
 // endpoint.
 //
 // Polarity switch (RED_MODE, default "0" = standing GREEN regression guard):
-//   RED_MODE=1 reproduces the defect on the pre-fix artifact and asserts the
-//             nil-redis /health currently PANICS / returns 500 (captures the
-//             defect is genuinely present on the broken build).
-//   RED_MODE=0 (default) is the standing GREEN guard asserting the defect is
-//             ABSENT: nil-redis /health returns 200 healthy, no panic.
+//
+//	RED_MODE=1 reproduces the defect on the pre-fix artifact and asserts the
+//	          nil-redis /health currently PANICS / returns 500 (captures the
+//	          defect is genuinely present on the broken build).
+//	RED_MODE=0 (default) is the standing GREEN guard asserting the defect is
+//	          ABSENT: nil-redis /health returns 200 healthy, no panic.
 func newNilRedisServer(t *testing.T) *Server {
 	t.Helper()
 	cfg := &config.Config{
@@ -55,7 +55,7 @@ func TestHealthCheck_NilRedis_NoPanic(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	server.router.ServeHTTP(w, req)
 
-	if os.Getenv("RED_MODE") == "1" {
+	if redMode(t) {
 		// RED: prove the defect is present on the pre-fix artifact.
 		// gin.Recovery() turns the nil-ptr panic into a 500 on /health.
 		assert.Equal(t, http.StatusInternalServerError, w.Code,
@@ -83,7 +83,7 @@ func TestHealthCheck_NilRedis_HandlerDirect(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request = httptest.NewRequest(http.MethodGet, "/health", nil)
 
-	if os.Getenv("RED_MODE") == "1" {
+	if redMode(t) {
 		// RED: the pre-fix handler nil-derefs; assert it panics when called directly
 		// (no gin.Recovery wrapping at this layer — the panic surfaces).
 		assert.Panics(t, func() { server.healthCheck(c) },

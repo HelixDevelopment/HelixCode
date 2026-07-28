@@ -43,13 +43,9 @@ import (
 // CONST-050(A): the fake provider below lives ONLY in this *_test.go unit file.
 // Production code never references it.
 
-// redMode reports whether RED_MODE is set to a truthy value (default false ⇒
-// GREEN guard). Per §11.4.115 the SAME source serves both polarities.
-func redMode(t *testing.T) bool {
-	t.Helper()
-	v := strings.TrimSpace(os.Getenv("RED_MODE"))
-	return v == "1" || strings.EqualFold(v, "true") || strings.EqualFold(v, "yes")
-}
+// redMode moved to red_polarity_convention_test.go (HXC-155): the package's
+// polarity switches now share one helper shape and one enumeration point.
+// Per §11.4.115 the SAME source still serves both polarities.
 
 // closingFakeProvider is a deterministic, network-free llm.Provider whose
 // GenerateStream obeys the channel-ownership contract: it sends a chunk then

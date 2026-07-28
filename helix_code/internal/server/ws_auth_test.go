@@ -52,7 +52,7 @@ import (
 
 func wsAuthRedMode(t *testing.T) bool {
 	t.Helper()
-	return strings.TrimSpace(getenvDefault("RED_WS_AUTH", "0")) == "1"
+	return redModeFor(t, "RED_WS_AUTH")
 }
 
 const wsAuthTestAPIKey = "test-only-ws-auth-key-not-a-real-secret"

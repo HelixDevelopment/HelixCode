@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -41,7 +40,7 @@ import (
 
 func llmAuthRedMode(t *testing.T) bool {
 	t.Helper()
-	return strings.TrimSpace(getenvDefault("RED_LLM_AUTH", "0")) == "1"
+	return redModeFor(t, "RED_LLM_AUTH")
 }
 
 // llmAuthFixture builds a real Server whose auth user-lookup returns an ACTIVE
