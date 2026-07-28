@@ -28,6 +28,7 @@ import (
 	"dev.helix.code/internal/config"
 	"dev.helix.code/internal/database"
 	"dev.helix.code/internal/ensembleui"
+	"dev.helix.code/internal/fyneui"
 	"dev.helix.code/internal/llm"
 	"dev.helix.code/internal/notification"
 	"dev.helix.code/internal/project"
@@ -60,8 +61,28 @@ func hxcLogoResource() fyne.Resource {
 // It emits `prefix` once, then appends each streamed chunk's Content to the
 // chat-history Entry the instant the chunk arrives — so the user sees the
 // reply grow token-by-token (time-to-first-visible-token) instead of waiting
-// for the whole completion. (*widget.Entry).SetText is goroutine-safe in
-// Fyne, so calling it from the caller's worker goroutine is correct.
+// for the whole completion.
+//
+// THREAD-AFFINITY FIX (§11.4.115). An earlier revision of this comment claimed
+// "(*widget.Entry).SetText is goroutine-safe in Fyne, so calling it from the
+// caller's worker goroutine is correct." That is FALSE, and was the root cause
+// of a large data-race population. Fyne states the opposite verbatim since 2.6
+// (fyne.io/fyne/v2/thread.go): "This is required when a background process
+// wishes to adjust graphical elements of a running app." This function is
+// invoked from the Send-Message worker goroutine, so every mutation of
+// `history` MUST be dispatched onto the UI goroutine.
+//
+// Do (async) rather than DoAndWait (blocking) is deliberate: this is the
+// streaming hot path, and the whole point of P1-T07 is that tokens appear as
+// they arrive. Blocking the producer on the render loop once per token would
+// couple stream throughput to frame time. Ordering is still exact — the glfw
+// driver's func-queue is an unbounded FIFO drained sequentially by the main
+// loop, so appends submitted by this one goroutine are applied in submission
+// order.
+//
+// The read and the write are inside ONE closure on purpose:
+// `history.Text + content` READS the widget too, so hoisting the read out
+// would leave it racing the renderer even though the write was dispatched.
 //
 // The channel-consumption loop is delegated to consumeDesktopChatStream (a
 // build-tag-free helper) so it stays unit-testable without an X11 display.
@@ -70,9 +91,9 @@ func hxcLogoResource() fyne.Resource {
 // Content, byte-identical to the buffered Generate result for any conformant
 // provider. Only WHEN the bytes appear changes.
 func streamDesktopChat(ctx context.Context, provider llm.Provider, request *llm.LLMRequest, prefix string, history *widget.Entry) error {
-	history.SetText(history.Text + prefix)
+	fyneui.Do(func() { history.SetText(history.Text + prefix) })
 	return consumeDesktopChatStream(ctx, provider, request, func(content string) {
-		history.SetText(history.Text + content)
+		fyneui.Do(func() { history.SetText(history.Text + content) })
 	})
 }
 
@@ -640,13 +661,27 @@ func (da *DesktopApp) createDashboardTab() fyne.CanvasObject {
 	taskCard := widget.NewCard("Tasks", "", taskStatsLabel)
 	systemCard := widget.NewCard("System", "", systemStatsLabel)
 
-	// Start a goroutine to update stats
+	// Start a goroutine to update stats.
+	//
+	// THREAD-AFFINITY FIX (§11.4.115): this is a background goroutine, so every
+	// label mutation below MUST be dispatched onto the UI goroutine via
+	// fyneui.Do — a bare SetText here raced the renderer and was the single
+	// largest contributor to this package's data-race population. The domain
+	// data is gathered OUTSIDE the closure and only the formatted string is
+	// captured, so the UI goroutine never touches a manager while this one is
+	// mid-read.
 	go func() {
 		startTime := time.Now()
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
-		for range ticker.C {
+		// LIFECYCLE FIX (§11.4.115): this loop used to be `for range ticker.C`,
+		// which can never terminate — the goroutine outlived the window it
+		// painted into, kept mutating labels after teardown, and leaked for the
+		// lifetime of the process. It was observed still running after its own
+		// test finished, racing a LATER test's app construction. It now honours
+		// the app's existing stopUpdate channel (closed by Close()).
+		for fyneui.TickOrStop(ticker.C, da.stopUpdate) {
 			// Update worker stats
 			if da.workerManager != nil {
 				workers := da.workerManager.GetWorkers()
@@ -660,14 +695,16 @@ func (da *DesktopApp) createDashboardTab() fyne.CanvasObject {
 						healthy++
 					}
 				}
-				workerStatsLabel.SetText(fmt.Sprintf("Total: %d\nActive: %d\nHealthy: %d", len(workers), active, healthy))
+				workerText := fmt.Sprintf("Total: %d\nActive: %d\nHealthy: %d", len(workers), active, healthy)
+				fyneui.Do(func() { workerStatsLabel.SetText(workerText) })
 			}
 
 			// Update task stats
 			if da.taskManager != nil {
 				stats := da.taskManager.GetStats()
-				taskStatsLabel.SetText(fmt.Sprintf("Total: %d\nCompleted: %d\nRunning: %d",
-					stats.TotalTasks, stats.CompletedTasks, stats.RunningTasks))
+				taskText := fmt.Sprintf("Total: %d\nCompleted: %d\nRunning: %d",
+					stats.TotalTasks, stats.CompletedTasks, stats.RunningTasks)
+				fyneui.Do(func() { taskStatsLabel.SetText(taskText) })
 			}
 
 			// Update system stats
@@ -675,7 +712,8 @@ func (da *DesktopApp) createDashboardTab() fyne.CanvasObject {
 			hours := int(uptime.Hours())
 			minutes := int(uptime.Minutes()) % 60
 			seconds := int(uptime.Seconds()) % 60
-			systemStatsLabel.SetText(fmt.Sprintf("Status: Operational\nUptime: %02d:%02d:%02d", hours, minutes, seconds))
+			systemText := fmt.Sprintf("Status: Operational\nUptime: %02d:%02d:%02d", hours, minutes, seconds)
+			fyneui.Do(func() { systemStatsLabel.SetText(systemText) })
 		}
 	}()
 
@@ -1317,24 +1355,42 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 		selectedLabel := da.llmProviderSel.Selected
 		providerType := modelLabelToProvider[selectedLabel]
 
-		// Make LLM call in goroutine to not block UI
+		// Make LLM call in goroutine to not block UI.
+		//
+		// THREAD-AFFINITY FIX (§11.4.115): this whole body runs OFF the UI
+		// goroutine, so every da.chatHistory mutation below is dispatched via
+		// the fyneui helpers. Two flavours, deliberately:
+		//   - fyneui.Do        — the streaming hot path (per-token appends and
+		//                        the prefix that opens the stream). Non-blocking
+		//                        so token throughput is never coupled to frame
+		//                        time; ordering is preserved by the driver's
+		//                        FIFO func-queue.
+		//   - fyneui.DoAndWait — one-shot status/terminal appends. Blocking, so
+		//                        that when this goroutine returns the UI has
+		//                        provably been updated (anything synchronising
+		//                        on the turn ending sees the final text).
+		// In every case the read and the write live in the SAME closure:
+		// `da.chatHistory.Text + …` reads the widget, so splitting them would
+		// leave the read racing the renderer.
 		go func(msg, model string, ptype llm.ProviderType) {
 			if da.llmManager == nil {
 				// CONST-046: llm-not-initialized message resolved via i18n bundle.
-				da.chatHistory.SetText(da.chatHistory.Text + da.tr(ctxLLM, "desktop_chat_llm_not_initialized", map[string]any{
+				notInit := da.tr(ctxLLM, "desktop_chat_llm_not_initialized", map[string]any{
 					"Provider": string(ptype),
 					"Model":    model,
-				}) + "\n")
+				}) + "\n"
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + notInit) })
 				return
 			}
 
 			provider, err := da.llmManager.GetProviderForModel(model, ptype)
 			if err != nil || provider == nil {
 				// CONST-046: provider-unavailable message resolved via i18n bundle.
-				da.chatHistory.SetText(da.chatHistory.Text + da.tr(ctxLLM, "desktop_chat_provider_unavailable", map[string]any{
+				unavailable := da.tr(ctxLLM, "desktop_chat_provider_unavailable", map[string]any{
 					"Provider": string(ptype),
 					"Model":    model,
-				}) + "\n")
+				}) + "\n"
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + unavailable) })
 				return
 			}
 
@@ -1356,10 +1412,13 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 				systemPrompt := clientcore.BuildToolLoopSystemPrompt(registry)
 				history := []llm.Message{{Role: "user", Content: msg}}
 
-				da.chatHistory.SetText(da.chatHistory.Text + prefix)
+				fyneui.Do(func() { da.chatHistory.SetText(da.chatHistory.Text + prefix) })
 				onFinalChunk := func(chunk string) {
-					// (*widget.Entry).SetText is goroutine-safe in Fyne.
-					da.chatHistory.SetText(da.chatHistory.Text + chunk)
+					// Streaming append: dispatched onto the UI goroutine
+					// (widgets are NOT goroutine-safe — see fyneui package doc)
+					// and non-blocking so the token stream is not throttled by
+					// the render loop.
+					fyneui.Do(func() { da.chatHistory.SetText(da.chatHistory.Text + chunk) })
 				}
 				result, loopErr := agent.RunToolLoopStream(ctx, provider, registry, history, agent.ToolLoopOptions{
 					Model:              model,
@@ -1369,16 +1428,18 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 					ReadOnlyOnly:       true,
 				}, onFinalChunk)
 				if loopErr != nil {
-					da.chatHistory.SetText(da.chatHistory.Text + fmt.Sprintf("\n[Error: %v]\n", loopErr))
+					errLine := fmt.Sprintf("\n[Error: %v]\n", loopErr)
+					fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + errLine) })
 					return
 				}
-				da.chatHistory.SetText(da.chatHistory.Text + "\n")
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + "\n") })
 
 				// Surface the agentic tool trace so the operator SEES each tool
 				// call ("tool: git_status … <real output>").
 				if len(result.Trace) > 0 {
 					if traceLines := ensembleui.FormatToolTrace(clientcore.AdaptToolTrace(result.Trace)); len(traceLines) > 0 {
-						da.chatHistory.SetText(da.chatHistory.Text + "\n" + strings.Join(traceLines, "\n") + "\n")
+						traceText := "\n" + strings.Join(traceLines, "\n") + "\n"
+						fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + traceText) })
 					}
 				}
 
@@ -1386,7 +1447,8 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 				// — the SAME shared renderer the TUI uses — so the operator SEES
 				// every member + the winning vote.
 				if panelLines := ensembleui.FormatEnsemblePanel(result.FinalMetadata); len(panelLines) > 0 {
-					da.chatHistory.SetText(da.chatHistory.Text + "\n" + strings.Join(panelLines, "\n") + "\n")
+					panelText := "\n" + strings.Join(panelLines, "\n") + "\n"
+					fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + panelText) })
 				}
 				return
 			}
@@ -1400,10 +1462,10 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 				Stream:      true,
 			}
 			if streamErr := streamDesktopChat(ctx, provider, request, prefix, da.chatHistory); streamErr != nil {
-				da.chatHistory.SetText(da.chatHistory.Text +
-					fmt.Sprintf("\n[AI (%s/%s)]: Error: %v\n", ptype, model, streamErr))
+				errLine := fmt.Sprintf("\n[AI (%s/%s)]: Error: %v\n", ptype, model, streamErr)
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + errLine) })
 			} else {
-				da.chatHistory.SetText(da.chatHistory.Text + "\n")
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + "\n") })
 			}
 		}(userMessage, modelName, providerType)
 	})
@@ -1441,9 +1503,13 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 		ticker := time.NewTicker(10 * time.Second)
 		defer ticker.Stop()
 
+		// THREAD-AFFINITY FIX (§11.4.115): background ticker goroutine — the
+		// health probe itself stays here, only the resulting label mutation is
+		// dispatched onto the UI goroutine.
 		checkHealth := func() {
 			if da.llmManager == nil {
-				healthLabel.SetText(da.tr(ctxLLM, "desktop_health_no_manager", nil))
+				noManager := da.tr(ctxLLM, "desktop_health_no_manager", nil)
+				fyneui.DoAndWait(func() { healthLabel.SetText(noManager) })
 				return
 			}
 			ctx := context.Background()
@@ -1455,11 +1521,13 @@ func (da *DesktopApp) createLLMTab() fyne.CanvasObject {
 			if len(health) == 0 {
 				healthText += da.tr(ctxLLM, "desktop_health_none_configured", nil)
 			}
-			healthLabel.SetText(healthText)
+			fyneui.DoAndWait(func() { healthLabel.SetText(healthText) })
 		}
 
 		checkHealth()
-		for range ticker.C {
+		// LIFECYCLE FIX (§11.4.115): same unstoppable-ticker defect as the
+		// dashboard stats loop — honour stopUpdate instead of looping forever.
+		for fyneui.TickOrStop(ticker.C, da.stopUpdate) {
 			checkHealth()
 		}
 	}()

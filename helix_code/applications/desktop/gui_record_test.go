@@ -63,6 +63,7 @@ import (
 
 	"dev.helix.code/internal/clientcore"
 	"dev.helix.code/internal/config"
+	"dev.helix.code/internal/fyneui"
 	"dev.helix.code/internal/llm"
 )
 
@@ -241,11 +242,15 @@ func TestRecordDesktopGUILLMChat(t *testing.T) {
 			}
 			// PRODUCTION streaming fn (main.go streamDesktopChat → writes into
 			// da.chatHistory token-by-token). REAL provider, REAL reply.
+			// Mirrors the production send path in main.go: this runs OFF the UI
+			// goroutine, so the terminal append is dispatched via
+			// fyneui.DoAndWait — blocking, so the text has provably landed
+			// before sendDone closes and the renderer captures the final frame.
 			if err := streamDesktopChat(ctx, provider, req, prefix, da.chatHistory); err != nil {
-				da.chatHistory.SetText(da.chatHistory.Text +
-					fmt.Sprintf("\n[AI (%s/%s)]: Error: %v\n", ptype, model, err))
+				errLine := fmt.Sprintf("\n[AI (%s/%s)]: Error: %v\n", ptype, model, err)
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + errLine) })
 			} else {
-				da.chatHistory.SetText(da.chatHistory.Text + "\n")
+				fyneui.DoAndWait(func() { da.chatHistory.SetText(da.chatHistory.Text + "\n") })
 			}
 		}(userMessage)
 	})
@@ -269,9 +274,16 @@ func TestRecordDesktopGUILLMChat(t *testing.T) {
 	// size so the chat history/widgets lay out at full size (NOT the tiny
 	// min-size software.Render(obj) would give). We capture the WINDOW canvas,
 	// which honours Resize.
-	win := test.NewWindow(chatCard)
-	defer win.Close()
-	win.Resize(fyne.NewSize(1100, 720))
+	// This goroutine is the RENDERER; the send worker above mutates the same
+	// widget tree concurrently. In the shipped app both run on the glfw main
+	// goroutine, but Fyne's test driver serializes nothing, so the renderer
+	// takes the UI lock explicitly (see the fyneui package doc).
+	var win fyne.Window
+	fyneui.Sync(func() {
+		win = test.NewWindow(chatCard)
+		win.Resize(fyne.NewSize(1100, 720))
+	})
+	defer func() { fyneui.Sync(func() { win.Close() }) }()
 
 	framesDir := os.Getenv("HELIX_GUI_FRAMES_DIR")
 	if framesDir == "" {
@@ -288,7 +300,8 @@ func TestRecordDesktopGUILLMChat(t *testing.T) {
 		// window canvas to a Go image (software/render.go == Canvas.Capture
 		// under a software painter). This captures the full-size layout, not
 		// the object's minimum size.
-		img := software.RenderCanvas(win.Canvas(), theme)
+		var img image.Image
+		fyneui.Sync(func() { img = software.RenderCanvas(win.Canvas(), theme) })
 		recordPNG(t, framesDir, frame, img)
 		frame++
 	}

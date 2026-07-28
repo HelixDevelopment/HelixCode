@@ -63,6 +63,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"dev.helix.code/applications/desktop/i18n"
+	"dev.helix.code/internal/fyneui"
 	"dev.helix.code/internal/project"
 	"dev.helix.code/internal/session"
 	"dev.helix.code/internal/task"
@@ -147,6 +148,13 @@ func newRecordingApp(t *testing.T) (*DesktopApp, fyne.Theme) {
 	da.projectManager = project.NewManager()
 	da.sessionManager = session.NewManager()
 
+	// Stop the production refresh tickers (dashboard stats, provider health)
+	// when the test ends. Those goroutines are started by the create*Tab
+	// constructors and previously ran forever: one was observed still repainting
+	// labels after its own test had finished, racing a later test's app
+	// construction. Closing stopUpdate is exactly what production Close() does.
+	t.Cleanup(func() { close(da.stopUpdate) })
+
 	// A virtual AppTabs so the Dashboard "Quick Actions" closures (which call
 	// da.tabs.SelectIndex) have a non-nil target. We never tap those; this is
 	// purely to keep the production constructor's closures safe to construct.
@@ -170,13 +178,24 @@ func newRecordingApp(t *testing.T) (*DesktopApp, fyne.Theme) {
 func recordTabFrames(t *testing.T, framesDir string, theme fyne.Theme, content fyne.CanvasObject,
 	drive func(cap func())) int {
 	t.Helper()
-	win := test.NewWindow(content)
-	defer win.Close()
-	win.Resize(fyne.NewSize(1200, 800))
+	// This goroutine acts as the RENDERER. In the shipped app that role belongs
+	// to the glfw main loop, which is also where fyneui.Do closures are applied
+	// — so mutation and rendering are inherently serialized. Fyne's TEST driver
+	// provides no such serialization (its DoFromGoroutine runs closures inline
+	// on the calling goroutine), so the renderer must take the UI lock
+	// explicitly via fyneui.Sync. Without this, production background tickers
+	// (e.g. the dashboard stats goroutine) race every window/layout/paint here.
+	var win fyne.Window
+	fyneui.Sync(func() {
+		win = test.NewWindow(content)
+		win.Resize(fyne.NewSize(1200, 800))
+	})
+	defer func() { fyneui.Sync(func() { win.Close() }) }()
 
 	frame := 0
 	cap := func() {
-		img := software.RenderCanvas(win.Canvas(), theme)
+		var img image.Image
+		fyneui.Sync(func() { img = software.RenderCanvas(win.Canvas(), theme) })
 		featRecordPNG(t, framesDir, frame, img)
 		frame++
 	}
