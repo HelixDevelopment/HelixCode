@@ -235,21 +235,46 @@ func TestStress_Cache_Boundary(t *testing.T) {
 	if got, ok := c.GetModels("big"); !ok || len(got) != 5000 {
 		t.Fatalf("boundary max: ok=%v len=%d", ok, len(got))
 	}
-	// off-by-one TTL expiry boundary.
+	// off-by-one TTL expiry boundary — driven by an injected clock (cache.go
+	// `Cache.now`) rather than time.Sleep. A sleep only guarantees a LOWER
+	// bound on elapsed time, so the previous 15ms-TTL / 20ms-sleep form left a
+	// 10ms slack that host load routinely overshot, making the verdict a
+	// function of machine load instead of of the code under test (§11.4.50).
+	// Advancing the clock makes every boundary below exact to the nanosecond.
+	clk := newTestClock()
 	short := NewCache(15*time.Millisecond, nil)
+	short.now = clk.Now
 	short.SetModels("p", sampleModels(1, "p"))
 	if _, ok := short.GetModels("p"); !ok {
 		t.Fatal("boundary ttl: fresh entry should hit")
 	}
-	time.Sleep(30 * time.Millisecond)
+	// Exactly at TTL the entry is still fresh: cache.go:80 misses only when
+	// age is STRICTLY greater than ttl.
+	clk.Advance(15 * time.Millisecond)
+	if _, ok := short.GetModels("p"); !ok {
+		t.Fatal("boundary ttl: entry at exactly TTL should still hit (miss condition is age > ttl)")
+	}
+	// One nanosecond past TTL it must miss.
+	clk.Advance(time.Nanosecond)
 	if _, ok := short.GetModels("p"); ok {
 		t.Fatal("boundary ttl: expired entry should miss")
 	}
 	// stale window (up to 2x TTL) still returns.
 	short.SetModels("q", sampleModels(1, "q"))
-	time.Sleep(20 * time.Millisecond)
+	clk.Advance(20 * time.Millisecond)
 	if _, ok := short.GetModelsStale("q"); !ok {
 		t.Fatal("boundary stale: entry within 2x TTL should be stale-readable")
+	}
+	// Exactly at 2x TTL (30ms) still stale-readable; cache.go:95 misses only
+	// when age is strictly greater than 2*ttl.
+	clk.Advance(10 * time.Millisecond)
+	if _, ok := short.GetModelsStale("q"); !ok {
+		t.Fatal("boundary stale: entry at exactly 2x TTL should still be stale-readable")
+	}
+	// One nanosecond past 2x TTL it must miss.
+	clk.Advance(time.Nanosecond)
+	if _, ok := short.GetModelsStale("q"); ok {
+		t.Fatal("boundary stale: entry past 2x TTL should miss")
 	}
 }
 

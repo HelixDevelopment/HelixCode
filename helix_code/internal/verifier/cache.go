@@ -10,11 +10,23 @@ import (
 // Cache provides a two-tier cache (in-memory LRU + Redis fallback) for verifier data.
 // If Redis is unavailable, falls back to memory-only.
 type Cache struct {
-	mu       sync.RWMutex
-	entries  map[string]*cacheEntry
-	ttl      time.Duration
-	redis    RedisClient // optional
-	maxSize  int
+	mu      sync.RWMutex
+	entries map[string]*cacheEntry
+	ttl     time.Duration
+	redis   RedisClient // optional
+	maxSize int
+
+	// now is the cache's clock. Production always uses time.Now (set by
+	// NewCache); it is a field rather than a direct time.Now() call so that
+	// TTL/stale-window boundary tests can advance time EXPLICITLY instead of
+	// sleeping past an approximate wall-clock window. time.Sleep guarantees a
+	// lower bound only, never an upper one, so a sleep-driven boundary test
+	// silently overshoots under host load and its verdict becomes a function of
+	// machine load rather than of the code under test (§11.4.50). With an
+	// injected clock the boundary is exact to the nanosecond — strictly
+	// stricter than any sleep could be. Never mutated after construction
+	// outside tests.
+	now func() time.Time
 }
 
 // RedisClient is the minimal interface needed from the Redis wrapper.
@@ -42,7 +54,18 @@ func NewCache(ttl time.Duration, redisClient RedisClient) *Cache {
 		ttl:     ttl,
 		redis:   redisClient,
 		maxSize: 1024,
+		now:     time.Now,
 	}
+}
+
+// clock returns the cache's current time. It tolerates a zero-value Cache
+// (now == nil) by falling back to time.Now, so behaviour is identical whether
+// the Cache came from NewCache or from a composite literal.
+func (c *Cache) clock() time.Time {
+	if c.now != nil {
+		return c.now()
+	}
+	return time.Now()
 }
 
 // GetModels returns cached models for a provider (or "all") if fresh.
@@ -54,7 +77,7 @@ func (c *Cache) GetModels(provider string) ([]*VerifiedModel, bool) {
 	if !ok || entry == nil {
 		return nil, false
 	}
-	if time.Since(entry.FetchedAt) > c.ttl {
+	if c.clock().Sub(entry.FetchedAt) > c.ttl {
 		return nil, false
 	}
 	return entry.Models, true
@@ -69,7 +92,7 @@ func (c *Cache) GetModelsStale(provider string) ([]*VerifiedModel, bool) {
 	if !ok || entry == nil {
 		return nil, false
 	}
-	if time.Since(entry.FetchedAt) > 2*c.ttl {
+	if c.clock().Sub(entry.FetchedAt) > 2*c.ttl {
 		return nil, false
 	}
 	return entry.Models, true
@@ -82,7 +105,7 @@ func (c *Cache) SetModels(provider string, models []*VerifiedModel) {
 
 	c.entries[provider] = &cacheEntry{
 		Models:    models,
-		FetchedAt: time.Now(),
+		FetchedAt: c.clock(),
 		Source:    "verifier",
 	}
 
@@ -105,7 +128,7 @@ func (c *Cache) GetModelScore(modelID string) (float64, bool) {
 	for _, entry := range c.entries {
 		if entry.Scores != nil {
 			if score, ok := entry.Scores[modelID]; ok {
-				if time.Since(entry.FetchedAt) <= c.ttl {
+				if c.clock().Sub(entry.FetchedAt) <= c.ttl {
 					return score, true
 				}
 			}
@@ -121,7 +144,7 @@ func (c *Cache) SetScores(scores map[string]float64) {
 
 	entry := &cacheEntry{
 		Scores:    scores,
-		FetchedAt: time.Now(),
+		FetchedAt: c.clock(),
 		Source:    "verifier",
 	}
 	c.entries["__scores__"] = entry
