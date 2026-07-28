@@ -31,6 +31,19 @@ type Store struct {
 	onSave           []SaveCallback    // Callbacks on save
 	onLoad           []LoadCallback    // Callbacks on load
 	onError          []ErrorCallback   // Callbacks on error
+
+	// autoSaveTickRaceHook is a test seam (nil in production, never set
+	// outside _test.go files): when non-nil, autoSaveTick invokes it
+	// immediately after the non-blocking priority pre-check observes `stop`
+	// still open, but BEFORE the blocking select that follows is evaluated.
+	// This is precisely the residual race window described on autoSaveTick's
+	// doc comment — a close(stop) landing here, concurrently with an
+	// already-buffered tick, leaves Go's uniform-random select pick free to
+	// choose either case. Production code never sets this hook; it exists so
+	// a §11.4.115 test can land a close(stop) deterministically inside that
+	// exact window instead of depending on scheduler luck to hit a
+	// nanosecond-wide gap.
+	autoSaveTickRaceHook func()
 }
 
 // SaveCallback is called after successful save
@@ -200,10 +213,32 @@ func (s *Store) autoSaveLoop(interval time.Duration, stop <-chan struct{}) {
 // ALREADY closed before the select was reached — if the goroutine was
 // scheduler-delayed long enough for a tick to also land in ticker.C by the
 // time it finally runs. The non-blocking priority pre-check below closes
-// that gap: it runs FIRST, on every loop iteration, and returns immediately
-// whenever stop is already closed, so the caller's disable decision is never
-// second-guessed by a coincidentally-pending tick in the blocking select
-// that follows.
+// that WIDE window: it runs FIRST, on every loop iteration, and returns
+// immediately whenever stop is already closed BEFORE this call is even
+// invoked.
+//
+// RESIDUAL WINDOW (closed by the inner re-check below, §11.4.115 review
+// follow-up): the pre-check only proves stop was open at the instant it ran.
+// If close(stop) lands in the narrow gap BETWEEN the pre-check returning and
+// the blocking select below being evaluated, and a tick is already buffered
+// on tickerC, both cases are ready when the blocking select fires and Go's
+// uniform-random pick can still choose the tickerC branch — one stray
+// SaveAll() after DisableAutoSave() has already returned to its caller. The
+// inner non-blocking re-check inside the tickerC case closes this too: any
+// SaveAll() that runs past it is proof stop was OPEN at that re-check,
+// i.e. close(stop) happened no earlier than concurrently with this
+// decision — never validly before it. This is the strongest ordering
+// guarantee a plain channel select can offer; it is not a guarantee that no
+// stray save can ever happen (a close() landing between the re-check and
+// SaveAll() itself is still possible and unavoidable without an additional
+// lock around the save+stop-check pair) — only that a stray save cannot be
+// attributed to a stop that was already closed before this tick began
+// deciding. TestAutoSaveTick_ResidualWindowStopRaceDuringBlockingSelect
+// (store_autosave_residual_window_test.go) forces exactly this window via
+// the autoSaveTickRaceHook test seam and proves the re-check closes it: with
+// the re-check, 0 stray saves across many forced-race trials; without it (see
+// that test's file comment for the manual RED-mode verification protocol),
+// stray saves occur.
 //
 // Returns false when the loop must stop (stop was signalled — checked FIRST,
 // non-blocking, and again in the blocking select below), true when a tick
@@ -218,8 +253,25 @@ func (s *Store) autoSaveTick(tickerC <-chan time.Time, stop <-chan struct{}) boo
 	default:
 	}
 
+	// Test seam (§11.4.115 residual-window guard): fires only when a test
+	// has set it, giving the test a deterministic hook to land close(stop)
+	// exactly here — after the pre-check above, before the blocking select
+	// below. Always nil in production.
+	if s.autoSaveTickRaceHook != nil {
+		s.autoSaveTickRaceHook()
+	}
+
 	select {
 	case <-tickerC:
+		// Re-check: a stop-close landing in the window between the pre-check
+		// above and this blocking select being evaluated can still leave the
+		// tickerC branch "randomly" chosen even though stop is now closed.
+		// Catch it here, non-blocking, before running SaveAll.
+		select {
+		case <-stop:
+			return false
+		default:
+		}
 		if err := s.SaveAll(); err != nil {
 			s.triggerError(err)
 		}

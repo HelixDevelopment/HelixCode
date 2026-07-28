@@ -279,6 +279,15 @@ func TestOpenAICompatibleProvider_Generate(t *testing.T) {
 		assert.NotNil(t, response)
 		assert.Equal(t, "Hello from OpenAI-compatible API!", response.Content)
 		assert.Equal(t, 18, response.Usage.TotalTokens)
+		// CONST-036/037 (§11.4.135 regression guard): convertFromOpenAIResponse
+		// must carry the backend-reported model through to LLMResponse.Model so
+		// callers can surface the model that ACTUALLY served the request rather
+		// than the requested alias. The canned server response above sets
+		// Model: "llama-3-8b" — assert it survives the conversion. Deleting
+		// `Model: response.Model` in convertFromOpenAIResponse makes this FAIL
+		// (response.Model reverts to "") while every other assertion in this
+		// suite stays green — that emptiness is the hole this guard closes.
+		assert.Equal(t, "llama-3-8b", response.Model)
 	})
 
 	t.Run("APIError", func(t *testing.T) {

@@ -342,11 +342,24 @@ func (s *Server) generateLLM(c *gin.Context) {
 		return
 	}
 
+	// Report the model the provider ACTUALLY served. llmReq.Model is the
+	// caller's REQUESTED string, which is an alias ("default", "local", a
+	// routing name) whenever the backend resolved it to a concrete model —
+	// echoing it back tells the client a model identity that never served the
+	// request (CONST-036 / CONST-037). Fall back to the requested model only
+	// when the provider reported none, so the field is never empty. Mirrors
+	// llmResponseToOpenAI in wire_facade.go exactly — the same defect existed
+	// on this native API surface as on the OpenAI/Anthropic wire facades.
+	servedModel := llmReq.Model
+	if resp.Model != "" {
+		servedModel = resp.Model
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":   "success",
 		"content":  resp.Content,
 		"provider": provider.GetName(),
-		"model":    llmReq.Model,
+		"model":    servedModel,
 		"usage": gin.H{
 			"prompt_tokens":     resp.Usage.PromptTokens,
 			"completion_tokens": resp.Usage.CompletionTokens,
