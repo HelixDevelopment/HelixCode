@@ -66,7 +66,7 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 <tbody>
 <tr>
 <td>Revision</td>
-<td>19</td>
+<td>20</td>
 </tr>
 <tr>
 <td>Created</td>
@@ -74,7 +74,7 @@ CLI-Agent Fusion — Programme Continuation Guide</h1>
 </tr>
 <tr>
 <td>Last modified</td>
-<td>2026-07-28T18:20:00Z (dedicated doc-refresh pass,
+<td>2026-07-28T17:45Z (RED-polarity repair + bisect guidance,
 §11.4.131/§12.10)</td>
 </tr>
 <tr>
@@ -103,16 +103,26 @@ NOT compile at
 caught by independent review and fixed in <code>34e264e1</code>.
 <code>3fd55a4d</code>‘s own message additionally discloses its
 <code>RED_MODE=1</code> branch is itself a bluff (asserts on a local
-replica of pre-fix behaviour, cannot fail) — tracked, still open, not
-repaired. <code>c7484cc7</code> (scaling-harness signal-to-noise fix,
-<code>Trials</code> 3→5, confirmed in source) and <code>640db264</code>
-(aurora_os uint64-underflow fix) both carry pasted verification in their
-own messages. The newest commit <code>99ff7d8e</code> reviewed
-<code>3c8197cf</code>’s new <code>*_racefix_test.go</code> files by
-READING alone (host lacks X11/GL headers to build them) and found +
-fixed a deterministic nil-pointer panic in the harmony_os file — proof
-the “authored but never executed” GUI-test gap (below) can hide real
-defects. <strong>(E2) <code>helix_agent</code> moved
+replica of pre-fix behaviour, cannot fail) — <strong>REPAIRED in
+<code>bf1ce692</code></strong>: both polarities drive the real handler;
+four-quadrant proof captured (pre-fix RED=PASS / pre-fix GREEN=FAIL /
+fixed RED=FAIL / fixed GREEN=PASS). Its “tracked” claim was itself
+unbacked — no matching entry in
+<code>docs/</code>/<code>Issues.md</code>/the SSoT DB (§11.4.148) — so
+it was fixed, not back-filled. <strong><code>git bisect skip</code> is
+REQUIRED across
+<code>3fd55a4d</code>/<code>3c8197cf</code>/<code>905a0b0a</code></strong>
+— they do not build <code>internal/server</code>; a bisect stopping
+there has found a build break, not the bug. <code>c7484cc7</code>
+(scaling-harness signal-to-noise fix, <code>Trials</code> 3→5, confirmed
+in source) and <code>640db264</code> (aurora_os uint64-underflow fix)
+both carry pasted verification in their own messages. The newest commit
+<code>99ff7d8e</code> reviewed <code>3c8197cf</code>’s new
+<code>*_racefix_test.go</code> files by READING alone (host lacks X11/GL
+headers to build them) and found + fixed a deterministic nil-pointer
+panic in the harmony_os file — proof the “authored but never executed”
+GUI-test gap (below) can hide real defects. <strong>(E2)
+<code>helix_agent</code> moved
 <code>a345c551</code>→<code>f451d342</code>, 9 more commits, now 11
 ahead</strong> (was 2); this pass verified BY DIFF that a Critical
 review finding described elsewhere as “remediation in flight” (Dreamer

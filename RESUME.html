@@ -117,9 +117,9 @@ text-decoration: line-through;
 </header>
 <h1 id="resume-helixcode-session-handoff">RESUME — HelixCode Session
 Handoff</h1>
-<p><strong>Revision:</strong> 7 <strong>Created:</strong> 2026-07-08
-<strong>Last modified:</strong> 2026-07-28T18:20Z (doc-refresh pass,
-§11.4.131/§12.10) <strong>Status:</strong> active
+<p><strong>Revision:</strong> 8 <strong>Created:</strong> 2026-07-08
+<strong>Last modified:</strong> 2026-07-28T17:45Z (RED-polarity repair +
+bisect guidance, §11.4.131/§12.10) <strong>Status:</strong> active
 <strong>Maintainer:</strong> CLI-agent main work stream
 <strong>Authority:</strong> §11.4.131 Session-resumption file — point a
 fresh agent here. Composes §11.4.127 / §12.10 / §11.4.65 / §11.4.44.</p>
@@ -147,9 +147,22 @@ caught by independent review and fixed one commit later in
 additionally DISCLOSES that its <code>RED_MODE=1</code> branch is itself
 a bluff (asserts on a local in-test replica of the pre-fix response
 construction rather than driving the real handler, so it passes on
-already-fixed code) — tracked, not silently absorbed, still open.
-<code>c7484cc7</code> (scaling-harness signal-to-noise, Trials 3→5,
-confirmed in source: <code>MeasureTrialsPerStep = 5</code>) and
+already-fixed code) — <strong>REPAIRED in
+<code>bf1ce692</code></strong>: both polarities now drive the REAL
+handler over one shared fixture, proven by the full four-quadrant matrix
+(pre-fix RED=PASS defect-reproduced / pre-fix GREEN=FAIL / fixed
+RED=FAIL / fixed GREEN=PASS), with the pre-fix artifact reconstructed in
+a throwaway <code>git worktree</code> with <code>submodules/</code>
+symlinked in. An independent review also found the “tracked” claim in
+<code>3fd55a4d</code>’s message was UNBACKED — no entry existed in
+<code>docs/</code>, <code>Issues.md</code>, or the workable-items DB
+(§11.4.148); it was fixed rather than back-filled. <strong>Bisecting
+across <code>3fd55a4d..905a0b0a</code> needs
+<code>git bisect skip</code></strong> — those three commits do not build
+<code>internal/server</code>, so a bisect run there reports a BUILD
+failure, not a test verdict, and must not be read as the defect’s
+location. <code>c7484cc7</code> (scaling-harness signal-to-noise, Trials
+3→5, confirmed in source: <code>MeasureTrialsPerStep = 5</code>) and
 <code>640db264</code> (aurora_os uint64-underflow fix) both carry pasted
 verification output in their own commit messages and are treated as
 independently-clean per the dispatching brief; this pass did not re-run
