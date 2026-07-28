@@ -414,3 +414,12 @@ A recent change gave one part of the project a distinct name so that two differe
 
 A detector was written to catch a specific kind of stall where a background worker gets stuck trying to hand off a result nobody is collecting. It identifies that stall by looking for one particular description of what the worker is waiting on. There is a second, equally real form of the same stall — where the worker waits on a choice between several possibilities rather than a single handoff — and the detector does not recognise it. This was demonstrated rather than theorised: a deliberately introduced leak of the second form went completely undetected while the detector reported everything healthy. The shape it does catch is the historical one, so the guard is not useless, but a future change that keeps the newer structure while breaking its escape route would slip past. Widening it to recognise both descriptions is a small change and restores the guard to covering the whole defect rather than half of it.
 
+## HXC-201 — The documented way to regenerate the tracker documents writes them to the wrong place and reports success
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** High
+**Created-By:** Claude
+
+The command the project's manuals give for regenerating the tracker documents does not put them where it says. It builds the tool from one directory and is told to write output to a path relative to the project root, but the build step also changes the working directory, so the output lands inside the tool's own folder instead. It prints the correct-looking destinations and reports success, leaving the real documents untouched and several hours stale, and it creates empty placeholder files in the wrong location. This replaced an earlier version of the same command that was outright invalid and failed loudly, so the situation is now worse: a visible error became a silent one. It also explains an empty database file previously found in that folder and attributed to a different mistake. The correction is to give an absolute output path, or to make the tool resolve its output against the project root regardless of where it was built, and then to update the manuals and the check that currently enforces the broken form.
+
