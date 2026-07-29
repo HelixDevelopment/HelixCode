@@ -104,10 +104,22 @@ deadlock, lock-across-blocking-work, remaining unguarded shared state,
 compare-and-set correctness, caller-visible behaviour change, whether the guard
 test can actually fail, and comment honesty.
 
-**Verdict: GO, zero blocking findings.** The reviewer re-ran the build, vet,
-gofmt and both `-race` suites itself, and confirmed the cited RED evidence file
-exists and contains a real DATA RACE report rather than taking the claim on
-trust.
+**Round 1 verdict: GO, zero blocking findings.** The reviewer re-ran the build,
+vet, gofmt and both `-race` suites itself, and confirmed the cited RED evidence
+file exists and contains a real DATA RACE report rather than taking the claim
+on trust.
+
+**Round 2 verdict (§11.4.134, after the F3 remediation): GO, zero blocking and
+zero non-blocking findings against the delta.** The reviewer traced the whole
+lock sequence rather than accepting the author's reasoning — confirming
+`Initialize` holds no lock at the new `shouldSkipProviderInstall()` call site
+(the fast-path `RLock` is released at `:338`, `registerProvider` is
+self-contained, and the final `Lock` comes after the loop), that no accessor
+calls another accessor, and that no nested `RLock` exists anywhere. It also
+verified by full assignment census that the rewritten doc comment's claim —
+mu guards every mutable field — is literally true, and that the
+publication-order justification for the unguarded config reads is correct.
+Round 2 surfaced F9 below.
 
 Non-blocking findings and their disposition:
 
@@ -120,6 +132,7 @@ Non-blocking findings and their disposition:
 | F5 | The GREEN guard's write traffic depends on phase 3 stamping `LastCheck` on all providers; a compound future regression could evade it | Disclosed below under "Not verified" |
 | F6 | **The same defect class is live in the sibling type `AutoLLMManager`** | Follow-up ticket — see below |
 | F7/F8 | `.go` source carries mode 100755; `HealthURL` is write-only | Nits, both pre-existing |
+| F9 | `local_llm_manager.go:366` copies `definition.Environment` by **reference**, so every provider record in every manager instance aliases the same map owned by the package-level `providerDefinitions` var (`:72`) | Follow-up. Verified latent, not live: no code writes `provider.Environment[...]` today (grep across `internal/llm/` returns nothing) and `snapshotProviders` deep-copies it for callers. But a future *locked* write would corrupt state shared across manager instances, which a per-instance `mu` cannot protect. Fix is a deep copy at construction (`:357-368`) |
 
 **Correction to F1's deferral rationale (round 2).** An earlier revision of this
 document justified deferring F1 partly on the grounds that it would change an
