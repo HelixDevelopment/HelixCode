@@ -214,3 +214,16 @@ scripts/opendesign/run/
 
 # Scratchpad: temp files, AI model downloads, discovery notes (§11.4.30)
 helix_code/scratchpad/
+
+# Compiled root-level helper binaries (§11.4.53 no-versioned-build-artifacts).
+# Identified from the binaries' own embedded module metadata, not guessed:
+#   `go version -m ./bridge` -> path dev.helix.code/meta/scripts/bridge
+#   `go version -m ./qa`     -> path dev.helix.code/meta/scripts/qa
+# §11.4.77 regeneration mechanism (sources are tracked, so a fresh clone can
+# rebuild both with no network and no credentials):
+#   go build -o bridge ./scripts/bridge
+#   go build -o qa     ./scripts/qa
+# Patterns are ROOT-ANCHORED on purpose: a bare `qa` would also swallow the
+# `docs/qa/` §11.4.83 evidence tree and the `scripts/qa/` source package.
+/bridge
+/qa
