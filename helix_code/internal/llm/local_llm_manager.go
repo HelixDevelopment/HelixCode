@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"dev.helix.code/internal/providers/httpclient"
@@ -17,6 +18,26 @@ import (
 
 // LocalLLMManager manages all local LLM providers
 type LocalLLMManager struct {
+	// mu guards the providers map itself AND the mutable fields of the
+	// *LocalLLMProvider records it holds (Status, LastCheck, Process), plus
+	// isInitialized and skipProviderInstall — i.e. every mutable field on this
+	// type. The provider fields that are assigned only during Initialize,
+	// BEFORE the record is published into the map (Name, DefaultPort, DataPath,
+	// ConfigPath, HealthURL, Environment, ...) are safe to read unguarded: the
+	// mutex handoff in registerProvider/lookupProvider supplies the
+	// happens-before edge.
+	//
+	// LOCK DISCIPLINE (HXC-203) — two rules, both load-bearing:
+	//
+	//  1. NEVER hold mu across blocking work: no network probe, no exec, no
+	//     process Wait, no filesystem walk. A hung provider must not be able to
+	//     block every other reader of the status map. Blocking work is always
+	//     performed on values snapshotted out from under the lock.
+	//  2. NEVER call another locking method while holding mu. Go mutexes are
+	//     not reentrant, so a helper that locks must not be invoked from a
+	//     critical section. The small accessors below each take and release
+	//     mu themselves, which is what keeps that rule mechanical.
+	mu                  sync.RWMutex
 	baseDir             string
 	binaryDir           string
 	configDir           string
@@ -215,24 +236,107 @@ func NewLocalLLMManager(baseDir string) *LocalLLMManager {
 	}
 
 	manager := &LocalLLMManager{
-		baseDir:       baseDir,
-		binaryDir:     filepath.Join(baseDir, "bin"),
-		configDir:     filepath.Join(baseDir, "config"),
-		dataDir:       filepath.Join(baseDir, "data"),
-		providers:     make(map[string]*LocalLLMProvider),
+		baseDir:   baseDir,
+		binaryDir: filepath.Join(baseDir, "bin"),
+		configDir: filepath.Join(baseDir, "config"),
+		dataDir:   filepath.Join(baseDir, "data"),
+		providers: make(map[string]*LocalLLMProvider),
 		// Shared tuned HTTP/2 transport (speed programme P1-T01,
 		// R1 B03 / R3 §4.7) — connection pooling only; request
 		// behaviour is unchanged.
-		httpClient: httpclient.NewHTTPClient(10 * time.Second),
+		httpClient:    httpclient.NewHTTPClient(10 * time.Second),
 		isInitialized: false,
 	}
 
 	return manager
 }
 
+// --- Shared-state accessors (HXC-203) ------------------------------------
+//
+// Every read or write of the providers map, of a provider's mutable fields,
+// or of isInitialized goes through one of these. Each takes and releases mu
+// itself and performs no blocking work, so callers can never accidentally
+// hold the lock across a network probe or an exec, and can never deadlock by
+// nesting two of them.
+
+// registerProvider inserts a provider record under the write lock.
+func (m *LocalLLMManager) registerProvider(name string, provider *LocalLLMProvider) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.providers[name] = provider
+}
+
+// lookupProvider returns the live provider record for name.
+func (m *LocalLLMManager) lookupProvider(name string) (*LocalLLMProvider, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	provider, exists := m.providers[name]
+	return provider, exists
+}
+
+// providerNames returns a snapshot of the registered provider names. Callers
+// iterate this slice rather than the live map, so a concurrent registration
+// cannot trigger Go's concurrent-map-iteration fatal error and the lock is not
+// held while the loop body does real work.
+func (m *LocalLLMManager) providerNames() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	names := make([]string, 0, len(m.providers))
+	for name := range m.providers {
+		names = append(names, name)
+	}
+	return names
+}
+
+// providerCount returns the number of registered providers.
+func (m *LocalLLMManager) providerCount() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.providers)
+}
+
+// statusOf reads a provider's Status under the read lock.
+func (m *LocalLLMManager) statusOf(provider *LocalLLMProvider) string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return provider.Status
+}
+
+// setStatus writes a provider's Status under the write lock.
+func (m *LocalLLMManager) setStatus(provider *LocalLLMProvider, status string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	provider.Status = status
+}
+
+// setStarted records the process handle, the "starting" status and the check
+// timestamp in one critical section, so no reader can observe a provider that
+// has a live process but no status (or the reverse).
+func (m *LocalLLMManager) setStarted(provider *LocalLLMProvider, process *os.Process) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	provider.Process = process
+	provider.Status = "starting"
+	provider.LastCheck = time.Now()
+}
+
+// takeProcess clears and returns a provider's process handle. The caller then
+// signals/kills/waits on the returned handle with no lock held, since those
+// operations block for as long as the child takes to exit.
+func (m *LocalLLMManager) takeProcess(provider *LocalLLMProvider) *os.Process {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	process := provider.Process
+	provider.Process = nil
+	return process
+}
+
 // Initialize sets up the local LLM manager
 func (m *LocalLLMManager) Initialize(ctx context.Context) error {
-	if m.isInitialized {
+	m.mu.RLock()
+	initialized := m.isInitialized
+	m.mu.RUnlock()
+	if initialized {
 		return nil
 	}
 
@@ -273,18 +377,22 @@ func (m *LocalLLMManager) Initialize(ctx context.Context) error {
 		os.MkdirAll(provider.ConfigPath, 0755)
 		os.MkdirAll(provider.DataPath, 0755)
 
-		m.providers[name] = provider
+		m.registerProvider(name, provider)
 
-		// Install provider (skip if in test mode)
-		if !m.skipProviderInstall {
+		// Install provider (skip if in test mode). Deliberately performed with
+		// no lock held — installProvider clones a repository and runs a build.
+		if !m.shouldSkipProviderInstall() {
 			if err := m.installProvider(ctx, provider); err != nil {
 				log.Printf("⚠️  Failed to install %s: %v", name, err)
 			}
 		}
 	}
 
+	m.mu.Lock()
 	m.isInitialized = true
-	log.Printf("✅ Local LLM Manager initialized with %d providers", len(m.providers))
+	m.mu.Unlock()
+
+	log.Printf("✅ Local LLM Manager initialized with %d providers", m.providerCount())
 
 	return nil
 }
@@ -296,7 +404,18 @@ func (m *LocalLLMManager) GetBaseDir() string {
 
 // SetSkipProviderInstall sets whether to skip provider installation (for testing)
 func (m *LocalLLMManager) SetSkipProviderInstall(skip bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.skipProviderInstall = skip
+}
+
+// shouldSkipProviderInstall reads the test-only install-skip flag under the
+// read lock. Guarded for the same reason as every other mutable field on this
+// type: Initialize reads it while a caller could still be setting it.
+func (m *LocalLLMManager) shouldSkipProviderInstall() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.skipProviderInstall
 }
 
 // createDirectories creates necessary directories
@@ -378,7 +497,7 @@ func (m *LocalLLMManager) installProvider(ctx context.Context, provider *LocalLL
 		return fmt.Errorf("failed to create startup script: %w", err)
 	}
 
-	provider.Status = "installed"
+	m.setStatus(provider, "installed")
 	log.Printf("✅ Successfully installed %s", provider.Name)
 
 	return nil
@@ -484,12 +603,12 @@ func (m *LocalLLMManager) createStartupScript(provider *LocalLLMProvider) error 
 
 // StartProvider starts a specific local LLM provider
 func (m *LocalLLMManager) StartProvider(ctx context.Context, providerName string) error {
-	provider, exists := m.providers[providerName]
+	provider, exists := m.lookupProvider(providerName)
 	if !exists {
 		return fmt.Errorf("provider %s not found", providerName)
 	}
 
-	if provider.Status == "running" {
+	if m.statusOf(provider) == "running" {
 		return fmt.Errorf("provider %s is already running", providerName)
 	}
 
@@ -512,17 +631,16 @@ func (m *LocalLLMManager) StartProvider(ctx context.Context, providerName string
 		return fmt.Errorf("failed to start provider: %w", err)
 	}
 
-	provider.Process = cmd.Process
-	provider.Status = "starting"
-	provider.LastCheck = time.Now()
+	m.setStarted(provider, cmd.Process)
 
-	// Wait for provider to be ready
+	// Wait for provider to be ready. No lock held: this polls the provider's
+	// health endpoint for up to 60s.
 	if err := m.waitForProvider(ctx, provider); err != nil {
-		provider.Status = "failed"
+		m.setStatus(provider, "failed")
 		return fmt.Errorf("provider failed to start: %w", err)
 	}
 
-	provider.Status = "running"
+	m.setStatus(provider, "running")
 	log.Printf("✅ Successfully started %s on port %d", provider.Name, provider.DefaultPort)
 
 	return nil
@@ -530,33 +648,36 @@ func (m *LocalLLMManager) StartProvider(ctx context.Context, providerName string
 
 // StopProvider stops a specific local LLM provider
 func (m *LocalLLMManager) StopProvider(ctx context.Context, providerName string) error {
-	provider, exists := m.providers[providerName]
+	provider, exists := m.lookupProvider(providerName)
 	if !exists {
 		return fmt.Errorf("provider %s not found", providerName)
 	}
 
-	if provider.Status != "running" {
+	if m.statusOf(provider) != "running" {
 		return fmt.Errorf("provider %s is not running", providerName)
 	}
 
 	log.Printf("🛑 Stopping %s...", provider.Name)
 
-	if provider.Process != nil {
+	// Claim the process handle under the lock and clear it in the same critical
+	// section. Two concurrent stops therefore cannot both signal and Wait on
+	// the same child (a double Wait reaps an already-reaped process and
+	// errors); the loser simply sees nil and falls through to the status write.
+	if process := m.takeProcess(provider); process != nil {
+		// No lock held from here: Wait blocks until the child exits.
 		// Try graceful shutdown first
-		if err := provider.Process.Signal(os.Interrupt); err != nil {
+		if err := process.Signal(os.Interrupt); err != nil {
 			// Force kill if graceful fails
-			provider.Process.Kill()
+			process.Kill()
 		}
 
 		// Wait for process to exit
-		if _, err := provider.Process.Wait(); err != nil {
+		if _, err := process.Wait(); err != nil {
 			log.Printf("⚠️  Error waiting for process to exit: %v", err)
 		}
-
-		provider.Process = nil
 	}
 
-	provider.Status = "stopped"
+	m.setStatus(provider, "stopped")
 	log.Printf("✅ Successfully stopped %s", provider.Name)
 
 	return nil
@@ -584,7 +705,18 @@ func (m *LocalLLMManager) waitForProvider(ctx context.Context, provider *LocalLL
 
 // isProviderHealthy checks if a provider is healthy
 func (m *LocalLLMManager) isProviderHealthy(ctx context.Context, provider *LocalLLMProvider) bool {
-	healthURL := fmt.Sprintf("http://127.0.0.1:%d/health", provider.DefaultPort)
+	// DefaultPort is immutable after Initialize, so reading it here needs no
+	// lock. The probe itself is delegated so the status refresh can call it
+	// with a plain port value and touch no shared memory at all.
+	return m.isEndpointHealthy(ctx, provider.DefaultPort)
+}
+
+// isEndpointHealthy probes a provider's health endpoint by port. It takes the
+// port BY VALUE and reads no manager state, so it is safe — and required — to
+// call it with no lock held: it performs network I/O that can hang for the
+// duration of the HTTP client timeout.
+func (m *LocalLLMManager) isEndpointHealthy(ctx context.Context, port int) bool {
+	healthURL := fmt.Sprintf("http://127.0.0.1:%d/health", port)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", healthURL, nil)
 	if err != nil {
@@ -600,24 +732,122 @@ func (m *LocalLLMManager) isProviderHealthy(ctx context.Context, provider *Local
 	return resp.StatusCode == http.StatusOK
 }
 
-// GetProviderStatus returns the status of all providers
-func (m *LocalLLMManager) GetProviderStatus(ctx context.Context) map[string]*LocalLLMProvider {
-	for _, provider := range m.providers {
-		if provider.Status == "running" {
-			if m.isProviderHealthy(ctx, provider) {
-				provider.Status = "running"
-			} else {
-				provider.Status = "unhealthy"
-			}
-		}
-		provider.LastCheck = time.Now()
+// refreshProviderHealth re-probes every provider that claims to be running and
+// records the verdict. This is the MUTATING half of what used to live inside
+// GetProviderStatus (HXC-203): a method named as a query wrote to shared state
+// with no synchronisation, so two concurrent callers raced on Status and
+// LastCheck.
+//
+// It runs in three phases so that the network probe never happens under the
+// lock — holding mu across a hung provider's health check would stall every
+// other reader of the status map for the full HTTP timeout.
+func (m *LocalLLMManager) refreshProviderHealth(ctx context.Context) {
+	type probeTarget struct {
+		name string
+		port int
 	}
-	return m.providers
+
+	// Phase 1 — snapshot the probe targets under the read lock. The port is
+	// copied by value so phase 2 dereferences nothing shared.
+	m.mu.RLock()
+	targets := make([]probeTarget, 0, len(m.providers))
+	for name, provider := range m.providers {
+		if provider.Status == "running" {
+			targets = append(targets, probeTarget{name: name, port: provider.DefaultPort})
+		}
+	}
+	m.mu.RUnlock()
+
+	// Phase 2 — probe with NO lock held. This is the blocking part.
+	verdicts := make(map[string]bool, len(targets))
+	for _, target := range targets {
+		verdicts[target.name] = m.isEndpointHealthy(ctx, target.port)
+	}
+
+	// Phase 3 — apply the verdicts under the write lock.
+	now := time.Now()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for name, healthy := range verdicts {
+		provider, exists := m.providers[name]
+		if !exists {
+			continue
+		}
+		// Compare-and-set. The lock was released for the probe, so
+		// StartProvider or StopProvider may have moved this provider on since
+		// the verdict was formed. Only a provider that is STILL claiming
+		// "running" may be judged by this probe — otherwise a stale verdict
+		// would clobber newer, authoritative state (demoting a provider that
+		// has since been deliberately stopped, or resurrecting one as
+		// "unhealthy" after it was stopped cleanly).
+		if provider.Status != "running" {
+			continue
+		}
+		if healthy {
+			provider.Status = "running"
+		} else {
+			provider.Status = "unhealthy"
+		}
+	}
+
+	// LastCheck is stamped on every provider, not just the probed ones, which
+	// preserves the pre-fix contract: `helixcode local-llm status` renders a
+	// LAST CHECK column for every row.
+	for _, provider := range m.providers {
+		provider.LastCheck = now
+	}
+}
+
+// snapshotProviders returns a deep copy of the provider records.
+//
+// The pre-fix GetProviderStatus returned m.providers — the LIVE internal map —
+// so every caller received pointers into manager state that it could mutate,
+// and any range over the result raced with a concurrent registration. Callers
+// now get records they own outright.
+func (m *LocalLLMManager) snapshotProviders() map[string]*LocalLLMProvider {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	snapshot := make(map[string]*LocalLLMProvider, len(m.providers))
+	for name, provider := range m.providers {
+		clone := *provider
+
+		// Never hand out the live OS process handle: a caller holding it could
+		// signal or kill a provider this manager owns. No caller reads it.
+		clone.Process = nil
+
+		// Copy the reference-typed fields too, so a caller mutating the
+		// returned record cannot reach back into manager state through them.
+		if provider.Environment != nil {
+			environment := make(map[string]string, len(provider.Environment))
+			for key, value := range provider.Environment {
+				environment[key] = value
+			}
+			clone.Environment = environment
+		}
+		clone.Dependencies = append([]string(nil), provider.Dependencies...)
+		clone.StartupCmd = append([]string(nil), provider.StartupCmd...)
+
+		snapshot[name] = &clone
+	}
+
+	return snapshot
+}
+
+// GetProviderStatus refreshes provider health and returns a snapshot of all
+// providers. The returned map and the records in it are private copies owned
+// by the caller; mutating them does not affect manager state.
+func (m *LocalLLMManager) GetProviderStatus(ctx context.Context) map[string]*LocalLLMProvider {
+	m.refreshProviderHealth(ctx)
+	return m.snapshotProviders()
 }
 
 // GetRunningProviders returns a list of running provider endpoints
 func (m *LocalLLMManager) GetRunningProviders(ctx context.Context) []string {
 	running := make([]string, 0)
+	// GetProviderStatus hands back a private snapshot, so reading Status off
+	// these records needs no further synchronisation.
 	status := m.GetProviderStatus(ctx)
 
 	for _, provider := range status {
@@ -634,7 +864,10 @@ func (m *LocalLLMManager) GetRunningProviders(ctx context.Context) []string {
 func (m *LocalLLMManager) StartAllProviders(ctx context.Context) error {
 	log.Println("🚀 Starting all local LLM providers...")
 
-	for name := range m.providers {
+	// Iterate a name snapshot, never the live map: StartProvider locks
+	// internally, so ranging m.providers under the lock would deadlock, and
+	// ranging it unlocked would race with a concurrent registration.
+	for _, name := range m.providerNames() {
 		if err := m.StartProvider(ctx, name); err != nil {
 			log.Printf("⚠️  Failed to start %s: %v", name, err)
 		}
@@ -648,7 +881,8 @@ func (m *LocalLLMManager) StartAllProviders(ctx context.Context) error {
 func (m *LocalLLMManager) StopAllProviders(ctx context.Context) error {
 	log.Println("🛑 Stopping all local LLM providers...")
 
-	for name := range m.providers {
+	// Name snapshot, same reasoning as StartAllProviders.
+	for _, name := range m.providerNames() {
 		if err := m.StopProvider(ctx, name); err != nil {
 			log.Printf("⚠️  Failed to stop %s: %v", name, err)
 		}
@@ -675,7 +909,7 @@ func (m *LocalLLMManager) Cleanup(ctx context.Context) error {
 
 // UpdateProvider updates a specific provider to the latest version
 func (m *LocalLLMManager) UpdateProvider(ctx context.Context, providerName string) error {
-	provider, exists := m.providers[providerName]
+	provider, exists := m.lookupProvider(providerName)
 	if !exists {
 		return fmt.Errorf("provider %s not found", providerName)
 	}
@@ -683,7 +917,7 @@ func (m *LocalLLMManager) UpdateProvider(ctx context.Context, providerName strin
 	log.Printf("🔄 Updating %s...", provider.Name)
 
 	// Stop provider if running
-	if provider.Status == "running" {
+	if m.statusOf(provider) == "running" {
 		if err := m.StopProvider(ctx, providerName); err != nil {
 			log.Printf("⚠️  Failed to stop provider for update: %v", err)
 		}
@@ -723,7 +957,7 @@ func (m *LocalLLMManager) ShareModelWithProviders(ctx context.Context, modelPath
 
 	// Find compatible providers
 	compatibleProviders := []string{}
-	for name := range m.providers {
+	for _, name := range m.providerNames() {
 		if m.isFormatCompatibleWithProvider(format, name) {
 			compatibleProviders = append(compatibleProviders, name)
 		}
@@ -735,7 +969,11 @@ func (m *LocalLLMManager) ShareModelWithProviders(ctx context.Context, modelPath
 
 	// Create symlinks or copies for each compatible provider
 	for _, providerName := range compatibleProviders {
-		provider := m.providers[providerName]
+		provider, exists := m.lookupProvider(providerName)
+		if !exists {
+			// Deregistered between the name snapshot and here.
+			continue
+		}
 		targetDir := filepath.Join(provider.DataPath, "models")
 		os.MkdirAll(targetDir, 0755)
 
@@ -813,8 +1051,22 @@ func (m *LocalLLMManager) DownloadModelForAllProviders(ctx context.Context, mode
 func (m *LocalLLMManager) GetSharedModels(ctx context.Context) (map[string][]string, error) {
 	shared := make(map[string][]string)
 
+	// Snapshot (name, DataPath) under the lock, then walk the filesystem with
+	// no lock held — a slow or stalled mount must not block status readers.
+	type providerDir struct {
+		name     string
+		dataPath string
+	}
+	m.mu.RLock()
+	providerDirs := make([]providerDir, 0, len(m.providers))
 	for name, provider := range m.providers {
-		modelsDir := filepath.Join(provider.DataPath, "models")
+		providerDirs = append(providerDirs, providerDir{name: name, dataPath: provider.DataPath})
+	}
+	m.mu.RUnlock()
+
+	for _, entry := range providerDirs {
+		name := entry.name
+		modelsDir := filepath.Join(entry.dataPath, "models")
 		if _, err := os.Stat(modelsDir); err == nil {
 			entries, err := os.ReadDir(modelsDir)
 			if err != nil {
@@ -839,7 +1091,7 @@ func (m *LocalLLMManager) GetSharedModels(ctx context.Context) (map[string][]str
 
 // OptimizeModelForProvider optimizes a model specifically for a provider
 func (m *LocalLLMManager) OptimizeModelForProvider(ctx context.Context, modelPath string, targetProvider string) error {
-	provider, exists := m.providers[targetProvider]
+	provider, exists := m.lookupProvider(targetProvider)
 	if !exists {
 		return fmt.Errorf("provider %s not found", targetProvider)
 	}
@@ -967,9 +1219,18 @@ func (m *LocalLLMManager) findMostCompatibleFormat(sourceFormat ModelFormat) Mod
 	// Count how many providers support each format
 	formatCounts := make(map[ModelFormat]int)
 
+	// Snapshot the display names under the lock rather than ranging the live
+	// map, which would race with a concurrent registration.
+	m.mu.RLock()
+	displayNames := make([]string, 0, len(m.providers))
 	for _, provider := range m.providers {
+		displayNames = append(displayNames, provider.Name)
+	}
+	m.mu.RUnlock()
+
+	for _, displayName := range displayNames {
 		var supportedFormats []ModelFormat
-		switch provider.Name {
+		switch displayName {
 		case "VLLM":
 			supportedFormats = []ModelFormat{FormatGGUF, FormatGPTQ, FormatAWQ, FormatHF, FormatFP16, FormatBF16}
 		case "Llama.cpp":
