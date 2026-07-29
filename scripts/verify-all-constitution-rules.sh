@@ -756,6 +756,57 @@ if want_gate G21; then
 fi
 
 # ---------------------------------------------------------------------------
+# G22 — CONST-046 toolschema i18n default resolves real text (runtime probe)
+#
+# CM-TOOLSCHEMA-I18N-DEFAULT-RESOLVES. Guards the user-visible defect that
+# `digital.vasic.toolschema` shipped silently from the 2026-05-20 tr() migration
+# until 8cec90b: the package-default Translator was NoopTranslator{}, a raw
+# message-ID echo, so every unwired consumer saw "toolschema_git_desc_commit"
+# where "Create git commit" belonged — including user-visible ToolResult.Error
+# payloads. Only a consumer's own test ever surfaced it.
+#
+# RECONCILED per §11.4.120, not fake-passed and not reverted: the gate was
+# authored against the PRE-FIX shape (it hard-required the literal
+# `activeTr Translator = NoopTranslator{}` and demanded a composition root call
+# SetTranslator). 8cec90b fixed the same defect by a better mechanism — a
+# go:embed bundle translator as the default — which removed that literal and
+# made the composition-root requirement WRONG (no wiring is needed any more).
+# The gate now asserts the invariant that actually protects users: the zero-
+# wired default resolves REAL bundle text, and NoopTranslator still echoes so
+# the seam stays overridable and the guard stays falsifiable.
+#
+# Upgraded from grep to RUNTIME EVIDENCE (§11.4.5): the old file conceded its
+# runtime half was "deliberately not implemented ... no observable subject yet".
+# There is one now, so the gate executes tr() in a fresh process via
+# `go test -overlay` — which injects the probe WITHOUT writing into the module
+# tree — and compares the rendered output against the on-disk bundle rather
+# than a hardcoded string. Expected strings are not pinned in the gate, so a
+# legitimate bundle-text edit cannot false-FAIL it (§11.4.201).
+#
+# Exit-code handling mirrors G21 deliberately: 2 is the §11.4.3 environment
+# SKIP (no Go toolchain, module tree absent, probe did not execute) and MUST
+# NOT be reported with the substantive-violation wording — a gate that cries
+# "users see raw message IDs" when it merely could not run gets disabled, which
+# is worse than none. It is still a FAIL, because a guard that cannot run has
+# certified nothing.
+# ---------------------------------------------------------------------------
+if want_gate G22; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G22 — CONST-046 toolschema i18n default resolves real text (CM-TOOLSCHEMA-I18N-DEFAULT-RESOLVES)"
+    bash "$ROOT/scripts/gates/toolschema_i18n_seam_wired_gate.sh" >/tmp/g22-i18n.out 2>&1
+    g22_rc=$?
+    if [[ "$g22_rc" -eq 0 ]]; then
+        gate_pass G22 "$(grep -m1 -oE 'default_resolves=[a-z]+ interpolation_ok=[a-z]+ noop_echoes=[a-z]+ restore_ok=[a-z]+' /tmp/g22-i18n.out) — runtime-probed in a fresh process, submodule tree unchanged"
+    elif [[ "$g22_rc" -eq 2 ]]; then
+        gate_fail G22 "i18n default gate could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g22-i18n.out)" \
+            "resolve the environment blocker (Go toolchain / submodule checkout) so the probe executes, then re-run"
+    else
+        gate_fail G22 "toolschema tr() no longer resolves real text with zero wiring — unwired consumers get raw message IDs in user-visible output (see /tmp/g22-i18n.out)" \
+            "$(tail -8 /tmp/g22-i18n.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
