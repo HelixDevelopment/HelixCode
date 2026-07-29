@@ -1,0 +1,41 @@
+2026/07/29 05:00:15 🔧 Initializing Local LLM Manager in /tmp/.private/milos/TestLocalLLMManager_ConcurrentAccess1396308663/001
+2026/07/29 05:00:15 🔍 Checking system dependencies...
+2026/07/29 05:00:15 ✅ All dependencies satisfied
+2026/07/29 05:00:15 ✅ Local LLM Manager initialized with 11 providers
+==================
+WARNING: DATA RACE
+Write at 0x00c000332fe8 by goroutine 80:
+  dev.helix.code/internal/llm.(*LocalLLMManager).GetProviderStatus()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/local_llm_manager.go:613 +0x395
+  dev.helix.code/tests/unit.TestLocalLLMManager_ConcurrentAccess.func1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/tests/unit/local_llm_manager_test.go:510 +0xc9
+
+Previous write at 0x00c000332fe8 by goroutine 75:
+  dev.helix.code/internal/llm.(*LocalLLMManager).GetProviderStatus()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/local_llm_manager.go:613 +0x395
+  dev.helix.code/internal/llm.(*LocalLLMManager).GetRunningProviders()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/local_llm_manager.go:621 +0x5b
+  dev.helix.code/tests/unit.TestLocalLLMManager_ConcurrentAccess.func1()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/tests/unit/local_llm_manager_test.go:513 +0x104
+
+Goroutine 80 (running) created at:
+  dev.helix.code/tests/unit.TestLocalLLMManager_ConcurrentAccess()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/tests/unit/local_llm_manager_test.go:506 +0xb6
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 75 (finished) created at:
+  dev.helix.code/tests/unit.TestLocalLLMManager_ConcurrentAccess()
+      /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/tests/unit/local_llm_manager_test.go:506 +0xb6
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+==================
+--- FAIL: TestLocalLLMManager_ConcurrentAccess (0.00s)
+    testing.go:1712: race detected during execution of test
+FAIL
+FAIL	dev.helix.code/tests/unit	0.045s
+FAIL

@@ -44,14 +44,14 @@ Every exit code below was captured directly from the command, never through a pi
 
 | # | File | Command | Exit |
 |---|---|---|---|
-| 1 | `red_baseline_prefix.log` | `go test -race -count=1 -run TestLocalLLMManager_ConcurrentAccess ./tests/unit/` on the **pre-fix** artifact | **1** (DATA RACE) |
-| 2 | `green_after_fix.log` | same command, post-fix | 0 |
-| 3 | `full_tests_unit.log` | `go test -race -count=1 ./tests/unit/` | 0 |
-| 4 | `full_internal_llm.log` | `go test -race -count=1 ./internal/llm/` | 0 |
-| 5 | `guard_green_default.log` | `go test -race -count=3 -run TestLocalLLMManager_HXC203 ./tests/unit/` | 0 |
-| 6 | `guard_redmode1_selfvalidation.log` | `RED_MODE=1 go test -race -count=1 -run ..._HarnessSelfValidation ./tests/unit/` | **1** (2× DATA RACE) |
-| 7 | `guard_red_on_prefix_artifact.log` | new guard run against the **pre-fix** source (paired mutation) | **1** |
-| 8 | `green_after_gofmt.log` | `go test -race -count=2 -run TestLocalLLMManager ./tests/unit/` | 0 |
+| 1 | `red_baseline_prefix.txt` | `go test -race -count=1 -run TestLocalLLMManager_ConcurrentAccess ./tests/unit/` on the **pre-fix** artifact | **1** (DATA RACE) |
+| 2 | `green_after_fix.txt` | same command, post-fix | 0 |
+| 3 | `full_tests_unit.txt` | `go test -race -count=1 ./tests/unit/` | 0 |
+| 4 | `full_internal_llm.txt` | `go test -race -count=1 ./internal/llm/` | 0 |
+| 5 | `guard_green_default.txt` | `go test -race -count=3 -run TestLocalLLMManager_HXC203 ./tests/unit/` | 0 |
+| 6 | `guard_redmode1_selfvalidation.txt` | `RED_MODE=1 go test -race -count=1 -run ..._HarnessSelfValidation ./tests/unit/` | **1** (2× DATA RACE) |
+| 7 | `guard_red_on_prefix_artifact.txt` | new guard run against the **pre-fix** source (paired mutation) | **1** |
+| 8 | `green_after_gofmt.txt` | `go test -race -count=2 -run TestLocalLLMManager ./tests/unit/` | 0 |
 
 ## What each capture proves
 
