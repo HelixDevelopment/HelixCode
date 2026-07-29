@@ -1,0 +1,61 @@
+# ============================================================================
+# .helix/feature.yaml — CONSUMER-OWNED config for the §11.4.213 FEATURE
+# research-scheduling engine (constitution/scripts/feature/…), and, as a
+# schema-compatible superset, for the delegated §11.4.202 report_item.sh.
+#
+# Copied from constitution/scripts/feature/feature.example.yaml per §11.4.28
+# (engine is project-agnostic; THIS file is the project's DATA). The engine is
+# never edited.
+#
+# Every value below was VERIFIED against this repository, not copied from the
+# template's defaults (§11.4.6):
+#   db          — docs/workable_items.db exists and is git-TRACKED (§11.4.95);
+#                 `PRAGMA integrity_check` = ok.
+#   id_prefix   — the SSoT's live ids are HXC-NNN (HXC-158 latest at write
+#                 time), NOT the template's placeholder `WIT`.
+#   binary      — constitution/scripts/workable-items/bin/workable-items is
+#                 present and executable, so no `go build` fallback is needed.
+# ============================================================================
+
+schema_version: 1
+
+# The workable-items SQLite single-source-of-truth (§11.4.93 / §11.4.95).
+db: docs/workable_items.db
+
+# Ticket-id prefix (§11.4.54) — verified against the live DB, not assumed.
+id_prefix: HXC
+
+default_severity: Medium
+default_reported_by: Operator
+
+# Root for scheduled research-doc trees (§11.4.213). Matches this project's
+# existing convention — docs/research/<slug>_<UTC-ts>/ is already in use.
+research_doc_root: docs/research
+
+# ── sync_command: DELIBERATELY EMPTY → honest SKIP-with-reason (§11.4.3) ─────
+# The contract requires a command that regenerates EVERY derived document from
+# the DB — Issues/Fixed AND their .html/.pdf/.docx siblings. This project has
+# no single wrapper that does all of it:
+#   * `workable-items sync db-to-md --db <p>` regenerates only the Issues/Fixed
+#     markdown.
+#   * `scripts/testing/sync_all_markdown_exports.sh` regenerates only exports.
+#   * `scripts/gates/workable_items_sync_gate.sh` is a GATE (verifies), not a
+#     sync.
+# Composing an unverified pipeline here would risk corrupting derived docs, and
+# concurrent streams are writing the DB right now. The template is explicit:
+# leave EMPTY rather than invent a command. The engine then reports an honest
+# SKIP instead of a faked sync. Wire this only once a single wrapper exists and
+# has been verified end-to-end (tracked separately).
+sync_command: ""
+
+# Captured evidence root (§11.4.5 / §11.4.69).
+evidence_dir: qa-results/feature
+
+# Explicit binary — present and executable, so the engine need not rebuild.
+workable_items_bin: constitution/scripts/workable-items/bin/workable-items
+
+# ── External trackers (§11.4.148 D5) ────────────────────────────────────────
+# None configured for this project. An empty list is the honest state; a
+# configured-but-clientless tracker would report SKIP (`tracker_client_absent`)
+# — never a faked push.
+trackers: []
