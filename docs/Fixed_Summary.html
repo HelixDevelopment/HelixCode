@@ -192,7 +192,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>184</td>
+<td>185</td>
 </tr>
 <tr>
 <td>Bug</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>368</strong></td>
+<td><strong>369</strong></td>
 </tr>
 </tbody>
 </table>
@@ -4192,6 +4192,31 @@ separate decision and is deliberately not bundled with this.</td>
 </tr>
 <tr>
 <td>351</td>
+<td>Critical</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-203 — The component that tracks locally-running AI model servers
+offers a method to report their status. Despite being named as a query,
+it also writes to the shared records it reports on: it overwrites each
+provider’s health and stamps a last-checked time on every call. Nothing
+coordinates those writes, and the component has no locking of any kind,
+so two callers asking at the same moment write over each other. This was
+caught by the race detector during a full test run, which does not
+produce false alarms, so it is a real defect rather than a timing
+coincidence. Two further problems compound it: the method hands back the
+internal collection itself instead of a copy, so every caller receives
+live references it can also modify; and the health check that decides
+the value performs network calls while holding no lock, so slow or
+hanging providers widen the window. The consequence for a user is a
+status display that reports a healthy provider as unhealthy or the
+reverse, and in the worst case corrupted records shared across the whole
+component. The fix is to protect the shared records with a lock, return
+a copy rather than the live collection, and separate the act of
+refreshing health from the act of reporting it.</td>
+</tr>
+<tr>
+<td>352</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4201,7 +4226,7 @@ separate decision and is deliberately not bundled with this.</td>
 path</td>
 </tr>
 <tr>
-<td>352</td>
+<td>353</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4210,7 +4235,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>353</td>
+<td>354</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4219,7 +4244,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>354</td>
+<td>355</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4227,7 +4252,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>355</td>
+<td>356</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4236,7 +4261,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>356</td>
+<td>357</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4245,7 +4270,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>357</td>
+<td>358</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4255,7 +4280,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>358</td>
+<td>359</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4264,7 +4289,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>359</td>
+<td>360</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4273,7 +4298,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>360</td>
+<td>361</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4282,7 +4307,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>361</td>
+<td>362</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4292,7 +4317,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>362</td>
+<td>363</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4301,7 +4326,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>363</td>
+<td>364</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4311,7 +4336,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>364</td>
+<td>365</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4321,7 +4346,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>365</td>
+<td>366</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4330,7 +4355,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>366</td>
+<td>367</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4339,7 +4364,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>367</td>
+<td>368</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4349,7 +4374,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>368</td>
+<td>369</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>

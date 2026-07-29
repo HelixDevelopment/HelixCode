@@ -6,12 +6,12 @@ Closed workable items (current_location = Fixed), regenerated from the SQLite si
 
 | Type | Status | Count |
 |---|---|---|
-| Bug | Fixed (→ Fixed.md) | 184 |
+| Bug | Fixed (→ Fixed.md) | 185 |
 | Bug | Obsolete (→ Fixed.md) | 3 |
 | Feature | Implemented (→ Fixed.md) | 95 |
 | Task | Completed (→ Fixed.md) | 83 |
 | Task | Fixed (→ Fixed.md) | 3 |
-| **TOTAL** | | **368** |
+| **TOTAL** | | **369** |
 
 ## Items
 
@@ -367,21 +367,22 @@ Closed workable items (current_location = Fixed), regenerated from the SQLite si
 | 348 | Critical | Fixed (→ Fixed.md) | Bug | — | HXC-184 — A recent change made the command-runner wait for its output pipes to close rather than for the command itself to finish. Those are normally the same moment, but not when the command leaves something running in the background: the background process holds the pipes open, so the wait never ended. The request hung indefinitely and permanently consumed one of a small fixed number of execution slots, so ten such commands stopped the facility accepting any work at all. FIXED IN TWO ROUNDS. Round one added a bounded grace period after the command is reaped, then stopped reading and released everything. An independent review accepted the mechanism but found it had moved the boundary somewhere unmeasured: an adversarial probe using a perfectly healthy command with no background process at all, consumed slowly by a caller following the documented pattern, delivered 490 of 5000 lines where the previous code delivered all 5000. The original reasoning held only when the consumer kept pace, not when the operating system's own buffer did. Round two replaced the fixed grace with a progress-aware one: the timer restarts whenever a line was actually handed to a consumer, so only a window in which nothing at all was delivered counts as stuck. The author then tested an objection the review had not raised — whether that could revive the original hang — and showed it cannot, because delivery requires a consumer that is still listening; an abandoned one stops consuming within two windows by construction. The one case that remains genuinely unbounded is a caller still actively reading output from a background process that keeps producing, which is documented rather than hidden, because cutting it off would discard output someone is reading. Three smaller findings were also closed, one of them by deriving the truncation flag from a recorded error rather than from which timing branch ran, so no scheduling coincidence can set it falsely. |
 | 349 | High | Fixed (→ Fixed.md) | Bug | — | HXC-185 — Modern internet addresses contain colons, so when one is combined with a port number it has to be wrapped in brackets or the result is unreadable to the software that parses it. Two places were recently corrected to do this properly. A review found fourteen more places that build addresses the same unsafe way and can receive such an address from configuration or from service discovery. The clearest illustration sits inside a single file that checks service health two different ways: the connection check carefully adds the brackets and works, while the web-request check a few lines away does not and fails outright for the same service. The others cover the local model server, the memory service, the notification service, worker connections and the test infrastructure. Each is a one-line change using the standard helper that handles this correctly. Left alone, any deployment using these newer addresses sees confusing partial failures where some checks pass and others fail against the same healthy service. |
 | 350 | High | Fixed (→ Fixed.md) | Bug | — | HXC-187 — The project declares the same module identity in two places: once at the top level and once for the real application inside it. Because of that, one particular internal name refers to two completely different pieces of code — a five-line placeholder at the top level, and the real fifty-kilobyte subsystem inside. They share no files at all. Which one any given piece of code actually receives depends entirely on which directory the build was started from, which is not something a developer would ever expect or notice. Nothing is broken today only because the top-level placeholder has no users, but that is luck rather than design, and the first time someone adds one the behaviour will differ between two builds of the same source with no error to explain it. The fix is to give the top-level module a distinct identity so the collision cannot occur. Removing the placeholder is a separate decision and is deliberately not bundled with this. |
-| 351 | — | Fixed (→ Fixed.md) | Bug | — | HXL-001 — HelixLLM `internal/agents/tools/analysis_test.go` hardcoded absolute path |
-| 352 | — | Fixed (→ Fixed.md) | Bug | — | HXL-001 — HXL-001 (ex-ISSUE-003): HelixLLM analysis_test.go hardcoded path |
-| 353 | — | Fixed (→ Fixed.md) | Bug | — | HXL-002 — HelixLLM `internal/gateway/middleware` TOON `WriteTOON` returns 500 |
-| 354 | — | Fixed (→ Fixed.md) | Bug | — | HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500 |
-| 355 | — | Fixed (→ Fixed.md) | Bug | — | HXQ-001 — helix_qa intermittent TestPerformance flake (host-load-sensitive) |
-| 356 | — | Fixed (→ Fixed.md) | Bug | — | HXQ-001 — HXQ-001 (ex-ISSUE-008): helix_qa intermittent `TestPerformance` flake (host-load-sensitive) |
-| 357 | — | Fixed (→ Fixed.md) | Bug | — | HXQ-002 — HXQ-002: helix_qa `pkg/autonomous` ↔ VisionEngine `remote` API drift blocks helix_agent `tests/integration` compile |
-| 358 | — | Fixed (→ Fixed.md) | Bug | — | HXV-001 — HXV-001: LLMsVerifier 18 pre-existing `tests/` failures (CLI-integration + verification/scoring) |
-| 359 | — | Fixed (→ Fixed.md) | Bug | — | HXV-002 — LLMsVerifier `verification/` package 10 pre-existing test failures |
-| 360 | — | Fixed (→ Fixed.md) | Bug | — | HXV-002 — HXV-002: LLMsVerifier `verification/` package 10 pre-existing test failures |
-| 361 | — | Fixed (→ Fixed.md) | Bug | — | HXV-003 — HXV-003: LLMsVerifier `ProviderAdapterForBenchmark.Complete` is a CONST-050(A) production mock-bluff |
-| 362 | — | Fixed (→ Fixed.md) | Bug | — | OPS-001 — OPS-001: LLMOps 2 pre-existing `CreatePromptExperiment` test failures |
-| 363 | — | Fixed (→ Fixed.md) | Bug | — | PAN-001 — panoptic `appendJSONString` truncates multi-byte UTF-8 runes to bytes (`TestResult.MarshalJSON` corrupts non-ASCII) |
-| 364 | — | Fixed (→ Fixed.md) | Bug | — | PAN-001 — PAN-001: panoptic `appendJSONString` truncates multi-byte UTF-8 runes to bytes (`TestResult.MarshalJSON` corrupts non-ASCII) |
-| 365 | — | Completed (→ Fixed.md) | Task | — | VEN-001 — VisionEngine `helix-gitlab` remote repo missing (404) — CLOSED (→ Fixed.md) |
-| 366 | — | Completed (→ Fixed.md) | Task | — | VEN-001 — VEN-001 (ex-ISSUE-001): VisionEngine `helix-gitlab` URL fix (was misconfigured, not missing) |
-| 367 | — | Fixed (→ Fixed.md) | Bug | — | VEN-002 — VEN-002 (ex-ISSUE-002): VisionEngine `vasic-digital-github` fork lineage divergent at SHA 93c830a |
-| 368 | — | Fixed (→ Fixed.md) | Bug | — | VEN-002#1 — VEN-002 (ex-ISSUE-002): VisionEngine `vasic-digital-github` fork lineage divergent at SHA 93c830a |
+| 351 | Critical | Fixed (→ Fixed.md) | Bug | — | HXC-203 — The component that tracks locally-running AI model servers offers a method to report their status. Despite being named as a query, it also writes to the shared records it reports on: it overwrites each provider's health and stamps a last-checked time on every call. Nothing coordinates those writes, and the component has no locking of any kind, so two callers asking at the same moment write over each other. This was caught by the race detector during a full test run, which does not produce false alarms, so it is a real defect rather than a timing coincidence. Two further problems compound it: the method hands back the internal collection itself instead of a copy, so every caller receives live references it can also modify; and the health check that decides the value performs network calls while holding no lock, so slow or hanging providers widen the window. The consequence for a user is a status display that reports a healthy provider as unhealthy or the reverse, and in the worst case corrupted records shared across the whole component. The fix is to protect the shared records with a lock, return a copy rather than the live collection, and separate the act of refreshing health from the act of reporting it. |
+| 352 | — | Fixed (→ Fixed.md) | Bug | — | HXL-001 — HelixLLM `internal/agents/tools/analysis_test.go` hardcoded absolute path |
+| 353 | — | Fixed (→ Fixed.md) | Bug | — | HXL-001 — HXL-001 (ex-ISSUE-003): HelixLLM analysis_test.go hardcoded path |
+| 354 | — | Fixed (→ Fixed.md) | Bug | — | HXL-002 — HelixLLM `internal/gateway/middleware` TOON `WriteTOON` returns 500 |
+| 355 | — | Fixed (→ Fixed.md) | Bug | — | HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500 |
+| 356 | — | Fixed (→ Fixed.md) | Bug | — | HXQ-001 — helix_qa intermittent TestPerformance flake (host-load-sensitive) |
+| 357 | — | Fixed (→ Fixed.md) | Bug | — | HXQ-001 — HXQ-001 (ex-ISSUE-008): helix_qa intermittent `TestPerformance` flake (host-load-sensitive) |
+| 358 | — | Fixed (→ Fixed.md) | Bug | — | HXQ-002 — HXQ-002: helix_qa `pkg/autonomous` ↔ VisionEngine `remote` API drift blocks helix_agent `tests/integration` compile |
+| 359 | — | Fixed (→ Fixed.md) | Bug | — | HXV-001 — HXV-001: LLMsVerifier 18 pre-existing `tests/` failures (CLI-integration + verification/scoring) |
+| 360 | — | Fixed (→ Fixed.md) | Bug | — | HXV-002 — LLMsVerifier `verification/` package 10 pre-existing test failures |
+| 361 | — | Fixed (→ Fixed.md) | Bug | — | HXV-002 — HXV-002: LLMsVerifier `verification/` package 10 pre-existing test failures |
+| 362 | — | Fixed (→ Fixed.md) | Bug | — | HXV-003 — HXV-003: LLMsVerifier `ProviderAdapterForBenchmark.Complete` is a CONST-050(A) production mock-bluff |
+| 363 | — | Fixed (→ Fixed.md) | Bug | — | OPS-001 — OPS-001: LLMOps 2 pre-existing `CreatePromptExperiment` test failures |
+| 364 | — | Fixed (→ Fixed.md) | Bug | — | PAN-001 — panoptic `appendJSONString` truncates multi-byte UTF-8 runes to bytes (`TestResult.MarshalJSON` corrupts non-ASCII) |
+| 365 | — | Fixed (→ Fixed.md) | Bug | — | PAN-001 — PAN-001: panoptic `appendJSONString` truncates multi-byte UTF-8 runes to bytes (`TestResult.MarshalJSON` corrupts non-ASCII) |
+| 366 | — | Completed (→ Fixed.md) | Task | — | VEN-001 — VisionEngine `helix-gitlab` remote repo missing (404) — CLOSED (→ Fixed.md) |
+| 367 | — | Completed (→ Fixed.md) | Task | — | VEN-001 — VEN-001 (ex-ISSUE-001): VisionEngine `helix-gitlab` URL fix (was misconfigured, not missing) |
+| 368 | — | Fixed (→ Fixed.md) | Bug | — | VEN-002 — VEN-002 (ex-ISSUE-002): VisionEngine `vasic-digital-github` fork lineage divergent at SHA 93c830a |
+| 369 | — | Fixed (→ Fixed.md) | Bug | — | VEN-002#1 — VEN-002 (ex-ISSUE-002): VisionEngine `vasic-digital-github` fork lineage divergent at SHA 93c830a |

@@ -423,3 +423,48 @@ A detector was written to catch a specific kind of stall where a background work
 
 The command the project's manuals give for regenerating the tracker documents does not put them where it says. It builds the tool from one directory and is told to write output to a path relative to the project root, but the build step also changes the working directory, so the output lands inside the tool's own folder instead. It prints the correct-looking destinations and reports success, leaving the real documents untouched and several hours stale, and it creates empty placeholder files in the wrong location. This replaced an earlier version of the same command that was outright invalid and failed loudly, so the situation is now worse: a visible error became a silent one. It also explains an empty database file previously found in that folder and attributed to a different mistake. The correction is to give an absolute output path, or to make the tool resolve its output against the project root regardless of where it was built, and then to update the manuals and the check that currently enforces the broken form.
 
+## HXC-202 — The network address fix reached the server but not the app that connects to it
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** Medium
+**Created-By:** Claude
+
+A recent change taught the product to correctly format modern internet addresses when combining them with a port number. It was applied where the server decides what address to listen on, but not in the desktop application for one platform that builds the address it connects to from the very same two configuration settings. So with such an address configured, the server starts up correctly while that application constructs an unusable address and cannot reach it — a failure that looks like the server is down when it is running perfectly. A second instance exists in a maintenance tool that contacts a code-analysis service. Neither is newly broken; both were simply outside the list of places the original change examined, so nothing was made worse. This is the seventh time in one working cycle that a correct change was applied in one place and not to a sibling doing the same thing nearby, which is worth treating as a review habit rather than seven separate oversights.
+
+## HXC-204 — Two more endurance tests report failure whenever the machine is busy
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** Medium
+**Created-By:** Claude
+
+Two long-running tests — one exercising heavy simultaneous access to the memory store, one exercising leader election among worker nodes under deliberately induced faults — report failure when the machine is under load, and pass comfortably when run on their own. Measured: during a full test run both failed, while in isolation they passed three times consecutively, one finishing in roughly a fifth of its allowed time and the other in about a twentieth. Their verdicts are therefore reporting how busy the machine was, not whether the product works. This matters most at exactly the wrong moment: the complete test run performed before a release is by definition the busiest the machine ever gets, so these two will mark a healthy release as broken and train everyone to wave the result through. A third test with the same problem was already corrected by making an inconclusive run report as skipped rather than failed, while keeping its real checks strict; the same treatment fits here. Both should wait for the condition they care about rather than assuming a fixed time is enough.
+
+## HXC-205 — A second model manager owns a lock and then writes shared state without using it
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** Critical
+**Created-By:** Claude
+
+A sibling component that manages automatically-selected model providers has the same defect just fixed in its counterpart, with an additional twist: this one actually declares a lock and uses it in two places, then writes provider health, process handles and last-checked times in three other places without holding it. That is arguably worse than having no lock at all, because a reader of the code sees synchronisation and reasonably assumes it is applied throughout. The consequence is the same as the defect already fixed next door — concurrent status updates overwrite each other, and a provider can be reported healthy when it has stopped or stopped when it is running. This was found by sweeping for the same pattern after fixing the first one, and it is the eighth time in this working cycle that a defect has had an unfixed twin elsewhere. The fix is the same shape as the one already proven: hold the lock around the field writes only, never across process start, process wait, or the readiness poll.
+
+## HXC-206 — A provider stopped and restarted during a health probe can have a stale verdict applied
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** Low
+**Created-By:** Claude
+
+The newly-fixed health refresh deliberately releases its lock while it contacts each provider over the network, so that a slow or hanging provider cannot block everyone else. It then re-acquires the lock and only applies its verdict if the provider's state has not changed underneath it. There is a narrow remaining window: if a provider is stopped and started again entirely within one probe, the check sees the same state it started with and applies a verdict formed against the previous instance. The result would be a provider briefly reported unhealthy when it is fine, which the next refresh corrects, and the dangerous direction — reporting a stopped provider as healthy — is already prevented. Worth recording that this is cheap to close rather than expensive: a hidden counter incremented on each state change is invisible to the outside world and requires no change to any published structure. An earlier note describing it as a published-interface change was wrong and has been retracted.
+
+## HXC-207 — Every model manager shares one settings map by reference, so a future write would corrupt all of them
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** Low
+**Created-By:** Claude
+
+When a model provider record is created, its environment settings are taken from a shared template by reference rather than copied. Every record in every manager therefore points at the same underlying settings, including across separate manager instances. Nothing writes to those settings today, and the values handed out to callers are copied, so no corruption occurs at present — this was verified rather than assumed. The reason to record it is that the protection now added to these managers is per-instance: a lock in one manager cannot protect a structure shared with another. So the day someone adds a legitimate, properly-locked write to a provider's settings, it will silently alter every other manager's view as well, and the locking will look correct while failing. Copying the settings when the record is created removes the hazard permanently and costs nothing.
+
