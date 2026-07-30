@@ -96,7 +96,7 @@ if ! "$BIN" export --db "$TMP/out/committed.db" --out-dir "$TMP/out" --no-format
     fail "workable-items export failed: $(tail -3 "$TMP/export.out" | tr '\n' ' ')"
 fi
 
-REMEDY="regenerate from the DB: go run -C $WI_SRC ./cmd/workable-items export --db $DB --out-dir docs"
+REMEDY="regenerate from the DB (HXC-201: use ABSOLUTE paths — go run -C relocates the child process's cwd, so a relative --db/--out-dir silently writes inside $WI_SRC instead of docs/): go run -C $WI_SRC ./cmd/workable-items export --db \"$ROOT/$DB\" --out-dir \"$ROOT/docs\""
 
 rc=0
 for pair in "$ISSUES_SUMMARY:Issues_Summary.md:CM-ISSUES-SUMMARY-SYNC" \

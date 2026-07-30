@@ -62,10 +62,14 @@ generate_fixed_summary.sh: REFUSING TO RUN — superseded and data-destroying.
   H2-section item (measured 2026-07-29: 344 closed items -> 188, all
   per-type counts corrupted, per-item table replaced by bare aggregates).
 
-  Use the canonical DB exporter instead:
+  Use the canonical DB exporter instead — with ABSOLUTE paths (HXC-201: `go
+  run -C` changes the CHILD PROCESS's cwd to the tool's own directory, so a
+  relative --db/--out-dir silently writes inside constitution/scripts/
+  workable-items/ instead of here; $PWD is your shell's cwd, untouched by the
+  child's chdir, so it always resolves to the directory you are standing in):
 
     go run -C constitution/scripts/workable-items ./cmd/workable-items \
-        export --db docs/workable_items.db --out-dir docs
+        export --db "$PWD/docs/workable_items.db" --out-dir "$PWD/docs"
 
   Then verify:  bash scripts/gates/summary_sync_gate.sh
 

@@ -475,7 +475,7 @@ if want_gate G12; then
     if bash "$ROOT/scripts/gates/summary_sync_gate.sh" >/tmp/g12-summary.out 2>&1; then
         gate_pass G12 "$(tail -1 /tmp/g12-summary.out | sed 's/^CM-SUMMARY-SYNC: //')"
     else
-        gate_fail G12 "summary docs drifted from the SQLite SSoT (docs/workable_items.db) — regenerate via the §11.4.93 binary: go run -C constitution/scripts/workable-items ./cmd/workable-items export --db docs/workable_items.db --out-dir docs (see /tmp/g12-summary.out)" \
+        gate_fail G12 "summary docs drifted from the SQLite SSoT (docs/workable_items.db) — regenerate via the §11.4.93 binary (HXC-201: use ABSOLUTE paths — go run -C relocates the child process's cwd, so a relative --db/--out-dir silently writes inside the tool's own directory): go run -C constitution/scripts/workable-items ./cmd/workable-items export --db \"$ROOT/docs/workable_items.db\" --out-dir \"$ROOT/docs\" (see /tmp/g12-summary.out)" \
             "$(tail -6 /tmp/g12-summary.out)"
     fi
 fi
@@ -846,6 +846,92 @@ if want_gate G23; then
     else
         gate_fail G23 "a mock service accepts cross-origin requests from any website again — any page a developer visits could drive it and read its responses (see /tmp/g23-cors.out)" \
             "$(tail -8 /tmp/g23-cors.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# G24 — HXC-201 workable-items export writes to its DOCUMENTED destination
+# (runtime probe)
+#
+# CM-EXPORT-OUTPUT-LOCATION. Guards the hole HXC-201 closed: the documented
+# regeneration command — `go run -C constitution/scripts/workable-items
+# ./cmd/workable-items export --db docs/workable_items.db --out-dir docs` —
+# relocates the CHILD PROCESS's cwd to the tool's own directory (a `go run
+# -C <dir>` property), so relative --db/--out-dir silently wrote INSIDE
+# constitution/scripts/workable-items/docs/ instead of the caller's real
+# docs/ tree while printing success-looking "wrote docs/Issues.md" lines and
+# materialising a fresh, zero-row workable_items.db at the wrong location.
+#
+# RUNTIME EVIDENCE (§11.4.5), not a grep verdict: the gate reproduces the
+# documented invocation VERBATIM inside a disposable scratch project root
+# (never the real docs/ tree) and asserts the regenerated docs land at the
+# real destination, non-empty, and nothing lands inside the relocated tool
+# directory. RED-verified against the pre-fix tool source (this session,
+# HXC-201): all four docs missing/empty at the documented destination and a
+# fresh stub materialised inside constitution/scripts/workable-items/docs/ —
+# then GREEN after the fix, proving the guard is falsifiable per §11.4.115.
+#
+# Exit-code handling mirrors G22/G23: 2 is the §11.4.3 environment SKIP (no
+# Go toolchain / workable-items source / tracked DB present) and MUST NOT be
+# worded as a detected regression — a gate that cries "output goes to the
+# wrong place" when it merely could not run gets disabled, which is worse
+# than none. It is still a FAIL, because a guard that cannot run has
+# certified nothing.
+# ---------------------------------------------------------------------------
+if want_gate G24; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G24 — HXC-201 workable-items export output location (CM-EXPORT-OUTPUT-LOCATION)"
+    bash "$ROOT/scripts/gates/export_output_location_gate.sh" >/tmp/g24-export-loc.out 2>&1
+    g24_rc=$?
+    if [[ "$g24_rc" -eq 0 ]]; then
+        gate_pass G24 "documented export invocation wrote all four docs to the caller's real docs/ tree; nothing landed inside the relocated tool directory"
+    elif [[ "$g24_rc" -eq 2 ]]; then
+        gate_fail G24 "export-output-location gate could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g24-export-loc.out)" \
+            "resolve the environment blocker (Go toolchain / constitution submodule checkout / tracked DB) so the probe executes, then re-run"
+    else
+        gate_fail G24 "the documented export invocation wrote into the relocated tool directory (or omitted a doc) instead of the caller's real docs/ tree — HXC-201 regressed (see /tmp/g24-export-loc.out)" \
+            "$(tail -8 /tmp/g24-export-loc.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# G25 — HXC-193 + HXC-195 mcp-server port agreement (runtime bind probe)
+#
+# CM-MCP-SERVER-PORT-AGREEMENT. Two tickets, ONE root cause: the shipped
+# `plugins/mcp-server` service read NOTHING from its environment. So MCP_PORT
+# was an inert knob an operator could edit with no change and no error
+# (HXC-195), the transport stayed `stdio` and nothing ever called listen(), and
+# the health check probed a port where nothing could answer — reporting the
+# container unhealthy no matter how well the service worked, forever, to
+# anything that replaces unhealthy containers (HXC-193).
+#
+# The gate asserts BIND == PUBLISHED == PROBED, and it observes BIND at RUNTIME
+# by starting the built artifact under the container's own environment rather
+# than parsing it out of source. That distinction is the point: a source-only
+# assertion is precisely what let this ship (§11.4.108 — SOURCE green says
+# nothing about RUNTIME). Its RED_MODE case B proves the runtime layer alone is
+# falsifiable, so the gate cannot silently decay into a config-only check.
+#
+# Ports are never pinned to a literal, so deliberately moving the service to a
+# different port cannot false-FAIL this (§11.4.201); it fails only on DISAGREEMENT.
+#
+# Exit 2 is the §11.4.3 environment SKIP (no node, unbuilt artifact, submodule
+# not checked out) and MUST NOT be worded as a detected regression — it means
+# the guard certified nothing, which is still a FAIL but a different one.
+# ---------------------------------------------------------------------------
+if want_gate G25; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G25 — HXC-193/HXC-195 mcp-server port agreement (CM-MCP-SERVER-PORT-AGREEMENT)"
+    bash "$ROOT/scripts/gates/mcp_server_port_agreement_gate.sh" >/tmp/g25-mcp-port.out 2>&1
+    g25_rc=$?
+    if [[ "$g25_rc" -eq 0 ]]; then
+        gate_pass G25 "$(grep -m1 -oE 'bind=[0-9]+ published=[0-9]+ probed=[A-Za-z_-]+ transport=[a-z]+' /tmp/g25-mcp-port.out) — bind observed at runtime under the container's own environment"
+    elif [[ "$g25_rc" -eq 2 ]]; then
+        gate_fail G25 "mcp-server port-agreement gate could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g25-mcp-port.out)" \
+            "resolve the environment blocker (node on PATH / 'npm run build' in submodules/helix_agent/plugins/mcp-server / submodule checked out), then re-run"
+    else
+        gate_fail G25 "mcp-server bind/published/probed ports no longer agree — the container health check cannot answer and the service is unreachable on its published port (see /tmp/g25-mcp-port.out)" \
+            "$(tail -8 /tmp/g25-mcp-port.out)"
     fi
 fi
 

@@ -12,9 +12,21 @@
 # the constitution submodule's Go exporter:
 #
 #   go run -C constitution/scripts/workable-items ./cmd/workable-items \
-#       export --db docs/workable_items.db --out-dir docs
+#       export --db "$PWD/docs/workable_items.db" --out-dir "$PWD/docs"
 #
 #   (cmd/workable-items/export.go: renderIssuesSummary / renderFixedSummary)
+#
+#   HXC-201: --db/--out-dir MUST be ABSOLUTE. `go run -C <dir>` changes the
+#   BUILT BINARY's own working directory to <dir> (not just the build step),
+#   so a relative --db/--out-dir resolves against constitution/scripts/
+#   workable-items/ instead of the caller's real docs/ tree — a run that
+#   prints success-looking "wrote docs/Issues.md" lines while writing nothing
+#   useful to the real project and silently materialising a fresh, zero-row
+#   docs/workable_items.db inside the tool's own directory. As a second,
+#   independent layer of defense the exporter itself (export.go / db.go)
+#   anchors a relative --db/--out-dir against the invoking shell's directory
+#   via $PWD when it is set — but the documented invocation MUST still pass
+#   absolute paths; never rely on that fallback alone.
 #
 # The legacy shell generators scripts/generate_issues_summary.sh and
 # scripts/generate_fixed_summary.sh derive the summaries from the MARKDOWN
