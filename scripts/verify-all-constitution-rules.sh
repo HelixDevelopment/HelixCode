@@ -936,6 +936,36 @@ if want_gate G25; then
 fi
 
 # ---------------------------------------------------------------------------
+# G26 — HXC-212 mcp-server SSE CORS allowlist (CM-MCP-SERVER-CORS-ALLOWLIST)
+#
+# Pairs with G25 and guards what G25's own fix ACTIVATED. The SSE transport
+# answered every browser with a wildcard Allow-Origin on both the preflight and
+# the response path. That hole was DORMANT while the service only spoke stdio
+# and never opened a socket — commit 30c81925 (G25's fix) correctly repaired the
+# inert-config defect, and in doing so set MCP_TRANSPORT=sse, which made the
+# service listen and the wildcard reachable on a published port.
+#
+# The gate checks BOTH layers per §11.4.108, because the tracked dist/ carried
+# the wildcard independently of src/: a source-only check would pass while a
+# fresh clone running `node dist/index.js` without building still served it.
+# ---------------------------------------------------------------------------
+if want_gate G26; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G26 — HXC-212 mcp-server SSE CORS allowlist (CM-MCP-SERVER-CORS-ALLOWLIST)"
+    bash "$ROOT/scripts/gates/mcp_server_cors_allowlist_gate.sh" >/tmp/g26-mcp-cors.out 2>&1
+    g26_rc=$?
+    if [[ "$g26_rc" -eq 0 ]]; then
+        gate_pass G26 "$(grep -m1 -oE 'green=[0-9]+/[0-9]+ red_falsifiable=[0-9]+/[0-9]+ source_clean=[0-9]+/[0-9]+ artifact_clean=[0-9]+/[0-9]+' /tmp/g26-mcp-cors.out) — hostile origin denied on preflight AND simple, permitted origin echoed with Vary: Origin, guard proven falsifiable"
+    elif [[ "$g26_rc" -eq 2 ]]; then
+        gate_fail G26 "mcp-server CORS gate could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g26-mcp-cors.out)" \
+            "resolve the environment blocker (node/npm on PATH, submodules/helix_agent checked out, test:cors script present), then re-run"
+    else
+        gate_fail G26 "the mcp-server SSE transport no longer enforces its origin allowlist — a wildcard Allow-Origin is reachable on the published port (see /tmp/g26-mcp-cors.out)" \
+            "$(tail -10 /tmp/g26-mcp-cors.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
