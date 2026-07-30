@@ -164,3 +164,71 @@ Rule: tasks marked complete here are DONE. Do not re-dispatch. Trust this + `git
   Now fixed. Rebuild pending.
 - I said helix.target "does not pull in" the other services — WRONG. All units declare
   WantedBy=helix.target; they were merely disabled. No target edit was needed.
+
+---
+
+## Session 7237795e — publish sweep + Critical/High burn-down (2026-07-29 → 07-31)
+
+Written retroactively. This session was compacted once and lost two agent fleets to
+session limits, and the ledger had ZERO entries for any of it — exactly the
+"controller loses its place" failure the skill names as most expensive. Recorded now
+so a fresh session can recover from git rather than from my memory.
+
+### Landed and PUBLISHED (main @ 342c948f; ahead=0 behind=0; all remotes ls-remote MATCH)
+
+- HXC-203: complete — `b2215793` fix (LocalLLMManager race: query-named method mutated
+  shared state, type had no mutex, returned the live internal map), `be3e6605` +
+  `1c2e7d07` evidence. Independent review to clean GO.
+  Honest limit recorded in that commit: no provider was ever `running` during the
+  tests, so refresh phases 2-3 INCLUDING the CAS rest on reasoning + review, not on
+  executed evidence.
+- Tracker regen: `11f0b7e1` — 401 items from the SSoT, absolute paths (see HXC-201).
+- Publish sweep, 6 commits `8d1100a7..342c948f`:
+  - `8d1100a7` gitignore two 9 MB untracked ELF binaries (`/bridge`, `/qa`);
+    provenance read from `go version -m`, patterns root-anchored so `docs/qa/`
+    (126 evidence dirs) is not swallowed. Both directions verified.
+  - `e850cd02` submodule pointers + inner `go.sum` as ONE atomic change —
+    `helix_code/go.mod:240` has `replace dev.helix.agent => ../submodules/helix_agent`,
+    so submodule dep bumps invalidate the parent's checksums. Either alone breaks build.
+  - `72967fcd` track the never-drop directive queues (they were UNTRACKED).
+  - `de622751` 36 QA evidence runs; the Bearer literal is a tracked test constant at
+    `helix_code/internal/server/wire_facade_live_e2e_test.go:62`, not a leak.
+  - `342c948f` reconcile the toolschema i18n gate (§11.4.120: the fix `8cec90b` made
+    its RED anchor obsolete), upgrade grep→runtime via `go test -overlay`, register G22.
+    Four-quadrant polarity proof re-run independently. Sweep: 22 gates, 0 failures.
+- Submodules published + verified at remote: constitution `02a3520` (8/8 remotes),
+  helix_agent `453f18ff` (4/4), github_pages_website `ead9b2b` (3/3).
+  All 227 submodules clean, 0 dirty, 0 unpushed.
+
+### IN FLIGHT — 6 parallel implementers, disjoint files (do NOT re-dispatch)
+
+Dispatched 2026-07-31. If you are a fresh session and these are unreported, check
+`git log` for their commits BEFORE re-dispatching — they may have landed.
+
+| Item | Sev | Scope |
+|---|---|---|
+| HXC-205 | Critical | auto model manager: declares a mutex, writes shared state in 3 places without it. Apply the proven HXC-203 three-phase shape. 8th sibling-miss this cycle. |
+| HXC-169 | Critical | container-sandbox library: 4 advisories on copy-in/out ops we call, 3 with NO fixed version. Reachability DECISION, not an upgrade. Disabling needs operator sign-off (§11.4.122) — recommend only. |
+| HXC-198 | High | sibling hang in the progress-reporting fn, same file as the one just fixed. 6th sibling-miss. |
+| HXC-194 | High | hand-rolled server accepts any origin. TRAP: the upstream advisory is a DISTINCT problem that merely looks the same — bumping the dep silences the scanner and leaves the hole open. |
+| HXC-168 | High | DB password literal published on 4 remotes. CODE HALF ONLY; rotation is operator action. Item does NOT close on the code half. |
+| HXC-201 | High | documented tracker-regen command writes to the wrong place (`go run -C` changes child cwd). Enshrined across ~21 G20-protected sites. |
+
+Every dispatch requires: §11.4.115 RED-first on the pre-fix artifact, a registered
+§11.4.135 guard in the same commit, and a SIBLING SWEEP — because 4 of these 6 are
+themselves sibling-misses, which is one review-step gap, not N independent bugs.
+
+### Still owed after the wave
+- Independent code review of every landed change (§11.4.142) on Fable @ xhigh
+  (§11.4.209), iterated to zero findings AND zero warnings (§11.4.134).
+- Fresh full-suite retest on a quiescent host.
+- Operator §11.4.185 manual-QA sign-off — CANNOT be self-certified; blocks the tag.
+- No `helix-code-1.2.0-dev-*` tag exists yet; latest is `helix-code-1.1.0-dev-0.0.3`.
+
+### Corrections to my own claims this session (§11.4.6)
+- I twice captured `tail`'s exit code instead of the command's. `cmd | tail; echo $?`
+  reports 0 on a failed build. Redirect to a file, capture `$?`, then read.
+- I told a subagent its package broke the tree; per-package isolation showed it built
+  fine — the real cause was the `replace`-edge go.sum invalidation above. Retracted.
+- A doc in this repo claimed `go run -C` does NOT change the child's cwd. It DOES.
+  That claim was "verified" by reading, not running. It is HXC-201's root cause.
