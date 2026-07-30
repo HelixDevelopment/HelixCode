@@ -232,3 +232,32 @@ themselves sibling-misses, which is one review-step gap, not N independent bugs.
   fine — the real cause was the `replace`-edge go.sum invalidation above. Retracted.
 - A doc in this repo claimed `go run -C` does NOT change the child's cwd. It DOES.
   That claim was "verified" by reading, not running. It is HXC-201's root cause.
+
+### Agent registry — crash + respawn log (§11.4.147: crashed != complete)
+
+2026-07-31. Two of the six implementers died on transient `API Error: Connection
+closed mid-response` — the same class that killed two fleets earlier this session.
+
+| Item | Outcome | Partial state | Action |
+|---|---|---|---|
+| HXC-168 | crashed mid-investigation | tree verified CLEAN — wrote nothing | RESPAWNED with its own lead carried forward, marked UNVERIFIED |
+| HXC-198 | crashed just before writing the RED guard | tree verified CLEAN — wrote nothing | RESPAWNED fresh; it reported no findings, so nothing to inherit |
+
+Quiescence check before respawning (§11.4.84): `git status --porcelain` = 0 lines,
+zero mutation residue, HEAD unchanged at `d9ad0b20`. So this was a clean restart,
+not a resume — no partial edits to reconcile and no risk of a half-written file
+being swept into someone else's commit.
+
+The HXC-168 lead worth preserving even though its author died mid-sentence: it
+claimed the `.env` plumbing ALREADY exists and is correct (`.env.example:8`
+placeholder, `setup.sh:123` copies at 0600, `.gitignore:106-108` protects it) and
+that the container files simply do not USE it. If true the job is wiring, not
+building. Passed to the respawn explicitly flagged as unverified — a dead agent's
+last words are a lead, not a finding.
+
+An eighth agent was also dispatched for the HXC-193 + HXC-195 CLUSTER. Those two
+were filed separately but share one root cause (the service reads no environment
+config, which makes the port knob inert AND the health check unreachable), so they
+got ONE agent rather than two: parallel dispatch is for INDEPENDENT domains, and
+related failures where one fix resolves both must not be split across agents that
+would then contend on the same files.
