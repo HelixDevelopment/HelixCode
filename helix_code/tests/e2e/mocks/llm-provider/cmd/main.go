@@ -29,19 +29,8 @@ func main() {
 	// Create router
 	router := gin.Default()
 
-	// Add CORS middleware
-	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	})
+	// Add CORS middleware (origin allowlist from MOCK_LLM_ALLOWED_ORIGINS)
+	router.Use(corsMiddleware(cfg.AllowedOrigins))
 
 	// Create handlers
 	completionsHandler := handlers.NewCompletionsHandler(cfg, fixtures)

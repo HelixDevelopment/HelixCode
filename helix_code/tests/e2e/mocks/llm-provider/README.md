@@ -51,6 +51,31 @@ Configure via environment variables:
 | `MOCK_LLM_LOGGING` | `true` | Enable request logging |
 | `MOCK_LLM_FIXTURES` | `./responses/fixtures.json` | Path to fixtures file |
 | `MOCK_LLM_DEFAULT_MODEL` | `mock-gpt-4` | Default model name |
+| `MOCK_LLM_ALLOWED_ORIGINS` | *(empty — deny all)* | Comma-separated CORS origin allowlist |
+
+### CORS origin allowlist (HXC-194)
+
+`MOCK_LLM_ALLOWED_ORIGINS` defaults to **empty, meaning no cross-origin browser
+access is permitted**. This service previously answered every request with
+`Access-Control-Allow-Origin: *` and never checked who was asking, so any web
+page on any site — opened by anyone able to route to this port — could drive
+these endpoints and read the responses.
+
+**This does not affect the normal workflow.** The e2e suite drives this mock
+with Go HTTP clients, which are not browsers: they send no `Origin` header,
+CORS never applies to them, and they are unaffected by the empty default.
+
+You only need to set this variable if you point a **browser** front-end at the
+mock. Set it to the exact origin(s), comma-separated — never `*`, which is
+rejected:
+
+```bash
+export MOCK_LLM_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:5173"
+```
+
+A request whose `Origin` is on the list gets that exact origin echoed back
+(plus `Vary: Origin`); anything else gets no `Access-Control-Allow-Origin`
+header at all, on both simple requests and `OPTIONS` preflights.
 
 ## API Endpoints
 

@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,6 +15,22 @@ type Config struct {
 	FixturesPath    string
 	DefaultModel    string
 	SupportedModels []string
+
+	// AllowedOrigins is the CORS allowlist: the exact set of browser origins
+	// permitted to make cross-origin requests to this service. It is read
+	// from MOCK_LLM_ALLOWED_ORIGINS (comma-separated) and defaults to EMPTY,
+	// i.e. default-deny — no cross-origin browser access at all.
+	//
+	// CONST-045 / §11.4.28: no origin is hardcoded here. The allowlist is
+	// configuration; adding an origin means setting the environment
+	// variable, never editing this file.
+	//
+	// The empty default does not break the normal workflow: this service is
+	// driven by Go/e2e HTTP clients, which are not browsers, send no Origin
+	// header, and ignore CORS response headers entirely. Only a browser
+	// front-end pointed at this mock needs the variable set, e.g.
+	// MOCK_LLM_ALLOWED_ORIGINS=http://localhost:3000
+	AllowedOrigins []string
 }
 
 // Load loads configuration from environment variables with defaults
@@ -25,11 +42,12 @@ func Load() *Config {
 	defaultModel := getEnv("MOCK_LLM_DEFAULT_MODEL", "mock-gpt-4")
 
 	return &Config{
-		Port:          port,
-		ResponseDelay: time.Duration(delayMs) * time.Millisecond,
-		EnableLogging: enableLogging,
-		FixturesPath:  fixturesPath,
-		DefaultModel:  defaultModel,
+		Port:           port,
+		ResponseDelay:  time.Duration(delayMs) * time.Millisecond,
+		EnableLogging:  enableLogging,
+		FixturesPath:   fixturesPath,
+		DefaultModel:   defaultModel,
+		AllowedOrigins: getEnvList("MOCK_LLM_ALLOWED_ORIGINS"),
 		SupportedModels: []string{
 			"mock-gpt-4",
 			"mock-gpt-3.5-turbo",
@@ -45,6 +63,24 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// getEnvList reads a comma-separated environment variable into a slice,
+// trimming surrounding whitespace and discarding empty entries. An unset or
+// empty variable yields nil — for an allowlist that means default-deny.
+func getEnvList(key string) []string {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return nil
+	}
+
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if part = strings.TrimSpace(part); part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
 }
 
 func getEnvInt(key string, defaultValue int) int {

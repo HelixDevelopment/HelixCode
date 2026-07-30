@@ -807,6 +807,49 @@ if want_gate G22; then
 fi
 
 # ---------------------------------------------------------------------------
+# G23 — HXC-194 mock-service CORS origin allowlist (runtime probe)
+#
+# CM-MOCK-SERVICES-CORS-ALLOWLIST. Guards the hole HXC-194 closed: both e2e
+# mock services hand-rolled their Gin CORS middleware, emitted a blanket
+# "Access-Control-Allow-Origin: *", and never inspected the request Origin — so
+# any web page on any site, opened by anyone able to route to the service, could
+# drive every route and read the responses (on the Slack mock: read back every
+# captured message and webhook body, and clear them via DELETE).
+#
+# Deliberately asserts OUR behaviour, never a dependency version. The
+# look-alike gin-contrib/cors advisory concerns a package neither module has
+# ever depended on; a version-based gate would have gone green on an upgrade
+# that never touched this hand-rolled code.
+#
+# RUNTIME EVIDENCE (§11.4.5), not a grep verdict: the gate executes the guard
+# suite in both modules at RED_MODE=0 (must pass), re-executes the SAME source
+# at RED_MODE=1 (must FAIL — the §1.1 paired mutation is built into the test's
+# polarity switch, so a passing RED means the hole is back or the guard went
+# blind), then checks no wildcard literal has crept back into service source.
+#
+# Exit-code handling mirrors G21/G22: 2 is the §11.4.3 environment SKIP (no Go
+# toolchain / module tree absent) and MUST NOT be worded as a detected hole — a
+# gate that cries "any website can drive this service" when it merely could not
+# run gets disabled, which is worse than none. It is still a FAIL, because a
+# guard that cannot run has certified nothing.
+# ---------------------------------------------------------------------------
+if want_gate G23; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G23 — HXC-194 mock-service CORS origin allowlist (CM-MOCK-SERVICES-CORS-ALLOWLIST)"
+    bash "$ROOT/scripts/gates/mock_services_cors_allowlist_gate.sh" >/tmp/g23-cors.out 2>&1
+    g23_rc=$?
+    if [[ "$g23_rc" -eq 0 ]]; then
+        gate_pass G23 "$(grep -m1 -oE 'green=[0-9]+/[0-9]+ red_falsifiable=[0-9]+/[0-9]+ source_clean=[0-9]+/[0-9]+' /tmp/g23-cors.out) — hostile origin denied on simple AND preflight, permitted origin still accepted, guard proven falsifiable"
+    elif [[ "$g23_rc" -eq 2 ]]; then
+        gate_fail G23 "mock-service CORS gate could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g23-cors.out)" \
+            "resolve the environment blocker (Go toolchain / mock module checkout) so the probe executes, then re-run"
+    else
+        gate_fail G23 "a mock service accepts cross-origin requests from any website again — any page a developer visits could drive it and read its responses (see /tmp/g23-cors.out)" \
+            "$(tail -8 /tmp/g23-cors.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
