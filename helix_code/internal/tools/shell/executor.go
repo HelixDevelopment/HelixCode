@@ -753,20 +753,36 @@ func (p *streamPipes) closeAll() {
 	p.closeReadEnds()
 }
 
-// prepareCommand prepares an exec.Cmd from a Command
-func (e *DefaultExecutor) prepareCommand(cmd *Command) (*exec.Cmd, error) {
+// commandArgv resolves the interpreter and argument vector for a Command.
+//
+// Split out of prepareCommand so the streaming background path
+// (ExecuteWithProgress) can build an exec.CommandContext — it needs the context
+// to carry cancellation to the child — while still deriving the interpreter and
+// arguments from the SAME rules as the three exec.Command call sites here.
+// Duplicating those rules is what let the background path drift onto a
+// hardcoded "sh" that ignored Command.Shell and Command.Args entirely.
+func commandArgv(cmd *Command) (string, []string) {
 	shell := cmd.Shell
 	if shell == "" {
 		shell = "/bin/sh"
 	}
 
-	var execCmd *exec.Cmd
+	argv := []string{"-c", cmd.Command}
 	if len(cmd.Args) > 0 {
-		execCmd = exec.Command(shell, append([]string{"-c", cmd.Command}, cmd.Args...)...)
-	} else {
-		execCmd = exec.Command(shell, "-c", cmd.Command)
+		argv = append(argv, cmd.Args...)
 	}
 
+	return shell, argv
+}
+
+// applyCommandSpec applies a Command's working directory and environment onto a
+// prepared exec.Cmd.
+//
+// Shared with ExecuteWithProgress for the same reason as commandArgv: the
+// working directory in particular is security-relevant (ValidateCommand screens
+// it via isValidPath), so exactly one implementation of "how a Command's WorkDir
+// and Env reach the process" is the point.
+func applyCommandSpec(execCmd *exec.Cmd, cmd *Command) {
 	if cmd.WorkDir != "" {
 		execCmd.Dir = cmd.WorkDir
 	}
@@ -781,6 +797,13 @@ func (e *DefaultExecutor) prepareCommand(cmd *Command) (*exec.Cmd, error) {
 		}
 		execCmd.Env = env
 	}
+}
+
+// prepareCommand prepares an exec.Cmd from a Command
+func (e *DefaultExecutor) prepareCommand(cmd *Command) (*exec.Cmd, error) {
+	shell, argv := commandArgv(cmd)
+	execCmd := exec.Command(shell, argv...)
+	applyCommandSpec(execCmd, cmd)
 
 	return execCmd, nil
 }

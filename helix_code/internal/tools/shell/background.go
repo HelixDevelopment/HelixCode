@@ -52,10 +52,64 @@ func (se *ShellExecutor) ExecuteWithProgress(
 		return nil, fmt.Errorf("shell: command must be a non-empty string")
 	}
 
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
-	if cwd, ok := params["cwd"].(string); ok && cwd != "" {
-		cmd.Dir = cwd
+	// Build the same *Command the three synchronous entry points build, so this
+	// path is governed by the SAME policy rather than a parallel one of its own.
+	//
+	// HXC-209 (CRITICAL) and HXC-210 were two symptoms of one root cause: this
+	// function used to construct its exec.Cmd straight from the params map, so
+	// it consulted neither the security policy nor the shared command-spec
+	// rules. Reconstructing the spec here and handing it to the SAME validator
+	// and the SAME builder is what closes the class, not just the two symptoms.
+	spec := &Command{
+		ID:      fmt.Sprintf("bg-progress-%d", time.Now().UnixNano()),
+		Command: command,
 	}
+
+	// "workdir" is the key the published schema emits (ShellTool.Schema) and the
+	// key the synchronous path reads (ShellTool.Execute) — HXC-210 was this
+	// function reading "cwd" instead, so the value a caller actually sent never
+	// arrived and the command silently ran wherever the server process happened
+	// to be. "cwd" is still accepted as a fallback: it is undocumented and no
+	// in-tree caller sends it, but it DID take effect before this change, and
+	// §11.4.122 forbids quietly dropping a capability that worked.
+	if workdir, ok := params["workdir"].(string); ok && workdir != "" {
+		spec.WorkDir = workdir
+	} else if cwd, ok := params["cwd"].(string); ok && cwd != "" {
+		spec.WorkDir = cwd
+	}
+
+	// Config-level defaults, exactly as ShellExecutor.Execute / ExecuteAsync /
+	// ExecuteStream apply them before dispatching.
+	//
+	// Honest scope note (§11.4.6): applyDefaults also populates Timeout,
+	// MaxOutputSize and Sandbox, and this path still honours none of the three.
+	// Timeout is deliberate — a background execution exists to outlive the 30s
+	// DefaultTimeout, so enforcing it here would kill exactly the long-running
+	// work this entry point is for. MaxOutputSize and Sandbox are genuine
+	// remaining gaps, tracked separately rather than silently implied fixed.
+	se.applyDefaults(spec)
+
+	// The guard HXC-209 was missing outright. Every sibling entry point calls
+	// this (executor.go:199, :329, :357); this one called nothing, while the
+	// route between them is chosen by an ordinary caller-supplied boolean
+	// (`run_in_background: true`) on the same tool. That made the background
+	// flag a way to step around the blocklist, the allowlist, the
+	// dangerous-pattern screen and the working-directory check together.
+	//
+	// It runs BEFORE Start, so a refused command is never executed at all.
+	if err := se.executor.security.ValidateCommand(spec); err != nil {
+		return nil, err
+	}
+
+	// exec.CommandContext (rather than the shared prepareCommand's exec.Command)
+	// because cancellation must reach the child here: the caller's ctx is the
+	// only stop signal this path has, and TestShellBackgroundAware_
+	// ContextCancelKillsProcess pins that. Interpreter, argv, working directory
+	// and environment still come from the shared helpers, so the only thing that
+	// differs from the synchronous paths is the cancellation wiring.
+	shellPath, argv := commandArgv(spec)
+	cmd := exec.CommandContext(ctx, shellPath, argv...)
+	applyCommandSpec(cmd, spec)
 
 	// Parent-owned pipes, exactly as ExecuteStream uses them (see newStreamPipes
 	// in executor.go for the full rationale). cmd.StdoutPipe()/StderrPipe() would
