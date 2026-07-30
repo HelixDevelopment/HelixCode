@@ -261,3 +261,42 @@ config, which makes the port knob inert AND the health check unreachable), so th
 got ONE agent rather than two: parallel dispatch is for INDEPENDENT domains, and
 related failures where one fix resolves both must not be split across agents that
 would then contend on the same files.
+
+### HXC-168 ESCALATED — reachability established, exposure is ~9 months old
+
+The item said reachability "has not been established either way and should not be
+assumed harmless." It is now ESTABLISHED, and the answer is the bad one.
+
+**Exposed, not local-only.** `docs/distribution/docker-compose.mistborn.yml:31-39`
+publishes postgres `"5432:5432"` with no IP prefix — Docker short syntax, so it binds
+0.0.0.0 — carrying `POSTGRES_DB: helixcode_prod` on a SEPARATE network-reachable host.
+The documented SSH tunnel is a convenience for the dev host; it does not restrict the
+bind. ~13 other compose files follow the same pattern.
+
+**Not a Docker default nobody knew about.** `helix_code/docker-compose.builder.yml:75`
+uses `127.0.0.1:5432:5432`. Exactly one file restricts to loopback, which makes the
+rest a pattern rather than an oversight. That contrast is the load-bearing evidence.
+
+**Duration (measured, not estimated):**
+  literal B — in history since `b80b1a38` 2025-11-02 — 271 days, 23 commits
+  literal A — in history since `3af11059` 2025-11-07 — 266 days, 13 commits
+Both present in the CURRENT tree (30 and 16 files respectively).
+
+**Published everywhere.** Per-remote `git log -S` counts on all four remote mains were
+reported identical to the local `--all` scan (13 / 23). I independently re-ran this for
+`origin` and `github` and got exactly 13/23 on both; the `gitlab` and `upstream` checks
+timed out under 7-agent load, so those two rest on the agent's report, not on my own
+execution. Stated precisely rather than rounded up to "I verified all four."
+
+**This is a REPEAT, not a discovery.** `25d41351` (2026-06-04) is titled
+"fix(security): remove hardcoded DB password from tracked SQL + sanitize .env.example
+(Wave3 W3E, CONST-042)". A fix was attempted almost two months ago and did not finish
+— which is exactly what the tracker item means by "the project's own earlier security
+review already recorded it as something that must be replaced, and that has still not
+happened." Worth noting against §11.4.214: a returning defect should reopen its
+original item rather than enter as a fresh id.
+
+**Rotation is the ONLY remedy.** The literals are in commits already pushed to every
+configured upstream. Editing files does not remove published history, and a history
+rewrite is forbidden outright by §11.4.113 — and would not help anyway, since the
+remotes already carry it. This half CANNOT be closed by an agent.
