@@ -300,3 +300,42 @@ original item rather than enter as a fresh id.
 configured upstream. Editing files does not remove published history, and a history
 rewrite is forbidden outright by §11.4.113 — and would not help anyway, since the
 remotes already carry it. This half CANNOT be closed by an agent.
+
+### Stall diagnosis — contention RULED OUT (saves the next session the hunt)
+
+Four agent failures now: HXC-168 and HXC-198 died on `API Error: Connection closed
+mid-response`; HXC-205 and HXC-169 STALLED with "no progress for 600s, stream watchdog
+did not recover". Four of a class is past the §11.4.102 Phase-4.5 threshold where the
+right question stops being "retry?" and becomes "what is actually wrong?".
+
+Measured at the moment of the fourth failure, rather than assumed:
+  load average 5.08 / 5.05 / 4.14   — low
+  memory 44G of 251G (18%)          — low
+  threads 5572 of 262144            — low
+So HOST CONTENTION IS NOT THE CAUSE. The host was close to idle while agents stalled.
+The failures sit at the API/stream layer, which is infrastructure I do not control.
+
+Operationally that matters because it rules out the tempting wrong fix: throttling
+concurrency would cost parallelism and change nothing. §11.4.147 respawn is the correct
+response, and every respawn now carries explicit `-timeout` on go commands,
+package-scoped test invocations, and output-to-file rather than streaming — mitigations
+against long-blocking calls, not against load.
+
+### HXC-169 — the lead its stalled agent died holding (potentially decisive)
+
+Final words before the stall: *"Zero importers, and those two lines are the only copy
+call sites in the entire tree. Let me confirm with the Go toolchain rather than grep."*
+
+If that holds, it resolves the item favourably: the sandbox code calls the vulnerable
+copy functions, but NOTHING calls the sandbox code — "vulnerable but unreachable"
+rather than "vulnerable". Note this does NOT contradict the item's claim that an
+automated analysis traced calls from our sandbox code to the affected functions. Both
+are true at once, and that reconciliation IS the answer.
+
+Two traps recorded for whoever finishes it:
+  §11.4.124 — "zero importers ⇒ unreachable" is a GUESS until reflection, build tags,
+  codegen, DI/plugin registries and init() side effects are each ruled out with the Go
+  toolchain rather than grep. The predecessor knew this; it stalled mid-sentence
+  saying so.
+  An unreachability verdict MUST ship with a guard that FAILS when something becomes an
+  importer. Otherwise the finding silently rots the day someone wires it up.
