@@ -68,15 +68,26 @@ func (hm *HealthMonitor) Start(ctx context.Context) error {
 	}
 }
 
-// performHealthChecks checks health of all providers
+// performHealthChecks checks health of all providers.
+//
+// HXC-205: this iterates the manager's LIVE records, deliberately NOT
+// GetStatus(). GetStatus now hands back a deep copy the caller owns, so a
+// verdict written into it would be silently discarded and health monitoring
+// would become a no-op that still looked green. Before the fix this code
+// depended on GetStatus returning a SHALLOW copy — the verdict reached manager
+// state only by accident, through the aliased Health pointer, while
+// RetryCount (a value field on the copy) was written to the throwaway and lost
+// on every cycle. Both halves now go through the manager's accessors, which
+// take its lock.
 func (hm *HealthMonitor) performHealthChecks() {
-	providers := hm.manager.GetStatus()
+	for _, entry := range hm.manager.providerEntries() {
+		name, provider := entry.name, entry.provider
 
-	for name, provider := range providers {
-		if provider.Status != "running" {
+		if hm.manager.statusOf(provider) != "running" {
 			continue
 		}
 
+		// Probe with no lock held: an HTTP call with a 5s timeout.
 		isHealthy, responseTime, err := hm.checkProviderHealth(provider)
 
 		hm.updateProviderHealth(provider, isHealthy, responseTime, err)
@@ -102,23 +113,20 @@ func (hm *HealthMonitor) checkProviderHealth(provider *AutoProvider) (bool, int,
 	return resp.StatusCode == 200, responseTime, nil
 }
 
-// updateProviderHealth updates provider health status
+// updateProviderHealth records a health verdict in manager state.
+//
+// HXC-205: the five Health fields and RetryCount were written here with no
+// lock, on a record shared with AutoLLMManager.autoHealthCheck, which writes
+// the same words from the background-task goroutine whenever AutoMonitor is
+// enabled. They are now applied in a single critical section, so a reader
+// observes one whole verdict or the other and never a mixture of the two —
+// which is how a provider came to be reported healthy when the probe had found
+// it stopped.
+//
+// The record is mutated in place, so this stays correct both for providers the
+// manager owns and for detached records handed in directly.
 func (hm *HealthMonitor) updateProviderHealth(provider *AutoProvider, isHealthy bool, responseTime int, err error) {
-	provider.Health.LastCheck = time.Now()
-	provider.Health.ResponseTime = responseTime
-	provider.Health.IsHealthy = isHealthy
-
-	if isHealthy {
-		provider.Health.Status = "healthy"
-		provider.Health.Error = ""
-		provider.RetryCount = 0
-	} else {
-		provider.Health.Status = "unhealthy"
-		if err != nil {
-			provider.Health.Error = err.Error()
-		}
-		provider.RetryCount++
-	}
+	hm.manager.applyHealthResult(provider, isHealthy, responseTime, err)
 }
 
 // handleUnhealthyProvider handles unhealthy provider scenarios
@@ -134,8 +142,9 @@ func (hm *HealthMonitor) handleUnhealthyProvider(name string, provider *AutoProv
 		Timestamp: time.Now(),
 	})
 
-	// Trigger auto-recovery if within retry limits
-	if provider.RetryCount <= hm.manager.config.Health.MaxRetries {
+	// Trigger auto-recovery if within retry limits. The counter is read back
+	// under the manager's lock (HXC-205) rather than off the record directly.
+	if hm.manager.retryCountOf(provider) <= hm.manager.config.Health.MaxRetries {
 		go hm.triggerAutoRecovery(name, provider)
 	} else {
 		// Max retries exceeded, send critical alert
@@ -151,7 +160,7 @@ func (hm *HealthMonitor) handleUnhealthyProvider(name string, provider *AutoProv
 
 // triggerAutoRecovery triggers automatic recovery for a provider
 func (hm *HealthMonitor) triggerAutoRecovery(name string, provider *AutoProvider) {
-	log.Printf("🔄 Triggering auto-recovery for %s (attempt %d)", name, provider.RetryCount)
+	log.Printf("🔄 Triggering auto-recovery for %s (attempt %d)", name, hm.manager.retryCountOf(provider))
 
 	// Wait before recovery attempt
 	time.Sleep(time.Duration(hm.manager.config.Health.RetryDelay) * time.Second)
