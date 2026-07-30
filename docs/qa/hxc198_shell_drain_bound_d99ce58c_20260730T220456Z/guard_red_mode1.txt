@@ -1,0 +1,22 @@
+--- FAIL: TestExecuteWithProgressReturnsWhenGrandchildHoldsPipes (2.01s)
+    background_grandchild_grace_test.go:147: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/background_grandchild_grace_test.go:147
+        	Error:      	Expected nil, but got: &shell.progressResult{out:map[string]interface {}{"exit_code":0, "output":"started", "output_incomplete":true}, err:error(nil)}
+        	Test:       	TestExecuteWithProgressReturnsWhenGrandchildHoldsPipes
+        	Messages:   	RED_MODE: expected the BROKEN behaviour (ExecuteWithProgress parks in wg.Wait() while the grandchild holds the inherited pipe write ends) but it returned after 2.011795846s — defect NOT reproduced on this artifact
+--- FAIL: TestExecuteWithProgressCancelReleasesDespiteGrandchild (2.01s)
+    background_grandchild_grace_test.go:226: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/background_grandchild_grace_test.go:226
+        	Error:      	Expected nil, but got: &shell.progressResult{out:map[string]interface {}{"exit_code":0, "output":"started", "output_incomplete":true}, err:error(nil)}
+        	Test:       	TestExecuteWithProgressCancelReleasesDespiteGrandchild
+        	Messages:   	RED_MODE: expected the BROKEN behaviour (cancelling only SIGKILLs the already-exited direct child, so the grandchild keeps the pipes open and the call stays parked) but it returned after 2.00991938s — defect NOT reproduced
+--- FAIL: TestExecuteStreamReturnsWhenGrandchildHoldsPipes (2.01s)
+    stream_grandchild_grace_test.go:125: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/stream_grandchild_grace_test.go:125
+        	Error:      	Expected nil, but got: &shell.ExecutionResult{ID:"hxc184-grandchild-holds-pipes", Command:"sleep 12 & echo started", ExitCode:0, Stdout:"", Stderr:"", Duration:1759508, StartTime:time.Date(2026, time.July, 31, 3, 5, 19, 688844205, time.Local), EndTime:time.Date(2026, time.July, 31, 3, 5, 19, 690603723, time.Local), Error:error(nil), Killed:false, TimedOut:false, OutputSize:0, OutputIncomplete:true}
+        	Test:       	TestExecuteStreamReturnsWhenGrandchildHoldsPipes
+        	Messages:   	RED_MODE: expected the BROKEN behaviour (Done never fires while the grandchild holds the inherited pipe write ends) but Done fired after 2.011060334s — defect NOT reproduced on this artifact
+FAIL
+FAIL	dev.helix.code/internal/tools/shell	6.040s
+FAIL
+RED_MODE=1 EXIT=1
