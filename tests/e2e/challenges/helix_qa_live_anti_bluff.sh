@@ -47,7 +47,7 @@ if ! curl -fsS -m 3 http://localhost:8080/health >/dev/null 2>&1; then
     (cd helix_code && go build -o "$HC_BIN" ./cmd/server)
     HELIX_DATABASE_HOST=127.0.0.1 HELIX_DATABASE_PORT=15432 \
         HELIX_DATABASE_USER=helix HELIX_DATABASE_NAME=helixcode_prod \
-        HELIX_DATABASE_PASSWORD=helixpass \
+        HELIX_DATABASE_PASSWORD="${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh) — CONST-042: no credential literal in tracked files}" \
         HELIX_REDIS_HOST=127.0.0.1 HELIX_REDIS_PORT=16379 HELIX_REDIS_PASSWORD="" \
         nohup "$HC_BIN" >"/tmp/hcsrv-$$.log" 2>&1 &
     HC_PID=$!

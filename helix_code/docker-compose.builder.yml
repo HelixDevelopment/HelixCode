@@ -37,7 +37,7 @@ services:
       - HELIX_DATABASE_HOST=postgres
       - HELIX_DATABASE_PORT=5432
       - HELIX_DATABASE_USER=helix
-      - HELIX_DATABASE_PASSWORD=helixpass
+      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
       - HELIX_DATABASE_NAME=helixcode_test
       - HELIX_REDIS_HOST=redis
       - HELIX_REDIS_PORT=6379
@@ -60,7 +60,7 @@ services:
     container_name: helixcode-builder-postgres
     environment:
       POSTGRES_USER: helix
-      POSTGRES_PASSWORD: helixpass
+      POSTGRES_PASSWORD: ${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
       POSTGRES_DB: helixcode_test
     volumes:
       - helixcode-postgres:/var/lib/postgresql/data

@@ -13,7 +13,10 @@ services:
     environment:
       POSTGRES_DB: helixcode_prod
       POSTGRES_USER: helix
-      POSTGRES_PASSWORD: helixpass
+      # CONST-042: supplied at runtime from the private configuration source.
+      # infraboot exports HELIX_AUTOBOOT_PG_PASSWORD (resolved from .env via
+      # internal/secrets) before invoking compose, so both sides always agree.
+      POSTGRES_PASSWORD: ${HELIX_AUTOBOOT_PG_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
     ports:
       - "55432:5432"
     healthcheck:

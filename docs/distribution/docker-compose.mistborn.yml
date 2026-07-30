@@ -34,7 +34,7 @@ services:
     environment:
       POSTGRES_DB: helixcode_prod
       POSTGRES_USER: helix
-      POSTGRES_PASSWORD: ${HELIX_POSTGRES_PASSWORD:-helixpass}
+      POSTGRES_PASSWORD: ${HELIX_POSTGRES_PASSWORD:?set HELIX_POSTGRES_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
     ports:
       - "5432:5432"
     healthcheck:
@@ -124,7 +124,7 @@ services:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${HELIX_GRAFANA_USER:-helix}
-      GF_SECURITY_ADMIN_PASSWORD: ${HELIX_GRAFANA_PASSWORD:-helixpass}
+      GF_SECURITY_ADMIN_PASSWORD: ${HELIX_GRAFANA_PASSWORD:?set HELIX_GRAFANA_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
       GF_USERS_ALLOW_SIGN_UP: "false"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health 2>/dev/null || exit 1"]

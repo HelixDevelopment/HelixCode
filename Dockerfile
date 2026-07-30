@@ -45,7 +45,11 @@ EXPOSE 8080 2222 3000
 
 # Set environment variables
 ENV HELIX_ENV=production
-ENV HELIX_DATABASE_URL=postgres://helix:helixpass@postgres:5432/helixcode_prod?sslmode=disable
+# CONST-042 / §12.1: no credential is baked into the image. This URL is a
+# readiness-probe target only (docker-entrypoint.sh feeds it to `pg_isready`,
+# which does not authenticate); the real password is supplied at RUNTIME from
+# the private configuration source (.env -> HELIX_DATABASE_PASSWORD).
+ENV HELIX_DATABASE_URL=postgres://helix@postgres:5432/helixcode_prod?sslmode=disable
 ENV HELIX_REDIS_URL=redis://redis:6379
 ENV HELIX_WORKSPACE=/workspace
 ENV HELIX_PROJECTS=/projects

@@ -15,16 +15,16 @@ services:
       - "${HELIX_WEB_PORT:-3000}:3000"
     environment:
       - HELIX_ENV=production
-      - HELIX_DATABASE_URL=postgres://helix:helixpass@postgres:5432/helixcode_prod?sslmode=disable
+      - HELIX_DATABASE_URL=postgres://helix:${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}@postgres:5432/helixcode_prod?sslmode=disable
       - HELIX_DATABASE_HOST=postgres
       - HELIX_DATABASE_PORT=5432
       - HELIX_DATABASE_USER=helix
       - HELIX_DATABASE_NAME=helixcode_prod
-      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD:-helixpass}
+      - HELIX_DATABASE_PASSWORD=${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
       - HELIX_REDIS_URL=redis://redis:6379
       - HELIX_REDIS_HOST=redis
       - HELIX_REDIS_PORT=6379
-      - HELIX_REDIS_PASSWORD=${HELIX_REDIS_PASSWORD:-redispass}
+      - HELIX_REDIS_PASSWORD=${HELIX_REDIS_PASSWORD:?set HELIX_REDIS_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
       - HELIX_API_PORT=8080
       - HELIX_SSH_PORT=2222
       - HELIX_WEB_PORT=3000

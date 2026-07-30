@@ -154,10 +154,21 @@ docker exec helixcode ps aux
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+**One-step path (recommended):** run `./setup.sh`. It creates `.env` from
+`.env.example` at mode 0600 and generates a unique random value for
+`HELIX_DATABASE_PASSWORD`, `HELIX_REDIS_PASSWORD` and `HELIX_AUTH_JWT_SECRET`.
+Re-running it never overwrites a value you already set.
+
+The compose files and the server carry **no** credential of their own
+(CONST-042): they read these variables from `.env`, and refuse to start with an
+actionable message if one is missing. `.env` is gitignored and must never be
+committed.
+
+To do it by hand instead, create a `.env` file in the root directory:
 
 ```bash
-# Required for security
+# Required for security — use a unique, randomly generated value per install,
+# e.g. `openssl rand -hex 24`. Never reuse a value published anywhere.
 HELIX_DATABASE_PASSWORD=your-db-password
 HELIX_AUTH_JWT_SECRET=your-jwt-secret
 HELIX_REDIS_PASSWORD=your-redis-password

@@ -197,7 +197,7 @@ services:
     environment:
       - POSTGRES_DB=helixcode
       - POSTGRES_USER=helixuser
-      - POSTGRES_PASSWORD=helixpass
+      - POSTGRES_PASSWORD=${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_init:/docker-entrypoint-initdb.d
@@ -240,7 +240,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MLFLOW_BACKEND_STORE_URI=postgresql://helixuser:helixpass@postgres:5432/helixcode
+      - MLFLOW_BACKEND_STORE_URI=postgresql://helixuser:${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}@postgres:5432/helixcode
       - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
     volumes:
       - mlflow_data:/mlflow
@@ -251,7 +251,7 @@ services:
       mlflow server 
         --host 0.0.0.0 
         --port 5000 
-        --backend-store-uri postgresql://helixuser:helixpass@postgres:5432/helixcode 
+        --backend-store-uri postgresql://helixuser:${HELIX_DATABASE_PASSWORD:?set HELIX_DATABASE_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}@postgres:5432/helixcode 
         --default-artifact-root /mlflow/artifacts
       "
     depends_on:
@@ -293,7 +293,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${HELIX_GRAFANA_PASSWORD:?set HELIX_GRAFANA_PASSWORD in .env (run ./setup.sh, or cp .env.example .env)}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana

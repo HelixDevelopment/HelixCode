@@ -120,15 +120,59 @@ fi
 # --- 5. secrets --------------------------------------------------------------
 # Never generated with real values, never committed (CONST-042 / §12.1).
 section "Checking environment file"
+# gen_secret prints a fresh high-entropy value. openssl is preferred; the
+# /dev/urandom path is the portable fallback so setup never silently degrades
+# to a weak or fixed value (CONST-042: a predictable secret is not a secret).
+gen_secret() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -hex 24
+    return
+  fi
+  if [ -r /dev/urandom ]; then
+    LC_ALL=C tr -dc 'a-f0-9' < /dev/urandom | head -c 48
+    echo
+    return
+  fi
+  die "cannot generate a secret: neither openssl nor /dev/urandom is available"
+}
+
+# fill_placeholder replaces a CHANGE_ME_* placeholder in .env with a generated
+# secret. It ONLY ever rewrites the placeholder, so re-running setup.sh never
+# clobbers a real value the operator (or a previous run) already set.
+fill_placeholder() {
+  key="$1"; placeholder="$2"
+  if grep -q "^${key}=${placeholder}\$" .env 2>/dev/null; then
+    secret="$(gen_secret)"
+    # Generated values are hex only, so they carry no sed metacharacters.
+    sed -i.bak "s|^${key}=${placeholder}\$|${key}=${secret}|" .env
+    rm -f .env.bak
+    unset secret
+    ok "${key}: generated a unique local secret"
+  fi
+}
+
 if [ ! -f .env ] && [ -f .env.example ]; then
   cp .env.example .env
   chmod 0600 .env
-  warn "created .env from .env.example — fill in secrets (DB_PASSWORD, API keys) before starting"
+  ok "created .env from .env.example (mode 0600)"
 elif [ -f .env ]; then
   chmod 0600 .env
   ok ".env present (mode 0600)"
 else
   warn "no .env and no .env.example — services needing secrets may fail dependency verification"
+fi
+
+# HXC-168 / CONST-042: the container and setup files no longer carry any
+# credential literal — they read HELIX_DATABASE_PASSWORD (and friends) from this
+# gitignored .env. Generating a unique per-install value here is what keeps the
+# platform working out of the box WITHOUT a shared, published default.
+if [ -f .env ]; then
+  fill_placeholder HELIX_DATABASE_PASSWORD CHANGE_ME_db_password
+  fill_placeholder HELIX_REDIS_PASSWORD    CHANGE_ME_redis_password
+  fill_placeholder HELIX_AUTH_JWT_SECRET   CHANGE_ME_jwt_secret
+  if grep -q '=CHANGE_ME' .env 2>/dev/null; then
+    warn ".env still has CHANGE_ME placeholders (provider API keys) — fill them in before using those providers"
+  fi
 fi
 
 # --- 6. systemd --------------------------------------------------------------

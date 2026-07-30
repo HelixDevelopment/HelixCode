@@ -46,11 +46,49 @@ const (
 	defaultPgPort       = 55432
 	defaultRedisPort    = 56379
 	defaultPgUser       = "helix"
-	defaultPgPassword   = "helixpass"
 	defaultPgDBName     = "helixcode_prod"
 	defaultHealthBudget = 120 * time.Second
 	bootHost            = "127.0.0.1"
+
+	// envAutobootPgPassword is the variable the autoboot compose file reads
+	// (`POSTGRES_PASSWORD: ${HELIX_AUTOBOOT_PG_PASSWORD:?...}`). resolvePgPassword
+	// exports it before `compose up` so the container and the in-process config
+	// are guaranteed to agree on one value.
+	envAutobootPgPassword = "HELIX_AUTOBOOT_PG_PASSWORD"
+	// envDatabasePassword is the project-wide credential variable, populated
+	// from the private, gitignored .env by internal/secrets at server startup.
+	envDatabasePassword = "HELIX_DATABASE_PASSWORD"
 )
+
+// errNoPgPassword is returned when neither credential variable is set.
+// CONST-042 / §12.1: there is deliberately NO built-in fallback value — a
+// literal default compiled into a published binary is a published credential.
+// Failing fast with an actionable message is the only honest behaviour.
+var errNoPgPassword = fmt.Errorf(
+	"infraboot: no Postgres password configured — set %s (or %s) in the gitignored .env "+
+		"(run ./setup.sh, or `cp .env.example .env` and fill it in), "+
+		"or set HELIX_AUTOBOOT_INFRA=false to use externally-provisioned infra",
+	envDatabasePassword, envAutobootPgPassword)
+
+// resolvePgPassword reads the auto-boot Postgres credential from the process
+// environment — which internal/secrets has already gap-filled from .env before
+// EnsureInfra runs (see cmd/server/main.go ordering). The resolved value is
+// exported under envAutobootPgPassword so the child `compose` process
+// interpolates the SAME secret into the container. The value is never logged.
+func resolvePgPassword() (string, error) {
+	pw := strings.TrimSpace(os.Getenv(envAutobootPgPassword))
+	if pw == "" {
+		pw = strings.TrimSpace(os.Getenv(envDatabasePassword))
+	}
+	if pw == "" {
+		return "", errNoPgPassword
+	}
+	// Export for the compose child process (no-op when already identical).
+	if err := os.Setenv(envAutobootPgPassword, pw); err != nil {
+		return "", fmt.Errorf("infraboot: could not export %s: %w", envAutobootPgPassword, err)
+	}
+	return pw, nil
+}
 
 // composeFileCandidates are searched (relative to cwd, then the executable's
 // directory) when Options.ComposeFile / $HELIX_AUTOBOOT_COMPOSE_FILE are unset.
@@ -131,6 +169,14 @@ func EnsureInfra(ctx context.Context, cfg *config.Config, opts *Options) (*Resul
 	pgPort := resolvePort(opts.PgPort, "HELIX_AUTOBOOT_PG_PORT", defaultPgPort)
 	redisPort := resolvePort(opts.RedisPort, "HELIX_AUTOBOOT_REDIS_PORT", defaultRedisPort)
 
+	// Resolve the credential BEFORE either branch: the already-healthy path
+	// still needs it for rewriteConfig, and failing here gives the operator one
+	// actionable message instead of a downstream auth error (CONST-042).
+	pgPassword, err := resolvePgPassword()
+	if err != nil {
+		return nil, err
+	}
+
 	b := opts.Booter
 	if b == nil {
 		b = containersadapter.NewAdapter()
@@ -179,7 +225,7 @@ func EnsureInfra(ctx context.Context, cfg *config.Config, opts *Options) (*Resul
 	if res.RuntimeName == "" {
 		res.RuntimeName = b.RuntimeName()
 	}
-	rewriteConfig(cfg, pgPort, redisPort)
+	rewriteConfig(cfg, pgPort, redisPort, pgPassword)
 
 	// Protocol-level readiness: TCP-up does NOT mean Postgres accepts auth
 	// (it opens the port mid-initdb). Poll a real readiness probe until the
@@ -243,11 +289,11 @@ func waitReady(ctx context.Context, cfg *config.Config, probe func(context.Conte
 // rewriteConfig points cfg at the booted Postgres + Redis endpoints. This is
 // the load-bearing step: without it the process would still try the original
 // compose-DNS hostnames and fail (the original defect).
-func rewriteConfig(cfg *config.Config, pgPort, redisPort int) {
+func rewriteConfig(cfg *config.Config, pgPort, redisPort int, pgPassword string) {
 	cfg.Database.Host = bootHost
 	cfg.Database.Port = pgPort
 	cfg.Database.User = defaultPgUser
-	cfg.Database.Password = defaultPgPassword
+	cfg.Database.Password = pgPassword
 	cfg.Database.DBName = defaultPgDBName
 	cfg.Database.SSLMode = "disable"
 
