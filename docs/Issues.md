@@ -414,35 +414,11 @@ When a model provider record is created, its environment settings are taken from
 
 Four compose entries across two end-to-end test stacks declare a build context pointing at the Slack mock and the LLM-provider mock, but neither directory contains a Dockerfile. Any attempt to build those stacks therefore fails at the build step rather than at run time, which means the containerised form of these two services has almost certainly never been exercised. This was surfaced while fixing an unrelated permissive-origin defect in the same two services: the fix could be proven at the source and test-process level but not against a running container, precisely because no container of either service can be produced. That gap matters beyond these two mocks, because a fix validated only in-process leaves the deployed-artifact layer unproven, which is exactly the class of silent failure the four-layer verification discipline exists to catch. The work is to add the missing Dockerfiles, or to remove the build entries if these services are genuinely never meant to run containerised, and then to prove the choice by building the stack.
 
-## HXC-211 — Four more unbounded waits remain in the shell package after the latest hang fix
+## HXC-216 — Thirty-five historical evidence folders hold runs that were never saved to the repository
 
 **Status:** Queued
-**Type:** Bug
+**Type:** Task
 **Created-By:** Claude
 
-The hang just repaired was one instance of a pattern that survives in four other places in the same package, each able to park a call forever under conditions the code already permits. Two sit in the synchronous execution path and become unbounded when sandboxing is switched off or when no timeout is supplied, both of which are reachable through documented usage rather than misconfiguration. Two more sit in the output-streaming helper and are presently safe only because their single existing caller happens to rescue them, so any future caller wiring that helper the obvious way reproduces the original defect exactly. A fifth site in the background task manager amplifies all of them by calling into this code with no timeout and no way to abandon the attempt. These were found by sweeping the whole package after the fix rather than only the function named in the report, which was necessary because the reported defect and its already-fixed twin turned out to live in different files, so a reviewer re-reading the same file would have found nothing.
-
-## HXC-213 — The deployment tracker guards one line of shared state and leaves seventy-seven unguarded
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-A component that tracks the progress of a production deployment declares a lock for protecting its shared status record, and then uses that lock in exactly one place while touching the same record in seventy-eight others. This is the same shape as a defect just fixed elsewhere, and it is not speculative: a comment in the file records that a real race was previously detected here by the race detector, and the repair made at that time guarded only the single line the detector happened to point at, leaving every other access untouched. So the file now reads as though it is synchronised, which is more misleading than having no lock at all, because a reader sees the mechanism and assumes it applies. Concurrent deployment phases can therefore overwrite each other's status, and a deployment can report a state that never occurred. The remedy is the one already proven twice in this codebase: bring every access to the shared record under the existing lock, keeping the lock away from any long-running call, and add a guard that runs under the race detector.
-
-## HXC-214 — Four model providers hand callers a live pointer to their own health record
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-Four provider integrations each declare a lock and then, in a method whose name promises only to read, both modify their stored health record and hand the caller a pointer to that same record rather than a copy. Two faults follow from one line. A method that reads according to its name but writes in practice will be called freely from places that assume it is safe, so the write happens under no lock and concurrent callers overwrite each other. And because the caller receives the live pointer rather than a copy, anything it does to the value it was given silently changes the provider's own state, which no caller could reasonably expect. The result is that a provider can be reported healthy when it is failing, or the reverse, and that an unrelated piece of code can corrupt that judgement without ever intending to touch it. The remedy matches the two fixes already landed for this pattern: perform the update under the lock and return a copy, then guard both halves with a test that fails if the returned value is ever aliased to the stored one.
-
-## HXC-215 — The commit-compile gate blames a different innocent commit on each run
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-The gate that checks whether each recent commit can actually be built reported a failure on two separate runs, naming a different commit each time, and in both cases the named commit builds cleanly when the gate's own command is re-run against it in isolation. The packages it reported as broken were unrelated to anything the accused commits changed, which was the first clue. The gate has no time limit, so these were real non-zero results at the moment they happened rather than a run that was cut short. What distinguishes the gate's own execution from a reproduction is that it builds five commits back to back, each in a fresh throwaway checkout, all of them sharing one build cache, whereas a reproduction builds one. That points at interference between those consecutive builds rather than at any defect in the code being judged, though the precise mechanism is not yet proven and should not be assumed. This matters more than an occasional wrong answer suggests, because the gate blocks releases: a check that accuses innocent work teaches people to dismiss it, and the day it is right about a genuinely broken commit that habit will let the breakage through. The work is to make the gate produce the same verdict every time it is given the same input, and to prove that by running it repeatedly against an unchanged tree.
+A blanket rule excluding log files from version control was also excluding captured test evidence, because evidence transcripts are written as log files. The rule has now been corrected so this cannot happen again, and the three folders backing recently closed items have been recovered and committed. Thirty-five older folders remain in the same state: the runs exist only on the machine that produced them, so anyone cloning this project sees an evidence folder that appears empty, which is indistinguishable from a test that was never run. Recovering them is not automatic, because two of the files alone account for seventy-eight megabytes and committing those into permanent history is a poor trade that deserves a deliberate decision rather than a reflex. The work is to review the thirty-five, keep what genuinely substantiates a closed item, trim or summarise the two very large ones rather than storing them whole, and record explicitly which ones are being let go and why, so the gap is visible rather than silent.
 

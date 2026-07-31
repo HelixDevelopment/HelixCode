@@ -2222,3 +2222,39 @@ The shell tool accepts a working-directory parameter under one name in its publi
 
 A configuration fix landed today made a small protocol service actually listen on the network for the first time, because previously it only ever spoke over standard input and no socket was ever opened. That fix is correct and was needed. The consequence nobody traced is that the network path it switched on tells every browser that any website at all may call it, on both the preflight and the response, and it never checks who is asking. So a weakness that was genuinely unreachable an hour ago is now reachable on a published port, and the container image selects that path by default. This is the classic pattern where a correct repair to one defect activates a second one that was only ever safe by accident, which is why a change should be assessed for what it makes reachable and not only for what it repairs. The same any-origin weakness was fixed today in two sibling services in the main repository, but that sweep could not see into this one because it lives in a separate repository, so the class was reported closed while this instance remained. The fix is the one already proven in those siblings: check the origin against a configured allowlist and reject anything else, covering both the preflight and the ordinary request.
 
+## HXC-213 — The deployment tracker guards one line of shared state and leaves seventy-seven unguarded
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc213_deployer_status_race_20260731T063405Z
+**Created-By:** Claude
+
+A component that tracks the progress of a production deployment declares a lock for protecting its shared status record, and then uses that lock in exactly one place while touching the same record in seventy-eight others. This is the same shape as a defect just fixed elsewhere, and it is not speculative: a comment in the file records that a real race was previously detected here by the race detector, and the repair made at that time guarded only the single line the detector happened to point at, leaving every other access untouched. So the file now reads as though it is synchronised, which is more misleading than having no lock at all, because a reader sees the mechanism and assumes it applies. Concurrent deployment phases can therefore overwrite each other's status, and a deployment can report a state that never occurred. The remedy is the one already proven twice in this codebase: bring every access to the shared record under the existing lock, keeping the lock away from any long-running call, and add a guard that runs under the race detector.
+
+## HXC-214 — Four model providers hand callers a live pointer to their own health record
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc214_provider_health_race_20260731T063414Z
+**Created-By:** Claude
+
+Four provider integrations each declare a lock and then, in a method whose name promises only to read, both modify their stored health record and hand the caller a pointer to that same record rather than a copy. Two faults follow from one line. A method that reads according to its name but writes in practice will be called freely from places that assume it is safe, so the write happens under no lock and concurrent callers overwrite each other. And because the caller receives the live pointer rather than a copy, anything it does to the value it was given silently changes the provider's own state, which no caller could reasonably expect. The result is that a provider can be reported healthy when it is failing, or the reverse, and that an unrelated piece of code can corrupt that judgement without ever intending to touch it. The remedy matches the two fixes already landed for this pattern: perform the update under the lock and return a copy, then guard both halves with a test that fails if the returned value is ever aliased to the stored one.
+
+## HXC-215 — The commit-compile gate blames a different innocent commit on each run
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc215_commit_compile_integrity_classifier_20260731T072605Z
+**Created-By:** Claude
+
+The gate that checks whether each recent commit can actually be built reported a failure on two separate runs, naming a different commit each time, and in both cases the named commit builds cleanly when the gate's own command is re-run against it in isolation. The packages it reported as broken were unrelated to anything the accused commits changed, which was the first clue. The gate has no time limit, so these were real non-zero results at the moment they happened rather than a run that was cut short. What distinguishes the gate's own execution from a reproduction is that it builds five commits back to back, each in a fresh throwaway checkout, all of them sharing one build cache, whereas a reproduction builds one. That points at interference between those consecutive builds rather than at any defect in the code being judged, though the precise mechanism is not yet proven and should not be assumed. This matters more than an occasional wrong answer suggests, because the gate blocks releases: a check that accuses innocent work teaches people to dismiss it, and the day it is right about a genuinely broken commit that habit will let the breakage through. The work is to make the gate produce the same verdict every time it is given the same input, and to prove that by running it repeatedly against an unchanged tree.
+
+## HXC-211 — Four more unbounded waits remain in the shell package after the latest hang fix
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc211_bounded_wait_shell_executor_20260731T073118Z
+**Created-By:** Claude
+
+The hang just repaired was one instance of a pattern that survives in four other places in the same package, each able to park a call forever under conditions the code already permits. Two sit in the synchronous execution path and become unbounded when sandboxing is switched off or when no timeout is supplied, both of which are reachable through documented usage rather than misconfiguration. Two more sit in the output-streaming helper and are presently safe only because their single existing caller happens to rescue them, so any future caller wiring that helper the obvious way reproduces the original defect exactly. A fifth site in the background task manager amplifies all of them by calling into this code with no timeout and no way to abandon the attempt. These were found by sweeping the whole package after the fix rather than only the function named in the report, which was necessary because the reported defect and its already-fixed twin turned out to live in different files, so a reviewer re-reading the same file would have found nothing.
+

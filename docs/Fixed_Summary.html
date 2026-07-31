@@ -192,7 +192,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>195</td>
+<td>199</td>
 </tr>
 <tr>
 <td>Bug</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>379</strong></td>
+<td><strong>383</strong></td>
 </tr>
 </tbody>
 </table>
@@ -4417,6 +4417,29 @@ directory it was given rather than merely accepting the parameter.</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
+<td>HXC-211 — The hang just repaired was one instance of a pattern that
+survives in four other places in the same package, each able to park a
+call forever under conditions the code already permits. Two sit in the
+synchronous execution path and become unbounded when sandboxing is
+switched off or when no timeout is supplied, both of which are reachable
+through documented usage rather than misconfiguration. Two more sit in
+the output-streaming helper and are presently safe only because their
+single existing caller happens to rescue them, so any future caller
+wiring that helper the obvious way reproduces the original defect
+exactly. A fifth site in the background task manager amplifies all of
+them by calling into this code with no timeout and no way to abandon the
+attempt. These were found by sweeping the whole package after the fix
+rather than only the function named in the report, which was necessary
+because the reported defect and its already-fixed twin turned out to
+live in different files, so a reviewer re-reading the same file would
+have found nothing.</td>
+</tr>
+<tr>
+<td>362</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
 <td>HXC-212 — A configuration fix landed today made a small protocol
 service actually listen on the network for the first time, because
 previously it only ever spoke over standard input and no socket was ever
@@ -4437,7 +4460,80 @@ check the origin against a configured allowlist and reject anything
 else, covering both the preflight and the ordinary request.</td>
 </tr>
 <tr>
-<td>362</td>
+<td>363</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-213 — A component that tracks the progress of a production
+deployment declares a lock for protecting its shared status record, and
+then uses that lock in exactly one place while touching the same record
+in seventy-eight others. This is the same shape as a defect just fixed
+elsewhere, and it is not speculative: a comment in the file records that
+a real race was previously detected here by the race detector, and the
+repair made at that time guarded only the single line the detector
+happened to point at, leaving every other access untouched. So the file
+now reads as though it is synchronised, which is more misleading than
+having no lock at all, because a reader sees the mechanism and assumes
+it applies. Concurrent deployment phases can therefore overwrite each
+other’s status, and a deployment can report a state that never occurred.
+The remedy is the one already proven twice in this codebase: bring every
+access to the shared record under the existing lock, keeping the lock
+away from any long-running call, and add a guard that runs under the
+race detector.</td>
+</tr>
+<tr>
+<td>364</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-214 — Four provider integrations each declare a lock and then,
+in a method whose name promises only to read, both modify their stored
+health record and hand the caller a pointer to that same record rather
+than a copy. Two faults follow from one line. A method that reads
+according to its name but writes in practice will be called freely from
+places that assume it is safe, so the write happens under no lock and
+concurrent callers overwrite each other. And because the caller receives
+the live pointer rather than a copy, anything it does to the value it
+was given silently changes the provider’s own state, which no caller
+could reasonably expect. The result is that a provider can be reported
+healthy when it is failing, or the reverse, and that an unrelated piece
+of code can corrupt that judgement without ever intending to touch it.
+The remedy matches the two fixes already landed for this pattern:
+perform the update under the lock and return a copy, then guard both
+halves with a test that fails if the returned value is ever aliased to
+the stored one.</td>
+</tr>
+<tr>
+<td>365</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-215 — The gate that checks whether each recent commit can
+actually be built reported a failure on two separate runs, naming a
+different commit each time, and in both cases the named commit builds
+cleanly when the gate’s own command is re-run against it in isolation.
+The packages it reported as broken were unrelated to anything the
+accused commits changed, which was the first clue. The gate has no time
+limit, so these were real non-zero results at the moment they happened
+rather than a run that was cut short. What distinguishes the gate’s own
+execution from a reproduction is that it builds five commits back to
+back, each in a fresh throwaway checkout, all of them sharing one build
+cache, whereas a reproduction builds one. That points at interference
+between those consecutive builds rather than at any defect in the code
+being judged, though the precise mechanism is not yet proven and should
+not be assumed. This matters more than an occasional wrong answer
+suggests, because the gate blocks releases: a check that accuses
+innocent work teaches people to dismiss it, and the day it is right
+about a genuinely broken commit that habit will let the breakage
+through. The work is to make the gate produce the same verdict every
+time it is given the same input, and to prove that by running it
+repeatedly against an unchanged tree.</td>
+</tr>
+<tr>
+<td>366</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4447,7 +4543,7 @@ else, covering both the preflight and the ordinary request.</td>
 path</td>
 </tr>
 <tr>
-<td>363</td>
+<td>367</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4456,7 +4552,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>364</td>
+<td>368</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4465,7 +4561,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>365</td>
+<td>369</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4473,7 +4569,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>366</td>
+<td>370</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4482,7 +4578,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>367</td>
+<td>371</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4491,7 +4587,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>368</td>
+<td>372</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4501,7 +4597,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>369</td>
+<td>373</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4510,7 +4606,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>370</td>
+<td>374</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4519,7 +4615,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>371</td>
+<td>375</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4528,7 +4624,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>372</td>
+<td>376</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4538,7 +4634,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>373</td>
+<td>377</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4547,7 +4643,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>374</td>
+<td>378</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4557,7 +4653,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>375</td>
+<td>379</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4567,7 +4663,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>376</td>
+<td>380</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4576,7 +4672,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>377</td>
+<td>381</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4585,7 +4681,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>378</td>
+<td>382</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4595,7 +4691,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>379</td>
+<td>383</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>

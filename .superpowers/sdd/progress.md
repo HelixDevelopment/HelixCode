@@ -390,3 +390,58 @@ separated them.
   agent hit the same class via a relative path in a trap after a cd.)
 - G7 is ENFORCING: every fix commit needs `docs/qa/<run-id>/`. Two commits shipped
   without one today.
+
+### CORRECTION to my own headroom method — `ulimit -u` is NOT the binding limit here
+
+Every §12.12 headroom check I ran this session read `ulimit -u` (262144) and
+concluded "plenty of headroom". **That number does not bind on this host.** The
+cgroup hierarchy caps it far lower, and the LOWEST value in the chain wins:
+
+```
+max      /user.slice
+678505   /user.slice/user-1000.slice
+max      /user.slice/user-1000.slice/user@1000.service
+max      .../tmxw.slice
+4096     .../tmxw.slice/tmxw-helix\x2dcode\x2d6339.slice   <-- BINDS
+308411   .../run-<scope>.scope
+```
+
+So the real ceiling is **4096**, not 262144 — a 64x overestimate, and neither the
+leaf scope nor the rlimit reveals it. The HXC-215 agent found this from the other
+direction: `fork/exec …/compile: resource temporarily unavailable` (EAGAIN) in the
+preserved gate logs.
+
+**How to check headroom correctly:** walk every level of
+`/proc/self/cgroup`'s path, read `pids.max` at each, take the MINIMUM, and compare
+against that level's `pids.current`. `ulimit -u` alone is misleading.
+
+Honest boundary: this does NOT overturn the earlier "contention ruled out" finding
+for the STALLS — load 5.08 and memory 18% were real, and stalls are an API/stream
+failure. But the process ceiling was a genuine pressure I never measured, and the
+EAGAIN failures are consistent with hitting it.
+
+### HXC-215 — three defects, and the one that was hiding the others
+
+Root cause (FACT): the gate asserted `if rc -eq 0 then COMPILES else DOES-NOT-COMPILE`.
+`go test ./...` also exits non-zero when the TOOLCHAIN dies, so an infrastructure
+failure was indistinguishable from a compile error. Confirmed three ways: the two
+reports contradict each other on the same commit; `92840ade` touches only
+`tests/e2e/mocks/**` yet was blamed for `internal/rules` (causally impossible); and
+zero compiler diagnostics appear in either log.
+
+A second defect MANUFACTURED the evidence the first misread: a trap bug deleted the
+build workdir mid-run, producing `chdir …: no such file or directory`. Worse, the old
+trap form ran cleanup, RESUMED, and **exited 0** — a signal-killed gate reporting
+SUCCESS.
+
+A third was found only because the fix exposed it: the built-in self-test pins had
+BIT-ROTTED (`go.mod 9c9b5912` vs HEAD's `4960895d`) and failed in 0s. The old gate
+could not see this — it would have "passed" its known-bad half while the compiler
+never ran. So the gate's own falsifiability proof was itself a bluff. Falsifiability
+is now carried by a synthetic wolf test built from HEAD via `git archive`:
+c2 COMPILES, c3 DOES-NOT-COMPILE, blamed set exactly `{c3}`, real diagnostic, exit 1.
+
+Verified after the fix: `non-compiling: 0`, one infra failure reported as exit 3
+INCONCLUSIVE with "not a PASS for those, and not an accusation against them".
+Against the REAL flake logs: 2/2 exonerated, 0 false accusations. 5/5 identical
+verdicts on a pinned range. Classifier 9/9 fixtures, both §1.1 mutations FAIL.
