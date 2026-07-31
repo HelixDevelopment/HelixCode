@@ -74,13 +74,50 @@ Filed **9 new items** from sibling sweeps: HXC-208, 209, 210, 211, 212, 213,
 | HXC-186 | fix landed in `790d097c` | close with evidence; `docs/qa/README.md` not yet documenting the new declared-citation field |
 | HXC-199 | landed `a0dc39a5` | close with evidence |
 | HXC-202 | landed `a0dc39a5` | close with evidence |
-| HXC-204 | landed `a0dc39a5` | close with evidence |
+| HXC-204 | landed `a0dc39a5` + `b3f29480` | **DO NOT CLOSE — acceptance criterion NOT met.** See below. |
 | HXC-172 | `d0a53e0b` (submodule) | **Operator-blocked**: SDK 1.24.0 lands inside two other advisories; clean floor is ≥1.26.0, a breaking major adding ~79 packages to patch never-loaded code |
 
 **None of the five is independently reviewed** (§11.4.142/§11.4.209 owe a Fable
 xhigh pass). `a0dc39a5` landed three of them on the agents' behalf because the
 session was closing; it verifies they COMPILE (`go build -tags=nogui` exit 0,
 `go vet` exit 0, `bash -n` OK), **not** that they are correct.
+
+#### HXC-204 — partially fixed, and its own agent said so
+
+The named defect IS fixed: **zero false DEADLOCK accusations** across every
+loaded run. But the §11.4.50 acceptance bar (≥5 stable verdicts under load) was
+**not met** — 5 runs gave **1 PASS, 3 SKIP, 1 lost to a command timeout**.
+PASS/SKIP alternating is not a stable verdict, so the item stays OPEN.
+
+The two tests failed for *different* reasons, which is why the fix is split:
+
+- **`TestConsensus_Chaos_DropVoteFraction`** → made **deterministic**. It sampled
+  each node's state ONCE and failed if that sample said `Candidate`; livelock is
+  steady-state, so one sample cannot distinguish "wedged" from "mid-election".
+  The RED log shows it calling node-0 livelocked and node-0 winning term 2 ms
+  later. It failed in **0.20s — never a slow-machine problem at all**, a pure
+  race that load merely widens. Now requires `Candidate` on *every* sample
+  across a 3s window, sized from the fixture's own 8 ms heartbeat.
+- **`TestManager_Stress_ConcurrentReadWrite`** → made **honestly inconclusive**
+  (the HXC-215 shape). Its old harness had one signal — did it finish in budget?
+  — and reported an overrun as a deadlock, while its own evidence read
+  `{"deadlock":true,"error_count":0,"duration_ms":25001}`: 1920 calls proceeding
+  cleanly, just unfinished. The PASS path now carries **no wall-clock condition
+  at all**; deadlock is detected by forward progress (completed-iteration
+  counter + goroutine-state census from a real stack dump), so it fires *sooner*
+  than the old ceiling did.
+
+**Remaining work:** size `maxExtensionFactor` (currently 4) from a MEASURED
+distribution rather than the single 3×-oversubscription point it was set from —
+heavier load needs >100s — or cut the 16×120 matrix so it is not this expensive
+under contention. Then re-run the consensus test ≥5× under load; its mechanism
+and fix are proven but its load runs were never completed.
+
+Host note that cost that 5th run: the cgroup `pids.max` = 4096 ceiling was held
+at **3652 by other agents**, so the load generator correctly REFUSED to spawn
+rather than trigger the EAGAIN that HXC-215 chased. `taskset` is *not* a usable
+starvation substitute here — pinning to 2 CPUs made the race-instrumented run
+2.5× **faster**.
 
 ### Release-tag blockers (`helix-code-1.2.0-dev-0.0.1`)
 
