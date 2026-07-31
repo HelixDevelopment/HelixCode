@@ -32,6 +32,13 @@ type DeepSeekProvider struct {
 	models     []ModelInfo
 	lastHealth *ProviderHealth
 
+	// healthMu guards lastHealth (HXC-214). GetHealth is NAMED as a query but
+	// genuinely mutates the record, so callers invoke it from concurrent paths
+	// — health monitors, status endpoints, IsAvailable — assuming it is safe.
+	// Every read and write of lastHealth goes through recordHealth, and no
+	// network call is ever made with this lock held.
+	healthMu sync.Mutex
+
 	// catalogOnce/catalogMu guard the CONST-036 lazy live-catalog refresh.
 	catalogOnce sync.Once
 	catalogMu   sync.RWMutex
@@ -158,11 +165,15 @@ func (dp *DeepSeekProvider) IsAvailable(ctx context.Context) bool {
 	return err == nil && health.Status == "healthy"
 }
 
+// GetHealth probes the DeepSeek API and returns the resulting health record.
+//
+// The returned record is a COPY the caller owns outright — mutating it cannot
+// reach provider state (HXC-214).
 func (dp *DeepSeekProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/models", dp.endpoint), nil)
 	if err != nil {
-		dp.updateHealth("unhealthy", 0, dp.lastHealth.ErrorCount+1)
-		return dp.lastHealth, fmt.Errorf("failed to create health check request: %v", err)
+		return dp.recordHealth("unhealthy", 0, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("failed to create health check request: %v", err)
 	}
 	dp.setAuthHeaders(req)
 
@@ -170,14 +181,14 @@ func (dp *DeepSeekProvider) GetHealth(ctx context.Context) (*ProviderHealth, err
 	resp, err := dp.httpClient.Do(req)
 	latency := time.Since(start)
 	if err != nil {
-		dp.updateHealth("unhealthy", latency, dp.lastHealth.ErrorCount+1)
-		return dp.lastHealth, fmt.Errorf("health check failed: %v", err)
+		return dp.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		dp.updateHealth("unhealthy", latency, dp.lastHealth.ErrorCount+1)
-		return dp.lastHealth, fmt.Errorf("health check returned status %d", resp.StatusCode)
+		return dp.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check returned status %d", resp.StatusCode)
 	}
 
 	var modelsResponse struct {
@@ -186,13 +197,12 @@ func (dp *DeepSeekProvider) GetHealth(ctx context.Context) (*ProviderHealth, err
 		} `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&modelsResponse); err != nil {
-		dp.updateHealth("degraded", latency, dp.lastHealth.ErrorCount)
-		return dp.lastHealth, nil
+		// Still available: the endpoint answered, only the body was unreadable,
+		// so this is not a new connectivity failure.
+		return dp.recordHealth("degraded", latency, errCountKeep, modelCountUnchanged), nil
 	}
 
-	dp.updateHealth("healthy", latency, 0)
-	dp.lastHealth.ModelCount = len(modelsResponse.Data)
-	return dp.lastHealth, nil
+	return dp.recordHealth("healthy", latency, errCountReset, len(modelsResponse.Data)), nil
 }
 
 func (dp *DeepSeekProvider) Close() error {
@@ -467,11 +477,18 @@ func (dp *DeepSeekProvider) setAuthHeaders(req *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+dp.apiKey)
 }
 
-func (dp *DeepSeekProvider) updateHealth(status string, latency time.Duration, errorCount int) {
-	dp.lastHealth.Status = status
-	dp.lastHealth.Latency = latency
-	dp.lastHealth.ErrorCount = errorCount
-	dp.lastHealth.LastCheck = time.Now()
+// recordHealth applies a health verdict to lastHealth under healthMu and
+// returns a copy the caller owns outright (HXC-214). The whole verdict lands in
+// ONE critical section, so a concurrent reader cannot observe it half-applied.
+func (dp *DeepSeekProvider) recordHealth(
+	status string,
+	latency time.Duration,
+	adj errCountAdjust,
+	modelCount int,
+) *ProviderHealth {
+	dp.healthMu.Lock()
+	defer dp.healthMu.Unlock()
+	return applyProviderHealth(dp.lastHealth, status, latency, adj, modelCount)
 }
 
 // deepseekChatRequest mirrors the shared OpenAIRequest but adds the

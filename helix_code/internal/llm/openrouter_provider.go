@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,6 +23,13 @@ type OpenRouterProvider struct {
 	httpClient *http.Client
 	models     []ModelInfo
 	lastHealth *ProviderHealth
+
+	// healthMu guards lastHealth (HXC-214). GetHealth is NAMED as a query but
+	// genuinely mutates the record, so callers invoke it from concurrent paths
+	// — health monitors, status endpoints, IsAvailable — assuming it is safe.
+	// Every read and write of lastHealth goes through recordHealth, and no
+	// network call is ever made with this lock held.
+	healthMu sync.Mutex
 }
 
 // NewOpenRouterProvider creates a new OpenRouter provider
@@ -137,8 +145,8 @@ func (orp *OpenRouterProvider) GetHealth(ctx context.Context) (*ProviderHealth, 
 	// Check if we can reach the OpenRouter API
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/models", orp.endpoint), nil)
 	if err != nil {
-		orp.updateHealth("unhealthy", 0, orp.lastHealth.ErrorCount+1)
-		return orp.lastHealth, fmt.Errorf("failed to create health check request: %v", err)
+		return orp.recordHealth("unhealthy", 0, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("failed to create health check request: %v", err)
 	}
 
 	orp.setAuthHeaders(req)
@@ -148,14 +156,14 @@ func (orp *OpenRouterProvider) GetHealth(ctx context.Context) (*ProviderHealth, 
 	latency := time.Since(start)
 
 	if err != nil {
-		orp.updateHealth("unhealthy", latency, orp.lastHealth.ErrorCount+1)
-		return orp.lastHealth, fmt.Errorf("health check failed: %v", err)
+		return orp.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		orp.updateHealth("unhealthy", latency, orp.lastHealth.ErrorCount+1)
-		return orp.lastHealth, fmt.Errorf("health check returned status %d", resp.StatusCode)
+		return orp.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check returned status %d", resp.StatusCode)
 	}
 
 	// Parse response to get model count
@@ -166,14 +174,12 @@ func (orp *OpenRouterProvider) GetHealth(ctx context.Context) (*ProviderHealth, 
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&modelsResponse); err != nil {
-		orp.updateHealth("degraded", latency, orp.lastHealth.ErrorCount)
-		return orp.lastHealth, nil // Still consider it available
+		// Still consider it available: the endpoint answered, only the body was
+		// unreadable, so this is not a new connectivity failure.
+		return orp.recordHealth("degraded", latency, errCountKeep, modelCountUnchanged), nil
 	}
 
-	orp.updateHealth("healthy", latency, 0)
-	orp.lastHealth.ModelCount = len(modelsResponse.Data)
-
-	return orp.lastHealth, nil
+	return orp.recordHealth("healthy", latency, errCountReset, len(modelsResponse.Data)), nil
 }
 
 // Close closes the provider
@@ -557,11 +563,18 @@ func (orp *OpenRouterProvider) setAuthHeaders(req *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+orp.apiKey)
 }
 
-func (orp *OpenRouterProvider) updateHealth(status string, latency time.Duration, errorCount int) {
-	orp.lastHealth.Status = status
-	orp.lastHealth.Latency = latency
-	orp.lastHealth.ErrorCount = errorCount
-	orp.lastHealth.LastCheck = time.Now()
+// recordHealth applies a health verdict to lastHealth under healthMu and
+// returns a copy the caller owns outright (HXC-214). The whole verdict lands in
+// ONE critical section, so a concurrent reader cannot observe it half-applied.
+func (orp *OpenRouterProvider) recordHealth(
+	status string,
+	latency time.Duration,
+	adj errCountAdjust,
+	modelCount int,
+) *ProviderHealth {
+	orp.healthMu.Lock()
+	defer orp.healthMu.Unlock()
+	return applyProviderHealth(orp.lastHealth, status, latency, adj, modelCount)
 }
 
 // Note: OpenAI API types are reused for OpenRouter compatibility

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +24,20 @@ type OpenAICompatibleProvider struct {
 	models     []ModelInfo
 	lastHealth *ProviderHealth
 	isRunning  bool
+
+	// healthMu guards lastHealth (HXC-214). GetHealth is NAMED as a query but
+	// genuinely mutates the record, so callers invoke it from concurrent paths
+	// — health monitors, status endpoints, IsAvailable, and XiaomiProvider,
+	// which delegates its own GetHealth straight to this type — assuming it is
+	// safe. Every read and write of lastHealth goes through recordHealth, and
+	// no network call is ever made with this lock held.
+	//
+	// KNOWN-UNGUARDED, reported separately (NOT fixed here): isRunning is
+	// written by Stop() and read by Generate/Stream/IsAvailable/GetHealth with
+	// no synchronization at all. Bringing it under a lock touches five call
+	// sites outside the health path, so it belongs to its own change rather
+	// than being smuggled into this one.
+	healthMu sync.Mutex
 }
 
 // OpenAICompatibleConfig holds configuration for OpenAI-compatible providers
@@ -303,8 +318,8 @@ func (p *OpenAICompatibleProvider) GetHealth(ctx context.Context) (*ProviderHeal
 	url := p.getAPIURL(p.config.ModelEndpoint)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		p.updateHealth("unhealthy", 0, p.lastHealth.ErrorCount+1)
-		return p.lastHealth, fmt.Errorf("failed to create health check request: %v", err)
+		return p.recordHealth("unhealthy", 0, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("failed to create health check request: %v", err)
 	}
 
 	// Set headers
@@ -319,14 +334,14 @@ func (p *OpenAICompatibleProvider) GetHealth(ctx context.Context) (*ProviderHeal
 	latency := time.Since(start)
 
 	if err != nil {
-		p.updateHealth("unhealthy", latency, p.lastHealth.ErrorCount+1)
-		return p.lastHealth, fmt.Errorf("health check failed: %v", err)
+		return p.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		p.updateHealth("unhealthy", latency, p.lastHealth.ErrorCount+1)
-		return p.lastHealth, fmt.Errorf("health check returned status %d", resp.StatusCode)
+		return p.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check returned status %d", resp.StatusCode)
 	}
 
 	// Try to parse models to get model count
@@ -335,14 +350,12 @@ func (p *OpenAICompatibleProvider) GetHealth(ctx context.Context) (*ProviderHeal
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&modelsResponse); err != nil {
-		p.updateHealth("degraded", latency, p.lastHealth.ErrorCount)
-		return p.lastHealth, nil // Still consider it available
+		// Still consider it available: the endpoint answered, only the body was
+		// unreadable, so this is not a new connectivity failure.
+		return p.recordHealth("degraded", latency, errCountKeep, modelCountUnchanged), nil
 	}
 
-	p.updateHealth("healthy", latency, 0)
-	p.lastHealth.ModelCount = len(modelsResponse.Data)
-
-	return p.lastHealth, nil
+	return p.recordHealth("healthy", latency, errCountReset, len(modelsResponse.Data)), nil
 }
 
 // Close stops the provider
@@ -721,11 +734,18 @@ func (p *OpenAICompatibleProvider) getAPIURL(endpoint string) string {
 	return strings.TrimSuffix(baseURL, "/") + endpoint
 }
 
-func (p *OpenAICompatibleProvider) updateHealth(status string, latency time.Duration, errorCount int) {
-	p.lastHealth.Status = status
-	p.lastHealth.Latency = latency
-	p.lastHealth.ErrorCount = errorCount
-	p.lastHealth.LastCheck = time.Now()
+// recordHealth applies a health verdict to lastHealth under healthMu and
+// returns a copy the caller owns outright (HXC-214). The whole verdict lands in
+// ONE critical section, so a concurrent reader cannot observe it half-applied.
+func (p *OpenAICompatibleProvider) recordHealth(
+	status string,
+	latency time.Duration,
+	adj errCountAdjust,
+	modelCount int,
+) *ProviderHealth {
+	p.healthMu.Lock()
+	defer p.healthMu.Unlock()
+	return applyProviderHealth(p.lastHealth, status, latency, adj, modelCount)
 }
 
 // Helper functions for model capabilities

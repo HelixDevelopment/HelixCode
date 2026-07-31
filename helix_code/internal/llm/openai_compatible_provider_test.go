@@ -713,21 +713,41 @@ func TestOpenAICompatibleProvider_SupportsVisionModel(t *testing.T) {
 	assert.False(t, provider.supportsVisionModel("text-only-model"))
 }
 
-func TestOpenAICompatibleProvider_UpdateHealth(t *testing.T) {
+// TestOpenAICompatibleProvider_RecordHealth
+//
+// HXC-214 reconciliation (§11.4.120). Was TestOpenAICompatibleProvider_UpdateHealth,
+// driving updateHealth(status, latency, absoluteErrorCount). That absolute
+// parameter was the defect: callers computed `lastHealth.ErrorCount+1` outside
+// any lock, so two concurrent failures both stored N+1 and one error vanished.
+// The count is now an INTENT applied under the same lock as the write. The
+// assertions below still pin the same behaviour and now also pin the
+// per-intent semantics the fix introduced.
+func TestOpenAICompatibleProvider_RecordHealth(t *testing.T) {
 	provider := &OpenAICompatibleProvider{
 		lastHealth: &ProviderHealth{},
 	}
 
-	// Test healthy update
-	provider.updateHealth("healthy", 50*time.Millisecond, 0)
+	// A successful probe clears the streak and records the model count.
+	provider.recordHealth("healthy", 50*time.Millisecond, errCountReset, 3)
 	assert.Equal(t, "healthy", provider.lastHealth.Status)
 	assert.Equal(t, 50*time.Millisecond, provider.lastHealth.Latency)
 	assert.Equal(t, 0, provider.lastHealth.ErrorCount)
+	assert.Equal(t, 3, provider.lastHealth.ModelCount)
 
-	// Test unhealthy update
-	provider.updateHealth("unhealthy", 100*time.Millisecond, 5)
+	// Consecutive failures accumulate one at a time.
+	for i := 1; i <= 5; i++ {
+		provider.recordHealth("unhealthy", 100*time.Millisecond, errCountIncrement, modelCountUnchanged)
+		assert.Equal(t, i, provider.lastHealth.ErrorCount)
+	}
 	assert.Equal(t, "unhealthy", provider.lastHealth.Status)
 	assert.Equal(t, 100*time.Millisecond, provider.lastHealth.Latency)
+	// The failure paths keep the last good model count rather than zeroing it.
+	assert.Equal(t, 3, provider.lastHealth.ModelCount)
+
+	// "degraded" means the endpoint answered but the body was unreadable — not
+	// a new connectivity failure, so the streak is left alone.
+	provider.recordHealth("degraded", 10*time.Millisecond, errCountKeep, modelCountUnchanged)
+	assert.Equal(t, "degraded", provider.lastHealth.Status)
 	assert.Equal(t, 5, provider.lastHealth.ErrorCount)
 }
 

@@ -26,6 +26,13 @@ type AnthropicProvider struct {
 	models     []ModelInfo
 	lastHealth *ProviderHealth
 
+	// healthMu guards lastHealth (HXC-214). GetHealth is NAMED as a query but
+	// genuinely mutates the record, so callers invoke it from concurrent paths
+	// — health monitors, status endpoints — assuming it is safe. Every read and
+	// write of lastHealth goes through storeHealth, and the Generate probe is
+	// issued with this lock NOT held.
+	healthMu sync.Mutex
+
 	// catalogOnce/catalogMu guard the CONST-036 lazy live-catalog refresh from
 	// Anthropic's GET /v1/models (seed set at construction, no network there).
 	catalogOnce sync.Once
@@ -960,14 +967,24 @@ func (ap *AnthropicProvider) IsAvailable(ctx context.Context) bool {
 	return ap.apiKey != ""
 }
 
-// GetHealth returns the health status of the provider
+// GetHealth returns the health status of the provider.
+//
+// The returned record is a COPY the caller owns outright — mutating it cannot
+// reach provider state (HXC-214).
 func (ap *AnthropicProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 	startTime := time.Now()
+
+	// ap.models is guarded by catalogMu — refreshCatalogOnce writes it under
+	// catalogMu.Lock(). Reading it here with no lock held raced the CONST-036
+	// live-catalogue refresh (HXC-214).
+	ap.catalogMu.RLock()
+	modelCount := len(ap.models)
+	ap.catalogMu.RUnlock()
 
 	// Simple health check: try to list models or make a minimal request
 	health := &ProviderHealth{
 		LastCheck:  time.Now(),
-		ModelCount: len(ap.models),
+		ModelCount: modelCount,
 	}
 
 	// Test with a minimal request
@@ -979,18 +996,38 @@ func (ap *AnthropicProvider) GetHealth(ctx context.Context) (*ProviderHealth, er
 		Temperature: 0.1,
 	}
 
+	// The probe is issued with no lock held: a hung endpoint would otherwise
+	// block every concurrent health reader for the full HTTP timeout.
 	_, err := ap.Generate(ctx, testReq)
 	if err != nil {
 		health.Status = "unhealthy"
 		health.ErrorCount = 1
+		// Deliberately NOT stored: the pre-fix code recorded only successful
+		// probes in lastHealth, and `health` is local to this call, so the
+		// caller cannot reach provider state through it either way.
 		return health, err
 	}
 
 	health.Status = "healthy"
 	health.Latency = time.Since(startTime)
-	ap.lastHealth = health
 
-	return health, nil
+	return ap.storeHealth(health), nil
+}
+
+// storeHealth records a successful health verdict under healthMu and returns a
+// copy the caller owns outright (HXC-214).
+//
+// Unlike its five siblings in this package, AnthropicProvider builds a fresh
+// record per probe rather than mutating one in place, so there is no verdict to
+// assemble here — only the store and the copy. The two invariants are the same:
+// the write to lastHealth is guarded, and the caller never receives the pointer
+// the provider kept.
+func (ap *AnthropicProvider) storeHealth(health *ProviderHealth) *ProviderHealth {
+	ap.healthMu.Lock()
+	defer ap.healthMu.Unlock()
+	ap.lastHealth = health
+	snapshot := *health
+	return &snapshot
 }
 
 // Close closes the provider and cleans up resources

@@ -26,6 +26,13 @@ type OpenAIProvider struct {
 	models     []ModelInfo
 	lastHealth *ProviderHealth
 
+	// healthMu guards lastHealth (HXC-214). GetHealth is NAMED as a query but
+	// genuinely mutates the record, so callers invoke it from concurrent paths
+	// — health monitors, status endpoints, IsAvailable — assuming it is safe.
+	// Every read and write of lastHealth goes through recordHealth, and no
+	// network call is ever made with this lock held.
+	healthMu sync.Mutex
+
 	// catalogOnce/catalogMu guard the CONST-036 lazy live-catalog refresh.
 	// Construction seeds a verified static list (no network at construction —
 	// preserves the no-network-on-NewXProvider contract); the first GetModels()
@@ -180,13 +187,16 @@ func (op *OpenAIProvider) IsAvailable(ctx context.Context) bool {
 	return err == nil && health.Status == "healthy"
 }
 
-// GetHealth returns provider health status
+// GetHealth probes the OpenAI API and returns the resulting health record.
+//
+// The returned record is a COPY the caller owns outright — mutating it cannot
+// reach provider state (HXC-214).
 func (op *OpenAIProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 	// Check if we can reach the OpenAI API
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/models", op.endpoint), nil)
 	if err != nil {
-		op.updateHealth("unhealthy", 0, 1)
-		return op.lastHealth, fmt.Errorf("failed to create health check request: %v", err)
+		return op.recordHealth("unhealthy", 0, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("failed to create health check request: %v", err)
 	}
 
 	op.setAuthHeaders(req)
@@ -196,14 +206,14 @@ func (op *OpenAIProvider) GetHealth(ctx context.Context) (*ProviderHealth, error
 	latency := time.Since(start)
 
 	if err != nil {
-		op.updateHealth("unhealthy", latency, op.lastHealth.ErrorCount+1)
-		return op.lastHealth, fmt.Errorf("health check failed: %v", err)
+		return op.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		op.updateHealth("unhealthy", latency, op.lastHealth.ErrorCount+1)
-		return op.lastHealth, fmt.Errorf("health check returned status %d", resp.StatusCode)
+		return op.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check returned status %d", resp.StatusCode)
 	}
 
 	// Parse response to get model count
@@ -214,14 +224,12 @@ func (op *OpenAIProvider) GetHealth(ctx context.Context) (*ProviderHealth, error
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&modelsResponse); err != nil {
-		op.updateHealth("degraded", latency, op.lastHealth.ErrorCount)
-		return op.lastHealth, nil // Still consider it available
+		// Still consider it available: the endpoint answered, only the body was
+		// unreadable, so this is not a new connectivity failure.
+		return op.recordHealth("degraded", latency, errCountKeep, modelCountUnchanged), nil
 	}
 
-	op.updateHealth("healthy", latency, 0)
-	op.lastHealth.ModelCount = len(modelsResponse.Data)
-
-	return op.lastHealth, nil
+	return op.recordHealth("healthy", latency, errCountReset, len(modelsResponse.Data)), nil
 }
 
 // Close closes the provider
@@ -494,11 +502,18 @@ func (op *OpenAIProvider) setAuthHeaders(req *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+op.apiKey)
 }
 
-func (op *OpenAIProvider) updateHealth(status string, latency time.Duration, errorCount int) {
-	op.lastHealth.Status = status
-	op.lastHealth.Latency = latency
-	op.lastHealth.ErrorCount = errorCount
-	op.lastHealth.LastCheck = time.Now()
+// recordHealth applies a health verdict to lastHealth under healthMu and
+// returns a copy the caller owns outright (HXC-214). The whole verdict lands in
+// ONE critical section, so a concurrent reader cannot observe it half-applied.
+func (op *OpenAIProvider) recordHealth(
+	status string,
+	latency time.Duration,
+	adj errCountAdjust,
+	modelCount int,
+) *ProviderHealth {
+	op.healthMu.Lock()
+	defer op.healthMu.Unlock()
+	return applyProviderHealth(op.lastHealth, status, latency, adj, modelCount)
 }
 
 // GetContextWindow returns the model's context window size in tokens.

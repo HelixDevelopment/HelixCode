@@ -276,7 +276,18 @@ func TestAPIURLGeneration(t *testing.T) {
 	}
 }
 
-// TestHealthStatusUpdate tests health status updating
+// TestHealthStatusUpdate tests health status updating.
+//
+// HXC-214 reconciliation (§11.4.120). This test drove
+// updateHealth(status, latency, absoluteErrorCount), which no longer exists:
+// the error count is now expressed as an INTENT and applied inside the same
+// critical section as the write, because computing `lastHealth.ErrorCount+1` at
+// the call site with no lock held let two concurrent failures both read N and
+// both store N+1, losing an error. The invariant this test guards — a verdict
+// writes Status, Latency and ErrorCount onto the provider's stored record — is
+// unchanged and still asserted; only the entry point moved. It additionally
+// asserts the property the fix introduced: the caller receives a copy, not the
+// provider's own record.
 func TestHealthStatusUpdate(t *testing.T) {
 	config := OpenAICompatibleConfig{
 		BaseURL: "http://localhost:8000",
@@ -291,17 +302,26 @@ func TestHealthStatusUpdate(t *testing.T) {
 	assert.Equal(t, "unknown", provider.lastHealth.Status)
 	assert.Equal(t, 0, provider.lastHealth.ErrorCount)
 
-	// Update health status
-	provider.updateHealth("healthy", 100*time.Millisecond, 0)
+	// A successful verdict clears the failure streak and records the count.
+	returned := provider.recordHealth("healthy", 100*time.Millisecond, errCountReset, 7)
 	assert.Equal(t, "healthy", provider.lastHealth.Status)
 	assert.Equal(t, 100*time.Millisecond, provider.lastHealth.Latency)
 	assert.Equal(t, 0, provider.lastHealth.ErrorCount)
+	assert.Equal(t, 7, provider.lastHealth.ModelCount)
 
-	// Update with error
-	provider.updateHealth("unhealthy", 200*time.Millisecond, 1)
+	// The caller owns what it was handed: writing to it must not reach the
+	// provider's record.
+	require.NotSame(t, provider.lastHealth, returned)
+	returned.Status = "CORRUPTED-BY-CALLER"
+	assert.Equal(t, "healthy", provider.lastHealth.Status)
+
+	// A failure verdict increments the streak and keeps the last known model
+	// count rather than zeroing it.
+	provider.recordHealth("unhealthy", 200*time.Millisecond, errCountIncrement, modelCountUnchanged)
 	assert.Equal(t, "unhealthy", provider.lastHealth.Status)
 	assert.Equal(t, 200*time.Millisecond, provider.lastHealth.Latency)
 	assert.Equal(t, 1, provider.lastHealth.ErrorCount)
+	assert.Equal(t, 7, provider.lastHealth.ModelCount)
 }
 
 // TestConvertToOpenAIRequest tests request conversion

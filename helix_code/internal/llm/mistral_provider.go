@@ -28,6 +28,13 @@ type MistralProvider struct {
 	models     []ModelInfo
 	lastHealth *ProviderHealth
 
+	// healthMu guards lastHealth (HXC-214). GetHealth is NAMED as a query but
+	// genuinely mutates the record, so callers invoke it from concurrent paths
+	// — health monitors, status endpoints, IsAvailable — assuming it is safe.
+	// Every read and write of lastHealth goes through recordHealth, and no
+	// network call is ever made with this lock held.
+	healthMu sync.Mutex
+
 	// catalogOnce/catalogMu guard the CONST-036 lazy live-catalog refresh.
 	catalogOnce sync.Once
 	catalogMu   sync.RWMutex
@@ -144,11 +151,15 @@ func (mp *MistralProvider) IsAvailable(ctx context.Context) bool {
 	return err == nil && health.Status == "healthy"
 }
 
+// GetHealth probes the Mistral API and returns the resulting health record.
+//
+// The returned record is a COPY the caller owns outright — mutating it cannot
+// reach provider state (HXC-214).
 func (mp *MistralProvider) GetHealth(ctx context.Context) (*ProviderHealth, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/models", mp.endpoint), nil)
 	if err != nil {
-		mp.updateHealth("unhealthy", 0, mp.lastHealth.ErrorCount+1)
-		return mp.lastHealth, fmt.Errorf("failed to create health check request: %v", err)
+		return mp.recordHealth("unhealthy", 0, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("failed to create health check request: %v", err)
 	}
 	mp.setAuthHeaders(req)
 
@@ -156,14 +167,14 @@ func (mp *MistralProvider) GetHealth(ctx context.Context) (*ProviderHealth, erro
 	resp, err := mp.httpClient.Do(req)
 	latency := time.Since(start)
 	if err != nil {
-		mp.updateHealth("unhealthy", latency, mp.lastHealth.ErrorCount+1)
-		return mp.lastHealth, fmt.Errorf("health check failed: %v", err)
+		return mp.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check failed: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		mp.updateHealth("unhealthy", latency, mp.lastHealth.ErrorCount+1)
-		return mp.lastHealth, fmt.Errorf("health check returned status %d", resp.StatusCode)
+		return mp.recordHealth("unhealthy", latency, errCountIncrement, modelCountUnchanged),
+			fmt.Errorf("health check returned status %d", resp.StatusCode)
 	}
 
 	var modelsResponse struct {
@@ -172,13 +183,12 @@ func (mp *MistralProvider) GetHealth(ctx context.Context) (*ProviderHealth, erro
 		} `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&modelsResponse); err != nil {
-		mp.updateHealth("degraded", latency, mp.lastHealth.ErrorCount)
-		return mp.lastHealth, nil
+		// Still available: the endpoint answered, only the body was unreadable,
+		// so this is not a new connectivity failure.
+		return mp.recordHealth("degraded", latency, errCountKeep, modelCountUnchanged), nil
 	}
 
-	mp.updateHealth("healthy", latency, 0)
-	mp.lastHealth.ModelCount = len(modelsResponse.Data)
-	return mp.lastHealth, nil
+	return mp.recordHealth("healthy", latency, errCountReset, len(modelsResponse.Data)), nil
 }
 
 func (mp *MistralProvider) Close() error {
@@ -444,11 +454,18 @@ func (mp *MistralProvider) setAuthHeaders(req *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+mp.apiKey)
 }
 
-func (mp *MistralProvider) updateHealth(status string, latency time.Duration, errorCount int) {
-	mp.lastHealth.Status = status
-	mp.lastHealth.Latency = latency
-	mp.lastHealth.ErrorCount = errorCount
-	mp.lastHealth.LastCheck = time.Now()
+// recordHealth applies a health verdict to lastHealth under healthMu and
+// returns a copy the caller owns outright (HXC-214). The whole verdict lands in
+// ONE critical section, so a concurrent reader cannot observe it half-applied.
+func (mp *MistralProvider) recordHealth(
+	status string,
+	latency time.Duration,
+	adj errCountAdjust,
+	modelCount int,
+) *ProviderHealth {
+	mp.healthMu.Lock()
+	defer mp.healthMu.Unlock()
+	return applyProviderHealth(mp.lastHealth, status, latency, adj, modelCount)
 }
 
 // mistralChatRequest mirrors the shared OpenAIRequest but adds the
