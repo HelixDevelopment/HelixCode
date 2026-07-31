@@ -7,6 +7,30 @@
 `git log --grep HXC-186`. The fix commit touches only `scripts/` + `docs/`, so
 it is not itself a feature-shipping commit under G7's heuristic.)_
 
+## Commit provenance — read this before `git log`-ing for the fix
+
+The HXC-186 fix does **not** have a commit of its own. Between this agent's
+`git add` (explicit pathspec, 12 paths) and its `git commit`, a concurrent
+agent ran a broad stage-and-commit in the same checkout and swept all 12 staged
+paths into **`790d097c`**, whose subject is
+`fix(gitignore): exclude 3 oversized raw captures; commit the recovered evidence`.
+This agent's own `git commit` then reported "no changes added to commit" (rc 1)
+because the index had already been consumed.
+
+Nothing was lost or corrupted — the content in `790d097c` is byte-for-byte what
+was staged, and the working tree is clean for all 12 paths. But the fix is
+recorded under an unrelated subject, so `git log --grep HXC-186` will not find
+it. Search `git show 790d097c -- scripts/verify_qa_evidence.sh` instead.
+
+The other agent's commit was deliberately **not** amended: rewriting a
+concurrent agent's commit in a shared checkout is exactly the §11.4.84 hazard
+that caused this, and §9.2 / §11.4.113 make silent history rewriting of another
+stream's work the wrong remedy. This note is the additive correction instead.
+
+This is itself a live instance of the §11.4.84 working-tree-quiescence problem
+in a multi-agent checkout: an explicit pathspec protects *what this agent
+stages*, but it cannot protect a staged index from another agent's `git add -A`.
+
 ## The defect
 
 `scripts/verify_qa_evidence.sh` RULE 3 cleared a feature commit whenever any
