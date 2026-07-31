@@ -1,0 +1,38 @@
+MUTATION: applyProviderHealth + AnthropicProvider.storeHealth return the LIVE pointer instead of a copy.
+EXPECTED: the aliasing guard FAILS for all six providers; the race guard still PASSES (locking untouched).
+
+--- FAIL: TestProviderHealth_HXC214_NoAliasing (0.00s)
+    --- FAIL: TestProviderHealth_HXC214_NoAliasing/openai (0.00s)
+        provider_health_hxc214_race_test.go:253: GetHealth returned the provider's OWN *ProviderHealth (0x99a19b6e050): every caller can mutate provider state through it
+        provider_health_hxc214_race_test.go:268: a caller's writes to the value returned by GetHealth changed the provider's own health record.
+              before: {Status:healthy LastCheck:2026-07-31 11:46:16.674906544 +0500 +05 m=+0.082696029 Latency:256.217µs ModelCount:3 ErrorCount:0 Message:}
+              after:  {Status:CORRUPTED-BY-CALLER LastCheck:2026-07-31 11:46:16.674906544 +0500 +05 m=+0.082696029 Latency:256.217µs ModelCount:-321 ErrorCount:987654 Message:caller scribbled here}
+    --- FAIL: TestProviderHealth_HXC214_NoAliasing/deepseek (0.00s)
+        provider_health_hxc214_race_test.go:253: GetHealth returned the provider's OWN *ProviderHealth (0x99a19b6e0a0): every caller can mutate provider state through it
+        provider_health_hxc214_race_test.go:268: a caller's writes to the value returned by GetHealth changed the provider's own health record.
+              before: {Status:healthy LastCheck:2026-07-31 11:46:16.675209722 +0500 +05 m=+0.082999207 Latency:176.126µs ModelCount:3 ErrorCount:0 Message:}
+              after:  {Status:CORRUPTED-BY-CALLER LastCheck:2026-07-31 11:46:16.675209722 +0500 +05 m=+0.082999207 Latency:176.126µs ModelCount:-321 ErrorCount:987654 Message:caller scribbled here}
+    --- FAIL: TestProviderHealth_HXC214_NoAliasing/mistral (0.00s)
+        provider_health_hxc214_race_test.go:253: GetHealth returned the provider's OWN *ProviderHealth (0x99a19b6e0f0): every caller can mutate provider state through it
+        provider_health_hxc214_race_test.go:268: a caller's writes to the value returned by GetHealth changed the provider's own health record.
+              before: {Status:healthy LastCheck:2026-07-31 11:46:16.675341131 +0500 +05 m=+0.083130626 Latency:57.647µs ModelCount:3 ErrorCount:0 Message:}
+              after:  {Status:CORRUPTED-BY-CALLER LastCheck:2026-07-31 11:46:16.675341131 +0500 +05 m=+0.083130626 Latency:57.647µs ModelCount:-321 ErrorCount:987654 Message:caller scribbled here}
+    --- FAIL: TestProviderHealth_HXC214_NoAliasing/openrouter (0.00s)
+        provider_health_hxc214_race_test.go:253: GetHealth returned the provider's OWN *ProviderHealth (0x99a19b6e140): every caller can mutate provider state through it
+        provider_health_hxc214_race_test.go:268: a caller's writes to the value returned by GetHealth changed the provider's own health record.
+              before: {Status:healthy LastCheck:2026-07-31 11:46:16.675471357 +0500 +05 m=+0.083260852 Latency:63.686µs ModelCount:3 ErrorCount:0 Message:}
+              after:  {Status:CORRUPTED-BY-CALLER LastCheck:2026-07-31 11:46:16.675471357 +0500 +05 m=+0.083260852 Latency:63.686µs ModelCount:-321 ErrorCount:987654 Message:caller scribbled here}
+    --- FAIL: TestProviderHealth_HXC214_NoAliasing/anthropic (0.00s)
+        provider_health_hxc214_race_test.go:253: GetHealth returned the provider's OWN *ProviderHealth (0x99a19b6e780): every caller can mutate provider state through it
+        provider_health_hxc214_race_test.go:268: a caller's writes to the value returned by GetHealth changed the provider's own health record.
+              before: {Status:healthy LastCheck:2026-07-31 11:46:16.675488644 +0500 +05 m=+0.083278129 Latency:241.365µs ModelCount:11 ErrorCount:0 Message:}
+              after:  {Status:CORRUPTED-BY-CALLER LastCheck:2026-07-31 11:46:16.675488644 +0500 +05 m=+0.083278129 Latency:241.365µs ModelCount:-321 ErrorCount:987654 Message:caller scribbled here}
+    --- FAIL: TestProviderHealth_HXC214_NoAliasing/openai_compatible (0.00s)
+        provider_health_hxc214_race_test.go:253: GetHealth returned the provider's OWN *ProviderHealth (0x99a1974e320): every caller can mutate provider state through it
+        provider_health_hxc214_race_test.go:268: a caller's writes to the value returned by GetHealth changed the provider's own health record.
+              before: {Status:healthy LastCheck:2026-07-31 11:46:16.67583036 +0500 +05 m=+0.083619855 Latency:57.396µs ModelCount:3 ErrorCount:0 Message:}
+              after:  {Status:CORRUPTED-BY-CALLER LastCheck:2026-07-31 11:46:16.67583036 +0500 +05 m=+0.083619855 Latency:57.396µs ModelCount:-321 ErrorCount:987654 Message:caller scribbled here}
+FAIL
+FAIL	dev.helix.code/internal/llm	0.090s
+FAIL
+EXIT=1

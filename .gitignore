@@ -18,6 +18,23 @@ shared/
 *.log
 logs/
 
+# ...EXCEPT captured QA evidence (§11.4.83). The blanket `*.log` above was
+# silently swallowing evidence: 38 directories under docs/qa/ hold .log files
+# that were never committed, so their runs exist only on the machine that
+# produced them. Three of those back items closed on 2026-07-31, meaning the
+# closure cited evidence a fresh clone cannot see — a §11.4.5 gap created by a
+# repository-hygiene rule, not by anyone's carelessness.
+#
+# Evidence is the ONE class of file that must never be ignored: the whole point
+# of docs/qa/<run-id>/ is that a PASS is auditable after the fact by someone
+# else. An ignored transcript is indistinguishable from a transcript that was
+# never captured.
+#
+# Agents kept hitting this and working around it by renaming to .txt (1445
+# committed .txt vs 0 .log). That workaround only helps whoever remembers it,
+# which is why the rule is fixed here instead.
+!docs/qa/**/*.log
+
 # Backup files
 *.bak
 *.backup

@@ -1,0 +1,35 @@
+--- FAIL: TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState (0.00s)
+    auto_llm_manager_hxc205_race_test.go:250: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/auto_llm_manager_hxc205_race_test.go:250
+        	Error:      	Should not be: "corrupted-by-caller"
+        	Test:       	TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState
+        	Messages:   	GetStatus returned a SHALLOW copy — Health is a shared pointer (HXC-205)
+    auto_llm_manager_hxc205_race_test.go:252: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/auto_llm_manager_hxc205_race_test.go:252
+        	Error:      	Should be false
+        	Test:       	TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState
+        	Messages:   	a caller flipping Health.IsHealthy must not change what the manager reports (HXC-205)
+    auto_llm_manager_hxc205_race_test.go:254: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/auto_llm_manager_hxc205_race_test.go:254
+        	Error:      	Should not be: 99
+        	Test:       	TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState
+        	Messages:   	GetStatus returned a SHALLOW copy — Metrics is a shared pointer (HXC-205)
+    auto_llm_manager_hxc205_race_test.go:256: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/auto_llm_manager_hxc205_race_test.go:256
+        	Error:      	Should be false
+        	Test:       	TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState
+        	Messages:   	GetStatus returned a SHALLOW copy — Config is a shared map (HXC-205)
+    auto_llm_manager_hxc205_race_test.go:267: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/auto_llm_manager_hxc205_race_test.go:267
+        	Error:      	Expected and actual point to the same object: 0x27e77fc1e140 &llm.HealthStatus{Status:"corrupted-by-caller", ResponseTime:0, LastCheck:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC), Error:"", IsHealthy:true}
+        	Test:       	TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState
+        	Messages:   	successive calls must return independent Health records
+    auto_llm_manager_hxc205_race_test.go:269: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/llm/auto_llm_manager_hxc205_race_test.go:269
+        	Error:      	Expected and actual point to the same object: 0x27e77fc1e190 &llm.PerformanceMetrics{TokensPerSecond:0, MemoryUsage:0, CPUUsage:0, ActiveRequests:0, TotalRequests:0, ErrorRate:99, LastUpdated:time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)}
+        	Test:       	TestAutoLLMManager_HXC205_GetStatusIsNotLiveInternalState
+        	Messages:   	successive calls must return independent Metrics records
+FAIL
+FAIL	dev.helix.code/internal/llm	0.012s
+FAIL
+EXIT=1 (MUST be non-zero)
