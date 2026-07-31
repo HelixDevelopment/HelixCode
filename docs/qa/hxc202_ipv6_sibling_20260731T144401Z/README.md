@@ -148,3 +148,39 @@ actually dialled or reported. The sweep in §2 enumerates every remaining
 
 **Tree-wide including submodules: no** — `submodules/containers` still carries
 the defect (§2), and it is another project.
+
+## 7. Commit attribution — HXC-202 landed inside `a0dc39a5`, not its own commit
+
+Recorded per the precedent already set in this repo by `9fc97eb5` ("HXC-186 —
+record that the fix landed inside 790d097c, not its own commit").
+
+While this item was being verified, two concurrent sweeps by other agents staged
+and committed the whole HXC-202 change set before it could be committed under its
+own message:
+
+- `790d097c` — swept 6 of the RED/GREEN evidence captures.
+- `a0dc39a5` ("chore(session): land in-flight agent work + bump helix_agent for
+  HXC-172") — swept the remaining evidence plus **all five source files**:
+  `applications/harmony_os/{main.go,server_url.go,hxc202_ipv6_addr_test.go}` and
+  `cmd/security_scan/{main.go,hxc202_ipv6_addr_test.go}`.
+
+This is the §11.4.84 working-tree-quiescence hazard in reverse: a foreign
+`git add` swept files belonging to another agent's in-flight unit of work. No
+history is rewritten to correct it (§11.4.113 — force-push is absolutely
+forbidden, and the content is correct where it sits).
+
+**Verified after the fact — the swept content is the FINAL, FIXED state, not a
+mid-edit RED snapshot** (`git show HEAD:<path>`):
+
+- `server_url.go:53` → `return "http://" + netutil.JoinHostPort(cfg.Server.Address, cfg.Server.Port)`
+- `harmony_os/main.go:349` → `app.apiClient = NewAPIClient(apiServerURL(cfg))`
+- `security_scan/main.go:96` → `return "http://" + netutil.JoinHostPortStr(sonarqubeHost(), sonarqubePort())`
+- `security_scan/main.go:120` → `URL:     sonarqubeHealthURL(),`
+
+`git diff HEAD` over every HXC-202 path is empty: the working tree and HEAD
+agree, and the RED/GREEN evidence in this directory was captured against exactly
+this content.
+
+**Consequence for a cold session:** searching `git log` for an "HXC-202" commit
+subject finds nothing. The change is in `a0dc39a5`; this document is the
+attribution record.
