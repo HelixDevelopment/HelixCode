@@ -1,0 +1,16 @@
+STEP 1/5: FROM docker.io/nvidia/cuda:12.8.1-devel-ubuntu22.04
+STEP 2/5: RUN apt-get update && apt-get install -y --no-install-recommends         build-essential cmake git ca-certificates pkg-config         libcurl4-openssl-dev libgomp1     && rm -rf /var/lib/apt/lists/*
+--> Using cache 563f7b0abd2b6526b858b51cebcd8a7f91f7a05a63f1e266c195c5c39efc597e
+--> 563f7b0abd2b
+STEP 3/5: RUN ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
+--> Using cache 2499b337fbb9622ca3904caa21a437a93e088082816bf7a1bbd600a8bd2c7c94
+--> 2499b337fbb9
+STEP 4/5: ENV TORCH_CUDA_ARCH_LIST=12.0     CMAKE_CUDA_ARCHITECTURES=120     LIBRARY_PATH=/usr/local/cuda/lib64/stubs
+--> Using cache 516e734b475a3ac1e9ef010a33e45c4f006be07de12b65eea34ce330e699e5fb
+--> 516e734b475a
+STEP 5/5: LABEL org.helix.programme="helixllm-full-extension"       org.helix.cuda="12.8.1"       org.helix.arch="sm_120-blackwell"       org.helix.base="nvidia/cuda:12.8.1-devel-ubuntu22.04"
+--> Using cache 3b58c891ee1f2327727cc16b799478453fbc375464916d8b44b275c981fb25cd
+COMMIT helixllm/cuda-base:12.8.1
+--> 3b58c891ee1f
+Successfully tagged localhost/helixllm/cuda-base:12.8.1
+3b58c891ee1f2327727cc16b799478453fbc375464916d8b44b275c981fb25cd

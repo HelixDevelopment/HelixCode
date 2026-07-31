@@ -1,0 +1,129 @@
+=== §11.4.83 docs/qa/ evidence release gate (baseline: 925169c98945ca0fee1e84dae53ad494e4897832) ===
+===========================================================================
+ §11.4.83 docs/qa/ end-user evidence — ENFORCING release gate
+===========================================================================
+ Scope     : 925169c98945ca0fee1e84dae53ad494e4897832..HEAD  (commits before the baseline are exempt)
+ Opt-out   : commits whose message contains [no-qa-evidence] are exempt
+ Exit      : 0 when clean, 1 on any violation (release-gate blocking).
+---------------------------------------------------------------------------
+  ok     261f3d09  fix(tools/shell): HXC-211 — land the timeout's SIGKILL and bound Execute's drain
+         -> docs/qa/hxc211_bounded_wait_shell_executor_20260731T073118Z present (added by this commit (exact))
+  ok     4590c638  fix(deployment): guard all ProductionDeployer status access + stop publishing internal state (HXC-213)
+         -> docs/qa/hxc213_deployer_status_race_20260731T070422Z present (added by this commit (exact))
+  ok     69e16e36  fix(llm): HXC-214 — guard provider health state, stop returning the live record
+         -> docs/qa/hxc214_provider_health_race_20260731T063414Z present (added by this commit (exact))
+  ok     8490a5d9  fix(tools/shell): HXC-209 + HXC-210 — govern the background shell path by the same policy as the foreground
+         -> docs/qa/hxc209_hxc210_background_shell_policy_20260730T220801Z present (added by this commit (exact))
+  ok     9fd1395d  fix(llm): HXC-205 — synchronize AutoLLMManager provider state, deep-copy GetStatus
+         -> docs/qa/hxc205_autollm_race_20260730T214059Z present (added by this commit (exact))
+  ok     11861996  fix(security): source the database credential from .env, never a file literal (HXC-168, CONST-042)
+         -> docs/qa/hxc168_db_credential_env_sourced_11861996_20260730T220532Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     d99ce58c  fix(tools/shell): HXC-198 — bound ExecuteWithProgress's drain, the sibling HXC-184 missed
+         -> docs/qa/hxc198_shell_drain_bound_d99ce58c_20260730T220456Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     b2215793  fix(llm): HXC-203 — synchronize LocalLLMManager state, stop returning the live map
+         -> docs/qa/hxc203_localllm_race_20260729T000014Z present (added by this commit (exact))
+  ok     0c2f4940  docs+test(tools/shell): correct the abandoned-consumer bound, guard M2/M3
+         -> docs/qa/racefix_shell_bounds_0c2f4940_20260728T232950Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     9d082a7b  fix(net): HXC-185 — bracket IPv6 authorities via a shared netutil helper, with sink-side guards
+         -> docs/qa/netfix_ipv6_bracket_9d082a7b_20260728T233036Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     fa1b52b3  fix(tools/shell): make the drain grace a no-progress window, not a total budget
+         -> docs/qa/hxc211_bounded_wait_shell_executor_20260731T073118Z/README.md present (cites this commit's SHA (exact))
+  ok     1352caa5  fix(llm/helixagent): HXC-183 — ctx-guard both GenerateStream sends + register into the SHARED send-leak guard
+         -> docs/qa/hxc183_helixagent_send_leak_20260728T221659Z/README.md present (cites this commit's SHA (exact))
+  ok     b741d7da  fix(skills): resolve conventional-commit spec_url placeholder + add HXC-177 guard
+         -> docs/qa/hxc177_skill_placeholder_guard_20260729T031600Z/README.md present (cites this commit's SHA (exact))
+  ok     27754934  fix(terminal_ui,helixqa): snapshot QA sessions before rendering (HXC-174)
+         -> docs/qa/racefix_qa_dashboard_27754934_20260728T233102Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     a7d8dbb5  fix(tools/shell): bound ExecuteStream's drain wait so a grandchild cannot wedge the executor
+         -> docs/qa/hxc174_qa_dashboard_session_race_20260728T221246Z/README.md present (cites this commit's SHA (exact))
+  ok     bbd236c9  fix(cli,skills): wire skill auto-trigger into the REPL + register 7 governance skills
+         -> docs/qa/hxc162_hxc163_skills_wiring_20260728T205054Z/README.md present (cites this commit's SHA (exact))
+  ok     985d30a2  fix(helixqa): return a detached creation snapshot from StartSession (HXC-154)
+         -> docs/qa/hxc154_qa_session_created_status_20260729T005900Z present (added by this commit (exact))
+  ok     e1cde063  fix(fyneui): correct a false test comment, add Do coverage, close a stopOnce bypass
+         -> docs/qa/racefix_fyneui_docov_e1cde063_20260728T210714Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     0a4df699  fix(harmony_os,aurora_os): route background widget updates through internal/fyneui
+         -> docs/qa/racefix_fyneui_route_0a4df699_20260728T210614Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     ccce0b77  fix(harmony_os): stop the system monitor on a channel, not an unsynchronised bool
+         -> docs/qa/racefix_harmony_monitor_ccce0b77_20260728T210559Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     048ca700  test(verifier): replace sleep-driven TTL boundary tests with an injected clock
+         -> docs/qa/racefix_verifier_clock_048ca700_20260728T210445Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     fa9f0247  fix(tools/shell): stop Cmd.Wait tearing down stream pipes before the scanners read
+         -> docs/qa/racefix_shell_pipes_fa9f0247_20260728T210438Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     e879702c  fix(desktop): eliminate 265 data races from off-main-goroutine Fyne widget mutation
+         -> docs/qa/hxc151_hxc152_replica_red_falsifiability_20260729T0010Z/EVIDENCE.html present (cites this commit's SHA (exact))
+  ok     99ff7d8e  fix(applications/harmony_os,aurora_os): fix test constructions that panic on first execution
+         -> docs/qa/racefix_harmony_panic_99ff7d8e_20260728T210521Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     905a0b0a  fix(llm): eliminate guaranteed StreamWithTools deadlock + provider send-leak family
+         -> docs/qa/hxc183_helixagent_send_leak_20260728T221659Z/README.md present (cites this commit's SHA (exact))
+  ok     3c8197cf  fix(desktop,harmony_os,aurora_os,discovery): join teardown races + prioritize real answers over spurious signals in 4 unprioritized-select sites
+         -> docs/qa/racefix_select4_3c8197cf_20260728T210818Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     ed0cdcb8  fix(server,llm,persistence): 3 real defects from independent Fable review
+         -> docs/qa/racefix_fable3_ed0cdcb8_20260728T210426Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     640db264  fix(aurora_os): eliminate uint64 underflow in Optimize-performance memory-freed diagnostic
+         -> docs/qa/racefix_aurora_underflow_640db264_20260728T210456Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     dd3c0c3b  fix(persistence): close unprioritized-select race in autoSaveLoop (3rd instance)
+         -> docs/qa/racefix_persist_selectprio_dd3c0c3b_20260728T210415Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     e330149f  fix(llm/server): report the model that ACTUALLY served the request
+         -> docs/qa/docfix_cors_reconcile_f9dcf6a6_20260728T121101Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     56f7edf7  Auto-commit
+         -> docs/qa/phase1_fullhttp_e2e_20260727T120108Z present (added by this commit (exact))
+  ok     fbfffd7d  feat(HXC-119): ACP Phase-5 permission mapping onto tools/permissions (Option B)
+         -> docs/qa/hxc119_20260712T193000Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     0e3bb747  fix(HXC-145,HXC-147): update stale provider model-ids + harden nil-deref guards
+         -> docs/qa/hxc145_147_20260712T190000Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     6efadd15  fix(HXC-148): wire RAG into OpenAI/Anthropic wire-facade endpoints
+         -> docs/qa/hxc148_20260712T173000Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     225cdf77  feat(HXC-118): wire RAG retrieval-augmentation into server generate + stream endpoints
+         -> docs/qa/hxc118_20260712T151500Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     aa6b20b4  fix(HXC-117): surface 6 verifier-sourced CONST-040 capability flags in CLI list + server model JSON
+         -> docs/qa/hxc117_20260712T140900Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     3e67fa1a  close(HXC-135): publish 6 CONST-040 capability flags in verifier API + consumer wire-live (→ Fixed.md)
+         -> docs/qa/hxc135_20260712T130921Z present (added by this commit (exact))
+  ok     eb233785  fix(infra-defects): Azure nil-ptr panic + stale integration test + e2e -all flag
+         -> docs/qa/feat_azureguard_eb233785_20260728T101303Z/grounding.txt present (cites this commit's SHA (exact))
+  ok     edbd5a49  feat(const-040): Phase-2 — verifier capability sourcing + RAG retriever/wiring + ACP turn-generation
+         -> docs/qa/const040_phase2_20260712T073543Z present (added by this commit (exact))
+  ok     54a76c3c  feat(hardening): HXC-118 Phase 1 — RAG adapter (internal/rag), default-OFF
+         -> docs/qa/discovery_hardening_wave3rag_20260711T221237Z present (added by this commit (exact))
+  ok     ca76e14b  feat(hardening): discovery-sweep wave 2/3 source — CONST-040 verifier fields + ACP scaffold + integration-tag target
+         -> docs/qa/discovery_hardening_wave2src_20260711T220325Z present (added by this commit (exact))
+  ok     02e9e505  fix(test): reconcile stale internal/security assertion (§11.4.120) + deterministic/honest-skip browser timing (§11.4.102)
+         -> docs/qa/R41_testfail_fix_20260711T141510Z.md present (added by this commit (exact))
+  ok     7210f373  feat(providers): add huggingface-router + together as §11.4.99-current catalogue rows (catalogue-first, CONST-036)
+         -> docs/qa/r41_catalogue_hf_together_20260711T112230Z present (added by this commit (exact))
+  ok     f8c38181  fix(provider): update Cerebras model list to match live /models endpoint (§11.4.99/§11.4.150)
+         -> docs/qa/feat_cerebras_models_f8c38181_20260728T120731Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     67c9a9bc  fix(provider): Cohere v1->v2 endpoint + model default update (§11.4.99/§11.4.150)
+         -> docs/qa/feat_cohere_v2migrate_67c9a9bc_20260728T120737Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     f9dcf6a6  fix(server): update CORSMiddleware call sites for allowlist signature (§11.4.120 reconcile)
+         -> docs/qa/docfix_cors_reconcile_f9dcf6a6_20260728T121101Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     4727a9d0  fix(security): CORS no wildcard-origin-with-credentials — allowlist + Vary:Origin (§11.4.135)
+         -> docs/qa/docfix_cors_reconcile_f9dcf6a6_20260728T121101Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     9c876819  fix(security): authenticate /ws MCP WebSocket + fix CSWSH CheckOrigin gap
+         -> docs/qa/sec_ws_cswsh_9c876819_20260728T101258Z/grounding.txt present (cites this commit's SHA (exact))
+  ok     d6c05f76  docs(build): desktop/GUI (Fyne) build-host prerequisites — X11+OpenGL dev headers (§11.4.77)
+         -> docs/qa/docfix_fyne_prereqs_d6c05f76_20260728T121122Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     2ff55c31  fix(security): auth-gate the wire facade (/v1/chat/completions, /v1/messages) — unauth->401 (§11.4.115, §11.4.135, DZ-05 lineage)
+         -> docs/qa/sec_wirefacade_2ff55c31_20260728T101255Z/grounding.txt present (cites this commit's SHA (exact))
+  ok     a21ad7ca  feat(server): route HelixCode LLM to local HelixLLM coder (:18434) — §11.4.115
+         -> docs/qa/feat_helixllm_route_a21ad7ca_20260728T101301Z/grounding.txt present (cites this commit's SHA (exact))
+  ok     51c058b1  feat(server): dual OpenAI + Anthropic wire facade on HelixCode's own server
+         -> docs/qa/feat_wirefacade_51c058b1_20260728T101258Z/grounding.txt present (cites this commit's SHA (exact))
+  ok     1254e0a6  sync: auto-commit before cross-host sync 20260628
+         -> docs/qa/helixqa_bank_reclassification_design.md present (added by this commit (exact))
+  ok     66f9c21e  fix(server): advertise streaming_enabled + plugins_enabled in /server/info; wire plugin registry
+         -> docs/qa/feat_serverinfo_66f9c21e_20260728T101303Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     c9bad26a  fix(mcp): move blocking I/O out of toolMux critical section (lock-hold O(N^2) → snapshot-then-act)
+         -> docs/qa/perf_mcptoolmux_c9bad26a_20260728T120811Z/CONCURRENCY_ANALYSIS.md present (cites this commit's SHA (exact))
+  ok     b058c7c2  fix(tests/cognee): make the package deterministic under load (§11.4.50/§11.4.6) — no product change
+         -> docs/qa/testfix_cognee_determinism_b058c7c2_20260728T121411Z/EVIDENCE.md present (cites this commit's SHA (exact))
+  ok     a52a523a  fix(server): resolve default LLM model from the verifier catalog (DeepSeek 502)
+         -> docs/qa/DeepSeek/transcript.md present (cites this commit's SHA (exact))
+---------------------------------------------------------------------------
+ Feature-shipping commits evaluated : 57
+ Opt-out exempt commits             : 0
+ Violations                         : 0
+===========================================================================
+ RESULT: PASS (enforcing — no violations in 925169c98945ca0fee1e84dae53ad494e4897832..HEAD).
+qa_evidence_gate.sh: PASS (release gate green)

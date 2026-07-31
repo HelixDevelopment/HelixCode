@@ -1,0 +1,55 @@
+### pre-flight (§11.4.119 single-owner, coder untouched)
+date_utc=2026-07-06T17:16:29Z
+uname_m=x86_64  podman=podman version 5.7.1
+coder container (MUST remain running, untouched):
+helixllm-coder localhost/helixllm/llamacpp-router:cuda12.8-sm120 Up 3 hours
+target host port 18435 listeners (expect none):
+  (free)
+TEI image:
+ghcr.io/huggingface/text-embeddings-inference:cpu-1.9 690 MB
+[17:16:29] building harness (containers-submodule replace) ...
+### RED baseline (§11.4.115): analyzer vs the dim-1536 zero-vector stub
+RED_MODE=1 — expect the analyzer to FAIL (exit 1) = defect reproduced
+[RUNTIME-SIGNATURE] FAIL dim=1536 |A|=0.0000 |A'|=0.0000 |U|=0.0000 cos(A,A')=NaN cos(A,U)=NaN margin=NaN
+    reason: expected dim 768, got 1536
+    reason: zero/near-zero norm A=0 A'=0 U=0
+    reason: cosine NaN (zero-norm or dim mismatch)
+analyzer_exit=1
+RED-OK: stub correctly FAILED the runtime signature
+[17:16:31] boot TEI lane model=nomic-ai/nomic-embed-text-v1.5 port=18435 via containers submodule orchestrator
+UP-OK: phase3embed tei-embed via containers submodule orchestrator
+[17:17:40] health OK after 23 polls
+[17:17:40] GREEN lane=nomic-ai/nomic-embed-text-v1.5 dim=768
+helixllm-coder localhost/helixllm/llamacpp-router:cuda12.8-sm120 Up 3 hours 8080/tcp, 50052/tcp
+phase3embed_tei-embed_1 ghcr.io/huggingface/text-embeddings-inference:cpu-1.9 Up 40 seconds 0.0.0.0:18435->80/tcp
+EMBED-OK: status=200 wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_embeddings_20260706/green_response_1.json (14394 bytes)
+EMBED-OK: status=200 wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_embeddings_20260706/green_response_2.json (14394 bytes)
+### GREEN runtime signature (§11.4.108) lane=nomic-ai/nomic-embed-text-v1.5 dim=768 margin=0.15
+[RUNTIME-SIGNATURE] FAIL dim=384 |A|=1.0000 |A'|=1.0000 |U|=1.0000 cos(A,A')=0.7509 cos(A,U)=0.3931 margin=0.3578
+    reason: expected dim 768, got 384
+signature_exit=1
+[DETERMINISM] PASS: 3 vectors byte-identical across two identical requests
+determinism_exit=0
+GREEN-FAIL
+### analyzer self-validation (§11.4.107(10)) golden-good = real captured response
+[GOLDEN-GOOD(expect PASS)] FAIL dim=384 |A|=1.0000 |A'|=1.0000 |U|=1.0000 cos(A,A')=0.7509 cos(A,U)=0.3931 margin=0.3578
+    reason: expected dim 768, got 384
+    SELF-VALIDATION VIOLATION: golden-good did not PASS
+[GOLDEN-BAD-ZEROVEC(expect FAIL)] FAIL dim=1536 |A|=0.0000 |A'|=0.0000 |U|=0.0000 cos(A,A')=NaN cos(A,U)=NaN margin=NaN
+    reason: zero/near-zero norm A=0 A'=0 U=0
+    reason: cosine NaN (zero-norm or dim mismatch)
+[GOLDEN-BAD-SHUFFLED(expect FAIL)] FAIL dim=384 |A|=1.0000 |A'|=1.0000 |U|=1.0000 cos(A,A')=0.3931 cos(A,U)=0.7509 margin=-0.3578
+    reason: expected dim 768, got 384
+    reason: semantic-order margin -0.3578 < required 0.1500
+[GOLDEN-BAD-WRONGDIM(expect FAIL)] FAIL dim=383 |A|=0.9951 |A'|=0.9971 |U|=0.9988 cos(A,A')=0.7492 cos(A,U)=0.3907 margin=0.3584
+    reason: expected dim 768, got 383
+[SELF-VALIDATION] FAIL
+selfvalidate_exit=1
+[17:17:40] teardown (single-owner cleanup) ...
+DOWN-OK: phase3embed tei-embed (volumes removed) via containers submodule orchestrator
+### post-teardown state
+tei-embed containers (expect none):
+  (none — removed)
+coder still running (untouched):
+helixllm-coder Up 3 hours
+[17:17:41] DONE. Evidence in /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_embeddings_20260706

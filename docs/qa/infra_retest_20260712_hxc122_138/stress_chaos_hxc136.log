@@ -1,0 +1,539 @@
+=== RUN   TestRedis_Chaos_CancelMidOperation
+--- PASS: TestRedis_Chaos_CancelMidOperation (10.02s)
+=== RUN   TestRedis_Chaos_CancelDuringSustainedWrites
+--- PASS: TestRedis_Chaos_CancelDuringSustainedWrites (0.27s)
+=== RUN   TestRedis_Chaos_CorruptValues
+--- PASS: TestRedis_Chaos_CorruptValues (0.11s)
+=== RUN   TestRedis_Chaos_WeirdKeys
+--- PASS: TestRedis_Chaos_WeirdKeys (0.00s)
+=== RUN   TestRedis_Chaos_ResourcePressure
+--- PASS: TestRedis_Chaos_ResourcePressure (0.22s)
+=== RUN   TestRedis_Chaos_ConnectionChurn
+    redis_stress_test.go:79: cleanup scan error (non-fatal): redis: client is closed
+--- PASS: TestRedis_Chaos_ConnectionChurn (0.00s)
+=== RUN   TestRedis_Chaos_PanickingTranslator
+    redis_chaos_test.go:311: stresschaos: "redis_translator_panic_isolation" concurrent parallelism=16 calls=1600 gDelta=0 deadlock=false dur=1.1ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_translator_panic_isolation/concurrency_report.json
+    redis_chaos_test.go:350: redis panicking-translator chaos: 1600 calls survived, post-restore echo OK
+--- PASS: TestRedis_Chaos_PanickingTranslator (0.07s)
+=== RUN   TestRedis_Stress_SustainedSetGetDel
+    redis_stress_test.go:160: stresschaos: "redis_sustained_set_get_del" sustained N=600 p50=0.146ms p95=0.261ms p99=0.377ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_sustained_set_get_del/latency.json
+    redis_stress_test.go:185: redis sustained set/get/del: 600 real round-trips, p50=0.146ms p95=0.261ms p99=0.377ms
+--- PASS: TestRedis_Stress_SustainedSetGetDel (0.22s)
+=== RUN   TestRedis_Stress_SustainedHashAndList
+    redis_stress_test.go:197: stresschaos: "redis_sustained_hash_and_list" sustained N=300 p50=0.303ms p95=0.420ms p99=1.337ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_sustained_hash_and_list/latency.json
+--- PASS: TestRedis_Stress_SustainedHashAndList (0.28s)
+=== RUN   TestRedis_Stress_ConcurrentSetGet
+    redis_stress_test.go:251: stresschaos: "redis_concurrent_set_get" concurrent parallelism=16 calls=960 gDelta=0 deadlock=false dur=110.6ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_concurrent_set_get/concurrency_report.json
+--- PASS: TestRedis_Stress_ConcurrentSetGet (0.20s)
+=== RUN   TestRedis_Stress_ConcurrentSharedKeyCounter
+    redis_stress_test.go:285: stresschaos: "redis_concurrent_shared_counter" concurrent parallelism=12 calls=600 gDelta=0 deadlock=false dur=11.6ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_concurrent_shared_counter/concurrency_report.json
+    redis_stress_test.go:299: redis concurrent shared counter: 600 increments all landed atomically
+--- PASS: TestRedis_Stress_ConcurrentSharedKeyCounter (0.10s)
+=== RUN   TestRedis_Stress_ConcurrentPipeline
+    redis_stress_test.go:313: stresschaos: "redis_concurrent_pipeline" concurrent parallelism=12 calls=300 gDelta=0 deadlock=false dur=28.3ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_concurrent_pipeline/concurrency_report.json
+--- PASS: TestRedis_Stress_ConcurrentPipeline (0.11s)
+=== RUN   TestRedis_Stress_ConcurrentPubSub
+    redis_stress_test.go:382: stresschaos: "redis_concurrent_pubsub_publish" concurrent parallelism=12 calls=360 gDelta=0 deadlock=false dur=9.5ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144313Z/redis_concurrent_pubsub_publish/concurrency_report.json
+    redis_stress_test.go:397: redis concurrent pub/sub: delivered 360/360 messages (some loss acceptable for fire-and-forget pub/sub)
+--- PASS: TestRedis_Stress_ConcurrentPubSub (0.56s)
+=== RUN   TestRedis_Stress_Boundaries
+=== RUN   TestRedis_Stress_Boundaries/empty_value
+=== RUN   TestRedis_Stress_Boundaries/large_value_1MB
+=== RUN   TestRedis_Stress_Boundaries/missing_key_returns_nil_error
+=== RUN   TestRedis_Stress_Boundaries/binary_safe_value
+=== RUN   TestRedis_Stress_Boundaries/ttl_edges
+--- PASS: TestRedis_Stress_Boundaries (0.03s)
+    --- PASS: TestRedis_Stress_Boundaries/empty_value (0.00s)
+    --- PASS: TestRedis_Stress_Boundaries/large_value_1MB (0.03s)
+    --- PASS: TestRedis_Stress_Boundaries/missing_key_returns_nil_error (0.00s)
+    --- PASS: TestRedis_Stress_Boundaries/binary_safe_value (0.00s)
+    --- PASS: TestRedis_Stress_Boundaries/ttl_edges (0.00s)
+PASS
+ok  	dev.helix.code/internal/redis	13.284s
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/redis/i18n	1.013s [no tests to run]
+=== RUN   TestDatabase_Chaos_CancelMidQuery
+2026/07/12 19:43:04 ✅ Database connection established successfully
+2026/07/12 19:43:04 ✅ Database connection pool closed
+2026/07/12 19:43:04 ✅ Database connection established successfully
+    database_chaos_test.go:83: database chaos cancel: pool survived mid-query cancellation and remains usable (post-row id=1)
+2026/07/12 19:43:04 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_chaos_cancel: closed pool
+--- PASS: TestDatabase_Chaos_CancelMidQuery (0.28s)
+=== RUN   TestDatabase_Chaos_DeadlineExceededMidQuery
+2026/07/12 19:43:04 ✅ Database connection established successfully
+2026/07/12 19:43:04 ✅ Database connection pool closed
+2026/07/12 19:43:04 ✅ Database connection established successfully
+    database_chaos_test.go:119: database chaos deadline: 20 deadline-exceeded queries, pool still healthy
+2026/07/12 19:43:06 ✅ Database connection pool closed
+--- PASS: TestDatabase_Chaos_DeadlineExceededMidQuery (2.12s)
+=== RUN   TestDatabase_Chaos_CorruptInput
+2026/07/12 19:43:06 ✅ Database connection established successfully
+2026/07/12 19:43:06 ✅ Database connection pool closed
+2026/07/12 19:43:06 ✅ Database connection established successfully
+    database_chaos_test.go:186: database chaos corrupt-input: 10 payloads bound safely, sentinel intact, 10 rows total (no injection)
+2026/07/12 19:43:06 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_chaos_corrupt: closed pool
+--- PASS: TestDatabase_Chaos_CorruptInput (0.22s)
+=== RUN   TestDatabase_Chaos_PoolExhaustion
+2026/07/12 19:43:06 ✅ Database connection established successfully
+2026/07/12 19:43:06 ✅ Database connection pool closed
+2026/07/12 19:43:06 ✅ Database connection established successfully
+    database_chaos_test.go:257: database chaos pool-exhaustion: 10/30 succeeded, 15 timed out cleanly, pool recovered
+2026/07/12 19:43:07 ✅ Database connection pool closed
+--- PASS: TestDatabase_Chaos_PoolExhaustion (0.90s)
+=== RUN   TestDatabase_Chaos_ConnectionChurn
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:07 ✅ Database connection established successfully
+2026/07/12 19:43:07 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+    database_chaos_test.go:300: database chaos churn: 25 open/query/close cycles completed without leak or panic
+--- PASS: TestDatabase_Chaos_ConnectionChurn (1.07s)
+=== RUN   TestDatabase_Chaos_ResourcePressure
+2026/07/12 19:43:08 ✅ Database connection established successfully
+2026/07/12 19:43:08 ✅ Database connection pool closed
+2026/07/12 19:43:08 ✅ Database connection established successfully
+    database_chaos_test.go:338: database chaos resource-pressure: 200 rows persisted under memory pressure
+2026/07/12 19:43:09 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_chaos_pressure: closed pool
+--- PASS: TestDatabase_Chaos_ResourcePressure (0.65s)
+=== RUN   TestDatabase_Stress_SustainedInsertSelectUpdate
+2026/07/12 19:43:09 ✅ Database connection established successfully
+2026/07/12 19:43:09 ✅ Database connection pool closed
+2026/07/12 19:43:09 ✅ Database connection established successfully
+    database_stress_test.go:188: stresschaos: "database_sustained_insert_select_update" sustained N=400 p50=2.855ms p95=3.200ms p99=44.318ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144304Z/database_sustained_insert_select_update/latency.json
+    database_stress_test.go:225: database sustained: 400 rows inserted+selected+updated, 400 persisted
+2026/07/12 19:43:11 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_sustained: closed pool
+--- PASS: TestDatabase_Stress_SustainedInsertSelectUpdate (1.66s)
+=== RUN   TestDatabase_Stress_ConcurrentPoolContention
+2026/07/12 19:43:11 ✅ Database connection established successfully
+2026/07/12 19:43:11 ✅ Database connection pool closed
+2026/07/12 19:43:11 ✅ Database connection established successfully
+    database_stress_test.go:247: stresschaos: "database_concurrent_pool_contention" concurrent parallelism=16 calls=640 gDelta=0 deadlock=false dur=301.4ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144304Z/database_concurrent_pool_contention/concurrency_report.json
+    database_stress_test.go:273: database concurrent: 640 calls across 16 goroutines, 640 rows persisted, gDelta=0
+2026/07/12 19:43:11 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_concurrent: closed pool
+--- PASS: TestDatabase_Stress_ConcurrentPoolContention (0.48s)
+=== RUN   TestDatabase_Stress_TransactionContention
+2026/07/12 19:43:11 ✅ Database connection established successfully
+2026/07/12 19:43:11 ✅ Database connection pool closed
+2026/07/12 19:43:11 ✅ Database connection established successfully
+    database_stress_test.go:294: stresschaos: "database_transaction_contention" concurrent parallelism=12 calls=360 gDelta=0 deadlock=false dur=196.0ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144304Z/database_transaction_contention/concurrency_report.json
+    database_stress_test.go:328: database tx contention: 360 committed transactions, 360 rows with n=1
+2026/07/12 19:43:11 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_tx: closed pool
+--- PASS: TestDatabase_Stress_TransactionContention (0.40s)
+=== RUN   TestDatabase_Stress_BoundaryConditions
+2026/07/12 19:43:11 ✅ Database connection established successfully
+2026/07/12 19:43:11 ✅ Database connection pool closed
+2026/07/12 19:43:11 ✅ Database connection established successfully
+    database_stress_test.go:387: database boundary: empty-result, 1048576-byte large row, no-op update, empty-string row all handled
+2026/07/12 19:43:12 ✅ Database connection pool closed
+    database_stress_test.go:163: cleanup: drop table hxc014_stress_boundary: closed pool
+--- PASS: TestDatabase_Stress_BoundaryConditions (0.22s)
+PASS
+ok  	dev.helix.code/internal/database	9.011s
+?   	dev.helix.code/internal/database/i18n	[no test files]
+=== RUN   TestServer_Chaos_MalformedRequests
+    server_chaos_test.go:179: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Chaos_MalformedRequests (0.02s)
+=== RUN   TestServer_Chaos_HandlerPanicIsolation
+    server_chaos_test.go:258: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Chaos_HandlerPanicIsolation (0.01s)
+=== RUN   TestServer_Chaos_ConcurrentMalformedChurn
+    server_chaos_test.go:302: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Chaos_ConcurrentMalformedChurn (0.02s)
+=== RUN   TestServer_Chaos_SlowAndCancelledRequests
+    server_chaos_test.go:389: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Chaos_SlowAndCancelledRequests (0.05s)
+=== RUN   TestServer_Stress_SustainedHealthLoad
+    server_stress_test.go:37: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Stress_SustainedHealthLoad (0.01s)
+=== RUN   TestServer_Stress_SustainedPublicEndpointMix
+    server_stress_test.go:70: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Stress_SustainedPublicEndpointMix (0.02s)
+=== RUN   TestServer_Stress_ConcurrentDDoSFlood
+    server_stress_test.go:112: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Stress_ConcurrentDDoSFlood (0.06s)
+=== RUN   TestServer_Stress_BoundaryLargeBodyAndManyHeaders
+    server_stress_test.go:156: SKIP-OK: real PostgreSQL unreachable at localhost:5432 (failed to ping database: failed to connect to `user=helix database=helix_test`: 127.0.0.1:5432 (localhost): failed SASL auth: FATAL: password authentication failed for user "helix" (SQLSTATE 28P01)) — §11.4.3 honest skip, never a faked PASS
+--- SKIP: TestServer_Stress_BoundaryLargeBodyAndManyHeaders (0.02s)
+PASS
+ok  	dev.helix.code/internal/server	1.277s
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/server/i18n	1.013s [no tests to run]
+=== RUN   TestEnsembleProvider_Stress_SustainedLoad
+    ensemble_stress_chaos_test.go:244: STRESS sustained-load: iterations=120 p50=2.180859ms p95=2.27402ms goroutines baseline=2 after=2 (delta=0)
+--- PASS: TestEnsembleProvider_Stress_SustainedLoad (0.26s)
+=== RUN   TestEnsembleProvider_Stress_ConcurrentContention
+    ensemble_stress_chaos_test.go:331: STRESS concurrent-contention: workers=32 all-ok=32 Groq-dead=1 Groq-cached="llama-3.1-8b-instant" DeepSeek-cached="deepseek-chat" goroutines baseline=2 after=2
+--- PASS: TestEnsembleProvider_Stress_ConcurrentContention (0.00s)
+=== RUN   TestEnsembleProvider_Chaos_MemberFailureInjection
+    ensemble_stress_chaos_test.go:391: CHAOS member-failure-injection: prompts=60 survived=60 (≥1-up) all-down-errored=true Groq-dead=0 goroutines baseline=2 after=2
+--- PASS: TestEnsembleProvider_Chaos_MemberFailureInjection (0.00s)
+=== RUN   TestEnsembleProvider_Chaos_ContextCancellation
+    ensemble_stress_chaos_test.go:457: CHAOS context-cancellation: errored=true both-unwound=true no-hang=true goroutines baseline=2 after=2
+--- PASS: TestEnsembleProvider_Chaos_ContextCancellation (0.00s)
+=== RUN   TestEnsembleProvider_Chaos_TinyTimeout
+    ensemble_stress_chaos_test.go:498: CHAOS tiny-timeout: errored=true unwound=true goroutines baseline=2 after=2
+--- PASS: TestEnsembleProvider_Chaos_TinyTimeout (0.03s)
+=== RUN   TestEnsembleProvider_Chaos_DeadModelSetBoundsProbing
+    ensemble_stress_chaos_test.go:566: CHAOS dead-model-bounds-probing: prompts=40 dead-recorded=2 total-member-calls=42 (want 42) goroutines baseline=2 after=2
+--- PASS: TestEnsembleProvider_Chaos_DeadModelSetBoundsProbing (0.00s)
+=== RUN   TestEnsembleProvider_Chaos_AllDeadThenRecovers
+    ensemble_stress_chaos_test.go:610: CHAOS all-dead-then-recovers: recovered=true dead-leads-attempted-once=true dead-recorded=2
+--- PASS: TestEnsembleProvider_Chaos_AllDeadThenRecovers (0.00s)
+=== RUN   TestLoadBalancer_Chaos_FlipStrategyDuringSelect
+    load_balancer_chaos_test.go:106: load_balancer chaos: ok=12000 degraded=0
+--- PASS: TestLoadBalancer_Chaos_FlipStrategyDuringSelect (0.30s)
+=== RUN   TestLoadBalancer_Chaos_AllProvidersUnhealthy
+--- PASS: TestLoadBalancer_Chaos_AllProvidersUnhealthy (0.00s)
+=== RUN   TestLoadBalancer_Stress_SustainedSelect
+    load_balancer_stress_test.go:42: stresschaos: "load_balancer_sustained_select" sustained N=5000 p50=0.003ms p95=0.007ms p99=0.011ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/load_balancer_sustained_select/latency.json
+--- PASS: TestLoadBalancer_Stress_SustainedSelect (0.02s)
+=== RUN   TestLoadBalancer_Stress_ConcurrentSelect
+    load_balancer_stress_test.go:60: stresschaos: "load_balancer_concurrent_select" concurrent parallelism=24 calls=4800 gDelta=0 deadlock=false dur=28.1ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/load_balancer_concurrent_select/concurrency_report.json
+--- PASS: TestLoadBalancer_Stress_ConcurrentSelect (0.08s)
+=== RUN   TestModelManager_Chaos_CorruptCriteria
+--- PASS: TestModelManager_Chaos_CorruptCriteria (0.09s)
+=== RUN   TestModelManager_Chaos_RegisterDuringSelect
+    manager_chaos_test.go:157: model_manager register-during-select chaos: ok=12000 degraded=0
+--- PASS: TestModelManager_Chaos_RegisterDuringSelect (33.93s)
+=== RUN   TestModelManager_Chaos_AllProvidersUnavailable
+--- PASS: TestModelManager_Chaos_AllProvidersUnavailable (0.02s)
+=== RUN   TestModelManager_Chaos_KillDuringRegisterSelect
+--- PASS: TestModelManager_Chaos_KillDuringRegisterSelect (0.16s)
+=== RUN   TestModelManager_Stress_SustainedSelect
+    manager_stress_test.go:131: stresschaos: "model_manager_sustained_select" sustained N=3000 p50=6.627ms p95=7.825ms p99=28.774ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/model_manager_sustained_select/latency.json
+--- PASS: TestModelManager_Stress_SustainedSelect (22.16s)
+=== RUN   TestModelManager_Stress_ConcurrentReadPaths
+    manager_stress_test.go:153: stresschaos: "model_manager_concurrent_reads" concurrent parallelism=24 calls=6000 gDelta=0 deadlock=false dur=7237.8ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/model_manager_concurrent_reads/concurrency_report.json
+--- PASS: TestModelManager_Stress_ConcurrentReadPaths (7.29s)
+=== RUN   TestModelManager_Stress_ConcurrentRegisterAndRead
+    manager_stress_test.go:193: stresschaos: "model_manager_concurrent_register_read" concurrent parallelism=16 calls=960 gDelta=0 deadlock=false dur=2297.5ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/model_manager_concurrent_register_read/concurrency_report.json
+--- PASS: TestModelManager_Stress_ConcurrentRegisterAndRead (2.35s)
+=== RUN   TestModelManager_Stress_BoundaryCriteria
+=== RUN   TestModelManager_Stress_BoundaryCriteria/empty_criteria
+=== RUN   TestModelManager_Stress_BoundaryCriteria/zero_max_tokens
+=== RUN   TestModelManager_Stress_BoundaryCriteria/oversized_max_tokens
+=== RUN   TestModelManager_Stress_BoundaryCriteria/unknown_capability
+--- PASS: TestModelManager_Stress_BoundaryCriteria (0.04s)
+    --- PASS: TestModelManager_Stress_BoundaryCriteria/empty_criteria (0.03s)
+    --- PASS: TestModelManager_Stress_BoundaryCriteria/zero_max_tokens (0.01s)
+    --- PASS: TestModelManager_Stress_BoundaryCriteria/oversized_max_tokens (0.00s)
+    --- PASS: TestModelManager_Stress_BoundaryCriteria/unknown_capability (0.00s)
+=== RUN   TestOllamaProvider_Chaos_CancelMidGenerate
+    ollama_provider_chaos_test.go:60: ollama cancel-mid-generate chaos: provider unwound cleanly on mid-flight cancellation
+--- PASS: TestOllamaProvider_Chaos_CancelMidGenerate (0.30s)
+=== RUN   TestOllamaProvider_Chaos_DeadlineExceededGenerate
+    ollama_provider_chaos_test.go:96: ollama deadline-exceeded chaos: provider surfaced controlled error, no panic
+--- PASS: TestOllamaProvider_Chaos_DeadlineExceededGenerate (0.00s)
+=== RUN   TestOllamaProvider_Chaos_HostilePrompts
+    ollama_provider_chaos_test.go:138: ollama hostile-prompt chaos: provider handled empty/control/invalid-utf8/large/whitespace prompts without crash
+--- PASS: TestOllamaProvider_Chaos_HostilePrompts (0.00s)
+=== RUN   TestOllamaProvider_Chaos_ClosedPort
+    ollama_provider_chaos_test.go:219: ollama closed-port chaos: every network path returned a clean error/false, no panic/crash
+--- PASS: TestOllamaProvider_Chaos_ClosedPort (0.00s)
+=== RUN   TestOllamaProvider_Stress_SustainedGetHealth
+    ollama_provider_stress_test.go:110: stresschaos: "ollama_sustained_get_health" sustained N=150 p50=0.247ms p95=0.310ms p99=0.672ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/ollama_sustained_get_health/latency.json
+    ollama_provider_stress_test.go:133: ollama sustained GetHealth: 150 real round-trips, p50=0.247ms p95=0.310ms p99=0.672ms
+--- PASS: TestOllamaProvider_Stress_SustainedGetHealth (0.04s)
+=== RUN   TestOllamaProvider_Stress_SustainedGetModels
+    ollama_provider_stress_test.go:151: stresschaos: "ollama_sustained_get_models" sustained N=200 p50=0.001ms p95=0.001ms p99=0.005ms errRate=0.0000 -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/ollama_sustained_get_models/latency.json
+    ollama_provider_stress_test.go:170: configured test model "qwen2.5:0.5b" not in live model list — discovery did not reflect real /api/tags
+--- FAIL: TestOllamaProvider_Stress_SustainedGetModels (0.00s)
+=== RUN   TestOllamaProvider_Stress_ConcurrentHealthAndModels
+    ollama_provider_stress_test.go:189: stresschaos: "ollama_concurrent_health_models" concurrent parallelism=16 calls=400 gDelta=2 deadlock=false dur=120.5ms -> /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/ollama_concurrent_health_models/concurrency_report.json
+    ollama_provider_stress_test.go:207: ollama concurrent health/models: 16x25 real concurrent round-trips, no race/deadlock/leak
+--- PASS: TestOllamaProvider_Stress_ConcurrentHealthAndModels (0.17s)
+=== RUN   TestOllamaProvider_Stress_BoundedConcurrentGenerate
+    ollama_provider_stress_test.go:230: stresschaos: "ollama_bounded_concurrent_generate" reported 10 errors under concurrent load (evidence: /home/milos/Factory/projects/tools_and_research/helix_code/helix_code/qa-results/20260712T144329Z/ollama_bounded_concurrent_generate/concurrency_report.json)
+--- FAIL: TestOllamaProvider_Stress_BoundedConcurrentGenerate (0.05s)
+=== RUN   TestOllamaProvider_Stress_SmallSequentialGenerate
+    ollama_provider_stress_test.go:291: sequential generate 0 failed: API request failed: API returned status 404
+--- FAIL: TestOllamaProvider_Stress_SmallSequentialGenerate (0.00s)
+=== RUN   TestXiaomiChaos_InvalidAPIKey
+    xiaomi_provider_chaos_test.go:49: CHAOS EVIDENCE: invalid key correctly rejected: API request failed: API returned status 401: {
+            "error": {
+                "message": "Invalid API Key",
+                "param": "Please provide valid API Key",
+                "code": "401",
+                "type": "invalid_key"
+            }
+        }
+--- PASS: TestXiaomiChaos_InvalidAPIKey (1.51s)
+=== RUN   TestXiaomiChaos_InvalidModel
+    xiaomi_provider_chaos_test.go:82: CHAOS EVIDENCE: invalid model correctly rejected: API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model nonexistent-model-xyz"
+            }
+        }
+--- PASS: TestXiaomiChaos_InvalidModel (1.33s)
+=== RUN   TestXiaomiChaos_ContextCancellation
+    xiaomi_provider_chaos_test.go:116: CHAOS EVIDENCE: context cancellation handled: API request failed: API request failed: Post "https://api.xiaomimimo.com/v1/chat/completions": context deadline exceeded
+--- PASS: TestXiaomiChaos_ContextCancellation (0.95s)
+=== RUN   TestXiaomiChaos_EmptyMessages
+    xiaomi_provider_chaos_test.go:148: CHAOS EVIDENCE: empty messages correctly rejected: API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+--- PASS: TestXiaomiChaos_EmptyMessages (1.24s)
+=== RUN   TestXiaomiChaos_ZeroMaxTokens
+    xiaomi_provider_chaos_test.go:182: CHAOS EVIDENCE: zero max tokens handled: API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+--- PASS: TestXiaomiChaos_ZeroMaxTokens (1.28s)
+=== RUN   TestXiaomiChaos_NilContext
+    xiaomi_provider_chaos_test.go:219: CHAOS EVIDENCE: nil context handled gracefully: API request failed: failed to create request: net/http: nil Context
+--- PASS: TestXiaomiChaos_NilContext (0.96s)
+=== RUN   TestXiaomiStress_SequentialCalls
+    xiaomi_provider_stress_test.go:60: iteration 0: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 1: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 2: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 3: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 4: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 5: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 6: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 7: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 8: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 9: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 10: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 11: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 12: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 13: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 14: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 15: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 16: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 17: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 18: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:60: iteration 19: FAIL (API request failed: API returned status 400: {
+            "error": {
+                "code": "400",
+                "message": "Unsupported model mimo-v2-flash"
+            }
+        }
+        )
+    xiaomi_provider_stress_test.go:71: STRESS EVIDENCE: 0/20 successes, avg latency 0s
+    xiaomi_provider_stress_test.go:74: all sequential iterations failed
+--- FAIL: TestXiaomiStress_SequentialCalls (6.71s)
+=== RUN   TestXiaomiStress_ConcurrentCalls
+    xiaomi_provider_stress_test.go:123: CONCURRENT EVIDENCE: 0/5 successes (rate-limit 429 counts as expected chaos)
+    xiaomi_provider_stress_test.go:127: CONCURRENT NOTE: all 5 calls hit rate limits — expected under free-tier API load
+--- PASS: TestXiaomiStress_ConcurrentCalls (1.28s)
+=== RUN   TestXiaomiStress_RapidFire
+    xiaomi_provider_stress_test.go:174: RAPID-FIRE EVIDENCE: 0/10 successes, 10 rate-limited
+    xiaomi_provider_stress_test.go:178: RAPID-FIRE NOTE: all 10 calls hit rate limits — expected under free-tier API load
+--- PASS: TestXiaomiStress_RapidFire (5.72s)
+FAIL
+FAIL	dev.helix.code/internal/llm	88.344s
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/compression	1.067s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/compressioniface	1.072s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/i18n	1.014s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/litellm	1.025s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/promptcache	1.012s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/providers/cerebras	1.102s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/providers/cohere	1.086s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/providers/helixagent	1.088s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/providers/huggingface	1.024s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/providers/replicate	1.071s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/providers/together	1.024s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/routing	1.013s [no tests to run]
+testing: warning: no tests to run
+PASS
+ok  	dev.helix.code/internal/llm/vision	1.021s [no tests to run]
+FAIL

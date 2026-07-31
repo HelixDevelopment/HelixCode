@@ -60,12 +60,75 @@
 #       * flat transcript  : docs/qa/<name>.md
 #     docs/qa/README.md is the CONVENTION document, not evidence — excluded.
 #
-#   RULE 3 — CITATION (proof, §11.4.120 reconciliation 2026-07-28):
+#   RULE 3 — CITATION (proof, §11.4.120 reconciliation 2026-07-28;
+#            TIGHTENED to a DECLARED citation 2026-07-31, HXC-186):
 #     A TRACKED docs/qa/ evidence file cites this commit's SHA (full or
-#     abbreviated, >=8 hex chars) in its content. Matched with `git grep`,
-#     which searches TRACKED files only — an untracked file dropped into
-#     the working tree can NOT clear the gate (verified by negative
-#     control). docs/qa/README.md is excluded as the convention doc.
+#     abbreviated, >=8 hex chars). Matched with `git grep`, which searches
+#     TRACKED files only — an untracked file dropped into the working tree
+#     can NOT clear the gate (verified by negative control).
+#     docs/qa/README.md is excluded as the convention doc.
+#
+#     RULE 3 IS TWO-TIER (HXC-186). What counts as a "citation" depends on
+#     whether the commit is newer than the CITATION BASELINE:
+#
+#       STRICT tier  — commits strictly AFTER $QA_CITATION_BASELINE.
+#         The SHA must appear ON THE SAME LINE as a DECLARED CITATION LABEL
+#         drawn from this closed set (case-insensitive, markdown decoration
+#         such as `**`/`|`/`#`/`>` tolerated before the label):
+#             Evidence-For-Commit:      (the canonical machine-readable field)
+#             Source commit:            (emitted by qa_finish, see below)
+#             Fix commit:
+#             Commit under test:
+#         i.e. an EXPLICIT assertion "this evidence is FOR that commit".
+#         A SHA appearing anywhere else in the file no longer clears it.
+#
+#       LEGACY tier  — commits at or before the baseline: the historical
+#         substring behaviour, reported as "legacy substring" so it is never
+#         mistaken for a declaration.
+#
+#   WHY THE STRICT TIER EXISTS (HXC-186 — the coincidence hole):
+#     Evidence files record PROVENANCE as well as citations.
+#     scripts/qa/lib/sec_capture_lib.sh's qa_capture_grounding() writes
+#         ## repo HEAD
+#         <git log --oneline -1>
+#     into docs/qa/<run-id>/grounding.txt — the SHA of whatever the repo's
+#     HEAD happened to be WHEN THE CAPTURE RAN. In this repository
+#     `git log --oneline` abbreviates to exactly 8 hex chars, which is
+#     precisely the RULE 3 needle width (measured 2026-07-31), so every such
+#     stamp was a live match. In a multi-agent checkout (§11.4.103 mandates
+#     >=3 concurrent streams committing to main) that HEAD is routinely a
+#     DIFFERENT commit from the one the evidence documents — so an unrelated
+#     feature commit could be cleared by evidence demonstrating something
+#     else entirely: a §11.4 PASS-bluff inside an ENFORCING release gate.
+#     The stamp is NOT the only such class — the corpus also carries SHAs in
+#     scratch-checkout paths (`chdir /tmp/.../<sha>/helix_code`), request
+#     nonces and build logs. The strict tier therefore keys on the PRESENCE
+#     OF A DECLARATION, not on a denylist of recognised stamp formats: a
+#     denylist could only ever exclude the coincidence classes someone
+#     already thought of, which is the same shape of hole as the defect.
+#     The provenance stamp is deliberately KEPT — it is genuinely useful
+#     §11.4.108 grounding; it simply no longer counts as a citation.
+#
+#   Why the legacy tier exists (the 400+ existing evidence directories):
+#     At the time of the fix, 42 of the 57 in-range feature commits were
+#     cleared by RULE 3. All 42 were inspected individually: every one
+#     resolves to a DELIBERATE citation of the commit under test — 37 via a
+#     labelled field, 5 via a markdown/HTML table cell or prose ("| Commits |
+#     `b741d7da` …", "commit `a52a523a`; greppable via …"). NONE was a
+#     coincidence. Requiring the strict form retroactively would therefore
+#     have turned 5 honest, human-written citations into release-blocking
+#     violations without improving truthfulness. They are quarantined by the
+#     baseline instead — the same instrument this gate already uses for
+#     historical scope — and the strict rule binds every commit from the
+#     baseline forward. This is a QUARANTINE, not a claim of cleanliness:
+#     the legacy tier remains coincidence-capable by construction, which is
+#     exactly why nothing new may enter it.
+#
+#   Citation baseline (--citation-baseline / $QA_CITATION_BASELINE):
+#     Default: the repository HEAD at the time HXC-186 landed. If the value
+#     cannot be resolved in this checkout the gate FAILS CLOSED — every
+#     commit is held to the STRICT tier — because an unknown baseline must
+#     never silently grant legacy leniency (§11.4.6).
 #
 #   Why RULE 3 exists (the second false-positive class this reconciles):
 #     The project's normal workflow is a PAIR of commits: the feature
@@ -229,6 +292,41 @@ cd "$REPO_ROOT" || exit 2
 
 QA_DIR="docs/qa"
 
+# --------- Citation baseline (HXC-186) ---------
+# Commits strictly AFTER this ref must carry a DECLARED citation (see the
+# RULE 3 header); commits at or before it keep the legacy substring match.
+# Default = repository HEAD when HXC-186 landed (2026-07-31).
+CITATION_BASELINE_DEFAULT="249ae5dcef3d4107d1161515a9b1d9206bfa5ca5"
+CITATION_BASELINE="${QA_CITATION_BASELINE:-$CITATION_BASELINE_DEFAULT}"
+CITATION_BASELINE_RESOLVED=""
+if git rev-parse --verify --quiet "${CITATION_BASELINE}^{commit}" >/dev/null 2>&1; then
+	CITATION_BASELINE_RESOLVED="$(git rev-parse "${CITATION_BASELINE}^{commit}" 2>/dev/null || true)"
+fi
+
+# Declared-citation labels — the CLOSED set (§11.4.6: closed, documented, not
+# open-ended pattern-guessing). The SHA must sit on the SAME LINE as one of
+# these labels. Markdown/HTML decoration before the label is tolerated; the
+# trailing colon is REQUIRED, which is what separates a declaration
+# ("Source commit: <sha>") from a provenance heading ("## repo HEAD" with the
+# SHA on the NEXT line). A bare "Commit:" is deliberately NOT accepted — it is
+# generic enough to appear incidentally in a shell transcript.
+QA_CITATION_LABEL_RE='^[[:space:]]*[-*#>|[:space:]]*(\*\*)?(evidence-for-commit|source[[:space:]]+commit|fix[[:space:]]+commit|commit[[:space:]]+under[[:space:]]+test)(\*\*)?[[:space:]]*:'
+
+# qa_citation_tier_is_strict <sha>
+#   Exit 0 when <sha> is strictly AFTER the citation baseline (STRICT tier),
+#   1 when it is the baseline itself or an ancestor of it (LEGACY tier).
+#   FAILS CLOSED: an unresolvable baseline yields STRICT for everything.
+qa_citation_tier_is_strict() {
+	[ -n "$CITATION_BASELINE_RESOLVED" ] || return 0
+	c="$(git rev-parse "$1" 2>/dev/null || true)"
+	[ -n "$c" ] || return 0
+	[ "$c" = "$CITATION_BASELINE_RESOLVED" ] && return 1
+	if git merge-base --is-ancestor "$CITATION_BASELINE_RESOLVED" "$c" 2>/dev/null; then
+		return 0
+	fi
+	return 1
+}
+
 # --------- Enforcing-mode preconditions ---------
 if [ "$MODE_ENFORCE" -eq 1 ]; then
 	if [ -z "$SINCE_REF" ]; then
@@ -305,6 +403,36 @@ qa_evidence_added_by_commit() {
 #   - Prints the citing FILE (not just the run-id) so a reviewer can see at a
 #     glance whether the citation came from a per-feature transcript or from
 #     a blanket ledger (the documented residual risk in the header).
+# qa_evidence_declared_citation <sha>
+#   RULE 3 / STRICT tier (HXC-186). Prints the docs/qa/ evidence file that
+#   DECLARES this commit — i.e. carries the SHA on the same line as a label
+#   from $QA_CITATION_LABEL_RE — or nothing.
+#   - `git grep` again, so TRACKED files only: an untracked file dropped into
+#     docs/qa/ still cannot clear the gate.
+#   - A machine-written provenance stamp (grounding.txt's "## repo HEAD"
+#     line, a scratch-checkout path, a nonce, a build log) carries no label
+#     and therefore no longer matches. That is the whole point of the tier.
+qa_evidence_declared_citation() {
+	sha_full="$(git rev-parse "$1" 2>/dev/null || true)"
+	[ "${#sha_full}" -ge 8 ] || return 0
+	needle="${sha_full:0:8}"
+	# Cheap prefilter: only files mentioning the SHA at all can declare it.
+	candidates="$(git grep -l -F "$needle" -- "$QA_DIR" ":!$QA_DIR/README.md" 2>/dev/null || true)"
+	[ -n "$candidates" ] || return 0
+	printf '%s\n' "$candidates" \
+		| while IFS= read -r f; do
+			[ -n "$f" ] || continue
+			# Collect the file's DECLARATION lines, then require the needle to
+			# be on one of them. Captures stdout, never an exit code after a
+			# pipe (§11.4.6).
+			decl_lines="$(git grep -h -i -E "$QA_CITATION_LABEL_RE" -- "$f" 2>/dev/null || true)"
+			case "$decl_lines" in
+				*"$needle"*) echo "${f#"$QA_DIR"/}"; break ;;
+			esac
+		done \
+		| head -1
+}
+
 qa_evidence_citing_commit() {
 	sha_full="$(git rev-parse "$1" 2>/dev/null || true)"
 	# The needle is the FIRST 8 CHARS of the full SHA — deliberately NOT
@@ -406,8 +534,17 @@ for sha in $commits; do
 	# feature commit ships code and its paired close commit lands the
 	# evidence. Proof, not a guess — the evidence names the commit.
 	if [ -z "$matched" ]; then
-		matched="$(qa_evidence_citing_commit "$sha")"
-		[ -n "$matched" ] && match_kind="cites this commit's SHA (exact)"
+		if qa_citation_tier_is_strict "$sha"; then
+			# STRICT tier (HXC-186): only an explicit DECLARATION counts. A
+			# provenance stamp that merely happens to carry this SHA does not.
+			matched="$(qa_evidence_declared_citation "$sha")"
+			[ -n "$matched" ] && match_kind="declares this commit in a citation field (exact)"
+		else
+			# LEGACY tier: pre-baseline substring match, labelled as such so it
+			# is never read as a declaration.
+			matched="$(qa_evidence_citing_commit "$sha")"
+			[ -n "$matched" ] && match_kind="cites this commit's SHA (legacy substring, pre-baseline — not coincidence-proof)"
+		fi
 	fi
 
 	# RULE 2 (LEGACY heuristic): does the subject name an existing run-id

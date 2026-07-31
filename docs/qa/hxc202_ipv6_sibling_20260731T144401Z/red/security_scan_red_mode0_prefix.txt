@@ -1,0 +1,19 @@
+=== RUN   TestHXC202_SonarqubeHealthURL_IPv6IsBracketed
+    hxc202_ipv6_addr_test.go:64: sonarqubeHealthURL() = "http://::1:9000/api/system/status", want "http://[::1]:9000/api/system/status" — an IPv6 literal must be bracketed or the probe can never reach SonarQube
+--- FAIL: TestHXC202_SonarqubeHealthURL_IPv6IsBracketed (0.00s)
+=== RUN   TestHXC202_SonarqubeStatusTarget_ProbesTheReportedURL
+    hxc202_ipv6_addr_test.go:105: status target carries no URL — health.CheckHTTP would fall back to its own unbracketed scheme://host:port composition, so an IPv6 SonarQube would never be reached
+--- FAIL: TestHXC202_SonarqubeStatusTarget_ProbesTheReportedURL (0.00s)
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/default_localhost_unchanged
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/ipv4_literal_unchanged
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/hostname_unchanged
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/already_bracketed_not_double_bracketed
+--- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/default_localhost_unchanged (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/ipv4_literal_unchanged (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/hostname_unchanged (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/already_bracketed_not_double_bracketed (0.00s)
+FAIL
+FAIL	dev.helix.code/cmd/security_scan	0.200s
+FAIL

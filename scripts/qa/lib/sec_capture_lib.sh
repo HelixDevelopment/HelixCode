@@ -889,6 +889,13 @@ qa_finish() {
         echo
         echo "**Run ID:** \`${QA_RUN_ID}\`"
         echo "**Source commit:** \`${QA_COMMIT_SHA}\`"
+        # Canonical machine-readable citation field (HXC-186). The §11.4.83
+        # gate's RULE 3 strict tier clears a commit ONLY when its SHA sits on
+        # a line carrying a declared citation label — this is that declaration,
+        # stated explicitly rather than left to be inferred from a provenance
+        # stamp. Always QA_COMMIT_SHA (the commit under test), NEVER HEAD:
+        # grounding.txt's "## repo HEAD" line is provenance, not a citation.
+        echo "**Evidence-For-Commit:** \`${QA_COMMIT_SHA}\`"
         echo "**Captured (UTC):** $(qa_iso)"
         echo "**Verdict:** ${verdict}"
         echo "**Counts:** PASS=${QA_PASS} FAIL=${QA_FAIL} SKIP=${QA_SKIP}"

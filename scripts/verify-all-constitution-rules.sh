@@ -990,6 +990,40 @@ if want_gate G26; then
 fi
 
 # ---------------------------------------------------------------------------
+# G27 — HXC-186 G7 RULE 3 citation-vs-coincidence (CM-QA-EVIDENCE-DECLARED-CITATION)
+#
+# Guards the ENFORCING §11.4.83 gate (G7) against being satisfied by accident.
+# G7's RULE 3 cleared a feature commit whenever any tracked docs/qa file
+# contained its 8-hex prefix ANYWHERE. Evidence files also record provenance —
+# qa_capture_grounding() stamps `## repo HEAD` with `git log --oneline -1`,
+# which abbreviates to exactly 8 chars here — so an evidence directory captured
+# while HEAD sat on an unrelated commit could clear that commit while
+# demonstrating something else. A gate satisfiable by coincidence provides
+# false assurance precisely where assurance is the point.
+#
+# The guard is the §11.4.115 polarity test: RED_MODE=1 reproduces the defect on
+# a pre-fix artifact, RED_MODE=0 (used here) asserts it is absent. Its two
+# positive controls also assert that a genuine declared citation and RULE 1
+# still clear — so a fix that simply rejected everything would FAIL this gate.
+# ---------------------------------------------------------------------------
+if want_gate G27; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G27 — HXC-186 G7 RULE 3 declared-citation guard (CM-QA-EVIDENCE-DECLARED-CITATION)"
+    RED_MODE=0 bash "$ROOT/scripts/tests/qa_evidence_citation_coincidence_meta_test.sh" \
+        >/tmp/g27-qa-citation.out 2>&1
+    g27_rc=$?
+    if [[ "$g27_rc" -eq 0 ]]; then
+        gate_pass G27 "$(grep -cE '^  PASS:' /tmp/g27-qa-citation.out) assertion(s) green — a bare provenance stamp cannot clear a commit, while declared citations and RULE 1 still do"
+    elif [[ "$g27_rc" -eq 2 ]]; then
+        gate_fail G27 "citation guard could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g27-qa-citation.out)" \
+            "resolve the environment blocker (git on PATH, scripts/verify_qa_evidence.sh present), then re-run"
+    else
+        gate_fail G27 "G7 RULE 3 can again be satisfied by a coincidental SHA — the §11.4.83 release gate would accept evidence that documents a different commit (see /tmp/g27-qa-citation.out)" \
+            "$(grep -E '^  FAIL:' /tmp/g27-qa-citation.out | head -4)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo

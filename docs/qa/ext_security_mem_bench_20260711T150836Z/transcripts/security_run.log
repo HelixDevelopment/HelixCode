@@ -1,0 +1,13 @@
+=== Section 11.4.169(8) Security probe suite -- helixllm-coder :18434 ===
+Target: http://localhost:18434 (READ-ONLY probes; no restart/kill/reconfigure)
+[SELF-VALIDATION] all checkers correctly PASS-on-good / FAIL-on-synthetic-bad: True
+  - rejected_not_crashed: golden_good_pass=True golden_bad_fails=True (malformed/injection request ACCEPTED with 200 (expected 4xx rejection))
+  - no_secret_leak: golden_good_pass=True golden_bad_fails=True (LEAKED markers found in response: ['HELIX_MODELS_MAX', 'SECRET_TOKEN_MARKER'])
+  - graceful_oversized: golden_good_pass=True golden_bad_fails=True (no HTTP response (connection dropped -- possible crash under load))
+[FINDING] SEC-01-AUTH-BOUNDARY: Auth-boundary: unauth vs bogus-auth-header request behavior + bind-address check :: unauth request status=200, bogus-auth-header request status=200 (both succeed identically => NO auth boundary enforced at this layer); listen socket bound_to_all_interfaces=True
+[FAIL] SEC-02-MALFORMED-JSON: Malformed/invalid JSON body rejection (server returns 4xx, does not crash) :: cases=[('truncated-json', False, 'server error 500 (possible crash/unhandled exception)'), ('invalid-json-syntax', False, 'server error 500 (possible crash/unhandled exception)'), ('wrong-type-messages', True, 'correctly rejected with 400')]; server_alive_after=True
+[PASS] SEC-03-INJECTION: Injection payload safe-handling (path traversal, null bytes, control chars, SQLi-like, prompt-injection, deep nesting) :: path-traversal-model=OK; null-byte-content=OK; control-chars-content=OK; sql-like-content=OK; prompt-injection-system-override=OK; oversized-array-nesting=OK
+[PASS] SEC-04-SECRET-LEAK: Secret-leak scan (no env vars/keys/tokens echoed in normal or error responses) :: direct-exfil-attempt: no secret markers found in response body; invalid-model-error-path: no secret markers found in response body
+[PASS] SEC-05-OVERSIZED-PAYLOAD: Oversized payload (~2MB prompt) handled gracefully, server remains alive :: handled with status 400 in 0.38s (no crash); payload_size_mb=1.93; server_alive_after=True
+
+Summary written to /tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/454f5003-cc9c-4bc0-9c9c-b78813ab3940/scratchpad/wave2_ext_sec_mem_bench/transcripts/security/SECURITY_SUMMARY.json

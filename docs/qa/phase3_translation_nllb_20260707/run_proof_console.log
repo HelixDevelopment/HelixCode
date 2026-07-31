@@ -1,0 +1,84 @@
+[11:38:04] building harness (containers-submodule replace) ...
+[11:38:07] building shim image localhost/helixllm-nllb-shim:latest ...
+BUILD-OK localhost/helixllm-nllb-shim:latest
+### pre-flight (§11.4.119 single-owner, coder untouched)
+date_utc=2026-07-07T11:38:08Z
+uname_m=x86_64  podman=podman version 5.7.1
+lane=NLLB-200-distilled-600M via CTranslate2 (PRIMARY design-default lane), CPU, shim=localhost/helixllm-nllb-shim:latest
+primary_repo=entai2965/nllb-200-distilled-600M-ctranslate2  fallback_repo=JustFrederik/nllb-200-distilled-600M-ct2-int8  host_port=18436
+coder container (MUST remain running, untouched):
+helixllm-coder localhost/helixllm/llamacpp-router:cuda12.8-sm120 Up 22 hours
+target host port 18436 listeners (expect none):
+  (free)
+### RED baseline (§11.4.115): analyzer vs an echo-stub that returns q unchanged
+RED_MODE=1 — expect the analyzer to FAIL (exit 1) = defect reproduced, for BOTH pairs
+--- en->de ---
+[RUNTIME-SIGNATURE(en->de)] FAIL notIdentity=false allKeywordsOK=false anyKeywordOK=false
+    reason: identity/passthrough: forward "The house is blue." == source "The house is blue." (or empty)
+    reason: missing required keyword(s) [haus] in forward "The house is blue."
+    reason: none of the alternative keyword(s) [blau blaues blaue] present in forward "The house is blue."
+analyzer_exit(en->de)=1
+--- en->fr ---
+[RUNTIME-SIGNATURE(en->fr)] FAIL notIdentity=false allKeywordsOK=false anyKeywordOK=false
+    reason: identity/passthrough: forward "The cat sleeps." == source "The cat sleeps." (or empty)
+    reason: missing required keyword(s) [chat] in forward "The cat sleeps."
+    reason: none of the alternative keyword(s) [dort dormir] present in forward "The cat sleeps."
+analyzer_exit(en->fr)=1
+RED-OK: echo-stub correctly FAILED the runtime signature for both pairs
+[11:38:08] lane primary attempt 1/4
+[11:38:08] boot NLLB shim lane repo=entai2965/nllb-200-distilled-600M-ctranslate2 port=18436 project=phase3translatenllb_primary attempt=1 via containers submodule orchestrator
+UP-OK: phase3translatenllb_primary nllb-shim via containers submodule orchestrator
+[11:38:13] health OK after 2 polls: {"status": "ok", "model": "entai2965/nllb-200-distilled-600M-ctranslate2"}
+served-model cross-check: requested=entai2965/nllb-200-distilled-600M-ctranslate2 reported=entai2965/nllb-200-distilled-600M-ctranslate2
+[11:38:13] GREEN lane repo=entai2965/nllb-200-distilled-600M-ctranslate2 project=phase3translatenllb_primary
+helixllm-coder localhost/helixllm/llamacpp-router:cuda12.8-sm120 Up 22 hours 8080/tcp, 50052/tcp
+phase3translatenllb_primary_nllb-shim_1 localhost/helixllm-nllb-shim:latest Up 4 seconds 0.0.0.0:18436->8000/tcp
+PROBE-OK en->de wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_translation_nllb_20260707/green_record_en_de_1.json
+    source  = "The house is blue."
+    forward = "Das Haus ist blau."
+PROBE-OK en->de wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_translation_nllb_20260707/green_record_en_de_2.json
+    source  = "The house is blue."
+    forward = "Das Haus ist blau."
+### GREEN runtime signature (§11.4.108) pair=en->de repo=entai2965/nllb-200-distilled-600M-ctranslate2
+[RUNTIME-SIGNATURE(en->de)] PASS notIdentity=true allKeywordsOK=true anyKeywordOK=true
+signature_exit=0
+[DETERMINISM] PASS: forward byte-identical across two identical requests (en->de) = "Das Haus ist blau."
+determinism_exit=0
+GREEN-OK (en->de)
+PROBE-OK en->fr wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_translation_nllb_20260707/green_record_en_fr_1.json
+    source  = "The cat sleeps."
+    forward = "Le chat dort."
+PROBE-OK en->fr wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_translation_nllb_20260707/green_record_en_fr_2.json
+    source  = "The cat sleeps."
+    forward = "Le chat dort."
+### GREEN runtime signature (§11.4.108) pair=en->fr repo=entai2965/nllb-200-distilled-600M-ctranslate2
+[RUNTIME-SIGNATURE(en->fr)] PASS notIdentity=true allKeywordsOK=true anyKeywordOK=true
+signature_exit=0
+[DETERMINISM] PASS: forward byte-identical across two identical requests (en->fr) = "Le chat dort."
+determinism_exit=0
+GREEN-OK (en->fr)
+### analyzer self-validation (§11.4.107(10)) golden-good = real captured en->de record
+[GOLDEN-GOOD(expect PASS)] PASS notIdentity=true allKeywordsOK=true anyKeywordOK=true
+[GOLDEN-BAD-IDENTITY/ECHO(expect FAIL)] FAIL notIdentity=false allKeywordsOK=false anyKeywordOK=false
+    reason: identity/passthrough: forward "The house is blue." == source "The house is blue." (or empty)
+    reason: missing required keyword(s) [haus] in forward "The house is blue."
+    reason: none of the alternative keyword(s) [blau blaues blaue] present in forward "The house is blue."
+[GOLDEN-BAD-EMPTY(expect FAIL)] FAIL notIdentity=false allKeywordsOK=false anyKeywordOK=false
+    reason: identity/passthrough: forward "" == source "The house is blue." (or empty)
+    reason: missing required keyword(s) [haus] in forward ""
+    reason: none of the alternative keyword(s) [blau blaues blaue] present in forward ""
+[GOLDEN-BAD-WRONGLANG(expect FAIL)] FAIL notIdentity=true allKeywordsOK=false anyKeywordOK=false
+    reason: missing required keyword(s) [haus] in forward "Le chat dort."
+    reason: none of the alternative keyword(s) [blau blaues blaue] present in forward "Le chat dort."
+[SELF-VALIDATION] PASS: analyzer PASSes golden-good and FAILs all golden-bad fixtures
+selfvalidate_exit=0
+### overall verdict
+ALL-GREEN: runtime signature + determinism + self-validation PASS (lane=entai2965/nllb-200-distilled-600M-ctranslate2)
+[11:38:14] teardown project=phase3translatenllb_primary (single-owner cleanup) ...
+DOWN-OK: phase3translatenllb_primary nllb-shim (volumes removed) via containers submodule orchestrator
+### post-teardown state
+nllb-shim containers (expect none):
+  (none — removed)
+coder still running (untouched):
+helixllm-coder Up 22 hours
+[11:38:25] DONE. Evidence in /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_translation_nllb_20260707

@@ -1,0 +1,71 @@
+[06:49:05] building harness (containers-submodule replace) ...
+### pre-flight (§11.4.119 single-owner, coder untouched)
+date_utc=2026-07-07T06:49:08Z
+uname_m=x86_64  podman=podman version 5.7.1
+coder container (MUST remain running, untouched):
+helixllm-coder localhost/helixllm/llamacpp-router:cuda12.8-sm120 Up 17 hours
+target host port 18435 listeners (expect none):
+  (free)
+TEI image:
+ghcr.io/huggingface/text-embeddings-inference:cpu-1.9 690 MB
+### RED baseline (§11.4.115): analyzer vs the dim-1536 zero-vector stub
+RED_MODE=1 — expect the analyzer to FAIL (exit 1) = defect reproduced
+[RUNTIME-SIGNATURE] FAIL dim=1536 |A|=0.0000 |A'|=0.0000 |U|=0.0000 cos(A,A')=NaN cos(A,U)=NaN margin=NaN
+    reason: expected dim 768, got 1536
+    reason: zero/near-zero norm A=0 A'=0 U=0
+    reason: cosine NaN (zero-norm or dim mismatch)
+analyzer_exit=1
+RED-OK: stub correctly FAILED the runtime signature
+[06:49:08] boot TEI lane model=nomic-ai/nomic-embed-text-v1.5 port=18435 project=phase3embed_primary via containers submodule orchestrator
+UP-OK: phase3embed_primary tei-embed via containers submodule orchestrator
+[06:49:09] container state=exited before healthy — abort poll (n=1)
+[06:49:09] lane nomic-ai/nomic-embed-text-v1.5 did not become healthy; capturing logs + tearing down
+[2m2026-07-07T06:49:09.467888Z[0m [32m INFO[0m [2mtext_embeddings_router[0m[2m:[0m [2mrouter/src/main.rs[0m[2m:[0m[2m216:[0m Args { model_id: "nom**-**/*****-*****-****-v1.5", revision: None, tokenization_workers: None, dtype: None, served_model_name: None, pooling: None, max_concurrent_requests: 512, max_batch_tokens: 16384, max_batch_requests: None, max_client_batch_size: 32, auto_truncate: true, default_prompt_name: None, default_prompt: None, dense_path: None, hf_api_token: None, hf_token: None, hostname: "0.0.0.0", port: 80, uds_path: "/tmp/text-embeddings-inference-server", huggingface_hub_cache: Some("/data"), payload_limit: 2000000, api_key: None, json_output: false, disable_spans: false, otlp_endpoint: None, otlp_service_name: "text-embeddings-inference.server", prometheus_port: 9000, cors_allow_origin: None }
+[2m2026-07-07T06:49:09.519771Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m42:[0m Starting download
+[2m2026-07-07T06:49:09.519782Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `1_Pooling/config.json`
+[2m2026-07-07T06:49:09.519873Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `sentence_bert_config.json`
+[2m2026-07-07T06:49:09.519895Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `config_sentence_transformers.json`
+[2m2026-07-07T06:49:09.519910Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `config.json`
+[2m2026-07-07T06:49:09.519924Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m18:[0m Downloading `tokenizer.json`
+[2m2026-07-07T06:49:09.519938Z[0m [32m INFO[0m [1mdownload_artifacts[0m[2m:[0m [2mtext_embeddings_core::download[0m[2m:[0m [2mcore/src/download.rs[0m[2m:[0m[2m72:[0m Model artifacts downloaded in 169.226µs
+Error: Failed to parse `config.json`
+
+Caused by:
+    duplicate field `max_position_embeddings` at line 42 column 15
+[06:49:09] teardown project=phase3embed_primary (single-owner cleanup) ...
+DOWN-OK: phase3embed_primary tei-embed (volumes removed) via containers submodule orchestrator
+[06:49:10] lane fallback attempt 1/3
+[06:49:10] boot TEI lane model=BAAI/bge-small-en-v1.5 port=18435 project=phase3embed_fallback via containers submodule orchestrator
+UP-OK: phase3embed_fallback tei-embed via containers submodule orchestrator
+[06:49:14] health OK after 2 polls
+SUBSTITUTION (§11.4.6): primary lane nomic-ai/nomic-embed-text-v1.5 did not become healthy (TEI cpu-1.9 rejects its config.json — 'duplicate field max_position_embeddings'); fell back to BAAI/bge-small-en-v1.5 (a design-listed TEI CPU model)
+[06:49:14] GREEN lane=BAAI/bge-small-en-v1.5 project=phase3embed_fallback
+helixllm-coder localhost/helixllm/llamacpp-router:cuda12.8-sm120 Up 17 hours 8080/tcp, 50052/tcp
+phase3embed_fallback_tei-embed_1 ghcr.io/huggingface/text-embeddings-inference:cpu-1.9 Up 3 seconds 0.0.0.0:18435->80/tcp
+EMBED-OK: status=200 wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_embeddings_20260706/green_response_1.json (14394 bytes)
+EMBED-OK: status=200 wrote /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_embeddings_20260706/green_response_2.json (14394 bytes)
+### GREEN runtime signature (§11.4.108) served_model=BAAI/bge-small-en-v1.5 served_dim=384 margin=0.15
+[RUNTIME-SIGNATURE] PASS dim=384 |A|=1.0000 |A'|=1.0000 |U|=1.0000 cos(A,A')=0.7509 cos(A,U)=0.3931 margin=0.3578
+signature_exit=0
+[DETERMINISM] PASS: 3 vectors byte-identical across two identical requests
+determinism_exit=0
+GREEN-OK
+### analyzer self-validation (§11.4.107(10)) golden-good = real captured response (dim=384)
+[GOLDEN-GOOD(expect PASS)] PASS dim=384 |A|=1.0000 |A'|=1.0000 |U|=1.0000 cos(A,A')=0.7509 cos(A,U)=0.3931 margin=0.3578
+[GOLDEN-BAD-ZEROVEC(expect FAIL)] FAIL dim=1536 |A|=0.0000 |A'|=0.0000 |U|=0.0000 cos(A,A')=NaN cos(A,U)=NaN margin=NaN
+    reason: zero/near-zero norm A=0 A'=0 U=0
+    reason: cosine NaN (zero-norm or dim mismatch)
+[GOLDEN-BAD-SHUFFLED(expect FAIL)] FAIL dim=384 |A|=1.0000 |A'|=1.0000 |U|=1.0000 cos(A,A')=0.3931 cos(A,U)=0.7509 margin=-0.3578
+    reason: semantic-order margin -0.3578 < required 0.1500
+[GOLDEN-BAD-WRONGDIM(expect FAIL)] FAIL dim=383 |A|=0.9951 |A'|=0.9971 |U|=0.9988 cos(A,A')=0.7492 cos(A,U)=0.3907 margin=0.3584
+    reason: expected dim 384, got 383
+[SELF-VALIDATION] PASS: analyzer PASSes golden-good and FAILs all golden-bad fixtures
+selfvalidate_exit=0
+[06:49:14] teardown project=phase3embed_fallback (single-owner cleanup) ...
+DOWN-OK: phase3embed_fallback tei-embed (volumes removed) via containers submodule orchestrator
+### post-teardown state
+tei-embed containers (expect none):
+  (none — removed)
+coder still running (untouched):
+helixllm-coder Up 17 hours
+[06:49:15] DONE. Evidence in /home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/phase3_embeddings_20260706

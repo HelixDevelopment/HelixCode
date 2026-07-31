@@ -1,0 +1,126 @@
+=== RUN   TestHeapTrend_FlagsMonotonicLeak
+    memory_test.go:233: bounded-noisy series signed-R2 = -0.0023 (must be < 0.50)
+    memory_test.go:245: monotonic-leak series signed-R2 = 0.9989 (must be >= 0.50)
+    memory_test.go:258: slow-noisy-leak series signed-R2 = 0.5059 (must be >= 0.50)
+    memory_test.go:268: declining series signed-R2 = -1.0000 (must be < 0.50)
+--- PASS: TestHeapTrend_FlagsMonotonicLeak (0.00s)
+=== RUN   TestHeapTrendIsLeak_RequiresTrendAndMagnitude
+    memory_test.go:296: tiny-flat-creep: signed-R2=0.8722 rise=2785B riseFraction=0.0045 (must NOT be a leak)
+    memory_test.go:309: monotonic-leak: signed-R2=0.9989 rise=152914286B riseFraction=1.8266 (must BE a leak)
+    memory_test.go:321: slow-noisy-leak: signed-R2=0.5059 rise=86730769B riseFraction=1.0785 (must BE a leak)
+    memory_test.go:333: bounded-noisy: signed-R2=-0.0023 rise=-6257143B riseFraction=-0.0966 (must NOT be a leak)
+    memory_test.go:343: declining: signed-R2=-1.0000 riseFraction=-1.5556 (must NOT be a leak)
+--- PASS: TestHeapTrendIsLeak_RequiresTrendAndMagnitude (0.00s)
+=== RUN   TestMemory_LeakDetection_RepeatedRequests
+    memory_test.go:419: Memory delta after 1000 requests:
+    memory_test.go:420:   Alloc delta: 22392 bytes
+    memory_test.go:421:   Heap alloc delta (point snapshot): 22392 bytes
+    memory_test.go:422:   Total allocated: 5599736 bytes
+    memory_test.go:423:   GC runs: 12
+    memory_test.go:424:   Live-heap samples (post-GC, bytes): [239456 241872 242320 242896 244048 244080 244448 244080 244080 246048]
+    memory_test.go:431:   Live-heap trend signal (signed-R2): 0.8091 (leak if >= 0.50, slope 535 B/sample, rise 4815 B = 1.98% of mean)
+--- PASS: TestMemory_LeakDetection_RepeatedRequests (0.14s)
+=== RUN   TestMemory_LeakDetection_ConcurrentRequests
+    memory_test.go:507: Memory delta after concurrent requests:
+    memory_test.go:508:   Heap alloc delta (point snapshot): 58224 bytes
+    memory_test.go:509:   GC runs: 12
+    memory_test.go:510:   Live-heap samples (post-GC per wave, bytes): [299728 289624 301824 317104 301048 330272 303480 293800 303512 303992]
+    memory_test.go:516:   Live-heap trend signal (signed-R2): 0.0177 (leak if >= 0.50, slope 508 B/sample, rise 4572 B = 1.50% of mean)
+--- PASS: TestMemory_LeakDetection_ConcurrentRequests (0.07s)
+=== RUN   TestMemory_LeakDetection_JSONParsing
+    memory_test.go:610: Memory delta after JSON parsing tests:
+    memory_test.go:611:   Total allocated: 2112488 bytes
+    memory_test.go:612:   Heap alloc delta (point snapshot): -8224 bytes
+    memory_test.go:613:   Live-heap samples (post-GC, bytes): [348008 348024 348024 348040 348040 348120 348120 348120 348120 348552]
+    memory_test.go:619:   Live-heap trend signal (signed-R2): 0.5336 (leak if >= 0.50, slope 39 B/sample, rise 347 B = 0.10% of mean)
+--- PASS: TestMemory_LeakDetection_JSONParsing (0.01s)
+=== RUN   TestMemory_Allocation_LargePayloads
+=== RUN   TestMemory_Allocation_LargePayloads/PayloadSize_1024
+    memory_test.go:691: Memory for 1024 byte payload:
+    memory_test.go:692:   Allocated: 68224 bytes
+=== RUN   TestMemory_Allocation_LargePayloads/PayloadSize_10240
+    memory_test.go:691: Memory for 10240 byte payload:
+    memory_test.go:692:   Allocated: 110232 bytes
+=== RUN   TestMemory_Allocation_LargePayloads/PayloadSize_102400
+    memory_test.go:691: Memory for 102400 byte payload:
+    memory_test.go:692:   Allocated: 615832 bytes
+=== RUN   TestMemory_Allocation_LargePayloads/PayloadSize_1048576
+    memory_test.go:691: Memory for 1048576 byte payload:
+    memory_test.go:692:   Allocated: 5351224 bytes
+=== RUN   TestMemory_Allocation_LargePayloads/PayloadSize_5242880
+    memory_test.go:691: Memory for 5242880 byte payload:
+    memory_test.go:692:   Allocated: 26335352 bytes
+--- PASS: TestMemory_Allocation_LargePayloads (0.02s)
+    --- PASS: TestMemory_Allocation_LargePayloads/PayloadSize_1024 (0.00s)
+    --- PASS: TestMemory_Allocation_LargePayloads/PayloadSize_10240 (0.00s)
+    --- PASS: TestMemory_Allocation_LargePayloads/PayloadSize_102400 (0.00s)
+    --- PASS: TestMemory_Allocation_LargePayloads/PayloadSize_1048576 (0.00s)
+    --- PASS: TestMemory_Allocation_LargePayloads/PayloadSize_5242880 (0.02s)
+=== RUN   TestMemory_Allocation_ConnectionPooling
+    memory_test.go:744: Connection pool memory efficiency:
+    memory_test.go:745:   Total allocated: 2791352 bytes
+    memory_test.go:746:   Heap delta: 10968 bytes
+--- PASS: TestMemory_Allocation_ConnectionPooling (0.08s)
+=== RUN   TestMemory_GCPressure_HighAllocationRate
+    memory_test.go:845: GC pressure test results:
+    memory_test.go:846:   Duration: 30.069269571s
+    memory_test.go:847:   Requests: 268275
+    memory_test.go:848:   Requests/sec: 8921.90
+    memory_test.go:849:   GC runs: 469
+    memory_test.go:850:   GC runs/sec: 15.60
+    memory_test.go:851:   Heap delta (point snapshot): 49456 bytes
+    memory_test.go:852:   Live-heap samples (post-GC, bytes): [481344 427368 493848 481144 430280 426256 498608 447312 494784 488056 439736 496096 433296 496760]
+    memory_test.go:879:   Live-heap trend slope: 965 bytes/sample
+    memory_test.go:880:   Live-heap trend rise (slope*window): 12547 bytes
+    memory_test.go:881:   Live-heap trend signal (signed-R2): 0.0178 (leak if >= 0.50)
+--- PASS: TestMemory_GCPressure_HighAllocationRate (30.07s)
+=== RUN   TestMemory_GCPressure_BurstTraffic
+    memory_test.go:951: Burst traffic GC test:
+    memory_test.go:952:   GC runs: 11
+    memory_test.go:953:   Heap delta: 13968 bytes
+--- PASS: TestMemory_GCPressure_BurstTraffic (3.01s)
+=== RUN   TestMemory_ResourceCleanup_Goroutines
+    memory_test.go:978: Initial goroutines: 4
+    memory_test.go:1006: Final goroutines: 6 (delta: 2)
+--- PASS: TestMemory_ResourceCleanup_Goroutines (2.10s)
+=== RUN   TestMemory_ResourceCleanup_FileDescriptors
+    memory_test.go:1039: File descriptor cleanup test passed
+--- PASS: TestMemory_ResourceCleanup_FileDescriptors (0.02s)
+=== RUN   TestMemory_ResourceCleanup_Contexts
+    memory_test.go:1107: Context cleanup test:
+    memory_test.go:1108:   Goroutine delta: 2
+    memory_test.go:1109:   Heap delta (point snapshot): -21800 bytes
+    memory_test.go:1110:   Live-heap samples (post-GC, bytes): [326712 326184 326008 325832 326200 326232 325864 326232 326408 326344]
+    memory_test.go:1117:   Live-heap trend signal (signed-R2): -0.0012 (leak if >= 0.50, slope -3 B/sample, rise -27 B = -0.01% of mean)
+--- PASS: TestMemory_ResourceCleanup_Contexts (1.02s)
+=== RUN   TestMemory_Profiling_Baseline
+    memory_test.go:1140: Baseline memory statistics:
+    memory_test.go:1141:   Allocated: 307416 bytes (0.29 MB)
+    memory_test.go:1142:   Total allocated: 1583193328 bytes (1509.85 MB)
+    memory_test.go:1143:   System: 42707224 bytes (40.73 MB)
+    memory_test.go:1144:   Heap allocated: 307416 bytes (0.29 MB)
+    memory_test.go:1145:   Heap system: 36995072 bytes (35.28 MB)
+    memory_test.go:1146:   Heap idle: 35708928 bytes (34.05 MB)
+    memory_test.go:1147:   Heap in use: 1286144 bytes (1.23 MB)
+    memory_test.go:1148:   Stack in use: 753664 bytes (0.72 MB)
+    memory_test.go:1149:   Number of GC runs: 560
+    memory_test.go:1150:   Number of goroutines: 4
+--- PASS: TestMemory_Profiling_Baseline (0.00s)
+=== RUN   TestMemory_Profiling_IdleServerMemory
+    memory_test.go:1172: Server memory (idle after health check):
+    memory_test.go:1173:   Heap in use: 1236992 bytes (1.18 MB)
+    memory_test.go:1174:   Goroutines: 2
+--- PASS: TestMemory_Profiling_IdleServerMemory (2.00s)
+=== RUN   TestMemory_Stress_SustainedLoad
+    memory_test.go:1258: Sustained load test results:
+    memory_test.go:1259:   Initial heap: 1220608 bytes
+    memory_test.go:1261:   Sample 1 heap: 2695168 bytes
+    memory_test.go:1261:   Sample 2 heap: 2326528 bytes
+    memory_test.go:1261:   Sample 3 heap: 2564096 bytes
+    memory_test.go:1261:   Sample 4 heap: 2375680 bytes
+    memory_test.go:1261:   Sample 5 heap: 2564096 bytes
+    memory_test.go:1261:   Sample 6 heap: 4145152 bytes
+    memory_test.go:1263:   Final heap: 1351680 bytes
+--- PASS: TestMemory_Stress_SustainedLoad (60.05s)
+PASS
+ok  	dev.helix.code/tests/memory	98.609s

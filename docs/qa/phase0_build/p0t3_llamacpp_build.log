@@ -1,0 +1,27 @@
+[1/2] STEP 1/4: FROM helixllm/cuda-base:12.8.1 AS build
+[1/2] STEP 2/4: WORKDIR /src
+--> Using cache dbd0ab8be64118704e0b97b3f75322af1e3c4edefb94e8a8b4614e17d4c73e76
+--> dbd0ab8be641
+[1/2] STEP 3/4: COPY . /src
+--> Using cache 71d61ba3ebe5f06258559abd7a2bb34104c605948f3123676ff5b8d7b53ad2b3
+--> 71d61ba3ebe5
+[1/2] STEP 4/4: RUN cmake -S . -B build         -DGGML_CUDA=ON         -DCMAKE_CUDA_ARCHITECTURES=120         -DLLAMA_CURL=ON         -DCMAKE_BUILD_TYPE=Release         -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,/usr/local/cuda/lib64/stubs"         -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath-link,/usr/local/cuda/lib64/stubs"  && cmake --build build --config Release -j"$(nproc)"         --target llama-server llama-cli  && test -x /src/build/bin/llama-server && test -x /src/build/bin/llama-cli  && echo "BUILD OK: llama-server + llama-cli linked for sm_120" | tee /src/build/.build-ok.txt
+--> Using cache 8dfa77867a42945ec9a93ca8774f807adaaf00bcc1a1e1b8bc92cb0d3fa12ad0
+--> 8dfa77867a42
+[2/2] STEP 1/7: FROM docker.io/nvidia/cuda:12.8.1-runtime-ubuntu22.04 AS runtime
+[2/2] STEP 2/7: RUN apt-get update && apt-get install -y --no-install-recommends         libcurl4-openssl-dev libgomp1 ca-certificates     && rm -rf /var/lib/apt/lists/*
+--> Using cache 33b7da1bac7aed9b2cb37077a6a9e4591376334472359bcbdf79eb1ef8ce5c5f
+--> 33b7da1bac7a
+[2/2] STEP 3/7: COPY --from=build /src/build/bin/ /opt/llamacpp/
+--> f4485e9450ef
+[2/2] STEP 4/7: ENV PATH=/opt/llamacpp:${PATH}     LD_LIBRARY_PATH=/opt/llamacpp
+--> b02f08283894
+[2/2] STEP 5/7: EXPOSE 8080
+--> 12fa1c891ce3
+[2/2] STEP 6/7: ENTRYPOINT ["/opt/llamacpp/llama-server"]
+--> 1b049edc5083
+[2/2] STEP 7/7: LABEL org.helix.programme="helixllm-full-extension"       org.helix.component="llamacpp-server"       org.helix.arch="sm_120-blackwell"
+[2/2] COMMIT helixllm/llamacpp:cuda12.8-sm120
+--> 412fdf57df7e
+Successfully tagged localhost/helixllm/llamacpp:cuda12.8-sm120
+412fdf57df7eceb39456774319da71408cbc42d0f48389f0a955ad3adf70b40b

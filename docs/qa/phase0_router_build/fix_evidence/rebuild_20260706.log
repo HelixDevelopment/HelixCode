@@ -1,0 +1,65 @@
+[1/2] STEP 1/8: FROM docker.io/nvidia/cuda:12.8.1-devel-ubuntu24.04 AS builder
+[1/2] STEP 2/8: RUN apt-get update && apt-get install -y --no-install-recommends     cmake     git     build-essential     pkg-config     libcurl4-openssl-dev     libssl-dev     && rm -rf /var/lib/apt/lists/*
+--> Using cache f9029193eda8113defece95113fd0c5fc08d109f96fca81b9128509d839f6f65
+--> f9029193eda8
+[1/2] STEP 3/8: RUN ln -sf /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
+--> Using cache 0089f6cd855ba8937e664a0673cc2ba40d724e7dfa77b7e0bd9cc5a6e740ba9d
+--> 0089f6cd855b
+[1/2] STEP 4/8: ENV LIBRARY_PATH=/usr/local/cuda/lib64/stubs
+--> Using cache 234725c786a78912d12a26cbf157621db35c9d376e0673420986d45cb0c7f63d
+--> 234725c786a7
+[1/2] STEP 5/8: WORKDIR /src
+--> Using cache 39cb60702bea7f2f27579b1a5c4e8eef8860bcbc33e6b305cb38f650ac254f1a
+--> 39cb60702bea
+[1/2] STEP 6/8: RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp.git .
+--> Using cache 2c007b4b9948853e59847797cb020f66342cb450b07d6ea5b1613a556daa3d27
+--> 2c007b4b9948
+[1/2] STEP 7/8: RUN cmake -B build     -DCMAKE_BUILD_TYPE=Release     -DGGML_CUDA=ON     -DCMAKE_CUDA_ARCHITECTURES=120     -DGGML_CUDA_F16=ON     -DGGML_CUDA_FA_ALL_QUANTS=ON     -DGGML_LTO=ON     -DGGML_RPC=ON     -DGGML_NATIVE=OFF     -DLLAMA_CURL=ON     -DLLAMA_OPENSSL=ON     -DBUILD_SHARED_LIBS=OFF     -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath-link,/usr/local/cuda/lib64/stubs"
+--> Using cache edfe3706f0ed94b02c7250d57ce5be27b3e8a26d712249ae8ebb333028a00748
+--> edfe3706f0ed
+[1/2] STEP 8/8: RUN cmake --build build --config Release       --target llama-server --target llama-cli --target ggml-rpc-server -j$(nproc)  && test -x build/bin/llama-server && test -x build/bin/llama-cli && test -x build/bin/ggml-rpc-server  && echo "BUILD OK: sm_120 static llama-server + llama-cli + ggml-rpc-server"
+--> Using cache 8951397043f8b5c74cd56a2c51c6dcfaa7f5c7b877488e3768324504885d3c53
+--> 8951397043f8
+[2/2] STEP 1/14: FROM docker.io/nvidia/cuda:12.8.1-runtime-ubuntu24.04
+[2/2] STEP 2/14: RUN apt-get update && apt-get install -y --no-install-recommends     ca-certificates     curl     libcurl4     libssl3     libgomp1     && rm -rf /var/lib/apt/lists/*
+--> Using cache d7bdb212784c01bf23a76e5a8991d4b22bda967f67646a84b9394ee8bed282a0
+--> d7bdb212784c
+[2/2] STEP 3/14: COPY --from=builder /src/build/bin/llama-server /usr/local/bin/llama-server
+--> Using cache 7abb8adff1b4286e90900d6ed06950ba0790423abc5ccefc30bf28d37d09bb1c
+--> 7abb8adff1b4
+[2/2] STEP 4/14: COPY --from=builder /src/build/bin/llama-cli /usr/local/bin/llama-cli
+--> Using cache ef5a22b3cfffcd577ea6e3985040bebe8d6f75ab2b4d1063d2ecdcac5e345426
+--> ef5a22b3cfff
+[2/2] STEP 5/14: RUN --mount=from=builder,source=/src/build/bin,target=/builder-bin     cp /builder-bin/ggml-rpc-server /usr/local/bin/rpc-server ||     { echo "FATAL: ggml-rpc-server not found in build output — RPC worker mode would be silently missing from the shipped image"; exit 1; }
+--> Using cache dfb85a009dc80cd8a2edd5b135da0a6b7d595a51beb9a84ee8549cce7229255b
+--> dfb85a009dc8
+[2/2] STEP 6/14: RUN mkdir -p /models /config
+--> Using cache 5f3983697f04d0ba0a143fd2eb4c02276afcc8cf77b5cd735e48e85c2853b714
+--> 5f3983697f04
+[2/2] STEP 7/14: EXPOSE 8080
+--> Using cache e6000121853a64bd27dde8f617fa784cf427c8a0f5d4439aeb1fba94e966fcce
+--> e6000121853a
+[2/2] STEP 8/14: EXPOSE 50052
+--> Using cache 60409a862aa1af759a3f5f18ccc0a4dddf60cda6a9324009af78b994bc403ef5
+--> 60409a862aa1
+[2/2] STEP 9/14: HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3     CMD curl -sf http://localhost:8080/health || exit 1
+--> Using cache 6fabb6af28a7852a129897839d3a1a211daec444893740d20626d27c72449ca0
+--> 6fabb6af28a7
+[2/2] STEP 10/14: ENV HELIX_MODELS_MAX=3
+--> Using cache f544e932cba355de036f24368e8f7a22d8fa52db9ce7d51c871eea0c93933602
+--> f544e932cba3
+[2/2] STEP 11/14: ENV HELIX_THREADS=14
+--> Using cache 4f5450c637f05f59ed6c4d7d8fca29b63e67af28327b21941c28a04d802f0dd7
+--> 4f5450c637f0
+[2/2] STEP 12/14: ENV HELIX_THREADS_BATCH=16
+--> Using cache e1c1bd63e727cf102ac7160f6366df4aecd854bde966e11d273738c5bd231abd
+--> e1c1bd63e727
+[2/2] STEP 13/14: ENTRYPOINT ["llama-server"]
+--> Using cache 9a0a03332783af844a51de0e48789eb6548a6549a4b8c04a959eba4ef095e50b
+--> 9a0a03332783
+[2/2] STEP 14/14: CMD ["--host", "0.0.0.0",      "--port", "8080",      "--models-dir", "/models",      "--models-max", "3",      "--models-autoload",      "--threads", "14",      "--threads-batch", "16",      "--metrics"]
+--> Using cache 473fe1ae8970d56d353c91709fc0e1657d9c0d578eb02cfa9bdeb29ce08a6305
+[2/2] COMMIT helixllm/llamacpp-router:cuda12.8-sm120
+--> 473fe1ae8970
+Successfully tagged localhost/helixllm/llamacpp-router:cuda12.8-sm120
+473fe1ae8970d56d353c91709fc0e1657d9c0d578eb02cfa9bdeb29ce08a6305
