@@ -1,0 +1,32 @@
+=== RED (pre-fix, HEAD version of the script) run against the CURRENT (already-HXC-187-fixed) go.mod tree ===
+rows: 11
+facts.json : /tmp/hxc199_red_evidence_run/facts.json
+raw output : /tmp/hxc199_red_evidence_run/raw_output.txt
+
+ASSERTION                                                                VERDICT
+SpecKit binary installed at /home/milos/.local/bin/specify               CONFIRMED
+SpecKit NOT initialised in repo — no .specify/ present                   CONFIRMED
+SpecKit NOT initialised in repo — no specs/ present                      CONFIRMED
+Initialisation is an explicit early task (implies zero speckit skills    CONFIRMED
+git@github.com:HelixDevelopment/skills.git reachable via SSH             CONFIRMED
+U-8: stale skills branches carry nothing not already in main             PARTIAL
+HelixDevelopment/skills is NOT a submodule of this project               STALE
+The only skills-matching .gitmodules entry is cli_agents/codex-skills    CONFIRMED
+Inner Go module helix_code/ declares module dev.helix.code               CONTRADICTED
+Submodule submodules/helix_agent declares module dev.helix.agent         CONTRADICTED
+UNSTATED BY ITEM: the thin root module's identity                        CONFIRMED
+{
+  "assertion": "UNSTATED BY ITEM: the thin root module's identity",
+  "stated": "(not stated)",
+  "measured": "grep: //go.mod: No such file or directory \u2014 identical to the inner module (R-26 duplicate)",
+  "verdict": "CONFIRMED",
+  "scope_searched": "repo-root go.mod",
+  "independent_methods": 1
+}
+
+root go.mod (real, current):
+module dev.helix.code/meta
+inner helix_code/go.mod (real, current):
+module dev.helix.code
+
+RED PROOF: verdict is GAP-IN-ITEM (false positive) even though root_mod (dev.helix.code/meta) and inner_mod (dev.helix.code) are genuinely distinct module paths -- the HXC-187 fix already landed on this tree.

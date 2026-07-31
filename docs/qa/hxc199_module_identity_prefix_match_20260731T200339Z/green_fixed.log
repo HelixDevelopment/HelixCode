@@ -1,0 +1,27 @@
+=== GREEN (fixed script) run against the CURRENT (HXC-187-fixed) go.mod tree ===
+rows: 11
+facts.json : /tmp/hxc199_green_evidence_run/facts.json
+raw output : /tmp/hxc199_green_evidence_run/raw_output.txt
+
+ASSERTION                                                                VERDICT
+SpecKit binary installed at /home/milos/.local/bin/specify               CONFIRMED
+SpecKit NOT initialised in repo — no .specify/ present                   STALE
+SpecKit NOT initialised in repo — no specs/ present                      STALE
+Initialisation is an explicit early task (implies zero speckit skills    STALE
+git@github.com:HelixDevelopment/skills.git reachable via SSH             CONFIRMED
+U-8: stale skills branches carry nothing not already in main             PARTIAL
+HelixDevelopment/skills is NOT a submodule of this project               CONFIRMED
+The only skills-matching .gitmodules entry is cli_agents/codex-skills    CONTRADICTED
+Inner Go module helix_code/ declares module dev.helix.code               CONFIRMED
+Submodule submodules/helix_agent declares module dev.helix.agent         CONFIRMED
+UNSTATED BY ITEM: the thin root module's identity                        CONFIRMED
+{
+  "assertion": "UNSTATED BY ITEM: the thin root module's identity",
+  "stated": "(not stated)",
+  "measured": "module dev.helix.code/meta \u2014 distinct from the inner module (dev.helix.code) \u2014 R-26 resolved by HXC-187",
+  "verdict": "CONFIRMED",
+  "scope_searched": "repo-root go.mod",
+  "independent_methods": 1
+}
+
+GREEN PROOF: verdict is CONFIRMED -- the fixed script correctly reports the root/inner module identities as distinct (no false positive on the fixed tree).

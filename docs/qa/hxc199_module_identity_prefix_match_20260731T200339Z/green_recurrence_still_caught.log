@@ -1,0 +1,9 @@
+=== GREEN recurrence check: matcher still catches a GENUINE duplicate (module_paths_identical unit-level proof) ===
+case 1: exact recurrence -- root path forced back to literally match inner (dev.helix.code == dev.helix.code)
+  module_paths_identical(dev.helix.code, dev.helix.code) = TRUE  -> correctly flags the duplicate (matcher still fires on a genuine recurrence)
+case 2: current fixed state -- root=dev.helix.code/meta vs inner=dev.helix.code (must NOT be flagged)
+  module_paths_identical(dev.helix.code/meta, dev.helix.code) = FALSE -> correctly distinct, no false positive
+case 3: unrelated-but-prefixed name -- dev.helix.codebase vs dev.helix.code (must NOT be flagged)
+  module_paths_identical(dev.helix.codebase, dev.helix.code) = FALSE -> correct, not identical
+ALL THREE CASES CORRECT: exact-match predicate fires on genuine duplicates only, never on prefix relationships.
+exit=0

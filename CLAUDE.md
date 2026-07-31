@@ -104,7 +104,7 @@ The `docs/CONTINUATION.md` document MUST be kept in sync with actual programme s
 
 ### 3.1 Technology Stack
 - **Language**: Go — root meta-repo on `go 1.25.2`, inner Go application (`helix_code/`) on `go 1.26`. Keep both modules current; do not downgrade.
-- **Module IDs**: root `dev.helix.code` (thin), inner `dev.helix.code` (full app + transitive deps).
+- **Module IDs**: root `dev.helix.code/meta` (thin — renamed off `dev.helix.code` by HXC-187/D-7 so it stops colliding with the inner module), inner `dev.helix.code` (full app + transitive deps).
 - **HTTP / API**: Gin v1.11.0, gorilla/websocket v1.5.3, gRPC v1.80.0.
 - **Persistence**: PostgreSQL 15+ via pgx/v5 + lib/pq; Redis 7+ via go-redis/v9.
 - **AuthN/Z**: golang-jwt/v4 v4.5.2, bcrypt/argon2 (`golang.org/x/crypto`), oauth2.
@@ -121,7 +121,7 @@ The `docs/CONTINUATION.md` document MUST be kept in sync with actual programme s
 helix_code/                                # ← repo root (governance + submodules)
 ├── CLAUDE.md / AGENTS.md / CONSTITUTION.md / CRUSH.md / QWEN.md   # agent manuals
 ├── Makefile                              # governance gates only (see §3.4)
-├── go.mod                                # thin root module (dev.helix.code, go 1.25.2)
+├── go.mod                                # thin root module (dev.helix.code/meta, go 1.25.2)
 ├── helix                                 # Docker facade script (run platform standalone)
 ├── setup.sh                              # one-shot: submodule init + deps + build
 ├── .gitmodules                           # source of truth for submodule wiring
@@ -159,7 +159,9 @@ helix_code/                                # ← repo root (governance + submodu
 (NOT a submodule — see §3.2 line for `helix_code/`. The inner Go module lives
 one level down from the meta-repo root, at `<repo-root>/helix_code/`, whose
 `go.mod` declares `module dev.helix.code` on `go 1.26`. The meta-repo root has
-its own thin `go.mod` — `module dev.helix.code` on `go 1.25.2`.)
+its own thin `go.mod` — `module dev.helix.code/meta` on `go 1.25.2` (renamed
+off `dev.helix.code` by HXC-187/D-7; the two module paths are no longer the
+same identity, just siblings that share a prefix).)
 
 ```
 helix_code/                                 # module dev.helix.code, go 1.26 (inner app)

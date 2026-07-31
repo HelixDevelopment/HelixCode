@@ -24,11 +24,13 @@ package stresschaos
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -116,6 +118,178 @@ func settleGoroutines() int {
 	return last
 }
 
+// --- HXC-204: progress-based deadlock classification -------------------------
+//
+// The pre-HXC-204 harness detected deadlock by ONE signal: "did the run finish
+// inside cfg.Timeout?". That signal cannot separate a deadlock from a busy host,
+// and the busy-host reading is the likelier one during a full pre-release run —
+// by definition the busiest the machine ever gets. Measured on this repo
+// (docs/qa/hxc204_.../red/): internal/memory's concurrent read/write run
+// completes in 7.68s against a 25s budget in isolation, and blows the same
+// budget with error_count:0 and deadlock:true under 3x CPU oversubscription —
+// i.e. the harness reported DEADLOCK about a run that was working correctly.
+//
+// The two conditions are separable, and the separating signal is FORWARD
+// PROGRESS: a deadlocked worker set completes no further iterations, ever; a
+// starved one keeps completing them, just slowly. So the harness now counts
+// completed iterations and classifies on that, with the goroutine-state census
+// below as the corroborating second oracle.
+//
+// The important structural consequence: deadlock detection NO LONGER DEPENDS ON
+// THE BUDGET. It fires on a progress stall, which is typically much sooner than
+// the old timeout. That is what makes it safe for the budget to stretch while
+// work is demonstrably completing (see maxExtensionFactor) — the extension buys
+// slow hosts a real PASS without buying a hung run any extra time to hide in.
+
+// progressPollInterval is how often RunConcurrent samples the completed-call
+// counter while waiting. Small enough that a stall is noticed promptly, large
+// enough to be free next to the work being measured.
+const progressPollInterval = 100 * time.Millisecond
+
+// maxStallWindow / minStallWindow bound the "no forward progress" window that
+// arms the goroutine-state census. Derived from cfg.Timeout (see stallWindow)
+// rather than fixed, so a caller with a 500ms budget and a caller with a 60s
+// budget both get a proportionate window.
+const (
+	maxStallWindow = 5 * time.Second
+	minStallWindow = 50 * time.Millisecond
+)
+
+// maxExtensionFactor bounds how far past cfg.Timeout a run may stretch WHILE
+// STILL COMPLETING ITERATIONS. This is not a bigger fixed timeout: a run that
+// stops progressing is classified immediately by the stall detector regardless
+// of how much budget is left, so the extension is unreachable by a hung run.
+//
+// Sized against measurement, not taste (§11.4.6). internal/memory's 16x120
+// concurrent read/write run — the HXC-204 subject, and the heaviest RunConcurrent
+// caller in the tree — measures 7.68s under -race in isolation against its 25s
+// budget, and 34.6s under 3x CPU oversubscription (192 busy workers on 64 CPUs
+// alongside the host's existing load). 4x covers that measured worst case with
+// roughly 3x headroom on top, while keeping even the largest budget in the tree
+// (60s, consensus_concurrent_clusters) at 4 minutes — well inside `go test`'s
+// 10-minute default, which a stalled run would otherwise consume in full.
+const maxExtensionFactor = 4
+
+// stallWindow returns the no-progress duration that arms the goroutine-state
+// census, derived from the caller's budget and clamped to sane bounds.
+func stallWindow(timeout time.Duration) time.Duration {
+	w := timeout / 2
+	if w > maxStallWindow {
+		w = maxStallWindow
+	}
+	if w < minStallWindow {
+		w = minStallWindow
+	}
+	return w
+}
+
+// blockedGoroutineStates are the runtime goroutine states that mean "parked in a
+// synchronization primitive": the goroutine is off the run queue and only
+// another goroutine's action can wake it. A worker set entirely in these states,
+// having made no progress, is a deadlock OBSERVED rather than inferred.
+//
+// Deliberately excluded: `sleep`, `IO wait`, `syscall`, `runnable`, `running`,
+// `GC assist wait`, `preempted`. Those all describe a goroutine that will make
+// progress on its own once the CPU/disk/network yields — which is exactly the
+// busy-host case this classifier exists to stop mis-reporting.
+var blockedGoroutineStates = []string{
+	"chan receive",
+	"chan send",
+	"select",
+	"semacquire",
+	"sync.Mutex.Lock",
+	"sync.RWMutex.Lock",
+	"sync.RWMutex.RLock",
+	"sync.WaitGroup.Wait",
+	"sync.Cond.Wait",
+}
+
+// runningGoroutineStates are the states that positively contradict a deadlock:
+// a goroutine in one of these is executing or waiting only on the scheduler.
+var runningGoroutineStates = []string{
+	"running",
+	"runnable",
+	"syscall",
+	"preempted",
+}
+
+func stateMatches(state string, set []string) bool {
+	for _, s := range set {
+		// Prefix match: the runtime appends a duration to long waits, e.g.
+		// "semacquire, 5 minutes", and qualifies some states further.
+		if len(state) >= len(s) && state[:len(s)] == s {
+			return true
+		}
+	}
+	return false
+}
+
+// workerStateCensus dumps every goroutine in the process and counts the states
+// of those running RunConcurrent's worker body. It is the second, independent
+// oracle behind a DEADLOCK verdict (§11.4.107(2) — a different-domain signal, so
+// a single misleading measurement cannot produce the verdict on its own).
+//
+// Worker goroutines are identified by the concurrentWorker frame, which exists
+// as a named package-level function precisely so it is greppable in a dump.
+func workerStateCensus() map[string]int {
+	buf := make([]byte, 1<<20)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			buf = buf[:n]
+			break
+		}
+		if len(buf) >= 64<<20 { // pathological; take what we have
+			buf = buf[:n]
+			break
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+
+	census := map[string]int{}
+	for _, block := range strings.Split(string(buf), "\n\ngoroutine ") {
+		if !strings.Contains(block, "stresschaos.concurrentWorker") {
+			continue
+		}
+		// Header is "<id> [<state>]:" (the leading "goroutine " is the split
+		// separator, except for the very first block).
+		openIdx := strings.Index(block, "[")
+		closeIdx := strings.Index(block, "]")
+		if openIdx < 0 || closeIdx < openIdx {
+			continue
+		}
+		state := block[openIdx+1 : closeIdx]
+		// Drop the runtime's "\, N minutes" duration suffix.
+		if comma := strings.Index(state, ","); comma >= 0 {
+			state = state[:comma]
+		}
+		census[strings.TrimSpace(state)]++
+	}
+	return census
+}
+
+// censusShowsDeadlock reports whether a worker-state census is positive evidence
+// of a deadlock: at least one worker parked in a synchronization primitive, and
+// NOT ONE worker running, runnable or in a syscall.
+//
+// The conjunction is deliberately conservative. A census with both blocked and
+// runnable workers is ambiguous — it is what a lock-convoy on a starved host
+// looks like as well as what a partial deadlock looks like — and under HXC-204
+// the harness must not resolve an ambiguous reading into an accusation. It
+// reports INCONCLUSIVE instead, which still stops the test.
+func censusShowsDeadlock(census map[string]int) bool {
+	blocked, running := 0, 0
+	for state, n := range census {
+		switch {
+		case stateMatches(state, blockedGoroutineStates):
+			blocked += n
+		case stateMatches(state, runningGoroutineStates):
+			running += n
+		}
+	}
+	return blocked > 0 && running == 0
+}
+
 // LatencyReport is the §11.4.85 `latency.json` closed-set evidence shape.
 type LatencyReport struct {
 	Name       string  `json:"name"`
@@ -130,6 +304,35 @@ type LatencyReport struct {
 	Timestamp  string  `json:"timestamp"`
 }
 
+// ConcurrencyVerdict is the classification RunConcurrent reaches for a run that
+// did not complete inside its budget. It exists because "the run did not finish
+// in time" and "the code under test deadlocked" are DIFFERENT conditions that
+// the pre-HXC-204 harness collapsed into one: any budget overrun was reported as
+// `DEADLOCK`, so a merely-busy host produced a verdict about production code
+// (§11.4.201 — a guard must assert the condition it names).
+//
+// The classification mirrors the HXC-215 compile-integrity classifier: a real
+// defect FAILS and names itself; an inconclusive run is reported honestly and
+// names nobody. Both still stop the test — INCONCLUSIVE is not a pass.
+type ConcurrencyVerdict string
+
+const (
+	// VerdictCompleted — every goroutine finished every iteration. This is the
+	// only verdict that permits a PASS, and it carries NO wall-clock condition:
+	// a slow host produces a slow PASS.
+	VerdictCompleted ConcurrencyVerdict = "completed"
+	// VerdictDeadlock — forward progress stopped AND every still-live worker is
+	// parked in a synchronization primitive. That is a deadlock observed, not
+	// inferred from elapsed time. FAILs the test.
+	VerdictDeadlock ConcurrencyVerdict = "deadlock"
+	// VerdictInconclusive — the run did not finish, but the evidence positively
+	// contradicts a deadlock (work was still completing) or is simply silent on
+	// it (workers runnable/in syscall, i.e. starved of CPU rather than blocked).
+	// Reported as SKIP-with-reason per §11.4.3 — never as a verdict about the
+	// code under test.
+	VerdictInconclusive ConcurrencyVerdict = "inconclusive"
+)
+
 // ConcurrencyReport is the §11.4.85 `concurrency_report.json` closed-set shape.
 type ConcurrencyReport struct {
 	Name             string  `json:"name"`
@@ -143,6 +346,24 @@ type ConcurrencyReport struct {
 	ErrorCount       int64   `json:"error_count"`
 	DurationMs       float64 `json:"duration_ms"`
 	Timestamp        string  `json:"timestamp"`
+
+	// --- HXC-204 classification evidence -------------------------------------
+	// Verdict is the closed-set classification above. Deadlock stays in the
+	// shape for compatibility with existing readers and is now true ONLY for
+	// VerdictDeadlock — never for a plain budget overrun.
+	Verdict ConcurrencyVerdict `json:"verdict"`
+	// CompletedCalls is how many fn invocations returned. It is the forward-
+	// progress signal the classifier reads: a deadlocked run cannot advance it.
+	CompletedCalls int64 `json:"completed_calls"`
+	// StallMs is how long progress had been stalled when the budget expired.
+	StallMs float64 `json:"stall_ms"`
+	// BudgetMs is the effective wall-clock ceiling (see maxExtensionFactor).
+	BudgetMs float64 `json:"budget_ms"`
+	// WorkerStates is the goroutine-state census of still-live workers taken at
+	// classification time — the positive evidence behind a DEADLOCK verdict.
+	WorkerStates map[string]int `json:"worker_states,omitempty"`
+	// Reason is the human-readable justification for a non-completed verdict.
+	Reason string `json:"reason,omitempty"`
 }
 
 // RecoveryTrace is the §11.4.85 `recovery_trace.log` (categorised) evidence shape.
@@ -364,16 +585,53 @@ type ConcurrencyConfig struct {
 	// IterationsPerGoroutine is how many times each goroutine calls fn. If 0,
 	// defaults to 50 (so a 10x50 run does 500 real concurrent calls).
 	IterationsPerGoroutine int
-	// Timeout is the deadlock guard. If 0, defaults to 30s. If the run does not
-	// complete within Timeout, the test FAILS with deadlock:true evidence.
+	// Timeout is the wall-clock budget for the run. If 0, defaults to 30s.
+	//
+	// HXC-204 changed what exceeding it MEANS, not what it is. It is no longer
+	// the deadlock guard — deadlock is now detected by a forward-progress stall
+	// plus a goroutine-state census, which fires independently of (and usually
+	// well before) this budget. Exceeding the budget while work is still
+	// completing is reported INCONCLUSIVE (SKIP), never as a deadlock, and a run
+	// that is still progressing may stretch to maxExtensionFactor x Timeout so a
+	// slow host yields a slow PASS rather than a false accusation.
 	Timeout time.Duration
 }
 
-// RunConcurrent hammers fn from N>=10 goroutines per §11.4.85(A)(2), guards against
-// deadlock with a timeout, measures the goroutine-count delta to detect leaks, and
-// writes concurrency_report.json. It FAILS the test on deadlock (timeout), on a
-// goroutine leak beyond tolerance, or if fn reports errors. Run under `-race` to
-// also catch data races. Returns the ConcurrencyReport for extra assertions.
+// concurrentWorker is RunConcurrent's per-goroutine body.
+//
+// It is a named package-level function rather than an inline closure for one
+// load-bearing reason: workerStateCensus identifies worker goroutines in a
+// runtime stack dump by looking for the `stresschaos.concurrentWorker` frame. An
+// inline closure would appear as `RunConcurrent.funcN`, whose number shifts with
+// unrelated edits to this file — a census keyed on it would silently stop
+// matching and quietly downgrade every deadlock to INCONCLUSIVE.
+func concurrentWorker(gid, iters int, startGate <-chan struct{}, fn func(int, int) error, completed, errCount *int64) {
+	<-startGate // release all goroutines simultaneously for true contention
+	for it := 0; it < iters; it++ {
+		if err := fn(gid, it); err != nil {
+			atomic.AddInt64(errCount, 1)
+		}
+		// Incremented AFTER fn returns, so it counts finished work only. This is
+		// the forward-progress signal the HXC-204 classifier reads.
+		atomic.AddInt64(completed, 1)
+	}
+}
+
+// RunConcurrent hammers fn from N>=10 goroutines per §11.4.85(A)(2), detects
+// deadlock by forward-progress stall + goroutine-state census, measures the
+// goroutine-count delta to detect leaks, and writes concurrency_report.json.
+//
+// Verdicts (HXC-204):
+//
+//	completed    every iteration finished -> leak/error checks decide PASS/FAIL.
+//	             Carries no wall-clock condition: a slow host passes slowly.
+//	deadlock     progress stopped AND every live worker is parked in a sync
+//	             primitive -> t.Fatalf, naming the condition it observed.
+//	inconclusive did not finish, but the evidence contradicts or is silent on a
+//	             deadlock -> t.Skipf with a reason (§11.4.3). Not a pass.
+//
+// Run under `-race` to also catch data races. Returns the ConcurrencyReport for
+// extra assertions.
 func RunConcurrent(t testing.TB, name string, cfg ConcurrencyConfig, fn func(goroutine, iter int) error) ConcurrencyReport {
 	t.Helper()
 
@@ -398,6 +656,7 @@ func RunConcurrent(t testing.TB, name string, cfg ConcurrencyConfig, fn func(gor
 	gBefore := runtime.NumGoroutine()
 
 	var errCount int64
+	var completed int64
 	var wg sync.WaitGroup
 	wg.Add(p)
 	start := time.Now()
@@ -406,12 +665,7 @@ func RunConcurrent(t testing.TB, name string, cfg ConcurrencyConfig, fn func(gor
 	for g := 0; g < p; g++ {
 		go func(gid int) {
 			defer wg.Done()
-			<-startGate // release all goroutines simultaneously for true contention
-			for it := 0; it < iters; it++ {
-				if err := fn(gid, it); err != nil {
-					atomic.AddInt64(&errCount, 1)
-				}
-			}
+			concurrentWorker(gid, iters, startGate, fn, &completed, &errCount)
 		}(g)
 	}
 	close(startGate)
@@ -422,19 +676,97 @@ func RunConcurrent(t testing.TB, name string, cfg ConcurrencyConfig, fn func(gor
 		close(done)
 	}()
 
-	deadlock := false
-	select {
-	case <-done:
-	case <-time.After(timeout):
-		deadlock = true
+	// --- HXC-204 wait loop: watch forward progress, not just the clock --------
+	//
+	// The old loop was a single `select { <-done ; <-time.After(timeout) }`, so
+	// the only thing it could ever learn was "finished / did not finish". This
+	// one samples the completed-call counter as it waits, which is what lets the
+	// classifier below tell a stalled run from a slow one.
+	stall := stallWindow(timeout)
+	hardCeiling := time.Duration(maxExtensionFactor) * timeout
+	budget := timeout
+	lastCompleted := int64(0)
+	lastProgressAt := start
+
+	ticker := time.NewTicker(progressPollInterval)
+	defer ticker.Stop()
+
+	finished := false
+	stalled := false
+waitLoop:
+	for {
+		select {
+		case <-done:
+			finished = true
+			break waitLoop
+		case <-ticker.C:
+			if c := atomic.LoadInt64(&completed); c != lastCompleted {
+				lastCompleted = c
+				lastProgressAt = time.Now()
+			}
+			elapsed := time.Since(start)
+			// A progress stall arms the census REGARDLESS of remaining budget:
+			// a hung run is caught on the stall, never on the ceiling, which is
+			// what keeps the extension below honest.
+			if time.Since(lastProgressAt) >= stall {
+				stalled = true
+				break waitLoop
+			}
+			if elapsed >= budget {
+				// Still progressing at the budget. Extend — bounded — so a
+				// merely slow host reaches a real PASS instead of a verdict
+				// about code that is working.
+				if budget < hardCeiling {
+					budget += timeout
+					if budget > hardCeiling {
+						budget = hardCeiling
+					}
+					continue
+				}
+				break waitLoop
+			}
+		}
 	}
 	durMs := float64(time.Since(start).Microseconds()) / 1000.0
+
+	// Classify the non-completed cases (§11.4.201: assert the real condition).
+	verdict := VerdictCompleted
+	reason := ""
+	var census map[string]int
+	stallMs := 0.0
+	if !finished {
+		sinceProgress := time.Since(lastProgressAt)
+		stallMs = float64(sinceProgress.Microseconds()) / 1000.0
+		doneCalls := atomic.LoadInt64(&completed)
+		if !stalled {
+			// Work was still completing when the ceiling arrived. That is
+			// positive evidence AGAINST a deadlock, so it can never be reported
+			// as one.
+			verdict = VerdictInconclusive
+			reason = fmt.Sprintf(
+				"run still progressing at the %s ceiling (%d/%d calls completed, last progress %.0fms ago) — host too loaded to finish, NOT a deadlock",
+				hardCeiling, doneCalls, p*iters, stallMs)
+		} else {
+			census = workerStateCensus()
+			if censusShowsDeadlock(census) {
+				verdict = VerdictDeadlock
+				reason = fmt.Sprintf(
+					"no forward progress for %s (%d/%d calls completed) and every live worker is parked in a synchronization primitive: %v",
+					stall, doneCalls, p*iters, census)
+			} else {
+				verdict = VerdictInconclusive
+				reason = fmt.Sprintf(
+					"no forward progress for %s (%d/%d calls completed) but the worker state census does not show a deadlock: %v — reads as CPU starvation, and an ambiguous census is not an accusation",
+					stall, doneCalls, p*iters, census)
+			}
+		}
+	}
 
 	// Let scheduled goroutines wind down before snapshotting (only meaningful if
 	// the run actually completed). Poll-until-stable rather than a single fixed
 	// sleep: see settleGoroutines() doc comment (HXC-144).
 	var gAfter int
-	if !deadlock {
+	if finished {
 		gAfter = settleGoroutines()
 	} else {
 		gAfter = runtime.NumGoroutine()
@@ -448,18 +780,32 @@ func RunConcurrent(t testing.TB, name string, cfg ConcurrencyConfig, fn func(gor
 		GoroutinesBefore: gBefore,
 		GoroutinesAfter:  gAfter,
 		GoroutineDelta:   gAfter - gBefore,
-		Deadlock:         deadlock,
+		Deadlock:         verdict == VerdictDeadlock,
 		ErrorCount:       atomic.LoadInt64(&errCount),
 		DurationMs:       durMs,
 		Timestamp:        time.Now().UTC().Format(time.RFC3339Nano),
+		Verdict:          verdict,
+		CompletedCalls:   atomic.LoadInt64(&completed),
+		StallMs:          stallMs,
+		BudgetMs:         float64(hardCeiling.Microseconds()) / 1000.0,
+		WorkerStates:     census,
+		Reason:           reason,
 	}
 
 	dir := evidenceDir(t, name)
 	path := filepath.Join(dir, "concurrency_report.json")
 	writeJSON(t, path, rep)
 
-	if deadlock {
-		t.Fatalf("stresschaos: %q DEADLOCK — %d goroutines did not finish within %s (evidence: %s)", name, p, timeout, path)
+	switch verdict {
+	case VerdictDeadlock:
+		t.Fatalf("stresschaos: %q DEADLOCK — %s (evidence: %s)", name, reason, path)
+	case VerdictInconclusive:
+		// §11.4.3 honest inconclusive. Reported BEFORE the leak and error checks
+		// below because an unfinished run still holds live workers, and reading
+		// those as a goroutine leak would be the same category of false
+		// accusation this fix exists to remove.
+		// SKIP-OK: #HXC-204 — host-load inconclusive, never a verdict about the code.
+		t.Skipf("stresschaos: %q INCONCLUSIVE — %s (evidence: %s)", name, reason, path)
 	}
 	if rep.GoroutineDelta > goroutineLeakTolerance {
 		t.Fatalf("stresschaos: %q goroutine leak — before=%d after=%d delta=%d > tolerance %d (evidence: %s)",

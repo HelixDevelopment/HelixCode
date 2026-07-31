@@ -19,6 +19,8 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../lib/module_identity.sh
+source "${REPO_ROOT}/scripts/lib/module_identity.sh"
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT_DIR="${1:-${REPO_ROOT}/qa-results/hxc159/env_facts/${RUN_ID}}"
 mkdir -p "$OUT_DIR"
@@ -158,9 +160,29 @@ emit "Submodule submodules/helix_agent declares module dev.helix.agent" \
      "$([[ "$agent_mod" == *"dev.helix.agent"* ]] && echo CONFIRMED || echo CONTRADICTED)" \
      "submodules/helix_agent/go.mod" 1
 # Not stated by the item at all — recorded because it is the R-26 duplicate.
+#
+# HXC-199: this MUST be a WHOLE-NAME comparison, never a substring/prefix
+# match. `dev.helix.code` is a literal PREFIX of `dev.helix.code/meta` (the
+# HXC-187 fix), so `[[ "$root_mod" == *"dev.helix.code"* ]]` still matched
+# after the collision was resolved and kept reporting GAP-IN-ITEM on a
+# genuinely-fixed tree — a false positive that could mislead a reader into
+# reverting already-correct work. module_paths_identical() (scripts/lib/
+# module_identity.sh) does exact string equality on the extracted module path
+# tokens, comparing against whatever the inner module ACTUALLY declares today
+# rather than a hardcoded literal, so this stays correct if the inner module's
+# own identity ever legitimately changes.
+root_mod_path="$(go_mod_module_path "${REPO_ROOT}/go.mod")"
+inner_mod_path="$(go_mod_module_path "${REPO_ROOT}/helix_code/go.mod")"
+if module_paths_identical "$root_mod_path" "$inner_mod_path"; then
+  root_identity_verdict="GAP-IN-ITEM"
+  root_identity_relation="identical to the inner module (R-26 duplicate)"
+else
+  root_identity_verdict="CONFIRMED"
+  root_identity_relation="distinct from the inner module (${inner_mod_path:-<unknown>}) — R-26 resolved by HXC-187"
+fi
 emit "UNSTATED BY ITEM: the thin root module's identity" \
-     "(not stated)" "$root_mod — identical to the inner module (R-26 duplicate)" \
-     "$([[ "$root_mod" == *"dev.helix.code"* ]] && echo GAP-IN-ITEM || echo CONFIRMED)" \
+     "(not stated)" "$root_mod — $root_identity_relation" \
+     "$root_identity_verdict" \
      "repo-root go.mod" 1
 
 # ---------------------------------------------------------------------------

@@ -26,6 +26,8 @@ import (
 	"digital.vasic.containers/pkg/endpoint"
 	"digital.vasic.containers/pkg/health"
 	"digital.vasic.containers/pkg/runtime"
+
+	"dev.helix.code/internal/netutil"
 )
 
 const (
@@ -81,6 +83,45 @@ func sonarqubeDBHost() string { return envOrDefault(envSonarqubeDBHost, defaultS
 
 // sonarqubeDBPort returns the configured SonarQube PostgreSQL port, or the default.
 func sonarqubeDBPort() string { return envOrDefault(envSonarqubeDBPort, defaultSonarqubeDBPort) }
+
+// sonarqubeBaseURL returns the scheme+authority of the configured SonarQube.
+//
+// HXC-202 (sibling miss of HXC-185): the host arrives from HELIX_SONARQUBE_HOST
+// and is a bare HOST, so it can be a bare IPv6 literal. An IPv6 literal contains
+// colons, so `fmt.Sprintf("http://%s:%s", host, port)` produced an authority
+// that is invalid per RFC 3986 §3.2.2 and that net/url rejects. netutil is the
+// ONE shared join and is idempotent for an already-bracketed host; hostnames and
+// IPv4 literals pass through byte-for-byte unchanged.
+func sonarqubeBaseURL() string {
+	return "http://" + netutil.JoinHostPortStr(sonarqubeHost(), sonarqubePort())
+}
+
+// sonarqubeHealthURL returns the full URL of the SonarQube system-status
+// endpoint. It is BOTH the address that is actually probed and the address
+// reported to the operator, so the two can never disagree.
+func sonarqubeHealthURL() string {
+	return sonarqubeBaseURL() + sonarqubeHealth
+}
+
+// sonarqubeStatusTarget builds the health target probed by `-action=status`.
+//
+// HXC-202: URL is set explicitly. health.CheckHTTP honours a non-empty URL and
+// otherwise composes `scheme://host:port/path` itself WITHOUT bracketing
+// (containers pkg/health/http.go), so an IPv6 SonarQube would never be reached.
+// Setting URL both fixes the probe and guarantees the endpoint reported to the
+// operator is byte-identical to the one actually probed. Host/Port/Path are kept
+// so the target stays self-describing for any other consumer.
+func sonarqubeStatusTarget() health.HealthTarget {
+	return health.HealthTarget{
+		Name:    "sonarqube",
+		Host:    sonarqubeHost(),
+		Port:    sonarqubePort(),
+		Path:    sonarqubeHealth,
+		URL:     sonarqubeHealthURL(),
+		Type:    health.HealthHTTP,
+		Timeout: 10 * time.Second,
+	}
+}
 
 func main() {
 	scanner := flag.String("scanner", "", "Scanner to boot: sonarqube|snyk")
@@ -176,21 +217,14 @@ func handleSonarQube(ctx context.Context, projectDir string, rt runtime.Containe
 		if summary.Failed > 0 {
 			return fmt.Errorf("one or more required services failed to start")
 		}
-		log.Printf("security-scan: SonarQube ready at http://%s:%s", sonarqubeHost(), sonarqubePort())
+		log.Printf("security-scan: SonarQube ready at %s", sonarqubeBaseURL())
 	case "status":
-		target := health.HealthTarget{
-			Name:    "sonarqube",
-			Host:    sonarqubeHost(),
-			Port:    sonarqubePort(),
-			Path:    sonarqubeHealth,
-			Type:    health.HealthHTTP,
-			Timeout: 10 * time.Second,
-		}
+		target := sonarqubeStatusTarget()
 		result := checker.Check(ctx, target)
 		// Always name the endpoint that was actually probed. The address is
 		// env-overridable, so a verdict without it cannot be audited — a
 		// "healthy" line could refer to a different SonarQube entirely.
-		endpointDesc := fmt.Sprintf("http://%s:%s%s", sonarqubeHost(), sonarqubePort(), sonarqubeHealth)
+		endpointDesc := sonarqubeHealthURL()
 		if result.Healthy {
 			fmt.Printf("SonarQube: healthy at %s (checked in %v)\n",
 				endpointDesc, result.Duration.Round(time.Millisecond))

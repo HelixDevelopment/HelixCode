@@ -342,12 +342,11 @@ func (app *HarmonyApp) Initialize() error {
 	}
 	app.config = cfg
 
-	// Initialize API client with default URL (can be changed in settings)
-	serverURL := "http://localhost:8080"
-	if cfg.Server.Address != "" && cfg.Server.Port > 0 {
-		serverURL = fmt.Sprintf("http://%s:%d", cfg.Server.Address, cfg.Server.Port)
-	}
-	app.apiClient = NewAPIClient(serverURL)
+	// Initialize API client with default URL (can be changed in settings).
+	// HXC-202: composition lives in apiServerURL (server_url.go) so the IPv6
+	// bracketing is shared with internal/server's bind path and is testable on
+	// a host without the GUI toolchain.
+	app.apiClient = NewAPIClient(apiServerURL(cfg))
 
 	// Initialize database (optional - continue without it if not available)
 	db, err := database.New(cfg.Database)

@@ -159,16 +159,81 @@ func (ec *electionCluster) waitForSingleLeader(timeout time.Duration) string {
 	return ""
 }
 
-// noNodeStuckCandidate asserts no manager is left in Candidate state — the
-// anti-livelock invariant (an election round ALWAYS terminates Leader|Follower).
+// livelockSettleBudget bounds how long noNodeStuckCandidate watches each node
+// for a way out of Candidate before calling it livelocked.
+//
+// Sized against the fixture's own timing rather than taste (§11.4.6): every
+// cluster in this file runs an 8ms heartbeat with election timeouts staggered at
+// heartbeat*5 + i*heartbeat*4, so the slowest node in the largest cluster here
+// (7 nodes) re-arms its election timer about every 232ms. Three seconds is more
+// than ten such rounds, so a node that is merely mid-election has many chances to
+// resolve, while a node genuinely wedged in Candidate never does — on any host.
+const livelockSettleBudget = 3 * time.Second
+
+// livelockPollInterval is the sampling period for the settle watch. Well under
+// the 8ms heartbeat so a transition cannot slip between two samples unobserved.
+const livelockPollInterval = 2 * time.Millisecond
+
+// noNodeStuckCandidate asserts the anti-livelock invariant: an election round
+// ALWAYS terminates in Leader|Follower, so no node stays Candidate forever.
+//
+// HXC-204: this used to read each node's state ONCE and fail if that single
+// sample said Candidate. Candidate is a legitimate, healthy, transient Raft
+// state — a node that has just started an election is Candidate until it wins,
+// loses, or hears a higher term — so a single sample cannot tell "wedged" from
+// "mid-election". Under load the scheduler simply widens the window in which a
+// sample lands mid-election, which is why the check failed on a busy host and
+// passed on an idle one. The captured RED run is unambiguous: node-0 was
+// declared "stuck as Candidate (livelock)" and, milliseconds later, WON election
+// for term 2 and became leader (docs/qa/hxc204_.../red/).
+//
+// Livelock is a STEADY-STATE property, so it is now sampled as one: a node is
+// stuck only if it is observed in Candidate on EVERY sample for the whole settle
+// budget, never once seen as Leader or Follower. That is deliberately robust to
+// the churn these chaos scenarios create — under a 1/3 vote-drop the cluster
+// elects continuously, so at any instant SOME node is legitimately Candidate,
+// and a node cycling Candidate -> Leader -> Follower -> Candidate across terms is
+// making progress, not livelocked.
+//
+// The polarity is unchanged and still bites: a node that never leaves Candidate
+// fails, on any host, however fast. Only the sampling changed.
 func (ec *electionCluster) noNodeStuckCandidate(t testing.TB) {
 	t.Helper()
+
+	// everLeft[id] records that the node was observed OUT of Candidate at least
+	// once during the window — the direct refutation of "stuck as Candidate".
+	everLeft := make(map[string]bool, len(ec.ids))
+	lastState := make(map[string]NodeState, len(ec.ids))
+
+	deadline := time.Now().Add(livelockSettleBudget)
+	for {
+		remaining := len(ec.ids)
+		for _, id := range ec.ids {
+			cm := ec.managers[id]
+			cm.mutex.RLock()
+			st := cm.state
+			cm.mutex.RUnlock()
+			lastState[id] = st
+			if st != Candidate {
+				everLeft[id] = true
+			}
+			if everLeft[id] {
+				remaining--
+			}
+		}
+		if remaining == 0 {
+			return // every node resolved at least once — invariant holds
+		}
+		if !time.Now().Before(deadline) {
+			break
+		}
+		time.Sleep(livelockPollInterval)
+	}
+
 	for _, id := range ec.ids {
-		cm := ec.managers[id]
-		cm.mutex.RLock()
-		st := cm.state
-		cm.mutex.RUnlock()
-		assert.NotEqualf(t, Candidate, st, "node %s stuck as Candidate (livelock)", id)
+		assert.Truef(t, everLeft[id],
+			"node %s stuck as Candidate for the whole %s settle window (livelock) — last observed state %v",
+			id, livelockSettleBudget, lastState[id])
 	}
 }
 
