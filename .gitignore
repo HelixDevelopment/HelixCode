@@ -244,3 +244,19 @@ helix_code/scratchpad/
 # `docs/qa/` §11.4.83 evidence tree and the `scripts/qa/` source package.
 /bridge
 /qa
+
+# Three oversized raw captures, excluded by PATH (§11.4.30 / §11.4.77).
+# The `!docs/qa/**/*.log` rule above deliberately un-ignores evidence, because an
+# ignored transcript is indistinguishable from one that was never captured. These
+# three are the exception on SIZE alone, not on kind — together they are 404 MB of
+# the 413 MB untracked evidence corpus, and committing them would bloat every
+# future clone permanently to preserve raw output nobody reads.
+#
+# They are NOT deleted; they remain on the machine that produced them. Their
+# verdicts are summarised in their sibling evidence files, which ARE committed.
+# Regeneration mechanism (§11.4.77): re-run the originating suite named in each
+# directory's siblings — these are raw stdout captures, not build inputs.
+# Tracked as HXC-216.
+docs/qa/phase0_router_build/fix_evidence/hf_https_test_20260706.log
+docs/qa/phase0_gpu/p0t3_gpu_inference.log
+docs/qa/infra_fulltest_20260712/integration_full_tests.log

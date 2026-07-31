@@ -1,0 +1,12 @@
+RED_MODE=1  entry=/home/milos/Factory/projects/tools_and_research/helix_code/submodules/helix_agent/plugins/mcp-server/dist/index.js  port=33761
+  POST /mcp  Host: evil.example:33761   (DNS rebinding): status=200 executed=true
+  POST /mcp  Origin: https://evil.example  (hostile browser): status=200 executed=true
+  POST /mcp  Host: localhost:33761       (loopback name): status=200 executed=true
+  POST /mcp  Host: 127.0.0.1:33761       (loopback ip): status=200 executed=true
+  POST /mcp  Host: mcp.allowed.test:33761 (configured): status=200 executed=true
+  POST /mcp  (no Origin, CLI agent): status=200 executed=true
+  POST /mcp  Origin: https://allowed.test (allowed browser): status=200 executed=true
+  GET  /health: status=200
+RED reproduced: POST /mcp with Host: evil.example:33761 -> executed, real serverInfo returned
+RED reproduced: POST /mcp from https://evil.example -> executed (side effect lands) while the response stays unreadable
+RED PASS — both defects are present: no Host validation, and a non-allowlisted Origin is still executed.
