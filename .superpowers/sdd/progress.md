@@ -339,3 +339,54 @@ Two traps recorded for whoever finishes it:
   saying so.
   An unreachability verdict MUST ship with a guard that FAILS when something becomes an
   importer. Otherwise the finding silently rots the day someone wires it up.
+
+### Wave 2 (2026-07-31) — 10 items closed, zero Criticals open
+
+Closed with captured evidence: HXC-169, 193, 194, 195, 198, 201, 205, 209, 210, 212.
+Five had NO docs/qa directory, so each got a FRESH gate run captured to disk before
+closing — the close tool takes an `--evidence` path, and pointing it at prose or a
+non-resolving path would be the exact bluff §11.4.5 exists to stop.
+
+HXC-168 deliberately LEFT OPEN: code half done and guard proven both directions, but
+the credential is in 23 commits across 271 days on every upstream and rotation is
+operator action. Closing on the code half would misrepresent a live exposure.
+
+Remaining: 30 open (0 Critical / 3 High / 8 Medium / 12 Low / 7 unset), 379 closed.
+
+### Agent attrition — SIX failures, and what survives them
+
+| Agent | Mode | Work state when it died |
+|---|---|---|
+| HXC-168 | API disconnect | tree clean — nothing written |
+| HXC-198 | API disconnect | tree clean — nothing written |
+| HXC-205 | stall 600s | tree clean — nothing written |
+| HXC-169 | stall 600s | tree clean — held a decisive lead |
+| HXC-213 | stall 600s mid-mutation | **fix complete in tree, tests passing** |
+| HXC-211 | stall 600s | **fix complete in tree, tests passing** |
+
+**Contention is ruled out** — measured at the fourth failure: load 5.08, memory 18%,
+threads 5572/262144. The host was near-idle. These sit at the API/stream layer.
+
+**The load-bearing finding: the WORK survives the stall.** For 213 and 211 the tree
+held a coherent fix that compiled and passed its own guards. What is lost is the
+REPORT and the COMMIT, not the engineering. So the correct response is respawn-to-
+FINISH ("your work is in the tree, do not redo it, verify and complete"), not
+respawn-to-redo — which would waste the work and risk two agents editing one file.
+
+**Two residue false-alarms I chased and cleared, recorded so the next reader doesn't:**
+- `- mutex sync.RWMutex` appeared as a DELETION in the deployment diff. It was not
+  deleted; the line changed because a doc comment was added above it. Lock sites went
+  2 → 50, which is the fix.
+- `MUTATED-BY-CALLER` matched the residue grep in a test file. It is a deliberate test
+  assertion proving a caller cannot corrupt manager state through a returned pointer —
+  the aliasing guard working, not leftover mutation.
+Both looked exactly like §11.4.84 residue at grep distance. Only reading the diff
+separated them.
+
+### Standing warnings now injected into every dispatch
+- A mutation whose verification step REBUILDS the artifact cannot be reverted from a
+  file backup — `npm test` runs `npm run build`, so restoring `src/` leaves `dist/`
+  contaminated. Restore from `git checkout --`. (Cost me one red sweep; the HXC-209
+  agent hit the same class via a relative path in a trap after a cd.)
+- G7 is ENFORCING: every fix commit needs `docs/qa/<run-id>/`. Two commits shipped
+  without one today.
