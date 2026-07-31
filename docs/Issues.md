@@ -218,14 +218,6 @@ When publishing the agent component, the hosting provider reported 204 outstandi
 
 The password used to reach the project database is written in plain text inside several setup and container files, and those files are published on all four public code-hosting accounts. Anyone who reads the project can read the password. This is not new and was not introduced by recent work; the project's own earlier security review already recorded it as something that must be replaced, and that has still not happened. The practical risk depends on whether the same password is used anywhere reachable from outside, which has not been established either way and should not be assumed harmless. Because the value is already public, changing the files alone is not enough — the password itself has to be changed everywhere it is used, and the setup files must then read it from a private configuration source rather than containing it. Until both halves are done the project cannot honestly claim its credentials are protected.
 
-## HXC-169 — Container-sandbox library has four known flaws we actively use and the vendor has published no fix
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** Critical
-
-The agent can run user-supplied code inside a throwaway container for safety, and it drives that container through a third-party library. Four publicly documented flaws in that library affect exactly the parts we use — in particular the file copy-in and copy-out operations — and for three of them the vendor has published no corrected version at all, so there is nothing to upgrade to. We confirmed we genuinely use the affected operations rather than merely shipping the library: an automated analysis traced the calls from our own sandbox code to the affected functions. This matters because the flaws concern a sandbox escaping onto the machine that hosts it, which is the specific thing the sandbox exists to prevent. What remains unknown, and is the work here, is whether an outsider can actually influence those copy operations in the way we deploy them, and whether this sandbox feature is switched on in real deployments at all. The expected outcome is a written decision backed by evidence: either a demonstration that the risky paths are unreachable in our configuration, or a concrete containment change such as disabling the feature, constraining the copy paths, or isolating access to the container service. Because no upgrade can close these, a deliberate decision is the only way to resolve them.
-
 ## HXC-171 — A copied-in third-party web app carries most of our reported security warnings but cannot even be built
 
 **Status:** Queued
@@ -342,33 +334,6 @@ When a command is cancelled or times out, the system tries to stop not just that
 
 Output from a running command is read line by line, with a limit on how long any single line may be. When a line exceeds that limit the reader stops — not just for that line, but permanently for that stream, because the buffer is fixed at the limit and can never grow past it. Nothing else takes over the reading. The command on the other end keeps writing until the operating system's own small buffer fills, and then it blocks forever waiting for someone to read. So one unusually long line, which programs emitting compact machine-readable output produce quite naturally, can wedge the command that produced it. The fix is to keep draining and discarding the remainder of an over-long line rather than abandoning the stream, so the producing command is never starved of a reader.
 
-## HXC-193 — A shipped service container declares a health check that can never succeed
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-**Created-By:** Claude
-
-One of the small services we ship in a container declares a health check that asks a web address on a specific port to confirm the service is alive. Three facts combine to make that impossible. The service reads no configuration from its environment at all, so the setting that is supposed to tell it which port to listen on has no effect. Nothing therefore ever listens on the port the container publishes. And the health check asks that same port. So the check queries an address where nothing can ever answer, and reports the container unhealthy no matter how well the service is actually working. Anything that restarts or replaces unhealthy containers will do so endlessly. This was found while investigating unrelated security advisories in the same service, which is worth noting because it means nobody had exercised the health check since it was written.
-
-## HXC-194 — A service we wrote accepts requests from any website with no origin checking
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-**Created-By:** Claude
-
-One of our own small services builds its web server by hand rather than using the toolkit that ships with the library it is based on. In doing so it tells every browser that any website at all may make requests to it, and it never checks who is asking. A page on an unrelated site visited by someone on the same machine or network could therefore drive this service and read its responses. This is the same weakness that a published advisory describes for the library's own toolkit, but because we hand-rolled our version instead of using theirs, upgrading the library would not fix ours — the advisory and our defect are separate problems that merely look alike. That distinction matters, because closing the advisory would make the warning disappear while leaving the actual hole open. The fix is to check the origin of incoming requests against a list of permitted ones and reject anything else.
-
-## HXC-195 — A container setting meant to choose the service port has no effect because the code never reads it
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** Medium
-**Created-By:** Claude
-
-The container definition for one of our services sets a value intended to tell the service which network port to use. The service never reads any settings from its environment, so that value does nothing at all. The result is a setting that looks like configuration, appears in the container definition where anyone would expect to change it, and silently has no effect — so a person adjusting it to move the service would see no change and no error, and would have no way to tell why. This also cascades: the published port and the declared health check were both written to match that inert setting, so neither lines up with what the service actually does. Either the service should read the setting, or the setting should be removed and the real behaviour documented; leaving an inert knob in place is the worst of the three options.
-
 ## HXC-196 — The project handbook names a component version the code no longer uses
 
 **Status:** Queued
@@ -386,15 +351,6 @@ The handbook that describes this project's technology stack names a specific ver
 **Created-By:** Claude
 
 One test directory contains a duplicate of its own path nested inside itself, so the same ten files appear twice in the project at two different depths. It was created by an earlier renaming exercise that moved a tree while leaving a copy behind at the old location inside the new one. Nothing reads the nested copy, so it causes no failure today, but it means anyone searching the project finds two results for every one of those files and cannot tell which is real, and any tool that scans for duplicate declarations reports it forever. It also blocks a useful check from being switched on: a guard that detects accidentally-nested duplicates cannot be enabled while this one exists, because it would report a failure on every run. Removing it requires first confirming through the project history that the nested copy is genuinely the leftover and not the original.
-
-## HXC-198 — A second command-running path has the same hang that was just fixed in its sibling
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-**Created-By:** Claude
-
-A serious defect was recently fixed where running a command that leaves a background process behind would hang forever and permanently consume one of a small number of execution slots. A second function in the very same file, used for commands that report progress while they run, has the identical defect and was not fixed. It waits for the output readers to finish before waiting for the command itself, with no time limit and no give-up path, so the same background process holds it open indefinitely. The route that runs commands in the background reaches this function, so the hang is reachable in practice. This is the sixth time in one working cycle that a correct fix was applied in one place and not to its sibling a few lines away, which suggests the review step should routinely ask what else in the same file shares the pattern. The remedy already exists and is proven next door, so this is a matter of applying it rather than designing anything.
 
 ## HXC-199 — A check for a just-fixed problem would still report it as broken, because it matches on a fragment
 
@@ -414,15 +370,6 @@ A recent change gave one part of the project a distinct name so that two differe
 
 A detector was written to catch a specific kind of stall where a background worker gets stuck trying to hand off a result nobody is collecting. It identifies that stall by looking for one particular description of what the worker is waiting on. There is a second, equally real form of the same stall — where the worker waits on a choice between several possibilities rather than a single handoff — and the detector does not recognise it. This was demonstrated rather than theorised: a deliberately introduced leak of the second form went completely undetected while the detector reported everything healthy. The shape it does catch is the historical one, so the guard is not useless, but a future change that keeps the newer structure while breaking its escape route would slip past. Widening it to recognise both descriptions is a small change and restores the guard to covering the whole defect rather than half of it.
 
-## HXC-201 — The documented way to regenerate the tracker documents writes them to the wrong place and reports success
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-**Created-By:** Claude
-
-The command the project's manuals give for regenerating the tracker documents does not put them where it says. It builds the tool from one directory and is told to write output to a path relative to the project root, but the build step also changes the working directory, so the output lands inside the tool's own folder instead. It prints the correct-looking destinations and reports success, leaving the real documents untouched and several hours stale, and it creates empty placeholder files in the wrong location. This replaced an earlier version of the same command that was outright invalid and failed loudly, so the situation is now worse: a visible error became a silent one. It also explains an empty database file previously found in that folder and attributed to a different mistake. The correction is to give an absolute output path, or to make the tool resolve its output against the project root regardless of where it was built, and then to update the manuals and the check that currently enforces the broken form.
-
 ## HXC-202 — The network address fix reached the server but not the app that connects to it
 
 **Status:** Queued
@@ -440,15 +387,6 @@ A recent change taught the product to correctly format modern internet addresses
 **Created-By:** Claude
 
 Two long-running tests — one exercising heavy simultaneous access to the memory store, one exercising leader election among worker nodes under deliberately induced faults — report failure when the machine is under load, and pass comfortably when run on their own. Measured: during a full test run both failed, while in isolation they passed three times consecutively, one finishing in roughly a fifth of its allowed time and the other in about a twentieth. Their verdicts are therefore reporting how busy the machine was, not whether the product works. This matters most at exactly the wrong moment: the complete test run performed before a release is by definition the busiest the machine ever gets, so these two will mark a healthy release as broken and train everyone to wave the result through. A third test with the same problem was already corrected by making an inconclusive run report as skipped rather than failed, while keeping its real checks strict; the same treatment fits here. Both should wait for the condition they care about rather than assuming a fixed time is enough.
-
-## HXC-205 — A second model manager owns a lock and then writes shared state without using it
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** Critical
-**Created-By:** Claude
-
-A sibling component that manages automatically-selected model providers has the same defect just fixed in its counterpart, with an additional twist: this one actually declares a lock and uses it in two places, then writes provider health, process handles and last-checked times in three other places without holding it. That is arguably worse than having no lock at all, because a reader of the code sees synchronisation and reasonably assumes it is applied throughout. The consequence is the same as the defect already fixed next door — concurrent status updates overwrite each other, and a provider can be reported healthy when it has stopped or stopped when it is running. This was found by sweeping for the same pattern after fixing the first one, and it is the eighth time in this working cycle that a defect has had an unfixed twin elsewhere. The fix is the same shape as the one already proven: hold the lock around the field writes only, never across process start, process wait, or the readiness poll.
 
 ## HXC-206 — A provider stopped and restarted during a health probe can have a stale verdict applied
 
@@ -476,22 +414,6 @@ When a model provider record is created, its environment settings are taken from
 
 Four compose entries across two end-to-end test stacks declare a build context pointing at the Slack mock and the LLM-provider mock, but neither directory contains a Dockerfile. Any attempt to build those stacks therefore fails at the build step rather than at run time, which means the containerised form of these two services has almost certainly never been exercised. This was surfaced while fixing an unrelated permissive-origin defect in the same two services: the fix could be proven at the source and test-process level but not against a running container, precisely because no container of either service can be produced. That gap matters beyond these two mocks, because a fix validated only in-process leaves the deployed-artifact layer unproven, which is exactly the class of silent failure the four-layer verification discipline exists to catch. The work is to add the missing Dockerfiles, or to remove the build entries if these services are genuinely never meant to run containerised, and then to prove the choice by building the stack.
 
-## HXC-209 — Running a shell command in the background skips every command-security check
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-The shell tool validates each command against its security policy before running it, and does so on all three of its foreground paths. The background path does not call that check at all. Because the caller chooses background execution with an ordinary boolean flag on the same tool, anyone able to request a shell command can also request that it run in the background, and in doing so step around the entire blocklist and allowlist. The protection is therefore not merely weaker on that path, it is absent, while the tool presents the same interface and gives no indication that a different and unguarded route was taken. This was found while fixing an unrelated hang in the same function, and the agent that found it judged it more serious than the defect it had been sent to fix, which is the correct reading: a hang costs an execution slot, whereas this costs the security boundary. The fix is to route the background path through the same validation the foreground paths use, and to add a test proving a blocked command stays blocked when the background flag is set.
-
-## HXC-210 — Background shell commands silently ignore the working directory they were given
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-The shell tool accepts a working-directory parameter under one name in its published schema and in its foreground code path, but the background path reads a different name that the schema never emits. The value therefore never arrives, and every command run in the background executes in whatever directory the process happens to be in rather than the one the caller asked for. Nothing reports this: there is no error, no warning, and no fallback message, so a caller who relies on the setting to target a particular checkout or workspace will see commands quietly operate somewhere else entirely. The consequences range from confusing failures to a command succeeding against the wrong files, which is the more dangerous outcome because it looks like success. The fix is to read the same parameter name the schema publishes, and to add a test asserting that a background command actually runs in the directory it was given rather than merely accepting the parameter.
-
 ## HXC-211 — Four more unbounded waits remain in the shell package after the latest hang fix
 
 **Status:** Queued
@@ -499,14 +421,6 @@ The shell tool accepts a working-directory parameter under one name in its publi
 **Created-By:** Claude
 
 The hang just repaired was one instance of a pattern that survives in four other places in the same package, each able to park a call forever under conditions the code already permits. Two sit in the synchronous execution path and become unbounded when sandboxing is switched off or when no timeout is supplied, both of which are reachable through documented usage rather than misconfiguration. Two more sit in the output-streaming helper and are presently safe only because their single existing caller happens to rescue them, so any future caller wiring that helper the obvious way reproduces the original defect exactly. A fifth site in the background task manager amplifies all of them by calling into this code with no timeout and no way to abandon the attempt. These were found by sweeping the whole package after the fix rather than only the function named in the report, which was necessary because the reported defect and its already-fixed twin turned out to live in different files, so a reviewer re-reading the same file would have found nothing.
-
-## HXC-212 — The port fix turned a dormant any-origin hole into a live one on a published port
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-A configuration fix landed today made a small protocol service actually listen on the network for the first time, because previously it only ever spoke over standard input and no socket was ever opened. That fix is correct and was needed. The consequence nobody traced is that the network path it switched on tells every browser that any website at all may call it, on both the preflight and the response, and it never checks who is asking. So a weakness that was genuinely unreachable an hour ago is now reachable on a published port, and the container image selects that path by default. This is the classic pattern where a correct repair to one defect activates a second one that was only ever safe by accident, which is why a change should be assessed for what it makes reachable and not only for what it repairs. The same any-origin weakness was fixed today in two sibling services in the main repository, but that sweep could not see into this one because it lives in a separate repository, so the class was reported closed while this instance remained. The fix is the one already proven in those siblings: check the origin against a configured allowlist and reject anything else, covering both the preflight and the ordinary request.
 
 ## HXC-213 — The deployment tracker guards one line of shared state and leaves seventy-seven unguarded
 
@@ -523,4 +437,12 @@ A component that tracks the progress of a production deployment declares a lock 
 **Created-By:** Claude
 
 Four provider integrations each declare a lock and then, in a method whose name promises only to read, both modify their stored health record and hand the caller a pointer to that same record rather than a copy. Two faults follow from one line. A method that reads according to its name but writes in practice will be called freely from places that assume it is safe, so the write happens under no lock and concurrent callers overwrite each other. And because the caller receives the live pointer rather than a copy, anything it does to the value it was given silently changes the provider's own state, which no caller could reasonably expect. The result is that a provider can be reported healthy when it is failing, or the reverse, and that an unrelated piece of code can corrupt that judgement without ever intending to touch it. The remedy matches the two fixes already landed for this pattern: perform the update under the lock and return a copy, then guard both halves with a test that fails if the returned value is ever aliased to the stored one.
+
+## HXC-215 — The commit-compile gate blames a different innocent commit on each run
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The gate that checks whether each recent commit can actually be built reported a failure on two separate runs, naming a different commit each time, and in both cases the named commit builds cleanly when the gate's own command is re-run against it in isolation. The packages it reported as broken were unrelated to anything the accused commits changed, which was the first clue. The gate has no time limit, so these were real non-zero results at the moment they happened rather than a run that was cut short. What distinguishes the gate's own execution from a reproduction is that it builds five commits back to back, each in a fresh throwaway checkout, all of them sharing one build cache, whereas a reproduction builds one. That points at interference between those consecutive builds rather than at any defect in the code being judged, though the precise mechanism is not yet proven and should not be assumed. This matters more than an occasional wrong answer suggests, because the gate blocks releases: a check that accuses innocent work teaches people to dismiss it, and the day it is right about a genuinely broken commit that habit will let the breakage through. The work is to make the gate produce the same verdict every time it is given the same input, and to prove that by running it repeatedly against an unchanged tree.
 

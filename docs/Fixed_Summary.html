@@ -192,7 +192,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>185</td>
+<td>195</td>
 </tr>
 <tr>
 <td>Bug</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>369</strong></td>
+<td><strong>379</strong></td>
 </tr>
 </tbody>
 </table>
@@ -3961,6 +3961,33 @@ sent us.</td>
 </tr>
 <tr>
 <td>341</td>
+<td>Critical</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-169 — The agent can run user-supplied code inside a throwaway
+container for safety, and it drives that container through a third-party
+library. Four publicly documented flaws in that library affect exactly
+the parts we use — in particular the file copy-in and copy-out
+operations — and for three of them the vendor has published no corrected
+version at all, so there is nothing to upgrade to. We confirmed we
+genuinely use the affected operations rather than merely shipping the
+library: an automated analysis traced the calls from our own sandbox
+code to the affected functions. This matters because the flaws concern a
+sandbox escaping onto the machine that hosts it, which is the specific
+thing the sandbox exists to prevent. What remains unknown, and is the
+work here, is whether an outsider can actually influence those copy
+operations in the way we deploy them, and whether this sandbox feature
+is switched on in real deployments at all. The expected outcome is a
+written decision backed by evidence: either a demonstration that the
+risky paths are unreachable in our configuration, or a concrete
+containment change such as disabling the feature, constraining the copy
+paths, or isolating access to the container service. Because no upgrade
+can close these, a deliberate decision is the only way to resolve
+them.</td>
+</tr>
+<tr>
+<td>342</td>
 <td>High</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -3986,7 +4013,7 @@ releases and deserve a slightly closer look at build and test
 results.</td>
 </tr>
 <tr>
-<td>342</td>
+<td>343</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4007,7 +4034,7 @@ so that a slow machine produces a slow pass instead of a false
 failure.</td>
 </tr>
 <tr>
-<td>343</td>
+<td>344</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4030,7 +4057,7 @@ consistent copy of each session while holding the lock, then draw the
 screen from that copy.</td>
 </tr>
 <tr>
-<td>344</td>
+<td>345</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4051,7 +4078,7 @@ to the project so the shortcut works on every machine that checks the
 project out.</td>
 </tr>
 <tr>
-<td>345</td>
+<td>346</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4070,7 +4097,7 @@ ship a skill containing a placeholder the system cannot resolve, so the
 same mistake cannot recur silently.</td>
 </tr>
 <tr>
-<td>346</td>
+<td>347</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4092,7 +4119,7 @@ and it needs to be visible to everyone working in this copy rather than
 mentioned only in a commit message where no one will see it.</td>
 </tr>
 <tr>
-<td>347</td>
+<td>348</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4113,7 +4140,7 @@ round of fixes stopped one directory short of covering every affected
 provider.</td>
 </tr>
 <tr>
-<td>348</td>
+<td>349</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4148,7 +4175,7 @@ truncation flag from a recorded error rather than from which timing
 branch ran, so no scheduling coincidence can set it falsely.</td>
 </tr>
 <tr>
-<td>349</td>
+<td>350</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4170,7 +4197,7 @@ newer addresses sees confusing partial failures where some checks pass
 and others fail against the same healthy service.</td>
 </tr>
 <tr>
-<td>350</td>
+<td>351</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4191,7 +4218,110 @@ identity so the collision cannot occur. Removing the placeholder is a
 separate decision and is deliberately not bundled with this.</td>
 </tr>
 <tr>
-<td>351</td>
+<td>352</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-193 — One of the small services we ship in a container declares
+a health check that asks a web address on a specific port to confirm the
+service is alive. Three facts combine to make that impossible. The
+service reads no configuration from its environment at all, so the
+setting that is supposed to tell it which port to listen on has no
+effect. Nothing therefore ever listens on the port the container
+publishes. And the health check asks that same port. So the check
+queries an address where nothing can ever answer, and reports the
+container unhealthy no matter how well the service is actually working.
+Anything that restarts or replaces unhealthy containers will do so
+endlessly. This was found while investigating unrelated security
+advisories in the same service, which is worth noting because it means
+nobody had exercised the health check since it was written.</td>
+</tr>
+<tr>
+<td>353</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-194 — One of our own small services builds its web server by
+hand rather than using the toolkit that ships with the library it is
+based on. In doing so it tells every browser that any website at all may
+make requests to it, and it never checks who is asking. A page on an
+unrelated site visited by someone on the same machine or network could
+therefore drive this service and read its responses. This is the same
+weakness that a published advisory describes for the library’s own
+toolkit, but because we hand-rolled our version instead of using theirs,
+upgrading the library would not fix ours — the advisory and our defect
+are separate problems that merely look alike. That distinction matters,
+because closing the advisory would make the warning disappear while
+leaving the actual hole open. The fix is to check the origin of incoming
+requests against a list of permitted ones and reject anything else.</td>
+</tr>
+<tr>
+<td>354</td>
+<td>Medium</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-195 — The container definition for one of our services sets a
+value intended to tell the service which network port to use. The
+service never reads any settings from its environment, so that value
+does nothing at all. The result is a setting that looks like
+configuration, appears in the container definition where anyone would
+expect to change it, and silently has no effect — so a person adjusting
+it to move the service would see no change and no error, and would have
+no way to tell why. This also cascades: the published port and the
+declared health check were both written to match that inert setting, so
+neither lines up with what the service actually does. Either the service
+should read the setting, or the setting should be removed and the real
+behaviour documented; leaving an inert knob in place is the worst of the
+three options.</td>
+</tr>
+<tr>
+<td>355</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-198 — A serious defect was recently fixed where running a
+command that leaves a background process behind would hang forever and
+permanently consume one of a small number of execution slots. A second
+function in the very same file, used for commands that report progress
+while they run, has the identical defect and was not fixed. It waits for
+the output readers to finish before waiting for the command itself, with
+no time limit and no give-up path, so the same background process holds
+it open indefinitely. The route that runs commands in the background
+reaches this function, so the hang is reachable in practice. This is the
+sixth time in one working cycle that a correct fix was applied in one
+place and not to its sibling a few lines away, which suggests the review
+step should routinely ask what else in the same file shares the pattern.
+The remedy already exists and is proven next door, so this is a matter
+of applying it rather than designing anything.</td>
+</tr>
+<tr>
+<td>356</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-201 — The command the project’s manuals give for regenerating
+the tracker documents does not put them where it says. It builds the
+tool from one directory and is told to write output to a path relative
+to the project root, but the build step also changes the working
+directory, so the output lands inside the tool’s own folder instead. It
+prints the correct-looking destinations and reports success, leaving the
+real documents untouched and several hours stale, and it creates empty
+placeholder files in the wrong location. This replaced an earlier
+version of the same command that was outright invalid and failed loudly,
+so the situation is now worse: a visible error became a silent one. It
+also explains an empty database file previously found in that folder and
+attributed to a different mistake. The correction is to give an absolute
+output path, or to make the tool resolve its output against the project
+root regardless of where it was built, and then to update the manuals
+and the check that currently enforces the broken form.</td>
+</tr>
+<tr>
+<td>357</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4216,7 +4346,98 @@ a copy rather than the live collection, and separate the act of
 refreshing health from the act of reporting it.</td>
 </tr>
 <tr>
-<td>352</td>
+<td>358</td>
+<td>Critical</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-205 — A sibling component that manages automatically-selected
+model providers has the same defect just fixed in its counterpart, with
+an additional twist: this one actually declares a lock and uses it in
+two places, then writes provider health, process handles and
+last-checked times in three other places without holding it. That is
+arguably worse than having no lock at all, because a reader of the code
+sees synchronisation and reasonably assumes it is applied throughout.
+The consequence is the same as the defect already fixed next door —
+concurrent status updates overwrite each other, and a provider can be
+reported healthy when it has stopped or stopped when it is running. This
+was found by sweeping for the same pattern after fixing the first one,
+and it is the eighth time in this working cycle that a defect has had an
+unfixed twin elsewhere. The fix is the same shape as the one already
+proven: hold the lock around the field writes only, never across process
+start, process wait, or the readiness poll.</td>
+</tr>
+<tr>
+<td>359</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-209 — The shell tool validates each command against its security
+policy before running it, and does so on all three of its foreground
+paths. The background path does not call that check at all. Because the
+caller chooses background execution with an ordinary boolean flag on the
+same tool, anyone able to request a shell command can also request that
+it run in the background, and in doing so step around the entire
+blocklist and allowlist. The protection is therefore not merely weaker
+on that path, it is absent, while the tool presents the same interface
+and gives no indication that a different and unguarded route was taken.
+This was found while fixing an unrelated hang in the same function, and
+the agent that found it judged it more serious than the defect it had
+been sent to fix, which is the correct reading: a hang costs an
+execution slot, whereas this costs the security boundary. The fix is to
+route the background path through the same validation the foreground
+paths use, and to add a test proving a blocked command stays blocked
+when the background flag is set.</td>
+</tr>
+<tr>
+<td>360</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-210 — The shell tool accepts a working-directory parameter under
+one name in its published schema and in its foreground code path, but
+the background path reads a different name that the schema never emits.
+The value therefore never arrives, and every command run in the
+background executes in whatever directory the process happens to be in
+rather than the one the caller asked for. Nothing reports this: there is
+no error, no warning, and no fallback message, so a caller who relies on
+the setting to target a particular checkout or workspace will see
+commands quietly operate somewhere else entirely. The consequences range
+from confusing failures to a command succeeding against the wrong files,
+which is the more dangerous outcome because it looks like success. The
+fix is to read the same parameter name the schema publishes, and to add
+a test asserting that a background command actually runs in the
+directory it was given rather than merely accepting the parameter.</td>
+</tr>
+<tr>
+<td>361</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-212 — A configuration fix landed today made a small protocol
+service actually listen on the network for the first time, because
+previously it only ever spoke over standard input and no socket was ever
+opened. That fix is correct and was needed. The consequence nobody
+traced is that the network path it switched on tells every browser that
+any website at all may call it, on both the preflight and the response,
+and it never checks who is asking. So a weakness that was genuinely
+unreachable an hour ago is now reachable on a published port, and the
+container image selects that path by default. This is the classic
+pattern where a correct repair to one defect activates a second one that
+was only ever safe by accident, which is why a change should be assessed
+for what it makes reachable and not only for what it repairs. The same
+any-origin weakness was fixed today in two sibling services in the main
+repository, but that sweep could not see into this one because it lives
+in a separate repository, so the class was reported closed while this
+instance remained. The fix is the one already proven in those siblings:
+check the origin against a configured allowlist and reject anything
+else, covering both the preflight and the ordinary request.</td>
+</tr>
+<tr>
+<td>362</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4226,7 +4447,7 @@ refreshing health from the act of reporting it.</td>
 path</td>
 </tr>
 <tr>
-<td>353</td>
+<td>363</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4235,7 +4456,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>354</td>
+<td>364</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4244,7 +4465,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>355</td>
+<td>365</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4252,7 +4473,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>356</td>
+<td>366</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4261,7 +4482,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>357</td>
+<td>367</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4270,7 +4491,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>358</td>
+<td>368</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4280,7 +4501,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>359</td>
+<td>369</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4289,7 +4510,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>360</td>
+<td>370</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4298,7 +4519,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>361</td>
+<td>371</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4307,7 +4528,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>362</td>
+<td>372</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4317,7 +4538,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>363</td>
+<td>373</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4326,7 +4547,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>364</td>
+<td>374</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4336,7 +4557,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>365</td>
+<td>375</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4346,7 +4567,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>366</td>
+<td>376</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4355,7 +4576,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>367</td>
+<td>377</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4364,7 +4585,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>368</td>
+<td>378</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4374,7 +4595,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>369</td>
+<td>379</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
