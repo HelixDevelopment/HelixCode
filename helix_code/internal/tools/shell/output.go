@@ -16,7 +16,30 @@ import (
 // failure with errors.Is.
 var ErrStreamStopped = errors.New("output streaming stopped before EOF")
 
-// OutputStreamer streams command output in real-time
+// OutputStreamer streams command output in real-time.
+//
+// Reader ownership — read this before wiring a new source to it. An
+// OutputStreamer NEVER closes the readers it was handed. It holds them as plain
+// io.Readers, which carry no Close, so those descriptors belong to whoever
+// created them and only that owner can tear them down.
+//
+// That makes the owner responsible for the streamer's TERMINATION, not merely
+// for its own cleanup. Both scanners end only when their reader reports EOF or
+// an error, and a pipe reports EOF only once every write end is closed —
+// including the copies a GRANDCHILD inherited. So against a reader that can
+// stay open indefinitely the scanners park in Read, Done never closes, and the
+// output channels are never closed. Stop does not rescue that (see Stop).
+//
+// Both of this file's waits are therefore unbounded BY CONSTRUCTION — the
+// scanner loop in streamOutput, and the wg.Wait in Start that closes Done — and
+// that is not a defect to fix here: this type cannot bound them without closing
+// descriptors it does not own, which would double-close them under the one
+// caller that does own them.
+//
+// ExecuteStream discharges the contract by owning its pipes (streamPipes) and
+// calling closeReadEnds BEFORE it waits on Done. A caller that instead wires
+// this to cmd.StdoutPipe() and waits on Done with no teardown of its own
+// reproduces HXC-198 verbatim.
 type OutputStreamer struct {
 	stdout      io.Reader
 	stderr      io.Reader
@@ -77,6 +100,13 @@ func (os *OutputStreamer) Start() {
 // line to a consumer that has stopped reading. Without it a caller that walks
 // away from the output channels would wedge the scanners forever, since done is
 // only closed once both scanners have returned.
+//
+// Stop is HALF of a teardown, never the whole of one. It cannot interrupt a
+// scanner parked in Read on the reader itself: a blocked channel send and a
+// blocked read are different waits, and closing os.stop only releases the
+// former. Releasing the latter requires closing the reader, which only its
+// owner can do (see the type doc). Calling Stop and then waiting on Done, with
+// nothing closing the readers, is an unbounded wait.
 func (os *OutputStreamer) Stop() {
 	os.stopOnce.Do(func() {
 		close(os.stop)
@@ -185,7 +215,13 @@ func (os *OutputStreamer) GetStderr() <-chan string {
 	return os.stderrChan
 }
 
-// Done returns a channel that's closed when streaming is complete
+// Done returns a channel that is closed once BOTH scanners have returned and
+// the output channels have been closed.
+//
+// It is not self-bounding. A scanner returns on EOF or on a read error, so a
+// reader that reaches neither holds this open indefinitely. Waiting on it is
+// bounded only AFTER the reader owner has closed the readers; waiting on it
+// before that is the unbounded wait the type doc describes.
 func (os *OutputStreamer) Done() <-chan struct{} {
 	return os.done
 }

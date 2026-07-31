@@ -27,6 +27,37 @@ import (
 // comfortably longer than any scheduling hiccup on a loaded host.
 const streamDrainGrace = 2 * time.Second
 
+// executeDrainGrace bounds how long Execute's Cmd.Wait keeps waiting for
+// os/exec's output-copy goroutines AFTER the direct child has been reaped.
+//
+// Execute hands Cmd.Stdout/Stderr a non-*os.File writer, so os/exec makes its
+// own pipes and copies from them on goroutines that Wait waits for. Those
+// goroutines end on EOF, and a pipe reaches EOF only once EVERY write end is
+// closed — including the copies a GRANDCHILD inherited. `sleep 300 & echo hi`
+// leaves those open long after the direct child exits, so without a bound Wait
+// parks for as long as the descendant lives (measured: 8.01s for an 8s
+// grandchild, with the direct child gone in milliseconds).
+//
+// Unlike streamDrainGrace this is a TOTAL budget, not a no-progress window, and
+// the difference is deliberate rather than an oversight. The two call sites have
+// genuinely different consumers:
+//
+//   - ExecuteStream hands lines to a CALLER that may legitimately read slowly
+//     and that holds Cancel. Cutting it off for being slow would lose output
+//     someone is actively reading, so its grace rearms while lines still move,
+//     and a still-producing descendant keeps it alive by design.
+//   - Execute collects into an in-memory OutputCollector that cannot be slow,
+//     and its caller is BLOCKED inside this function with no Cancel handle. Once
+//     the child is reaped the only legitimate data left is what the pipe already
+//     buffered (at most a pipe's worth, drained in microseconds). Anything still
+//     arriving is being produced by a surviving descendant — and rearming for
+//     that would mean a daemon that keeps logging could hold this call open
+//     forever, which is exactly the hang this bound exists to prevent.
+//
+// So a total budget is the correct shape HERE, and two seconds is roughly six
+// orders of magnitude more than the legitimate case needs.
+const executeDrainGrace = 2 * time.Second
+
 // ExecutionState represents the state of an execution
 type ExecutionState int
 
@@ -78,10 +109,23 @@ type ExecutionResult struct {
 	// reached EOF, so Stdout/Stderr (for ExecuteStream, the output channels) may
 	// be missing trailing data the command's descendants had not yet written.
 	//
-	// It is set by ExecuteStream whenever the scanners did NOT both reach a
-	// clean EOF — the drain grace expired with delivery stalled, the caller
-	// cancelled while lines were still in flight, or a read genuinely failed.
-	// False means both streams were read to EOF and nothing was dropped.
+	// ExecuteStream sets it whenever the scanners did NOT both reach a clean EOF
+	// — the drain grace expired with delivery stalled, the caller cancelled while
+	// lines were still in flight, or a read genuinely failed.
+	//
+	// Execute sets it when the command was killed (a command interrupted
+	// mid-flight cannot have written everything it would have) and when its
+	// post-exit drain bound expired with a descendant still holding the output
+	// pipes open.
+	//
+	// False means nothing was detected as dropped. Honest boundary (§11.4.6):
+	// for Execute that is "not detected", not "proven complete". os/exec reports
+	// a drain-bound expiry only when the command had no other error, so a command
+	// that BOTH exits non-zero AND has its drain cut short reports the exit
+	// status alone and leaves this flag false. Execute cannot distinguish that
+	// case, because os/exec owns those pipes and does not expose whether its copy
+	// goroutines finished. The size-cap truncation is separate and is disclosed
+	// inline in Stdout instead.
 	//
 	// It is deliberately NOT an Error: the command itself may have succeeded,
 	// and reporting a healthy exit as a failure would misclassify it. Callers
@@ -225,6 +269,21 @@ func (e *DefaultExecutor) Execute(ctx context.Context, cmd *Command) (*Execution
 	execCmd.Stdout = &writerAdapter{collector.WriteStdout}
 	execCmd.Stderr = &writerAdapter{collector.WriteStderr}
 
+	// Bound the post-exit drain. Because the two writers above are NOT *os.File,
+	// os/exec creates its own pipes and copies from them on goroutines that
+	// Cmd.Wait waits for; a grandchild holding the inherited write ends keeps
+	// those goroutines alive indefinitely, and Wait with it. WaitDelay's timer
+	// starts when Wait observes the process exit, and on expiry it closes the
+	// parent's pipe ends — the same remedy os/exec cites go.dev/issue/23019 for,
+	// and the same one ExecuteStream implements by hand for its own pipes.
+	//
+	// It cannot cut the command itself short: while the child is still running
+	// the timer has not started. And it cannot mask a failure — Cmd.Wait assigns
+	// *ExitError first and reports a WaitDelay expiry only when there is no other
+	// error, so a real exit status always wins (verified: `sleep 6 & echo hi;
+	// exit 7` with a 2s delay returns `exit status 7`, not ErrWaitDelay).
+	execCmd.WaitDelay = executeDrainGrace
+
 	// Apply sandbox
 	if err := e.sandbox.Apply(execCmd); err != nil {
 		return nil, err
@@ -262,13 +321,11 @@ func (e *DefaultExecutor) Execute(ctx context.Context, cmd *Command) (*Execution
 		return result, err
 	}
 
-	// Register for signal handling
+	// Register for signal handling. processGroupID reports 0 when no process
+	// group was created for this child, which is what makes the SIGKILL below
+	// reach it instead of failing with ESRCH (see processGroupID).
 	pid := execCmd.Process.Pid
-	pgid := pid
-	if execCmd.SysProcAttr != nil && execCmd.SysProcAttr.Setpgid {
-		pgid = pid
-	}
-	e.signalHandler.Register(cmd.ID, pid, pgid, cmd.Command)
+	e.signalHandler.Register(cmd.ID, pid, processGroupID(execCmd), cmd.Command)
 	defer e.signalHandler.Unregister(cmd.ID)
 
 	// Register execution status
@@ -292,23 +349,44 @@ func (e *DefaultExecutor) Execute(ctx context.Context, cmd *Command) (*Execution
 		result.EndTime = time.Now()
 		result.Duration = result.EndTime.Sub(result.StartTime)
 
-		if err != nil {
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				result.ExitCode = exitErr.ExitCode()
-			} else {
-				result.Error = err
-			}
-		} else {
+		var exitErr *exec.ExitError
+		switch {
+		case err == nil:
 			result.ExitCode = 0
+
+		case errors.As(err, &exitErr):
+			result.ExitCode = exitErr.ExitCode()
+
+		case errors.Is(err, exec.ErrWaitDelay):
+			// The COMMAND succeeded; only its drain was cut short because a
+			// descendant still held the pipe write ends when the bound expired.
+			// Reporting that as an Error would misclassify a healthy run, which
+			// is the same reasoning ExecutionResult.OutputIncomplete exists for
+			// — so disclose the truncation and keep the real exit status.
+			result.OutputIncomplete = true
+			if execCmd.ProcessState != nil {
+				result.ExitCode = execCmd.ProcessState.ExitCode()
+			}
+
+		default:
+			result.Error = err
 		}
 
 	case <-execCtx.Done():
-		// Timeout or cancellation
+		// Timeout or cancellation. The SIGKILL now actually lands (see
+		// processGroupID); before that correction it ESRCHed whenever no process
+		// group existed, and this wait had nothing to bound it. The wait is
+		// bounded a second time by WaitDelay, which matters when the child is
+		// killed but a grandchild it spawned keeps the output pipes open.
 		e.signalHandler.Send(cmd.ID, syscall.SIGKILL)
 		result.Killed = true
 		result.EndTime = time.Now()
 		result.Duration = result.EndTime.Sub(result.StartTime)
 		<-done // Wait for process to actually exit
+
+		// A killed command was interrupted mid-flight, so whatever it had not
+		// written yet is gone. That is a truncation and is disclosed as one.
+		result.OutputIncomplete = true
 	}
 
 	// Collect output
@@ -403,13 +481,14 @@ func (e *DefaultExecutor) ExecuteStream(ctx context.Context, cmd *Command) (*Str
 	// exits instead of finishing.
 	pipes.closeWriteEnds()
 
-	// Register for signal handling
+	// Register for signal handling. Same correction as Execute: a PGID is
+	// recorded only when a process group actually exists, so the SIGKILL on the
+	// cancel path below reaches the child rather than ESRCHing against a group
+	// that was never created — which left `<-waitDone` unbounded (see
+	// processGroupID). The drain grace further down does NOT rescue that wait:
+	// it bounds the SCANNERS, and this one waits on the PROCESS, before it.
 	pid := execCmd.Process.Pid
-	pgid := pid
-	if execCmd.SysProcAttr != nil && execCmd.SysProcAttr.Setpgid {
-		pgid = pid
-	}
-	e.signalHandler.Register(cmd.ID, pid, pgid, cmd.Command)
+	e.signalHandler.Register(cmd.ID, pid, processGroupID(execCmd), cmd.Command)
 
 	// Register execution status
 	startTime := time.Now()
@@ -797,6 +876,48 @@ func applyCommandSpec(execCmd *exec.Cmd, cmd *Command) {
 		}
 		execCmd.Env = env
 	}
+}
+
+// processGroupID reports the process-group ID to register for a freshly-started
+// command, or 0 when the command has no process group of its own.
+//
+// A process group whose ID equals the child's PID exists ONLY if the child
+// called setpgid, which os/exec does only when SysProcAttr.Setpgid is set — and
+// that is set only by Sandbox.applyResourceLimits, which never runs when
+// sandboxing is disabled (Sandbox.Apply returns early, as PermissiveConfig
+// arranges). Without it the child stays in the PARENT's process group.
+//
+// This is a real distinction that both call sites previously threw away, each
+// with an `if` whose branches were identical:
+//
+//	pgid := pid
+//	if execCmd.SysProcAttr != nil && execCmd.SysProcAttr.Setpgid {
+//	    pgid = pid          // ← same value either way
+//	}
+//
+// The registered PGID was therefore always positive, and SignalHandler.Send
+// signals `-PGID` whenever the PGID is positive — a process group that had never
+// been created. The kill failed with ESRCH (measured: child pid 2596613 sat in
+// the parent's group 2596503; kill(-2596613, SIGKILL) → ESRCH, child alive), the
+// returned error was discarded, and the wait that follows the kill then had
+// nothing to bound it. That is HXC-211's defect A, in both Execute and
+// ExecuteStream.
+//
+// Returning 0 makes Send fall back to signalling the PID directly, which is the
+// only reachable process when there is no group. It also NARROWS the blast
+// radius of any signal that races PID reuse, from a stranger's whole process
+// group down to a single process.
+//
+// It is a function shared by both call sites precisely because they already
+// proved they will drift apart if each writes this itself.
+func processGroupID(execCmd *exec.Cmd) int {
+	if execCmd.Process == nil {
+		return 0
+	}
+	if execCmd.SysProcAttr != nil && execCmd.SysProcAttr.Setpgid {
+		return execCmd.Process.Pid
+	}
+	return 0
 }
 
 // prepareCommand prepares an exec.Cmd from a Command

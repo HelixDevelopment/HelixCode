@@ -1,0 +1,32 @@
+=== RUN   TestExecuteTimeoutKillsTheChildWhenSandboxingIsDisabled
+    executor_bounded_wait_test.go:214: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/executor_bounded_wait_test.go:214
+        	Error:      	Expected nil, but got: &shell.executeResult{res:(*shell.ExecutionResult)(0x316b001a2c0), err:error(nil)}
+        	Test:       	TestExecuteTimeoutKillsTheChildWhenSandboxingIsDisabled
+        	Messages:   	RED_MODE=1: Execute returned after 1.004834053s — the SIGKILL reached the child, so the defect is NOT present on this artifact
+--- FAIL: TestExecuteTimeoutKillsTheChildWhenSandboxingIsDisabled (1.01s)
+=== RUN   TestKillReachesAnUnsandboxedChild
+    executor_bounded_wait_test.go:267: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/executor_bounded_wait_test.go:267
+        	Error:      	An error is expected but got nil.
+        	Test:       	TestKillReachesAnUnsandboxedChild
+        	Messages:   	RED_MODE=1: Kill succeeded — the PGID bookkeeping is already correct here
+--- FAIL: TestKillReachesAnUnsandboxedChild (0.02s)
+=== RUN   TestExecuteStreamTimeoutKillsTheChildWhenSandboxingIsDisabled
+    executor_bounded_wait_test.go:332: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/executor_bounded_wait_test.go:332
+        	Error:      	Expected nil, but got: &shell.ExecutionResult{ID:"hxc211-defect-a-stream", Command:"echo $$ > /tmp/.private/milos/TestExecuteStreamTimeoutKillsTheChildWhenSandboxingIsDisabled2286128819/001/child.pid; exec sleep 30", ExitCode:0, Stdout:"", Stderr:"", Duration:1004191031, StartTime:time.Date(2026, time.July, 31, 12, 26, 37, 141671921, time.Local), EndTime:time.Date(2026, time.July, 31, 12, 26, 38, 145862942, time.Local), Error:error(nil), Killed:true, TimedOut:false, OutputSize:0, OutputIncomplete:false}
+        	Test:       	TestExecuteStreamTimeoutKillsTheChildWhenSandboxingIsDisabled
+        	Messages:   	RED_MODE=1: ExecuteStream returned after 984.337906ms — the SIGKILL reached the child, so the defect is NOT present on this artifact
+--- FAIL: TestExecuteStreamTimeoutKillsTheChildWhenSandboxingIsDisabled (1.01s)
+=== RUN   TestExecuteIsBoundedWhenAGrandchildHoldsThePipe
+    executor_bounded_wait_test.go:379: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/internal/tools/shell/executor_bounded_wait_test.go:379
+        	Error:      	Expected nil, but got: &shell.executeResult{res:(*shell.ExecutionResult)(0x316affbe0b0), err:error(nil)}
+        	Test:       	TestExecuteIsBoundedWhenAGrandchildHoldsThePipe
+        	Messages:   	RED_MODE=1: Execute returned after 2.019984995s — the drain is already bounded on this artifact, so the defect is NOT present
+--- FAIL: TestExecuteIsBoundedWhenAGrandchildHoldsThePipe (2.02s)
+FAIL
+FAIL	dev.helix.code/internal/tools/shell	4.069s
+FAIL
+EXIT=1
