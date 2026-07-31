@@ -1,0 +1,14 @@
+HXC-215 second defect: 'trap cleanup EXIT INT TERM' resumes after a signal.
+Minimal reproducer, run on this host 2026-07-31T07:29:24Z:
+
+---- OLD FORM: trap cleanup EXIT INT TERM ----
+phase-1
+CLEANUP RAN
+PHASE-2-STILL-RUNNING  <-- script resumed after SIGTERM
+CLEANUP RAN
+rc=0   <- a SIGTERM-killed script reporting SUCCESS (PASS-bluff)
+
+---- NEW FORM: trap cleanup EXIT / trap 'exit 130' INT / trap 'exit 143' TERM ----
+phase-1
+CLEANUP RAN
+rc=143  <- correct 128+SIGTERM, cleanup ran exactly once

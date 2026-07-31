@@ -1,0 +1,34 @@
+Gate's built-in --self-test over its pinned fixtures.
+gate sha256: ae35edd0408487225f247aa6b932ec05624e8492f0edabb24c2eb5ab78e0cc69
+
+§1.1 paired-mutation self-test (tags='nogui')
+classifier self-validation (golden-good / golden-bad fixtures):
+  OK   diag.log -> COMPILE-FAIL
+  OK   killed.log -> INFRA
+  OK   enospc.log -> INFRA
+  OK   bare.log -> UNCLASSIFIED
+  OK   both.log -> COMPILE-FAIL
+  OK   stack.log -> UNCLASSIFIED
+  OK   eagain.log -> INFRA
+  OK   vanished.log -> INFRA
+  OK   missingsrc.log -> COMPILE-FAIL
+expect DOES-NOT-COMPILE on known-bad 3fd55a4d:
+  3fd55a4d  BUILD-FAILED-UNCLASSIFIED  0s  (no compiler diagnostic, no known host signature)
+      full log: /tmp/.private/milos/cci-gate-failures/3fd55a4d-20260731-130853-092371258.log  <- inspect this; extend INFRA_SIGNATURES or fix the source
+expect COMPILES on known-good 34e264e1:
+  34e264e1  BUILD-FAILED-UNCLASSIFIED  1s  (no compiler diagnostic, no known host signature)
+      full log: /tmp/.private/milos/cci-gate-failures/34e264e1-20260731-130854-147356356.log  <- inspect this; extend INFRA_SIGNATURES or fix the source
+SELF-TEST INCONCLUSIVE (§11.4.3): the pinned fixtures could not be BUILT in
+this environment (known-bad rc=4, known-good rc=4), so neither
+half exercised the gate. This is NOT evidence the gate is a bluff and NOT a
+pass. Read the preserved log path printed above for the reason.
+To restore a real §1.1 pairing here, either repin KNOWN_BAD/KNOWN_GOOD to a
+recent pair whose go.mod resolves against current submodules, or exercise the
+gate against a synthetic broken commit built from HEAD.
+
+self-test exit: 3
+  0 = pins exercised the gate and it both failed the bad and passed the good
+  1 = gate is a BLUFF (a real pairing failure)
+  3 = INCONCLUSIVE — pins could not be BUILT here (bit-rotted go.mod), so
+      neither half exercised the gate. Falsifiability is proven instead by
+      synthetic_wolf_test.sh, which builds a broken commit from CURRENT HEAD.

@@ -1,0 +1,12 @@
+§1.1 paired mutation on the G19 REGISTRATION (not the gate).
+Mutation: collapse the exit-code branch back to 'if cmd; then PASS; else ACCUSE; fi'.
+Expected: the INCONCLUSIVE code (3) is reported as a broken commit — the HXC-215 false accusation.
+
+-------- gate exit=3 --------
+  MUTATED registration says:   FAIL (G19): a recent commit does NOT compile — it is broken for every checkout but the author's (see /tmp/g19-cci.out)
+  FIXED    registration says:   FAIL (G19): per-commit compile check INCONCLUSIVE (exit 3) — the build failed with no compiler diagnostic, so this is NOT a claim that any commit is broken and NOT a pass (see /tmp/g19-cci.out)
+
+-------- gate exit=2 --------
+  MUTATED registration says:   FAIL (G19): a recent commit does NOT compile — it is broken for every checkout but the author's (see /tmp/g19-cci.out)
+  FIXED    registration says:   FAIL (G19): per-commit compile-integrity gate did not run to completion (exit 2 — usage error, interrupted, or malfunction); it certified nothing and this is NOT an accusation against any commit (see /tmp/g19-cci.out)
+

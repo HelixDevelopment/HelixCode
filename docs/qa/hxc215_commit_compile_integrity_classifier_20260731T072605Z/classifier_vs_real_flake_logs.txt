@@ -1,0 +1,33 @@
+VALIDATION AGAINST THE REAL FLAKE — not synthetic fixtures.
+gate sha256: 3648c3d3766c19522a6f2ec54f1ae126b95f5dbbbc3eb9ded49f5c1c2f5936ed
+Generated 2026-07-31T08:00:24Z
+
+The predecessor ran the OLD logic (gate_instrumented.sh — verified to contain ZERO
+classify_build_failure) 8 times over a PINNED range on an unchanged tree, keeping
+every build log. Result: 4 PASS / 4 FAIL, accusing TWO MORE innocent commits
+(11861996, d99ce58c) on top of the original two — four distinct innocent commits.
+
+ROOT CAUSE — FACT (the kept logs name both transients; neither is a source defect):
+  (1) fork/exec .../compile: resource temporarily unavailable
+      EAGAIN on fork(2): the kernel refused the process, so the Go driver could
+      not spawn compile/link/vet workers (§12.12). ~7 agents live on a 64-core
+      host. Which ceiling (measured 2026-07-31): the cgroup pids controller on
+      the per-project session slice, pids.max=4096 — NOT the per-user
+      RLIMIT_NPROC (262144) nor threads-max (2056078). Honest boundary
+      (§11.4.6): EAGAIN is FACT from the log and 4096 is FACT from
+      /sys/fs/cgroup; that it was the binding ceiling is an inference, since
+      pids.current was not sampled at the moment of failure.
+  (2) chdir .../cci-gate.7GVMhX/d99ce58c/helix_code: no such file or directory
+      The gate's OWN worktree vanished mid-build — the trap defect observed in the
+      wild. The two HXC-215 defects are causally linked: the trap bug MANUFACTURED
+      the evidence the classification bug then misread as a broken commit.
+
+Does the FINAL classifier get these right? COMPILE-FAIL would be a false accusation.
+
+  run6_20260731-115453 (exit=1)  11861996.log     -> INFRA
+  run8_20260731-120601 (exit=1)  d99ce58c.log     -> INFRA
+
+failed-build logs: 2 | INFRA (positively exonerated): 2 | UNCLASSIFIED (blocks, blames nobody): 0 | COMPILE-FAIL (FALSE ACCUSATION): 0
+
+Under the OLD logic each of these produced a DOES-NOT-COMPILE accusation against
+an innocent commit. Under the FINAL logic: 0 false accusations.

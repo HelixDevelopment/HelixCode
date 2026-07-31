@@ -1,0 +1,45 @@
+HXC-215 — the accusations were causally impossible, independent of any compile.
+Generated 2026-07-31T07:39:56Z
+
+Two runs, unchanged history, identical tags, each naming a DIFFERENT commit.
+Neither accused commit touched any package it was blamed for.
+
+======== run 1 (/tmp/g19-cci.out) accused 8490a5d9 ========
+subject: fix(tools/shell): HXC-209 + HXC-210 — govern the background shell path by the same policy as the foreground
+blamed packages: internal/project, internal/telemetry/i18n, internal/tools/lsp_fakeserver
+inner-Go files actually touched:
+  helix_code/internal/tools/shell/background.go
+  helix_code/internal/tools/shell/background_security_workdir_test.go
+  helix_code/internal/tools/shell/executor.go
+  helix_code/internal/tools/shell_tools_background_security_test.go
+
+======== run 2 (/tmp/g19b.out) accused 92840ade ========
+subject: fix(mocks): HXC-194 — enforce a CORS origin allowlist in both hand-rolled mock services
+blamed packages: internal/rules, internal/telemetry/i18n
+inner-Go files actually touched:
+  helix_code/tests/e2e/mocks/llm-provider/cmd/cors.go
+  helix_code/tests/e2e/mocks/llm-provider/cmd/cors_test.go
+  helix_code/tests/e2e/mocks/llm-provider/cmd/main.go
+  helix_code/tests/e2e/mocks/llm-provider/config/config.go
+  helix_code/tests/e2e/mocks/slack/cmd/cors.go
+  helix_code/tests/e2e/mocks/slack/cmd/cors_test.go
+  helix_code/tests/e2e/mocks/slack/cmd/main.go
+  helix_code/tests/e2e/mocks/slack/config/config.go
+
+======== why this settles it ========
+* 92840ade touches ONLY helix_code/tests/e2e/mocks/** . A leaf e2e mock package
+  cannot be imported by internal/rules or internal/telemetry/i18n, so it cannot
+  break their compilation. The accusation is causally impossible.
+* run 2's OWN output lists '8490a5d9  COMPILES' — the commit run 1 had just
+  blamed. The two reports contradict each other directly.
+* Neither report contained a single file.go:line:col compiler diagnostic; both
+  carried only 'FAIL <pkg> [build failed]'.
+
+Import-edge check (does anything under internal/ import the e2e mocks?):
+  helix_code/internal/adapters/containers/adapter_remote.go:149://     "tests/e2e/mocks"). These are SCP'd so remote `--build` can build
+
+  ^ NOTE: that single hit is a COMMENT line inside adapter_remote.go, not an
+    import statement. Verified below — real import edges only:
+    grep for a real import of tests/e2e/mocks under internal/: NONE
+    => no package under helix_code/internal/ imports the e2e mocks, so a
+       change confined to tests/e2e/mocks/** cannot break their compilation.

@@ -1,0 +1,46 @@
+§11.4.107(10) analyzer self-validation + §1.1 paired mutations
+gate sha256: ae35edd0408487225f247aa6b932ec05624e8492f0edabb24c2eb5ab78e0cc69
+
+======== BASELINE: real classifier (expect PASS, rc=0) ========
+classifier self-validation (golden-good / golden-bad fixtures):
+  OK   diag.log -> COMPILE-FAIL
+  OK   killed.log -> INFRA
+  OK   enospc.log -> INFRA
+  OK   bare.log -> UNCLASSIFIED
+  OK   both.log -> COMPILE-FAIL
+  OK   stack.log -> UNCLASSIFIED
+  OK   eagain.log -> INFRA
+  OK   vanished.log -> INFRA
+  OK   missingsrc.log -> COMPILE-FAIL
+CLASSIFIER SELF-TEST PASS: every golden fixture classified correctly
+rc=0
+
+======== MUTATION A: classifier always COMPILE-FAIL ========
+(reinstates the pre-fix rule 'any non-zero exit blames the commit')
+classifier self-validation (golden-good / golden-bad fixtures):
+  OK   diag.log -> COMPILE-FAIL
+  BAD  killed.log -> COMPILE-FAIL (expected INFRA)
+  BAD  enospc.log -> COMPILE-FAIL (expected INFRA)
+  BAD  bare.log -> COMPILE-FAIL (expected UNCLASSIFIED)
+  OK   both.log -> COMPILE-FAIL
+  BAD  stack.log -> COMPILE-FAIL (expected UNCLASSIFIED)
+  BAD  eagain.log -> COMPILE-FAIL (expected INFRA)
+  BAD  vanished.log -> COMPILE-FAIL (expected INFRA)
+  OK   missingsrc.log -> COMPILE-FAIL
+CLASSIFIER SELF-TEST FAIL
+rc=1  <- MUST be non-zero
+
+======== MUTATION B: classifier always INFRA ========
+(stops crying wolf but also stops catching them)
+classifier self-validation (golden-good / golden-bad fixtures):
+  BAD  diag.log -> INFRA (expected COMPILE-FAIL)
+  OK   killed.log -> INFRA
+  OK   enospc.log -> INFRA
+  BAD  bare.log -> INFRA (expected UNCLASSIFIED)
+  BAD  both.log -> INFRA (expected COMPILE-FAIL)
+  BAD  stack.log -> INFRA (expected UNCLASSIFIED)
+  OK   eagain.log -> INFRA
+  OK   vanished.log -> INFRA
+  BAD  missingsrc.log -> INFRA (expected COMPILE-FAIL)
+CLASSIFIER SELF-TEST FAIL
+rc=1  <- MUST be non-zero

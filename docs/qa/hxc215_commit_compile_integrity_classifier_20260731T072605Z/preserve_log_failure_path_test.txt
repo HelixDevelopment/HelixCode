@@ -1,0 +1,13 @@
+Exercises the evidence-preservation path (preserve_log) that only runs when a
+build FAILS — untested by any determinism run, since every commit compiled.
+Functions are extracted VERBATIM from the gate, not reimplemented.
+
+preserved #1: /tmp/hxc215-preserve.68wRoX/faildir/deadbeef-20260731-123607-774549024.log  (rc=0) exists=YES bytes=80
+preserved #2: /tmp/hxc215-preserve.68wRoX/faildir/cafebabe-20260731-123607-879291286.log  (rc=0) exists=YES bytes=48
+preserved #3: /tmp/hxc215-preserve.68wRoX/faildir/cafebabe-20260731-123608-071414860.log  distinct-from-#2=YES
+content of #1 round-trips: YES
+classification of preserved #1: COMPILE-FAIL
+classification of preserved #2: INFRA
+
+unwritable FAILDIR must degrade gracefully, never crash the gate:
+  result='(could not preserve log)' rc=0 (expected the '(could not preserve log)' marker, rc 0)

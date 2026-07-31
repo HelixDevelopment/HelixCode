@@ -1,0 +1,33 @@
+HXC-215 trap fix observed on the REAL gate (not just the minimal reproducer).
+Captured 2026-07-31T07:43:29Z
+
+PRE-CONDITIONS verified before signalling (else the observation is meaningless):
+  gate pid 1947386 alive:  YES
+  argv:                    bash scripts/gates/commit_compile_integrity_gate.sh --last 3
+  live foreground child:   1998801 (go test)
+  worktree held:           /tmp/.private/milos/cci-gate.wIVsAR/4590c638 (detached HEAD)
+  workdir on disk:         /tmp/.private/milos/cci-gate.wIVsAR
+
+ACTION: kill -TERM 1947386   (kill rc=0, signal delivered)
+
+OBSERVED AFTER:
+  gate process alive:          NO
+  cci-gate worktrees registered: 0
+  cci-gate workdirs on disk:     NONE
+
+INTERPRETATION
+  The gate STOPPED and its EXIT trap ran cleanup exactly once: the detached
+  worktree was deregistered and the workdir removed. It did NOT resume to
+  emit verdicts for the remaining commits, which is what the old
+  'trap cleanup EXIT INT TERM' form did (see trap_resume_defect_reproducer.txt).
+
+HONEST BOUNDARY (§11.4.6): bash defers a trapped signal until the running
+  foreground command returns, so termination is not instantaneous — the gate
+  finishes the in-flight 'go test' first. The guarantee this fix provides is
+  that it then STOPS (exit 143) rather than resuming with a deleted workdir,
+  NOT that it dies immediately.
+
+OTHER SESSIONS UNAFFECTED (§11.4.174) — worktree list after:
+  /home/milos/Factory/projects/tools_and_research/helix_code                                                                                          4590c638 [main]
+  /tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/063ce360-1ec7-4fa8-9ef3-d219fadeed5e/scratchpad/prefix   ad6833c0 (detached HEAD)
+  /tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/7237795e-6ba4-4873-bf1f-2576bdb3d028/scratchpad/wt-head  8f072866 (detached HEAD)

@@ -665,16 +665,40 @@ fi
 if want_gate G19; then
     GATES_RUN=$((GATES_RUN + 1))
     gate_header "G19 — §11.4.108 per-commit compile integrity, last 3 (CM-COMMIT-COMPILE-INTEGRITY)"
-    if bash "$ROOT/scripts/gates/commit_compile_integrity_gate.sh" --last 3 >/tmp/g19-cci.out 2>&1; then
+    # HXC-215: the gate now separates "a commit really does not compile" (exit 1,
+    # backed by a real compiler diagnostic) from "the build failed for a host or
+    # unrecognised reason" (exit 3, which proves NOTHING about the source). Both
+    # block, but reporting the second as a broken commit is the false accusation
+    # that made this gate untrustworthy — so branch on the code, never on
+    # truthiness. Capture rc directly: `if cmd` would collapse 1 and 3 together.
+    bash "$ROOT/scripts/gates/commit_compile_integrity_gate.sh" --last 3 >/tmp/g19-cci.out 2>&1
+    g19_rc=$?
+    if [ "$g19_rc" -eq 0 ]; then
         # Surface the compile-checked COUNT, never a bare "compiles". A window
         # of docs-only commits legitimately checks ZERO, and a pass message that
         # says "each of the last 3 compiles" would then be a bluff at the
         # registration layer — indistinguishable from a window that really did
         # type-check three commits (§11.4 / §11.4.1).
         gate_pass G19 "$(grep -oE 'commits in range: [0-9]+ \| compile-checked: [0-9]+ \| skipped \(no inner Go\): [0-9]+' /tmp/g19-cci.out | tail -1) — no non-compiling commit in the bounded window (see gate comment for what this does NOT cover)"
-    else
+    elif [ "$g19_rc" -eq 1 ]; then
         gate_fail G19 "a recent commit does NOT compile — it is broken for every checkout but the author's (see /tmp/g19-cci.out)" \
             "$(tail -8 /tmp/g19-cci.out)"
+    elif [ "$g19_rc" -eq 3 ]; then
+        # Exit 3 is the gate's INCONCLUSIVE verdict: the build failed but emitted
+        # no compiler diagnostic, so nothing was proven about any commit's
+        # source. Wording this as a broken commit is the exact false accusation
+        # HXC-215 exists to remove — mirrors the §11.4.3 SKIP branch of G21/G25/
+        # G26. Still a FAIL, because a gate that could not reach a verdict has
+        # certified nothing.
+        gate_fail G19 "per-commit compile check INCONCLUSIVE (exit 3) — the build failed with no compiler diagnostic, so this is NOT a claim that any commit is broken and NOT a pass (see /tmp/g19-cci.out)" \
+            "read the 'full log:' path printed in the output — it is preserved outside the gate's workdir — and classify the failure before blaming any commit"
+    else
+        # Neither a verdict nor an inconclusive build: the gate itself did not
+        # run to completion (2 = usage error, 130/143 = interrupted, anything
+        # else = malfunction). Distinct from exit 3 because there may be no build
+        # log at all to read.
+        gate_fail G19 "per-commit compile-integrity gate did not run to completion (exit $g19_rc — usage error, interrupted, or malfunction); it certified nothing and this is NOT an accusation against any commit (see /tmp/g19-cci.out)" \
+            "$(tail -10 /tmp/g19-cci.out)"
     fi
 fi
 

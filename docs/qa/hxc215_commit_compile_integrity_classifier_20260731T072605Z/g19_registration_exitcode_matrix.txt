@@ -1,0 +1,20 @@
+G19 registration exit-code matrix — HXC-215
+Replays the BYTE-IDENTICAL real registration (cmp-verified) under a fake
+ROOT whose gate is a stub exiting with a chosen code, so the branch taken
+is observed, not read.
+
+======== gate stub exit=0  (verify script rc=0) ========
+  PASS: commits in range: 3 | compile-checked: 2 | skipped (no inner Go): 1 — no non-compiling commit in the bounded window (see gate comment for what this does NOT cover)
+
+======== gate stub exit=1  (verify script rc=1) ========
+  FAIL (G19): a recent commit does NOT compile — it is broken for every checkout but the author's (see /tmp/g19-cci.out)
+
+======== gate stub exit=3  (verify script rc=1) ========
+  FAIL (G19): per-commit compile check INCONCLUSIVE (exit 3) — the build failed with no compiler diagnostic, so this is NOT a claim that any commit is broken and NOT a pass (see /tmp/g19-cci.out)
+
+======== gate stub exit=2  (verify script rc=1) ========
+  FAIL (G19): per-commit compile-integrity gate did not run to completion (exit 2 — usage error, interrupted, or malfunction); it certified nothing and this is NOT an accusation against any commit (see /tmp/g19-cci.out)
+
+======== gate stub exit=143  (verify script rc=1) ========
+  FAIL (G19): per-commit compile-integrity gate did not run to completion (exit 143 — usage error, interrupted, or malfunction); it certified nothing and this is NOT an accusation against any commit (see /tmp/g19-cci.out)
+

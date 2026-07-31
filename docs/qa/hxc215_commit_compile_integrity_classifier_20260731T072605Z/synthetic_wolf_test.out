@@ -1,0 +1,41 @@
+source repo:     /home/milos/Factory/projects/tools_and_research/helix_code
+gate under test: /home/milos/Factory/projects/tools_and_research/helix_code/scripts/gates/commit_compile_integrity_gate.sh
+gate sha256:     ae35edd0408487225f247aa6b932ec05624e8492f0edabb24c2eb5ab78e0cc69
+synthetic repo:  /tmp/hxc215-wolf.sc6nEd/repo
+
+c2 (must COMPILE):          9380a9e6
+c3 (must NOT compile):      7f2bf136
+
+==================== gate output (--last 2) ====================
+CM-COMMIT-COMPILE-INTEGRITY (§11.4.108) range='HEAD~2..HEAD' tags='nogui'
+  9380a9e6  COMPILES     50s
+  7f2bf136  DOES-NOT-COMPILE  46s
+      internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+      internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+      internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+      internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+      FAIL	dev.helix.code/applications/aurora_os [build failed]
+      FAIL	dev.helix.code/applications/desktop [build failed]
+      FAIL	dev.helix.code/applications/harmony_os [build failed]
+      FAIL	dev.helix.code/applications/terminal_ui [build failed]
+      full log: /tmp/.private/milos/cci-gate-failures/7f2bf136-20260731-130851-860321094.log
+---
+commits in range: 2 | compile-checked: 2 | skipped (no inner Go): 0
+non-compiling: 1 | infrastructure failures: 0 | unclassified build failures: 0
+NON-COMPILING COMMITS: 7f2bf136
+FAIL §11.4.108: a commit that does not compile shipped. The working-tree
+gate cannot see this class — a symbol referenced by a committed file must
+itself be committed.
+(Each blamed commit above carries at least one file.go:line:col compiler
+diagnostic — that diagnostic IS the evidence the source is broken.)
+===============================================================
+gate exit: 1
+
+--- diagnostic the gate surfaced ---
+        internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+        internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+        internal/version/hxc215_synthetic_wolf.go:5:41: undefined: hxc215ThisSymbolDoesNotExist
+
+SYNTHETIC WOLF TEST PASS: the gate catches a genuinely broken commit, names
+ONLY that commit, backs it with a real compiler diagnostic, and exits 1.
+WOLF-RC=0
