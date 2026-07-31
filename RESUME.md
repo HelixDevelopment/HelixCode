@@ -1,11 +1,116 @@
 # RESUME — HelixCode Session Handoff
 
-**Revision:** 10
+**Revision:** 11
 **Created:** 2026-07-08
-**Last modified:** 2026-07-29T01:35Z (rev 10 — paused at session limit with 12 streams in flight)
+**Last modified:** 2026-08-01T00:05Z (rev 11 — everything committed and published; safe to leave)
 **Status:** active
 **Maintainer:** CLI-agent main work stream
 **Authority:** §11.4.131 Session-resumption file — point a fresh agent here. Composes §11.4.127 / §12.10 / §11.4.65 / §11.4.44.
+
+---
+
+## ▶ START HERE (Revision 11) — paste this into a fresh session
+
+> Read `RESUME.md` (this file) and `docs/CONTINUATION.md` first, then
+> `git fetch --all --prune`. Main repo `a0dc39a5`, **0 unpushed / 0 behind**,
+> working tree clean, every submodule clean and published. Continue the
+> autonomous burn-down: 28 open items, **zero Critical**. First action —
+> close the five items whose fixes ARE landed but whose tracker rows are still
+> open (HXC-186, 199, 202, 204 need evidence-cited closure; HXC-172 is
+> Operator-blocked pending an SDK-upgrade decision). Then resume the queue in
+> severity order. The release tag `helix-code-1.2.0-dev-0.0.1` remains gated on
+> §11.4.185 operator manual-QA, which cannot be self-certified.
+
+### State at the close (verified live, not remembered)
+
+| | |
+|---|---|
+| main repo | `a0dc39a5` — **0 unpushed, 0 behind**, tree clean |
+| published | all 3 distinct repos MATCH by `git ls-remote` |
+| `submodules/helix_agent` | `d0a53e0b` — 4/4 remotes MATCH |
+| `constitution` | `428ff9d` — 8/8 remotes MATCH |
+| all 227 submodules | recursive sweep: **0 dirty, 0 unpushed** |
+| tracker | **383 closed / 28 open** — 0 Critical, 3 High, 8 Medium, 12 Low, 5 unset |
+| gates | **27** registered (was 21 at session start) |
+| commits this session | **34** |
+| disk | 147 GB free (was 0 — see below) |
+
+### What this session actually did
+
+Closed **17 items** with committed evidence, including both Criticals:
+HXC-169 (five docker advisories — resolved *structurally unreachable*, not
+patched: `go list -deps ./cmd/...` = 1097 deps, **zero** docker), HXC-205,
+HXC-193/195, HXC-194, HXC-198, HXC-201, HXC-203, HXC-209/210, HXC-211,
+HXC-212, HXC-213, HXC-214, HXC-215.
+
+Filed **9 new items** from sibling sweeps: HXC-208, 209, 210, 211, 212, 213,
+214, 216, 217.
+
+### The three findings a fresh session most needs
+
+1. **A zero-byte `.git/index.lock` blocked EVERY writer for 2h23m.** No commit
+   landed in the 394 minutes it existed. Four §11.4.180 criteria all held (age
+   8575s, size 0, no live git writer, no commit since). I mis-reported the
+   agents as "slow on deep investigations" — they were *blocked*, and the
+   lock's own mtime proved it the whole time. **If commits stop landing, check
+   `.git/index.lock` age FIRST.**
+
+2. **`ulimit -u` is NOT the binding process limit here.** It reports 262144;
+   the cgroup hierarchy caps it at **4096** at a parent slice. Walk every level
+   of `/proc/self/cgroup`, read `pids.max`, take the MINIMUM. I used the wrong
+   number all session — a 64× overestimate.
+
+3. **Evidence can be silently absent.** A blanket `*.log` ignore meant 38
+   `docs/qa/` directories held transcripts that were **never committed** —
+   three of them backing items closed the same day. Fixed at source with
+   `!docs/qa/**/*.log` (`7552c7bd`), then three oversized captures (404 MB of
+   413 MB) excluded by path as HXC-216. An ignored transcript is
+   indistinguishable from one never captured.
+
+### Landed but NOT closed — do these first
+
+| Item | State | What remains |
+|---|---|---|
+| HXC-186 | fix landed in `790d097c` | close with evidence; `docs/qa/README.md` not yet documenting the new declared-citation field |
+| HXC-199 | landed `a0dc39a5` | close with evidence |
+| HXC-202 | landed `a0dc39a5` | close with evidence |
+| HXC-204 | landed `a0dc39a5` | close with evidence |
+| HXC-172 | `d0a53e0b` (submodule) | **Operator-blocked**: SDK 1.24.0 lands inside two other advisories; clean floor is ≥1.26.0, a breaking major adding ~79 packages to patch never-loaded code |
+
+**None of the five is independently reviewed** (§11.4.142/§11.4.209 owe a Fable
+xhigh pass). `a0dc39a5` landed three of them on the agents' behalf because the
+session was closing; it verifies they COMPILE (`go build -tags=nogui` exit 0,
+`go vet` exit 0, `bash -n` OK), **not** that they are correct.
+
+### Release-tag blockers (`helix-code-1.2.0-dev-0.0.1`)
+
+1. **§11.4.185 operator manual-QA** — cannot be self-certified. **Yours.**
+2. **HXC-168 credential rotation** — the code half is done and guarded, but the
+   value sits in **23 commits across 271 days on every upstream**. Editing
+   files cannot remove published history; §11.4.113 forbids a rewrite and it
+   would be futile anyway. **Operator action.**
+3. §11.4.40 full-suite retest on a quiescent host.
+4. Independent review of the whole delta.
+
+### Traps that cost real time — do not re-learn these
+
+- **A mutation whose verification step REBUILDS the artifact cannot be reverted
+  from a file backup.** `npm test` runs `npm run build`, so restoring `src/`
+  leaves `dist/` contaminated. Restore from `git checkout --`.
+- **An unapplied mutation looks exactly like a passing gate.** Check the diff is
+  non-empty before trusting a mutation result. This produced a false pass three
+  times today.
+- **A class-closed claim is only as wide as the tree that was swept.** HXC-194
+  reported the any-origin class closed after sweeping the main repo; a third
+  site lived in a submodule, and 8 more remain there.
+- **Blocking the read is not blocking the call.** HXC-212's CORS fix stopped the
+  browser reading the reply while the `tools/call` had already executed —
+  found by HXC-172 in a fix already marked closed.
+- **`git add <path>` protects what YOU stage, not the index from another
+  agent's broad `git add`.** Two cross-contamination events today; check
+  `git show --stat` immediately AFTER committing, which is what caught both.
+
+---
 
 > **Revision 10 (2026-07-29T01:35Z) — session-limit pause with 12 streams in flight, then resumed on a fresh alias.**
 > **State at the pause (verified live, not remembered):** main repo `bbd236c9`, **66 unpushed / 0 behind** (clean fast-forward, base `0a4eb8d0`). Both submodules are FULLY PUBLISHED and at 0 unpushed: `submodules/helix_agent` = `c740eaf1` (live on all four remotes), `submodules/debate_orchestrator` = `354635f`. Workable-items DB: 173 Fixed / 95 Implemented / 81 Completed / 3 Obsolete / 8 Queued (`HXC-159..166`).
