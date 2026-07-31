@@ -1,0 +1,41 @@
+# Provenance: filtered transcript
+# Original: 57 lines, 4046 bytes. Race reports: 0 (ALL preserved verbatim below).
+# Filtered: repeated Go log.Printf lines (^YYYY/MM/DD HH:MM:SS) from the deployer's
+#   failure path — 2703 identical repetitions per run, no evidential value.
+#   First 25 retained as a sample. Test-framework lines and race reports untouched.
+=== RUN   TestHXC213_ReturnedStatus_IsCallerOwnedDeepCopy
+2026/07/31 12:06:14 🚀 Starting Comprehensive Production Deployment
+2026/07/31 12:06:14 📋 Deployment ID: deploy-1785481574181823886-1
+2026/07/31 12:06:14 🌍 Environment: test
+2026/07/31 12:06:14 🎯 Strategy: production
+2026/07/31 12:06:14 📢 Notification: deployment_started - Production deployment started for hxc213-aliasing
+2026/07/31 12:06:14 
+🔧 Executing Phase: preparation
+2026/07/31 12:06:14 📋 Preparing production deployment...
+2026/07/31 12:06:14 ✅ Prerequisites check passed
+2026/07/31 12:06:14    🌍 Preparing deployment environment...
+2026/07/31 12:06:14    ⚠️  Real environment preparation is not wired in this build (no remote staging/dependency checks); proceeding without a verified-prepared claim (§11.4 honest gap)
+2026/07/31 12:06:14    🖥️  1 target server(s) configured
+2026/07/31 12:06:14       Server 1/1 configured: s1 (not validated here; real reachability is probed later in checkServerHealth)
+2026/07/31 12:06:14    ⚠️  Target-server validation not performed in this phase (§11.4 honest gap); reachability is checked at health-check time
+2026/07/31 12:06:14 ✅ Preparation completed successfully
+2026/07/31 12:06:14 📢 Notification: preparation_complete - Deployment preparation completed successfully
+2026/07/31 12:06:14 ✅ Phase preparation completed successfully
+2026/07/31 12:06:14 
+🔧 Executing Phase: security_check
+2026/07/31 12:06:14 ⏭️  Security gate disabled - skipping
+2026/07/31 12:06:14 ✅ Phase security_check completed successfully
+2026/07/31 12:06:14 
+🔧 Executing Phase: performance_check
+2026/07/31 12:06:14 ⏭️  Performance gate disabled - skipping
+2026/07/31 12:06:14 ✅ Phase performance_check completed successfully
+2026/07/31 12:06:14 
+🔧 Executing Phase: deployment
+2026/07/31 12:06:14 🚀 Executing production deployment...
+2026/07/31 12:06:14    Strategy: production
+[... deployer log.Printf output elided — see provenance header ...]
+❌ PRODUCTION DEPLOYMENT FAILED
+    production_deployer_hxc213_race_test.go:185: RED_MODE: reproduced — StartProductionDeployment returned the live internal *DeploymentStatus; callers alias deployer state
+--- PASS: TestHXC213_ReturnedStatus_IsCallerOwnedDeepCopy (0.29s)
+PASS
+ok  	dev.helix.code/internal/deployment	1.901s

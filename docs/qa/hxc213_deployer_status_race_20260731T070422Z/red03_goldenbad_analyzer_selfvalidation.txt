@@ -1,0 +1,64 @@
+# Provenance: filtered transcript
+# Original: 59 lines, 3201 bytes. Race reports: 2 (ALL preserved verbatim below).
+# Filtered: repeated Go log.Printf lines (^YYYY/MM/DD HH:MM:SS) from the deployer's
+#   failure path — 2703 identical repetitions per run, no evidential value.
+#   First 25 retained as a sample. Test-framework lines and race reports untouched.
+=== RUN   TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected
+==================
+WARNING: DATA RACE
+Read at 0x00c000242320 by goroutine 75:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected.func2()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:281 +0xa4
+
+Previous write at 0x00c000242320 by goroutine 74:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected.func1()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:274 +0x11c
+
+Goroutine 75 (running) created at:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:278 +0x2e8
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 74 (finished) created at:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:270 +0x246
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+==================
+==================
+WARNING: DATA RACE
+Read at 0x00c000032720 by goroutine 75:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected.func2()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:282 +0xcb
+
+Previous write at 0x00c000032720 by goroutine 74:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected.func1()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:275 +0xe4
+
+Goroutine 75 (running) created at:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:278 +0x2e8
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+
+Goroutine 74 (finished) created at:
+  dev.helix.code/internal/deployment.TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected()
+      /tmp/hxc213_red_artifact/helix_code/internal/deployment/production_deployer_hxc213_race_test.go:270 +0x246
+  testing.tRunner()
+      /usr/lib/golang/src/testing/testing.go:2036 +0x21c
+  testing.(*T).Run.gowrap1()
+      /usr/lib/golang/src/testing/testing.go:2101 +0x38
+==================
+    production_deployer_hxc213_race_test.go:287: RED_MODE golden-bad fixture completed; the race detector MUST have reported a DATA RACE — if this run is green, the harness is blind and every other guard here is void
+    testing.go:1712: race detected during execution of test
+--- FAIL: TestHXC213_GoldenBad_UnsynchronizedWriteIsDetected (0.00s)
+FAIL
+FAIL	dev.helix.code/internal/deployment	0.703s
+FAIL

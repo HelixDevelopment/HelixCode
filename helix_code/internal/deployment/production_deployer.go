@@ -25,8 +25,26 @@ type ProductionDeployer struct {
 	securityManager *security.SecurityManager
 	monitoring      *monitoring.Monitor
 	status          *DeploymentStatus
-	mutex           sync.RWMutex
-	running         atomic.Bool
+	// mutex guards EVERY access to status and to everything it points at
+	// (Metrics, and the backing arrays of CompletedPhases, FailedPhases,
+	// ServersDeployed, ServersRollback, Notifications, HealthStatus.ServerDetails).
+	//
+	// Lock discipline (HXC-213), non-negotiable:
+	//  1. No field of status may be read or written outside a critical section.
+	//     Reach it through the accessors below, never directly — the accessors
+	//     are the only places pd.status appears.
+	//  2. The lock MUST NOT be held across anything that can block: network or
+	//     process I/O (deployToServer, checkServerHealth's dial, the security
+	//     scan's exec), or log.Printf (which writes to stderr). Long operations
+	//     use the three-phase shape — snapshot under the lock, work with none
+	//     held, write the verdict back in ONE critical section so no reader ever
+	//     observes a half-applied update.
+	//  3. A multi-field update is ONE critical section, not several.
+	//
+	// config is treated as immutable after construction and is read unguarded;
+	// a future runtime config-reload must bring it under this lock too.
+	mutex   sync.RWMutex
+	running atomic.Bool
 }
 
 // DeploymentConfig defines comprehensive production deployment configuration
@@ -226,6 +244,265 @@ func NewProductionDeployer(config *DeploymentConfig) (*ProductionDeployer, error
 	return deployer, nil
 }
 
+// ---------------------------------------------------------------------------
+// Status accessors — the ONLY places pd.status is touched (HXC-213).
+//
+// Each holds pd.mutex for the shortest possible window and never spans a
+// blocking call. Readers return copies, so a caller can log or branch on the
+// result with no lock held and no risk of a torn read.
+// ---------------------------------------------------------------------------
+
+// cloneStrings returns an independent copy of s, preserving nil-ness so a
+// round-tripped status marshals identically to the original.
+func cloneStrings(s []string) []string {
+	if s == nil {
+		return nil
+	}
+	out := make([]string, len(s))
+	copy(out, s)
+	return out
+}
+
+// copyScanResultLocked deep-copies a scan result so a caller holding the
+// returned status cannot reach into the deployer's live scan record.
+func copyScanResultLocked(in *security.FeatureScanResult) *security.FeatureScanResult {
+	if in == nil {
+		return nil
+	}
+	out := *in
+	if in.Issues != nil {
+		out.Issues = make([]interface{}, len(in.Issues))
+		copy(out.Issues, in.Issues)
+	}
+	out.Recommendations = cloneStrings(in.Recommendations)
+	return &out
+}
+
+// copyStatusLocked returns a deep copy of pd.status. The caller MUST already
+// hold pd.mutex (read or write). Every slice and every pointer reachable from
+// the result is independent of the deployer, so the copy is owned outright by
+// whoever receives it.
+func (pd *ProductionDeployer) copyStatusLocked() *DeploymentStatus {
+	out := *pd.status
+
+	out.CompletedPhases = cloneStrings(pd.status.CompletedPhases)
+	out.FailedPhases = cloneStrings(pd.status.FailedPhases)
+	out.ServersDeployed = cloneStrings(pd.status.ServersDeployed)
+	out.ServersRollback = cloneStrings(pd.status.ServersRollback)
+
+	out.SecurityGateStatus.ScanResults = copyScanResultLocked(pd.status.SecurityGateStatus.ScanResults)
+
+	if pd.status.HealthStatus.ServerDetails != nil {
+		out.HealthStatus.ServerDetails = make([]ServerHealth, len(pd.status.HealthStatus.ServerDetails))
+		copy(out.HealthStatus.ServerDetails, pd.status.HealthStatus.ServerDetails)
+	}
+
+	if pd.status.Notifications != nil {
+		out.Notifications = make([]NotificationEvent, len(pd.status.Notifications))
+		copy(out.Notifications, pd.status.Notifications)
+	}
+
+	// Metrics is a pointer field: a shallow copy would hand the caller the
+	// deployer's live counter block.
+	if pd.status.Metrics != nil {
+		metrics := *pd.status.Metrics
+		out.Metrics = &metrics
+	}
+
+	return &out
+}
+
+// snapshotStatus returns a deep copy of the current status under the read lock.
+// This is what StartProductionDeployment hands back to callers: the deployer's
+// only exported method must not publish its internal state.
+func (pd *ProductionDeployer) snapshotStatus() *DeploymentStatus {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return pd.copyStatusLocked()
+}
+
+func (pd *ProductionDeployer) statusDeploymentID() string {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return pd.status.DeploymentID
+}
+
+func (pd *ProductionDeployer) statusDuration() time.Duration {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return pd.status.Duration
+}
+
+// statusDeployedServers returns a copy of the deployed-server list so callers
+// can iterate it — performing network I/O or logging per element — with no lock
+// held (lock-discipline rule 2).
+func (pd *ProductionDeployer) statusDeployedServers() []string {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return cloneStrings(pd.status.ServersDeployed)
+}
+
+func (pd *ProductionDeployer) statusDeployedCount() int {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return len(pd.status.ServersDeployed)
+}
+
+func (pd *ProductionDeployer) statusSecurityGate() SecurityGateStatus {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	gate := pd.status.SecurityGateStatus
+	gate.ScanResults = copyScanResultLocked(pd.status.SecurityGateStatus.ScanResults)
+	return gate
+}
+
+func (pd *ProductionDeployer) statusPerformanceGate() PerformanceGateStatus {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return pd.status.PerformanceGate
+}
+
+func (pd *ProductionDeployer) statusHealthStatus() HealthCheckStatus {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	health := pd.status.HealthStatus
+	// ServerDetails is a slice: copy it rather than returning the live backing
+	// array, so the result is a self-contained value like every other accessor's.
+	if pd.status.HealthStatus.ServerDetails != nil {
+		health.ServerDetails = make([]ServerHealth, len(pd.status.HealthStatus.ServerDetails))
+		copy(health.ServerDetails, pd.status.HealthStatus.ServerDetails)
+	}
+	return health
+}
+
+func (pd *ProductionDeployer) statusDeploymentTime() time.Duration {
+	pd.mutex.RLock()
+	defer pd.mutex.RUnlock()
+	return pd.status.Metrics.DeploymentTime
+}
+
+func (pd *ProductionDeployer) setCurrentPhase(phase string) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.CurrentPhase = phase
+}
+
+func (pd *ProductionDeployer) appendCompletedPhase(phase string) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.CompletedPhases = append(pd.status.CompletedPhases, phase)
+}
+
+func (pd *ProductionDeployer) appendDeployedServer(server string) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.ServersDeployed = append(pd.status.ServersDeployed, server)
+}
+
+// setSecurityGate publishes a whole gate verdict in one critical section, so no
+// reader can observe it half-applied.
+func (pd *ProductionDeployer) setSecurityGate(gate SecurityGateStatus) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.SecurityGateStatus = gate
+}
+
+func (pd *ProductionDeployer) setSecurityGateOutcome(status, reason string) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.SecurityGateStatus.Status = status
+	pd.status.SecurityGateStatus.Reason = reason
+}
+
+func (pd *ProductionDeployer) incSecurityScans() {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.Metrics.SecurityScans++
+}
+
+func (pd *ProductionDeployer) setPerformanceGate(gate PerformanceGateStatus) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.PerformanceGate = gate
+}
+
+func (pd *ProductionDeployer) setPerformanceGateOutcome(status, reason string) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.PerformanceGate.Status = status
+	pd.status.PerformanceGate.Reason = reason
+}
+
+func (pd *ProductionDeployer) incPerformanceTests() {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.Metrics.PerformanceTests++
+}
+
+// publishHealthStatus stores the health verdict and counts the check in one
+// critical section (the two were previously separate unguarded statements).
+func (pd *ProductionDeployer) publishHealthStatus(health HealthCheckStatus) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.HealthStatus = health
+	pd.status.Metrics.HealthChecks++
+}
+
+// markEnded stamps EndTime and the derived Duration together — computing
+// Duration from a separately-read EndTime would be a torn read-modify-write.
+func (pd *ProductionDeployer) markEnded() {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.EndTime = time.Now()
+	pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
+}
+
+func (pd *ProductionDeployer) recordDeploymentMetrics(elapsed time.Duration) {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.Metrics.DeploymentTime = elapsed
+	pd.status.Metrics.DeployedServers = len(pd.status.ServersDeployed)
+}
+
+// markCompleted applies the whole success transition in one critical section and
+// returns a snapshot, so the summary can be logged with no lock held.
+func (pd *ProductionDeployer) markCompleted() *DeploymentStatus {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.EndTime = time.Now()
+	pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
+	pd.status.Status = PhaseSuccess
+	pd.status.CurrentPhase = string(PhaseCompletion)
+	return pd.copyStatusLocked()
+}
+
+// markFailed applies the whole failure transition in one critical section and
+// returns a snapshot for lock-free logging.
+func (pd *ProductionDeployer) markFailed(phase DeploymentPhase) *DeploymentStatus {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.EndTime = time.Now()
+	pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
+	pd.status.Status = PhaseFailed
+	pd.status.CurrentPhase = string(PhaseFailed)
+	pd.status.FailedPhases = append(pd.status.FailedPhases, string(phase))
+	return pd.copyStatusLocked()
+}
+
+// markRollbackTriggered records the rollback request and the (honestly zero)
+// rollback metrics in one critical section, returning the servers awaiting
+// rollback so the per-server logging below runs with no lock held.
+func (pd *ProductionDeployer) markRollbackTriggered(reason string) []string {
+	pd.mutex.Lock()
+	defer pd.mutex.Unlock()
+	pd.status.RollbackTriggered = true
+	pd.status.RollbackReason = reason
+	pd.status.CurrentPhase = string(PhaseRollback)
+	pd.status.Metrics.RollbackServers = 0
+	pd.status.Metrics.RollbackTime = 0
+	return cloneStrings(pd.status.ServersDeployed)
+}
+
 // StartProductionDeployment starts comprehensive production deployment
 func (pd *ProductionDeployer) StartProductionDeployment(ctx context.Context) (*DeploymentStatus, error) {
 	if !pd.running.CompareAndSwap(false, true) {
@@ -235,11 +512,11 @@ func (pd *ProductionDeployer) StartProductionDeployment(ctx context.Context) (*D
 	defer pd.running.Store(false)
 
 	log.Printf("🚀 Starting Comprehensive Production Deployment")
-	log.Printf("📋 Deployment ID: %s", pd.status.DeploymentID)
+	log.Printf("📋 Deployment ID: %s", pd.statusDeploymentID())
 	log.Printf("🌍 Environment: %s", pd.config.Environment)
 	log.Printf("🎯 Strategy: %s", pd.config.DeploymentStrategy)
 
-	pd.status.CurrentPhase = string(PhasePreparation)
+	pd.setCurrentPhase(string(PhasePreparation))
 	pd.addNotification("deployment_started", fmt.Sprintf("Production deployment started for %s", pd.config.ProjectName), "system")
 
 	// Execute deployment phases
@@ -264,31 +541,37 @@ func (pd *ProductionDeployer) StartProductionDeployment(ctx context.Context) (*D
 		// WHY the deployment stopped.
 		if cerr := ctx.Err(); cerr != nil {
 			pd.failDeployment(phase, fmt.Errorf("deployment aborted before phase %s: %w", phase, cerr))
-			return pd.status, nil
+			return pd.snapshotStatus(), nil
 		}
 
 		log.Printf("\n🔧 Executing Phase: %s", phase)
-		pd.status.CurrentPhase = string(phase)
+		pd.setCurrentPhase(string(phase))
 
 		success, err := pd.executePhase(ctx, phase)
 		if err != nil {
 			pd.failDeployment(phase, err)
-			return pd.status, nil
+			return pd.snapshotStatus(), nil
 		}
 
 		if !success {
 			pd.failDeployment(phase, fmt.Errorf("phase %s failed", phase))
-			return pd.status, nil
+			return pd.snapshotStatus(), nil
 		}
 
-		pd.status.CompletedPhases = append(pd.status.CompletedPhases, string(phase))
+		pd.appendCompletedPhase(string(phase))
 		log.Printf("✅ Phase %s completed successfully", phase)
 	}
 
 	// Complete deployment
 	pd.completeDeployment()
 
-	return pd.status, nil
+	// HXC-213: hand back a deep copy, never the live pd.status. This is the
+	// type's ONLY exported method, so returning the internal pointer published
+	// the deployer's mutable state to every caller — who could then both corrupt
+	// it and race against any subsequent deployment on the same deployer (the
+	// single-flight guard is released by the defer above, so a second run is
+	// legal). The caller owns what it receives.
+	return pd.snapshotStatus(), nil
 }
 
 // executePhase executes a specific deployment phase
@@ -355,13 +638,14 @@ func (pd *ProductionDeployer) executeSecurityCheck(ctx context.Context) (bool, e
 	scanResult, err := pd.runSecurityScan(ctx)
 	if err != nil {
 		log.Printf("❌ Security scan failed: %v", err)
-		pd.status.SecurityGateStatus.Status = "scan_failed"
-		pd.status.SecurityGateStatus.Reason = fmt.Sprintf("Security scan failed: %v", err)
+		pd.setSecurityGateOutcome("scan_failed", fmt.Sprintf("Security scan failed: %v", err))
 		return false, err
 	}
 
-	// Evaluate security gate
-	pd.status.SecurityGateStatus = SecurityGateStatus{
+	// Evaluate security gate. The verdict is built locally and published in one
+	// critical section; the local copy then feeds the logging below, so no
+	// reader can see a half-written gate and no lock is held across log I/O.
+	gate := SecurityGateStatus{
 		Enabled:          true,
 		Status:           "evaluated",
 		CriticalIssues:   countCriticalIssues(scanResult),
@@ -371,29 +655,28 @@ func (pd *ProductionDeployer) executeSecurityCheck(ctx context.Context) (bool, e
 		LastCheckTime:    time.Now(),
 		Passed:           scanResult.CanProceed,
 	}
+	pd.setSecurityGate(gate)
 
 	if !scanResult.CanProceed {
 		log.Printf("🚨 SECURITY GATE FAILED - Zero Tolerance Policy Violated")
-		log.Printf("   Critical Issues: %d", pd.status.SecurityGateStatus.CriticalIssues)
-		log.Printf("   High Issues: %d", pd.status.SecurityGateStatus.HighIssues)
-		log.Printf("   Zero Tolerance Met: %t", pd.status.SecurityGateStatus.ZeroToleranceMet)
+		log.Printf("   Critical Issues: %d", gate.CriticalIssues)
+		log.Printf("   High Issues: %d", gate.HighIssues)
+		log.Printf("   Zero Tolerance Met: %t", gate.ZeroToleranceMet)
 
-		pd.status.SecurityGateStatus.Status = "failed"
-		pd.status.SecurityGateStatus.Reason = "Zero-tolerance security policy violation - critical issues present"
+		pd.setSecurityGateOutcome("failed", "Zero-tolerance security policy violation - critical issues present")
 
-		pd.addNotification("security_gate_failed", fmt.Sprintf("Security gate failed: %d critical issues detected", pd.status.SecurityGateStatus.CriticalIssues), "security")
-		return false, fmt.Errorf("security gate failed - %d critical issues present", pd.status.SecurityGateStatus.CriticalIssues)
+		pd.addNotification("security_gate_failed", fmt.Sprintf("Security gate failed: %d critical issues detected", gate.CriticalIssues), "security")
+		return false, fmt.Errorf("security gate failed - %d critical issues present", gate.CriticalIssues)
 	}
 
 	log.Printf("✅ Security gate passed - Zero Tolerance Policy satisfied")
-	log.Printf("   Critical Issues: %d", pd.status.SecurityGateStatus.CriticalIssues)
-	log.Printf("   High Issues: %d", pd.status.SecurityGateStatus.HighIssues)
-	log.Printf("   Zero Tolerance Met: %t", pd.status.SecurityGateStatus.ZeroToleranceMet)
+	log.Printf("   Critical Issues: %d", gate.CriticalIssues)
+	log.Printf("   High Issues: %d", gate.HighIssues)
+	log.Printf("   Zero Tolerance Met: %t", gate.ZeroToleranceMet)
 	log.Printf("   Security Score: %d", scanResult.SecurityScore)
 
-	pd.status.SecurityGateStatus.Status = "passed"
-	pd.status.SecurityGateStatus.Reason = "Zero-tolerance security policy satisfied"
-	pd.status.Metrics.SecurityScans++
+	pd.setSecurityGateOutcome("passed", "Zero-tolerance security policy satisfied")
+	pd.incSecurityScans()
 
 	pd.addNotification("security_gate_passed", "Security gate passed - Zero tolerance policy satisfied", "security")
 	return true, nil
@@ -412,8 +695,7 @@ func (pd *ProductionDeployer) executePerformanceCheck(ctx context.Context) (bool
 	perfMetrics, err := pd.runPerformanceValidation(ctx)
 	if err != nil {
 		log.Printf("❌ Performance validation failed: %v", err)
-		pd.status.PerformanceGate.Status = "validation_failed"
-		pd.status.PerformanceGate.Reason = fmt.Sprintf("Performance validation failed: %v", err)
+		pd.setPerformanceGateOutcome("validation_failed", fmt.Sprintf("Performance validation failed: %v", err))
 		return false, err
 	}
 
@@ -441,7 +723,7 @@ func (pd *ProductionDeployer) executePerformanceCheck(ctx context.Context) (bool
 		reasons = append(reasons, fmt.Sprintf("Memory target not met: %d MB > %d MB", perfMetrics.MemoryUsage/(1024*1024), pd.config.PerformanceGateStatus.MemoryTarget/(1024*1024)))
 	}
 
-	pd.status.PerformanceGate = PerformanceGateStatus{
+	pd.setPerformanceGate(PerformanceGateStatus{
 		Enabled:           true,
 		Status:            "evaluated",
 		ThroughputTarget:  pd.config.PerformanceGateStatus.ThroughputTarget,
@@ -455,7 +737,7 @@ func (pd *ProductionDeployer) executePerformanceCheck(ctx context.Context) (bool
 		AllTargetsMet:     targetsMet,
 		LastCheckTime:     time.Now(),
 		Passed:            targetsMet,
-	}
+	})
 
 	if !targetsMet {
 		log.Printf("🚨 PERFORMANCE GATE FAILED")
@@ -464,8 +746,7 @@ func (pd *ProductionDeployer) executePerformanceCheck(ctx context.Context) (bool
 		log.Printf("   CPU: %.1f%%/%.1f%%", perfMetrics.CPUUtilization, pd.config.PerformanceGateStatus.CPUTarget)
 		log.Printf("   Memory: %d MB/%d MB", perfMetrics.MemoryUsage/(1024*1024), pd.config.PerformanceGateStatus.MemoryTarget/(1024*1024))
 
-		pd.status.PerformanceGate.Status = "failed"
-		pd.status.PerformanceGate.Reason = fmt.Sprintf("Performance targets not met: %s", reasons[0])
+		pd.setPerformanceGateOutcome("failed", fmt.Sprintf("Performance targets not met: %s", reasons[0]))
 
 		pd.addNotification("performance_gate_failed", fmt.Sprintf("Performance gate failed: %s", reasons[0]), "performance")
 		return false, fmt.Errorf("performance gate failed: %s", reasons[0])
@@ -477,9 +758,8 @@ func (pd *ProductionDeployer) executePerformanceCheck(ctx context.Context) (bool
 	log.Printf("   CPU: %.1f%%/%.1f%%", perfMetrics.CPUUtilization, pd.config.PerformanceGateStatus.CPUTarget)
 	log.Printf("   Memory: %d MB/%d MB", perfMetrics.MemoryUsage/(1024*1024), pd.config.PerformanceGateStatus.MemoryTarget/(1024*1024))
 
-	pd.status.PerformanceGate.Status = "passed"
-	pd.status.PerformanceGate.Reason = "All performance targets met"
-	pd.status.Metrics.PerformanceTests++
+	pd.setPerformanceGateOutcome("passed", "All performance targets met")
+	pd.incPerformanceTests()
 
 	pd.addNotification("performance_gate_passed", "Performance gate passed - All targets met", "performance")
 	return true, nil
@@ -514,27 +794,25 @@ func (pd *ProductionDeployer) executeDeployment(ctx context.Context) (bool, erro
 
 	if err != nil {
 		log.Printf("❌ Deployment failed: %v", err)
-		pd.status.EndTime = time.Now()
-		pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
+		pd.markEnded()
 		return false, err
 	}
 
 	if !success {
 		log.Printf("❌ Deployment failed - no servers deployed successfully")
-		pd.status.EndTime = time.Now()
-		pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
+		pd.markEnded()
 		return false, fmt.Errorf("deployment failed - no servers deployed")
 	}
 
 	// Record deployment metrics
-	pd.status.Metrics.DeploymentTime = time.Since(deploymentStartTime)
-	pd.status.Metrics.DeployedServers = len(pd.status.ServersDeployed)
+	pd.recordDeploymentMetrics(time.Since(deploymentStartTime))
 
+	deployedCount := pd.statusDeployedCount()
 	log.Printf("✅ Production deployment completed successfully")
-	log.Printf("   Servers Deployed: %d", len(pd.status.ServersDeployed))
-	log.Printf("   Deployment Time: %v", pd.status.Metrics.DeploymentTime)
+	log.Printf("   Servers Deployed: %d", deployedCount)
+	log.Printf("   Deployment Time: %v", pd.statusDeploymentTime())
 
-	pd.addNotification("deployment_complete", fmt.Sprintf("Production deployment completed - %d servers deployed", len(pd.status.ServersDeployed)), "deployment")
+	pd.addNotification("deployment_complete", fmt.Sprintf("Production deployment completed - %d servers deployed", deployedCount), "deployment")
 	return true, nil
 }
 
@@ -567,7 +845,9 @@ func (pd *ProductionDeployer) executeProductionDeploy(ctx context.Context) (bool
 		// false) when SSH transport is not wired, rather than simulating.
 		success := pd.deployToServer(ctx, server)
 		if success {
-			pd.status.ServersDeployed = append(pd.status.ServersDeployed, server)
+			// Appended AFTER deployToServer returns — the lock is never held
+			// across the deployment itself (lock-discipline rule 2).
+			pd.appendDeployedServer(server)
 			successfulDeployments++
 			log.Printf("      ✅ Server deployed successfully")
 		} else {
@@ -664,7 +944,14 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 
 	log.Printf("🏥 Executing health checks on deployed servers...")
 
-	if len(pd.status.ServersDeployed) == 0 {
+	// Three-phase (lock-discipline rule 2): snapshot the target list under the
+	// lock, probe with NO lock held — checkServerHealth performs a real TCP dial
+	// with a 500ms timeout, and holding the lock across it would stall every
+	// status reader for the full timeout, per server — then publish the verdict
+	// back in one critical section.
+	deployedServers := pd.statusDeployedServers()
+
+	if len(deployedServers) == 0 {
 		log.Printf("   ⚠️  No servers deployed - cannot perform health checks")
 		return false, nil
 	}
@@ -672,7 +959,7 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 	healthyServers := 0
 	serverDetails := make([]ServerHealth, 0)
 
-	for _, server := range pd.status.ServersDeployed {
+	for _, server := range deployedServers {
 		log.Printf("   🔍 Checking health of server: %s", server)
 
 		// Real health check via HTTP request or SSH command
@@ -700,7 +987,7 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 		})
 	}
 
-	totalServers := len(pd.status.ServersDeployed)
+	totalServers := len(deployedServers)
 	healthStatus := HealthCheckStatus{
 		Enabled:          true,
 		Status:           "evaluated",
@@ -731,8 +1018,7 @@ func (pd *ProductionDeployer) executeHealthCheck(ctx context.Context) (bool, err
 	healthStatus.Status = "passed"
 	healthStatus.Reason = "Sufficient healthy servers"
 	healthStatus.ResponseTime = fmt.Sprintf("%v average", calculateAverageResponseTime(serverDetails))
-	pd.status.HealthStatus = healthStatus
-	pd.status.Metrics.HealthChecks++
+	pd.publishHealthStatus(healthStatus)
 
 	pd.addNotification("health_check_passed", fmt.Sprintf("Health check passed: %d/%d servers healthy", healthyServers, totalServers), "health")
 	return true, nil
@@ -781,22 +1067,22 @@ func (pd *ProductionDeployer) executeValidation(ctx context.Context) (bool, erro
 	log.Printf("✅ Executing final deployment validation...")
 
 	// Validate deployment success
-	if len(pd.status.ServersDeployed) == 0 {
+	if pd.statusDeployedCount() == 0 {
 		return false, fmt.Errorf("%s", tr(ctx, "internal_deployment_validation_no_servers_deployed", nil))
 	}
 
 	// Validate security gate (if enabled)
-	if pd.config.SecurityGateEnabled && !pd.status.SecurityGateStatus.Passed {
+	if pd.config.SecurityGateEnabled && !pd.statusSecurityGate().Passed {
 		return false, fmt.Errorf("%s", tr(ctx, "internal_deployment_validation_security_gate_failed", nil))
 	}
 
 	// Validate performance gate (if enabled)
-	if pd.config.PerformanceGateEnabled && !pd.status.PerformanceGate.Passed {
+	if pd.config.PerformanceGateEnabled && !pd.statusPerformanceGate().Passed {
 		return false, fmt.Errorf("%s", tr(ctx, "internal_deployment_validation_performance_gate_failed", nil))
 	}
 
 	// Validate health checks (if enabled)
-	if pd.config.HealthCheckEnabled && !pd.status.HealthStatus.Passed {
+	if pd.config.HealthCheckEnabled && !pd.statusHealthStatus().Passed {
 		return false, fmt.Errorf("%s", tr(ctx, "internal_deployment_validation_health_checks_failed", nil))
 	}
 
@@ -823,11 +1109,14 @@ func (pd *ProductionDeployer) executeMonitoring(ctx context.Context) (bool, erro
 		// RegisterTarget / RegisterScrapeTarget if available) wire in the
 		// real flow. Until then we surface the gap explicitly instead of
 		// fabricating success.
-		for _, server := range pd.status.ServersDeployed {
+		// Snapshot first: the per-server log.Printf below must not run with the
+		// lock held (lock-discipline rule 2).
+		deployedServers := pd.statusDeployedServers()
+		for _, server := range deployedServers {
 			log.Printf("   📈 Per-server monitoring registration is not wired in yet for %s (round-35 honest gap; previous code slept 100ms and claimed setup); using process-local monitor only", server)
 		}
 
-		log.Printf("✅ Production monitoring process-local hooks attached for %d servers (per-server agent installation pending real implementation)", len(pd.status.ServersDeployed))
+		log.Printf("✅ Production monitoring process-local hooks attached for %d servers (per-server agent installation pending real implementation)", len(deployedServers))
 
 		// Anti-bluff (CONST-035 / Article XI §11.9): the previous code ended
 		// with addNotification("monitoring_implemented", "Production monitoring
@@ -837,7 +1126,7 @@ func (pd *ProductionDeployer) executeMonitoring(ctx context.Context) (bool, erro
 		// ledger were told monitoring was fully implemented while the body
 		// admitted it was not. We emit an honest notification matching the
 		// gap-log instead of fabricating "implemented".
-		pd.addNotification("monitoring_partial", fmt.Sprintf("Process-local monitoring hooks attached for %d server(s); per-server agent registration not wired (§11.4 honest gap)", len(pd.status.ServersDeployed)), "monitoring")
+		pd.addNotification("monitoring_partial", fmt.Sprintf("Process-local monitoring hooks attached for %d server(s); per-server agent registration not wired (§11.4 honest gap)", len(deployedServers)), "monitoring")
 	} else {
 		log.Printf("⏭️  Monitoring disabled - skipping")
 		pd.addNotification("monitoring_skipped", "Monitoring disabled - skipping monitoring setup", "monitoring")
@@ -1075,36 +1364,36 @@ func (pd *ProductionDeployer) executeRecreateDeploy(ctx context.Context) (bool, 
 
 // Deployment completion and failure handling
 func (pd *ProductionDeployer) completeDeployment() {
-	pd.status.EndTime = time.Now()
-	pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
-	pd.status.Status = PhaseSuccess
-	pd.status.CurrentPhase = string(PhaseCompletion)
+	// The whole success transition lands in ONE critical section and returns a
+	// consistent snapshot, so the summary below logs with no lock held.
+	snap := pd.markCompleted()
 
 	log.Printf("\n🎉 PRODUCTION DEPLOYMENT COMPLETED SUCCESSFULLY")
 	log.Printf("📊 Deployment Summary:")
-	log.Printf("   Deployment ID: %s", pd.status.DeploymentID)
-	log.Printf("   Duration: %v", pd.status.Duration)
-	log.Printf("   Servers Deployed: %d", len(pd.status.ServersDeployed))
-	log.Printf("   Security Gate: %t", pd.status.SecurityGateStatus.Passed)
-	log.Printf("   Performance Gate: %t", pd.status.PerformanceGate.Passed)
-	log.Printf("   Health Checks: %t", pd.status.HealthStatus.Passed)
+	log.Printf("   Deployment ID: %s", snap.DeploymentID)
+	log.Printf("   Duration: %v", snap.Duration)
+	log.Printf("   Servers Deployed: %d", len(snap.ServersDeployed))
+	log.Printf("   Security Gate: %t", snap.SecurityGateStatus.Passed)
+	log.Printf("   Performance Gate: %t", snap.PerformanceGate.Passed)
+	log.Printf("   Health Checks: %t", snap.HealthStatus.Passed)
 
 	pd.addNotification("deployment_success", "Production deployment completed successfully", "deployment")
 }
 
 func (pd *ProductionDeployer) failDeployment(phase DeploymentPhase, err error) {
-	pd.status.EndTime = time.Now()
-	pd.status.Duration = pd.status.EndTime.Sub(pd.status.StartTime)
-	pd.status.Status = PhaseFailed
-	pd.status.CurrentPhase = string(PhaseFailed)
-	pd.status.FailedPhases = append(pd.status.FailedPhases, string(phase))
+	// One critical section for the whole failure transition; the returned
+	// snapshot feeds the summary below with no lock held. The unguarded version
+	// of these five writes is what the race detector reported (see the HXC-213
+	// evidence run) — concurrent readers honouring the RLock protocol raced
+	// against them, and the FailedPhases append genuinely lost updates.
+	snap := pd.markFailed(phase)
 
 	log.Printf("\n❌ PRODUCTION DEPLOYMENT FAILED")
 	log.Printf("📊 Failure Summary:")
 	log.Printf("   Failed Phase: %s", phase)
 	log.Printf("   Error: %v", err)
-	log.Printf("   Duration: %v", pd.status.Duration)
-	log.Printf("   Servers Deployed: %d", len(pd.status.ServersDeployed))
+	log.Printf("   Duration: %v", snap.Duration)
+	log.Printf("   Servers Deployed: %d", len(snap.ServersDeployed))
 
 	// Trigger rollback if auto-rollback is enabled
 	if pd.config.AutoRollbackEnabled {
@@ -1116,10 +1405,6 @@ func (pd *ProductionDeployer) failDeployment(phase DeploymentPhase, err error) {
 }
 
 func (pd *ProductionDeployer) triggerRollback(reason string) {
-	pd.status.RollbackTriggered = true
-	pd.status.RollbackReason = reason
-	pd.status.CurrentPhase = string(PhaseRollback)
-
 	// Anti-bluff (CONST-035 / Article XI §11.9 / CONST-050(A)): the previous
 	// loop body was `time.Sleep(300 * time.Millisecond)` per server, after
 	// which it appended every server to ServersRollback, set RollbackServers/
@@ -1137,12 +1422,15 @@ func (pd *ProductionDeployer) triggerRollback(reason string) {
 	// servers, surface the gap on RollbackReason, and emit a
 	// "rollback_not_completed" notification so downstream tooling reacts to a
 	// failed rollback rather than a fabricated success.
-	pd.status.Metrics.RollbackServers = 0
-	pd.status.Metrics.RollbackTime = 0
+	//
+	// HXC-213: the rollback flags and the two zeroed metrics are applied in ONE
+	// critical section, which also hands back the server list so the per-server
+	// logging below runs with no lock held.
+	pendingRollback := pd.markRollbackTriggered(reason)
 
-	pendingServers := len(pd.status.ServersDeployed)
+	pendingServers := len(pendingRollback)
 	log.Printf("🔄 Rollback requested for %d deployed server(s) (reason: %s)", pendingServers, reason)
-	for _, server := range pd.status.ServersDeployed {
+	for _, server := range pendingRollback {
 		log.Printf("   ⚠️  Rollback of %s NOT performed: real SSH rollback transport is not wired in this build (§11.4 PASS-bluff guard; previous code slept 300ms and claimed success). Wire golang.org/x/crypto/ssh restore→restart→verify to enable.", server)
 	}
 
