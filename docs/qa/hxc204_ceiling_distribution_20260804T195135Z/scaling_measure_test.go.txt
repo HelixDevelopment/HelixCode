@@ -1,0 +1,81 @@
+package memory
+
+// HXC-204 MEASUREMENT INSTRUMENT — TEMPORARY, NOT A COMMITTED TEST.
+//
+// Measures how the TestManager_Stress_ConcurrentReadWrite workload scales with
+// the iteration count, to establish whether run cost is linear or quadratic in
+// the matrix size. Gated behind HXC204_SCALING=1 so it never runs in a normal
+// `go test ./...`.
+
+import (
+	"fmt"
+	"os"
+	"strconv"
+	"sync"
+	"testing"
+	"time"
+)
+
+func TestHXC204_ScalingCurve(t *testing.T) {
+	if os.Getenv("HXC204_SCALING") != "1" {
+		t.Skip("SKIP-OK: measurement instrument, set HXC204_SCALING=1")
+	}
+
+	type point struct{ p, iters int }
+	points := []point{
+		{16, 15}, {16, 30}, {16, 60}, {16, 120},
+	}
+	// HXC204_ITERS pins a single matrix point; HXC204_REPEATS repeats it, so the
+	// same instrument yields an uncapped duration DISTRIBUTION under load (the
+	// real RunConcurrent ceiling truncates observation and cannot be used here).
+	if v := os.Getenv("HXC204_ITERS"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			t.Fatalf("HXC204_ITERS=%q: %v", v, err)
+		}
+		reps := 1
+		if rv := os.Getenv("HXC204_REPEATS"); rv != "" {
+			if reps, err = strconv.Atoi(rv); err != nil {
+				t.Fatalf("HXC204_REPEATS=%q: %v", rv, err)
+			}
+		}
+		points = nil
+		for i := 0; i < reps; i++ {
+			points = append(points, point{16, n})
+		}
+	}
+
+	for _, pt := range points {
+		m := NewManager()
+		var wg sync.WaitGroup
+		wg.Add(pt.p)
+		gate := make(chan struct{})
+		start := time.Now()
+		for g := 0; g < pt.p; g++ {
+			go func(gid int) {
+				defer wg.Done()
+				<-gate
+				for it := 0; it < pt.iters; it++ {
+					conv, err := m.CreateConversation(fmt.Sprintf("g%d-it%d", gid, it))
+					if err != nil {
+						continue
+					}
+					_ = m.AddMessage(conv.ID, NewAssistantMessage(fmt.Sprintf("reply %d-%d", gid, it)))
+					_, _ = m.GetConversation(conv.ID)
+					_ = m.GetAll()
+					_ = m.Search("reply")
+					_ = m.Count()
+					_ = m.GetStatistics()
+					_, _ = m.GetConversation("conv-does-not-exist")
+				}
+			}(g)
+		}
+		close(gate)
+		wg.Wait()
+		d := time.Since(start)
+		calls := pt.p * pt.iters
+		t.Logf("HXC204SCALE p=%d iters=%d calls=%d store=%d duration_ms=%d us_per_call=%.1f",
+			pt.p, pt.iters, calls, m.Count(), d.Milliseconds(),
+			float64(d.Microseconds())/float64(calls))
+	}
+}

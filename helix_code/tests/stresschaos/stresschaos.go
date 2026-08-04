@@ -160,14 +160,45 @@ const (
 // stops progressing is classified immediately by the stall detector regardless
 // of how much budget is left, so the extension is unreachable by a hung run.
 //
-// Sized against measurement, not taste (§11.4.6). internal/memory's 16x120
-// concurrent read/write run — the HXC-204 subject, and the heaviest RunConcurrent
-// caller in the tree — measures 7.68s under -race in isolation against its 25s
-// budget, and 34.6s under 3x CPU oversubscription (192 busy workers on 64 CPUs
-// alongside the host's existing load). 4x covers that measured worst case with
-// roughly 3x headroom on top, while keeping even the largest budget in the tree
-// (60s, consensus_concurrent_clusters) at 4 minutes — well inside `go test`'s
+// Sized against measurement, not taste (§11.4.6) — and the measurement that
+// originally justified this value was WRONG, so record what actually happened.
+//
+// The first HXC-204 pass sized this from ONE data point: "34.6s under 3x CPU
+// oversubscription (192 busy workers on 64 CPUs)", concluding 4x (100s) covered
+// it with 3x headroom. Re-measured properly — 8 uncapped runs of the same 16x120
+// matrix under 160 competing workers — the same run takes min 108.5s / median
+// 114.7s / max 121.6s. The 100s ceiling was BELOW the entire distribution, so
+// every loaded run overran it and the verdict alternated PASS/SKIP with host
+// load. Evidence: docs/qa/hxc204_ceiling_distribution_20260804T195135Z/.
+//
+// Two facts the original sizing missed, both of which matter for any future
+// caller sizing a budget here:
+//
+//  1. This process runs inside a cgroup with cpu.max = 860000/100000, i.e. 8.6
+//     CPUs — NOT the host's 64 (§11.4.225; the slice showed nr_throttled 54991
+//     of nr_periods 192813). Competing workers contend for that 8.6-CPU quota,
+//     so "192 workers on 64 CPUs" was really ~20x oversubscription of the quota,
+//     not 3x. This is also why pinning with taskset made runs FASTER: fewer
+//     runnable threads burning one shared quota means fewer throttle stalls.
+//  2. An allocation-heavy, race-instrumented run inflates ~29x under that
+//     pressure (3.88s quiet -> 114s loaded), because GC assist and race shadow
+//     traffic starve far harder than the CPU-share ratio alone predicts.
+//
+// The value stays at 4 deliberately. The HXC-204 subject no longer depends on
+// it: that caller was re-sized to 16x40, whose whole loaded distribution
+// (10.4-13.0s) fits inside its 25s BASE budget and never reaches the extension.
+// Raising the factor for the other callers is NOT done here because no
+// measurement of them exists, and inventing a bigger number from one caller's
+// data would repeat the exact error above. 4x keeps the largest budget in the
+// tree (60s, consensus_concurrent_clusters) at 4 minutes — inside `go test`'s
 // 10-minute default, which a stalled run would otherwise consume in full.
+//
+// Guidance for a caller that DOES overrun: prefer bounding the per-run work over
+// enlarging the budget. A ceiling is a fixed point on an unbounded axis — load
+// can always grow past it — whereas a run whose cost fits the base budget is
+// stable under any load the base budget already tolerates. Note also that
+// raising this constant never buys a hung run more time: deadlock is caught on a
+// forward-progress stall, independent of the budget.
 const maxExtensionFactor = 4
 
 // stallWindow returns the no-progress duration that arms the goroutine-state

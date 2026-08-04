@@ -109,12 +109,48 @@ func TestManager_Stress_SustainedCreateAddGet(t *testing.T) {
 // deadlock, no goroutine leak, and (under -race) no data race in the shared
 // conversations map. Each goroutine creates its own conversation then reads
 // across the whole store, maximising reader/writer RWMutex contention.
+// HXC-204 sizing note — why 40 iterations and not 120.
+//
+// This run's cost is QUADRATIC in the iteration count, and that is a property of
+// the workload rather than of the concurrency it exists to test. Every iteration
+// creates one more conversation and never removes it, while GetAll / Search /
+// GetStatistics each scan (and GetAll/Search *clone*) the ENTIRE store. So the
+// per-call cost grows linearly with the iteration index and the total grows as
+// the square. Measured on this repo under -race, quiet host:
+//
+//	iters=15  240 calls   79 ms    333 us/call
+//	iters=30  480 calls  254 ms    531 us/call
+//	iters=60  960 calls 1019 ms   1062 us/call
+//	iters=120 1920 calls 3880 ms  2021 us/call   <- 4x cost per doubling
+//
+// That extra cost is memcpy under an RLock, not additional lock-contention
+// coverage: the contention property is delivered by the 16 concurrent goroutines
+// hammering the RWMutex, and it is fully exercised long before iteration 40.
+//
+// Why it mattered: this process runs inside a cgroup whose cpu.max is 8.6 CPUs
+// (not the host's 64), so under a loaded pre-release sweep the allocation-heavy
+// tail inflates ~29x. Measured, 8 uncapped runs each under 160 competing workers
+// (docs/qa/hxc204_ceiling_distribution_20260804T195135Z/):
+//
+//	16x120  min 108.5s  median 114.7s  max 121.6s   <- ENTIRELY above the 100s ceiling
+//	16x60   min  19.1s  median  21.0s  max  25.2s
+//	16x40   min  10.4s  median  11.1s  max  13.0s   <- inside the 25s base budget
+//
+// At 16x120 every loaded run overran the ceiling, so the verdict alternated
+// PASS/SKIP with host load — a verdict about the machine, not the code. At 16x40
+// the whole measured distribution fits inside the BASE budget with ~1.9x margin
+// and never needs the extension at all.
+//
+// Coverage is preserved, not traded away: 640 real concurrent calls still clears
+// the §11.4.85(A) sustained floor (N >= 100) and parallelism 16 clears the
+// contention floor (N >= 10) — and the sustained-load axis has its own dedicated
+// coverage in TestManager_Stress_SustainedCreateAddGet above.
 func TestManager_Stress_ConcurrentReadWrite(t *testing.T) {
 	m := stressConvManager(t)
 
 	var created int64
 	stresschaos.RunConcurrent(t, "memory_manager_concurrent_read_write",
-		stresschaos.ConcurrencyConfig{Parallelism: 16, IterationsPerGoroutine: 120, Timeout: 25 * time.Second},
+		stresschaos.ConcurrencyConfig{Parallelism: 16, IterationsPerGoroutine: 40, Timeout: 25 * time.Second},
 		func(g, it int) error {
 			conv, err := m.CreateConversation(fmt.Sprintf("g%d-it%d", g, it))
 			if err != nil {
