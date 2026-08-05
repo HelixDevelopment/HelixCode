@@ -1,0 +1,46 @@
+HXC-220 — REPRODUCTION of the argument-order asymmetry AGAINST THE PRE-STRENGTHENING GATE
+Captured: 2026-08-05T20:25:27Z
+Gate under test: git show 40c8d5ce:scripts/gates/hxc199_module_identity_exact_match_gate.sh
+(i.e. the gate exactly as committed, BEFORE this session's fix)
+
+=== CASE A: M1 mutation ('$a' contains '$b'), REAL module paths ===
+Expected if the falsifiability block were symmetric: S1b catches it.
+47c47
+<   [[ -n "$a" && -n "$b" && "$a" == "$b" ]]
+---
+>   [[ -n "$a" && -n "$b" && "$a" == *"$b"* ]]
+(diff above non-empty => mutation applied)
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=0
+  root  go.mod module path : dev.helix.code/meta   (/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/7237795e-6ba4-4873-bf1f-2576bdb3d028/scratchpad/sandbox/go.mod)
+  inner go.mod module path : dev.helix.code   (/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/7237795e-6ba4-4873-bf1f-2576bdb3d028/scratchpad/sandbox/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught by exact-match  : yes   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+GREEN FAIL — root go.mod (dev.helix.code/meta) and inner go.mod (dev.helix.code) declare the EXACT SAME
+             module path. This is the real R-26 collision HXC-187 was supposed to resolve:
+             two disjoint import trees would collide under one module identity.
+EXIT=1
+
+>>> S1b reports 'yes' (clean) — the falsifiability block is BLIND to this direction.
+>>> The failure comes from GREEN FAIL, i.e. the REAL CALL SITE, only because today's
+>>> root path 'dev.helix.code/meta' happens to CONTAIN the inner path 'dev.helix.code'.
+
+=== CASE B: same M1 mutation, root module renamed to a NON-CONTAINING value ===
+This removes the coincidence Case A relied on.
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=0
+  root  go.mod module path : dev.helix.meta   (/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/7237795e-6ba4-4873-bf1f-2576bdb3d028/scratchpad/sandbox/go.mod)
+  inner go.mod module path : dev.helix.code   (/tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/7237795e-6ba4-4873-bf1f-2576bdb3d028/scratchpad/sandbox/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught by exact-match  : yes   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+GREEN PASS — root go.mod (dev.helix.meta) and inner go.mod (dev.helix.code) are exact-match distinct,
+             verified via module_paths_identical() (scripts/lib/module_identity.sh) — never a
+             substring/prefix test. The reconstructed OLD substring predicate would have
+             wrongly flagged this pair as a collision (see S1c above); this guard would not.
+EXIT=0
+
+>>> EXIT=0. The PRE-STRENGTHENING gate GREEN PASSES with a substring predicate installed,
+>>> while printing 'never a substring/prefix test'. That is the asymmetry, and it is a
+>>> latent PASS-bluff (§11.4 / §11.4.201): a future legitimate root-module rename would
+>>> have silently disarmed the guard with no signal to anyone.
+>>> The strengthened gate returns EXIT=1 on this identical input (see 9_..._battery.log).

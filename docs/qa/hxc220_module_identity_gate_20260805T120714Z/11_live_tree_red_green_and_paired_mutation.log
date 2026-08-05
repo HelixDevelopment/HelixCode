@@ -1,0 +1,90 @@
+HXC-220 — LIVE TREE: RED/GREEN polarity + paired §1.1 mutation
+Captured: 2026-08-05T20:35:53Z  repo=/home/milos/Factory/projects/tools_and_research/helix_code  HEAD=40c8d5ce
+Gate: scripts/gates/hxc199_module_identity_exact_match_gate.sh  (strengthened this session)
+
+================ 1. RED_MODE=1 — reproduce the historical false positive ================
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=1
+  root  go.mod module path : dev.helix.code/meta   (/home/milos/Factory/projects/tools_and_research/helix_code/go.mod)
+  inner go.mod module path : dev.helix.code   (/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught, BOTH orders    : yes   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+  S1d historical R-26 pair NOT falsely caught, BOTH orders: yes   (want yes)
+  old-substring verdict on real root go.mod line : collision(WRONG)
+  exact-match   verdict on real module paths     : distinct
+RED PASS — reproduced the false positive: the OLD substring predicate reports a collision
+           on the CURRENT tree (root='dev.helix.code/meta' inner='dev.helix.code') even though the
+           two module paths are exact-match distinct. This is precisely the defect
+           HXC-199 exists to guard against — a reader trusting the old predicate would be
+           misled into believing the R-26 collision is still unresolved.
+EXIT=0   (0 = the historical substring mechanism still reproduces on this tree)
+
+================ 2. RED_MODE=0 — standing GREEN guard, unmutated ================
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=0
+  root  go.mod module path : dev.helix.code/meta   (/home/milos/Factory/projects/tools_and_research/helix_code/go.mod)
+  inner go.mod module path : dev.helix.code   (/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught, BOTH orders    : yes   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+  S1d historical R-26 pair NOT falsely caught, BOTH orders: yes   (want yes)
+GREEN PASS — root go.mod (dev.helix.code/meta) and inner go.mod (dev.helix.code) are exact-match distinct,
+             verified via module_paths_identical() (scripts/lib/module_identity.sh) — never a
+             substring/prefix test. The reconstructed OLD substring predicate would have
+             wrongly flagged this pair as a collision (see S1c above); this guard would not.
+EXIT=0   (0 = guard satisfied)
+
+================ 3. PAIRED §1.1 MUTATION on the live scripts/lib/module_identity.sh ======
+Direction M1 ('$a' contains '$b') — the direction the pre-fix fixture was blind to.
+--- pre-mutation: live lib vs HEAD (must be empty) ---
+pre-diff-lines=0
+--- mutation diff (NON-EMPTY is the precondition for trusting the result below) ---
+diff --git a/scripts/lib/module_identity.sh b/scripts/lib/module_identity.sh
+index 61064bc6..0171edba 100644
+--- a/scripts/lib/module_identity.sh
++++ b/scripts/lib/module_identity.sh
+@@ -44,7 +44,7 @@
+ #   duplicate of" anything.
+ module_paths_identical() {
+   local a="${1:-}" b="${2:-}"
+-  [[ -n "$a" && -n "$b" && "$a" == "$b" ]]
++  [[ -n "$a" && -n "$b" && "$a" == *"$b"* ]]
+ }
+ 
+ # go_mod_module_path <path-to-go.mod>
+mutation-diff-lines=13
+
+--- gate under mutation (must FAIL) ---
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=0
+  root  go.mod module path : dev.helix.code/meta   (/home/milos/Factory/projects/tools_and_research/helix_code/go.mod)
+  inner go.mod module path : dev.helix.code   (/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught, BOTH orders    : no   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+  S1d historical R-26 pair NOT falsely caught, BOTH orders: no   (want yes)
+FAIL: module_paths_identical() reported the prefix-only lookalike "dev.helix.codebase" as
+      IDENTICAL to "dev.helix.code" (in at least one argument order) — it has regressed to
+      substring/prefix behaviour, which is the exact HXC-199 defect this gate prevents.
+FAIL: module_paths_identical() reported the historical R-26 pair "dev.helix.code/meta" vs
+      "dev.helix.code" as IDENTICAL (in at least one argument order). Those two paths are
+      exactly what HXC-187 created to be DISTINCT; a predicate that conflates them has
+      regressed to the prefix behaviour HXC-199 exists to prevent.
+EXIT=1   (1 = mutation CAUGHT)
+
+================ 4. RESTORE + re-verify ================
+post-restore-diff-vs-HEAD-lines=0   (0 = live source fully restored)
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=0
+  root  go.mod module path : dev.helix.code/meta   (/home/milos/Factory/projects/tools_and_research/helix_code/go.mod)
+  inner go.mod module path : dev.helix.code   (/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught, BOTH orders    : yes   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+  S1d historical R-26 pair NOT falsely caught, BOTH orders: yes   (want yes)
+GREEN PASS — root go.mod (dev.helix.code/meta) and inner go.mod (dev.helix.code) are exact-match distinct,
+             verified via module_paths_identical() (scripts/lib/module_identity.sh) — never a
+             substring/prefix test. The reconstructed OLD substring predicate would have
+             wrongly flagged this pair as a collision (see S1c above); this guard would not.
+EXIT=0   (0 = guard green again after restore)
+
+SUMMARY  RED=0  GREEN=0  UNDER-MUTATION=1  (want 0 / 0 / 1)
+Note: under mutation the FAILING checks are S1b and S1d — the falsifiability block itself,
+not the incidental real-call-site comparison. That is the asymmetry this session closed.

@@ -1,0 +1,32 @@
+HXC-220 / HXC-199 — argument-order asymmetry: mutation battery
+Captured: 2026-08-05T20:15:00Z  host=the-factory  gate=scripts/gates/hxc199_module_identity_exact_match_gate.sh
+Sandbox replica (real go.mod values copied in); the LIVE tree is never mutated by this battery.
+
+Each row: predicate replaced in a sandbox copy of scripts/lib/module_identity.sh, then the gate run.
+'mutation_applied' is a real diff check — an UNAPPLIED mutation looks exactly like a passing gate.
+S1b/S1d are the falsifiability fixtures; 'no' means that fixture CAUGHT the mutant.
+
+############ DATA SCENARIO: real   root module = dev.helix.code/meta  inner = dev.helix.code
+  M1_a_contains_b        mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M2_b_contains_a        mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M3_hardcoded_needle    mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M4_a_prefix_of_b       mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M5_b_prefix_of_a       mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M6_first_segment_only  mutation_applied=YES  gate_exit=1  S1a=yes S1b=yes S1c=yes S1d=no 
+  M7_always_true         mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M8_always_false        mutation_applied=YES  gate_exit=1  S1a=no S1b=yes S1c=yes S1d=yes 
+
+############ DATA SCENARIO: renamed   root module = dev.helix.meta  inner = dev.helix.code
+  (hypothetical future rename in which the root path no longer CONTAINS the inner path)
+  M1_a_contains_b        mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M2_b_contains_a        mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M3_hardcoded_needle    mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M4_a_prefix_of_b       mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M5_b_prefix_of_a       mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M6_first_segment_only  mutation_applied=YES  gate_exit=1  S1a=yes S1b=yes S1c=yes S1d=no 
+  M7_always_true         mutation_applied=YES  gate_exit=1  S1a=yes S1b=no S1c=yes S1d=no 
+  M8_always_false        mutation_applied=YES  gate_exit=1  S1a=no S1b=yes S1c=yes S1d=yes 
+
+ALL 8 mutants caught in BOTH data scenarios (gate_exit=1), each by a falsifiability fixture (S1a/S1b/S1d).
+BEFORE this strengthening, M1 under the 'renamed' scenario produced gate_exit=0 (GREEN PASS) with a
+substring predicate installed — see 9_asymmetry_finding.md.
