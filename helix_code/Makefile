@@ -42,12 +42,44 @@ GOLINT=golangci-lint run
 #                      run simultaneously WITHIN a single package binary.
 #                      Defaults to GOMAXPROCS; set explicitly for stable,
 #                      reproducible scheduling across machines.
-# Both are computed from the host CPU count (`nproc`) so the suite scales
-# with the machine without hardcoding a number. Override on the command line:
+# Both are computed from the CPU count that ACTUALLY BINDS this process, so the
+# suite scales with the machine without hardcoding a number. Override on the
+# command line:
 #   make test GO_TEST_P=4 GO_TEST_PARALLEL=4
-NPROC := $(shell nproc 2>/dev/null || echo 4)
+#
+# NOT `nproc` — that reports the host's CPU count and ignores the cgroup quota.
+# Measured on this host 2026-08-05: `nproc` says 64 while the binding quota is
+# 8.6 CPUs (`cpu.max = 860000 100000` on a PARENT slice). Go 1.25+ is
+# container-aware but reads the process's own LEAF cgroup, which here is a
+# per-command `run-<id>.scope` carrying no `cpu.max`; finding none, it falls
+# back to NumCPU(). So every build and test ran 64-way against 8.6 CPUs —
+# 7.4x oversubscription per process, and roughly 30x with four agents.
+# Consequence: 50.3% of scheduling periods throttled, 75.5 hours of wall-clock
+# frozen, 0.62s frozen per 1s of CPU obtained. Long commands overran the 600s
+# agent watchdog and were reported as "stalled" when they were merely starved.
+#
+# cgroup_cpu_quota walks every level of the hierarchy and takes the MINIMUM,
+# which is the only correct reading of a nested limit. It falls back to nproc
+# when genuinely unconstrained, so this is a no-op on an unlimited host.
+# Two guards here, BOTH load-bearing — each was added after the other proved
+# insufficient against a real deleted/corrupted helper:
+#   1. `[ -r ... ] &&`  — a FAILED `.` (source) is fatal in a non-interactive
+#      POSIX shell, so the shell exits before any `||` fallback can run.
+#   2. the SUBSHELL `( ... )` — guard 1 covers a MISSING file, but a file that
+#      exists and is syntactically BROKEN dies at parse time, killing the whole
+#      shell anyway. Running it in a subshell contains that death so the `||`
+#      still fires in the parent.
+# Without both, this expands to the EMPTY string, which silently removes the
+# -p/-parallel caps and unsets GOMAXPROCS — strictly worse than the bug being
+# fixed. Verified against three cases: helper present (9), helper deleted (64),
+# helper corrupted (64). Re-run all three if you touch this line.
+NPROC := $(shell ( [ -r "$(CURDIR)/../scripts/lib/cgroup_cpu_quota.sh" ] && . "$(CURDIR)/../scripts/lib/cgroup_cpu_quota.sh" && cgroup_cpu_quota ) 2>/dev/null || nproc 2>/dev/null || echo 4)
 GO_TEST_P ?= $(NPROC)
 GO_TEST_PARALLEL ?= $(NPROC)
+# Bind GOMAXPROCS for every recipe in this Makefile unless the caller set one.
+# Without this, `go build`/`go test` each spawn NumCPU()-way parallelism
+# regardless of the -p/-parallel caps above, which govern only test scheduling.
+export GOMAXPROCS ?= $(NPROC)
 # Composite flag block reused by the parallelism-tuned test targets below.
 GO_TEST_PARFLAGS := -p $(GO_TEST_P) -parallel $(GO_TEST_PARALLEL)
 
