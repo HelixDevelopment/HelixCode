@@ -1,0 +1,32 @@
+### STAGE B: RED_MODE=0 (default) GREEN guard + extended case set on FIXED artifact
+### cmd: go test -tags=nogui -count=1 -v -run TestHXC221 ./internal/services/  (RED_MODE unset)
+
+=== RUN   TestHXC221_EntropyFailureMustNotMintClockDerivedAPIKey
+--- PASS: TestHXC221_EntropyFailureMustNotMintClockDerivedAPIKey (0.00s)
+=== RUN   TestHXC221_ExtendedCaseSet
+=== RUN   TestHXC221_ExtendedCaseSet/happy_path_yields_a_proper_16-byte_hex_key
+=== RUN   TestHXC221_ExtendedCaseSet/keys_are_unique_across_many_generations
+=== RUN   TestHXC221_ExtendedCaseSet/partial_entropy_read_fails_closed
+    protocol_security_hxc221_red_test.go:201: 
+        	Error Trace:	/home/milos/Factory/projects/tools_and_research/helix_code/submodules/helix_agent/internal/services/protocol_security_hxc221_red_test.go:201
+        	Error:      	An error is expected but got nil.
+        	Test:       	TestHXC221_ExtendedCaseSet/partial_entropy_read_fails_closed
+        	Messages:   	a truncated entropy read must not yield a key
+=== RUN   TestHXC221_ExtendedCaseSet/empty_entropy_source_fails_closed
+=== RUN   TestHXC221_ExtendedCaseSet/nil_entropy_defaults_to_crypto/rand,_never_to_a_weak_source
+=== RUN   TestHXC221_ExtendedCaseSet/explicit_key_path_is_unaffected_by_entropy_state
+=== RUN   TestHXC221_ExtendedCaseSet/InitializeDefaultSecurity_fails_closed_on_entropy_failure
+=== RUN   TestHXC221_ExtendedCaseSet/concurrent_generation_stays_unique_and_error-free
+--- FAIL: TestHXC221_ExtendedCaseSet (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/happy_path_yields_a_proper_16-byte_hex_key (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/keys_are_unique_across_many_generations (0.00s)
+    --- FAIL: TestHXC221_ExtendedCaseSet/partial_entropy_read_fails_closed (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/empty_entropy_source_fails_closed (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/nil_entropy_defaults_to_crypto/rand,_never_to_a_weak_source (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/explicit_key_path_is_unaffected_by_entropy_state (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/InitializeDefaultSecurity_fails_closed_on_entropy_failure (0.00s)
+    --- PASS: TestHXC221_ExtendedCaseSet/concurrent_generation_stays_unique_and_error-free (0.00s)
+FAIL
+FAIL	dev.helix.agent/internal/services	0.011s
+FAIL
+exit_code=1
