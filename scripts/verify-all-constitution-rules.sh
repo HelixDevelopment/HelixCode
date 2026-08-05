@@ -1024,6 +1024,42 @@ if want_gate G27; then
 fi
 
 # ---------------------------------------------------------------------------
+# G28 — HXC-199 module-identity exact-match regression guard
+# (CM-MODULE-IDENTITY-EXACT-MATCH)
+#
+# HXC-187 renamed the thin root module to `dev.helix.code/meta` so it would
+# stop colliding with the inner application module (`dev.helix.code`).
+# scripts/probes/hxc159_env_facts.sh originally re-derived that collision with
+# a substring test (`[[ "$root_mod" == *"dev.helix.code"* ]]`); since
+# `dev.helix.code` is a literal PREFIX of `dev.helix.code/meta`, that test
+# still matched after the fix landed and kept reporting the collision as
+# unfixed — a false positive that could mislead a reader into reverting
+# already-correct work. The fix replaced the substring test with an exact
+# string-equality comparison (`module_paths_identical()` in
+# scripts/lib/module_identity.sh), but landed without a permanent §11.4.135
+# regression guard. This gate is that guard: RED_MODE=1 reproduces the false
+# positive on the current tree; the default RED_MODE=0 asserts the root and
+# inner modules stay exact-match distinct, with both-direction falsifiability
+# checks (a genuine recurrence IS caught; a prefix-only lookalike is NOT).
+# ---------------------------------------------------------------------------
+if want_gate G28; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G28 — HXC-199 module-identity exact-match regression guard (CM-MODULE-IDENTITY-EXACT-MATCH)"
+    RED_MODE=0 bash "$ROOT/scripts/gates/hxc199_module_identity_exact_match_gate.sh" \
+        >/tmp/g28-module-identity.out 2>&1
+    g28_rc=$?
+    if [[ "$g28_rc" -eq 0 ]]; then
+        gate_pass G28 "root go.mod and inner helix_code/go.mod module paths verified exact-match distinct via module_paths_identical() — both-direction falsifiability (genuine recurrence caught, prefix lookalike not falsely caught) confirmed (see /tmp/g28-module-identity.out)"
+    elif [[ "$g28_rc" -eq 2 ]]; then
+        gate_fail G28 "module-identity guard could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g28-module-identity.out)" \
+            "resolve the environment blocker (scripts/lib/module_identity.sh, root go.mod, helix_code/go.mod all present), then re-run"
+    else
+        gate_fail G28 "the root and inner Go modules are no longer exact-match distinct (or the guard's falsifiability preconditions failed) — see /tmp/g28-module-identity.out" \
+            "$(tail -10 /tmp/g28-module-identity.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo

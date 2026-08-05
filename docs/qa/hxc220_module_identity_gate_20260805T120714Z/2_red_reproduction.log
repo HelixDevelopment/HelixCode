@@ -1,0 +1,14 @@
+CM-MODULE-IDENTITY-EXACT-MATCH  RED_MODE=1
+  root  go.mod module path : dev.helix.code/meta   (/home/milos/Factory/projects/tools_and_research/helix_code/go.mod)
+  inner go.mod module path : dev.helix.code   (/home/milos/Factory/projects/tools_and_research/helix_code/helix_code/go.mod)
+  S1a genuine recurrence caught (identical paths)         : yes   (want yes)
+  S1b prefix-lookalike NOT falsely caught by exact-match  : yes   (want yes)
+  S1c OLD substring predicate DOES misfire on the lookalike: yes   (want yes — reproduces the historical bug's mechanism)
+  old-substring verdict on real root go.mod line : collision(WRONG)
+  exact-match   verdict on real module paths     : distinct
+RED PASS — reproduced the false positive: the OLD substring predicate reports a collision
+           on the CURRENT tree (root='dev.helix.code/meta' inner='dev.helix.code') even though the
+           two module paths are exact-match distinct. This is precisely the defect
+           HXC-199 exists to guard against — a reader trusting the old predicate would be
+           misled into believing the R-26 collision is still unresolved.
+exit=0
