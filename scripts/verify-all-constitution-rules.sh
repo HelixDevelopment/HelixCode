@@ -1040,7 +1040,11 @@ fi
 # regression guard. This gate is that guard: RED_MODE=1 reproduces the false
 # positive on the current tree; the default RED_MODE=0 asserts the root and
 # inner modules stay exact-match distinct, with both-direction falsifiability
-# checks (a genuine recurrence IS caught; a prefix-only lookalike is NOT).
+# checks (a genuine recurrence IS caught; a prefix-only lookalike is NOT) —
+# the lookalike and historical-R-26-pair fixtures are exercised in BOTH
+# argument orders, because a substring regression can be reintroduced as
+# either `"$a" == *"$b"*` or `"$b" == *"$a"*` and a single-order fixture is
+# blind to one of them (measured 2026-08-05; see the gate's header).
 # ---------------------------------------------------------------------------
 if want_gate G28; then
     GATES_RUN=$((GATES_RUN + 1))

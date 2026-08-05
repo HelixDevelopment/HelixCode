@@ -60,13 +60,37 @@
 #         fires is not a guard.
 #   S1b — a PREFIX-ONLY LOOKALIKE ("dev.helix.codebase" merely starts with
 #         "dev.helix.code") must NOT be reported identical by
-#         module_paths_identical(). A predicate that always fires is worse
-#         than no guard — it is indistinguishable from the original bug.
+#         module_paths_identical(), in BOTH argument orders. A predicate that
+#         always fires is worse than no guard — it is indistinguishable from
+#         the original bug.
 #   S1c — negative control: the reconstructed OLD substring predicate MUST
 #         still misfire on that same lookalike fixture. If it stops
 #         misfiring, this gate's own "old vs new" comparison is dead and its
 #         RED_MODE=1 reproduction proves nothing — fail loudly rather than
 #         silently passing vacuously.
+#   S1d — the HISTORICAL R-26 PAIR itself ("dev.helix.code/meta" vs
+#         "dev.helix.code" — the exact values HXC-187 produced) must NOT be
+#         reported identical, in BOTH argument orders, as a PINNED FIXTURE
+#         rather than as whatever happens to be on disk.
+#
+#   WHY BOTH ARGUMENT ORDERS (measured, not assumed — 2026-08-05)
+#   ---------------------------------------------------------------------
+#   A substring/prefix regression can be reintroduced in either direction:
+#   `"$a" == *"$b"*` (M1) or `"$b" == *"$a"*` (M2). With single-order fixtures
+#   only M2 was caught here; M1 slipped through S1b entirely and was caught
+#   further down, incidentally, by the real call site — purely because today's
+#   root path ("dev.helix.code/meta") happens to CONTAIN today's inner path
+#   ("dev.helix.code"). That incidental catch is DATA-DEPENDENT, not
+#   structural: re-running this gate with the M1 mutation applied and the root
+#   module renamed to a non-containing value ("dev.helix.meta") produced
+#   `GREEN PASS`, exit 0 — a substring predicate installed, and the gate
+#   printing "never a substring/prefix test". A future legitimate rename would
+#   therefore have silently disarmed this guard.
+#
+#   S1b/S1d are pinned literals precisely so the falsifiability block keeps
+#   proving the predicate is exact-match REGARDLESS of what the on-disk go.mod
+#   files say. The on-disk comparison below is the invariant being guarded;
+#   these fixtures are what make the guard itself falsifiable.
 #
 # ===========================================================================
 # HONEST BOUNDARY (Constitution §11.4.6)
@@ -148,9 +172,25 @@ if module_paths_identical "dev.helix.code" "dev.helix.code"; then
     identical_case_caught="yes"
 fi
 
+# Both argument orders — a substring regression may be written either way
+# ("$a" == *"$b"* OR "$b" == *"$a"*), and a single-order fixture is blind to
+# one of them. See "WHY BOTH ARGUMENT ORDERS" in the header.
 lookalike_falsely_identical="no"
 if module_paths_identical "dev.helix.code" "dev.helix.codebase"; then
-    lookalike_falsely_identical="yes"
+    lookalike_falsely_identical="yes"      # short-then-long
+fi
+if module_paths_identical "dev.helix.codebase" "dev.helix.code"; then
+    lookalike_falsely_identical="yes"      # long-then-short (swapped)
+fi
+
+# The historical R-26 pair, pinned as a fixture so this check does not depend
+# on what the on-disk go.mod files currently declare.
+historical_pair_falsely_identical="no"
+if module_paths_identical "dev.helix.code/meta" "dev.helix.code"; then
+    historical_pair_falsely_identical="yes"
+fi
+if module_paths_identical "dev.helix.code" "dev.helix.code/meta"; then
+    historical_pair_falsely_identical="yes"
 fi
 
 old_logic_flags_lookalike="no"
@@ -159,8 +199,9 @@ if old_substring_says_collision "module dev.helix.codebase"; then
 fi
 
 echo "  S1a genuine recurrence caught (identical paths)         : $identical_case_caught   (want yes)"
-echo "  S1b prefix-lookalike NOT falsely caught by exact-match  : $([[ "$lookalike_falsely_identical" == no ]] && echo yes || echo no)   (want yes)"
+echo "  S1b prefix-lookalike NOT falsely caught, BOTH orders    : $([[ "$lookalike_falsely_identical" == no ]] && echo yes || echo no)   (want yes)"
 echo "  S1c OLD substring predicate DOES misfire on the lookalike: $old_logic_flags_lookalike   (want yes — reproduces the historical bug's mechanism)"
+echo "  S1d historical R-26 pair NOT falsely caught, BOTH orders: $([[ "$historical_pair_falsely_identical" == no ]] && echo yes || echo no)   (want yes)"
 
 s1_fail=0
 if [[ "$identical_case_caught" != "yes" ]]; then
@@ -170,8 +211,15 @@ if [[ "$identical_case_caught" != "yes" ]]; then
 fi
 if [[ "$lookalike_falsely_identical" == "yes" ]]; then
     echo "FAIL: module_paths_identical() reported the prefix-only lookalike \"dev.helix.codebase\" as" >&2
-    echo "      IDENTICAL to \"dev.helix.code\" — it has regressed to substring/prefix behaviour, which" >&2
-    echo "      is the exact HXC-199 defect this gate exists to prevent." >&2
+    echo "      IDENTICAL to \"dev.helix.code\" (in at least one argument order) — it has regressed to" >&2
+    echo "      substring/prefix behaviour, which is the exact HXC-199 defect this gate prevents." >&2
+    s1_fail=1
+fi
+if [[ "$historical_pair_falsely_identical" == "yes" ]]; then
+    echo "FAIL: module_paths_identical() reported the historical R-26 pair \"dev.helix.code/meta\" vs" >&2
+    echo "      \"dev.helix.code\" as IDENTICAL (in at least one argument order). Those two paths are" >&2
+    echo "      exactly what HXC-187 created to be DISTINCT; a predicate that conflates them has" >&2
+    echo "      regressed to the prefix behaviour HXC-199 exists to prevent." >&2
     s1_fail=1
 fi
 if [[ "$old_logic_flags_lookalike" != "yes" ]]; then
