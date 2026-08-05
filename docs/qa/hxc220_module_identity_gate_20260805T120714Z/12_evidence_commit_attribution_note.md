@@ -39,12 +39,35 @@ git, which is the property that matters. Attribution is corrected by this note, 
 This file was committed through a **private index** rather than the shared one:
 
 ```bash
-export GIT_INDEX_FILE=$(mktemp -u)   # a scratch index, not .git/index
-git read-tree HEAD
-git add -- <path>
-git commit -m ...                    # shared .git/index never touched
+TMPIDX=$(mktemp -u)                          # a scratch index, not .git/index
+GIT_INDEX_FILE="$TMPIDX" git read-tree HEAD
+GIT_INDEX_FILE="$TMPIDX" git add -- <path>
+GIT_INDEX_FILE="$TMPIDX" git commit -m ...   # shared .git/index never touched
+rm -f "$TMPIDX"
+git reset -q -- <path>                       # ← MANDATORY follow-up, see below
 ```
 
-That closes the window entirely: the file is never visible in the shared index, so no concurrent commit
-can sweep it. Recommended for any agent committing new untracked files in a shared checkout while other
-agents are live.
+That closes the sweep window entirely: the file is never visible in the shared index, so no concurrent
+commit can claim it.
+
+### The follow-up `git reset` is not optional — measured, not assumed
+
+Committing through a private index moves `HEAD` **without** updating the shared `.git/index`. The shared
+index therefore still has no entry for the new path while `HEAD` does, and git reads that difference as
+a **staged deletion**. Observed immediately after the commit above:
+
+```
+$ git diff --cached --stat -- <path>
+ .../12_evidence_commit_attribution_note.md | 50 ----------------------
+ 1 file changed, 50 deletions(-)
+$ git status --porcelain -- <path>
+D  .../12_evidence_commit_attribution_note.md
+?? .../12_evidence_commit_attribution_note.md
+```
+
+The next concurrent agent to commit the whole index would have **deleted the file that was just
+committed** — trading the sweep hazard for a worse deletion hazard. `git reset -q -- <path>` refreshes
+the shared index entry from `HEAD` and clears it (verified: `git diff --cached` empty afterwards, file
+still on disk and still in `HEAD`).
+
+So the pattern is *private index to commit, then `git reset` to resync* — never the first half alone.
