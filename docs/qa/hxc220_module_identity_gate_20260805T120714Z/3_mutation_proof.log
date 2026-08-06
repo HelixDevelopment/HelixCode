@@ -1,0 +1,19 @@
+=== 3. pre-mutation diff (must be empty) ===
+pre-mutation diff exit=0
+=== 4. post-mutation diff (must be NON-empty — proves mutation applied) ===
+diff --git a/scripts/lib/module_identity.sh b/scripts/lib/module_identity.sh
+index 61064bc6..68ee936d 100644
+--- a/scripts/lib/module_identity.sh
++++ b/scripts/lib/module_identity.sh
+@@ -44,7 +44,9 @@
+ #   duplicate of" anything.
+ module_paths_identical() {
+   local a="${1:-}" b="${2:-}"
+-  [[ -n "$a" && -n "$b" && "$a" == "$b" ]]
++  # MUTATED for paired §1.1 mutation test (HXC-220) — reverts to the exact
++  # pre-HXC-199 substring/containment bug this file exists to prevent.
++  [[ -n "$a" && -n "$b" && "$a" == *"$b"* ]]
+ }
+ 
+ # go_mod_module_path <path-to-go.mod>
+diff line count: 15
