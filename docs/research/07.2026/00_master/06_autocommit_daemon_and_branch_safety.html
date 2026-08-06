@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>06_autocommit_daemon_and_branch_safety</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">06_autocommit_daemon_and_branch_safety</h1>
+</header>
+<h1 id="auto-commit-mechanism-forensics-feature-branch-safety-11.4.181-prep">06
+— “Auto-commit” mechanism forensics + feature-branch safety (§11.4.181
+prep)</h1>
+<p><strong>Revision:</strong> 1 <strong>Captured:</strong> 2026-07-06
+(UTC) on host <code>the-factory</code> = the machine running this repo
+<strong>Repo:</strong>
+<code>/home/milos/Factory/projects/tools_and_research/helix_code</code>
+<strong>Method:</strong> §11.4.6 — every claim below is backed by pasted
+evidence or explicitly marked <code>UNCONFIRMED:</code>. Evidence copies
+live under <code>./evidence/daemon/</code>.</p>
+<hr />
+<h2 id="tldr">0. TL;DR</h2>
+<ul>
+<li>The commits titled <strong><code>Auto-commit</code></strong> are
+produced by a reusable <strong><code>commit</code> shell-command
+toolkit</strong> installed on <code>$PATH</code> from
+<code>project_toolkit</code>, <strong>not</strong> by any OS-level
+daemon on this host.</li>
+<li><strong>Branch targeting:</strong> it commits to the <strong>CURRENT
+branch (HEAD)</strong> — plain <code>git commit -m</code>. There is
+<strong>NO</strong> <code>git checkout</code>, <code>git switch</code>,
+<code>git reset</code>, or branch hard-targeting anywhere in the chain.
+<strong>→ A feature branch is safe: Auto-commit lands on whatever branch
+is checked out.</strong></li>
+<li><strong>Add scope:</strong> <strong><code>git add .</code></strong>
+(everything in the current working tree, tracked + untracked,
+incl. submodule GITLINK pointer bumps). This is broad, but
+branch-safe.</li>
+<li><strong>Push:</strong> after a successful commit it runs
+<code>push_all.sh</code> → <code>git push &lt;remote&gt;</code>
+<strong>of the current branch</strong> to every configured upstream +
+<code>git push --tags</code>. <strong>No <code>--force</code></strong>
+(§11.4.113-compatible).</li>
+<li><strong>Cadence / “daemon”:</strong> <code>UNCONFIRMED:</code> there
+is <strong>no cron, no systemd timer (user or system), no
+<code>at</code> job, no file-watcher, no shell loop</strong> invoking
+it. Cadence is irregular (3 commits inside 4 min on 2026‑07‑05, none on
+2026‑07‑06, prior gap back to 2026‑07‑02). The trigger is an
+<strong>external orchestrator</strong> — most plausibly the running
+Claude Code agent sessions (<code>helix_code</code>,
+<code>helix_terminator</code>, <code>atmosphere_t1</code>) calling
+<code>commit</code>/<code>cmt</code> as part of their work loop, and/or
+a cross‑host rsync sync (the
+<code>Test User &lt;test@example.com&gt;</code> “sync:” commits). See
+§5.</li>
+</ul>
+<hr />
+<h2 id="the-invocation-chain-fileline-evidence">1. The invocation chain
+(file:line evidence)</h2>
+<p>Four scripts form the chain. All emit the literal
+<code>git log</code> subject <strong><code>Auto-commit</code></strong>
+(no period) when invoked with no argument.</p>
+<h3 id="a.-cmt-repo-root-convenience-wrapper-not-the-auto-path">1a.
+<code>cmt</code> — repo-root convenience wrapper (NOT the auto
+path)</h3>
+<p><code>/home/milos/Factory/projects/tools_and_research/helix_code/cmt</code></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">15</span>      MESSAGE=<span class="st">&quot;Auto-commit.&quot;</span>          <span class="co"># </span><span class="al">NOTE</span><span class="co">: has a trailing period</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">34</span>  echo <span class="st">&quot;Pushing: &#39;</span><span class="va">$MESSAGE</span><span class="st">&#39;&quot;</span> <span class="kw">&amp;&amp;</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">35</span>    commit <span class="st">&quot;</span><span class="va">$MESSAGE</span><span class="st">&quot;</span> <span class="kw">&amp;&amp;</span> <span class="ex">\ </span>          <span class="co"># delegates to the `commit` command on PATH</span></span></code></pre></div>
+<p><code>cmt</code> <strong>always passes a message</strong>
+(<code>&quot;Auto-commit.&quot;</code> with a period, or
+<code>$DEFAULT_COMMIT_MESSAGE</code>/<code>$1</code>). The real
+<code>Auto-commit</code> commits have <strong>no period</strong>, so
+<code>cmt</code> is a manual helper, not the source of the observed
+commits.</p>
+<h3 id="b.-commit-the-path-command-commit.sh">1b. <code>commit</code> —
+the PATH command → <code>commit.sh</code></h3>
+<p><code>which commit</code> →
+<code>/home/milos/Factory/project_toolkit/Upstreamable/commit</code></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">9</span>   SCRIPT_COMMIT=<span class="st">&quot;</span><span class="va">$SUBMODULES_HOME</span><span class="st">/Upstreamable/commit.sh&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">19</span>    bash <span class="st">&quot;</span><span class="va">$SCRIPT_COMMIT</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span>       <span class="co"># if arg given</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">23</span>    bash <span class="st">&quot;</span><span class="va">$SCRIPT_COMMIT</span><span class="st">&quot;</span>            <span class="co"># if NO arg  ← the auto path</span></span></code></pre></div>
+<p>Installed on <code>$PATH</code> via
+<code>.bashrc:228 export SUBMODULES_HOME=/home/milos/Factory/project_toolkit</code>
+(and <code>project_toolkit/Upstreamable</code> is on
+<code>$PATH</code>).</p>
+<h3 id="c.-upstreamablecommit.sh-builds-the-default-message">1c.
+<code>Upstreamable/commit.sh</code> — builds the default message</h3>
+<p><code>/home/milos/Factory/project_toolkit/Upstreamable/commit.sh</code></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">35</span>  SCRIPT_COMMIT=<span class="st">&quot;</span><span class="va">$SUBMODULES_HOME</span><span class="st">/Software-Toolkit/Utils/Git/commit.sh&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">39</span>    MESSAGE=<span class="st">&quot;Auto-commit </span><span class="va">$SESSION</span><span class="st">&quot;</span>   <span class="co"># $SESSION is EMPTY in this env → &quot;Auto-commit &quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">43</span>        MESSAGE=<span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span>                 <span class="co"># overridden only if an arg was passed</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">46</span>    if ! bash <span class="st">&quot;</span><span class="va">$SCRIPT_COMMIT</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$MESSAGE</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span></span></code></pre></div>
+<p><code>$SESSION</code> resolves empty
+(<code>bash -lc &#39;echo [$SESSION]&#39;</code> → <code>[]</code>), so
+<code>MESSAGE=&quot;Auto-commit &quot;</code> and git trims the trailing space →
+<strong>exactly <code>Auto-commit</code></strong>. This matches the
+observed subjects byte-for-byte.</p>
+<h3 id="d.-software-toolkitutilsgitcommit.sh-the-committer-add-commit-push">1d.
+<code>Software-Toolkit/Utils/Git/commit.sh</code> — THE committer (add +
+commit + push)</h3>
+<p><code>/home/milos/Factory/project_toolkit/Software-Toolkit/Utils/Git/commit.sh</code></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">17</span>  SESSION=<span class="va">$(($(</span><span class="fu">date</span> +%s%N<span class="va">)</span><span class="op">/</span><span class="dv">1000000</span><span class="va">))</span>   <span class="co"># ms timestamp (used only if no arg)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">18</span>  MESSAGE=<span class="st">&quot;Auto-commit </span><span class="va">$SESSION</span><span class="st">&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">20</span>  if [ <span class="at">-n</span> <span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> ]<span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">22</span>      MESSAGE=<span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span>                      <span class="co"># arg &quot;Auto-commit&quot; from 1c wins → &quot;Auto-commit&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">25</span>  if git add .<span class="kw">;</span> <span class="cf">then</span>                    <span class="co"># ← ADD SCOPE: everything under CWD</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">27</span>      if git commit <span class="at">-m</span> <span class="st">&quot;</span><span class="va">$MESSAGE</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span> <span class="co"># ← CURRENT BRANCH; no checkout/reset</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">29</span>          bash <span class="st">&quot;</span><span class="va">$SCRIPT_PUSH_ALL</span><span class="st">&quot;</span>       <span class="co"># ← push after commit</span></span></code></pre></div>
+<p><strong>Behavioral facts proven by this file:</strong> -
+<strong><code>git add .</code></strong> — stages all changes
+(modified/new/deleted, tracked + untracked) under the current directory.
+Run from repo root, this <strong>includes submodule pointer (GITLINK)
+bumps</strong> and any dirty top-level files. It does
+<strong>NOT</strong> <code>git submodule foreach</code> — it does not
+commit <em>inside</em> submodules, it only records their pointer changes
+in the meta-repo. - <strong><code>git commit -m</code></strong> —
+commits to <strong>HEAD / current branch</strong>. No <code>-b</code>,
+no <code>checkout</code>, no <code>switch</code>, no <code>reset</code>.
+Confirmed by full read (only these three git verbs: <code>add</code>,
+<code>commit</code>, and push in 1e). - No branch name is ever
+referenced → it <strong>cannot</strong> hard-target <code>main</code>;
+it commits wherever you are.</p>
+<h3 id="e.-software-toolkitutilsgitpush_all.sh-the-push">1e.
+<code>Software-Toolkit/Utils/Git/push_all.sh</code> — the push</h3>
+<p><code>/home/milos/Factory/project_toolkit/Software-Toolkit/Utils/Git/push_all.sh</code></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">122</span>     if echo <span class="st">&quot;Upstream &#39;</span><span class="va">$NAME</span><span class="st">&#39;: </span><span class="va">$UPSTREAM</span><span class="st">&quot;</span> <span class="kw">&amp;&amp;</span> <span class="fu">git</span> push <span class="st">&quot;</span><span class="va">$NAME</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">124</span>       git config pull.rebase false <span class="kw">&amp;&amp;</span> <span class="fu">git</span> fetch <span class="kw">&amp;&amp;</span> <span class="fu">git</span> pull <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;&#39;</span><span class="va">$NAME</span><span class="st">&#39;: OK&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">155</span>   if git push <span class="at">--tags</span> <span class="op">&gt;</span>/dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span><span class="kw">;</span> <span class="cf">then</span></span></code></pre></div>
+<ul>
+<li><code>git push &quot;$NAME&quot;</code> — pushes the <strong>current
+branch</strong> (no explicit refspec → uses branch’s configured
+upstream/<code>push.default</code>) to each remote named by an
+<code>upstreams/*.sh</code> recipe file (loops over
+<code>upstreams/</code> or legacy <code>Upstreams/</code>,
+§11.4.29-aware, lines 19–29 / 130–151).</li>
+<li>Then <code>git fetch &amp;&amp; git pull</code> on the current
+branch (pull.rebase=false → merge).</li>
+<li>Then <code>git push --tags</code>.</li>
+<li><strong>No <code>git push --force</code> /
+<code>--force-with-lease</code> anywhere</strong> → §11.4.113-safe.</li>
+</ul>
+<hr />
+<h2 id="live-git-evidence-cadence-identity-remotes">2. Live git evidence
+(cadence, identity, remotes)</h2>
+<p><code>git log -15</code> (see
+<code>evidence/daemon/git_evidence.txt</code> for -20):</p>
+<pre><code>31cde9a1|Milos Vasic &lt;i@mvasic.ru&gt;|2026-07-05 13:35:03 +0500|Auto-commit
+ada44c74|Milos Vasic &lt;i@mvasic.ru&gt;|2026-07-05 13:33:41 +0500|Auto-commit
+4d25f404|Milos Vasic &lt;i@mvasic.ru&gt;|2026-07-05 13:31:02 +0500|Auto-commit
+06f85ba7|Milos Vasic|2026-07-02 02:30:16 +0500|sync(submodules): bump helix_agent -&gt; 725c3f4a ...
+49ff34da|Milos Vasic|2026-07-02 02:15:26 +0500|feat(submodules): interruption-safe init ...
+...
+1254e0a6|Test User &lt;test@example.com&gt;|2026-06-28 00:30:08 +0300|sync: auto-commit before cross-host sync 20260628</code></pre>
+<ul>
+<li><strong>Total <code>Auto-commit</code> commits in history:</strong>
+<code>181</code>.</li>
+<li><strong>Cadence:</strong> irregular. On 2026‑07‑05: 13:31 → 13:33 →
+13:35 (~1.5–2.5 min apart, a short burst), then <strong>nothing on
+2026‑07‑06</strong>, prior activity 2026‑07‑02. A fixed-interval OS
+daemon would produce a continuous, regular stream — this does not.</li>
+<li><strong>Author of the <code>Auto-commit</code> burst:</strong>
+<code>Milos Vasic &lt;i@mvasic.ru&gt;</code> — identical to this repo’s
+configured identity (<code>git config user.email</code> →
+<code>i@mvasic.ru</code>), i.e. the interactive/agent identity on
+<strong>this</strong> host.</li>
+<li>The older <code>Test User &lt;test@example.com&gt;</code> “sync:”
+commits are a <strong>different identity/host</strong> (cross-host rsync
+sync path).</li>
+</ul>
+<p><strong>Remotes</strong> (<code>git remote -v</code>):</p>
+<pre><code>github   git@github.com:HelixDevelopment/Helix-CLI.git (fetch/push)
+gitlab   git@gitlab.com:helixdevelopment1/HelixCode.git (fetch/push)
+origin   git@github.com:HelixDevelopment/HelixCode.git (fetch)
+origin   git@github.com:HelixDevelopment/Helix-CLI.git (push)
+origin   git@gitlab.com:helixdevelopment1/HelixCode.git (push)
+upstream git@github.com:HelixDevelopment/Helix-CLI.git (fetch/push)</code></pre>
+<p><code>git config --get-all remote.origin.url</code> (fetch) =
+<code>git@github.com:HelixDevelopment/HelixCode.git</code>.
+<code>origin</code> has <strong>two push URLs</strong> (Helix-CLI GitHub
++ HelixCode GitLab) — a fan-out remote. All SSH (§Rule
+3-compatible).</p>
+<p><strong>Active hooks:</strong> <code>.git/hooks/</code> contains
+<strong>no</strong> non-<code>.sample</code> files → no pre/post-commit
+hook interference.</p>
+<hr />
+<h2 id="does-it-descend-into-clobber-submodules">3. Does it descend into
+/ clobber submodules?</h2>
+<ul>
+<li>The committer runs <code>git add . &amp;&amp; git commit</code>
+<strong>only in the CWD repo</strong>. It does <strong>NOT</strong>
+iterate submodules (<code>no git submodule foreach</code>, no
+<code>cd</code> into submodules).</li>
+<li>Consequence: if invoked from the <strong>meta-repo root</strong> it
+will <code>git add .</code> the <strong>submodule GITLINK pointer
+bumps</strong> that are already dirty in the worktree (e.g. current
+<code>git status</code> shows <code>M constitution</code>,
+<code>m submodules/helix_qa</code>) and commit them onto the current
+branch. It does not <em>create</em> pointer changes, but it will
+<strong>sweep whatever is dirty</strong> into the commit (a §11.4.84
+quiescence hazard, not a branch hazard).</li>
+<li>It does <strong>not</strong> reset or check out submodules.</li>
+</ul>
+<hr />
+<h2 id="what-it-does-not-do-proven-by-reading-the-whole-chain">4. What
+it does NOT do (proven by reading the whole chain)</h2>
+<ul>
+<li>❌ No <code>git checkout</code> / <code>git switch</code> /
+<code>git branch -f</code> / <code>git reset</code> — cannot move you
+off your branch or reset it.</li>
+<li>❌ No hard-coded <code>main</code> / <code>master</code> target —
+commits to HEAD.</li>
+<li>❌ No <code>--force</code> push.</li>
+<li>❌ No <code>git worktree</code> / <code>git clean -df</code> on the
+tree.</li>
+<li>❌ No commit <em>inside</em> submodules.</li>
+</ul>
+<hr />
+<h2 id="is-there-actually-a-periodic-daemon-unconfirmed-no-os-daemon-found">5.
+Is there actually a periodic DAEMON? — <code>UNCONFIRMED:</code> (no OS
+daemon found)</h2>
+<p>Exhaustive negative evidence
+(<code>evidence/daemon/no_os_daemon_evidence.txt</code>): -
+<code>crontab -l</code> →
+<strong><code>no crontab for milos</code></strong>. -
+<code>systemctl --user list-timers --all</code> → only
+<code>systemd-tmpfiles-clean.timer</code> +
+<code>gocryptfs-fsck.timer</code> (<strong>no</strong> commit/git/sync
+timer). - System-level
+<code>systemctl list-timers --all | grep -iE &#39;commit|helix|sync|git&#39;</code>
+→ <strong>none</strong>. - <code>atq</code> →
+<strong><code>no files in queue</code></strong>. -
+<code>pgrep -af &#39;watchexec|inotifywait|entr|fswatch&#39;</code> →
+<strong>none</strong>. - <code>pgrep -af &#39;commit|watch|auto&#39;</code> →
+only <code>tmx-recycler.sh watch</code> processes, which are the
+<strong>tmux idle-session recycler</strong> (read its header: purpose is
+killing idle detached tmux sessions;
+<code>grep &#39;commit|git&#39; tmx-recycler.sh</code> → empty).
+<strong>Not</strong> a committer. - No <code>.bashrc</code>
+alias/function/<code>SESSION</code> export tied to auto-commit; no
+script under <code>~/scripts</code>, <code>~/tmux/scripts</code>,
+<code>~/.config</code> references the helix path AND
+<code>git add/commit</code>.</p>
+<p><strong>Conclusion (evidence-based):</strong> On THIS host there is
+<strong>no fixed-interval OS-level auto-commit daemon</strong>. The
+<code>Auto-commit</code> commits are produced by <strong>on-demand
+invocations of the <code>commit</code> toolkit command by an external
+orchestrator</strong>. Running candidates (evidence:
+<code>pgrep -af claude</code>): three live Claude Code agent sessions —
+<code>helix_code</code> (pid 1166332), <code>helix_terminator</code>
+(pid 849723), <code>atmosphere_t1</code> (pid 977834). These agent loops
+(or a cross-host rsync sync for the <code>Test User</code> commits) are
+the most plausible trigger.</p>
+<p><code>UNCONFIRMED:</code> the exact caller of <code>commit</code> for
+the 2026‑07‑05 burst. <strong>What would confirm it:</strong> (a)
+instrument the toolkit — temporarily wrap
+<code>Software-Toolkit/Utils/Git/commit.sh</code> to log
+<code>$PPID</code> + <code>ps -o command= -p $PPID</code> +
+<code>pwd</code> + <code>date</code> to a file, then observe the next
+Auto-commit; or (b) grep the running agent sessions’ transcripts/logs
+for <code>commit</code>/<code>cmt</code> invocations; or (c) ask the
+operator which agent/session runs the auto-commit loop. Do
+<strong>not</strong> guess the trigger.</p>
+<hr />
+<h2 id="safe-feature-branch-creation-procedure-for-11.4.181">6. SAFE
+feature-branch-creation procedure for §11.4.181</h2>
+<p><strong>Core safety fact:</strong> the committer commits to and
+pushes the <strong>current branch</strong>, with <strong>no
+checkout/reset/branch-switch and no force-push</strong>. Therefore, once
+HEAD is on <code>feature/helixllm-full-extension</code>, any Auto-commit
+fired by the orchestrator <strong>lands on the feature branch</strong>,
+not on <code>main</code>, and pushes the feature branch (not
+<code>main</code>). <strong>No pause of the “daemon” is
+required</strong> for branch-integrity — the mechanism is inherently
+branch-following.</p>
+<p>Residual (non-branch) hazards to control, both from the broad
+<code>git add .</code>: 1. It will sweep <strong>all currently-dirty
+files</strong> (incl. the dirty <code>constitution</code> +
+<code>submodules/helix_qa</code> pointers, and the new
+<code>docs/research/07.2026/</code> tree) into the first Auto-commit on
+the feature branch. 2. It pushes the feature branch to
+<strong>all</strong> fan-out upstreams automatically.</p>
+<h3 id="recommended-procedure-concrete-evidence-backed">Recommended
+procedure (concrete, evidence-backed)</h3>
+<ol type="1">
+<li><p><strong>Quiescence first (§11.4.84):</strong> account for the
+current dirty tree BEFORE branching so the first auto
+<code>git add .</code> doesn’t sweep unintended changes.
+<code>git status</code> currently shows <code>M constitution</code>,
+<code>m submodules/helix_qa</code>,
+<code>?? docs/research/07.2026/</code>. Either commit/stash those
+deliberately on <code>main</code> (or under the feature branch) so their
+inclusion is intentional.</p></li>
+<li><p><strong>Create + switch the branch yourself</strong> (the toolkit
+never switches branches):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> switch <span class="at">-c</span> feature/helixllm-full-extension</span></code></pre></div>
+<p>From this point HEAD is the feature branch; every
+<code>commit</code>/<code>git commit</code> (manual or
+orchestrator-fired) targets it. Verify with
+<code>git branch --show-current</code>.</p></li>
+<li><p><strong>Work normally.</strong> Any Auto-commit that fires now
+commits to <code>feature/helixllm-full-extension</code> and
+<code>push_all.sh</code> pushes THAT branch to the upstreams (creating
+it remotely on first push). <code>main</code> is never touched by the
+committer.</p></li>
+<li><p><strong>If you want zero remote fan-out of the WIP feature
+branch</strong> (optional, not required for safety): the toolkit’s push
+is unconditional after commit, so to keep the feature branch local-only
+you would need to either (a) run work in a
+<strong><code>git worktree</code></strong> whose branch you never let
+the orchestrator push, or (b) temporarily point the orchestrator
+elsewhere. This is a <em>push-noise</em> preference, not a branch-safety
+requirement.</p></li>
+<li><p><strong>Belt-and-braces isolation (strongest, optional) —
+<code>git worktree</code>:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> worktree add ../helix_code-helixllm feature/helixllm-full-extension</span></code></pre></div>
+<p>If the auto-commit orchestrator only runs with CWD in the
+<strong>main</strong> checkout, a separate worktree fully decouples your
+feature work from any <code>git add .</code> fired against the main
+checkout (they are different working trees, same repo). Use this if §5’s
+<code>UNCONFIRMED:</code> trigger makes you want hard isolation until
+the caller is identified.</p></li>
+</ol>
+<h3 id="do-we-need-to-pause-the-daemon">Do we need to pause the
+daemon?</h3>
+<p><strong>No</strong> — there is no OS daemon to pause, and the toolkit
+is branch-following (commits/pushes HEAD, never hard-targets
+<code>main</code>, never force-pushes). Branch integrity is preserved by
+simply being on the feature branch. Pause/worktree is only warranted if
+you want to avoid the broad <code>git add .</code> sweeping unrelated
+dirty files or auto-pushing the WIP branch — a hygiene choice, addressed
+by steps 1 + 5.</p>
+<hr />
+<h2 id="evidence-file-index-.evidencedaemon">7. Evidence file index
+(<code>./evidence/daemon/</code>)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>What it proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cmt</code></td>
+<td>repo-root wrapper (adds a period; not the auto source)</td>
+</tr>
+<tr>
+<td><code>Upstreamable__commit</code></td>
+<td>PATH <code>commit</code> → delegates to <code>commit.sh</code></td>
+</tr>
+<tr>
+<td><code>Upstreamable__commit.sh</code></td>
+<td>default <code>MESSAGE=&quot;Auto-commit $SESSION&quot;</code>, empty SESSION →
+<code>Auto-commit</code></td>
+</tr>
+<tr>
+<td><code>SoftwareToolkit__Utils__Git__commit.sh</code></td>
+<td><code>git add .</code> + <code>git commit -m</code> (current branch)
++ push; no checkout/reset</td>
+</tr>
+<tr>
+<td><code>SoftwareToolkit__Utils__Git__push_all.sh</code></td>
+<td>pushes current branch to all upstream recipes + <code>--tags</code>;
+no <code>--force</code></td>
+</tr>
+<tr>
+<td><code>git_evidence.txt</code></td>
+<td>log/cadence/identity/remotes/hooks snapshot</td>
+</tr>
+<tr>
+<td><code>no_os_daemon_evidence.txt</code></td>
+<td>crontab/systemd/at/file-watcher all negative</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

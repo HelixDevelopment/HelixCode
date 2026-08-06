@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03_open_clarifications</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">03_open_clarifications</h1>
+</header>
+<h1 id="open-clarifications-operator-gated-ambiguities-11.4.6-11.4.66-11.4.105">Open
+Clarifications — operator-gated ambiguities (§11.4.6 / §11.4.66 /
+§11.4.105)</h1>
+<p>These are names/targets the research could NOT resolve to a single
+unambiguous real API/spec. Per §11.4.6 I will NOT invent an endpoint.
+Per §11.4.101 these are PARKED (they do not block the running research);
+they will be asked as ONE batched question at the Phase-R→P synthesis
+boundary. Confirmed items proceed regardless.</p>
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 28%" />
+<col style="width: 30%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Name (as given)</th>
+<th>Research finding</th>
+<th><strong>OPERATOR RESOLUTION (2026-07-06)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>“GPT SOL”</strong></td>
+<td>OpenAI GPT-5.6 “Sol” (rides existing OpenAI adapter) vs Upstage
+Solar (new adapter).</td>
+<td>✅ <strong>OpenAI GPT-5.6 “Sol”</strong> — NO new adapter; add model
+IDs to the existing OpenAI provider when it reaches GA (track as
+preview-pending).</td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong>“Google OKF”</strong></td>
+<td>Google Cloud Open Knowledge Format v0.1 — a knowledge-packaging
+spec, not a model/provider.</td>
+<td>✅ <strong>RAG/Skills knowledge format via MCP resources</strong> —
+implement OKF as the on-disk knowledge format served through an MCP
+<code>resources</code> server (context layer, not provider layer).</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>“ACP”</strong></td>
+<td>Zed Agent Client Protocol (editor↔︎agent) vs IBM/BeeAI ACP vs
+<strong>Google A2A</strong> (agent↔︎agent).</td>
+<td>✅ <strong>Google A2A (Agent-to-Agent)</strong> — implement A2A
+interop, NOT Zed ACP. (Note: A2A is agent↔︎agent, so “editor
+auto-recognition” is served separately via the <code>/v1/models</code> +
+MCP <code>server/discover</code> capability surface; A2A adds
+cross-agent interop.)</td>
+</tr>
+<tr>
+<td>C4</td>
+<td><strong>Subquadratic (SubQ)</strong></td>
+<td>Private beta only — no public base URL/auth.</td>
+<td>✅ <strong>BLOCKED-until-GA</strong> — tracked as a deferred item;
+no adapter work possible until a public API (or operator-supplied beta
+credentials) exists.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="resolved-without-needing-the-operator-recorded-for-transparency">Resolved
+WITHOUT needing the operator (recorded for transparency)</h2>
+<ul>
+<li><strong>Poe</strong> → <code>https://api.poe.com/v1</code>
+(OpenAI-compat aggregator) — adapter-ready. ✅</li>
+<li><strong>Perplexity</strong> → <code>https://api.perplexity.ai</code>
+Sonar models — adapter-ready. ✅</li>
+<li><strong>Sakana Fugu</strong> → <code>https://api.sakana.ai/v1</code>
+(<code>fugu</code>, <code>fugu-ultra</code>) — adapter-ready. ✅</li>
+<li><strong>Xiaomi MiMo</strong> →
+<code>https://api.xiaomimimo.com/v1</code> (+ Anthropic surface)
+<code>mimo-v2.5-pro</code> — adapter-ready. ✅</li>
+<li><strong>Tencent / Yuanbao</strong> → <strong>Yuanbao is the consumer
+app; the API target is Hunyuan</strong>
+<code>https://api.hunyuan.cloud.tencent.com/v1</code>
+(<code>hunyuan-t1</code>, <code>hunyuan-t1-vision</code>) —
+adapter-ready. ✅</li>
+<li><strong>Qwythos 9B</strong> → <code>empero-ai/Qwythos-9B-…</code>
+(Qwen3.5-9B, 1M ctx, Apache-2.0) — <strong>self-host</strong> via the
+existing local/Ollama/HF path, no new hosted adapter. ✅</li>
+<li><strong>GOT family</strong> → <strong>GOT-OCR2.0</strong>, an OCR
+model (not a chat LLM) — belongs to the OCR capability (stream 07),
+self-host. ✅</li>
+<li><strong>High-value additions to also implement</strong> (all
+confirmed public APIs): xAI Grok, Moonshot Kimi, Zhipu GLM, Fireworks,
+DeepInfra, Novita, AI21 Jamba, Reka (+ verify Hyperbolic/Baseten base
+URLs at build).</li>
+</ul>
+<h2 id="protocol-decisions-recorded-stream-05-ready">Protocol decisions
+recorded (stream 05, ready)</h2>
+<ul>
+<li><strong>MCP</strong> — official Go SDK now exists
+(<code>github.com/modelcontextprotocol/go-sdk</code>, v1.6.1, maintained
+with Google) → closes the old “no Go SDK” gap. Design the gateway
+<strong>stateless-first</strong> (2026-07-28 RC drops the session
+handshake). Gateway = MCP server (expose Helix tools) + MCP host
+(consume CodeGraph/OpenDesign).</li>
+<li><strong>Capability advertisement (CONST-040)</strong> — flags
+sourced from LLMsVerifier, surfaced on 3 channels:
+<code>/v1/models[].capabilities</code> (HelixCode), MCP
+<code>server/discover</code> (Claude Code), ACP <code>initialize</code>
+(editors). Tool-calling normalized to one canonical JSON-Schema +
+grammar-constrained decoding per local-model parser (anti-bluff).</li>
+<li><strong>OKF</strong> — used as the on-disk RAG/Skills knowledge
+format served via an MCP <code>resources</code> server (pending C2
+confirmation).</li>
+</ul>
+</body>
+</html>

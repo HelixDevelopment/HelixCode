@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MASTER_IMPLEMENTATION_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MASTER_IMPLEMENTATION_PLAN</h1>
+</header>
+<h1 id="helixllm-full-extension-programme-master-implementation-plan-consolidated">HelixLLM
+Full-Extension Programme — MASTER IMPLEMENTATION PLAN
+(consolidated)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td>Single authoritative roadmap consolidating three
+independently-reviewed domain plans</td>
+</tr>
+<tr>
+<td><strong>Path</strong></td>
+<td><code>docs/research/07.2026/00_master/MASTER_IMPLEMENTATION_PLAN.md</code></td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-08</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/feature/helixllm-full-extension)</code></td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>ROADMAP — references + sequencing + decisions. Does NOT re-derive
+detail already written in the three source plans; read the cited plan
+for full evidence/task detail before implementing.</td>
+</tr>
+<tr>
+<td><strong>Consolidates</strong></td>
+<td><code>01_local_models_serving/IMPLEMENTATION_PLAN_v2.md</code>
+(serving, GO),
+<code>02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code>
+(capabilities, GO),
+<code>06_providers_coverage/EXPANSION_PLAN_v2.md</code> (providers,
+PROVISIONAL — re-review in flight)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff notice (§11.4/§11.4.123).</strong> This document
+is a roadmap, not a new research pass. Every fact below is cited to one
+of the three source plans or to <code>RESUME.md</code>/
+<code>PROVIDER_COVERAGE.md</code>/<code>03_open_clarifications.md</code>/<code>99_risk_bottleneck_analysis.md</code>.
+Nothing here re-plans already-landed work (§11.4.74) — see §1.</p>
+</blockquote>
+<hr />
+<h2 id="baseline-whats-already-landed-proven-do-not-re-plan-this">1.
+Baseline — what’s already LANDED + PROVEN (do NOT re-plan this)</h2>
+<p>Per <code>RESUME.md</code>, the branch
+<code>feature/helixllm-full-extension</code> is <strong>RELEASE-READY /
+RELEASE PUBLISHED</strong>: tag <code>helix-code-1.0.0-dev-0.0.1</code>
+created + pushed across main-repo HEAD <code>10c40c85</code> and all 7
+owned submodule HEADs (helix_llm <code>071c1223</code>, doc_processor
+<code>b918111</code>, llm_provider <code>4db6c49</code>,
+llm_orchestrator <code>ee229a7</code>, llms_verifier
+<code>c696c5db</code>, vision_engine <code>a97df79</code>, helix_agent
+<code>cfa94f2f</code>). Whole-branch SDD end-gate returned <strong>GO
+across all 3 independent lenses</strong> (anti-bluff,
+security/§11.4.174, integration/release-readiness). §11.4.40 pre-tag
+sweep GREEN on owned scope. <strong>§11.4.138 honesty correction on
+file</strong> (2026-07-08): the tag’s commit message/annotation
+over-claimed “broad provider coverage” undifferentiated from live-proven
+capabilities — the substantive docs were audited HONEST; see §5 below
+for the follow-up this correction opened (now itself in flight, see
+§6.0).</p>
+<h3 id="reviewed-go-capabilities-proven-cite-never-re-plan">1.1
+Reviewed-GO capabilities (proven, cite — never re-plan)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>State</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU foundation (Phase 0)</td>
+<td>Rootless CDI passthrough + sm_120 build + real 30B inference
+PROVEN</td>
+<td><code>RESUME.md</code> Phase 0</td>
+</tr>
+<tr>
+<td>Coder fleet (Phase 1)</td>
+<td>Qwen3-Coder-30B-A3B live at <code>:18434/v1</code>, 8 slots, 24k
+ctx, q8_0 KV, ~19.4 GiB VRAM; ~220 tok/s single-stream, 8×85-96 tok/s
+concurrent</td>
+<td><code>docs/qa/phase2_e2e_20260706/</code></td>
+</tr>
+<tr>
+<td>HelixAgent→HelixLLM e2e (Phase 2)</td>
+<td>Real generate + Postgres/Redis persistence PROVEN + GO</td>
+<td><code>RESUME.md</code> Phase 2</td>
+</tr>
+<tr>
+<td>LLMsVerifier C1→C5 chain</td>
+<td>Landed (<code>309af635</code>…<code>c696c5db</code>), fail-closed
+resolver, combined review GO — <strong>do not re-implement in any
+form</strong></td>
+<td><code>01_local_models_serving/IMPLEMENTATION_PLAN_v2.md</code> §0;
+<code>06_providers_coverage/EXPANSION_PLAN_v2.md</code> §0.1</td>
+</tr>
+<tr>
+<td>Extended-provider config rows</td>
+<td>13 rows landed in <code>config.go</code> (<code>c696c5db</code>); 3
+LIVE-PROVEN (poe 341 models, zai 8 models, novita 143 models), 1 partial
+(fireworks billing-blocked), 9 honest credential-absent SKIPs</td>
+<td><code>06_providers_coverage/EXPANSION_PLAN_v2.md</code> §0.2</td>
+</tr>
+<tr>
+<td>CONST-039 per-provider live-proof harness</td>
+<td><strong>Landed this session (uncommitted, ready to commit)</strong>
+— <code>helix_code/internal/llm/provider_live_proof_test.go</code> +
+<code>_skip_test.go</code>, nonce-challenged unforgeable PASS; 2 LIVE
+(Groq, Mistral), 3 real non-fabricated FAILs
+(DeepSeek/Gemini/OpenRouter), 5 honest SKIPs</td>
+<td><code>docs/qa/provider_live_proof_RESULTS_20260707.md</code> — this
+directly closes the §11.4.138 tracked follow-up</td>
+</tr>
+<tr>
+<td>Embeddings</td>
+<td>IMPLEMENTED, PROVEN — bge-small via TEI, cos margin 0.3578</td>
+<td><code>55bdf9b6</code></td>
+</tr>
+<tr>
+<td>Vision-VLM (co-resident)</td>
+<td>PROVEN when running — Qwen2.5-VL-3B-Instruct-Q4_K_M at
+<code>:18439</code>, <code>n_ctx:16384</code> — <strong>container
+currently STOPPED</strong> (torn down mid-session, restart on demand, no
+VRAM held)</td>
+<td><code>02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code>
+§0.1</td>
+</tr>
+<tr>
+<td>Translation (NLLB)</td>
+<td>Landed at <code>:18436</code></td>
+<td><code>RESUME.md</code> Phase 3</td>
+</tr>
+<tr>
+<td>Whisper STT</td>
+<td>IMPLEMENTED, reviewed GO, <code>:18437</code></td>
+<td><code>07_stt_ocr_whisper_tesseract.md</code> §1</td>
+</tr>
+<tr>
+<td>Tesseract OCR</td>
+<td>IMPLEMENTED, reviewed GO, <code>:18438</code></td>
+<td><code>07_stt_ocr_whisper_tesseract.md</code> §2</td>
+</tr>
+<tr>
+<td>RAG-TEI</td>
+<td>Landed, <code>:18440</code></td>
+<td><code>RESUME.md</code> Phase 3</td>
+</tr>
+<tr>
+<td>ACP→A2A</td>
+<td>Landed (resolved to Google A2A, not Zed ACP),
+<code>:18441</code></td>
+<td><code>ACP_A2A_PROVIDER.md</code>;
+<code>03_open_clarifications.md</code> C3</td>
+</tr>
+<tr>
+<td>Network-provider (LAN/VPN)</td>
+<td>Landed</td>
+<td><code>RESUME.md</code> Phase 3</td>
+</tr>
+<tr>
+<td>VRAM broker CORE</td>
+<td><code>a12df57c</code>, reviewed GO —
+<code>ClassCoder</code>(resident)/<code>ClassVLM</code>/<code>ClassImage</code>/<code>ClassVideo</code>(burst,
+single-owner
+§11.4.119)/<code>ClassTranslate</code>(warm)/<code>ClassEmbed</code>(CPU
+0-byte); fail-closed <code>admit()</code>; <strong>no
+eviction/pause-warm-tier logic yet</strong> (honest gap)</td>
+<td><code>submodules/helix_llm/internal/vrambroker/broker.go</code></td>
+</tr>
+<tr>
+<td>DZ-05 (HelixLLM API contract)</td>
+<td><strong>RESOLVED</strong> —
+<code>submodules/helix_llm/docs/API_CONTRACT.md</code> now exists,
+confirmed on disk</td>
+<td><code>02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code>
+§0.1/§5.1</td>
+</tr>
+<tr>
+<td>codegraph</td>
+<td>DESIGN COMPLETE + defects PROBED (path rot, version drift, index
+bloat) — wiring fix not yet landed (see roadmap Phase 5)</td>
+<td><code>08_codegraph_opendesign.md</code> §1.1/§2/§4</td>
+</tr>
+<tr>
+<td>Operator clarifications (GPT-Sol, OKF, ACP, SubQ)</td>
+<td><strong>Already answered</strong>, do not re-derive</td>
+<td><code>03_open_clarifications.md</code> C1–C4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="imagevideo-generative-scaffold-complete-runtime-proof-pending">1.2
+Image/video generative — scaffold-complete, runtime-proof pending</h3>
+<p>Image-gen (<code>0f07559</code>, port 18442) and video-gen
+(<code>9145505</code>, port 18443) are <strong>SCAFFOLD-COMPLETE,
+broker-integrated, self-validated CLIPScore analyzers,
+RED-first</strong> — reviewed GO at the scaffold layer. <strong>Runtime
+proof is the only remaining gap</strong>, and per the re-baselined VRAM
+reading (§3 below) the fallback/fast-lane tiers <strong>no longer
+require an operator coder-pause</strong> (vision is already stopped) —
+only the flagship tiers still need a scheduled burst window. Do not
+re-scaffold; only the runtime-proof step remains (roadmap Phase 3,
+§4).</p>
+<hr />
+<h2 id="unified-phased-roadmap">2. Unified phased roadmap</h2>
+<p>Ordered by cross-plan dependency. Each phase cites source-plan task
+IDs — see the cited plan for full detail, acceptance criteria, and
+evidence paths. “Gated” = requires an operator decision (§5) or a live
+resource not currently free; “Non-gated” = startable now, subagent-
+dispatchable, parallel-safe (§11.4.103/§11.4.70).</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Phase</th>
+<th>Source task IDs</th>
+<th>Gated?</th>
+<th>Depends on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Baseline capture (config/throughput snapshot, no coder touch)</td>
+<td>Serving-plan Phase 0 (Tasks 0.1–0.2)</td>
+<td>No</td>
+<td>—</td>
+</tr>
+<tr>
+<td>1a</td>
+<td>Serving non-coder-touching work: GGUF-revision check, kv-unified PoC
+memo, batch-size sizing memo, broker <code>ClassAgent</code>, pre-boot
+config validator</td>
+<td>Serving-plan Phase 1 (1.1–1.5)</td>
+<td>No</td>
+<td>Phase 0</td>
+</tr>
+<tr>
+<td>1b</td>
+<td>Capabilities non-blocked work: codegraph wiring fix (path-rot +
+exclude-bloat + version reconcile), opendesign bring-up, HelixQA bank
+authoring (Bank B first — vision)</td>
+<td>Capabilities-plan P5-T1′/P5-T2′, §5</td>
+<td>No</td>
+<td>DZ-05 resolved (done)</td>
+</tr>
+<tr>
+<td>1c</td>
+<td>Providers Phase A–C: HelixLLM-as-tracked-provider registration in
+LLMsVerifier, claude_toolkit alias reconciliation (hunyuan/moonshot
+ambiguity resolution + sakana/fireworks/deepinfra/ai21/reka add), R5
+port-ownership hardening</td>
+<td>Providers-plan §3 Phase A/B/C</td>
+<td>No</td>
+<td>LLMsVerifier chain (landed)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Serving Lane-B build-out: model benchmarking spike (Mistral-Nemo-12B
+priority 1, GLM-4.7-Flash, DeepSeek-Coder-V2-Lite), production container
++ broker wiring</td>
+<td>Serving-plan Phase 2 (2.1–2.2)</td>
+<td>No (fits current free VRAM)</td>
+<td>Phase 1a Task 1.4/1.5</td>
+</tr>
+<tr>
+<td>2b</td>
+<td>Capabilities Phase 3 non-GPU-burst items: vectorization spike doc +
+vtracer default, translation P3-T5′ spike + NLLB CPU-tier route,
+embeddings/RAG completion (Qdrant + reranker), HelixMemory
+(Zep/Graphiti+mem0) spike doc re-authored</td>
+<td>Capabilities-plan P3-T4′/T5′/T6′/T7′</td>
+<td>No</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2c</td>
+<td>Providers Phase D: dual OpenAI+Anthropic wire facade for HelixCode’s
+own server (the one net-new adapter)</td>
+<td>Providers-plan §3 Phase D</td>
+<td>No</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2d</td>
+<td>Providers Phase E/F: setup/PATH-install gap-fill,
+provider-verification test extension</td>
+<td>Providers-plan §3 Phase E/F</td>
+<td>No</td>
+<td>Phase 1c</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Runtime-proof for image/video generative + serving
+observability</td>
+<td>Capabilities-plan P3-T2′/T3′; Serving-plan Phase 3 (3.1–3.3)</td>
+<td><strong>Partially gated</strong> — fallback/fast-lane tiers run NOW
+(no pause needed); flagship tiers need operator coder-pause</td>
+<td>Phase 1a broker validator; VRAM re-measured live at proof time</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Vision hardening (8B warm tier) + STT/OCR wiring-everywhere
+sweep</td>
+<td>Capabilities-plan P3-T1′/T8′</td>
+<td>No</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MCP gateway + A2A real-wire landing (retire/replace proprietary
+stub)</td>
+<td>Capabilities-plan P4-T5′/T4′</td>
+<td><strong>A2A partially gated</strong> — stub retirement needs
+operator decision (§11.4.122 no-silent-removal); MCP gated on confirming
+beta SDK Streamable-HTTP server transport</td>
+<td>2026-07-28 MCP RC (external)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Serving Phase 4: batched Lane-A operator-authorized changes
+(<code>--kv-unified</code>, batch-size/parallel tuning, GGUF re-pull if
+needed) — SINGLE coder-pause window</td>
+<td>Serving-plan Phase 4 (Task 4.1)</td>
+<td><strong>Gated</strong> — operator coder-pause (§11.4.122)</td>
+<td>Phases 1a/2/3 done</td>
+</tr>
+<tr>
+<td>7</td>
+<td>claude_toolkit LLMsVerifier trunk-bump for the extended-provider
+commits</td>
+<td>Providers-plan §3 Phase G.1</td>
+<td><strong>Gated</strong> — needs
+<code>feature/helixllm-full-extension</code>→<code>main</code> merge
+approval (§11.4.167) OR explicit deviation sign-off</td>
+<td>Operator decision</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Provider live-proof coverage completion (remaining ~7 of 10
+CONST-039 providers + remaining ~9 of 13 extended rows)</td>
+<td>Providers-plan §3 Phase F.3</td>
+<td><strong>Gated</strong> — needs API keys (§11.4.10)</td>
+<td>Phase 0 harness now exists (uncommitted)</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Full HelixQA bank sweep (all 9 banks) + Challenges + autonomous
+session</td>
+<td>Capabilities-plan §5</td>
+<td>Partially gated (Banks C/D/E/F wait on Phases 2b/3 landing)</td>
+<td>Phases 2b, 3</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Next release tag prep — pointer bumps, §11.4.40 full-suite sweep,
+prefixed tag</td>
+<td>—</td>
+<td><strong>Gated</strong> — operator decision on scope/timing</td>
+<td>All above phases the operator wants in-scope</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="vram-lane-budget-table-the-single-shared-gpu-truth">3. VRAM lane
+budget table — the single shared GPU truth</h2>
+<p><strong>Live reading, re-baselined 2026-07-08 03:45:27 local</strong>
+(<code>nvidia-smi --query-gpu=memory.total,memory.used,memory.free</code>):
+<strong>32607 MiB total (≈31.84 GiB), 19436 MiB used (≈18.98 GiB,
+coder-only resident), 12685 MiB free (≈12.39 GiB)</strong>. The vision
+co-resident container (<code>helixllm_visiongen_visiongen_1</code>) that
+was up when this session’s plans were first drafted has since been
+<strong>torn down</strong> — this is the single most important
+reconciled fact across both the serving plan and the capabilities plan
+(both independently re-baselined against it).</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Lane</th>
+<th>Class</th>
+<th>Residency</th>
+<th>Size</th>
+<th>Co-resides with coder?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Lane A — coder</strong></td>
+<td><code>ClassCoder</code></td>
+<td>Resident, always-on, never evicted, uncounted against admission</td>
+<td>~19.4 GiB</td>
+<td>N/A (baseline)</td>
+</tr>
+<tr>
+<td><strong>Lane B — 2nd coder/agent instance</strong></td>
+<td>New <code>ClassAgent</code> (broker gap, Phase 1a Task 1.4)</td>
+<td>Warm, admission-gated</td>
+<td>Priority: (1) Mistral-Nemo-12B Q4 ~6.52 GiB weights (~3.87 GiB KV
+headroom — best fit); (2) GLM-4.7-Flash smallest quant ~9.78 GiB (~0.61
+GiB KV headroom — single-slot only); (3) DeepSeek-Coder-V2-Lite Q4_K_M
+~9.65 GiB (~0.74 GiB KV headroom — single-slot only); (4) 2nd
+Qwen3-Coder replica — demoted, does not fit</td>
+<td>Yes, within 10.39 GiB ceiling</td>
+</tr>
+<tr>
+<td><strong>Vision (VLM)</strong></td>
+<td><code>ClassVLM</code></td>
+<td>Warm, currently STOPPED</td>
+<td>3B ~2 GiB when running; 8B upgrade tier ~12-16 GiB</td>
+<td>Yes at 3B; 8B needs re-measure</td>
+</tr>
+<tr>
+<td><strong>Image-gen fallback</strong></td>
+<td><code>ClassImage</code> (burst, single-owner §11.4.119)</td>
+<td>Burst</td>
+<td>SDXL/FLUX.1-schnell-Q4 ~7-9 GiB</td>
+<td><strong>Fits NOW</strong> (9+2=11 ≤ 12.39 GiB)</td>
+</tr>
+<tr>
+<td><strong>Image-gen flagship</strong></td>
+<td><code>ClassImage</code></td>
+<td>Burst</td>
+<td>FLUX.1-schnell fp8 ~16-20 GiB</td>
+<td><strong>Does NOT fit</strong> — needs coder-pause burst window</td>
+</tr>
+<tr>
+<td><strong>Video-gen fast lane</strong></td>
+<td><code>ClassVideo</code> (burst, single-owner)</td>
+<td>Burst</td>
+<td>LTX-Video 2B-distilled ~6-8 GiB or WAN 2.2 TI2V-5B ~7-9 GiB</td>
+<td><strong>Fits NOW</strong></td>
+</tr>
+<tr>
+<td><strong>Video-gen flagship</strong></td>
+<td><code>ClassVideo</code></td>
+<td>Burst</td>
+<td>WAN 2.2 A14B MoE fp8 ~14-20 GiB</td>
+<td><strong>Does NOT fit</strong> — needs coder-pause burst window</td>
+</tr>
+<tr>
+<td><strong>Translation/embeddings</strong></td>
+<td><code>ClassTranslate</code>/<code>ClassEmbed</code></td>
+<td>Warm/CPU, 0 or tiny GPU</td>
+<td>NLLB CPU-first ~3-4 GiB or 0 GPU</td>
+<td>Always fits</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reconciled co-reside ceiling:
+<code>needBytes + 2 GiB hard-floor headroom ≤ 12.39 GiB free</code> ⇒
+<code>needBytes ≲ 10.39 GiB</code>.</strong> This is the number every
+Lane-B candidate and every generative fallback/fast-lane tier is
+computed against. <strong>Single-owner sequencing (§11.4.119):</strong>
+<code>ClassImage</code> and <code>ClassVideo</code> are mutually
+exclusive burst classes — never run concurrently; Lane B
+(<code>ClassAgent</code>) and vision (<code>ClassVLM</code>) are
+independent warm-tier admissions, both gated by the same live
+<code>Budget().free</code> read.</p>
+<p><strong>Volatility warning (DZ-23, both plans independently flag
+this):</strong> free VRAM moved from ≈7.89 GiB (coder+vision resident)
+to ≈12.39 GiB (coder-only) <strong>within the same session</strong> —
+proof the number moves in EITHER direction. <strong>Every admission
+decision at every phase above MUST re-read
+<code>nvidia-smi</code>/<code>Budget().free</code> live immediately
+before acting — never trust this table’s cached numbers past the moment
+they were read.</strong></p>
+<p><strong>Coder-never-casually-restart constraint
+(D8/§11.4.122):</strong> <code>helixllm-coder</code> is explicitly
+“never restart” without operator authorization. All Lane-A-affecting
+changes (kv-unified flag, batch-size tuning, GGUF re-pull) MUST be
+batched into a <strong>single</strong> operator-authorized coder-pause
+window (roadmap Phase 6) — never several separate pauses.</p>
+<hr />
+<h2 id="consolidated-danger-zone-rollup-top-10-cross-cutting-risks">4.
+Consolidated danger-zone rollup — top 10 cross-cutting risks</h2>
+<p>Sourced from the 61-item programme register
+(<code>99_risk_bottleneck_analysis.md</code>, 56 items + 5 new
+DZ-23…AB-16 from the capabilities plan) plus the serving plan’s own 8
+danger zones (D1–D8). Ranked by current relevance (several original
+Critical items — DZ-01…DZ-04, GPU passthrough/
+toolchain/VRAM-contention/broker-design — are now
+<strong>RESOLVED</strong> per §1 and excluded from this “still live”
+top-10; cite them only as history).</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Risk</th>
+<th>Severity</th>
+<th>Mitigation (already designed — land it, don’t re-derive)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>DZ-23 / Live free-VRAM residency is volatile</strong> — the
+single most-repeated finding across both the serving and capabilities
+plans this session</td>
+<td>Med (was High)</td>
+<td>Re-measure <code>Budget().free</code>/<code>nvidia-smi</code>
+immediately before EVERY admission decision; never trust a cached table
+(§3 above)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>D8 / Coder-container never-restart constraint</strong> vs
+iteration need</td>
+<td>High (process)</td>
+<td>Batch ALL Lane-A flag changes into one operator-authorized
+coder-pause window (Phase 6); everything else proceeds without touching
+the live container</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>D1 / VRAM OOM under concurrency burst</strong> (Lane A +
+Lane B simultaneous peak)</td>
+<td>Critical if unmitigated</td>
+<td>Pre-boot config validator (Phase 1a Task 1.5) enforces worst-case
+static KV ceiling sums ≤ card total − headroom; runtime
+<code>/metrics</code>+<code>nvidia-smi</code> sidecar; chaos test
+asserting broker refuses admission rather than OS OOM-kill</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>D6 / Tool-calling type-validation failures under
+load</strong> (OpenCode #1809 array-as-string bug class)</td>
+<td>High</td>
+<td>Verify running GGUF postdates Unsloth’s fix; reproduce-first
+regression test at N concurrent tool-calling turns; register as
+permanent §11.4.135 guard</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>DZ-11 / Frozen-frame, silence-hallucination, analyzer-bluff
+family</strong> — every media/vision/STT test could pass-bluff</td>
+<td>High</td>
+<td>Mandatory §11.4.107/.137/.117/.163 self-validated
+golden-good/golden-bad + paired §1.1 mutation on every analyzer (already
+the design; land it per capability as each ships)</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>D3 / Slot starvation from prefill-heavy system
+prompts</strong> (CLI-agent frameworks resend large system prompt every
+turn)</td>
+<td>Med-High for the 6-12 agent goal</td>
+<td>Verify KV-cache-reuse/prefix-caching is actually active via
+<code>/metrics</code> runtime signature; stress test at 8-12x
+concurrency measuring prefill/decode split</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>DZ-08 / codegraph index bloat indexes third-party, violates
+§11.4.79</strong></td>
+<td>High</td>
+<td>Land the exclude-pattern fix (Phase 1b) <strong>before</strong>
+codegraph→RAG fusion (Phase 2b Task T6′.3) — explicit ordering rule, do
+not fuse first</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>DZ-10 / claude_toolkit LLMsVerifier
+bump-without-rebuild</strong> (SOURCE→ARTIFACT gap)</td>
+<td>High</td>
+<td>Force-rebuild binaries + re-run live tests before any gitlink bump
+(blocked anyway on Phase 7’s operator decision)</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>D5 / Broker <code>ClassVLM</code> reuse gap</strong> — if
+Lane B reuses <code>ClassVLM</code> instead of a new
+<code>ClassAgent</code>, a future real vision workload collides for the
+same class</td>
+<td>Med</td>
+<td>Implement the new <code>ClassAgent</code> (Phase 1a Task 1.4), never
+reuse <code>ClassVLM</code> semantically for a second coding lane</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>DZ-24/DZ-25 / HelixMemory spike doc missing + cognee has TWO
+known upstream bugs</strong></td>
+<td>Med</td>
+<td>Re-author <code>HELIXMEMORY_PROVIDER.md</code> from
+<code>04_embeddings_rag.md</code> §5 (Zep/Graphiti+mem0), independent of
+cognee’s fate; cognee re-enable (separate, §11.4.174-blocked) must test
+both bug classes before any attempt</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="operator-decision-list">5. OPERATOR-DECISION LIST</h2>
+<p>Every item genuinely gated on an explicit operator call, collected in
+one place per §11.4.66/§11.4.101. <strong>Count: 9.</strong></p>
+<ol type="1">
+<li><strong>GPU generative burst (coder-pause) for flagship image/video
+tiers</strong> — FLUX.1-schnell fp8 (~16-20 GiB) and WAN 2.2 A14B MoE
+fp8 (~14-20 GiB) exceed the 10.39 GiB co-reside ceiling and require
+pausing <code>helixllm-coder</code> for a scheduled full-burst window
+(§11.4.122). Fallback/ fast-lane tiers do NOT need this — they fit
+now.</li>
+<li><strong>Batched Lane-A serving changes (<code>--kv-unified</code>,
+batch-size/parallel tuning, GGUF re-pull)</strong> — a single
+coder-pause window (§11.4.122), enumerated choices already drafted: “[A]
+authorize a single window now · [B] defer to next scheduled maintenance
+· [C] apply only the GGUF re-pull if needed, defer flag changes.”</li>
+<li><strong>Broad-provider API keys</strong> (§11.4.10) — needed to
+advance the CONST-039 harness from 2/10 LIVE-PROVEN to full coverage,
+and the extended-provider rows from 3/13 to full coverage.</li>
+<li><strong>claude_toolkit → LLMsVerifier trunk merge</strong>
+(§11.4.167) — the extended-provider commits live on
+<code>origin/feature/helixllm-full-extension</code>, not
+<code>origin/main</code>; either (a) wait for an operator-approved merge
+to <code>main</code>, or (b) point claude_toolkit’s vendored submodule
+at the feature branch explicitly as a documented deviation.</li>
+<li><strong>cognee wire / HelixMemory</strong> — cognee re-enable is
+§11.4.174-blocked (foreign <code>helix_agent</code> go.mod/.qa_bak from
+a concurrent QA track) AND has its own upstream bug (two known classes,
+DZ-25); operator decision needed on whether/when to re-attempt vs
+proceed HelixMemory-only (Zep/Graphiti+mem0), which is independent and
+unblocked.</li>
+<li><strong>Release-tag/version for the next tag</strong> — scope,
+timing, and which of the phases above are included before cutting the
+next prefixed tag (§11.4.151).</li>
+<li><strong>Outward push target</strong> —
+<code>feature/helixllm-full-extension</code> currently has no upstream
+tracking configured; operator decision on which remote(s)/branch to push
+to next.</li>
+<li><strong>GPT-Sol / Subquadratic GA-wait</strong> — both held
+<code>UNCONFIRMED-needs-endpoint</code>/ <code>BLOCKED-until-GA</code>
+per already-resolved clarifications; revisit only on a public GA
+announcement, no operator action needed until then (listed for
+completeness/tracking).</li>
+<li><strong>A2A stub retirement</strong> — the pre-existing
+<code>/api/v1/acp/{execute,broadcast,status}</code> canned stub routes
+are a §11.4.122 no-silent-removal case: operator must choose (a) replace
+in-place with the real A2A wire, or (b) add A2A alongside and deprecate
+the stub on a schedule.</li>
+</ol>
+<p><em>(Qwythos-9B provenance sign-off and /ws credential channel, named
+in the task brief, were searched for in all three source plans and
+RESUME/PROVIDER_COVERAGE — Qwythos appears only as a resolved self-host
+item in <code>03_open_clarifications.md</code> with no pending sign-off
+tracked in this corpus, and no <code>/ws</code> credential-channel item
+was found anywhere in the three plans or grounding docs. Both are noted
+here as <strong>not found as open items in the reviewed source
+material</strong> rather than silently omitted — §11.4.6.)</em></p>
+<hr />
+<h2 id="recommended-immediate-phase-1-work-non-operator-gated-non-coder-disturbing">6.
+Recommended immediate Phase-1 work (non-operator-gated,
+non-coder-disturbing)</h2>
+<p>Concrete first steps producing real testable capability without
+touching the live coder or needing operator input. All are independently
+subagent-dispatchable in parallel (§11.4.103).</p>
+<h3 id="already-in-flight-commit-it">6.0 Already in flight (commit
+it)</h3>
+<p>The CONST-039 provider live-proof harness
+(<code>helix_code/internal/llm/provider_live_proof_test.go</code> +
+<code>_skip_test.go</code>) is <strong>complete and uncommitted</strong>
+— 2/10 providers LIVE-PROVEN (Groq, Mistral), 3 honest real FAILs, 5
+honest SKIPs, evidence at
+<code>docs/qa/provider_live_proof_RESULTS_20260707.md</code>.
+<strong>Acceptance proof:</strong> already captured; this is a
+commit-and-land action, not new work.</p>
+<h3 id="serving-lane-b-second-instance-fits-free-vram-now">6.1 Serving
+Lane-B second instance (fits free VRAM now)</h3>
+<p>Boot Mistral-Nemo-12B (Q4, ~6.52 GiB weights) in its own container
+via the <code>containers</code> submodule, gated through the new
+<code>ClassAgent</code> broker class (must land first, below) and the
+pre-boot config validator. <strong>Acceptance:</strong> benchmark report
+comparing tok/s + tool-calling correctness vs
+GLM-4.7-Flash/DeepSeek-Coder-V2-Lite, GO/NO-GO recommendation.
+(Serving-plan Task 2.1)</p>
+<h3 id="broker-classagent-addition-prerequisite-for-6.1">6.2 Broker
+<code>ClassAgent</code> addition (prerequisite for 6.1)</h3>
+<p>Add <code>ClassAgent Class = &quot;agent&quot;</code> to
+<code>broker.go</code>’s enum, warm-tier semantics identical to
+<code>ClassVLM</code>. <strong>Acceptance:</strong> unit test asserting
+<code>IsResident()==false</code>/<code>IsBurst()==false</code> +
+admission-gated identically to <code>ClassVLM</code>; paired §1.1
+mutation flips <code>IsResident()</code> to prove the test
+discriminates. (Serving-plan Task 1.4)</p>
+<h3 id="pre-boot-config-validator">6.3 Pre-boot config validator</h3>
+<p>Small Go tool (pattern:
+<code>submodules/helix_llm/cmd/videogen-boot</code>) computing
+worst-case static KV ceiling, <code>-ngl 99</code> full-GPU-residency
+achievability, and port/container-name distinctness; refuses non-zero
+exit on any failure. <strong>Acceptance:</strong> Challenge test feeding
+an over-budget config asserts non-zero exit + specific error; a valid
+config asserts zero exit. (Serving-plan Task 1.5)</p>
+<h3 id="mcpokf-wiring-groundwork">6.4 MCP/OKF wiring groundwork</h3>
+<p>Pull <code>github.com/modelcontextprotocol/go-sdk</code> latest
+release notes (post beta-SDK announcement) and confirm Streamable-HTTP
+<strong>server</strong> transport coverage before committing the gateway
+design. <strong>Acceptance:</strong> a documented go/no-go on the beta
+SDK; if GO, stateless-first gateway design; if not-yet, stdio-only
+fallback for this cycle. (Capabilities-plan Task P4-T5′.1)</p>
+<h3 id="helixqa-vision-bank-bank-b-authored-first-per-risk-descending-priority">6.5
+HelixQA vision bank (Bank B) — authored first per risk-descending
+priority</h3>
+<p>Author <code>helixllm_vision.yaml</code> ground-truth fixtures
+against the LIVE 3B model’s actual behavior (run each candidate fixture
+during authoring to confirm it’s achievable before committing it as
+“must-match”). <strong>Acceptance:</strong> Bank B PASS on the 3B tier +
+self-validated analyzer golden-bad fixture FAILs. (Capabilities-plan
+§5.2 item 1)</p>
+<h3 id="codegraphopendesign-as-core-wiring-fix">6.6
+codegraph/opendesign-as-core wiring fix</h3>
+<p>Rewrite <code>.mcp.json</code> codegraph entry to the portable
+bare-command form; add exclude patterns closing the 6.09 GB/102k-file
+third-party bloat (§11.4.79); reconcile 1.1.1↔︎1.2.0 version drift.
+Separately: install/start the opendesign daemon on <code>:7456</code>,
+seed the <code>helixcode-brand</code> project.
+<strong>Acceptance:</strong> <code>codegraph_validate.sh</code>
+cross-submodule probe PASSes + exclude-then-restore paired mutation
+FAILs when own-org content is wrongly excluded; the §11.4.78-style
+unforgeable dual challenge (<code>od_list_projects</code> +
+<code>codegraph_status</code>) resolves real facts in one script.
+(Capabilities-plan Tasks P5-T1′/P5-T2′ — flagged in that plan as “good
+candidate for the FIRST parallel stream dispatched”)</p>
+<h3 id="claude_toolkit-alias-reconciliation">6.7 claude_toolkit alias
+reconciliation</h3>
+<p>Resolve the <code>tencent-tokenhub</code> vs <code>hunyuan</code> and
+<code>kimi-for-coding</code> vs <code>moonshot</code> ambiguities via
+live endpoint comparison (one-command check), then add
+<code>sakana</code> (unambiguous) +
+<code>fireworks</code>/<code>deepinfra</code>/<code>ai21</code>/<code>reka</code>.
+<strong>Acceptance:</strong> <code>claude-providers sync</code> produces
+new <code>&lt;id&gt;.env</code> files with correct base URL/transport;
+<code>verify_providers_live.sh</code> produces real non-simulated
+round-trip proof. (Providers-plan §3 Phase B)</p>
+<h3 id="imagevideo-gen-fallbackfast-lane-runtime-proof-no-pause-needed-right-now">6.8
+Image/video-gen fallback/fast-lane runtime proof (no pause needed right
+now)</h3>
+<p>Because vision is currently stopped, the fallback tiers
+(SDXL/FLUX-schnell-Q4) and fast lane (LTX-Video/WAN-TI2V-5B) fit the
+live ≈12.39 GiB free without pausing anything. Re-measure
+<code>Budget().free</code> live immediately before attempting; if still
+free, run the full generate-and- verify cycle (CLIPScore + golden-bad
+fixtures) now. <strong>Acceptance:</strong> exact §5 signature from
+<code>IMAGE_GEN_PROVIDER.md</code>/<code>VIDEO_GEN_PROVIDER.md</code> —
+captured evidence, register as permanent regression guard.
+<strong>Caveat:</strong> if VRAM state has changed by execution time
+(volatility, §4 item 1), this step honestly falls back to requesting the
+operator-gated pause (item 1 of §5) rather than forcing admission.
+(Capabilities-plan Tasks P3-T2′/T3′)</p>
+<hr />
+<h2 id="sources">Sources</h2>
+<ul>
+<li><code>docs/research/07.2026/01_local_models_serving/IMPLEMENTATION_PLAN_v2.md</code></li>
+<li><code>docs/research/07.2026/02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code></li>
+<li><code>docs/research/07.2026/06_providers_coverage/EXPANSION_PLAN_v2.md</code></li>
+<li><code>docs/research/07.2026/00_master/RESUME.md</code></li>
+<li><code>docs/research/07.2026/00_master/PROVIDER_COVERAGE.md</code></li>
+<li><code>docs/research/07.2026/00_master/03_open_clarifications.md</code></li>
+<li><code>docs/research/07.2026/99_risk_analysis/99_risk_bottleneck_analysis.md</code></li>
+<li><code>docs/qa/provider_live_proof_RESULTS_20260707.md</code>
+(in-flight uncommitted evidence, cited for §6.0)</li>
+<li>Direct source reads (not web, this consolidation pass):
+<code>helix_code/internal/llm/provider_live_proof_test.go</code>,
+<code>docs/qa/helixllm_vision_boot_20260707T215007Z/</code> (directory
+listing)</li>
+</ul>
+</body>
+</html>

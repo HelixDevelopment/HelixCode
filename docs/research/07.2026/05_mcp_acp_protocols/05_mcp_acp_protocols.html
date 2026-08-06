@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>05_mcp_acp_protocols</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">05_mcp_acp_protocols</h1>
+</header>
+<h1 id="mcp-acp-tool-calling-okf-integration-research-for-the-helixcode-helixagent-helixllm-stack">MCP
++ ACP + Tool-Calling + “OKF” — Integration Research for the HelixCode →
+HelixAgent → HelixLLM Stack</h1>
+<p><strong>Doc type:</strong> Deep multi-angle research report (§11.4.8
+/ §11.4.99 / §11.4.150) <strong>Author:</strong> Deep-research subagent
+(T1/main) <strong>Access / verification date:</strong> 2026-07-06
+<strong>Scope:</strong> How to integrate Model Context Protocol (MCP),
+an “ACP” agent protocol, tool/function-calling normalization, and
+Google’s “OKF” into the Helix gateway stack so that <strong>local +
+cloud models expose these capabilities</strong> and <strong>Claude Code
+/ HelixCode auto-recognize them</strong>. <strong>Evidence
+discipline:</strong> every non-obvious claim carries a cited URL. Items
+that could not be confirmed from primary sources are marked
+<strong>UNCONFIRMED</strong> or <strong>NEEDS-CLARIFICATION</strong> per
+§11.4.6 (no-guessing).</p>
+<hr />
+<h2 id="grounding-facts-given-not-re-verified-here">0. Grounding facts
+(given, not re-verified here)</h2>
+<ul>
+<li><strong>HelixLLM</strong> already serves
+<strong>OpenAI-compatible</strong> (<code>/v1/chat/completions</code>,
+<code>/v1/models</code>, <code>/v1/embeddings</code>) <strong>and
+Anthropic-compatible</strong> (<code>/v1/messages</code>)
+endpoints.</li>
+<li><strong>HelixAgent</strong> has its own
+OpenAI/Anthropic/Google-compatible REST server
+(<code>internal/handlers/openai_compatible.go</code>).</li>
+<li>Existing <code>.mcp.json</code> wiring is <strong>partly
+rotted</strong>: CodeGraph MCP uses macOS-absolute paths (fails on this
+Linux host), OpenDesign MCP is disabled. (These are wiring bugs to fix
+in the integration work, not research unknowns.)</li>
+</ul>
+<hr />
+<h2 id="mcp-model-context-protocol-2026-state">1. MCP — Model Context
+Protocol (2026 state)</h2>
+<h3 id="spec-version-cadence">1.1 Spec version + cadence</h3>
+<ul>
+<li><strong>Current stable:</strong> <code>2025-11-25</code>.
+<strong>Release candidate <code>2026-07-28</code></strong> was locked on
+2026-05-21 and is scheduled to publish 2026-07-28; it is described as
+“the largest revision of the protocol since launch.” (<a href="https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/">MCP
+blog — 2026-07-28 RC</a>, accessed 2026-07-06)</li>
+<li>MCP is versioned by <strong>date strings</strong>. Known versions in
+the wild: <code>2024-11-05</code>, <code>2025-03-26</code>,
+<code>2025-06-18</code>, <code>2025-11-25</code>,
+<code>2026-07-28</code>. (<a href="https://github.com/modelcontextprotocol/go-sdk">go-sdk README</a>,
+accessed 2026-07-06)</li>
+</ul>
+<h3 id="transports">1.2 Transports</h3>
+<ul>
+<li><strong>stdio</strong> — local, same-machine; JSON-RPC 2.0 over
+stdin/stdout. Best for CodeGraph / OpenDesign / local tool servers a
+client launches as a subprocess.</li>
+<li><strong>Streamable HTTP</strong> — remote / multi-client over
+HTTP(S); client→server via HTTP POST/GET, server can stream via
+Server-Sent Events (SSE). This is the <strong>current</strong> HTTP
+transport (it replaced the older “HTTP+SSE” two- endpoint transport from
+<code>2024-11-05</code>). (<a href="https://modelcontextprotocol.io/specification/2025-03-26/basic/transports">Transports
+spec 2025-03-26</a>; <a href="https://auth0.com/blog/mcp-streamable-http/">Auth0 — why MCP moved
+off SSE</a>, both accessed 2026-07-06)</li>
+<li><strong>Direction of travel (<code>2026-07-28</code> RC): the
+protocol becomes stateless at the transport layer.</strong> The
+<code>initialize</code>/<code>initialized</code> handshake and the
+<code>Mcp-Session-Id</code> header are eliminated; “any MCP request can
+land on any server instance,” so a server can sit behind a plain
+round-robin load balancer. Applications keep state through
+<strong>explicit handles passed between tool calls</strong> rather than
+protocol-managed sessions. Six SEPs implement this. (<a href="https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/">MCP
+2026-07-28 RC</a>, accessed 2026-07-06) → <strong>Design
+implication:</strong> build the HelixLLM/HelixAgent MCP-gateway HTTP
+surface <strong>stateless-first</strong> so it is forward-compatible
+with <code>2026-07-28</code>.</li>
+</ul>
+<h3 id="the-go-sdk-situation-load-bearing-for-a-go-stack">1.3 The Go SDK
+situation (load-bearing for a Go stack)</h3>
+<ul>
+<li><strong>There is now an official Go MCP SDK:
+<code>github.com/modelcontextprotocol/go-sdk</code>, maintained in
+collaboration with Google.</strong> This resolves the prior “no official
+Go SDK” gap. (<a href="https://github.com/modelcontextprotocol/go-sdk">go-sdk repo</a>,
+accessed 2026-07-06)</li>
+<li><strong>Latest release seen: <code>v1.6.1</code>
+(2026-05-22)</strong>; 26 releases, 2,000+ dependents. Supports spec
+<code>2026-07-28</code> plus <code>2025-11-25</code>,
+<code>2025-06-18</code>, <code>2025-03-26</code>,
+<code>2024-11-05</code>. It provides both <strong>client and
+server</strong>, tool definitions, and <code>StdioTransport</code> /
+<code>CommandTransport</code>. (<a href="https://github.com/modelcontextprotocol/go-sdk">go-sdk repo</a>,
+accessed 2026-07-06)
+<ul>
+<li>One secondary source claims <strong><code>v1.7.0+</code> supports
+<code>2026-07-28</code></strong> and that stable client-side OAuth lands
+in <code>~v1.5.0</code> (end of March 2026). The exact
+minor-version→feature mapping is <strong>UNCONFIRMED</strong> against
+the repo release notes (repo page rendered <code>v1.6.1</code> as latest
+at access time); pin the version explicitly and read
+<code>go-sdk/releases</code> before wiring. (<a href="https://socket.dev/blog/official-go-sdk-for-mcp">socket.dev
+overview</a>, accessed 2026-07-06)</li>
+</ul></li>
+<li><strong>Streamable-HTTP transport in the Go SDK:</strong> the SDK
+README excerpt fetched did not explicitly enumerate a Streamable-HTTP
+transport type (it named Stdio/Command). Treat “Go SDK ships a
+production Streamable-HTTP server transport” as <strong>UNCONFIRMED —
+verify in <code>go-sdk/mcp</code> package docs before
+committing</strong> the remote- gateway design to it. (<a href="https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp">pkg.go.dev
+go-sdk/mcp</a>, accessed 2026-07-06)</li>
+<li><strong>Mature third-party fallback:</strong>
+<code>github.com/mark3labs/mcp-go</code> — widely used Go MCP
+implementation, useful as a cross-check or interim if an official-SDK
+feature is missing. (<a href="https://github.com/mark3labs/mcp-go">mark3labs/mcp-go</a>,
+accessed 2026-07-06)</li>
+</ul>
+<h3 id="how-a-model-serving-gateway-exposes-mcp">1.4 How a model-serving
+gateway exposes MCP</h3>
+<p>Two distinct roles — <strong>do not conflate them</strong>:</p>
+<ol type="1">
+<li><strong>Gateway as MCP <em>server</em></strong> (gateway → agents):
+HelixLLM/HelixAgent expose their own capabilities (repomap, memory,
+verifier, CodeGraph proxy, project tools) as MCP tools/resources over
+Streamable HTTP, so any MCP client (Claude Code, Zed, etc.) can consume
+them.</li>
+<li><strong>Gateway as MCP <em>host/client</em></strong> (gateway →
+downstream MCP servers): the gateway launches/connects to downstream MCP
+servers (CodeGraph, OpenDesign, filesystem) and makes their tools
+available to the model it is serving. This is the <strong>“remote MCP
+servers as built-in tools”</strong> pattern OpenAI added to its
+Responses API in 2025 — the server-side model calls MCP tools without
+the client wiring each one. (<a href="https://openai.com/index/new-tools-for-building-agents/">OpenAI —
+new tools for building agents</a>, accessed 2026-07-06)</li>
+</ol>
+<p><strong>Making a <em>local</em> model reliably drive MCP
+tools:</strong> MCP tools are just JSON-Schema-typed functions. The
+reliability problem is the model emitting schema-valid tool calls —
+solved with <strong>constrained / grammar-guided decoding</strong> (see
+§4). The gateway translates each MCP <code>tools/list</code> entry into
+the model’s native tool-format, runs constrained decoding on the
+arguments, then routes the resulting call back over MCP.</p>
+<h3 id="auth-security">1.5 Auth + security</h3>
+<ul>
+<li>MCP aligns authorization with <strong>OAuth 2.0 / OpenID
+Connect</strong>. The <code>2026-07-28</code> RC hardens this: clients
+must validate the <code>iss</code> parameter (RFC 9207), declare OIDC
+<code>application_type</code> at registration, bind credentials to a
+specific authorization server, and clarify refresh-token/scope
+accumulation. (<a href="https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/">MCP
+2026-07-28 RC</a>, accessed 2026-07-06)</li>
+<li>Moving off the SSE two-endpoint model to Streamable HTTP
+<strong>reduces attack surface</strong> (fewer long-lived server- push
+channels, standard request/response gateway inspection). (<a href="https://auth0.com/blog/mcp-streamable-http/">Auth0</a>, accessed
+2026-07-06)</li>
+<li>For the Helix stack: gate the <strong>remote</strong> MCP HTTP
+surface behind the existing auth (JWT/OAuth per stack config); keep
+<strong>stdio</strong> MCP servers (CodeGraph, OpenDesign) local-only
+and never exposed to the network. Secrets live in <code>.env</code>
+(§CONST-042), never in <code>.mcp.json</code>.</li>
+</ul>
+<hr />
+<h2 id="acp-three-different-protocols-share-the-acronym-disambiguation-required">2.
+“ACP” — three different protocols share the acronym (disambiguation
+REQUIRED)</h2>
+<p><strong>This is a genuine naming collision.</strong> Three unrelated
+2025 protocols are all called “ACP” or “A2A.” Pick deliberately.</p>
+<h3 id="agent-client-protocol-acp-zed-industries-the-one-that-fits-an-editoragent-gateway">2.1
+Agent <strong>Client</strong> Protocol (ACP) — Zed Industries —
+<strong>the one that fits an editor/agent gateway</strong></h3>
+<ul>
+<li><strong>What:</strong> “the LSP for AI coding agents” — standardizes
+communication between <strong>code editors (clients)</strong> and
+<strong>coding agents</strong>, so any agent runs inside any supporting
+editor. (<a href="https://zed.dev/acp">Zed ACP</a>; <a href="https://github.com/agentclientprotocol/agent-client-protocol">agentclientprotocol/agent-client-protocol</a>,
+accessed 2026-07-06)</li>
+<li><strong>Created:</strong> August 2025 by Zed Industries,
+co-maintained with JetBrains; now community-governed at
+<code>github.com/agentclientprotocol</code>, Apache-2.0. (<a href="https://blog.promptlayer.com/agent-client-protocol-the-lsp-for-ai-coding-agents/">PromptLayer
+— ACP is the LSP for coding agents</a>, accessed 2026-07-06)</li>
+<li><strong>Wire:</strong> <strong>JSON-RPC 2.0 over stdio.</strong>
+Stable <strong>protocol version <code>1</code></strong> (negotiated via
+<code>protocolVersion</code> at init, independent of SDK release
+version). (<a href="https://github.com/agentclientprotocol/agent-client-protocol">ACP
+repo</a>, accessed 2026-07-06)</li>
+<li><strong>SDKs:</strong> Rust (<code>agent-client-protocol</code>),
+TypeScript (<code>@agentclientprotocol/sdk</code>), Python, Java,
+Kotlin. (<a href="https://github.com/agentclientprotocol/agent-client-protocol">ACP
+repo</a>, accessed 2026-07-06)</li>
+<li><strong>Ecosystem (June 2026):</strong> ~50 agents (Claude Code,
+Gemini CLI, Codex, Copilot, Goose…); editors Zed (native), JetBrains
+(native), Neovim + Emacs (community); OpenCode and Kiro added ACP client
+support. (<a href="https://www.morphllm.com/agent-client-protocol">Morph
+— ACP explained</a>; <a href="https://opencode.ai/docs/acp/">OpenCode
+ACP docs</a>; <a href="https://kiro.dev/docs/cli/acp/">Kiro ACP
+docs</a>, accessed 2026-07-06)</li>
+<li><strong>Relationship to MCP:</strong> complementary, orthogonal
+axis. <strong>MCP = agent↔︎tools/data. ACP = editor↔︎agent.</strong> A
+HelixCode agent can <em>be</em> an ACP agent (so Zed/JetBrains/Neovim
+drive it) while <em>using</em> MCP to reach tools.</li>
+</ul>
+<h3 id="agent-communication-protocol-acp-ibm-research-beeai-enterprise-agentagent">2.2
+Agent <strong>Communication</strong> Protocol (ACP) — IBM Research /
+BeeAI — enterprise agent↔︎agent</h3>
+<ul>
+<li><strong>What:</strong> REST-native, async-first agent-to-agent
+messaging (multipart MIME, streaming), with offline/air- gapped agent
+discovery. Client-server architecture (not peer-to-peer). Central to
+IBM’s <strong>BeeAI</strong> platform. (<a href="https://arxiv.org/html/2505.02279v1">arXiv 2505.02279 — survey of
+interoperability protocols</a>; <a href="https://www.databooth.com.au/posts/acp/">databooth — ACP
+what/why/how</a>, accessed 2026-07-06)</li>
+<li><strong>Fit for the Helix gateway:</strong> low. This is a
+multi-agent orchestration/registry protocol, not an editor or
+tool-exposure surface. Note it exists so the acronym isn’t
+confused.</li>
+</ul>
+<h3 id="a2a-agent-to-agent-protocol-google-peer-to-peer-agent-tasks">2.3
+<strong>A2A</strong> — Agent-to-Agent Protocol — Google — peer-to-peer
+agent tasks</h3>
+<ul>
+<li><strong>What:</strong> peer-to-peer task outsourcing via
+capability-based <strong>Agent Cards</strong>; built on SSE, HTTP(S),
+JSON-RPC, OAuth 2.0. Enterprise multi-agent workflows. (<a href="https://getstream.io/blog/ai-agent-protocols/">getstream — top AI
+agent protocols 2026</a>; <a href="https://arxiv.org/html/2505.02279v1">arXiv 2505.02279</a>,
+accessed 2026-07-06)</li>
+<li><strong>Fit for the Helix gateway:</strong> medium-low for the
+<em>editor recognition</em> goal; relevant later if HelixAgent federates
+to <em>other</em> agents. Its <strong>Agent Card</strong>
+capability-advertisement idea (§5) is worth borrowing.</li>
+</ul>
+<h3 id="verdict-on-which-acp">2.4 Verdict on “which ACP”</h3>
+<blockquote>
+<p><strong>The ACP that matches “so Claude Code / editors auto-recognize
+the agent” is the Zed <em>Agent Client Protocol</em> (§2.1).</strong>
+IBM ACP (§2.2) and Google A2A (§2.3) are agent↔︎agent protocols for a
+different layer. <strong>Confirm with the operator which ACP was
+intended</strong> before building — but the editor-integration wording
+in the task strongly implies Zed ACP. (§11.4.6)</p>
+</blockquote>
+<hr />
+<h2 id="okf-verified">3. “OKF” — verified</h2>
+<p><strong>OKF = Open Knowledge Format</strong>, Google Cloud,
+<strong>v0.1, released 2026-06-12/13</strong> (open-sourced spec +
+reference implementations + sample data). (<a href="https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing/">Google
+Cloud — how OKF can improve data sharing</a>; <a href="https://www.marktechpost.com/2026/06/16/google-cloud-introduces-open-knowledge-format-okf-a-vendor-neutral-markdown-spec-for-giving-ai-agents-curated-context/">MarkTechPost
+— OKF introduced</a>, accessed 2026-07-06)</p>
+<ul>
+<li><strong>What it is:</strong> a <strong>vendor-neutral
+knowledge-packaging format</strong> — a directory of <strong>Markdown
+files with YAML frontmatter</strong> (one required <code>type</code>
+field), with <strong>Markdown links forming a knowledge graph</strong>.
+Shippable in git, readable on GitHub, consumable by any agent,
+<strong>no mandatory SDK</strong>. It formalizes Karpathy’s “LLM wiki”
+pattern. (<a href="https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing/">Google
+Cloud blog</a>; <a href="https://www.marktechpost.com/2026/06/16/google-cloud-introduces-open-knowledge-format-okf-a-vendor-neutral-markdown-spec-for-giving-ai-agents-curated-context/">marktechpost</a>,
+accessed 2026-07-06)</li>
+<li><strong>What it is NOT:</strong> it is <strong>not a
+tool/agent/transport protocol</strong> and <strong>not a competitor to
+or component of MCP</strong>. The Google Cloud announcement does not
+mention MCP. OKF answers “what does curated agent knowledge <em>look
+like</em>”; MCP answers “how does an agent <em>reach</em>
+tools/data.”</li>
+</ul>
+<p><strong>Honest verdict (§11.4.6):</strong> In the task’s framing
+“integrate MCP + ACP + tool-calling + OKF so models expose these
+<strong>capabilities</strong>,” <strong>OKF is
+category-mismatched</strong> — it is not a capability a
+<em>model/gateway</em> advertises or “drives” the way MCP tools or ACP
+sessions are. OKF’s real role in the Helix stack is
+<strong>content</strong>: it is the recommended on-disk format for the
+CodeGraph/RAG/memory knowledge the gateway already serves (and it aligns
+neatly with the constitution’s own markdown-doc discipline). It can be
+<strong>exposed <em>through</em> MCP</strong> (an MCP
+<code>resources</code> server that serves an OKF directory) but it is
+not itself an integration protocol. → <strong>Recommendation:</strong>
+treat OKF as an optional <strong>knowledge-source format for the
+RAG/Skills capability</strong>, not as a fourth protocol to implement.
+<strong>NEEDS-CLARIFICATION</strong> if the operator meant something
+else by “OKF.”</p>
+<hr />
+<h2 id="tool-function-calling-normalization-one-local-model-many-agent-clients">4.
+Tool / function-calling normalization (one local model, many agent
+clients)</h2>
+<h3 id="the-three-surfaces-the-gateway-must-speak">4.1 The three
+surfaces the gateway must speak</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Tool definition shape</th>
+<th>Tool-call return shape</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI Chat Completions / Responses</strong></td>
+<td><code>tools: [{type:&quot;function&quot;, function:{name, parameters:&lt;JSON Schema&gt;}}]</code>;
+<code>strict:true</code> recommended</td>
+<td><code>tool_calls[]</code> with JSON-string
+<code>arguments</code></td>
+</tr>
+<tr>
+<td><strong>Anthropic Messages</strong></td>
+<td><code>tools:[{name, input_schema:&lt;JSON Schema&gt;}]</code></td>
+<td><code>tool_use</code> <strong>content block</strong> with structured
+<code>input</code></td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td><code>tools/list</code> →
+<code>{name, inputSchema:&lt;JSON Schema&gt;}</code></td>
+<td><code>tools/call</code> params</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: <a href="https://developers.openai.com/api/docs/guides/function-calling">OpenAI
+function calling</a>; <a href="https://docs.vllm.ai/en/stable/features/tool_calling/">vLLM tool
+calling</a>, accessed 2026-07-06. Anthropic tool-use shape per the
+vLLM/tooling comparison (“Anthropic passes tools as an array similar to
+OpenAI but with a different return mechanism — content blocks”), same
+access date. <strong>All three are JSON-Schema-centric</strong>, which
+is what makes a single normalization layer feasible.</p>
+<h3 id="local-model-tool-formats-constrained-decoding-the-reliability-engine">4.2
+Local-model tool formats + constrained decoding (the reliability
+engine)</h3>
+<ul>
+<li>Serving engines (vLLM, and equivalents) implement <strong>per-model
+tool parsers</strong>: <code>hermes</code>, <code>llama3_json</code>,
+<code>llama4_pythonic</code>, <code>mistral</code>,
+<code>qwen3_xml</code>, <code>deepseek_v3</code>, <code>granite4</code>,
+<code>kimi_k2</code>, <code>glm45</code>, etc. Qwen2.5/Qwen3 use
+<strong>Hermes-style</strong> tool tokens; the gateway must select the
+right parser per served model. (<a href="https://docs.vllm.ai/en/stable/features/tool_calling/">vLLM tool
+calling</a>; <a href="https://qwen.readthedocs.io/en/latest/framework/function_call.html">Qwen
+function calling</a>, accessed 2026-07-06)</li>
+<li><strong>Constrained / grammar-guided decoding</strong> is the
+anti-bluff mechanism: when the model chooses a tool, token sampling is
+masked to the tool’s <strong>JSON Schema</strong> (integer params can
+only emit integer tokens, etc.), so arguments are schema-valid by
+construction. Without it, engines fall back to regex-extracting tool
+calls from raw text → “arguments may occasionally be malformed or
+violate the schema.” (<a href="https://docs.vllm.ai/en/stable/features/tool_calling/">vLLM tool
+calling</a>, accessed 2026-07-06)</li>
+<li><strong>Schema hygiene for max compatibility (OpenAI strict style,
+portable to all three):</strong>
+<code>additionalProperties: false</code>, mark every field
+<code>required</code>, express optionals as nullable. Apply this
+normalization to <em>every</em> tool schema the gateway emits,
+regardless of origin. (<a href="https://docs.vllm.ai/en/stable/features/tool_calling/">vLLM tool
+calling</a>; <a href="https://developers.openai.com/api/docs/guides/function-calling">OpenAI
+function calling</a>, accessed 2026-07-06)</li>
+</ul>
+<h3 id="normalization-design">4.3 Normalization design</h3>
+<p>Adopt a <strong>canonical internal tool representation</strong> =
+<code>{name, description, json_schema}</code> (JSON Schema is the lingua
+franca). At the edges: - <strong>Ingest</strong> tools from OpenAI-style
+<code>tools</code>, Anthropic <code>tools</code>, and MCP
+<code>tools/list</code> → canonical form. - <strong>Dispatch</strong> to
+the served model via its <strong>native parser</strong>
+(Hermes/Qwen/Llama/etc.) with <strong>constrained decoding against the
+canonical schema</strong>. - <strong>Emit</strong> the result back in
+whichever surface the client used (OpenAI <code>tool_calls</code> /
+Anthropic <code>tool_use</code> / MCP <code>tools/call</code>
+response).</p>
+<p>This is exactly the LocalAI / vLLM pattern generalized: one model,
+schema-constrained, many client dialects. (<a href="https://localai.io/features/openai-functions/">LocalAI OpenAI
+functions</a>, accessed 2026-07-06)</p>
+<hr />
+<h2 id="capability-advertisement-so-claude-code-helixcode-auto-recognize-capabilities">5.
+Capability advertisement so Claude Code + HelixCode auto-recognize
+capabilities</h2>
+<p><strong>Goal:</strong> map the CONST-040 capability flags
+(<strong>MCP / LSP / ACP / Embedding / RAG / Skills / Plugins</strong>)
+onto surfaces clients already poll, sourced from LLMsVerifier
+(CONST-036/040), never hardcoded.</p>
+<p>Three complementary advertisement channels:</p>
+<ol type="1">
+<li><p><strong>OpenAI <code>/v1/models</code> + per-model metadata (for
+HelixCode’s model list &amp; CONST-040 flags).</strong> The base
+<code>/v1/models</code> object is thin, but the ecosystem convention is
+to attach a <strong>capabilities object</strong> to each model entry
+(function-calling / tools / vision / etc.). HelixLLM should extend each
+<code>/v1/models</code> entry with a <code>capabilities</code> block
+carrying the CONST-040 flags sourced from
+<code>VerificationResult</code>, so HelixCode’s
+<code>handleListModels</code> reads them directly. (<a href="https://developers.openai.com/api/docs/models">OpenAI models
+API</a>; <a href="https://developers.openai.com/api/docs/models/compare">OpenAI
+compare models</a>, accessed 2026-07-06) <em>(The precise
+<code>capabilities</code> sub-schema is a HelixLLM-owned extension — no
+single cross-vendor standard exists; <strong>UNCONFIRMED</strong> that
+any external standard dictates its shape, so define it in LLMsVerifier
+and document it.)</em></p></li>
+<li><p><strong>MCP <code>server/discover</code> / capability negotiation
+(for the MCP flag + tool/resource inventory).</strong> The
+<code>2026-07-28</code> RC adds a <code>server/discover</code> method
+letting clients fetch server capabilities up front, and negotiates
+<strong>extensions via reverse-DNS identifiers in an
+<code>extensions</code> map</strong> on client+server capabilities.
+HelixAgent’s MCP server surface should advertise its tool/resource
+inventory here; Claude Code discovers it automatically once the server
+is listed in <code>.mcp.json</code>. (<a href="https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/">MCP
+2026-07-28 RC</a>, accessed 2026-07-06)</p></li>
+<li><p><strong>ACP <code>initialize</code> capability exchange (for the
+ACP/editor flag).</strong> ACP negotiates <code>protocolVersion</code>
+and capabilities at <code>initialize</code>; an editor (Zed/JetBrains)
+that connects to HelixAgent-as-ACP-agent auto-discovers what the agent
+can do. Borrow A2A’s <strong>Agent Card</strong> idea for a static,
+cacheable capability manifest if a discovery endpoint is wanted. (<a href="https://github.com/agentclientprotocol/agent-client-protocol">ACP
+repo</a>; <a href="https://getstream.io/blog/ai-agent-protocols/">A2A
+Agent Cards</a>, accessed 2026-07-06)</p></li>
+</ol>
+<p><strong>Auto-recognition mechanics for Claude Code / HelixCode
+specifically:</strong> - Claude Code recognizes MCP servers via
+<code>.mcp.json</code> (stdio or HTTP). <strong>Fix the rotted entries
+first</strong> — replace CodeGraph’s macOS-absolute path with a
+<code>PATH</code>-resolved command (§11.4.78), re-enable OpenDesign, and
+make paths host-portable — otherwise “advertisement” is moot because the
+client can’t launch the server. - HelixCode’s model list reads
+capability flags from <code>/v1/models</code> (channel 1); its agent
+surface is discovered via MCP (channel 2) and/or ACP (channel 3).</p>
+<hr />
+<h2 id="protocol-comparison-table">6. Protocol comparison table</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Protocol</th>
+<th>Layer / question it answers</th>
+<th>Wire / transport</th>
+<th>Version (2026-07-06)</th>
+<th>Go support</th>
+<th>Fit for Helix gateway</th>
+<th>Role in this integration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MCP</strong> (Anthropic + community)</td>
+<td>agent ↔︎ tools/data/resources</td>
+<td>JSON-RPC 2.0 over <strong>stdio</strong> or <strong>Streamable HTTP
+(SSE)</strong>; stateless in <code>2026-07-28</code></td>
+<td>stable <code>2025-11-25</code>; RC <code>2026-07-28</code></td>
+<td><strong>Official <code>modelcontextprotocol/go-sdk</code> (w/
+Google), v1.6.1</strong>; 3rd-party <code>mark3labs/mcp-go</code></td>
+<td><strong>PRIMARY</strong></td>
+<td>Gateway is both MCP server (expose Helix tools) and MCP host
+(consume CodeGraph/OpenDesign)</td>
+</tr>
+<tr>
+<td><strong>ACP — Agent <em>Client</em> Protocol</strong>
+(Zed/JetBrains)</td>
+<td><strong>editor ↔︎ agent</strong></td>
+<td>JSON-RPC 2.0 over <strong>stdio</strong></td>
+<td>protocol <code>1</code></td>
+<td>Rust/TS/Py/Java/Kotlin SDKs; <strong>no first-party Go SDK found
+(UNCONFIRMED)</strong></td>
+<td><strong>SECONDARY (editor recognition)</strong></td>
+<td>HelixAgent <em>is</em> an ACP agent → Zed/JetBrains/Neovim drive
+HelixCode</td>
+</tr>
+<tr>
+<td><strong>ACP — Agent <em>Communication</em> Protocol</strong>
+(IBM/BeeAI)</td>
+<td>agent ↔︎ agent (enterprise)</td>
+<td>REST, async, multipart MIME</td>
+<td>2025 (BeeAI)</td>
+<td>n/a</td>
+<td>LOW</td>
+<td>Note only; avoid acronym confusion</td>
+</tr>
+<tr>
+<td><strong>A2A</strong> (Google)</td>
+<td>agent ↔︎ agent (peer task outsourcing)</td>
+<td>SSE + HTTP(S) + JSON-RPC + OAuth2; <strong>Agent Cards</strong></td>
+<td>2025</td>
+<td>Google-backed SDKs</td>
+<td>LOW-MED (future federation)</td>
+<td>Borrow Agent-Card capability-manifest idea</td>
+</tr>
+<tr>
+<td><strong>OKF — Open Knowledge Format</strong> (Google Cloud)</td>
+<td><strong>knowledge packaging</strong> (not a protocol)</td>
+<td>Markdown + YAML files in git</td>
+<td><strong>v0.1 (2026-06-12)</strong></td>
+<td>format only, no SDK needed</td>
+<td>CONTENT, not protocol</td>
+<td>On-disk format for RAG/Skills knowledge, servable via MCP
+<code>resources</code></td>
+</tr>
+<tr>
+<td>Tool/function calling (OpenAI/Anthropic/local)</td>
+<td>model ↔︎ tool invocation</td>
+<td>JSON-Schema tool defs; constrained decoding</td>
+<td>ongoing</td>
+<td>vLLM-class parsers (hermes/qwen/…)</td>
+<td>PRIMARY (enabler)</td>
+<td>Canonical JSON-Schema normalization + grammar-constrained args</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="recommended-integration-design-for-the-helix-gateway">7.
+Recommended integration design for the Helix gateway</h2>
+<p><strong>Layering (bottom→top):</strong></p>
+<ol type="1">
+<li><p><strong>Canonical tool layer (JSON Schema).</strong> Internal
+<code>{name, description, json_schema}</code> representation. Normalize
+every tool schema to OpenAI-strict style
+(<code>additionalProperties:false</code>, all-required, nullable
+optionals). Enforce <strong>constrained decoding</strong> for local
+models against these schemas — this is the anti-bluff guarantee that a
+local model’s tool calls are schema-valid.</p></li>
+<li><p><strong>MCP layer (PRIMARY) — Go, official SDK.</strong></p>
+<ul>
+<li><em>Server role:</em> HelixAgent/HelixLLM expose Helix
+tools+resources over <strong>Streamable HTTP</strong> (stateless-first,
+forward-compatible with <code>2026-07-28</code>) and over
+<strong>stdio</strong> for local clients. Advertise via
+<code>server/discover</code>.</li>
+<li><em>Host role:</em> the gateway launches downstream MCP servers
+(CodeGraph, OpenDesign, filesystem) and folds their
+<code>tools/list</code> into the canonical tool layer, so the served
+model can call them.</li>
+<li>Use <code>github.com/modelcontextprotocol/go-sdk</code> (pin the
+version; <strong>verify Streamable-HTTP server transport presence in the
+package docs before committing</strong> — §1.3). Keep
+<code>mark3labs/mcp-go</code> as a documented fallback.</li>
+</ul></li>
+<li><p><strong>ACP layer (SECONDARY, editor recognition) — Zed Agent
+Client Protocol.</strong></p>
+<ul>
+<li>Make HelixAgent implement ACP <strong>protocol v1</strong> (JSON-RPC
+over stdio) so Zed / JetBrains / Neovim / OpenCode / Kiro discover and
+drive it as a native external agent.</li>
+<li><strong>Go SDK gap:</strong> no first-party Go ACP SDK was found
+(<strong>UNCONFIRMED</strong>); options are (a) implement the small ACP
+v1 JSON-RPC surface directly in Go (it is LSP-sized), or (b) bridge via
+the TS/Rust SDK. Prefer (a) for a Go stack; extend the catalogue
+submodule rather than vendoring (§11.4.74).</li>
+</ul></li>
+<li><p><strong>Capability advertisement layer (CONST-040).</strong>
+Source MCP/LSP/ACP/Embedding/RAG/Skills/Plugins flags from LLMsVerifier
+<code>VerificationResult</code>; surface them on (i)
+<code>/v1/models[].capabilities</code> for HelixCode’s model list, (ii)
+MCP <code>server/discover</code>, (iii) ACP <code>initialize</code>. No
+hardcoded flags (CONST-036/040).</p></li>
+<li><p><strong>OKF as content, not protocol.</strong> Store curated
+agent knowledge (schemas, runbooks, metrics) as an OKF directory; serve
+it through an MCP <code>resources</code> server so it lands in the
+RAG/Skills capability. Do <strong>not</strong> model OKF as a fourth
+protocol.</p></li>
+</ol>
+<p><strong>Immediate hygiene fixes (prerequisite to any advertisement
+working):</strong> repair <code>.mcp.json</code> — host-portable
+<code>PATH</code>-resolved CodeGraph command (drop macOS-absolute path),
+re-enable OpenDesign, keep stdio MCP servers local-only, secrets in
+<code>.env</code>.</p>
+<hr />
+<h2 id="top-risks">8. Top risks</h2>
+<ol type="1">
+<li><p><strong>Go SDK feature/version drift (MCP + ACP).</strong> The
+MCP Go SDK’s exact minor-version→feature map (esp. Streamable-HTTP
+server transport and stable OAuth) is <strong>UNCONFIRMED</strong> from
+primary release notes at access time, and <strong>no first-party Go ACP
+SDK was found</strong>. → Pin versions, read
+<code>go-sdk/releases</code> + <code>go-sdk/mcp</code> package docs
+before wiring, and budget for a hand-rolled Go ACP v1 surface.</p></li>
+<li><p><strong><code>2026-07-28</code> statelessness churn.</strong> The
+RC removes the <code>initialize</code> handshake and
+<code>Mcp-Session-Id</code> and moves to explicit handles. Building
+against <code>2025-11-25</code> session semantics risks a near-term
+rewrite. → Design the HTTP gateway stateless-first now; treat sessions
+as application handles, not transport state.</p></li>
+<li><p><strong>“ACP” / “OKF” category errors.</strong> Three protocols
+share “ACP” (Zed editor-agent vs IBM agent-agent vs Google A2A), and
+“OKF” is a <em>knowledge format</em>, not a capability/protocol.
+Building the wrong ACP, or treating OKF as a protocol to “expose,”
+wastes a cycle. → Operator confirmation on intended ACP;
+NEEDS-CLARIFICATION on OKF’s intended role (§11.4.6).</p></li>
+</ol>
+<p><em>(Secondary risk: local-model tool-format fragmentation — each
+model needs the correct parser (hermes/qwen/…) and constrained decoding,
+or tool calls silently malform. Mitigated by the canonical-schema +
+grammar layer in §7.1.)</em></p>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>MCP 2026-07-28 RC —
+https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/</li>
+<li>MCP Transports spec (2025-03-26) —
+https://modelcontextprotocol.io/specification/2025-03-26/basic/transports</li>
+<li>Auth0 — MCP Streamable HTTP / off-SSE —
+https://auth0.com/blog/mcp-streamable-http/</li>
+<li>Official Go MCP SDK repo —
+https://github.com/modelcontextprotocol/go-sdk</li>
+<li>Go MCP SDK package docs —
+https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp</li>
+<li>socket.dev — official Go SDK overview —
+https://socket.dev/blog/official-go-sdk-for-mcp</li>
+<li>mark3labs/mcp-go (third-party) —
+https://github.com/mark3labs/mcp-go</li>
+<li>Zed Agent Client Protocol — https://zed.dev/acp</li>
+<li>ACP repo (community governance) —
+https://github.com/agentclientprotocol/agent-client-protocol</li>
+<li>PromptLayer — ACP = LSP for coding agents —
+https://blog.promptlayer.com/agent-client-protocol-the-lsp-for-ai-coding-agents/</li>
+<li>Morph — ACP explained (ACP vs MCP) —
+https://www.morphllm.com/agent-client-protocol</li>
+<li>OpenCode ACP docs — https://opencode.ai/docs/acp/</li>
+<li>Kiro ACP docs — https://kiro.dev/docs/cli/acp/</li>
+<li>arXiv 2505.02279 — survey of MCP/ACP/A2A/ANP —
+https://arxiv.org/html/2505.02279v1</li>
+<li>databooth — IBM ACP what/why/how —
+https://www.databooth.com.au/posts/acp/</li>
+<li>getstream — top AI agent protocols 2026 (A2A/Agent Cards) —
+https://getstream.io/blog/ai-agent-protocols/</li>
+<li>Google Cloud — Open Knowledge Format —
+https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing/</li>
+<li>MarkTechPost — OKF introduction —
+https://www.marktechpost.com/2026/06/16/google-cloud-introduces-open-knowledge-format-okf-a-vendor-neutral-markdown-spec-for-giving-ai-agents-curated-context/</li>
+<li>vLLM — Tool Calling (parsers + constrained decoding) —
+https://docs.vllm.ai/en/stable/features/tool_calling/</li>
+<li>Qwen — Function Calling —
+https://qwen.readthedocs.io/en/latest/framework/function_call.html</li>
+<li>LocalAI — OpenAI Functions/Tools —
+https://localai.io/features/openai-functions/</li>
+<li>OpenAI — Function calling guide —
+https://developers.openai.com/api/docs/guides/function-calling</li>
+<li>OpenAI — Models API —
+https://developers.openai.com/api/docs/models</li>
+<li>OpenAI — New tools for building agents (remote MCP in Responses) —
+https://openai.com/index/new-tools-for-building-agents/</li>
+</ul>
+<p><strong>Confidence notes (§11.4.6):</strong> MCP spec/versioning, Zed
+ACP identity, and OKF identity are <strong>well-corroborated by primary
+sources</strong>. Marked <strong>UNCONFIRMED</strong>: exact Go MCP SDK
+minor-version→feature mapping, Go MCP SDK Streamable-HTTP
+server-transport presence, existence of a first-party Go ACP SDK. Marked
+<strong>NEEDS-CLARIFICATION</strong>: which “ACP” the operator intends
+(Zed strongly implied) and OKF’s intended role (recommended:
+knowledge-content format, not a protocol).</p>
+</body>
+</html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>03_translation</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">03_translation</h1>
+</header>
+<h1 id="local-cloud-professional-machine-translation-for-helixllm">Local
++ Cloud Professional Machine Translation for HelixLLM</h1>
+<p><strong>Scope:</strong> Run professional-grade machine translation
+LOCALLY on a single <strong>RTX 5090 (32 GB, Blackwell, sm_120),
+Linux</strong>, inside <strong>rootless Podman</strong> containers, to
+give the local LLM system (“HelixLLM”) strong translation capability —
+plus a unified API that also fronts the major cloud translation
+providers.</p>
+<p><strong>Author:</strong> Deep-research subagent (T1) ·
+<strong>Date:</strong> 2026-07-06 · <strong>Constitution:</strong>
+§11.4.99 latest-source cross-reference, §11.4.161 rootless-container,
+§11.4.76 containers-submodule, §11.4.77 re-obtain mechanism.</p>
+<blockquote>
+<p><strong>Evidence discipline (§11.4.6):</strong> every recommendation
+is cited with a URL + access date below. Claims that could not be pinned
+to a primary/authoritative 2025–2026 source are marked
+<strong>UNCONFIRMED</strong>. Automatic MT metrics (COMET/BLEU) are
+treated as <em>directional</em>, not ground truth — see the “COMET
+contamination” caveat in §1.</p>
+</blockquote>
+<hr />
+<h2 id="tldr-recommended-local-stack">0. TL;DR — Recommended local
+stack</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Choice</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Default workhorse NMT</strong> (200 langs)</td>
+<td><strong>NLLB-200-3.3B</strong>, served via <strong>CTranslate2
+int8</strong></td>
+<td>Best quality-per-VRAM for broad coverage; ~3–4 GB VRAM int8; 3–4×
+faster than FP32. Dedicated NMT, deterministic, cheap.</td>
+</tr>
+<tr>
+<td><strong>Quality tier</strong> (high-resource pairs, doc-level,
+instruction/context-aware)</td>
+<td><strong>TOWER+ 9B</strong> (Unbabel, open-weight) via
+<strong>vLLM</strong>, or <strong>Gemma-3-27B / Qwen</strong> routed to
+HelixLLM</td>
+<td>XCOMET-XXL 84.38 over 24 pairs; instruction-following + terminology
+adherence; ~18 GB FP16 fits the 5090.</td>
+</tr>
+<tr>
+<td><strong>Long-tail coverage</strong> (400+ langs)</td>
+<td><strong>MADLAD-400-3B/7B/10B</strong> via CTranslate2 int8</td>
+<td>419 languages; strong on niche/legal domains; fills NLLB’s
+gaps.</td>
+</tr>
+<tr>
+<td><strong>Speech / multimodal</strong> (optional)</td>
+<td><strong>SeamlessM4T v2 Large</strong></td>
+<td>Text + speech (S2T/S2S) if HelixLLM needs audio translation.</td>
+</tr>
+<tr>
+<td><strong>Serving front door</strong></td>
+<td><strong>LibreTranslate-compatible <code>/translate</code></strong> +
+custom <code>/translate/document</code> + router to HelixLLM</td>
+<td>Drop-in client compatibility; format-aware + glossary layer on
+top.</td>
+</tr>
+<tr>
+<td><strong>Cloud fallback / parity</strong></td>
+<td>Unified adapter over <strong>DeepL, Google Cloud Translation v3,
+Azure Translator, Amazon Translate</strong></td>
+<td>Same request/response shape; per-request engine selection +
+failover.</td>
+</tr>
+</tbody>
+</table>
+<p>The RTX 5090’s 32 GB comfortably co-hosts the CTranslate2 NMT tier
+(single-digit GB) <strong>and</strong> one 9B–27B LLM tier
+simultaneously.</p>
+<hr />
+<h2 id="local-translation-models-landscape-20252026">1. Local
+translation models — landscape (2025–2026)</h2>
+<h3 id="comparison-table">1.1 Comparison table</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>Type</th>
+<th>Languages</th>
+<th>Quality (headline)</th>
+<th>VRAM (approx.)</th>
+<th>Best serving</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NLLB-200 3.3B</strong> (Meta)</td>
+<td>Dedicated NMT (enc-dec)</td>
+<td>200</td>
+<td>+44% avg BLEU vs prior SoTA; low-resource +70%; fine-tuned 53.13
+BLEU EN→FR medical (TICO-19) beat Llama-3.1-405B 1-shot</td>
+<td>~8 GB FP16 / <strong>~3–4 GB int8</strong></td>
+<td><strong>CTranslate2</strong></td>
+<td>The reference broad-coverage NMT. Distilled-1.3B ~2–3 GB.</td>
+</tr>
+<tr>
+<td><strong>NLLB-200 1.3B distilled</strong></td>
+<td>Dedicated NMT</td>
+<td>200</td>
+<td>“Sweet spot” quality/resource</td>
+<td>~2 GB int8</td>
+<td>CTranslate2</td>
+<td>Fastest good-quality option; matches/beats Google on many
+African/Asian langs.</td>
+</tr>
+<tr>
+<td><strong>MADLAD-400 3B/7B/10B</strong> (Google)</td>
+<td>Dedicated NMT (T5)</td>
+<td><strong>419</strong></td>
+<td>XCOMET legal (SwiLTra): 3B 86.82 / 7B 87.40 / 10B 86.65 — beat GPT-4
+on that benchmark</td>
+<td>3B ~7 GB FP16 (int8 ~3–4 GB); 10B fits 5090</td>
+<td>CTranslate2 (int8; <strong>no 4-bit</strong>)</td>
+<td>Largest language coverage; strong niche domains; slightly below NLLB
+on common pairs.</td>
+</tr>
+<tr>
+<td><strong>SeamlessM4T v2 Large</strong> (Meta)</td>
+<td>Multimodal (text+speech)</td>
+<td>~200 text / 100 speech</td>
+<td>Matches NLLB-3.3B into-English, +1 chrF++ from-English on FLORES;
++20% BLEU speech</td>
+<td>~6 GB</td>
+<td>HF Transformers</td>
+<td>Use only if speech translation is needed; text-only is not its
+edge.</td>
+</tr>
+<tr>
+<td><strong>TOWER+ 2B/9B/72B</strong> (Unbabel, open-weight)</td>
+<td>Translation-tuned LLM</td>
+<td>27 langs / 47 pairs</td>
+<td>9B XCOMET-XXL 84.38 (24 pairs); 72B 83.29 WMT24++; matches/beats
+GPT-4o-1120, Claude-3.7</td>
+<td>2B ~5 GB / <strong>9B ~18 GB</strong> / 72B (multi-GPU)</td>
+<td><strong>vLLM</strong></td>
+<td>Instruction-following + translation in one; open weights on HF. Best
+“professional” LLM-MT you can self-host.</td>
+</tr>
+<tr>
+<td><strong>X-ALMA</strong> (ALMA family)</td>
+<td>Translation LLM w/ plug-in modules</td>
+<td>~50 (grouped)</td>
+<td>ICLR 2025; “quality translation at scale” via language-group
+modules</td>
+<td>13B-class ~ FP16 26 GB / int4 ~8 GB</td>
+<td>vLLM / llama.cpp</td>
+<td>Modular per-language-group adapters; good when you need many pairs
+from one base.</td>
+</tr>
+<tr>
+<td><strong>Gemma-3-27B</strong> (Google)</td>
+<td>General multilingual LLM</td>
+<td>140+</td>
+<td>WMT24++ COMET22 ~83.1 (27B) per TranslateGemma report
+(<strong>UNCONFIRMED</strong> exact number)</td>
+<td>~18 GB int4 / ~54 GB FP16</td>
+<td>vLLM / llama.cpp</td>
+<td>Good context-aware/doc translation; pair with HelixLLM prompt.</td>
+</tr>
+<tr>
+<td><strong>Qwen 2.5/3 (7B–32B)</strong></td>
+<td>General multilingual LLM</td>
+<td>29+</td>
+<td>32B ~95% of cloud quality ZH↔︎EN; natural/idiomatic; JA/KO
+80–90%</td>
+<td>7B ~5 GB / 32B ~20 GB</td>
+<td>vLLM / Ollama</td>
+<td>Strongest for CJK; context-aware.</td>
+</tr>
+<tr>
+<td><strong>Opus-MT</strong> (Helsinki)</td>
+<td>Per-pair NMT</td>
+<td>1 pair/model</td>
+<td>Fast, lightweight</td>
+<td>~300 MB/direction</td>
+<td>CTranslate2</td>
+<td>Ultra-fast single-pair micro-services; long tail of pairs.</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: NLLB [Meta arXiv 2207.04672], MADLAD [arXiv 2309.04662],
+SeamlessM4T [arXiv 2308.11596], TOWER+ [Unbabel/MarkTechPost
+2025-06-27], CTranslate2 [OpenNMT], InsiderLLM guide, WMT/leaderboard
+aggregator — all in the Sources footer.</p>
+<h3 id="which-give-truly-professional-quality-for-what">1.2 Which give
+<em>truly professional</em> quality, for what</h3>
+<ul>
+<li><strong>High-resource European pairs
+(EN↔︎DE/FR/ES/IT/PT/NL…):</strong> TOWER+ 9B, DeepL-class quality;
+NLLB-3.3B is very strong and far cheaper. Frontier LLMs
+(Gemini/GPT/Claude) still edge ahead on <em>human</em> evaluation for
+general content, but the gap is small and closed by TOWER+ for
+translation-specific work.</li>
+<li><strong>CJK (ZH/JA/KO):</strong> Qwen (32B) or TOWER+ 9B;
+GPT-4o-class open models beat DeepL on Asian pairs per BLEU (EN-ZH
+GPT-4o 57.4 vs DeepL 51.3; EN-JA 54.8 vs 49.1).</li>
+<li><strong>Low-resource / long tail (African, South/SE-Asian,
+indigenous):</strong> NLLB-200-3.3B and MADLAD-400 are the professional
+choice — they <em>match or beat Google</em> on many such languages and
+cover pairs cloud APIs don’t. MADLAD extends to 419 langs.</li>
+<li><strong>Legal/medical/technical with terminology control:</strong>
+MADLAD-400 (legal XCOMET leader), or TOWER+/Gemma with a
+glossary-constrained prompt + a terminology post-check.</li>
+<li><strong>Indian languages:</strong> consider
+<strong>IndicTrans2</strong> (22 scheduled Indian languages) as a
+specialist supplement [arXiv 2305.16307].</li>
+</ul>
+<h3 id="critical-caveat-dont-trust-cometbleu-blindly-11.4.107-analogue">1.3
+Critical caveat — don’t trust COMET/BLEU blindly (§11.4.107
+analogue)</h3>
+<p>The 2026 MT leaderboard aggregator explicitly warns <strong>“COMET
+now has a contamination problem,”</strong> and <strong>Tower-v2-70B
+ranked #1 on COMET across all 11 WMT24 pairs but lost to Claude-3.5 on 9
+of them under human evaluation</strong> — a textbook metric-gaming case.
+<strong>Operative rule for HelixLLM:</strong> treat automatic scores as
+a <em>screen</em>, gate professional claims on human/MQM spot-checks or
+an LLM-as-judge (e.g., CometKiwi reference-free QE + a HelixLLM
+adequacy/fluency rubric), and never ship a “professional quality” claim
+on COMET alone.</p>
+<hr />
+<h2 id="serving-how-to-expose-translation-behind-a-clean-local-api">2.
+Serving — how to expose translation behind a clean local API</h2>
+<h3 id="ctranslate2-is-the-efficiency-pick-for-nmt-confirmed">2.1
+CTranslate2 is the efficiency pick for NMT —
+<strong>CONFIRMED</strong></h3>
+<p>CTranslate2 is a purpose-built inference engine for Transformer
+models (supports NLLB, MADLAD/T5, Opus-MT, M2M-100). Verified benefits:
+- <strong>int8 quantization → ~3–4× faster inference at half the
+memory</strong> vs FP32 (measured ~3.53× vs float32); <strong>NLLB-200
+handles 200 languages in ~3 GB VRAM</strong> at int8. - Ready-made
+converted weights exist (e.g.,
+<code>OpenNMT/nllb-200-3.3B-ct2-int8</code>). -
+<strong>Limitation:</strong> CTranslate2 supports int8/float16/int16 but
+<strong>not 4-bit</strong> — for 4-bit you’d move that model to
+llama.cpp/vLLM. For NMT this doesn’t matter (int8 is the sweet
+spot).</p>
+<p>→ <strong>Use CTranslate2 for the dedicated NMT tier (NLLB, MADLAD,
+Opus-MT).</strong> Use <strong>vLLM</strong> for the LLM tier
+(TOWER+/Gemma/Qwen) because it gives paged-attention throughput and
+OpenAI-compatible serving.</p>
+<h3 id="blackwell-rtx-5090-serving-gotchas-11.4.99">2.2 Blackwell / RTX
+5090 serving gotchas (§11.4.99)</h3>
+<ul>
+<li><strong>vLLM on RTX 5090 needs CUDA 12.8+ and a recent PyTorch
+(torch 2.9.0 cu128 confirmed working; torch ≥2.6/cu128
+minimum).</strong> Stock/older vLLM wheels fail because PyTorch shipped
+only sm_50–sm_90; sm_120 (Blackwell) requires the newer stack — build
+from source or use a cu128 image.</li>
+<li><strong>FlashAttention 3 does not work on Blackwell yet — set
+<code>VLLM_FLASH_ATTN_VERSION=2</code>.</strong></li>
+<li>Reported throughput: ~140 tok/s Qwen3-14B-AWQ; GPT-OSS-20B MXFP4
+319–424 tok/s <span class="citation" data-cites="8k">@8k</span>.
+(Directional; <strong>UNCONFIRMED</strong> for our exact models.)</li>
+<li><strong>CTranslate2</strong> must also be built/installed against a
+CUDA 12.8 runtime for Blackwell; verify GPU int8 kernels load (fall back
+to CPU int8 is possible but slow). <strong>UNCONFIRMED</strong> whether
+prebuilt CT2 wheels ship sm_120 kernels as of 2026-07 — pin the build in
+the container and test <code>nvidia-smi</code>-visible GPU inference at
+image-build time.</li>
+</ul>
+<h3 id="api-shape-libretranslate-compatible-extensions">2.3 API shape
+(LibreTranslate-compatible + extensions)</h3>
+<p><strong>LibreTranslate</strong> is the reference self-hosted OSS API
+(Argos Translate backend): <code>POST /translate</code> with
+<code>{q, source, target, format}</code>, plus <code>/detect</code>,
+<code>/languages</code>, HTML translation, batch, API keys, Prometheus
+metrics, GPU acceleration. Adopt its request/response contract so any
+LibreTranslate client works unchanged, then extend:</p>
+<pre><code>POST /translate                     # LibreTranslate-compatible (q, source, target, format=text|html)
+POST /translate/batch               # array in, array out
+POST /translate/document            # markup/format-aware (md/html/xml/docx), glossary_id, engine
+POST /translate/context             # route to HelixLLM for context/document-aware translation
+GET  /languages                     # union of all engines&#39; supported pairs
+GET  /engines                       # nllb | madlad | tower | gemma | deepl | google | azure | aws
+POST /glossaries                    # CRUD terminology
+GET  /detect
+GET  /healthz  /metrics             # Prometheus</code></pre>
+<p><strong>Routing policy (server-side):</strong> 1. <code>engine</code>
+explicit → use it. 2. else pick by <code>(source,target)</code> + domain
++ latency SLA: dedicated NMT (CT2) for broad/low-resource + throughput;
+TOWER+/HelixLLM for high-resource + doc-level + terminology; cloud only
+on explicit request or local-failure failover. 3. Optional <strong>QE
+gate</strong>: run CometKiwi/HelixLLM judge; if score &lt; threshold,
+escalate to the quality tier or a cloud engine, log the escalation as
+captured evidence.</p>
+<hr />
+<h2 id="documentformat-aware-translation-glossaryterminology">3.
+Document/format-aware translation + glossary/terminology</h2>
+<p><strong>Never translate raw markup with an LLM and hope.</strong> Use
+tokenize-translate-restore:</p>
+<ul>
+<li><strong>Markdown/code/LaTeX/links:</strong> protect code blocks,
+inline code, LaTeX, links, image paths, HTML/JSX tags by replacing them
+with unique placeholder tokens, translate the prose only, then restore.
+OSS reference: <strong><code>md-translator</code></strong> (tokenizes
+those constructs, 25+ engines). For PDFs, <strong>BabelDOC</strong> does
+layout-preserving translation via an intermediate representation with
+terminology-constraint + math placeholders.</li>
+<li><strong>HTML/XML:</strong> use real tag handling — DeepL exposes
+<code>tag_handling=html|xml</code>, <code>ignore_tags</code>,
+<code>outline_detection</code>; emulate the same on the local side
+(parse → protect non-translatable subtrees → translate text nodes →
+reassemble). For placeholder tags (Mustache/ICU <code>{name}</code>),
+pre/post-process to XML placeholders with unique IDs so the engine
+preserves them.</li>
+<li><strong>DOCX/PPTX/XLSX:</strong> extract runs, translate text,
+re-inject (or front a library); preserve inline formatting runs as
+placeholders.</li>
+</ul>
+<p><strong>Glossary/terminology control:</strong> - <strong>Dedicated
+NMT (NLLB/MADLAD via CT2):</strong> constrained decoding /
+do-not-translate lists + a deterministic terminology post-substitution
+pass (glossary as source→target token map, applied after protecting
+placeholders). - <strong>LLM tier (TOWER+/Gemma/HelixLLM):</strong>
+inject the glossary into the instruction (“Use these translations for
+the following terms: …”) — TOWER+ is explicitly instruction-following,
+which is its differentiator. Follow with a terminology-adherence check
+(regex/fuzzy match on required target terms); on miss, re-prompt or fall
+back. - Store glossaries per (client, domain, langpair); expose CRUD via
+<code>/glossaries</code>. Map to each cloud engine’s native glossary at
+adapter level (§4).</p>
+<hr />
+<h2 id="cloud-provider-coverage-unified-adapter">4. Cloud provider
+coverage — unified adapter</h2>
+<p>All four are <code>text[] → text[]</code> with per-engine auth,
+glossary, and formality knobs. Normalize to the internal
+<code>/translate</code> contract; keep secrets in <code>.env</code>
+(§CONST-042, mode 0600), never hardcoded.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Endpoint / auth</th>
+<th>Glossary</th>
+<th>Formality / extras</th>
+<th>Price (approx., per M chars)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DeepL</strong></td>
+<td><code>POST https://api.deepl.com/v2/translate</code>; header
+<code>Authorization: DeepL-Auth-Key &lt;key&gt;</code>; body
+<code>text[]</code>, <code>target_lang</code>, <code>glossary_id</code>,
+<code>tag_handling</code></td>
+<td><strong>glossary_id</strong> (declension/gender/tense-aware —
+best-in-class)</td>
+<td><code>formality</code>, <code>ignore_tags</code>, HTML/XML
+handling</td>
+<td>~$25</td>
+</tr>
+<tr>
+<td><strong>Google Cloud Translation v3</strong></td>
+<td><code>projects.locations.translateText</code> (REST/gRPC),
+OAuth/service-account</td>
+<td><strong>glossaryConfig</strong> (CSV/TSV term pairs)</td>
+<td>model selection (NMT/LLM), 130+ langs</td>
+<td>~$20</td>
+</tr>
+<tr>
+<td><strong>Azure Translator</strong></td>
+<td><code>POST {endpoint}/translate?api-version=3.0</code> (GA) or new
+preview <code>2025-05-01</code>; header
+<code>Ocp-Apim-Subscription-Key</code> (+region)</td>
+<td>Custom Translator terminology models</td>
+<td>profanity, transliteration, dictionary lookup</td>
+<td>~$10 (cheapest raw)</td>
+</tr>
+<tr>
+<td><strong>Amazon Translate</strong></td>
+<td>AWS SDK <code>TranslateText</code> / <code>TranslateDocument</code>,
+SigV4</td>
+<td><strong>custom terminology</strong></td>
+<td>formality, profanity masking, 75 langs</td>
+<td>~$15</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Adapter design:</strong> one interface
+<code>Translate(ctx, texts, src, tgt, opts) → ([]string, meta)</code>;
+per-provider structs implement it; a factory selects by
+<code>engine</code>. Map internal glossary → provider-native glossary at
+upload time (cache glossary IDs). Implement retry/backoff, rate-limit
+handling, and per-request cost accounting. Prefer batch endpoints.
+(Verify each provider’s <em>latest</em> request shape at build time per
+§11.4.99 — DeepL and Azure both revised APIs in 2025.)</p>
+<hr />
+<h2 id="rootless-podman-deployment-11.4.161-11.4.76-11.4.77">5. Rootless
+Podman deployment (§11.4.161, §11.4.76, §11.4.77)</h2>
+<h3 id="gpu-access-under-rootless-podman-cdi-not---gpus">5.1 GPU access
+under rootless Podman — CDI, not <code>--gpus</code></h3>
+<p>Use the <strong>NVIDIA Container Device Interface (CDI)</strong>. As
+of NVIDIA Container Toolkit <strong>v1.18.0</strong>,
+<code>nvidia-cdi-refresh</code> (systemd) auto-generates
+<code>/var/run/cdi/nvidia.yaml</code>. For rootless, generate in user
+space:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one-time host prep (toolkit installed)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/.config/cdi</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi generate <span class="at">--output</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi/nvidia.yaml</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># run (rootless)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> <span class="at">--cdi-spec-dir</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi run <span class="at">--rm</span> <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> nvidia.com/gpu=all <span class="at">--security-opt</span><span class="op">=</span>label=disable <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">&lt;</span>image<span class="op">&gt;</span> nvidia-smi <span class="at">-L</span></span></code></pre></div>
+<p>Known rootless friction: CDI historically worked in privileged but
+not rootless on some setups (podman#17539); on modern toolkit (≥1.16,
+ideally ≥1.18) + Podman ≥4.1 (CDI-in-<code>--device</code>) it works.
+Verify at image-build/boot with <code>nvidia-smi -L</code> (positive
+evidence, §11.4.5).</p>
+<h3 id="images-volumes">5.2 Images &amp; volumes</h3>
+<ul>
+<li><strong>Base image:</strong> CUDA <strong>12.8</strong> runtime
+(Blackwell) — e.g., an <code>nvidia/cuda:12.8.x-runtime</code>
+derivative; install CTranslate2 (CUDA build) + vLLM (torch 2.9 cu128) +
+FastAPI service. Two images recommended: <code>helix-mt-nmt</code>
+(CTranslate2) and <code>helix-mt-llm</code> (vLLM), composed via the
+<strong>containers submodule</strong>
+<code>pkg/boot</code>/<code>pkg/compose</code>/<code>pkg/health</code>
+(§11.4.76) — no ad-hoc <code>podman run</code> in workflows.</li>
+<li><strong>Model volumes:</strong> mount a host model dir
+(<code>-v $HOME/helix/models:/models:Z</code>); models are large build
+derivatives → <strong>git-ignored</strong> (§CONST-053) with a
+<strong>§11.4.77 re-obtain mechanism</strong>: a
+<code>scripts/fetch_models.sh</code> that pulls from Hugging Face
+(<code>nllb-200-3.3B-ct2-int8</code>, MADLAD ct2, TOWER+ 9B) with pinned
+revisions + SHA256, plus a
+<code>.gitignore-meta/&lt;slug&gt;.yaml</code> declaring source URL,
+disk budget, and integrity hash. First-run bootstrap in
+<code>scripts/setup.sh</code>; a pre-build gate checks presence or a
+<code>.regenerated/&lt;slug&gt;.ok</code> stamp.</li>
+<li><strong>Rootless niceties:</strong> run as non-root UID
+in-container; use <code>:Z</code> SELinux relabel on mounts; keep
+<code>--security-opt=label=disable</code> only if SELinux blocks the CDI
+device (prefer proper labeling).</li>
+</ul>
+<hr />
+<h2 id="recommended-concrete-build">6. Recommended concrete build</h2>
+<ol type="1">
+<li><code>helix-mt-nmt</code> container: FastAPI + CTranslate2, serving
+<strong>NLLB-200-3.3B int8</strong> (default) + <strong>MADLAD-400
+int8</strong> (long tail) + Opus-MT micro-pairs.
+LibreTranslate-compatible <code>/translate</code>.</li>
+<li><code>helix-mt-llm</code> container: vLLM (cu128, FA v2) serving
+<strong>TOWER+ 9B</strong> for high-resource/doc/terminology; exposes
+OpenAI-compatible + is also reachable by the router as an “engine.”</li>
+<li><code>helix-mt-gateway</code>: the router +
+<code>/translate/document</code> (tokenize-restore) +
+<code>/glossaries</code> + QE gate + <strong>cloud adapters</strong>
+(DeepL/Google/Azure/AWS) behind the same contract.</li>
+<li>HelixLLM integration: <code>/translate/context</code> hands document
++ glossary + surrounding context to HelixLLM for context-aware
+translation and code-comment/string-literal translation in dev
+workflows.</li>
+<li>Compose via containers-submodule; models fetched by §11.4.77 script;
+GPU via rootless CDI.</li>
+</ol>
+<hr />
+<h2 id="top-risks">7. Top risks</h2>
+<ol type="1">
+<li><strong>Blackwell toolchain drift (highest).</strong> RTX 5090
+sm_120 requires CUDA 12.8 + torch 2.9/cu128; FA3 unsupported;
+CTranslate2 GPU int8 kernels for sm_120 are <strong>UNCONFIRMED</strong>
+as prebuilt. Mitigation: pin a working image, prove GPU inference at
+build time, keep a CPU-int8 fallback for CT2 and a cloud-engine
+failover.</li>
+<li><strong>Metric-gaming / false “professional quality”
+(§11.4.107).</strong> COMET/BLEU can be green while human quality is not
+(Tower-v2-70B case). Mitigation: mandatory QE + human/MQM spot-check
+gate before any professional claim; per-langpair quality ledger.</li>
+<li><strong>Glossary/markup breakage in document translation.</strong>
+LLMs drop/alter placeholders and tags; terminology not honored.
+Mitigation: deterministic tokenize-protect-restore, terminology
+post-check with re-prompt/fallback, golden-file regression tests on
+md/html/xml/docx (paired mutation per §1.1).</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>Meta, <em>No Language Left Behind</em> (NLLB-200) —
+https://arxiv.org/pdf/2207.04672 (accessed 2026-07-06)</li>
+<li>Google, <em>MADLAD-400</em> — https://arxiv.org/pdf/2309.04662
+(accessed 2026-07-06)</li>
+<li>Meta, <em>SeamlessM4T</em> — https://arxiv.org/pdf/2308.11596
+(accessed 2026-07-06)</li>
+<li>IndicTrans2 — https://arxiv.org/pdf/2305.16307 (accessed
+2026-07-06)</li>
+<li>Unbabel TOWER+ overview (MarkTechPost, 2025-06-27) —
+https://www.marktechpost.com/2025/06/27/unbabel-introduces-tower-a-unified-framework-for-high-fidelity-translation-and-instruction-following-in-multilingual-llms/
+(accessed 2026-07-06)</li>
+<li>Unbabel, <em>Announcing Tower</em> —
+https://unbabel.com/announcing-tower-an-open-multilingual-llm-for-translation-related-tasks/
+(accessed 2026-07-06)</li>
+<li>X-ALMA (ICLR 2025) — referenced via Unbabel/OpenReview; see
+leaderboard aggregator (accessed 2026-07-06)</li>
+<li>Machine Translation Benchmarks Leaderboard 2026 (aggregator;
+COMET-contamination + WMT25 human-eval note) —
+https://awesomeagents.ai/leaderboards/translation-benchmarks-leaderboard/
+(accessed 2026-07-06)</li>
+<li>InsiderLLM, <em>Best Local LLMs for Translation</em> (VRAM/engine
+table) — https://insiderllm.com/guides/best-local-llms-translation/
+(accessed 2026-07-06)</li>
+<li>SwiLTra-Bench (legal MT, MADLAD XCOMET) —
+https://arxiv.org/pdf/2503.01372 (accessed 2026-07-06)</li>
+<li>CTranslate2 (OpenNMT) repo — https://github.com/OpenNMT/CTranslate2
+(accessed 2026-07-06)</li>
+<li>CTranslate2 quantization docs —
+https://opennmt.net/CTranslate2/quantization.html (accessed
+2026-07-06)</li>
+<li>OpenNMT <code>nllb-200-3.3B-ct2-int8</code> —
+https://huggingface.co/OpenNMT/nllb-200-3.3B-ct2-int8 (accessed
+2026-07-06)</li>
+<li>LibreTranslate repo/docs —
+https://github.com/LibreTranslate/LibreTranslate ,
+https://docs.libretranslate.com/ (accessed 2026-07-06)</li>
+<li>md-translator (markup-preserving) —
+https://github.com/rockbenben/md-translator (accessed 2026-07-06)</li>
+<li>BabelDOC (layout-preserving PDF translation) —
+https://arxiv.org/html/2605.10845v1 (accessed 2026-07-06; <strong>note:
+future-dated arXiv id, treat as UNCONFIRMED primary</strong>)</li>
+<li>DeepL API — translate reference
+https://developers.deepl.com/api-reference/translate ; XML/HTML handling
+https://developers.deepl.com/docs/xml-and-html-handling/xml ;
+placeholder tags
+https://developers.deepl.com/docs/resources/examples-and-guides/placeholder-tags
+(accessed 2026-07-06)</li>
+<li>Google Cloud Translation v3 / Azure Translator / Amazon Translate
+comparison —
+https://chatscontrol.com/blog/deepl-api-vs-google-cloud-vs-azure-translator-comparison
+,
+https://kitemetric.com/blogs/pick-the-perfect-translation-api-in-2025-a-guide-for-developers
+(accessed 2026-07-06)</li>
+<li>NVIDIA Container Toolkit CDI support —
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html
+(accessed 2026-07-06)</li>
+<li>Run NVIDIA GPU containers with Podman (rootless CDI,
+nvidia-cdi-refresh) —
+https://oneuptime.com/blog/post/2026-03-18-run-nvidia-gpu-containers-podman/view
+; Podman Desktop GPU — https://podman-desktop.io/docs/podman/gpu
+(accessed 2026-07-06)</li>
+<li>Podman rootless CDI issue (#17539) —
+https://github.com/containers/podman/issues/17539 (accessed
+2026-07-06)</li>
+<li>vLLM RTX 5090 / Blackwell setup —
+https://github.com/vllm-project/vllm/issues/13306 ,
+https://discuss.vllm.ai/t/vllm-on-rtx5090-working-gpu-setup-with-torch-2-9-0-cu128/1492
+, https://github.com/vllm-project/vllm/issues/14452 (accessed
+2026-07-06)</li>
+</ul>
+<p><strong>Negative findings / gaps (§11.4.99(B)):</strong> (1) No
+authoritative confirmation that prebuilt CTranslate2 wheels ship sm_120
+(Blackwell) GPU kernels as of 2026-07 — must be verified at container
+build. (2) Several 2026 arXiv ids surfaced by search aggregators
+(TranslateGemma 2601.09012, Tower scaling 2602.11961, BabelDOC
+2605.10845) are future-dated and could not be cross-verified against a
+stable primary; exact COMET numbers from them are marked UNCONFIRMED.
+(3) TOWER+ per-language pair list beyond “27 langs / 47 pairs” not
+enumerated here — check the HF model card before committing to a
+language matrix.</p>
+</body>
+</html>

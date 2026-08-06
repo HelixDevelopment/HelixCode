@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>wiring_instructions</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">wiring_instructions</h1>
+</header>
+<h1 id="semgrep-wiring-apply-instructions-conductor-operator">Semgrep
+wiring — apply instructions (conductor / operator)</h1>
+<p><strong>Constitution:</strong> §11.4.166 (Universal Semgrep static
+analysis mandate). <strong>Date:</strong> 2026-06-22 <strong>Working
+dir:</strong> /Volumes/T7/Projects/helix_code <strong>Evidence
+basis:</strong>
+<code>docs/research/semgrep_onboarding_20260622/findings.md</code></p>
+<p>The onboarding agent created only DISJOINT new files. It did
+<strong>NOT</strong> touch <code>.mcp.json</code>,
+<code>~/.zshrc</code>, <code>~/.bashrc</code>, or the live
+<code>.git/hooks/pre-commit</code> (meta-git race avoidance + live-hook
+safety, §11.4.6). All four wiring points below are for the
+conductor/operator to apply.</p>
+<p>Scripts are inherited <strong>by reference</strong> from the
+constitution submodule (§11.4.28 / §11.4.35 / §11.4.74) — wire, never
+copy.</p>
+<hr />
+<h2 id="files-the-agent-created-disjoint-safe-to-commit">Files the agent
+created (DISJOINT, safe to commit)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.docs_chain/contexts/semgrep_status.yaml</code></td>
+<td>docs_chain context for the semgrep Status ledger (§11.4.166(6) /
+§11.4.106)</td>
+</tr>
+<tr>
+<td><code>docs/semgrep/Status.md</code></td>
+<td>consumer-side semgrep event ledger (SOURCE for the docs_chain
+context)</td>
+</tr>
+<tr>
+<td><code>docs/research/semgrep_wiring_20260622/precommit_wiring.md</code></td>
+<td>exact pre-commit hook change</td>
+</tr>
+<tr>
+<td><code>docs/research/semgrep_wiring_20260622/mcp_entry.json</code></td>
+<td>exact <code>.mcp.json</code> “semgrep” entry</td>
+</tr>
+<tr>
+<td><code>docs/research/semgrep_wiring_20260622/wiring_instructions.md</code></td>
+<td>this file</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="docs_chain-context-done-file-created">(1) docs_chain context —
+DONE (file created)</h2>
+<p><code>.docs_chain/contexts/semgrep_status.yaml</code> registers a
+<code>semgrep_status</code> context: <code>docs/semgrep/Status.md</code>
+(markdown SOURCE) → <code>Status.html</code> (md-to-html / pandoc) →
+<code>Status.pdf</code> (html-to-pdf / weasyprint). Schema matches the
+existing contexts (<code>governance</code>, <code>fixed</code>,
+<code>helixcode</code>).</p>
+<p>Generate the exports:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Volumes/T7/Projects/helix_code</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docs_chain</span> sync   <span class="at">--root</span> . semgrep_status     <span class="co"># regenerate Status.html + Status.pdf</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docs_chain</span> verify <span class="at">--root</span> . semgrep_status     <span class="co"># pre-build gate (must pass)</span></span></code></pre></div>
+<p>(If <code>docs_chain</code> resolves to the engine per §11.4.106; the
+constitution exposes it. The <code>.html</code>/<code>.pdf</code>
+siblings are gitignored-derivatives-regenerated, not hand-authored.)</p>
+<hr />
+<h2 id="pre-commit-hook-apply-per-precommit_wiring.md">(2) Pre-commit
+hook — apply per <code>precommit_wiring.md</code></h2>
+<p>The live <code>.git/hooks/pre-commit</code> is the
+<code>guard-forbidden-commands.sh</code> guard (§11.4.109), with NO
+semgrep reference. Wire semgrep <strong>additively</strong> (do not
+weaken the guard). RECOMMENDED (Option A in
+<code>precommit_wiring.md</code>): replace the hook’s single trailing
+<code>exit 0</code> with:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">_SEMGREP_HOOK</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> rev-parse <span class="at">--show-toplevel</span><span class="va">)</span><span class="st">/constitution/scripts/hooks/semgrep_precommit.sh&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-x</span> <span class="st">&quot;</span><span class="va">$_SEMGREP_HOOK</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$_SEMGREP_HOOK</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="bu">exit</span> 1</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
+<p>This runs <code>semgrep scan --config auto --error</code> on staged
+source files and blocks the commit (exit 1) on any finding;
+graceful-degrades when semgrep is absent. Full detail + Option B (via
+<code>scripts/install_git_hooks.sh</code>) + an inline one-liner
+alternative in <code>precommit_wiring.md</code>.</p>
+<hr />
+<h2 id="mcp.json-semgrep-server-apply-per-mcp_entry.json">(3)
+<code>.mcp.json</code> “semgrep” server — apply per
+<code>mcp_entry.json</code></h2>
+<p>Add the <code>semgrep</code> key from <code>mcp_entry.json</code>
+into the existing <code>mcpServers</code> object in
+<code>/Volumes/T7/Projects/helix_code/.mcp.json</code> (sibling to
+<code>codegraph</code>, <code>media-validator</code>,
+<code>open-design</code>). Do <strong>not</strong> replace the file —
+insert the one key. Verified for this host: <code>uvx</code> is present
+at <code>/opt/homebrew/bin/uvx</code> (FACT), so
+<code>uvx semgrep-mcp</code> is launchable; <code>uvx</code> fetches
+<code>semgrep-mcp</code> on demand. The entry pins
+<code>SEMGREP_PATH=/opt/homebrew/bin/semgrep</code> (the working 1.167.0
+binary confirmed this session).</p>
+<p>After insertion, validate the merged file:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> json.tool /Volumes/T7/Projects/helix_code/.mcp.json <span class="op">&gt;</span>/dev/null <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;VALID JSON&quot;</span></span></code></pre></div>
+<p>Then restart the agent session so the new MCP server loads, and
+confirm <code>semgrep</code> appears in the live MCP server list
+(install exit 0 != loadable — confirm by observing it live,
+§11.4.102(C)).</p>
+<blockquote>
+<p>Note: this environment also exposes the marketplace semgrep MCP
+plugin as <code>mcp__plugin_semgrep_semgrep__*</code>. The
+<code>.mcp.json</code> <code>uvx semgrep-mcp</code> entry is the
+project-pinned, decoupled form (§11.4.28) required by §11.4.166 so the
+wiring is reproducible from the checkout regardless of marketplace
+plugins.</p>
+</blockquote>
+<hr />
+<h2 id="shell-rc-path-line-operator-applies">(4) Shell rc PATH line —
+operator applies</h2>
+<p>Add to <code>~/.zshrc</code> (and/or <code>~/.bashrc</code>) so
+semgrep is on PATH in every shell (§11.4.166(2)):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> /Volumes/T7/Projects/helix_code/constitution/scripts/semgrep/semgrep_path.sh</span></code></pre></div>
+<p>(Currently moot for interactive use since semgrep is already on PATH
+via Homebrew, but the rc source line is required by §11.4.166(2) for
+all-shells/all-users availability and is harmless —
+<code>semgrep_path.sh</code> only prepends common bin dirs,
+dedup-guarded, and does not require semgrep pre-installed.)</p>
+<hr />
+<h2 id="post-apply-verification-11.4.166-107">Post-apply verification
+(§11.4.166 / §107)</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /Volumes/T7/Projects/helix_code</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># validate (anti-bluff JSON-with-results probe)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> constitution/scripts/semgrep/semgrep_validate.sh</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CI integration test (known-vuln detection, evidence under qa-results/)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> constitution/scripts/semgrep/semgrep_ci_test.sh</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># docs_chain export gate</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">docs_chain</span> verify <span class="at">--root</span> . semgrep_status</span></code></pre></div>
+<h2 id="sources-verified-2026-06-22">Sources verified 2026-06-22</h2>
+<ul>
+<li><code>constitution/scripts/semgrep/{semgrep_path,semgrep_validate,semgrep_setup,semgrep_ci_test}.sh</code></li>
+<li><code>constitution/scripts/hooks/semgrep_precommit.sh</code></li>
+<li><code>.git/hooks/pre-commit</code>, <code>.mcp.json</code>,
+<code>.docs_chain/contexts/*.yaml</code> (read this session)</li>
+<li>host probe: <code>uvx</code>=/opt/homebrew/bin/uvx,
+<code>semgrep</code>=1.167.0 (this session)</li>
+<li>Constitution §11.4.166;
+§11.4.28/§11.4.35/§11.4.74/§11.4.102(C)/§11.4.106</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HELIXMEMORY_PROVIDER</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HELIXMEMORY_PROVIDER</h1>
+</header>
+<h1 id="helixmemory-provider-local-agent-memory-stack-for-helixcode-helixagent-helixllm">HelixMemory
+Provider — Local Agent-Memory Stack for HelixCode / HelixAgent /
+HelixLLM</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td><code>docs/research/07.2026/04_embeddings_rag/HELIXMEMORY_PROVIDER.md</code></td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>Re-authored per Master Implementation Plan §4 item 10 (DZ-24/DZ-25)
+— the spike doc <code>04_embeddings_rag.md</code> §5 flagged this file
+as MISSING</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/feature/helixllm-full-extension)</code></td>
+</tr>
+<tr>
+<td><strong>Scope</strong></td>
+<td>The <strong>HelixMemory-only</strong> path — independent of
+<code>cognee</code> (re-enable is §11.4.174-blocked on a foreign-dirty
+<code>helix_agent</code> worktree; not touched by this document or its
+proof)</td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-08</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Anti-bluff note (§11.4.6/§11.4.99/§11.4.150)</strong></td>
+<td>Every architectural claim below is cited with a URL + access date
+(2026-07-08). The bring-up proof in §6 is a minimal reference
+implementation of the recommended mechanism, not a boot of the literal
+upstream <code>mem0</code>/<code>graphiti-core</code> packages — see the
+honest scope note in §5.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="tldr">1. TL;DR</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Recommendation</th>
+<th>Why (see §2 for full citations)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Durable temporal spine</strong></td>
+<td><strong>Graphiti</strong> (<code>getzep/graphiti</code>, Apache-2.0)
+— the raw library / its bundled MCP server</td>
+<td>Zep’s own open-source strategy pivoted here in 2025; “Zep” as a
+self-hostable server product is gone (§2.1)</td>
+</tr>
+<tr>
+<td><strong>Graph backing store</strong></td>
+<td><strong>FalkorDB</strong> (SSPLv1, single combined container,
+simplest deploy) for the MCP-server path; <strong>Kuzu</strong>
+(embedded, MIT) as an even-lighter no-second-container option; Neo4j
+Community (GPLv3) if HA/tooling maturity is preferred</td>
+<td>All three are supported natively by Graphiti; FalkorDB ships bundled
+in the official <code>graphiti/mcp_server</code> combined compose
+profile</td>
+</tr>
+<tr>
+<td><strong>Extraction / lightweight layer</strong></td>
+<td><strong>mem0</strong> (<code>mem0ai/mem0</code>, Apache-2.0) OSS
+self-hosted server</td>
+<td>Simplest ADD/UPDATE/DELETE fact-extraction API; its own vector layer
+is Postgres+pgvector — a store HelixCode already provisions via the
+<code>containers</code> submodule</td>
+</tr>
+<tr>
+<td><strong>LLM for extraction/reasoning</strong></td>
+<td>The <strong>live HelixLLM coder</strong>
+(<code>http://localhost:18434</code>, OpenAI-compatible)</td>
+<td>Both Graphiti and mem0 support pointing their LLM client at any
+OpenAI-compatible <code>base_url</code> — no cloud key needed
+(§2.3)</td>
+</tr>
+<tr>
+<td><strong>Embeddings</strong></td>
+<td>The <strong>local TEI lane</strong>
+(<code>BAAI/bge-small-en-v1.5</code>, dim 384, proven at
+<code>docs/qa/phase3_embeddings_20260706/</code>)</td>
+<td>Already proven local + proven composable with the coder in the
+Phase-3 RAG proof</td>
+</tr>
+<tr>
+<td><strong>Vector store (mem0’s layer)</strong></td>
+<td><strong>Postgres + pgvector</strong>, booted via the
+<code>containers</code> submodule (§11.4.76, rootless §11.4.161)</td>
+<td>Explicitly the vector backend mem0’s own self-hosted OSS server
+ships with</td>
+</tr>
+<tr>
+<td><strong>Exposure to CLI agents</strong></td>
+<td><strong>MCP server</strong> (<code>add_memory</code> /
+<code>search_memory</code> / <code>update_memory</code> style tool
+names, OpenAI-Assistants-adjacent shape so Claude Code / HelixCode
+auto-discover)</td>
+<td>Mirrors the already-proven §11.4.78 CodeGraph MCP wiring
+pattern</td>
+</tr>
+<tr>
+<td><strong>GPU need</strong></td>
+<td><strong>None</strong> — CPU-only Postgres, CPU-only TEI, reuses the
+already-resident coder</td>
+<td>Fits any VRAM budget without contending with the
+coder/vision/generative lanes (§3 of the Master Plan)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="deep-multi-angle-research-11.4.150-access-date-2026-07-08">2.
+Deep multi-angle research (§11.4.150), access date 2026-07-08</h2>
+<h3 id="zep-community-edition-is-deprecated-a-material-correction-to-04_embeddings_rag.md-5">2.1
+Zep Community Edition is DEPRECATED — a material correction to
+<code>04_embeddings_rag.md</code> §5</h3>
+<p>The prior spike doc (<code>04_embeddings_rag.md</code> §5, authored
+2026-07-06) recommended “Zep/Graphiti (temporal knowledge graph) as the
+durable spine,” implicitly treating “Zep” as still meaning a
+self-hostable server product bundled with Graphiti. Fresh research
+<strong>corrects</strong> this:</p>
+<ul>
+<li>Zep announced <em>“a new direction for [its] open source
+strategy”</em> — the company <strong>stopped maintaining and releasing
+Zep Community Edition</strong>; the CE repository remains on disk under
+Apache-2.0 but receives no further updates or support, and its code was
+moved to a <code>legacy/</code> folder. (<a href="https://blog.getzep.com/announcing-a-new-direction-for-zeps-open-source-strategy/">Zep
+blog, “Announcing a New Direction for Zep’s Open Source Strategy”,
+accessed 2026-07-08</a>)</li>
+<li>Zep Community Edition was deprecated <strong>April 2025</strong>,
+with further feature retirements announced <strong>February
+2026</strong>. (<a href="https://blog.getzep.com/zep-feature-retirements-may-2025/">Zep
+blog, “Zep Feature Retirements: May 2025”, accessed 2026-07-08</a>)</li>
+<li>Going forward Zep’s open-source investment is concentrated
+<strong>entirely on Graphiti</strong>, the temporal-knowledge-graph
+framework. The two remaining options for anyone wanting “Zep” today are:
+(a) <strong>Zep Cloud</strong> — a managed, credit-metered SaaS
+(excluded by this task’s local-only / no-cloud-keys constraint), or (b)
+build directly on the <strong>raw Graphiti library</strong>, which is
+the graph engine without Zep’s higher-level product features, and which
+requires the consumer to provision and manage a graph database
+themselves. (<a href="https://atlan.com/know/zep-vs-mem0/">search
+synthesis over the above + atlan.com “Zep vs Mem0” comparison, accessed
+2026-07-08</a>)</li>
+</ul>
+<p><strong>Conclusion:</strong> “HelixMemory’s durable spine =
+Zep/Graphiti” (as phrased in the prior spike doc) must be read as
+<strong>“HelixMemory’s durable spine = the raw Graphiti library / its
+MCP server,”</strong> never a Zep-branded self-hosted server — no such
+product currently exists to self-host.</p>
+<h3 id="graphiti-the-surviving-self-hostable-temporal-graph-engine">2.2
+Graphiti — the surviving self-hostable temporal-graph engine</h3>
+<ul>
+<li><strong>License:</strong> Apache-2.0. (<a href="https://github.com/getzep/graphiti">github.com/getzep/graphiti,
+accessed 2026-07-08</a>)</li>
+<li><strong>Self-host requirements:</strong> Python ≥ 3.10; one graph
+backing store from the closed set
+<code>{Neo4j 5.26, FalkorDB 1.1.2, Amazon Neptune, Kuzu 0.11.2}</code>.
+(<a href="https://github.com/getzep/graphiti">same source</a>)</li>
+<li><strong>Local-LLM support:</strong> Graphiti’s default config uses
+<code>OPENAI_API_KEY</code> against OpenAI’s cloud, but explicitly
+documents an <code>OpenAIGenericClient</code> that accepts a custom
+<code>base_url</code> for <strong>local servers (Ollama, vLLM,
+llama.cpp, LM Studio)</strong> — i.e. any OpenAI-compatible endpoint,
+which the live HelixLLM coder (<code>llama.cpp</code>-server-shaped,
+already OpenAI-compatible per the proven Phase-3 RAG harness) satisfies
+with zero code change beyond pointing <code>base_url</code> at
+<code>http://localhost:18434/v1</code>. (<a href="https://github.com/getzep/graphiti">github.com/getzep/graphiti,
+accessed 2026-07-08</a>)</li>
+<li><strong>Bundled MCP server:</strong> <code>getzep/graphiti</code>’s
+<code>mcp_server/</code> subtree ships a ready-to-run MCP server
+exposing “build and query temporally-aware knowledge graphs” tools, with
+THREE documented docker-compose deployment profiles: (a)
+<strong>FalkorDB combined</strong> — a single container bundling the MCP
+server + FalkorDB (the simplest option), (b) Neo4j in separate
+containers, (c) FalkorDB in separate containers. Configuration is
+entirely <code>.env</code>-driven
+(<code>OPENAI_API_KEY</code>/<code>ANTHROPIC_API_KEY</code>/… plus
+<code>SEMAPHORE_LIMIT</code>, <code>GRAPHITI_TELEMETRY_ENABLED</code>),
+and the README explicitly documents “To use Ollama with the MCP server,
+configure it as an OpenAI-compatible endpoint” with a dummy API key —
+the same pattern applies to the HelixLLM coder. (<a href="https://github.com/getzep/graphiti/blob/main/mcp_server/README.md">github.com/getzep/graphiti/blob/main/mcp_server/README.md,
+accessed 2026-07-08</a>)</li>
+<li><strong>Every edge in the graph carries four timestamps</strong>
+(fact became valid / stopped being valid / Graphiti learned it /
+Graphiti learned it was no longer true) — this is the temporal-reasoning
+property that makes Graphiti the right substrate for “the bug we fixed
+last week” / “the config value that changed” style agent memory the
+original spike doc’s rationale (§5) still correctly identifies. (<a href="https://www.falkordb.com/blog/building-temporal-knowledge-graphs-graphiti/">FalkorDB
+blog, “Building Temporal Knowledge Graphs with Graphiti”, accessed
+2026-07-08</a>)</li>
+</ul>
+<h3 id="graph-backing-store-choice">2.3 Graph backing-store choice</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Store</th>
+<th>License</th>
+<th>Self-host cost</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FalkorDB</strong></td>
+<td><strong>SSPLv1</strong> (source-available — “GPL-like but extending
+to server use”; permissive for internal self-hosting, restrictive only
+if you re-sell it as a hosted service to third parties)</td>
+<td>Single combined container in the official Graphiti MCP compose
+profile</td>
+<td>Redis-module-based; FalkorDB’s own materials report far lower P99
+latency and memory footprint vs Neo4j for this workload class; simplest
+bring-up. (<a href="https://docs.falkordb.com/license.html">FalkorDB
+license page, accessed 2026-07-08</a>; <a href="https://www.falkordb.com/blog/graphiti-falkordb-multi-agent-performance/">FalkorDB
+blog, “Graphiti + FalkorDB”, accessed 2026-07-08</a>)</td>
+</tr>
+<tr>
+<td><strong>Neo4j Community Edition</strong></td>
+<td>GPLv3, free to self-host</td>
+<td>Separate JVM-based container; single-node only (clustering/HA
+requires commercial Enterprise)</td>
+<td>Most mature tooling/ecosystem; heavier footprint. (<a href="https://arcadedb.com/blog/neo4j-alternatives-in-2026-a-fair-look-at-the-open-source-options/">ArcadeDB,
+“Neo4j Alternatives in 2026”, accessed 2026-07-08</a>)</td>
+</tr>
+<tr>
+<td><strong>Kuzu</strong></td>
+<td>MIT, embedded (no server container at all)</td>
+<td>Zero extra container — runs in-process, like SQLite for graphs</td>
+<td>Lightest possible option for a single-node HelixCode desktop
+deployment; <strong>UNCONFIRMED (verify against Kuzu’s own docs before
+pinning)</strong> whether the <code>graphiti-core</code> Kuzu backend is
+at full parity with the Neo4j/FalkorDB backends as of this writing —
+flagged honestly per §11.4.6, not yet independently verified this
+session. (<a href="https://github.com/getzep/graphiti">github.com/getzep/graphiti,
+accessed 2026-07-08</a>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> <strong>FalkorDB</strong> for the
+containerized/multi-agent HelixCode deployment (matches the official
+simplest compose profile, and composes naturally with the
+<code>containers</code> submodule’s rootless-podman pattern);
+<strong>Kuzu</strong> as a documented lighter-weight alternative for
+single-user desktop/CLI-agent deployments once its parity is
+independently confirmed.</p>
+<h3 id="mem0-the-extractionconvenience-layer">2.4 mem0 — the
+extraction/convenience layer</h3>
+<ul>
+<li><strong>License:</strong> Apache-2.0. (<a href="https://github.com/mem0ai/mem0/blob/main/LICENSE">github.com/mem0ai/mem0/blob/main/LICENSE,
+accessed 2026-07-08</a>)</li>
+<li><strong>Self-hosted OSS server topology:</strong> the official
+self-host guide packages the full stack into <strong>three</strong>
+Docker containers — FastAPI (the REST API), <strong>PostgreSQL with the
+pgvector extension</strong> (the <code>ankane/pgvector</code> image) for
+embeddings, and <strong>Neo4j</strong> for entity relationships
+(optional — the <code>graph_store</code> config block can be omitted to
+run vector-only). One <code>docker compose up</code> boots the whole
+stack. (<a href="https://mem0.ai/blog/self-host-mem0-docker">mem0.ai
+blog, “Self-Hosting Mem0: A Complete Docker Deployment Guide”, accessed
+2026-07-08</a>; mirrored at <a href="https://dev.to/mem0/self-hosting-mem0-a-complete-docker-deployment-guide-154i">dev.to/mem0,
+accessed 2026-07-08</a>)</li>
+<li><strong>REST API:</strong> full CRUD on memories with plain
+<code>curl</code> — no SDK required. (<a href="https://mem0.ai/blog/self-host-mem0-docker">same source</a>)</li>
+<li><strong>Local-LLM/embedding support:</strong> default config uses
+OpenAI (<code>gpt-5-nano</code> for extraction,
+<code>text-embedding-3-small</code> for embeddings); the guide
+explicitly states <strong>“Swap both for Ollama models to go fully
+offline”</strong> — the same swap applies to any OpenAI-compatible local
+endpoint (the HelixLLM coder for extraction, local TEI for embeddings).
+(<a href="https://mem0.ai/blog/self-host-mem0-docker">same
+source</a>)</li>
+<li><strong>Vector-store flexibility:</strong> mem0 supports 20+
+vector-store backends beyond pgvector (Qdrant, Chroma, Milvus, Pinecone,
+…) — Qdrant is already the recommended choice for the sibling code-RAG
+index (<code>04_embeddings_rag.md</code> §3), so a production
+HelixMemory deployment MAY consolidate onto the SAME Qdrant instance
+rather than running a second Postgres, at the cost of losing pgvector’s
+SQL-native joins with other HelixCode relational data. (<a href="https://docs.mem0.ai/components/vectordbs/dbs/pgvector">mem0 docs,
+“pgvector”, accessed 2026-07-08</a>)</li>
+<li><strong>Production caveat (carried into §7 danger zones):</strong>
+the OSS self-hosted server ships with <strong>no authentication</strong>
+and a wide-open CORS policy (<code>allow_origins=[&quot;*&quot;]</code>) — a
+reverse proxy with auth is mandatory before any non-loopback exposure.
+(<a href="https://mem0.ai/blog/self-host-mem0-docker">mem0.ai blog,
+accessed 2026-07-08</a>)</li>
+</ul>
+<h3 id="why-both-not-eitheror">2.5 Why both, not either/or</h3>
+<p>Graphiti’s temporal graph answers <em>“what do I know and when did it
+become/stop being true”</em> — the right substrate for facts that change
+over time (a config value, a fixed bug, a renamed service). mem0’s
+extraction API answers <em>“what is the single most salient fact from
+this turn, and does it update/replace/no-op an existing one”</em> — the
+right substrate for lightweight per-session memory capture with minimal
+integration code. Both are self-hostable with zero cloud dependency;
+using mem0 as the fast capture path feeding into (or alongside)
+Graphiti’s durable graph is the pattern the original spike doc’s
+rationale (§5) already identified, and this research does not find a
+reason to change that pairing — only to correct the “Zep” naming (§2.1)
+and add the concrete self-host topology (§2.3–2.4).</p>
+<hr />
+<h2 id="local-container-topology">3. Local container topology</h2>
+<pre><code>                         ┌───────────────────────────── HelixCode agent (Claude Code / OpenCode / Qwen / Crush)
+                         │   via MCP: remember() + recall() + (future) graphiti temporal-query()
+                         ▼
+   ┌───────────────────────────────────────────────────────────────────────────┐
+   │  HelixMemory MCP gateway (rootless-podman, booted via containers submodule) │
+   │                                                                             │
+   │  store:   fact text → embed (TEI, bge-small, dim 384)                       │
+   │           → persist (vector + text) in Postgres/pgvector                    │
+   │           [production: ALSO → Graphiti extraction → FalkorDB temporal graph]│
+   │                                                                             │
+   │  recall:  query text → embed (TEI) → pgvector cosine-distance top-k         │
+   │           [production: ALSO → Graphiti temporal graph traversal, merged]    │
+   │           → ground a prompt with the recalled memory → generate            │
+   └───────────────────────────────────────────────────────────────────────────┘
+        │ TEI (CPU, own port)   │ Postgres+pgvector (CPU, own port)   │ [FalkorDB, CPU, own port — production]
+        └── rootless podman, containers submodule orchestrator, §11.4.76/§11.4.161 ──┘
+                         │
+                         ▼
+              live coder LLM (helixllm-coder, :18434, OpenAI-compatible, READ-ONLY, §11.4.122)</code></pre>
+<ul>
+<li><strong>No GPU needed</strong> — Postgres, pgvector, TEI (CPU
+build), and (production) FalkorDB are all CPU workloads; the coder is
+already resident and untouched.</li>
+<li><strong>Every container is booted through the
+<code>containers</code> submodule’s <code>pkg/compose</code>
+orchestrator</strong> (§11.4.76), rootless podman (§11.4.161) — never an
+ad-hoc <code>podman run</code>/<code>docker compose up</code>.</li>
+<li><strong>Ports are config-injected, never hardcoded</strong>
+(§CONST-045/046) and chosen distinct from the coder
+(<code>:18434</code>), the sibling Phase-3 lanes
+(<code>:18435</code>–<code>:18441</code>), and the currently-running
+vision container (<code>:18439</code>) — see §6 for the exact ports used
+by this session’s proof.</li>
+<li><strong>Single-resource-owner discipline (§11.4.119):</strong> this
+document’s proof boots its OWN Postgres+TEI project, distinct from every
+sibling Phase-3 lane; the coder is read-only throughout and torn down
+NEVER.</li>
+</ul>
+<hr />
+<h2 id="storeretrieve-api-helixllm-exposed-openaistandard-shaped">4.
+Store/retrieve API — HelixLLM-exposed, OpenAI/standard-shaped</h2>
+<p>To let Claude Code / HelixCode / any CLI agent auto-discover
+HelixMemory the same way they already auto-discover CodeGraph (§11.4.78)
+and lumen, the recommended production surface is an <strong>MCP
+server</strong> exposing three tools, deliberately shaped close to the
+emerging “OpenAI Memory”/mem0-MCP tool-name conventions so agent
+frameworks that already know how to call a generic “memory” MCP server
+need no HelixCode-specific prompting:</p>
+<pre class="jsonc"><code>// MCP tool: remember
+{
+  &quot;name&quot;: &quot;remember&quot;,
+  &quot;description&quot;: &quot;Persist a fact/preference/decision to durable agent memory.&quot;,
+  &quot;input_schema&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;text&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;The fact to remember, in natural language.&quot; },
+      &quot;namespace&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Project/agent-scoped namespace (§11.4.28 decoupling — never hardcoded).&quot; }
+    },
+    &quot;required&quot;: [&quot;text&quot;, &quot;namespace&quot;]
+  }
+}
+
+// MCP tool: recall
+{
+  &quot;name&quot;: &quot;recall&quot;,
+  &quot;description&quot;: &quot;Retrieve the most relevant remembered facts for a query.&quot;,
+  &quot;input_schema&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;query&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;namespace&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;top_k&quot;: { &quot;type&quot;: &quot;integer&quot;, &quot;default&quot;: 5 }
+    },
+    &quot;required&quot;: [&quot;query&quot;, &quot;namespace&quot;]
+  },
+  &quot;output_schema&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;results&quot;: {
+        &quot;type&quot;: &quot;array&quot;,
+        &quot;items&quot;: {
+          &quot;type&quot;: &quot;object&quot;,
+          &quot;properties&quot;: {
+            &quot;id&quot;: { &quot;type&quot;: &quot;string&quot; },
+            &quot;text&quot;: { &quot;type&quot;: &quot;string&quot; },
+            &quot;score&quot;: { &quot;type&quot;: &quot;number&quot; },
+            &quot;valid_from&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date-time&quot;, &quot;description&quot;: &quot;Graphiti temporal edge, when present.&quot; },
+            &quot;valid_to&quot;: { &quot;type&quot;: [&quot;string&quot;, &quot;null&quot;], &quot;format&quot;: &quot;date-time&quot; }
+          }
+        }
+      }
+    }
+  }
+}
+
+// MCP tool: forget (mem0-style DELETE — explicit, never silent, composes §11.4.122)
+{
+  &quot;name&quot;: &quot;forget&quot;,
+  &quot;description&quot;: &quot;Remove a previously-remembered fact by id.&quot;,
+  &quot;input_schema&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: { &quot;id&quot;: { &quot;type&quot;: &quot;string&quot; }, &quot;namespace&quot;: { &quot;type&quot;: &quot;string&quot; } },
+    &quot;required&quot;: [&quot;id&quot;, &quot;namespace&quot;]
+  }
+}</code></pre>
+<p>Under the hood, <code>remember</code> = TEI-embed → pgvector insert
+(+ production: mem0-style extraction ADD/UPDATE/NOOP decision, +
+Graphiti temporal-edge write); <code>recall</code> = TEI-embed the query
+→ pgvector cosine-distance top-k (+ production: Graphiti
+temporal-graph-expand, merged + reranked) → returned to the calling
+agent, which grounds its own generation (the calling agent’s LLM turn,
+not a HelixMemory-internal generation call, mirroring how
+CodeGraph/lumen return facts rather than generate text themselves).</p>
+<hr />
+<h2 id="runtime-signature-11.4.10710-self-validated-analyzer-design">5.
+§11.4.108 runtime signature + §11.4.107(10) self-validated analyzer
+design</h2>
+<p><strong>Runtime signature (the one machine-checkable observable that
+proves <code>remember</code>+<code>recall</code> is genuinely wired, not
+source-only):</strong> a fact stored via <code>remember</code> with an
+INVENTED token (unknowable to the LLM’s training data) MUST be
+retrievable via <code>recall</code> on a DIFFERENTLY-PHRASED query about
+the same subject, AND grounding a live-LLM generation on that recalled
+fact MUST produce the invented token in the output — while the SAME live
+LLM asked the SAME question with NOTHING stored/recalled MUST NOT
+produce that token (the RED→GREEN polarity switch, §11.4.115).</p>
+<p><strong>Self-validated analyzer (§11.4.107(10)):</strong> the
+analyzer verifying the above MUST itself be proven non-bluff via a
+golden-good/golden-bad fixture pair: golden-good = the real captured
+recall+generation; golden-bad variants (no-fact answer, wrong-memory
+recall, empty answer) MUST all FAIL the SAME analyzer. An analyzer that
+PASSes any golden-bad fixture is itself a bluff gate.</p>
+<p><strong>Danger zones this design must guard against (§4 of the Master
+Plan, extended):</strong> 1. Embedding-dimension mismatch silently drops
+writes if the embedding model is swapped without a matching schema
+migration — a real upstream mem0 bug class
+(<code>mem0ai/mem0#4985</code>, “switching embedding provider silently
+drops writes due to vector dimension mismatch,” accessed 2026-07-08:
+https://github.com/mem0ai/mem0/issues/4985). HelixMemory’s schema MUST
+pin the vector dimension to the CURRENTLY-CONFIGURED embedder and fail
+loudly (not silently drop) on a mismatch. 2. mem0’s OSS server ships
+with <strong>no authentication</strong> and an open CORS policy by
+default (§2.4) — any non-loopback HelixMemory deployment MUST sit behind
+an authenticating reverse proxy. 3. FalkorDB’s SSPLv1 license is fine
+for internal self-hosting but would require re-licensing review before
+HelixCode ever offered HelixMemory AS a hosted service to third parties
+— not a concern for the current internal-use deployment, flagged for
+future SaaS-productization planning only. 4. Namespace isolation (the
+MCP <code>namespace</code> field in §4) is mandatory from day one — a
+single shared memory table across every project/agent is a
+cross-contamination risk (§11.4.119-adjacent: one caller’s facts leaking
+into another caller’s recall is the memory-layer analogue of a
+shared-hardware-resource violation).</p>
+<hr />
+<h2 id="this-sessions-real-bring-up-proof-6-cross-referenced-from-the-qa-evidence-directory">6.
+This session’s real bring-up proof (§6, cross-referenced from the QA
+evidence directory)</h2>
+<p>A minimal reference-implementation harness (Go, no new module
+dependency — <code>psql</code> via <code>os/exec</code>, mirroring the
+Phase-3 RAG harness’s zero-bloat pattern) was built at
+<code>submodules/helix_llm/docs/qa/phase1_helixmemory_20260708T061824Z/harness/</code>
+and its evidence captured at
+<code>docs/qa/phase1_helixmemory_20260708T061824Z/</code>. It boots a
+dedicated Postgres+pgvector container (own port) and a dedicated CPU TEI
+container (own port, reusing the already-populated
+<code>helixllm-tei-cache</code> volume) via the <code>containers</code>
+submodule orchestrator, stores four fixture “remember this” facts (two
+fact-bearing + two distractors) with real TEI embeddings into real
+Postgres/pgvector rows, then for two recall queries: RED-baselines the
+live coder with nothing stored/recalled (must NOT know the invented
+token), then embeds the query, retrieves the real pgvector top-1 match,
+grounds a prompt with ONLY that recalled memory, and generates on the
+SAME live coder (must contain the invented token) — with a
+self-validated analyzer proving the verdict cannot be bluffed. See
+<code>docs/qa/phase1_helixmemory_20260708T061824Z/RESULTS.md</code> for
+the captured verdict and evidence file index.</p>
+<p><strong>Honest scope note (§11.4.6/§11.4.150):</strong> this harness
+does <strong>not</strong> install or invoke the upstream
+<code>mem0</code> Python package nor the <code>graphiti-core</code>
+library / MCP server this session — it implements the SAME underlying
+mechanism (embed → persist → embed-query → similarity-search → ground)
+directly against Postgres+pgvector, the same class of backing store
+mem0’s own OSS server uses. Wiring the literal <code>mem0</code> package
+(Docker image <code>mem0ai/mem0</code> or a locally-built FastAPI
+server) and the literal
+<code>graphiti-core</code>/<code>graphiti/mcp_server</code>
+(FalkorDB-combined compose profile) is tracked as explicit follow-on
+work — see §7.</p>
+<hr />
+<h2 id="follow-on-work-tracked-not-yet-executed">7. Follow-on work
+(tracked, not yet executed)</h2>
+<ol type="1">
+<li><strong>Boot the literal <code>graphiti/mcp_server</code>
+FalkorDB-combined compose profile</strong> against the local coder
+(<code>OpenAIGenericClient</code> + custom <code>base_url</code>) and
+local TEI, proving a REAL Graphiti temporal-graph write + a
+temporal-aware recall (a fact whose validity window is later invalidated
+by a superseding fact) — the property this reference harness does not
+exercise.</li>
+<li><strong>Boot the literal <code>mem0ai/mem0</code> self-hosted OSS
+server</strong> (its own docker-compose, Postgres+pgvector + optional
+Neo4j) with the LLM/embedding config swapped to the local coder + local
+TEI, proving mem0’s own ADD/UPDATE/DELETE/NOOP extraction decision logic
+against a REAL multi-turn conversation.</li>
+<li><strong>Author the HelixMemory MCP gateway</strong> (Go, mirroring
+the CodeGraph MCP wiring pattern) exposing the
+<code>remember</code>/<code>recall</code>/<code>forget</code> tool
+surface from §4, backed by whichever of (1)/(2) above land first.</li>
+<li><strong>Namespace-isolation test</strong> — two distinct namespaces
+storing colliding-content facts, proving <code>recall</code> under
+namespace A never returns namespace B’s rows.</li>
+<li><strong>Vector-dimension-mismatch guard</strong> — a regression test
+reproducing the <code>mem0ai/mem0#4985</code> failure class (§5 item 1)
+against HelixMemory’s own schema, proving a loud failure rather than a
+silent drop.</li>
+<li><strong>Reverse-proxy + auth</strong> in front of any non-loopback
+HelixMemory exposure (§5 item 2).</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-08">Sources verified 2026-07-08</h2>
+<ul>
+<li>Zep blog — Announcing a New Direction for Zep’s Open Source Strategy
+—
+https://blog.getzep.com/announcing-a-new-direction-for-zeps-open-source-strategy/</li>
+<li>Zep blog — Zep Feature Retirements: May 2025 —
+https://blog.getzep.com/zep-feature-retirements-may-2025/</li>
+<li>Atlan — Zep vs Mem0: Benchmarks, Pricing, and When to Use Each —
+https://atlan.com/know/zep-vs-mem0/</li>
+<li>GitHub — getzep/graphiti — https://github.com/getzep/graphiti</li>
+<li>GitHub — getzep/graphiti/mcp_server/README.md —
+https://github.com/getzep/graphiti/blob/main/mcp_server/README.md</li>
+<li>FalkorDB blog — Building Temporal Knowledge Graphs with Graphiti —
+https://www.falkordb.com/blog/building-temporal-knowledge-graphs-graphiti/</li>
+<li>FalkorDB blog — Graphiti + FalkorDB: Integration for Multi-Agent
+Systems —
+https://www.falkordb.com/blog/graphiti-falkordb-multi-agent-performance/</li>
+<li>FalkorDB — License page (SSPLv1) —
+https://docs.falkordb.com/license.html</li>
+<li>ArcadeDB — Neo4j Alternatives in 2026: A Fair Look at the
+Open-Source Options —
+https://arcadedb.com/blog/neo4j-alternatives-in-2026-a-fair-look-at-the-open-source-options/</li>
+<li>mem0.ai blog — Self-Hosting Mem0: A Complete Docker Deployment Guide
+— https://mem0.ai/blog/self-host-mem0-docker</li>
+<li>DEV Community (mirror) — Self-Hosting Mem0: A Complete Docker
+Deployment Guide —
+https://dev.to/mem0/self-hosting-mem0-a-complete-docker-deployment-guide-154i</li>
+<li>GitHub — mem0ai/mem0/LICENSE (Apache-2.0) —
+https://github.com/mem0ai/mem0/blob/main/LICENSE</li>
+<li>mem0 docs — pgvector vector-store backend —
+https://docs.mem0.ai/components/vectordbs/dbs/pgvector</li>
+<li>GitHub Issue — mem0ai/mem0#4985 (embedding-dimension-mismatch silent
+write drop) — https://github.com/mem0ai/mem0/issues/4985</li>
+<li>Prior session —
+<code>docs/research/07.2026/04_embeddings_rag/04_embeddings_rag.md</code>
+§5 (original spike, being corrected/extended by this document per
+§2.1)</li>
+<li>Prior session — <code>docs/qa/phase3_rag_20260707/RESULTS.md</code>
+(the proven Phase-3 RAG harness pattern this document’s §6 proof
+mirrors)</li>
+<li>Prior session —
+<code>docs/qa/phase3_embeddings_20260706/RESULTS.md</code> (the proven
+local TEI bge-small-en-v1.5 lane reused by §6)</li>
+</ul>
+</body>
+</html>

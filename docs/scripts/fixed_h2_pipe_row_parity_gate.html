@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>fixed_h2_pipe_row_parity_gate</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">fixed_h2_pipe_row_parity_gate</h1>
+</header>
+<h1 id="fixed_h2_pipe_row_parity_gate.sh">fixed_h2_pipe_row_parity_gate.sh</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-29T00:00:00Z <strong>Gate ID:</strong>
+<code>CM-FIXED-SUMMARY-ITEM-VISIBILITY</code> (was
+<code>CM-FIXED-H2-PIPE-ROW-PARITY</code>)</p>
+<h2 id="overview">Overview</h2>
+<p>§11.4.135 standing regression guard for the §11.4.90 / §11.4.91 /
+§11.4.53 docs-tooling drift that hid <strong>HXC-044</strong>
+(<code>Bug | Obsolete (→ Fixed.md)</code>) from
+<code>docs/Fixed_Summary.md</code>.</p>
+<p><code>docs/Fixed.md</code> is MIXED: a pipe table
+(<code>| Closure | Title | Type | Status | Round | Commit(s) | Evidence |</code>)
+<strong>AND</strong> H2 detail sections
+(<code>## HXC/ATM-NNN — …</code>).</p>
+<blockquote>
+<p><strong>The file name is now historical.</strong> It names the
+<em>mechanism</em> this guard used before the 2026-07-29 reconciliation
+below, not what it asserts. The path is retained deliberately —
+<code>docs/Issues.md</code>, <code>docs/Issues_Summary.md</code> and
+this document reference it, and tracker-doc regeneration is
+operator-deferred, so a rename would strand those references. Renaming
+is tracked as follow-up, never done silently (§11.4.124).</p>
+</blockquote>
+<h2 id="reconciliation-2026-07-29-hxc-161">§11.4.120 reconciliation
+(2026-07-29, HXC-161)</h2>
+<p><strong>Original invariant.</strong> The guard asserted “every H2
+closure heading has a matching pipe-table row” as a
+<strong>proxy</strong> for what actually mattered — <em>no closed item
+is missing from <code>Fixed_Summary.md</code></em>. Under the
+then-canonical generator <code>scripts/generate_fixed_summary.sh</code>,
+which read <strong>only</strong> the pipe table, the proxy was sound:
+having a pipe row was exactly what made an item visible.</p>
+<p><strong>What changed — the consumer, not the data.</strong> Commit
+<code>8494380a</code> (2026-07-29):</p>
+<ul>
+<li><code>scripts/generate_fixed_summary.sh</code> is <strong>superseded
+and refuses to run</strong> (exits 2 in every mode, writes nothing)
+after a hand invocation at <code>0a4df699</code> rewrote the closed-item
+tally 344 → 188, dropping 156 items of tracked state.</li>
+<li><code>docs/Fixed_Summary.md</code> is now <strong>derived from
+<code>docs/workable_items.db</code></strong> by the constitution
+submodule’s Go exporter (<code>renderFixedSummary</code>,
+<code>export.go</code>), which selects every item with
+<code>current_location == &#39;Fixed&#39;</code> and is
+<strong>representation-agnostic</strong> — a <code>section</code> item
+and a <code>table</code> item land in the summary identically.</li>
+</ul>
+<p><strong>Measured consequence</strong> (HEAD <code>bbd236c9</code>):
+56 H2 closure sections have no pipe row, and <strong>all 56 are present
+in <code>Fixed_Summary.md</code></strong>. The invisibility the proxy
+existed to prevent no longer occurs; the proxy had become a standing
+57-failure red asserting an obsolete era’s mechanism. Per §11.4.120 the
+gate was <strong>reconciled</strong> to the new mechanism — never
+fake-passed, never reverted-against.</p>
+<p><strong>Why this is a strengthening, not a loosening.</strong>
+Against <code>0a4df699</code>, the real data-loss commit (summary
+corrupted down to 20 lines):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th></th>
+<th>summary-visibility failures reported</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>retired pipe-row invariant</td>
+<td><strong>0</strong> — it never noticed (it exited 1, but only on
+pipe-row noise: a 57-failure standing red is exactly how a real failure
+gets masked)</td>
+</tr>
+<tr>
+<td>reconciled invariant</td>
+<td><strong>246</strong> closed items flagged missing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="what-it-asserts">What it asserts</h2>
+<ul>
+<li><strong>(A)</strong> every <code>docs/Fixed.md</code> H2 closure
+heading (<code>## HXC-NNN</code> / <code>## ATM-NNN</code>) appears in
+<code>docs/Fixed_Summary.md</code>. <strong>Hard FAIL.</strong></li>
+<li><strong>(B)</strong> every <code>docs/Fixed.md</code> pipe-table row
+whose Title cell carries a ticket id appears in
+<code>docs/Fixed_Summary.md</code>. <strong>Hard FAIL.</strong></li>
+<li><strong>(C)</strong> every <code>Obsolete (→ Fixed.md)</code>
+pipe-table item appears in <code>docs/Fixed_Summary.md</code>.
+<strong>Hard FAIL.</strong> A strict subset of (B), retained as an
+explicitly-named check because it is the original HXC-044 forensic
+anchor, so an Obsolete-specific regression is reported as such.</li>
+</ul>
+<p><code>Fixed.md</code> and <code>Fixed_Summary.md</code> are rendered
+by <strong>different code paths</strong> (a <code>doc_segments</code>
+walk vs. <code>renderFixedSummary</code>’s item select), so agreement
+between them is a real, falsifiable cross-check — not a tautology, as
+<code>0a4df699</code> proved by breaking it.</p>
+<h2 id="honest-boundary-11.4.6-11.4.118">Honest boundary (§11.4.6 /
+§11.4.118)</h2>
+<ul>
+<li>Ticket-id matching is <strong>bounded</strong> (non-alphanumeric on
+both sides) so <code>ATM-97</code> is not spuriously satisfied by
+<code>ATM-970</code>.</li>
+<li>Legacy pipe rows whose Title cell carries <strong>no ticket
+id</strong> (the 2026-05-19 i18n-round rows,
+<code>Tracker HTML + PDF exports per §11.4.19</code>, …) cannot be keyed
+by id and are <strong>out of scope</strong> for (B). Their count is
+<strong>printed on every run</strong> so the exclusion is visible, not
+hidden — 87 at HEAD.</li>
+<li>This is a <strong>document-parity</strong> guard
+(<code>Fixed.md</code> ↔︎ <code>Fixed_Summary.md</code>) and reads no
+database. It proves the two rendered documents agree,
+<strong>not</strong> that either matches the SQLite SSoT — that md⟷db
+direction belongs to <code>CM-WORKABLE-ITEMS-MD-DB-IN-SYNC</code> and
+<code>CM-SUMMARY-SYNC</code>, both still required.</li>
+<li>The invariant is <strong>architecture-current, not retroactively
+green</strong>: it also fails against <code>a665b02d</code>, because
+that era’s summary was aggregate-counts-only and listed exactly one item
+id. That is a true property of the old document shape, not a false
+positive. The invariant became satisfiable at <code>8494380a</code>,
+when the summary gained its DB-derived per-item table.</li>
+<li>An <strong>anti-tautology tripwire</strong> refuses a vacuous PASS:
+if the extractors match 0 H2 sections <em>and</em> 0 ticket-id pipe rows
+(format drift), the gate FAILs rather than reporting a green it did not
+earn.</li>
+</ul>
+<h2 id="prerequisites">Prerequisites</h2>
+<p><code>awk</code>, <code>grep</code>, <code>mktemp</code>,
+<code>bash</code>. No network, no credentials, no database.</p>
+<h2 id="usage">Usage</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/gates/fixed_h2_pipe_row_parity_gate.sh</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># RED-baseline (§11.4.115) — reproduce the defect on temp copies and assert the</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># guard genuinely catches it (exit 0 = guard is not blind):</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">RED_MODE</span><span class="op">=</span>1 <span class="ex">scripts/gates/fixed_h2_pipe_row_parity_gate.sh</span></span></code></pre></div>
+<p><code>FIXED_PARITY_STRICT</code> is <strong>gone</strong> — it
+toggled the retired pipe-row invariant between WARN and FAIL. All three
+current invariants are unconditional hard FAILs.</p>
+<h2 id="edge-cases">Edge cases</h2>
+<ul>
+<li><code>RED_MODE=1</code> operates on copies under
+<code>$TMPDIR</code> (cleaned on <code>EXIT</code>); it never mutates
+the live <code>docs/Fixed.md</code> /
+<code>docs/Fixed_Summary.md</code>.</li>
+<li><code>RED_MODE=1</code> deletes <strong>two</strong> victims
+covering <strong>both</strong> representations — <code>HXC-044</code>
+(Obsolete, has a pipe row → trips (B)+(C)) and <code>HXC-157</code>
+(section-only, no pipe row → trips (A)). <code>HXC-157</code> is the
+load-bearing one: under the retired invariant its disappearance from the
+summary was completely invisible. A future edit that silently narrows
+the guard to one representation is caught here.</li>
+</ul>
+<h2 id="internal-behaviour">Internal behaviour</h2>
+<p>Parses pipe data rows by column (col1 = Closure date, col2 = Title,
+col3 = Type, col4 = Status, …; awk fields shift by one because each line
+starts with <code>|</code>), extracts the leading
+<code>(HXC|ATM)-&lt;id&gt;</code> token from Title cells and H2
+headings, and bounded-matches each id against
+<code>docs/Fixed_Summary.md</code>.</p>
+<h2 id="related-scripts">Related scripts</h2>
+<ul>
+<li><code>constitution/scripts/workable-items</code>
+(<code>renderFixedSummary</code> in <code>export.go</code>) — the
+canonical DB-derived generator this guard now protects.</li>
+<li><code>scripts/generate_fixed_summary.sh</code> — the
+<strong>superseded</strong> markdown-derived generator (refuses to run;
+retirement tracked as HXC-160).</li>
+<li><code>scripts/gates/summary_sync_gate.sh</code>,
+<code>scripts/gates/workable_items_sync_gate.sh</code> — the md⟷db
+direction this guard deliberately does not cover.</li>
+<li><code>scripts/gates/obsolete_details_gate.sh</code>,
+<code>scripts/gates/obsolete_colorize.sh</code> — §11.4.90 sibling
+gates.</li>
+</ul>
+<h2 id="last-verified">Last verified</h2>
+<p>2026-07-29 (HEAD <code>bbd236c9</code>) — GREEN (exit 0): 153 H2
+sections, 99 ticket-id pipe rows, 1 Obsolete item all present in
+<code>Fixed_Summary.md</code>; 87 legacy rows reported out of scope.
+<code>RED_MODE=1</code> exit 0 (guard correctly FAILs on the broken
+artifact). Mutation matrix, all exit 1: delete a section-only closure →
+(A) fires; delete a pipe-row closure → (A)+(B)+(C) fire; empty the
+summary → 253 failures; empty <code>Fixed.md</code> → anti-tautology
+tripwire fires.</p>
+</body>
+</html>

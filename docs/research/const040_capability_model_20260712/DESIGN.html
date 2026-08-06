@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DESIGN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DESIGN</h1>
+</header>
+<h1 id="const-040-capability-model-design-hxc-117-hxc-118-hxc-119">CONST-040
+Capability-Model Design — HXC-117 / HXC-118 / HXC-119</h1>
+<p><strong>Revision:</strong> 1 <strong>Created:</strong> 2026-07-12
+<strong>Last modified:</strong> 2026-07-12 <strong>Status:</strong>
+active <strong>Scope:</strong> design + phased sub-task plan only — NO
+source changes made in this pass (§11.4.145 independent impact-research
+agent; read-only per dispatch instructions)</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-current-capability-model-as-is-cited">1. Current
+capability model (as-is, cited)</a></li>
+<li><a href="#2-hxc-117--capability-flag-design">2. HXC-117 —
+capability-flag design</a></li>
+<li><a href="#3-hxc-118--rag-submodule-integration-plan">3. HXC-118 —
+RAG submodule integration plan</a></li>
+<li><a href="#4-hxc-119--acp-agent-client-protocol">4. HXC-119 — ACP
+(Agent Client Protocol)</a></li>
+<li><a href="#5-phased-sub-task-breakdown--blast-radiusrisk-114145">5.
+Phased sub-task breakdown + blast-radius/risk (§11.4.145)</a></li>
+<li><a href="#sources-verified-2026-07-12">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="current-capability-model-as-is-cited">1. Current capability
+model (as-is, cited)</h2>
+<h3 id="verificationresult-verifiedmodel-the-only-two-structs-const-040-could-gate-from">1.1
+<code>VerificationResult</code> / <code>VerifiedModel</code> — the only
+two structs CONST-040 could gate from</h3>
+<p>File: <code>helix_code/internal/verifier/types.go</code></p>
+<ul>
+<li><code>VerifiedModel</code> (lines 24-61) carries model-level
+capability booleans: <code>SupportsStreaming</code>,
+<code>SupportsTools</code>, <code>SupportsFunctions</code>,
+<code>SupportsCode</code>, <code>SupportsVision</code>,
+<code>SupportsAudio</code>, <code>SupportsVideo</code>,
+<code>SupportsReasoning</code>, <code>SupportsEmbeddings</code> (line
+43), <code>SupportsJSONMode</code>, plus a free-form
+<code>Capabilities []string</code> (line 59) and
+<code>Tags []string</code> (line 60).</li>
+<li><code>VerificationResult</code> (lines 81-108) — the on-demand
+verification result — carries a <strong>different, narrower</strong>
+boolean set: <code>SupportsToolUse</code>,
+<code>SupportsCodeGeneration</code>, <code>SupportsEmbeddings</code>
+(line 95), <code>SupportsStreaming</code>,
+<code>SupportsJSONMode</code>, <code>SupportsReasoning</code>, plus
+seven <code>CodeXxx</code>/<code>TestGeneration</code>/… flags (lines
+99-105).</li>
+<li><strong>Nowhere in either struct</strong> is there a field for MCP,
+LSP, ACP, RAG, Skills, or Plugins. <code>doc.go</code> line 33 lists
+<code>CONST-040: MCP/LSP/ACP/Embedding/RAG/Skills/Plugins</code> as a
+<strong>package-level constitutional citation</strong>, not an
+implemented contract — it documents the mandate, not a fulfilled
+one.</li>
+</ul>
+<h3 id="the-only-const-040-consumer-that-exists-today">1.2 The only
+CONST-040 consumer that exists today</h3>
+<p>File: <code>helix_code/internal/llm/ensemble_resolver.go</code></p>
+<ul>
+<li><code>ensembleVerifiedModelFor</code> (lines 61-113) reads
+<code>verifierAdapter.GetVerifiedModels(ctx)</code> and filters on
+<code>m.Verified</code>, <code>m.Deprecated</code>, and
+<code>m.SupportsEmbeddings</code> (line 89) to exclude embedding-only
+models from the ensemble’s chat-member candidate pool.</li>
+<li><code>verifierCapabilitiesAreEmbeddingOnly</code> (lines 121-141)
+matches the free-form <code>Capabilities []string</code> tokens against
+a 3-entry <code>embeddingCapabilityHints</code> map (lines 42-46:
+<code>&quot;embedding&quot;</code>, <code>&quot;embeddings&quot;</code>,
+<code>&quot;embed&quot;</code>).</li>
+<li><strong>This is the ONLY place <code>SupportsEmbeddings</code> (or
+any verifier capability field) is read anywhere in the inner
+app</strong> (confirmed via
+<code>grep -rn &quot;SupportsMCP\|SupportsLSP\|SupportsACP\|SupportsRAG\|SupportsSkills\|SupportsPlugins\|SupportsEmbedding&quot; --include=&quot;*.go&quot; . | grep -v _test.go</code>
+— zero hits outside <code>verifier/types.go</code> and
+<code>llm/ensemble_resolver.go</code>).</li>
+</ul>
+<h3 id="how-mcp-lsp-skills-plugins-actually-decide-availability-today-verifier-gating-zero">1.3
+How MCP / LSP / Skills / Plugins actually decide availability today
+(verifier-gating: ZERO)</h3>
+<ul>
+<li><strong>MCP</strong> —
+<code>helix_code/internal/mcp/registry.go</code>
+(<code>Manager.Start</code>, lines 104-129;
+<code>buildClient</code>/<code>buildTransport</code>, lines 132-137 and
+276-303) wires servers purely from a user-authored
+<code>mcp.Config</code> (<code>ServerSpec</code> list, transport =
+stdio/http/sse/ws). No verifier import, no capability check anywhere in
+the package (confirmed: package-level <code>grep</code> for verifier
+import in <code>internal/mcp/*.go</code> returns nothing).</li>
+<li><strong>LSP</strong> — <code>helix_code/cmd/cli/lsp_cmd.go</code>
+(lines 108-130, <code>runLSPSubcommand</code>) queries the live
+<code>commands.LSPManager</code> / <code>tools.LSPServerSpec</code>
+curated allowlist directly (<code>exec.LookPath</code> + process
+management per the file’s own doc comment, lines 13-16). No verifier
+read.</li>
+<li><strong>Skills</strong> —
+<code>helix_code/cmd/cli/skills_cmd.go</code> reads
+<code>commands.SkillRegistry</code>/<code>commands.SkillLoader</code>
+(filesystem-scanned skill definitions), never the verifier.</li>
+<li><strong>Plugins</strong> —
+<code>helix_code/internal/plugins/activation.go</code>
+(<code>LoadPlugins</code> lines 16-22, <code>MaybeRunPlugin</code> lines
+43-68) scans a plugin directory for <code>manifest.yaml</code> and
+dispatches on a <code>@plugin:&lt;name&gt; &lt;action&gt;</code> prompt
+regex. No verifier import anywhere in
+<code>internal/plugins/*.go</code>.</li>
+<li><strong>RAG</strong> — no package exists in
+<code>helix_code/internal/</code> at all. The only “RAG” hits in the
+inner app are prose in two model <strong>descriptions</strong>
+(<code>internal/llm/local_llm_manager.go:129</code> “Open-source local
+AI assistant with RAG capabilities”;
+<code>internal/llm/bedrock_provider.go:377,384</code> Cohere Command-R
+model blurbs) — cosmetic strings, not a capability or a wired retrieval
+path.</li>
+</ul>
+<p><strong>Conclusion (HXC-117 root finding):</strong> CONST-040’s
+“MCP/LSP/ACP/Embedding/RAG/Skills/Plugins capability flags MUST be
+sourced from verifier <code>VerificationResult</code>” is
+<strong>unimplemented for six of seven items</strong>. Only the
+embeddings exclusion in the ensemble resolver honors the mandate, and
+even that reads <code>VerifiedModel.SupportsEmbeddings</code>, not
+<code>VerificationResult</code> (the two structs are siblings, not the
+same type — CONST-040 names <code>VerificationResult</code>
+specifically, doc.go line 33).</p>
+<hr />
+<h2 id="hxc-117-capability-flag-design">2. HXC-117 — capability-flag
+design</h2>
+<h3 id="design-goal">2.1 Design goal</h3>
+<p>Extend <code>VerificationResult</code> (and, where the field is
+genuinely model-scoped rather than session/tool-scoped,
+<code>VerifiedModel</code>) with the five missing capability signals,
+and wire <strong>at least one real read-point per subsystem</strong> so
+the flags are not a repeat of the current “declared but never read”
+bluff.</p>
+<h3 id="field-by-field-design">2.2 Field-by-field design</h3>
+<p><code>internal/verifier/types.go</code> — add to
+<code>VerificationResult</code> (extends the existing bool block at
+lines 93-98):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// CONST-040 capability flags — MCP / LSP / ACP / RAG / Skills / Plugins.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Each reports whether the verified model/provider combination has been</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// confirmed (by LLMsVerifier, the CONST-036 single source of truth) to</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// support the corresponding integration surface. False/zero-value means</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// &quot;not verified as supporting&quot; — NEVER &quot;verified as NOT supporting&quot;; a</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">// verifier that has not run the relevant probe MUST report false, and</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">// callers MUST treat false as &quot;fall back to config-driven behavior&quot;,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">// never as &quot;actively disabled&quot; (no user-facing capability may regress</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// silently because the verifier hasn&#39;t probed it yet — see §5 Phase 1</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// rollout risk below).</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>SupportsMCP     <span class="dt">bool</span> <span class="st">`json:&quot;supports_mcp&quot;`</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>SupportsLSP     <span class="dt">bool</span> <span class="st">`json:&quot;supports_lsp&quot;`</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>SupportsACP     <span class="dt">bool</span> <span class="st">`json:&quot;supports_acp&quot;`</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>SupportsRAG     <span class="dt">bool</span> <span class="st">`json:&quot;supports_rag&quot;`</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>SupportsSkills  <span class="dt">bool</span> <span class="st">`json:&quot;supports_skills&quot;`</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>SupportsPlugins <span class="dt">bool</span> <span class="st">`json:&quot;supports_plugins&quot;`</span></span></code></pre></div>
+<p>Why <code>VerificationResult</code> and not (only)
+<code>VerifiedModel</code>: <code>VerificationResult</code> is what
+CONST-040’s doc.go line 33 literally names, and it is the artifact of an
+<strong>on-demand</strong> verification run (<code>Status</code> field,
+<code>CompletedAt</code> field) — the natural place to attach “this
+model+provider pairing was probed for tool-use / MCP-bridging /
+RAG-retrieval fitness.” <code>VerifiedModel</code> (the
+catalogue-listing type) should mirror the same six fields for
+consistency with the existing <code>SupportsEmbeddings</code>
+duplication pattern already present in both structs (types.go lines 43
+and 95) — same rationale, same shape, zero new design risk.</p>
+<h3 id="per-subsystem-read-points-what-must-change-to-make-the-flags-load-bearing-not-decorative">2.3
+Per-subsystem read-points (what must change to make the flags
+load-bearing, not decorative)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Subsystem</th>
+<th>Current file:line (verifier-blind)</th>
+<th>Proposed read-point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MCP</td>
+<td><code>internal/mcp/registry.go:104</code> <code>Manager.Start</code>
+— dials <code>AlwaysLoad</code> servers unconditionally from
+<code>mcp.Config</code></td>
+<td>Before <code>wg.Add(1)</code>/dial (line 118-125), when a server
+spec names a <code>Model</code> (new optional
+<code>ServerSpec.RequiredModel</code> field, config-only — MCP servers
+are user-installed tools, not model properties, so the model check is
+advisory: “does the active ensemble model support MCP tool-calling” —
+read via the package-level <code>verifierAdapter</code> the same way
+<code>ensemble_resolver.go:62</code> does)</td>
+</tr>
+<tr>
+<td>LSP</td>
+<td><code>cmd/cli/lsp_cmd.go:108</code> <code>runLSPSubcommand</code> —
+delegates straight to <code>commands.LSPCommand</code></td>
+<td>LSP servers are language-tooling processes, not model capabilities —
+<code>SupportsLSP</code> is more honestly a
+<strong>provider/session</strong> capability (“can this model consume
+LSP diagnostics as tool-call context”); read-point = the tool-loop’s
+context-injection step in <code>internal/agent/tool_loop.go</code> (not
+yet inspected in this pass — Phase 2 task) before attaching LSP
+diagnostics to a prompt</td>
+</tr>
+<tr>
+<td>ACP</td>
+<td>none exists (HXC-119)</td>
+<td>the ACP agent-side session/prompt handler (§4.4) checks
+<code>SupportsACP</code> before advertising ACP <code>session/new</code>
+capability negotiation for a given backing model</td>
+</tr>
+<tr>
+<td>RAG</td>
+<td>none exists (HXC-118)</td>
+<td>the RAG pipeline construction step (§3.4) checks
+<code>SupportsRAG</code> (or, more usefully,
+<code>SupportsEmbeddings</code> on the embedding model doing the vector
+encode — RAG capability is really a property of the <strong>embedding
+model</strong>, not the generation model; see §3.3 open design question)
+before offering retrieval-augmented mode</td>
+</tr>
+<tr>
+<td>Skills</td>
+<td><code>cmd/cli/skills_cmd.go</code> reads
+<code>commands.SkillRegistry</code> directly</td>
+<td><code>internal/agent/skill_dispatcher.go</code> (not yet inspected —
+Phase 2) is the more likely load-bearing site: gate
+skill-invocation-via-LLM-function-call on <code>SupportsSkills</code>
+(i.e., “can this model reliably drive structured skill dispatch”)</td>
+</tr>
+<tr>
+<td>Plugins</td>
+<td><code>internal/plugins/activation.go:43</code>
+<code>MaybeRunPlugin</code></td>
+<td>same shape as skills — the regex-dispatch path (line 30, 43) doesn’t
+need a model-capability gate (it’s a deterministic string match, not an
+LLM decision), but a <strong>future</strong> LLM-driven plugin-selection
+mode (CONST-046-compliant, no hardcoded <code>@plugin:</code> syntax
+requirement) would read <code>SupportsPlugins</code> at the point it
+asks the model “which plugin should handle this prompt”</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Honest boundary (§11.4.6):</strong> LSP, Skills, and Plugins
+are today <strong>config/filesystem-driven, not model-driven</strong>
+capabilities — a model doesn’t “support” having an LSP server installed.
+The CONST-040 flags for these three are best understood as <em>“is this
+model verified as capable of consuming/driving the subsystem via
+tool-calls,”</em> not <em>“is the subsystem itself available.”</em> This
+is a genuine design ambiguity in the original CONST-040 mandate; the
+sub-task plan (§5) allocates explicit time to resolve it with the
+operator via the constitution’s own §11.4.66 interactive-clarification
+mechanism before wiring gates that could be mis-scoped.</p>
+<h3 id="blast-radius-of-adding-the-six-fields-alone">2.4 Blast radius of
+adding the six fields alone</h3>
+<p>Adding six <code>bool</code> fields to
+<code>VerificationResult</code> (a JSON-tagged struct read from an HTTP
+client, <code>client.go</code>) is additive and non-breaking: existing
+<code>json.Unmarshal</code> calls on older verifier-service responses
+simply leave the new fields at their zero value (<code>false</code>),
+and no existing code path reads them yet, so <strong>zero behavior
+change</strong> until a read-point (2.3) is wired. This is the single
+lowest-risk part of the whole three-item plan and can land first,
+independently, as its own commit.</p>
+<hr />
+<h2 id="hxc-118-rag-submodule-integration-plan">3. HXC-118 — RAG
+submodule integration plan</h2>
+<h3 id="submodule-facts-verified-by-direct-build">3.1 Submodule facts
+(verified by direct build)</h3>
+<ul>
+<li>Path: <code>submodules/rag/</code> (flat-grouped layout per
+<code>.gitmodules</code>, consistent with CONST-051(C)).</li>
+<li>Module: <code>digital.vasic.rag</code>, <code>go 1.24.0</code>
+(compatible with helix_code’s <code>go 1.26</code> — no toolchain
+conflict).</li>
+<li><code>go build ./...</code> inside <code>submodules/rag/</code>
+<strong>succeeds</strong> (verified this session, exit 0) — the
+submodule is not broken, it is simply unimported.</li>
+<li><code>helix-deps.yaml</code> declares zero own-org dependencies
+(genuine leaf submodule, <code>Catalogue-Check</code> comment already
+present per §11.4.74/CONST-054).</li>
+<li>Public packages: <code>pkg/retriever</code> (Document, Options,
+Retriever interface, MultiRetriever), <code>pkg/chunker</code>,
+<code>pkg/reranker</code>, <code>pkg/hybrid</code>,
+<code>pkg/pipeline</code> (Builder/Pipeline fluent API —
+<code>pipeline.NewPipeline().Retrieve(r).Rerank(reranker).Format(formatter).Build()</code>,
+<code>Execute(ctx, query) (*Result, error)</code>).</li>
+<li><strong>Zero inner-app imports today</strong> (confirmed via
+<code>grep -rln &quot;digital.vasic.rag&quot; helix_code/</code> returning
+nothing) — HXC-118’s “0 inner-app imports” finding is confirmed as FACT,
+not a guess.</li>
+</ul>
+<h3 id="what-integrate-concretely-means">3.2 What “integrate” concretely
+means</h3>
+<ol type="1">
+<li>Add <code>digital.vasic.rag</code> as a <code>go.mod</code> require
+in <code>helix_code/go.mod</code>, with a
+<code>replace digital.vasic.rag =&gt; ../submodules/rag</code> directive
+during development (mirrors the §11.4.76 containers-submodule
+consumption pattern: <code>replace</code> directive during dev, pinned
+commit SHA in production per that anchor’s clause 2).</li>
+<li>Implement the <strong>only missing piece</strong> the submodule
+doesn’t provide: a concrete <code>retriever.Retriever</code> backed by
+HelixCode’s own storage. The submodule ships the <em>interfaces and
+pipeline machinery</em> (retriever.go’s <code>Retriever</code>
+interface, line 37-40) but deliberately no concrete vector-store-backed
+implementation (it is a decoupled, project-not-aware submodule per
+§11.4.28(B) — it cannot know HelixCode’s embedding provider or
+persistence layer). This concrete adapter is genuinely new
+HelixCode-side code, NOT a submodule extension (the submodule’s contract
+is correctly abstract; HelixCode supplies the concrete backing per the
+standard adapter pattern already used for <code>verifierAdapter</code>
+in <code>internal/llm</code>).</li>
+<li>Candidate concrete-retriever backing: <code>internal/memory</code>
+(not yet inspected this pass — the project already has a
+memory/persistence subsystem per the repo-layout table in CLAUDE.md
+§3.2.1) or <code>internal/persistence</code> combined with an embedding
+call through the existing <code>llm.Provider</code> interface (any
+provider whose <code>VerifiedModel.SupportsEmbeddings</code> is true —
+this is the natural intersection with HXC-117 §2.3’s RAG
+read-point).</li>
+</ol>
+<h3 id="open-design-question-flagged-honestly-not-guessed-11.4.6">3.3
+Open design question (flagged honestly, not guessed — §11.4.6)</h3>
+<p>Which embedding provider backs the vector encode step is a genuine
+open decision requiring either (a) an existing <code>internal/llm</code>
+embedding call path (UNCONFIRMED whether one exists — not located in
+this pass; <code>grep</code> for <code>embedding</code> outside
+verifier/ensemble_resolver returned only description strings, §1.2/§3.1)
+or (b) net-new embedding-provider wiring. This is flagged as a Phase-1
+investigation sub-task (§5), not resolved here — declaring an unverified
+embedding path would itself be a bluff.</p>
+<h3 id="wiring-points-capability-flag-request-flow-hook">3.4 Wiring
+points (capability flag + request-flow hook)</h3>
+<ul>
+<li><strong>Capability flag</strong>: a new <code>RAGEnabled bool</code>
+(or reuse of <code>SupportsRAG</code> from §2.2) on the session/request
+config, defaulted false, surfaced via a new CLI flag
+(<code>--rag</code>) and/or a <code>commands</code> slash-command
+(<code>/rag on|off|status</code>) following the exact
+<code>mcp_cmd.go</code>/<code>lsp_cmd.go</code> cobra-subcommand pattern
+already established (§1.3) — this keeps HXC-118 consistent with the
+existing CLI-surface conventions instead of inventing a new one.</li>
+<li><strong>Request-flow hook</strong>: the natural insertion point is
+immediately before the prompt is sent to the LLM provider inside
+<code>cmd/cli/main.go:handleGenerate</code> (line 1714 — the
+BLUFF-001-anchored real-generation path) and
+<code>cmd/cli/main.go:handleInteractive</code> (line 2298 — the REPL
+loop): when RAG is enabled, run
+<code>pipeline.Execute(ctx, userPrompt)</code> first, and prepend/inject
+<code>Result.Output</code> (formatted retrieved context) into the prompt
+sent to <code>provider.Generate</code>/<code>GenerateStream</code>. This
+is the same shape as the existing MCP tool-injection and
+LSP-diagnostic-injection points (both of which live in the same handler
+family) — no new architectural pattern, just a new injection stage.</li>
+<li><strong>New package</strong>: <code>internal/rag/</code> (adapter
+package, analogous to how <code>internal/mcp</code> wraps the MCP
+protocol) housing the concrete retriever + a thin <code>Manager</code>
+that owns pipeline construction, config load/save (mirroring
+<code>mcp.LoadConfig</code>/<code>mcp.SaveConfig</code>), and the
+CONST-046-compliant (no hardcoded strings) status/label surface.</li>
+</ul>
+<h3 id="catalogue-check-citation-11.4.74">3.5 Catalogue-check citation
+(§11.4.74)</h3>
+<p><code>Catalogue-Check: reuse vasic-digital/rag (submodules/rag, digital.vasic.rag) — 100% match for the retrieval/rerank/pipeline abstraction layer; extend NOT required at the submodule level (it correctly stays project-not-aware); the missing 20% (concrete storage-backed retriever) is HelixCode-side adapter code by design (§11.4.28(B) decoupling), not a submodule gap.</code></p>
+<hr />
+<h2 id="hxc-119-acp-agent-client-protocol">4. HXC-119 — ACP (Agent
+Client Protocol)</h2>
+<h3 id="what-acp-is-cited-11.4.811.4.99-deep-research-performed-this-session">4.1
+What ACP is (cited, §11.4.8/§11.4.99 deep research performed this
+session)</h3>
+<p>The Agent Client Protocol is a JSON-RPC 2.0-based protocol, modeled
+explicitly on the Language Server Protocol, that standardizes
+communication between code editors/IDEs (“clients”) and AI coding agents
+(“agents”) — eliminating N×M custom-integration overhead the same way
+LSP did for language tooling. Local agents run as editor sub-processes
+communicating over stdio; remote/HTTP-WebSocket transport is noted by
+the official docs as work-in-progress. It was introduced by Zed in
+August 2025 and JetBrains joined shortly after, turning it into a
+multi-editor interoperability layer (JetBrains now ships first-class ACP
+support per jetbrains.com/acp). The protocol defines a session lifecycle
+(<code>initialize</code> → <code>session/new</code> →
+<code>session/prompt</code> → streaming <code>session/update</code>
+notifications) plus auxiliary methods for filesystem access
+(<code>fs/read_text_file</code>), terminal execution, and permission
+requests — the same shape HelixCode’s own <code>internal/mcp</code>
+package already implements for MCP (session-based JSON-RPC over
+stdio/HTTP/SSE/WS, <code>internal/mcp/doc.go</code> lines 1-199).</p>
+<h3 id="is-there-a-reference-implementation-to-build-against-yes-including-go">4.2
+Is there a reference implementation to build against? YES — including
+Go</h3>
+<ul>
+<li>Official spec + docs: <code>agentclientprotocol.com</code>
+(maintained jointly by Zed + JetBrains, per
+<code>github.com/agentclientprotocol/agent-client-protocol</code>).</li>
+<li><strong>Official-adjacent Go SDK</strong>:
+<code>github.com/coder/acp-go-sdk</code> (pkg.go.dev confirms it as a
+maintained Go package: “acp package - github.com/coder/acp-go-sdk”). It
+provides:
+<ul>
+<li><code>Agent</code> interface (what HelixCode would implement —
+HelixCode IS the coding-assistance agent in ACP terms, analogous to how
+Claude Code / Gemini CLI are ACP agents editors connect to) and
+<code>Client</code> interface (the editor side — not HelixCode’s
+role).</li>
+<li>Connection constructors
+<code>acp.NewAgentSideConnection(agent, stdout, stdin)</code> for the
+agent role.</li>
+<li>Typed request/response plumbing for <code>initialize</code>,
+<code>session/new</code>, <code>session/prompt</code>,
+<code>session/update</code>, <code>fs/read_text_file</code>,
+<code>terminal</code>, <code>permission</code>.</li>
+<li>Content-block helpers (<code>TextBlock</code>,
+<code>ImageBlock</code>, <code>AudioBlock</code>,
+<code>ResourceBlock</code>) and an extension mechanism for
+vendor-specific underscore-prefixed methods.</li>
+</ul></li>
+<li>Additional independent Go implementations exist
+(<code>ironpark/acp-go</code>, <code>rokku-c/acp-go</code>) —
+corroborating the protocol is genuinely Go-implementable, not merely
+TypeScript/Python-only.</li>
+</ul>
+<h3 id="finding-acp-is-implementable-not-structurally-impossible">4.3
+Finding: ACP is IMPLEMENTABLE, NOT structurally impossible</h3>
+<p>Per §11.4.112, a <code>Won&#39;t-fix: structurally-impossible</code>
+classification requires PROVEN platform/hardware/protocol impossibility.
+The opposite is proven here: an official-adjacent, actively maintained
+Go SDK exists (<code>github.com/coder/acp-go-sdk</code>), the protocol
+is JSON-RPC-over-stdio (a transport HelixCode’s own
+<code>internal/mcp/transport_stdio.go</code> already implements for the
+structurally-analogous MCP protocol), and HelixCode already has the
+exact architectural role required — a CLI program with a turn-based
+prompt/response loop (<code>cmd/cli/main.go:handleGenerate</code> line
+1714, <code>handleInteractive</code> line 2298) — needed to be the ACP
+<strong>Agent</strong> side. <strong>Deciding evidence for
+“implementable”: the existence and current maintenance of
+<code>github.com/coder/acp-go-sdk</code> (verified via pkg.go.dev +
+GitHub search this session, access date 2026-07-12) providing a
+ready-made <code>Agent</code> interface + stdio connection constructor
+that maps directly onto HelixCode’s existing CLI turn loop.</strong></p>
+<h3 id="implementation-approach-design-sketch">4.4 Implementation
+approach (design sketch)</h3>
+<ol type="1">
+<li><strong>Dependency</strong>: add
+<code>github.com/coder/acp-go-sdk</code> to
+<code>helix_code/go.mod</code> (pure Go module dependency, no
+submodule/vendoring needed — this is a published library per §11.4.74’s
+“consumed as published package” pattern, same class as CodeGraph’s npm
+consumption).</li>
+<li><strong>New package</strong> <code>internal/acp/</code> (parallel to
+<code>internal/mcp/</code>): implements <code>acp.Agent</code> by
+wrapping the existing CLI turn-handling logic — <code>Initialize</code>
+reports HelixCode’s capabilities (tool-use, streaming, etc., itself
+potentially informed by the verifier per HXC-117 §2.3’s ACP read-point);
+<code>NewSession</code> creates a <code>session.Session</code> (existing
+<code>internal/session</code> package, <code>session.go</code>);
+<code>Prompt</code> delegates to the same code path
+<code>handleGenerate</code> (main.go:1714) already exercises against
+real providers (BLUFF-001-clean — no simulation risk since it reuses the
+existing real-provider call).</li>
+<li><strong>New CLI entrypoint</strong>: <code>helixcode acp</code>
+subcommand (cobra, following the exact
+<code>lsp_cmd.go</code>/<code>skills_cmd.go</code>/<code>mcp_cmd.go</code>
+pattern at <code>cmd/cli/acp_cmd.go</code>) that runs
+<code>acp.NewAgentSideConnection(agentImpl, os.Stdout, os.Stdin)</code>
+and blocks — this is the stdio sub-process mode an editor (Zed,
+JetBrains) would launch HelixCode in, exactly mirroring how
+<code>internal/mcp/transport_stdio.go</code> already spawns/talks-to MCP
+servers from the other side of an analogous protocol.</li>
+<li><strong>Streaming updates</strong>: <code>session/update</code>
+notifications map onto the existing <code>GenerateStream</code>
+real-time token path already used for <code>--stream</code> in
+<code>handleGenerate</code> (no new streaming plumbing needed, only a
+new notification-emission wrapper).</li>
+<li><strong>Permission requests</strong>: map onto HelixCode’s existing
+<code>internal/approval</code>/<code>internal/tools/confirmation</code>/<code>internal/tools/permissions</code>
+packages (already present per the go.mod-adjacent directory listing in
+main.go’s import block, lines 27, 51-54) — ACP’s <code>permission</code>
+method is functionally the same concept HelixCode already implements for
+tool-call approval, so this is a protocol-translation layer, not new
+policy logic.</li>
+</ol>
+<h3 id="risk-honest-gaps">4.5 Risk / honest gaps</h3>
+<ul>
+<li>Remote (HTTP/WebSocket) ACP transport is explicitly WIP in the
+official spec (per agentclientprotocol.com/get-started/introduction,
+fetched this session) — Phase 1 should scope to stdio-only, matching the
+officially-stable transport.</li>
+<li><code>coder/acp-go-sdk</code> is a third-party (not
+Zed/JetBrains-authored) SDK; its version/stability should be pinned and
+its own test coverage spot-checked before adoption (Phase 1 sub-task,
+§5).</li>
+<li>HXC-119 is <strong>NOT</strong> a §11.4.112 structural-impossibility
+candidate — closing it that way would itself be a §11.4.150 violation
+(closing/structural-verdicting without the mandatory deep multi-angle
+research pass, which this section IS, cited below).</li>
+</ul>
+<hr />
+<h2 id="phased-sub-task-breakdown-blast-radiusrisk-11.4.145">5. Phased
+sub-task breakdown + blast-radius/risk (§11.4.145)</h2>
+<p>All three items share one root cause (an unfulfilled/incomplete
+capability-model contract) and interlock (RAG’s capability flag and
+ACP’s capability flag both live in the same
+<code>VerificationResult</code> struct HXC-117 extends) — hence they
+were dispatched to one design pass instead of three independent ones,
+per the task’s own framing.</p>
+<h3 id="hxc-117-capability-flags">HXC-117 — capability flags</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Sub-task</th>
+<th>Blast radius</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Add six <code>bool</code> fields to <code>VerificationResult</code>
++ mirror on <code>VerifiedModel</code> (types.go)</td>
+<td>Additive struct fields only; zero read-points wired yet</td>
+<td><strong>Low</strong> — no behavior change (§2.4); safe to land
+standalone</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Resolve the MCP/LSP/Skills/Plugins “model-capability vs
+subsystem-availability” ambiguity (§2.3 honest boundary) via §11.4.66
+interactive clarification with the operator BEFORE wiring any gate</td>
+<td>none (research/decision only)</td>
+<td><strong>Low</strong> — pure decision-gathering; wrong assumption
+here would misdirect Phase 3</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Wire the MCP read-point (<code>internal/mcp/registry.go</code>
+<code>Manager.Start</code>)</td>
+<td>Touches MCP server-dial path; regression risk = a
+verifier-unreachable state must fail OPEN to current unconditional-dial
+behavior, never fail closed and silently stop dialing configured
+servers</td>
+<td><strong>Medium</strong> — MCP is a load-bearing developer-tool
+surface; requires §11.4.145 angle (2) regression call-graph check on
+every <code>Manager.Start</code> caller before merge</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Wire the LSP/Skills/Plugins read-points (locations TBD pending Phase
+1 investigation of
+<code>tool_loop.go</code>/<code>skill_dispatcher.go</code>)</td>
+<td>Same shape as Phase 3</td>
+<td><strong>Medium</strong>, same fail-open discipline</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Full four-layer test coverage (§11.4.4(b)) + HelixQA bank +
+regression guard registration (§11.4.135) per wired subsystem</td>
+<td>Test-only</td>
+<td><strong>Low</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="hxc-118-rag-integration">HXC-118 — RAG integration</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Sub-task</th>
+<th>Blast radius</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Investigate
+<code>internal/memory</code>/<code>internal/persistence</code> +
+confirm/deny existence of an embedding-call path in
+<code>internal/llm</code> (§3.3 open question) — MUST complete before
+any adapter code is written</td>
+<td>Read-only investigation</td>
+<td><strong>Low</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Add <code>go.mod</code> require + <code>replace</code> directive for
+<code>digital.vasic.rag</code>; confirm <code>go build ./...</code>
+still succeeds inner-app-wide</td>
+<td>Dependency-graph only, no runtime wiring</td>
+<td><strong>Low</strong> — mirrors §11.4.76 pattern already proven safe
+for <code>containers</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Implement concrete <code>retriever.Retriever</code> adapter in new
+<code>internal/rag/</code> package, backed by the Phase-1-confirmed
+storage + embedding path</td>
+<td>New package, no existing call-sites touched</td>
+<td><strong>Low-Medium</strong> — new code, but additive (nothing
+currently calls it)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Wire the CLI surface (<code>cmd/cli/acp_cmd.go</code>-style
+<code>rag_cmd.go</code>) + the
+<code>handleGenerate</code>/<code>handleInteractive</code> injection
+hook (§3.4), default-OFF</td>
+<td>Touches the two most heavily-used CLI handlers (main.go:1714,
+2298)</td>
+<td><strong>Medium-High</strong> — these are the BLUFF-001-anchored
+real-generation paths; any change here MUST preserve the existing
+real-provider-call contract exactly when RAG is disabled (default), and
+the §11.4.145 angle (2) regression check must enumerate every existing
+caller/test of both handlers before merge</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Full four-layer coverage + HelixQA + regression guard</td>
+<td>Test-only</td>
+<td><strong>Low</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="hxc-119-acp">HXC-119 — ACP</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Sub-task</th>
+<th>Blast radius</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Pin + vendor-audit <code>github.com/coder/acp-go-sdk</code>
+(version, license, its own test coverage)</td>
+<td>Dependency-graph only</td>
+<td><strong>Low</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Implement <code>internal/acp/</code> <code>acp.Agent</code> wrapper
+delegating to the existing turn-handling logic (§4.4.2)</td>
+<td>New package</td>
+<td><strong>Low-Medium</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>New <code>cmd/cli/acp_cmd.go</code> stdio entrypoint
+(<code>helixcode acp</code>)</td>
+<td>New cobra subcommand, additive — does not touch existing subcommand
+routing beyond one new <code>root.AddCommand</code> call, same shape as
+every other <code>newXxxCmd</code> registration already in
+<code>main.go</code></td>
+<td><strong>Low</strong> — purely additive surface</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Wire <code>session/update</code> onto the existing
+<code>GenerateStream</code> path (§4.4.4)</td>
+<td>Touches the streaming call inside <code>handleGenerate</code>, but
+only when invoked FROM the new ACP entrypoint (a new caller, not a
+change to the existing CLI-interactive caller)</td>
+<td><strong>Medium</strong> — must confirm (Phase-1-of-this-sub-item
+angle) that <code>GenerateStream</code>’s existing callback signature
+can be reused without modifying its contract for the pre-existing CLI
+streaming caller</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Map ACP <code>permission</code> requests onto existing
+<code>internal/approval</code>/<code>internal/tools/permissions</code>
+(§4.4.5)</td>
+<td>Touches an existing, security-relevant subsystem</td>
+<td><strong>Medium-High</strong> — permission-request translation is
+exactly the class of change §11.4.145 angle (5) security + angle (6)
+host/data safety must independently research before merge; no shortcut
+here regardless of how mechanical the mapping looks</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Full four-layer coverage + a real Zed-or-JetBrains-driven (or
+<code>coder/acp-go-sdk</code>’s own example client) E2E Challenge
+(§11.4.143-class real-journey discipline — no synthetic-JSON-RPC-only
+test as the sole proof) + HelixQA + regression guard</td>
+<td>Test-only, but MUST include a genuine external-client round-trip per
+the anti-bluff mandate — a self-talking-to-itself JSON-RPC unit test
+alone would be a metadata-only bluff</td>
+<td><strong>Low execution risk, HIGH bluff risk if skipped</strong> —
+flagged explicitly for the implementing agent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cross-cutting-risk-shared-by-all-three-items">Cross-cutting risk
+shared by all three items</h3>
+<p>Because HXC-117’s <code>VerificationResult</code> extension is a
+prerequisite read-point for both HXC-118’s and HXC-119’s optional
+capability-gating (§3.4, §4.4.2), <strong>HXC-117 Phase 1 (struct
+fields) should land first</strong>, independently, before either HXC-118
+or HXC-119 Phase 2+ begins — this avoids the three items conflicting on
+the same struct in parallel work-streams (§11.4.176 exactly-once claim
+discipline: the <code>types.go</code> file-scope should be claimed by
+exactly one track at a time).</p>
+<hr />
+<h2 id="sources-verified-2026-07-12">Sources verified 2026-07-12:</h2>
+<ul>
+<li>https://agentclientprotocol.com/get-started/introduction</li>
+<li>https://github.com/agentclientprotocol/agent-client-protocol</li>
+<li>https://github.com/agentclientprotocol</li>
+<li>https://www.jetbrains.com/acp/</li>
+<li>https://blog.marcnuri.com/agent-client-protocol-acp-introduction</li>
+<li>https://github.com/coder/acp-go-sdk</li>
+<li>https://pkg.go.dev/github.com/coder/acp-go-sdk</li>
+<li>https://github.com/ironpark/acp-go</li>
+<li>https://pkg.go.dev/github.com/rokku-c/acp-go</li>
+</ul>
+</body>
+</html>

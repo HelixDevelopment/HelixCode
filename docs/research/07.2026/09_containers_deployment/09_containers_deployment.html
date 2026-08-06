@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>09_containers_deployment</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">09_containers_deployment</h1>
+</header>
+<h1 id="deploying-the-local-ai-stack-via-the-containers-submodule-in-rootless-podman">Deploying
+the Local-AI Stack via the <code>containers</code> Submodule in Rootless
+Podman</h1>
+<p><strong>Task:</strong> T1/main deep-research + design report
+<strong>Date:</strong> 2026-07-06 <strong>Scope:</strong> LLM serving,
+VLM, image-gen, video-gen, translation, embeddings, vector DB, memory,
+Whisper, Tesseract — booted through the <code>containers</code>
+submodule (<code>digital.vasic.containers</code>) under rootless podman,
+per §11.4.76 (Containers-Submodule mandate) and §11.4.161
+(rootless-container-runtime mandate). <strong>Grounding
+discipline:</strong> §11.4.6 — every host/API claim below is captured
+(<code>[G-*]</code>) or cited; unproven items are marked
+<code>UNCONFIRMED:</code>.</p>
+<hr />
+<h2 id="grounding-facts-captured-this-session">0. Grounding facts
+(captured this session)</h2>
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Fact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G-HOST-1</td>
+<td>Host GPU = RTX 5090, 32 GB VRAM; driver 570.169; CUDA 12.8.
+<code>nvidia-ctk</code> (NVIDIA Container Toolkit) is
+<strong>ABSENT</strong>; <strong>no CDI specs exist</strong>
+(<code>/etc/cdi</code>, <code>/var/run/cdi</code>,
+<code>~/.config/cdi</code> empty). Rootless GPU passthrough is therefore
+<strong>not yet possible</strong> — this is the #1 blocker.</td>
+</tr>
+<tr>
+<td>G-HOST-2</td>
+<td><code>nvcc</code> absent on host (irrelevant for container workloads
+— the toolchain lives in the <code>-devel</code> image).</td>
+</tr>
+<tr>
+<td>G-HOST-3</td>
+<td>podman 5.7.1, rootless=true. 64 cores / 251 GiB RAM. No docker.</td>
+</tr>
+<tr>
+<td>G-CTN-1</td>
+<td><code>containers</code> submodule at
+<code>submodules/containers</code>, module
+<code>digital.vasic.containers</code>, go 1.24+. Packages
+<code>pkg/boot</code>, <code>pkg/compose</code>,
+<code>pkg/health</code>, <code>pkg/runtime</code>,
+<code>pkg/endpoint</code>, <code>pkg/scheduler</code>,
+<code>pkg/remote</code> read directly.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Blackwell (sm_120) implication (G-HOST-1):</strong> the RTX
+5090 is compute capability <code>sm_120</code>; every AI image MUST be
+built on <strong>CUDA ≥ 12.8</strong> with a matching PyTorch
+<code>cu128</code> wheel, or kernels fail to load ([vLLM #13306], [vLLM
+RTX5090 forum]).</p>
+<hr />
+<h2 id="the-containers-submodule-api-a-consumer-actually-uses-read-not-guessed-11.4.6">1.
+The <code>containers</code>-submodule API a consumer actually uses
+(READ, not guessed — §11.4.6)</h2>
+<h3 id="service-declaration-pkgendpoint.serviceendpoint">1.1 Service
+declaration — <code>pkg/endpoint.ServiceEndpoint</code></h3>
+<p>Boot input is <code>map[string]endpoint.ServiceEndpoint</code>.
+Verified fields (<code>pkg/endpoint/endpoint.go</code>):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ServiceEndpoint <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    Host<span class="op">,</span> Port<span class="op">,</span> URL          <span class="dt">string</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Enabled<span class="op">,</span> Required<span class="op">,</span> Remote <span class="dt">bool</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    HealthPath<span class="op">,</span> HealthType   <span class="dt">string</span>        <span class="co">// HealthType: &quot;http&quot;|&quot;tcp&quot;|&quot;grpc&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Timeout                  time<span class="op">.</span>Duration</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    RetryCount               <span class="dt">int</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    ComposeFile              <span class="dt">string</span>        <span class="co">// path to the compose file for this service</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    ServiceName              <span class="dt">string</span>        <span class="co">// service name within that compose file</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    Profile                  <span class="dt">string</span>        <span class="co">// compose --profile</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    DiscoveryEnabled         <span class="dt">bool</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    DiscoveryMethod          <span class="dt">string</span>        <span class="co">// &quot;dns&quot;|&quot;consul&quot;|&quot;static&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    DiscoveryTimeout         time<span class="op">.</span>Duration</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    Discovered               <span class="dt">bool</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<blockquote>
+<p><strong>GAP-1 (load-bearing):</strong> <code>ServiceEndpoint</code>
+has <strong>no GPU/VRAM/device field.</strong> A GPU service is declared
+exactly like a CPU one — the GPU request lives <em>inside the compose
+file the endpoint points at</em>, not in the Go struct.</p>
+</blockquote>
+<h3 id="boot-orchestration-pkgboot">1.2 Boot orchestration —
+<code>pkg/boot</code></h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewBootManager<span class="op">(</span>endpoints <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>endpoint<span class="op">.</span>ServiceEndpoint<span class="op">,</span> opts <span class="op">...</span>BootManagerOption<span class="op">)</span> <span class="op">*</span>BootManager</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bm <span class="op">*</span>BootManager<span class="op">)</span> BootAll<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(*</span>BootSummary<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bm <span class="op">*</span>BootManager<span class="op">)</span> HealthCheckAll<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">error</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bm <span class="op">*</span>BootManager<span class="op">)</span> Shutdown<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Functional options (pkg/boot/options.go):</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>WithRuntime<span class="op">(</span>runtime<span class="op">.</span>ContainerRuntime<span class="op">)</span>        WithOrchestrator<span class="op">(</span>compose<span class="op">.</span>ComposeOrchestrator<span class="op">)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>WithHealthChecker<span class="op">(</span>health<span class="op">.</span>HealthChecker<span class="op">)</span>      WithDiscoverer<span class="op">(</span>discovery<span class="op">.</span>Discoverer<span class="op">)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>WithDistributor<span class="op">(</span>Distributor<span class="op">)</span>                 WithHostManager<span class="op">(</span>remote<span class="op">.</span>HostManager<span class="op">)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>WithScheduler<span class="op">(</span>scheduler<span class="op">.</span>Scheduler<span class="op">)</span>           WithProjectDir<span class="op">(</span>dir <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>WithLogger<span class="op">(</span>logging<span class="op">.</span>Logger<span class="op">)</span>                   WithMetrics<span class="op">(</span>metrics<span class="op">.</span>MetricsCollector<span class="op">)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>WithEventBus<span class="op">(</span>event<span class="op">.</span>EventBus<span class="op">)</span></span></code></pre></div>
+<p><code>BootAll</code> runs three phases
+(<code>pkg/boot/manager.go</code>): <strong>(1) discovery</strong>
+(skips <code>!Enabled</code>, resolves <code>DiscoveryEnabled</code>
+remotes), <strong>(2) compose up</strong> — endpoints are
+<code>groupByCompose()</code> by <code>ComposeFile</code> and each group
+booted via
+<code>orchestrator.Up(ctx, compose.ComposeProject{File, Profile})</code>,
+<strong>(3) health checks</strong> — <code>HealthCheckAll</code> builds
+<code>health.HealthTarget</code>s from each endpoint and fails the boot
+only if a <code>Required</code> service is unhealthy. Returns a
+<code>*BootSummary{Started, Remote, Discovered, Failed, Skipped, TotalDuration}</code>.</p>
+<h3 id="compose-backend-pkgcompose">1.3 Compose backend —
+<code>pkg/compose</code></h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ComposeOrchestrator <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    Up<span class="op">(</span>ctx<span class="op">,</span> project ComposeProject<span class="op">,</span> opts <span class="op">...</span>UpOption<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Down<span class="op">(</span>ctx<span class="op">,</span> project ComposeProject<span class="op">,</span> opts <span class="op">...</span>DownOption<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Status<span class="op">(</span>ctx<span class="op">,</span> project ComposeProject<span class="op">)</span> <span class="op">([]</span>ServiceStatus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Logs<span class="op">(</span>ctx<span class="op">,</span> project ComposeProject<span class="op">,</span> service <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>io<span class="op">.</span>ReadCloser<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewDefaultOrchestrator<span class="op">(</span>workDir <span class="dt">string</span><span class="op">,</span> logger logging<span class="op">.</span>Logger<span class="op">)</span> <span class="op">(*</span>DefaultOrchestrator<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Backend auto-detection order</strong>
+(<code>detectComposeCmd</code>,
+<code>pkg/compose/orchestrator.go</code>): <code>docker compose</code> →
+<code>docker-compose</code> →
+<strong><code>podman-compose</code></strong> →
+<code>podman compose</code>. On this host (no docker) it selects
+<code>podman-compose</code> if the pip tool is installed, else
+<code>podman compose</code>.</p>
+<p>The orchestrator is <strong>podman-aware</strong>:
+<code>isPodmanCompose</code> is set when the command is standalone
+<code>podman-compose</code>; for that backend it omits docker’s
+<code>--wait</code> flag and instead <strong>host-side polls
+<code>Status()</code></strong> until every service is
+<code>running</code>/<code>healthy</code> (<code>waitForServices</code>,
+120 s default, 1 s tick), and parses <strong>podman-native
+<code>ps --format json</code></strong> rather than the docker
+Go-template (a real bug it fixes). Enable this wait via
+<code>compose.WithWait(true)</code>.</p>
+<blockquote>
+<p><strong>GAP-2 / RISK (cited):</strong> when the backend is
+<strong><code>podman compose</code></strong> (the docker-compose
+provider invoked through the podman CLI), CDI GPU devices declared in a
+compose <code>devices:</code> list are <strong>silently ignored</strong>
+— the container starts with <strong>no GPU</strong> ([podman #28436],
+[oneuptime podman-compose GPU]). Standalone
+<strong><code>podman-compose</code> (pip)</strong> honors them. The
+design MUST pin the backend to <code>podman-compose</code>.</p>
+</blockquote>
+<p><code>HelixService</code> (the programmatic compose model,
+<code>pkg/compose/helix_project.go</code>) also has <strong>no GPU
+field</strong> — only <code>ResourceLimits{CPUs, Memory, Pids}</code>.
+This confirms GAP-1 at the compose layer.</p>
+<h3 id="health-pkghealth">1.4 Health — <code>pkg/health</code></h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> HealthChecker <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    Check<span class="op">(</span>ctx<span class="op">,</span> HealthTarget<span class="op">)</span> <span class="op">*</span>HealthResult</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    CheckAll<span class="op">(</span>ctx<span class="op">,</span> <span class="op">[]</span>HealthTarget<span class="op">)</span> <span class="op">[]*</span>HealthResult</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewDefaultChecker<span class="op">()</span> <span class="op">*</span>DefaultChecker            <span class="co">// pre-loads tcp/http/grpc</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>DefaultChecker<span class="op">)</span> Register<span class="op">(</span>t HealthType<span class="op">,</span> f CheckFunc<span class="op">)</span>   <span class="co">// add &quot;custom&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewCustomCheckFunc<span class="op">(</span>fn CustomCheckFunc<span class="op">)</span> CheckFunc          <span class="co">// wrap arbitrary probe</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// GPU-specific (pkg/health/gpu.go):</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VRAMProbe <span class="kw">interface</span> <span class="op">{</span> Probe<span class="op">(</span>ctx<span class="op">)</span> <span class="op">(</span>freeMB <span class="dt">int</span><span class="op">,</span> err <span class="dt">error</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewGPUHealthCheck<span class="op">(</span>p VRAMProbe<span class="op">,</span> minFreeVRAMMB <span class="dt">int</span><span class="op">)</span> <span class="op">*</span>GPUHealthCheck</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>GPUHealthCheck<span class="op">)</span> Check<span class="op">(</span>ctx<span class="op">)</span> <span class="dt">error</span>   <span class="co">// ErrGPUUnhealthy if free &lt; floor</span></span></code></pre></div>
+<p><code>GPUHealthCheck</code> is the <strong>VRAM-budget gate</strong>
+the topology below leans on: a <code>VRAMProbe</code> (implementable by
+shelling
+<code>nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits</code>
+on the host, or <code>podman exec … nvidia-smi</code>) lets the boot
+manager refuse to start a resident-tier service unless the card has
+enough free VRAM.</p>
+<h3 id="remotescheduler-gpu-model-already-present-reuse-dont-reimplement">1.5
+Remote/scheduler GPU model (already present — reuse, don’t
+reimplement)</h3>
+<p><code>pkg/scheduler.GPURequirement{Count, MinVRAMMB, Vendor, MinCompute, Capabilities}</code>
++
+<code>pkg/remote.GPUDevice{Model, VRAMTotalMB, VRAMFreeMB, ComputeCapability, CUDA/NVENC/NVDEC/Vulkan/OpenCL/ROCm...}</code>
++ <code>scheduler.ContainerRequirements.GPU *GPURequirement</code>
+already model GPU-aware <strong>placement across remote hosts</strong>.
+This is the correct extension point if the stack later spans a second
+GPU box (<code>CONTAINERS_REMOTE_HOST_N_LABELS=gpu=true</code>). It does
+<strong>not</strong> help single-host local GPU passthrough
+(GAP-1/GAP-3).</p>
+<blockquote>
+<p><strong>GAP-3:</strong> <code>pkg/runtime.ContainerRuntime</code>
+(the local <code>podman run</code> path) exposes no
+<code>--device</code>/CDI option (only <code>pkg/runtime/lxd.go</code>
+has a generic <code>Devices map</code>). Local GPU containers must go
+through the <strong>compose file</strong> today, not the programmatic
+runtime API.</p>
+</blockquote>
+<hr />
+<h2 id="rootless-podman-gpu-enablement-nvidia-ctk-cdi-fixes-g-host-1">2.
+Rootless-podman GPU enablement — nvidia-ctk / CDI (fixes G-HOST-1)</h2>
+<p>This is the mandatory prerequisite; nothing GPU boots until it is
+done. All steps run <strong>once</strong> on the host.</p>
+<h3 id="install-the-nvidia-container-toolkit-nvidia-install-guide">2.1
+Install the NVIDIA Container Toolkit ([NVIDIA install-guide])</h3>
+<p><code>nvidia-ctk</code> ships in
+<code>nvidia-container-toolkit</code>. On an apt host:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://nvidia.github.io/libnvidia-container/gpgkey <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">sudo</span> gpg <span class="at">--dearmor</span> <span class="at">-o</span> /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-L</span> https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list <span class="dt">\</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">sed</span> <span class="st">&#39;s#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g&#39;</span> <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">sudo</span> tee /etc/apt/sources.list.d/nvidia-container-toolkit.list</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get update <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> apt-get install <span class="at">-y</span> nvidia-container-toolkit   <span class="co"># ≥ 1.18 recommended</span></span></code></pre></div>
+<p>(RPM/ALT hosts: use the <code>.repo</code> file +
+<code>dnf install nvidia-container-toolkit</code>, or the distro’s
+native package. The host here is ALT Linux — <code>UNCONFIRMED:</code>
+whether ALT packages <code>nvidia-container-toolkit</code>; if not,
+install from the NVIDIA rpm repo or build <code>nvidia-ctk</code> from
+the libnvidia-container release. Verify with
+<code>nvidia-ctk --version</code> before proceeding — install exit 0 ≠
+working binary, per §11.4.102(C).)</p>
+<h3 id="rootless-config-disable-cgroup-management">2.2 Rootless config:
+disable cgroup management</h3>
+<p>Rootless podman cannot manage device cgroups, so the toolkit must be
+told not to try ([podman-desktop GPU], [NVIDIA install-guide]):</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nvidia-ctk config <span class="at">--set</span> nvidia-container-cli.no-cgroups <span class="at">--in-place</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># writes no-cgroups = true into /etc/nvidia-container-runtime/config.toml</span></span></code></pre></div>
+<h3 id="generate-the-cdi-spec-the-missing-artifact-g-host-1">2.3
+Generate the CDI spec (the missing artifact — G-HOST-1)</h3>
+<p>CDI is NVIDIA’s <strong>recommended</strong> rootless mechanism
+([NVIDIA cdi-support]).</p>
+<ul>
+<li><p><strong>Rootless (user-owned spec)</strong> — no root needed at
+run time ([oneuptime podman GPU]):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/.config/cdi</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi generate <span class="at">--output</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi/nvidia.yaml</span></code></pre></div></li>
+<li><p><strong>System-wide (root, readable by all users):</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nvidia-ctk cdi generate <span class="at">--output</span><span class="op">=</span>/etc/cdi/nvidia.yaml</span></code></pre></div></li>
+<li><p>As of toolkit <strong>v1.18.0</strong> a
+<code>nvidia-cdi-refresh</code> systemd service
+<strong>auto-regenerates</strong> <code>/var/run/cdi/nvidia.yaml</code>
+on toolkit/driver install, upgrade, and reboot ([NVIDIA cdi-support],
+[NVIDIA release-notes]). Driver <em>removal</em> and MIG reconfig still
+need a manual regenerate.</p></li>
+</ul>
+<p>Podman reads CDI specs from <code>/etc/cdi</code> and
+<code>/var/run/cdi</code> by default; for the rootless
+<code>~/.config/cdi</code> path pass
+<code>--cdi-spec-dir=$HOME/.config/cdi</code>.</p>
+<h3 id="verify-captured-evidence-gate-11.4.5">2.4 Verify
+(captured-evidence gate — §11.4.5)</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi list          <span class="co"># must list nvidia.com/gpu=all and nvidia.com/gpu=0</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> run <span class="at">--rm</span> <span class="at">--device</span> nvidia.com/gpu=all <span class="at">--security-opt</span><span class="op">=</span>label=disable <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  nvidia/cuda:12.8.1-base-ubuntu22.04 nvidia-smi</span></code></pre></div>
+<p><code>nvidia-smi</code> inside the container printing the RTX 5090 +
+driver 570.169 is the runtime signature that closes G-HOST-1
+(§11.4.108). <code>--security-opt=label=disable</code> (or
+<code>--group-add keep-groups</code>) avoids SELinux/label denial on
+rootless ([oneuptime podman GPU]).</p>
+<h3 id="regeneration-mechanism-11.4.77">2.5 Regeneration mechanism
+(§11.4.77)</h3>
+<p>The CDI spec is host state that must be re-obtainable: ship
+<code>scripts/gpu_cdi_setup.sh</code> running §2.1–2.4 + a
+<code>.gitignore-meta/nvidia-cdi.yaml</code> declaring
+<code>mechanism: nvidia-ctk cdi generate; requires: nvidia-container-toolkit&gt;=1.18, driver 570.169</code>.
+<strong>CDI must be regenerated whenever the driver changes</strong> —
+wire that into the boot preflight so a stale spec is caught.</p>
+<hr />
+<h2 id="multi-service-gpu-sharing-on-one-32-gb-card-de-risks-rz-03">3.
+Multi-service GPU sharing on ONE 32 GB card (de-risks RZ-03)</h2>
+<p>The full stack has ~10 GPU-hungry services but one 32 GB card. Naive
+co-residency OOMs: time-sliced/CDI-shared processes <strong>share the
+whole VRAM pool with no per-process limit</strong> — if two services
+each grab 20 GB, one OOMs ([spheron GPU sharing], [vcluster GPU
+sharing]). Strategy = <strong>budget + tier + on-demand</strong>, not
+“start everything.”</p>
+<h3 id="mechanism-choice-for-a-single-consumer-gpu">3.1 Mechanism choice
+for a single consumer GPU</h3>
+<ul>
+<li><strong>MIG</strong> — <em>not available</em> on GeForce RTX 5090
+(MIG is datacenter-only). Rule it out.</li>
+<li><strong>Time-slicing (default under CDI)</strong> — multiple
+containers see the full GPU; concurrency by context-switch, <strong>no
+memory isolation</strong> ([nvidia gpu-sharing], [scaleops]). Acceptable
+only if the sum of resident VRAM budgets &lt; 32 GB.</li>
+<li><strong>MPS (Multi-Process Service)</strong> — concurrent kernel
+execution <strong>with per-client memory caps</strong>
+(<code>CUDA_MPS_PINNED_DEVICE_MEM_LIMIT</code>), which <strong>reduces
+OOM</strong> ([medium MPS], [nvidia consolidating]). Best for the
+always-resident small services (embeddings + Whisper) that must answer
+concurrently.</li>
+<li><strong>On-demand load/unload</strong> — the real lever for the big
+models:
+<ul>
+<li><strong>vLLM Sleep Mode</strong> (v0.11+): level-1 offloads weights
+to CPU RAM, level-2 discards them; wake is <strong>18–200× faster than a
+cold reload</strong> ([vLLM sleep-mode]). Ideal for the LLM/VLM tier —
+keep the server process warm, evict weights between jobs.</li>
+<li><strong>Ollama</strong> <code>OLLAMA_KEEP_ALIVE</code> +
+<code>keep_alive:0</code> unloads a model to free VRAM; it will juggle
+models in/out of a too-small card at the cost of swap latency
+([runaihome ollama], [sumguy ollama]).</li>
+<li><strong>llama.cpp router / <code>--n-gpu-layers</code></strong> for
+dynamic model switching without a restart ([glukhov llama-server]).</li>
+</ul></li>
+</ul>
+<h3 id="co-resident-vs-on-demand-policy-for-this-card-vram-budget-32-gb">3.2
+Co-resident vs on-demand policy for THIS card (VRAM budget, 32 GB)</h3>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 28%" />
+<col style="width: 22%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Services</th>
+<th>Policy</th>
+<th>Rough VRAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Always-resident</strong> (small, latency-critical,
+concurrent)</td>
+<td>embeddings (e.g. bge/nomic), Whisper (base/small)</td>
+<td>resident, optionally under <strong>MPS</strong> with per-client
+caps</td>
+<td>~2–4 GB total</td>
+</tr>
+<tr>
+<td><strong>Warm-swappable</strong> (one big model at a time)</td>
+<td>LLM serving (vLLM/Ollama), VLM</td>
+<td><strong>one active</strong>, others in vLLM
+<strong>sleep</strong>/Ollama keep-alive; a small router picks</td>
+<td>12–24 GB for the active model</td>
+</tr>
+<tr>
+<td><strong>On-demand burst</strong> (heavy, infrequent, exclusive)</td>
+<td>image-gen (SDXL/Flux), video-gen (SVD/Wan)</td>
+<td>started <strong>only for a job</strong>, single-owner of remaining
+VRAM, torn down after (§11.4.119)</td>
+<td>10–24 GB while running</td>
+</tr>
+<tr>
+<td><strong>CPU-only (no GPU)</strong></td>
+<td>vector DB (Qdrant/pgvector), memory store, translation (if CPU MT),
+<strong>Tesseract OCR</strong></td>
+<td>never touch the GPU</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Rules: (1) sum of <strong>resident</strong> budgets &lt; ~6 GB,
+leaving ≥ 26 GB for one warm/burst model; (2) <strong>never</strong> two
+burst services (image-gen + video-gen) resident simultaneously —
+serialize them as single-GPU-owner (§11.4.119); (3) every GPU service
+sets an explicit cap (<code>--gpu-memory-utilization</code> in vLLM,
+<code>OLLAMA_GPU_OVERHEAD</code>,
+<code>CUDA_MPS_PINNED_DEVICE_MEM_LIMIT</code>) so time-sliced neighbours
+can’t oversubscribe; (4) the <code>GPUHealthCheck</code> VRAM floor
+(§1.4) gates each resident/warm start.</p>
+<hr />
+<h2 id="design-containers-submodule-driven-topology-for-the-full-stack">4.
+Design: <code>containers</code>-submodule-driven topology for the full
+stack</h2>
+<h3 id="layout-compose-profiles-tiers">4.1 Layout (compose profiles =
+tiers)</h3>
+<p>One compose file <code>deploy/ai-stack.compose.yaml</code> with
+<strong>profiles</strong> so the boot manager brings up only the wanted
+tier; <code>ServiceEndpoint.Profile</code> selects it, and
+<code>groupByCompose</code> keeps one file → one group.</p>
+<pre><code>cpu-core     profile → qdrant, pgvector/postgres, memory, translation, tesseract   (Enabled, Required)
+gpu-resident profile → embeddings, whisper                                         (Enabled, Required, GPU)
+gpu-warm     profile → llm (vLLM sleep) , vlm                                       (Enabled, GPU, on-demand)
+gpu-burst    profile → image-gen, video-gen                                        (Enabled=false by default; started per job)</code></pre>
+<h3 id="a-gpu-service-entry-compose-the-cdi-device-shape">4.2 A GPU
+service entry (compose) — the CDI device shape</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">vllm</span><span class="kw">:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> &lt;registry&gt;/helix-vllm-cu128:&lt;sha&gt;</span><span class="co">    # CUDA 12.8, torch cu128, sm_120</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;gpu-warm&quot;</span><span class="kw">]</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">devices</span><span class="kw">:</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> nvidia.com/gpu=all</span><span class="co">            # CDI ref from §2.3</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">security_opt</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&quot;label=disable&quot;</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> VLLM_FLASH_ATTN_VERSION=2</span><span class="co">     # FA3 not yet on Blackwell ([vLLM RTX5090 forum])</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> CUDA_VISIBLE_DEVICES=0</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">command</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;--gpu-memory-utilization&quot;</span><span class="kw">,</span><span class="st">&quot;0.85&quot;</span><span class="kw">,</span><span class="st">&quot;--enable-sleep-mode&quot;</span><span class="kw">]</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> ai-weights:/models</span><span class="co">            # large-weight volume, §4.4</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span><span class="co">                      # host-side wait (podman-compose path) polls this</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD-SHELL&quot;</span><span class="kw">,</span><span class="st">&quot;curl -sf http://localhost:8000/health&quot;</span><span class="kw">]</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 10s</span></span></code></pre></div>
+<blockquote>
+<p>Because <code>devices: nvidia.com/gpu=all</code> is silently dropped
+by <code>podman compose</code> (GAP-2), the <strong>boot backend MUST be
+<code>podman-compose</code> (pip)</strong>. Enforce it: install
+<code>podman-compose</code>, and preflight-assert
+<code>detectComposeCmd()</code> resolved to it (not
+<code>podman compose</code>). Alternatively use the
+<code>deploy.resources.reservations.devices</code> form — but the
+<code>devices:</code>+CDI form is the reliable rootless path ([oneuptime
+podman-compose GPU]).</p>
+</blockquote>
+<h3 id="boot-wiring-consumer-go-15-lines">4.3 Boot wiring (consumer Go,
+~15 lines)</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>orch<span class="op">,</span> _ <span class="op">:=</span> compose<span class="op">.</span>NewDefaultOrchestrator<span class="op">(</span>projectDir<span class="op">,</span> log<span class="op">)</span>       <span class="co">// resolves podman-compose</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>hc      <span class="op">:=</span> health<span class="op">.</span>NewDefaultChecker<span class="op">()</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>hc<span class="op">.</span>Register<span class="op">(</span>health<span class="op">.</span>HealthCustom<span class="op">,</span> health<span class="op">.</span>NewCustomCheckFunc<span class="op">(</span>gpuVRAMGate<span class="op">))</span> <span class="co">// wraps GPUHealthCheck</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>bm <span class="op">:=</span> boot<span class="op">.</span>NewBootManager<span class="op">(</span>endpoints<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        boot<span class="op">.</span>WithOrchestrator<span class="op">(</span>orch<span class="op">),</span> boot<span class="op">.</span>WithHealthChecker<span class="op">(</span>hc<span class="op">),</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        boot<span class="op">.</span>WithProjectDir<span class="op">(</span>projectDir<span class="op">),</span> boot<span class="op">.</span>WithLogger<span class="op">(</span>log<span class="op">))</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>summary<span class="op">,</span> err <span class="op">:=</span> bm<span class="op">.</span>BootAll<span class="op">(</span>ctx<span class="op">)</span>     <span class="co">// discovery → podman-compose up (per profile) → health</span></span></code></pre></div>
+<p><code>endpoints</code> is a <code>map[string]ServiceEndpoint</code>
+where every GPU service shares
+<code>ComposeFile: &quot;deploy/ai-stack.compose.yaml&quot;</code> and differs by
+<code>Profile</code> + <code>ServiceName</code> + health
+<code>Port</code>. <code>WithWait</code>-style readiness is automatic on
+the podman-compose path.</p>
+<h3 id="large-weight-volume-strategy-11.4.77-re-obtain">4.4 Large-weight
+volume strategy (§11.4.77 re-obtain)</h3>
+<p>Model weights (tens–hundreds of GB) are <strong>never</strong>
+git-versioned. Use a named podman volume <code>ai-weights</code> (or a
+host bind under a fast NVMe) mounted read-write into each GPU service.
+Re-obtain mechanism per weight family, declared in
+<code>.gitignore-meta/ai-weights.yaml</code>: HuggingFace Hub pull
+(<code>huggingface-cli download &lt;repo&gt; --local-dir /models/&lt;name&gt;</code>),
+Ollama registry pull (<code>ollama pull &lt;model&gt;</code>), or the
+dedicated
+<code>dependencies/HuggingFace_Hub</code>/<code>dependencies/Ollama</code>
+submodules already in the tree. Ship
+<code>scripts/fetch_ai_weights.sh</code> invoked from
+<code>setup.sh</code>; a preflight gate checks the weight dir is
+populated or emits a <code>.regenerated/&lt;slug&gt;.ok</code> stamp.
+Integrity via sha256 where the source publishes it.</p>
+<h3 id="extensions-to-pr-upstream-into-containers-11.4.74-extend-dont-reimplement">4.5
+Extensions to PR upstream into <code>containers</code> (§11.4.74 —
+extend, don’t reimplement)</h3>
+<p>The submodule is <strong>90% sufficient</strong>; three additive
+primitives close the gaps (each project-agnostic, decoupled per
+§11.4.28): 1.
+<strong><code>compose.HelixService.Devices []string</code></strong> (+
+emit <code>devices:</code> and <code>security_opt: label=disable</code>
+in generated compose) — closes GAP-1 for the programmatic compose model.
+CDI-string valued, vendor-neutral. 2. <strong><code>runtime</code>
+GPU/device option</strong> — a <code>WithDevices([]string)</code> /
+<code>RunOptions.Devices</code> on the local
+<code>ContainerRuntime.Run</code> path so
+<code>podman run --device nvidia.com/gpu=all</code> is expressible
+without a compose file (closes GAP-3). 3.
+<strong><code>compose.NewDefaultOrchestrator</code> backend pin /
+preflight</strong> — an option to <em>require</em>
+<code>podman-compose</code> (reject <code>podman compose</code>) when
+any service requests a CDI device, turning GAP-2 from a silent no-GPU
+into a hard, captured failure. A <strong>host-side
+<code>VRAMProbe</code> impl</strong> (shell <code>nvidia-smi</code>) is
+also worth upstreaming so <code>GPUHealthCheck</code> works
+out-of-the-box.</p>
+<p>Each extension ships with a Challenge that boots a real CUDA-12.8
+container and asserts <code>nvidia-smi</code> sees the 5090 (anti-bluff,
+§11.4.76(5)).</p>
+<hr />
+<h2 id="top-risks">5. Top risks</h2>
+<ol type="1">
+<li><strong>R1 — GPU passthrough entirely blocked until §2 is done
+(G-HOST-1).</strong> No AI service can start; <code>nvidia-ctk</code>
+absent + zero CDI specs. Mitigation: §2 is the first, gating task;
+verify with the §2.4 <code>podman run … nvidia-smi</code> runtime
+signature before any stack boot. ALT-Linux packaging of
+<code>nvidia-container-toolkit</code> is <code>UNCONFIRMED:</code> and
+may need the NVIDIA rpm repo or a from-source
+<code>nvidia-ctk</code>.</li>
+<li><strong>R2 — silent no-GPU via wrong compose backend (GAP-2,
+cited).</strong> <code>podman compose</code> drops CDI
+<code>devices:</code>; the submodule’s auto-detect could pick it.
+Mitigation: install + pin <code>podman-compose</code> (pip);
+preflight-assert the resolved backend; upstream extension #3.</li>
+<li><strong>R3 — single-card VRAM oversubscription / OOM
+(RZ-03).</strong> 32 GB shared, no MIG, time-slicing has no memory
+isolation. Mitigation: the tiered resident/warm/burst budget (§3.2),
+explicit per-service VRAM caps, vLLM sleep + Ollama keep-alive for
+warm-swap, single-GPU-owner serialization of image-gen vs video-gen
+(§11.4.119), and the <code>GPUHealthCheck</code> VRAM floor gating each
+start.</li>
+</ol>
+<p>Runner-up: Blackwell/sm_120 image breakage — every AI image must be
+CUDA 12.8 + torch cu128 + <code>VLLM_FLASH_ATTN_VERSION=2</code>, else
+kernels fail ([vLLM #13306]).</p>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<p>Code (read this session):
+<code>submodules/containers/pkg/{boot/manager.go,boot/options.go,boot/result.go,compose/orchestrator.go,compose/options.go,compose/types.go,compose/helix_project.go,health/gpu.go,health/checker.go,health/custom.go,health/types.go,endpoint/endpoint.go,scheduler/gpu.go,scheduler/types.go,remote/gpu.go}</code>
++ <code>submodules/containers/CLAUDE.md</code>,
+<code>.env.example</code>.</p>
+<p>Web: - NVIDIA Container Toolkit — Installing:
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+- NVIDIA Container Toolkit — CDI support:
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html
+- NVIDIA Container Toolkit — Release notes (v1.18 nvidia-cdi-refresh):
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/release-notes.html
+- Podman Desktop — GPU container access (rootless, no-cgroups):
+https://podman-desktop.io/docs/podman/gpu - OneUptime — Run NVIDIA GPU
+containers with Podman (rootless CDI, ~/.config/cdi, label=disable):
+https://oneuptime.com/blog/post/2026-03-18-run-nvidia-gpu-containers-podman/view
+- OneUptime — GPU access in podman-compose (devices:
+nvidia.com/gpu=all):
+https://oneuptime.com/blog/post/2026-03-17-use-gpu-access-podman-compose/view
+- podman #28436 — CDI GPU devices not passed through with
+<code>podman compose</code>:
+https://github.com/podman-container-tools/podman/issues/28436 - podman
+#19338 — compose <code>driver: cdi</code> not supported:
+https://github.com/containers/podman/issues/19338 - Spheron — Run
+multiple LLMs on one GPU (MIG/time-slicing/MPS):
+https://www.spheron.network/blog/run-multiple-llms-one-gpu-mig-time-slicing-guide/
+- vcluster — DIY GPU sharing (time-slicing has no memory isolation):
+https://www.vcluster.com/blog/diy-gpu-sharing-in-kubernetes -
+Medium/Zanotti — Increase GPU utilization with NVIDIA MPS (per-client
+mem cap):
+https://medium.com/data-science/how-to-increase-gpu-utilization-in-kubernetes-with-nvidia-mps-e680d20c3181
+- NVIDIA — Time-slicing GPUs (GPU Operator):
+https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/gpu-sharing.html
+- vLLM Sleep Mode (18–200× faster wake):
+https://blog.vllm.ai/2025/10/26/sleep-mode.html - Ollama VRAM unloading
+/ keep-alive (2026):
+https://www.runaihome.com/blog/ollama-model-keeps-reloading-vram-fix-2026/
+- llama-server router mode (dynamic model switch):
+https://www.glukhov.org/llm-hosting/llama-cpp/llama-server-router-mode/
+- vLLM #13306 — RTX 5090 / CUDA 12.8 support:
+https://github.com/vllm-project/vllm/issues/13306 - vLLM RTX5090 working
+setup (torch 2.9 cu128, FA v2):
+https://discuss.vllm.ai/t/vllm-on-rtx5090-working-gpu-setup-with-torch-2-9-0-cu128/1492</p>
+<p><strong>Negative findings (§11.4.99):</strong> NVIDIA’s official
+install/CDI pages do NOT document the rootless
+<code>~/.config/cdi</code> path or <code>no-cgroups=true</code> — those
+come from Podman Desktop docs + the OneUptime guide (secondary
+authoritative sources). ALT-Linux <code>nvidia-container-toolkit</code>
+packaging is unverified (<code>UNCONFIRMED:</code>).</p>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>04_implementation_plan</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">04_implementation_plan</h1>
+</header>
+<h1 id="helixllm-full-extension-implementation-plan-phase-p">HelixLLM
+Full-Extension — Implementation Plan (Phase P)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td>Master implementation plan (phases → tasks → subtasks)</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1 · <strong>Created</strong> 2026-07-06</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>PLAN READY — pending operator go for Phase 0</td>
+</tr>
+<tr>
+<td><strong>Basis</strong></td>
+<td>13 research reports +
+<code>02_cross_cutting_foundations_ADR.md</code> +
+<code>99_risk_bottleneck_analysis.md</code></td>
+</tr>
+<tr>
+<td><strong>Constitution HEAD</strong></td>
+<td><code>0882b9e</code> (through §11.4.182)</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/main)</code> → implementation branch minted per §11.4.181
+(one canonical name)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="operating-rules-for-every-task-bind-once-apply-everywhere">Operating
+rules for every task (bind once, apply everywhere)</h2>
+<ol type="1">
+<li><strong>Subagent-driven</strong> (§11.4.70); each change
+<strong>independently reviewed</strong> to a clean GO
+(§11.4.125/§11.4.142/§11.4.134); <strong>multi-angle impact
+research</strong> per change (§11.4.145).</li>
+<li><strong>Reproduce-first tests</strong> (§11.4.146 STEP1→2→3):
+RED-on-broken-artifact polarity test (§11.4.115) → GREEN confirm →
+extend-to-all-cases; register a standing regression guard
+(§11.4.135).</li>
+<li><strong>Runtime-signature = definition of done</strong> (§11.4.108):
+a task is done only when its declared machine-checkable signature
+verifies on a <strong>clean deploy</strong> — <em>build-success ≠
+works</em>. No metadata/config/absence-of-error PASS
+(§11.4/§11.4.1).</li>
+<li><strong>Rock-solid captured proof</strong>
+(§11.4.5/§11.4.69/§11.4.107/§11.4.123); unclear-how-to-test ⇒ deep
+research first (§11.4.150), never a bluff.</li>
+<li><strong>Rootless podman via the <code>containers</code>
+submodule</strong> (§11.4.76/§11.4.161); <strong>no CI</strong>
+(§11.4.156); <strong>no force-push, merge-onto-latest</strong>
+(§11.4.113); <strong>no silent removal</strong> (§11.4.122) /
+investigate-before-remove (§11.4.124).</li>
+<li><strong>No hardcoded hosts/paths/content</strong>
+(CONST-045/046/051); large weights gitignored + §11.4.77 re-obtain
+script.</li>
+<li>Every agent/work-stream label carries
+<code>(T&lt;N&gt;/&lt;branch&gt;)</code> (§11.4.182).</li>
+</ol>
+<h2 id="critical-path-sequencing-from-stream-99-hard-serial-prefix-then-parallel">Critical-path
+sequencing (from stream 99 — hard serial prefix, then parallel)</h2>
+<pre><code>P0 host GPU foundation ─▶ P1 serving core + VRAM broker ─▶ P2 gateway + verifier ─┐
+   (nothing downstream is trusted until P0 prints nvidia-smi in a rootless          │
+    container AND P1 proves REAL inference on the card)                             ▼
+                          ┌───── P3 extended capabilities (vision/gen/xlate/embed/RAG/STT/OCR) ──┐
+                          ├───── P4 provider adapters + protocols (A2A / MCP / OKF-via-MCP) ──────┤ (parallel after P2)
+                          ├───── P5 codegraph + opendesign core wiring ────────────────────────────┤
+                          └───── P6 claude_toolkit + LLMsVerifier update ──────────────────────────┘
+                                        ▼
+                          P7 setup + PATH install ─▶ P8 HelixQA + full test matrix ─▶ P9 live run</code></pre>
+<hr />
+<h2 id="phase-0-host-gpu-foundation-unblocking-prefix-owns-dz-01dz-02g-host-123">PHASE
+0 — Host GPU foundation (UNBLOCKING PREFIX — owns
+DZ-01/DZ-02/G-HOST-1/2/3)</h2>
+<p>Goal: a rootless-podman container can run GPU work on the RTX 5090,
+and llama.cpp/vLLM are built for sm_120 with a REAL inference proof.
+<strong>Everything else is blocked on this.</strong></p>
+<ul>
+<li><strong>P0-T1 — Install NVIDIA Container Toolkit on ALT-Linux (V-03
+first).</strong>
+<ul>
+<li>Subtasks: verify ALT-Linux packaging
+(<code>nvidia-container-toolkit</code> may not be in apt/dnf — check
+NVIDIA rpm repo / from-source <code>nvidia-ctk</code>; <strong>this is
+UNCONFIRMED — verify before assuming</strong>);
+<code>nvidia-ctk config --set nvidia-container-cli.no-cgroups --in-place</code>;
+<code>nvidia-ctk cdi generate --output=$HOME/.config/cdi/nvidia.yaml</code>;
+<code>nvidia-ctk cdi list</code>.</li>
+<li><strong>Acceptance signature (§11.4.108/§11.4.69):</strong>
+<code>podman run --rm --device nvidia.com/gpu=all --security-opt=label=disable nvidia/cuda:12.8.1-base-ubuntu22.04 nvidia-smi</code>
+prints “RTX 5090” — captured to
+<code>docs/qa/&lt;run&gt;/p0_gpu_passthrough.txt</code>. Owns
+DZ-01.</li>
+<li>Deps: none. Risk: ALT-Linux packaging (V-03); rootless CDI may fail
+where privileged works (podman #17539) — document fallback.</li>
+</ul></li>
+<li><strong>P0-T2 — Pin the CUDA-12.8 base image + build-container
+(G-HOST-2).</strong>
+<ul>
+<li>Tracked <code>docker/Dockerfile.cuda-base</code> (or
+<code>containers</code>-submodule base spec) FROM
+<code>nvidia/cuda:12.8.x-devel</code>; torch 2.9 cu128;
+<code>TORCH_CUDA_ARCH_LIST=12.0</code>;
+<code>VLLM_FLASH_ATTN_VERSION=2</code>. <code>nvcc</code> lives in the
+container only (never host).</li>
+<li><strong>Signature:</strong>
+<code>podman run &lt;base&gt; nvcc --version</code> shows 12.8; a torch
+<code>cuda.is_available()</code> +
+<code>torch.cuda.get_device_name()</code> prints the 5090.</li>
+</ul></li>
+<li><strong>P0-T3 — Build llama.cpp for sm_120 (G-HOST-3) + vLLM source
+build (DZ-02).</strong>
+<ul>
+<li>llama.cpp:
+<code>cmake -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=120</code> in
+<code>dependencies/LLama_CPP</code> (inside the CUDA container); produce
+<code>llama-server</code>.</li>
+<li>vLLM: source build against the pinned torch-nightly/CUDA-12.8
+(prebuilt wheels fail on sm_120).</li>
+<li><strong>Signature:</strong> a real <code>/v1/completions</code>
+request to each server returns non-empty text AND
+<code>nvidia-smi</code> shows a VRAM delta — captured. <em>Build-success
+is NOT acceptance.</em> Owns DZ-02/CX-01.</li>
+</ul></li>
+<li><strong>P0-T4 — Driver decision (V — 570.169 vs ≥575).</strong>
+Investigate whether stream-01’s ≥575 recommendation is required for vLLM
+sm_120; if a driver change is needed it is host-safety-gated
+(§11.4.133/§12) and operator-confirmed. Capture the decision +
+evidence.</li>
+</ul>
+<h2 id="phase-1-serving-core-vram-residency-broker-owns-dz-03dz-04dz-05">PHASE
+1 — Serving core + VRAM residency broker (owns DZ-03/DZ-04/DZ-05)</h2>
+<ul>
+<li><strong>P1-T1 — Confirm &amp; specify the HelixLLM API contract
+(DZ-05, §11.4.73 main-spec).</strong>
+<ul>
+<li>Read <code>submodules/helix_llm/internal/brain/*</code> + handlers;
+author <code>submodules/helix_llm/docs/API_CONTRACT.md</code> (the
+canonical spec) enumerating every endpoint + request/response JSON
+(chat/completions/models/embeddings/messages + health). <strong>Blocks
+HelixQA banks + gateway routing — do FIRST in P1.</strong> No guessing
+(§11.4.6).</li>
+</ul></li>
+<li><strong>P1-T2 — Pin HelixLLM as a single root submodule (gap #3 /
+drift).</strong>
+<ul>
+<li>Resolve the two-checkout drift (<code>submodules/helix_llm/</code> +
+<code>dependencies/HelixDevelopment/helix_llm/</code>) —
+investigate-before-remove (§11.4.124); add ONE <code>.gitmodules</code>
+gitlink; ask operator before removing either checkout (§11.4.122).</li>
+</ul></li>
+<li><strong>P1-T3 — Primary fleet model live: Qwen3-Coder-30B-A3B
+(MoE).</strong>
+<ul>
+<li>GGUF (llama-server) or AWQ (vLLM) per P0-T3; launch flags from ADR
+(<code>--parallel 12 --cont-batching -fa --cache-type-k/v q8_0</code> OR
+vLLM
+<code>--max-num-seqs 12 --enable-prefix-caching --enable-auto-tool-choice --tool-call-parser qwen3_coder</code>).</li>
+<li><strong>Signature:</strong> 12 concurrent
+<code>/v1/chat/completions</code> streams each ≥30 tok/s, VRAM within
+budget — measured on-card (re-measure, don’t trust blog numbers CX-04),
+captured.</li>
+</ul></li>
+<li><strong>P1-T4 — DESIGN SPIKE: VRAM residency broker (DZ-04 — new
+component, design before build).</strong>
+<ul>
+<li>Design doc <code>submodules/helix_llm/docs/VRAM_BROKER.md</code>:
+tiered residency (resident / warm-swappable via vLLM Sleep Mode or
+Ollama <code>keep_alive:0</code> / burst single-owner §11.4.119 /
+CPU-only); a VRAM budget-broker admission API; eviction policy;
+per-engine caps. THEN implement in <code>internal/brain/</code>
+(residency scheduler).</li>
+<li><strong>Signature:</strong> load VLM on-demand while the coder fleet
+stays live; broker refuses admission when budget exceeded (no OOM under
+a scripted burst); captured <code>nvidia-smi</code> timeline.</li>
+</ul></li>
+</ul>
+<h2 id="phase-2-gateway-llmsverifier-extension-owns-const-036040-anti-bluff">PHASE
+2 — Gateway + LLMsVerifier extension (owns CONST-036–040
+anti-bluff)</h2>
+<ul>
+<li><strong>P2-T1 — Extend HelixAgent’s OpenAI/Anthropic REST server as
+the unified <code>/v1</code> gateway</strong> (ADR Decision 4; reuse not
+reimplement §11.4.74). Route per capability to HelixLLM/containers;
+advertise <code>/v1/models</code> + capabilities.</li>
+<li><strong>P2-T2 — LLMsVerifier: add <code>Message.ToolCalls</code>
+field (highest-leverage, stream 10).</strong> Unblocks tool-calling/MCP
+verification. RED test proving current <code>(false,0)</code> →
+GREEN.</li>
+<li><strong>P2-T3 — Capability probes fail-closed (CONST-040
+anti-bluff).</strong> Demote <code>registry.go</code> static MCP/LSP/ACP
+flags to seed-only; add <code>MCP/LSP/ACP/RAG/Skills/Plugins</code> +
+<code>CapabilityEvidence</code> to <code>ModelCapability</code> + DB
+columns; each flag set by ONE real probe with a captured wire artefact;
+golden-good/bad self-validated analyzers. Owns the static-registry
+anti-bluff hazard.</li>
+<li><strong>P2-T4 — Local HelixLLM verification + freshness.</strong>
+Register HelixLLM endpoint via a config-driven
+<code>ProviderDescriptor</code>; bind 24h stale re-queue (CONST-037) +
+≤60s poll (CONST-038) on the existing <code>event_stream</code>
+seam.</li>
+</ul>
+<h2 id="phase-3-extended-capabilities-parallel-after-p2-each-container-gateway-route-verifier-probe-helixqa-bank">PHASE
+3 — Extended capabilities (parallel after P2; each = container + gateway
+route + verifier probe + HelixQA bank)</h2>
+<p>Per-capability task template (T-a…T-h): boot container (P0 base) →
+gateway route → LLMsVerifier probe → HelixQA bank (P8) → captured
+proof.</p>
+<ul>
+<li><strong>P3-T1 Vision (VLM):</strong> Qwen3-VL-8B/30B via
+llama.cpp+mmproj (<code>--jinja</code> for tool_calls) or vLLM;
+<code>/v1/chat/completions</code> image parts. Signature: image→correct
+answer vs golden fixture + self-validated analyzer (§11.4.107(10)).</li>
+<li><strong>P3-T2 Image gen:</strong> FLUX.1-dev/schnell via ComfyUI;
+<code>/v1/images/generations</code> bridge. Signature: real image, not
+stub (dimensions + non-trivial content check).</li>
+<li><strong>P3-T3 Video gen (WAN 2.2 + LTX):</strong> ComfyUI; async job
+endpoint. Signature: ffprobe frame-advance + codec/resolution/fps
+(§11.4.107) on the produced mp4.</li>
+<li><strong>P3-T4 Vectorize:</strong> vtracer (+ StarVector-8B) FastAPI
+<code>/vectorize</code>. Signature: raster→valid SVG that re-rasterizes
+to match within tolerance.</li>
+<li><strong>P3-T5 Translation:</strong> NLLB-200-3.3B (CTranslate2 int8,
+warm) + TOWER+ 9B (vLLM, on-demand); LibreTranslate-compatible
+<code>/translate</code> + doc/glossary. Signature: COMET +
+back-translation metamorphic (guard COMET-gaming CX-05).</li>
+<li><strong>P3-T6 Embeddings + reranker:</strong> Qwen3-Embedding-4B
+(+BGE-M3 sparse) + bge-reranker-v2-m3 via TEI;
+<code>/v1/embeddings</code> + rerank. Signature: real vectors +
+retrieval Recall@K on a fixture.</li>
+<li><strong>P3-T7 RAG + HelixMemory:</strong> Qdrant + code-RAG
+(tree-sitter chunk → hybrid → codegraph graph-expand → rerank) +
+Zep/Graphiti + mem0 exposed via MCP. Signature: injected-fact recall +
+faithfulness.</li>
+<li><strong>P3-T8 STT + OCR:</strong> faster-whisper (+Parakeet
+streaming) <code>/v1/audio/transcriptions</code>; Tesseract 5.5
+<code>image_to_data</code> unified <code>/v1/ocr</code> (per-word
+conf+bbox — feeds §11.4.117/§11.4.137). Signature: WER/CER on fixtures;
+OCR conf-floor + ROI.</li>
+</ul>
+<h2 id="phase-4-provider-adapters-protocols-parallel-after-p2">PHASE 4 —
+Provider adapters + protocols (parallel after P2)</h2>
+<ul>
+<li><strong>P4-T1 New provider adapters</strong> (HelixAgent
+<code>internal/llm/providers/</code> + LLMsVerifier registration), all
+CONFIRMED public APIs: <strong>Poe, Perplexity/Sonar, Sakana Fugu,
+Xiaomi MiMo, Tencent Hunyuan</strong> (Yuanbao=app→target Hunyuan),
+<strong>xAI Grok, Moonshot Kimi, Zhipu GLM, Fireworks, DeepInfra,
+Novita, AI21, Reka</strong>; verify Hyperbolic/Baseten base URLs at
+build. Each: adapter + LLMsVerifier probe + live round-trip proof
+(§11.4.69).</li>
+<li><strong>P4-T2 GPT-Sol</strong> — add OpenAI GPT-5.6 “Sol” model IDs
+to the existing OpenAI adapter when GA (preview-pending flag).
+<strong>No new adapter</strong> (operator C1).</li>
+<li><strong>P4-T3 Qwythos 9B / GOT-OCR2.0</strong> — self-host via the
+local/Ollama/HF path (Qwythos = chat; GOT-OCR2.0 = an OCR engine option
+in P3-T8). No hosted adapter.</li>
+<li><strong>P4-T4 Google A2A protocol</strong> (operator C3) — implement
+A2A agent↔︎agent interop in HelixAgent (Go; verify SDK/spec latest
+§11.4.99). Editor/client auto-recognition served separately by the
+<code>/v1/models</code> + MCP <code>server/discover</code> capability
+surface.</li>
+<li><strong>P4-T5 MCP</strong> — official Go SDK
+<code>github.com/modelcontextprotocol/go-sdk</code>; gateway as MCP
+server (Helix tools) + host (codegraph/opendesign); stateless-first
+(2026-07-28 RC); verify Streamable-HTTP server transport availability
+(UNCONFIRMED).</li>
+<li><strong>P4-T6 OKF-via-MCP</strong> (operator C2) — implement Google
+Open Knowledge Format as the on-disk RAG/Skills knowledge format, served
+through an MCP <code>resources</code> server.</li>
+<li><strong>Deferred:</strong> Subquadratic — BLOCKED-until-GA (operator
+C4).</li>
+</ul>
+<h2 id="phase-5-codegraph-opendesign-core-wiring-owns-const-045-defect">PHASE
+5 — codegraph + opendesign core wiring (owns CONST-045 defect)</h2>
+<ul>
+<li><strong>P5-T1</strong> Fix <code>.mcp.json</code> rot: bare
+<code>codegraph serve --mcp</code> (no macOS path), exclude vendored
+third-party (§11.4.79b — drop 6 GB bloat), reconcile 1.1.1↔︎1.2.0, wire
+weekly <code>codegraph_update_and_resync.sh</code> (§11.4.80).
+PreToolUse guard grepping for absolute host paths
+(§11.4.109-class).</li>
+<li><strong>P5-T2</strong> Enable opendesign MCP
+(<code>npx open-design-mcp</code>, <code>:7456</code> daemon, BYOK from
+<code>.env</code> §11.4.10); resolve <code>od</code>↔︎coreutils
+collision; health-gate + honest SKIP.</li>
+<li><strong>P5-T3</strong> codegraph = <code>CodeIntel</code> provider
+feeding
+<code>internal/repomap</code>/<code>context</code>/<code>cognee</code>/<code>memory</code>
++ HelixAgent <code>internal/rag</code>;
+<code>impact</code>/<code>affected</code> scopes edits+tests
+(§11.4.145/§11.4.108).</li>
+<li><strong>P5-T4</strong> opendesign = design-system provider:
+<code>design-systems/helixcode/</code> (DESIGN.md + tokens.css
+light+dark) governs TUI (<code>internal/theme</code>), Fyne desktop, web
+(§11.4.162; visual-regression tests).</li>
+</ul>
+<h2 id="phase-6-claude_toolkit-llmsverifier-update-sibling-repo">PHASE 6
+— claude_toolkit + LLMsVerifier update (SIBLING repo)</h2>
+<ul>
+<li><strong>P6-T1</strong> <code>detect_helixagent()</code> gated on
+<code>command -v helixagent</code> in <code>cmd_sync</code>; emit
+resolved-shaped record via <code>jq</code> (transport=router;
+<code>base_url=http://localhost:8100/v1</code>;
+strong=<code>helix-debate</code>, fast=<code>helix-llm</code>); model
+enum via live <code>GET /v1/models</code>.</li>
+<li><strong>P6-T2</strong>
+<code>scripts/tests/verify_helixagent_live.sh</code> mirroring
+<code>verify_providers_live.sh</code> — PATH+record+no-secret asserts,
+live models, <strong>real <code>/v1/chat/completions</code>
+round-trip</strong> (§11.4.69), negative case; hermetic
+<code>test_providers.sh</code> with a fake <code>helixagent</code>.</li>
+<li><strong>P6-T3</strong> Update vendored LLMsVerifier
+<code>17b4bfb6</code>→<code>0e7d6949</code> (ff, §11.4.113),
+<strong>rebuild <code>bin/model-verification</code> +
+<code>.local-cache/code-verification</code></strong> (avoid
+SOURCE→ARTIFACT bluff §11.4.108), re-run verifier tests. Extended
+docs/guides/diagrams for all new aliases.</li>
+</ul>
+<h2 id="phase-7-setup-path-install">PHASE 7 — Setup + PATH install</h2>
+<ul>
+<li><strong>P7-T1</strong> <code>setup.sh</code> (+ per-subsystem
+installers) that build + install to PATH: <strong>HelixCode, HelixAgent,
+HelixLLM, LLMsVerifier</strong> (+ others); wire P0 GPU prereqs,
+<code>fetch_weights.sh</code>/<code>fetch_models.sh</code>/<code>fetch_tessdata.sh</code>
+re-obtain (§11.4.77), codegraph/opendesign, container boot. Signature:
+fresh-shell
+<code>which helixcode helixagent helixllm llmsverifier</code> all
+resolve + <code>--version</code>.</li>
+</ul>
+<h2 id="phase-8-helixqa-full-test-matrix-challenges">PHASE 8 — HelixQA +
+full test matrix + Challenges</h2>
+<ul>
+<li><strong>P8-T1</strong> New HelixQA test banks per capability
+(LLM/vision/image/video/translation/embed/RAG/STT/OCR/provider-coverage)
+using the existing <code>ContentAssertingResolver</code> + Conduit +
+<code>pkg/recordingqa</code>; each PASS gated on a
+<code>*_verdict.json</code> content assertion + paired §1.1 mutation +
+self-validated golden-good/bad analyzer.</li>
+<li><strong>P8-T2</strong> Full test-type matrix (CONST-050):
+unit/integration/e2e/security/<strong>stress+chaos</strong>
+(§11.4.85)/perf + <strong>Challenges</strong>
+(<code>challenges</code>).</li>
+<li><strong>P8-T3</strong> Autonomous HelixQA session
+(<code>helixqa autonomous --banks …</code>), live-watched via
+conduit-monitor; acceptance = self-driving <code>-count=3</code>,
+curated evidence under <code>docs/qa/&lt;run-id&gt;/</code> (§11.4.83),
+window-scoped project-prefixed recordings (§11.4.153–155/§11.4.158–160),
+media-validation (§11.4.163).</li>
+</ul>
+<h2 id="phase-9-live-run-resumption">PHASE 9 — Live run +
+resumption</h2>
+<ul>
+<li><strong>P9-T1</strong> Bring up the full stack (containers boot);
+keep it running for operator live testing.</li>
+<li><strong>P9-T2</strong> Session-resumption file (§11.4.131) +
+<code>docs/CONTINUATION.md</code> (§13.1) kept current; four-format
+exports where the doc class requires (§11.4.65/§11.4.153).</li>
+</ul>
+<h2 id="design-spikes-to-run-before-their-phases-line-level-code-honesty-11.4.6">Design
+spikes to run before their phase’s line-level code (honesty —
+§11.4.6)</h2>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 67%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Spike</th>
+<th>Why line-level detail waits</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixLLM API contract (<code>API_CONTRACT.md</code>)</td>
+<td>no canonical spec in-tree (DZ-05); gateway + banks depend on it</td>
+<td>P1-T1 (first)</td>
+</tr>
+<tr>
+<td>VRAM residency broker (<code>VRAM_BROKER.md</code>)</td>
+<td>new component, named by 4 streams, designed by none (DZ-04)</td>
+<td>P1-T4</td>
+</tr>
+<tr>
+<td>A2A Go integration</td>
+<td>verify latest A2A spec/SDK (§11.4.99) before coding</td>
+<td>P4-T4</td>
+</tr>
+</tbody>
+</table>
+<h2 id="governance-cascade-follow-up-tracked-not-blocking-phase-0">Governance-cascade
+follow-up (tracked, not blocking Phase 0)</h2>
+<p>Propagate §11.4.180–182 into helix_code
+<code>CLAUDE.md</code>/<code>AGENTS.md</code>/<code>QWEN.md</code>/<code>GEMINI.md</code>
+(§11.4.157) + bump the <code>constitution</code> submodule pointer in
+the same commit (CONST-049 step 7).</p>
+</body>
+</html>

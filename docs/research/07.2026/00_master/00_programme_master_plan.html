@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>00_programme_master_plan</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">00_programme_master_plan</h1>
+</header>
+<h1 id="helixllm-full-extension-programme-master-plan-research-index">HelixLLM
+Full-Extension Programme — Master Plan &amp; Research Index</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td>Master programme plan + research index</td>
+</tr>
+<tr>
+<td><strong>Path</strong></td>
+<td><code>docs/research/07.2026/00_master/00_programme_master_plan.md</code></td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-06</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>RESEARCH IN PROGRESS (Phase R)</td>
+</tr>
+<tr>
+<td><strong>Constitution HEAD followed</strong></td>
+<td><code>0882b9e</code> (through §11.4.182)</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/main)</code></td>
+</tr>
+<tr>
+<td><strong>Release prefix (§11.4.151)</strong></td>
+<td>resolve from <code>HELIX_RELEASE_PREFIX</code> else
+<code>helix_code</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Anti-bluff notice (§11.4 / §11.4.123): every number, model
+recommendation, and capability claim in this programme’s documents MUST
+carry a cited source or a captured runtime proof. Design estimates are
+labelled as such; measured results replace them.
+<code>UNCONFIRMED:</code> / <code>PENDING_FORENSICS:</code> mark
+anything not yet proven (§11.4.6). No placeholder or mocked
+implementation ships (§11.4.2 / CONST-050).</p>
+</blockquote>
+<hr />
+<h2 id="objective-verbatim-intent-decomposed">1. Objective (verbatim
+intent, decomposed)</h2>
+<p>Fully extend <strong>HelixLLM</strong> into a production-grade
+local-first model platform running on the current host (<strong>Gigabyte
+RTX 5090 AORUS MASTER, 32 GB VRAM, Blackwell; Linux; strong
+CPU/RAM</strong>), expose it <strong>through HelixAgent</strong> to
+<strong>HelixCode and any CLI agent</strong> configured for HelixAgent,
+and drive it to <strong>near-frontier coding + agentic quality</strong>
+while serving <strong>multiple concurrent instances × multiple
+subagents</strong> (target 6–12 concurrent sequences).</p>
+<p>Everything runs <strong>locally, in rootless-podman containers via
+the <code>containers</code> submodule</strong> (§11.4.76 / §11.4.161),
+is <strong>fully tested</strong>
+(unit/integration/e2e/security/stress/chaos + Challenges + HelixQA
+autonomous sessions), produces <strong>rock-solid captured
+proofs</strong> (§11.4.5 / §11.4.69 / §11.4.107 / §11.4.123), and is
+<strong>kept running for live operator testing</strong> when
+complete.</p>
+<h2 id="capability-scope-the-complete-non-negotiable-list">2. Capability
+scope (the complete, non-negotiable list)</h2>
+<p>Nothing in this list may be forgotten, skipped, or stubbed (§11.4.122
+/ §11.4.124 / CONST-050).</p>
+<h3 id="a-core-local-serving">2.A Core local serving</h3>
+<ul>
+<li>Local llama.cpp (or better infra — to be decided by research stream
+01) on the RTX 5090.</li>
+<li>Primary coding + agent models (baseline hypothesis, to be verified
+by stream 01): Qwen2.5-Coder-32B-Instruct (heavy coding),
+Qwen2.5-32B-Instruct (CLI agents / one-model-both),
+DeepSeek-Coder-V2-Lite (fast), plus 2026 successors (Qwen3-Coder,
+DeepSeek-V3/R1 distills, GLM-4.x, Devstral…).</li>
+<li>Multi-instance / multi-agent concurrency: continuous batching,
+<code>--parallel</code>, KV-cache quant (q8_0), flash attention;
+context-cap + VRAM budgeting for 6–12 concurrent sequences.</li>
+</ul>
+<h3 id="b-exposure-standards">2.B Exposure &amp; standards</h3>
+<ul>
+<li><strong>HelixAgent exposes HelixLLM</strong> + the <strong>AI
+ensemble</strong> + any other exposed models.</li>
+<li><strong>Both OpenAI-compatible and Anthropic-compatible REST
+endpoints</strong> for all our APIs.</li>
+<li>Claude Code / HelixCode auto-recognize the exposed models
+immediately (standard model-list surface).</li>
+<li>MCP + ACP integration; MCP + “OKF” (Google OKF — clarify/verify in
+stream 05); function/tool-calling standards.</li>
+</ul>
+<h3 id="c-extended-capabilities-each-fully-local-model-full-provider-coverage">2.C
+Extended capabilities (each fully local model + full provider
+coverage)</h3>
+<ul>
+<li><strong>Vision</strong>: local VLM (image understanding,
+screenshots, OCR-in-image), exposed via OpenAI vision endpoint.</li>
+<li><strong>Generative</strong>: image generation, <strong>video (WAN +
+LTX mandatory)</strong>, vector drawing, illustration, sketch/design,
+<strong>vectorizing pixel graphics</strong>.</li>
+<li><strong>Translation</strong>: professional-grade local translation
+model(s) + all major translation providers.</li>
+<li><strong>Embeddings + RAG</strong> + <strong>HelixMemory</strong>
+heavy use (durable agent memory).</li>
+<li><strong>STT = Whisper</strong> + <strong>OCR = Tesseract</strong>
+wired everywhere they add capability, incl. HelixQA vision testing.</li>
+<li><strong>codegraph</strong> + <strong>opendesign</strong> as core
+under-the-hood providers across
+HelixCode/HelixAgent/HelixLLM/LLMsVerifier (§11.4.78–80 codegraph;
+§11.4.162 opendesign).</li>
+</ul>
+<h3 id="d-provider-coverage-llmsverifier-helixagent-research-stream-06">2.D
+Provider coverage (LLMsVerifier + HelixAgent) — research stream 06</h3>
+<p>Latest models for all existing providers, <strong>plus</strong> every
+not-yet-supported provider/model, including explicitly: <strong>Poe,
+Perplexity, Sakana Fugu (+ family), Qwythos 9B, Google OKF, GOT family +
+GPT SOL, Subquadratic (+ models), Xiaomi, Tencent (+ Yuanbao), WAN + LTX
+video, major generative providers, major vision providers/models, major
+translation providers/models.</strong> (Each name to be verified for
+exact API/endpoint/auth/model-list; unverifiable ones flagged, never
+faked — §11.4.6.)</p>
+<h3 id="e-tooling-integration">2.E Tooling / integration</h3>
+<ul>
+<li><strong>LLMsVerifier extended</strong> to work flawlessly with
+HelixLLM (verify local + all new providers).</li>
+<li><strong>claude_toolkit</strong>
+(<code>/home/milos/Factory/projects/tools_and_research/claude_toolkit</code>)
+recognizes <strong>HelixAgent as a provider when on PATH</strong>,
+creates provider aliases for HelixAgent + all its exposed models (AI
+ensemble, HelixLLM, others), with extended docs/guides/diagrams; then
+updates its vendored LLMsVerifier to latest and fully incorporates
+it.</li>
+<li><strong>Setup scripts</strong> install HelixCode + all power
+sub-systems and add ALL to PATH: HelixCode, HelixAgent, HelixLLM,
+LLMsVerifier, + others.</li>
+<li><strong>Comprehensive provider-verification test</strong> for the
+HelixAgent alias, like every other provider alias.</li>
+</ul>
+<h3 id="f-quality-gate">2.F Quality gate</h3>
+<ul>
+<li>Full test-type coverage (CONST-050 / §11.4.4(b)) + Challenges
+(<code>challenges</code>) + HelixQA autonomous sessions (extended for
+the new vision capabilities). Rock-solid captured proofs; zero
+bluff.</li>
+<li>All documentation everywhere re-evaluated + extended; new docs, user
+guides, manuals, diagrams, schemes, SQL/templates, illustrations
+(§11.4.153 four-format incl DOCX where that class applies).</li>
+</ul>
+<h2 id="target-architecture-working-hypothesis-to-be-validated">3.
+Target architecture (working hypothesis — to be validated)</h2>
+<pre><code>CLI agents (opencode, aider, cline, Claude Code) ─┐
+HelixCode ────────────────────────────────────────┤ standard OpenAI/Anthropic model APIs
+                                                   ▼
+                        ┌──────────── HelixAgent (provider gateway) ────────────┐
+                        │  provider registry · OpenAI+Anthropic REST surface    │
+                        │  routes: local ↔ cloud, per-capability                 │
+                        └───┬───────────────┬───────────────┬──────────────┬────┘
+                            ▼               ▼               ▼              ▼
+                       HelixLLM        Cloud providers  LLMsVerifier   HelixMemory
+                     (local, GPU)      (Poe/Perplexity/  (SSoT model/   (durable mem)
+                            │           Sakana/Xiaomi/    provider meta)      │
+        ┌───────────────────┼───────────────Tencent/…)                       │
+        ▼         ▼         ▼         ▼         ▼         ▼                    │
+   coding/agent  vision   image-gen  video    translate  embed/rerank ◄───────┘
+   (Qwen2.5-…)   (VLM)    (FLUX/SD)  (WAN/LTX) (NLLB/…)   (BGE/Qwen3)
+        └──────────── all served in rootless-podman via `containers` submodule ──────────┘
+                     codegraph + opendesign as under-the-hood core providers
+                     Whisper (STT) + Tesseract (OCR) wired across components</code></pre>
+<h2 id="research-streams-phase-r-status-board">4. Research streams
+(Phase R) — status board</h2>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 26%" />
+<col style="width: 36%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Stream</th>
+<th>Output doc</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td>Codebase inventory (grounding)</td>
+<td><code>00_master/00_codebase_inventory.md</code></td>
+<td>✅ DONE</td>
+</tr>
+<tr>
+<td>01</td>
+<td>Local models + serving infra (RTX 5090, concurrency)</td>
+<td><code>01_local_models_serving/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>02</td>
+<td>Vision + generative (image/video WAN+LTX/vector)</td>
+<td><code>02_vision_generative/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>03</td>
+<td>Translation (local + cloud)</td>
+<td><code>03_translation/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>04</td>
+<td>Embeddings + RAG + HelixMemory</td>
+<td><code>04_embeddings_rag/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>05</td>
+<td>MCP + ACP + OKF + tool-calling standards</td>
+<td><code>05_mcp_acp_protocols/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>06</td>
+<td>Provider coverage (Poe/Perplexity/Sakana/Xiaomi/Tencent/…)</td>
+<td><code>06_providers_coverage/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>07</td>
+<td>Whisper (STT) + Tesseract (OCR) integration</td>
+<td><code>07_stt_ocr_whisper_tesseract/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>08</td>
+<td>codegraph + opendesign as core providers</td>
+<td><code>08_codegraph_opendesign/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>09</td>
+<td>Containers/rootless-podman deployment patterns</td>
+<td><code>09_containers_deployment/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>10</td>
+<td>LLMsVerifier ⇄ HelixLLM extension design</td>
+<td><code>10_llmsverifier_helixagent/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>11</td>
+<td>claude_toolkit provider recognition + aliasing</td>
+<td><code>11_claude_toolkit/…</code></td>
+<td>🟡 running</td>
+</tr>
+<tr>
+<td>12</td>
+<td>HelixQA extension for vision + full test matrix</td>
+<td><code>12_helixqa_testing/…</code></td>
+<td>✅ DONE</td>
+</tr>
+<tr>
+<td>99</td>
+<td>Multi-pass risk / danger-zone / bottleneck analysis</td>
+<td><code>99_risk_analysis/99_risk_bottleneck_analysis.md</code></td>
+<td>✅ DONE</td>
+</tr>
+</tbody>
+</table>
+<p><strong>✅ PHASE R COMPLETE (2026-07-06).</strong> 13 cited reports +
+<code>02_cross_cutting_foundations_ADR.md</code> +
+<code>03_open_clarifications.md</code> (all 4 operator-resolved) +
+<code>99_risk_bottleneck_analysis.md</code>. <strong>✅ PHASE P
+COMPLETE:</strong> <code>04_implementation_plan.md</code> (10 phases →
+tasks → subtasks, critical-path sequenced). <strong>▶ NEXT: Phase
+0</strong> (host GPU foundation — the unblocking prefix).</p>
+<p><strong>Inventory (00) key facts</strong> (full detail in
+<code>00_codebase_inventory.md</code>): HelixLLM is a real Go submodule
+(<code>github.com/HelixDevelopment/HelixLLM</code>, at
+<code>submodules/helix_llm/</code> + a second checkout under
+<code>dependencies/HelixDevelopment/helix_llm/</code>) already serving
+OpenAI + Anthropic APIs, RAG, a ReAct agent, and a scored provider
+fallback with a real <code>internal/brain/llamacpp.go</code> HTTP client
+to a llama.cpp server; HelixAgent has ~45 providers + its own
+OpenAI/Anthropic/Google REST server. → This is an
+<strong>extend</strong>, not a greenfield build. Grounded gaps: (1) no
+RTX-5090 GPU build/launch wiring for llama.cpp; (2) no
+vision/translation serving surface; (3) HelixLLM not pinned as a root
+submodule (two checkouts → drift risk); (4) LLMsVerifier missing
+CONST-040 capability probes; (5) host-wiring rot (<code>.mcp.json</code>
+macOS paths, opendesign disabled, claude_toolkit keys off env-var not
+PATH).</p>
+<p>Waves 2–3 (streams 05–12) dispatch after stream 00 (inventory)
+returns, so provider/integration research is grounded in the actual
+HelixAgent/LLMsVerifier/claude_toolkit interfaces (§11.4.6).</p>
+<h2 id="phase-plan-high-level-refined-into-fine-grained-taskssubtasks-after-phase-r">5.
+Phase plan (high-level — refined into fine-grained tasks/subtasks after
+Phase R)</h2>
+<ul>
+<li><strong>Phase R — Research &amp; inventory</strong> (current):
+streams 00–12 + risk 99 → cited reports.</li>
+<li><strong>Phase P — Planning</strong>: synthesize research into a full
+implementation plan with phases → tasks → subtasks down to
+file/function/line level; multi-pass danger-zone analysis (§11.4.92
+5-pass); ADRs.</li>
+<li><strong>Phase 1 — Local serving core</strong>: HelixLLM
+llama.cpp/infra service in rootless podman; primary coding/agent model
+live; OpenAI+Anthropic endpoints; HelixAgent provider for HelixLLM.</li>
+<li><strong>Phase 2 — LLMsVerifier + HelixAgent provider
+gateway</strong>: verify local + new providers; model-list surface.</li>
+<li><strong>Phase 3 — Extended capabilities</strong>: vision, generative
+(image/video WAN+LTX/vector), translation, embeddings/RAG/HelixMemory,
+Whisper/Tesseract — each a local model + provider coverage.</li>
+<li><strong>Phase 4 — Integrations</strong>: codegraph + opendesign core
+wiring; MCP/ACP/OKF.</li>
+<li><strong>Phase 5 — claude_toolkit</strong>: HelixAgent provider
+recognition + aliases + docs; update vendored LLMsVerifier.</li>
+<li><strong>Phase 6 — Setup + PATH</strong>: install scripts for the
+whole stack onto PATH.</li>
+<li><strong>Phase 7 — Test/Challenges/HelixQA</strong>: full matrix +
+autonomous QA sessions + captured proofs.</li>
+<li><strong>Phase 8 — Live run</strong>: keep the system running for
+operator testing; resumption doc (§11.4.131).</li>
+</ul>
+<p>Each implementation phase is subagent-driven (§11.4.70), reviewed
+independently (§11.4.125 / §11.4.142), multi-angle-researched per change
+(§11.4.145), reproduce-first tested (§11.4.146), and gated by
+runtime-signature verification on a clean deploy (§11.4.108).</p>
+<h2 id="binding-governance-anchors-non-exhaustive">6. Binding governance
+anchors (non-exhaustive)</h2>
+<p>Anti-bluff family (§11.4 / §11.4.1 / §11.4.5 / §11.4.6 / §11.4.69 /
+§11.4.107 / §11.4.123); rootless containers §11.4.161 + containers
+submodule §11.4.76; opendesign §11.4.162; codegraph §11.4.78–80; deep
+multi-angle research per change §11.4.150 + latest-source §11.4.99; full
+test-type coverage CONST-050 / §11.4.85 stress+chaos; HelixQA +
+Challenges §11.4.27 / CONST-050(B); media validation §11.4.163 +
+window-scoped project-prefixed recordings §11.4.153–155 / §11.4.158–160;
+no-silent-removal §11.4.122 + investigate-before-remove §11.4.124;
+release prefix §11.4.151; one canonical branch name §11.4.181;
+track/branch labels §11.4.182; no-force merge-onto-latest §11.4.113;
+independent verification §11.4.165.</p>
+<h2 id="risk-register-seed-expanded-by-stream-99-multi-pass-11.4.92">7.
+Risk register (seed — expanded by stream 99, multi-pass §11.4.92)</h2>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 39%" />
+<col style="width: 21%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Danger zone / bottleneck</th>
+<th>Why it bites</th>
+<th>Mitigation direction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RZ-01</td>
+<td>Blackwell (sm_120) CUDA support in serving engines</td>
+<td>llama.cpp/vLLM may need specific CUDA/build flags; wrong build = no
+GPU / crashes</td>
+<td>Stream 01 verifies exact build flags + CUDA version; capture
+<code>nvidia-smi</code> + a real inference proof</td>
+</tr>
+<tr>
+<td>RZ-02</td>
+<td>VRAM exhaustion under 6–12 concurrent agents</td>
+<td>KV cache per sequence dominates; naive config OOMs</td>
+<td>Context cap + q8_0 KV quant + measured concurrency math (stream 01);
+hard limits per §11.4.133 target-safety</td>
+</tr>
+<tr>
+<td>RZ-03</td>
+<td>Running MANY services on ONE 32 GB GPU
+(LLM+VLM+img+video+embed)</td>
+<td>Aggregate VRAM &gt;&gt; 32 GB if all resident</td>
+<td>Model residency scheduling / on-demand load-unload; per-capability
+separate podman services; single-owner GPU discipline §11.4.119</td>
+</tr>
+<tr>
+<td>RZ-04</td>
+<td>Unverifiable / mis-named providers (Qwythos 9B, GOT/GPT SOL, OKF,
+Fugu)</td>
+<td>Names may be ambiguous / not real public APIs</td>
+<td>Stream 06 verifies each against latest official sources; flag
+<code>UNCONFIRMED</code>, never fake (§11.4.6) — ask operator if truly
+ambiguous</td>
+</tr>
+<tr>
+<td>RZ-05</td>
+<td>HelixQA vision testing needs Whisper/Tesseract + self-validated
+analyzers</td>
+<td>New capability could pass-bluff (frozen frame, wrong OCR)</td>
+<td>§11.4.107/.137/.117/.163 self-validated golden-good/bad analyzers;
+media-validation pipeline</td>
+</tr>
+<tr>
+<td>RZ-06</td>
+<td>claude_toolkit is a SIBLING repo (outside monorepo)</td>
+<td>Cross-repo change coordination; PATH detection portability</td>
+<td>Stream 11 maps the alias mechanism; no hardcoded paths (§11.4.28 /
+CONST-045)</td>
+</tr>
+<tr>
+<td>RZ-07</td>
+<td>Large model/media weights not versioned</td>
+<td>Fresh clone can’t run (§11.4.77)</td>
+<td><code>.gitignore</code> + declared re-obtain mechanism per weight
+(§11.4.77)</td>
+</tr>
+<tr>
+<td>RZ-08</td>
+<td>Host safety while driving GPU hard</td>
+<td>Thermal/power; must not harm host or hardware (§11.4.133 / §12)</td>
+<td>Thermal-aware limits, captured thermal evidence, no unverified
+GPU-control writes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="next-actions-live">8. Next actions (live)</h2>
+<ol type="1">
+<li>Await streams 00–04 (running); on 00 (inventory) return, dispatch
+waves 2–3 (streams 05–12).</li>
+<li>Fill §4 status board + per-stream summaries as reports land.</li>
+<li>After all streams: write the full Phase-P implementation plan
+(tasks/subtasks to line level) + ADRs.</li>
+<li>Create session-resumption file (§11.4.131) +
+<code>docs/CONTINUATION.md</code> update for this programme.</li>
+<li>Governance cascade follow-up: propagate §11.4.180–182 into
+helix_code governance files + bump the <code>constitution</code> pointer
+(CONST-049 step 7) — tracked separately.</li>
+</ol>
+</body>
+</html>

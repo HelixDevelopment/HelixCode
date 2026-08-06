@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="semgrep-go.lang.security.audit.dangerous-exec-command-taint-triage">Semgrep
+<code>go.lang.security.audit.dangerous-exec-command</code> — Taint
+Triage</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>2026-06-22</td>
+</tr>
+<tr>
+<td>Rule</td>
+<td><code>go.lang.security.audit.dangerous-exec-command</code>
+(audit-class, input-provenance)</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>4 findings under <code>helix_code/internal/llm/</code></td>
+</tr>
+<tr>
+<td>Method</td>
+<td>§11.4.102 systematic-debugging taint analysis (codegraph + grep),
+READ-ONLY</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>Provenance traced to source for every site; captured grep/Read
+excerpts below</td>
+</tr>
+<tr>
+<td>Constitutional context</td>
+<td>helix_code DELIBERATELY uses <code>os/exec</code> (anti-BLUFF-003:
+<code>handleCommand</code> MUST really execute). Static/trusted exec is
+EXPECTED and CORRECT. The only question: does UNTRUSTED input reach the
+command NAME or get concatenated into a SHELL STRING?</td>
+</tr>
+</tbody>
+</table>
+<h2 id="verdict-summary">Verdict summary</h2>
+<table>
+<colgroup>
+<col style="width: 4%" />
+<col style="width: 15%" />
+<col style="width: 14%" />
+<col style="width: 23%" />
+<col style="width: 13%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>file:line</th>
+<th>function</th>
+<th>arg-provenance</th>
+<th>verdict</th>
+<th>recommended action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>internal/llm/auto_llm_manager.go:520</code></td>
+<td><code>AutoLLMManager.autoBuildProvider</code></td>
+<td><code>exec.Command(&quot;bash&quot;,&quot;-c&quot;,script)</code>; <code>script</code> =
+<code>provider.BuildScript</code> (from STATIC pkg-level map
+<code>providerDefinitions</code>,
+<code>local_llm_manager.go:51-201</code>) OR literal
+<code>&quot;bash build.sh&quot;</code>. Field NEVER set from user input (no
+Unmarshal/viper into <code>BuildScript</code>).</td>
+<td><strong>SAFE</strong></td>
+<td>Add
+<code>// nosemgrep: go.lang.security.audit.dangerous-exec-command — script sourced from static providerDefinitions map literal; never user-controlled (verified no Unmarshal/setter targets BuildScript). bash -c is required for multi-step build recipes.</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>internal/llm/local_llm_manager.go:439</code></td>
+<td><code>LocalLLMManager.buildProvider</code></td>
+<td><code>exec.CommandContext(ctx,&quot;bash&quot;,&quot;-c&quot;,provider.BuildScript)</code>;
+same static <code>providerDefinitions</code> origin (copied via
+<code>definition.BuildScript</code>, line 260). Field NEVER set from
+user input.</td>
+<td><strong>SAFE</strong></td>
+<td>Same <code>// nosemgrep</code> suppression with the static-origin
+rationale.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>internal/llm/model_converter.go:303</code></td>
+<td><code>ModelConverter.runConversion</code></td>
+<td><code>exec.CommandContext(ctx, tool.Command, job.Args...)</code>;
+<code>tool.Command</code> = STATIC <code>&quot;python&quot;</code> (hardcoded
+<code>initializeAllConversionTools</code>, line 488-541).
+<code>job.Args</code> = static <code>tool.Args</code> +
+<code>config.*</code> paths/flags appended as SEPARATE argv elements via
+<code>buildCommand</code> (line 364-408). CLI flags
+(<code>--format/--quantize/--optimize/--hardware</code> from
+<code>cmd/local_llm.go:799</code>) DO reach <code>config</code>, but as
+argv elements to a fixed binary — NO shell.</td>
+<td><strong>SAFE</strong></td>
+<td>Add <code>// nosemgrep</code> — static command name; user input
+enters as discrete argv elements (arg-array pattern), never a shell
+string; exec does not invoke a shell.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>internal/llm/model_download_manager.go:479</code></td>
+<td><code>ModelDownloadManager.convertModel</code></td>
+<td><code>exec.Command(tool.Command, args...)</code>;
+<code>tool.Command</code> = STATIC <code>&quot;python&quot;</code> (hardcoded
+<code>initializeConversionTools</code>, line 715-737). <code>args</code>
+= static <code>tool.Args</code> with
+<code>{input}</code>/<code>{output}</code> placeholders replaced by file
+paths, passed as argv array. NO shell.</td>
+<td><strong>SAFE</strong></td>
+<td>Add <code>// nosemgrep</code> — identical arg-array pattern; static
+command name; no shell interpretation.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="provenance-detail-captured-evidence">Provenance detail (captured
+evidence)</h2>
+<h3 id="findings-1-2-buildscript-is-static-never-user-controlled">Findings 1
+&amp; 2 — <code>BuildScript</code> is static, never user-controlled</h3>
+<ul>
+<li><code>auto_llm_manager.go:396</code>
+<code>for name, providerDef := range providerDefinitions</code> →
+<code>BuildScript: providerDef.BuildScript</code> (line 405).</li>
+<li><code>local_llm_manager.go:252</code>
+<code>for name, definition := range providerDefinitions</code> →
+<code>BuildScript: definition.BuildScript</code> (line 260).</li>
+<li><code>providerDefinitions</code> is
+<code>var providerDefinitions = map[string]*LocalLLMProvider{...}</code>
+(<code>local_llm_manager.go:51</code>) — a compile-time map literal.
+Every <code>BuildScript</code> is a hardcoded constant,
+e.g. <code>&quot;python3 -m pip install -e .&quot;</code>,
+<code>&quot;make build&quot;</code>,
+<code>&quot;pip install -r requirements.txt&quot;</code>,
+<code>&quot;mkdir -p build &amp;&amp; cd build &amp;&amp; cmake .. &amp;&amp; make -j$(nproc)&quot;</code>.</li>
+<li>grep for any assignment INTO <code>BuildScript</code>
+(<code>BuildScript =</code>/<code>BuildScript:</code>/Unmarshal/viper)
+returns ONLY: the static literals (lines 59-201), the two field copies
+from the static map (405, 260). NO deserialization path, NO
+HTTP/CLI/config-file setter targets this field.
+<code>loadConfiguration()</code> (auto_llm_manager.go:361) is a no-op
+stub that does not parse YAML into providers.</li>
+<li><code>bash -c &lt;script&gt;</code> IS shell interpretation, so
+these are the two true “shell-string” sites — but the string is a
+trusted constant, so injection is impossible by construction.</li>
+</ul>
+<h3 id="findings-3-4-static-command-name-arg-array-no-shell">Findings 3
+&amp; 4 — static command name + arg-array (no shell)</h3>
+<ul>
+<li><code>model_converter.go:303</code>
+<code>exec.CommandContext(ctx, tool.Command, job.Args...)</code>.
+<code>tool.Command</code> from
+<code>initializeAllConversionTools()</code> (line 482) — all entries
+<code>Command: &quot;python&quot;</code>.</li>
+<li><code>job.Args = c.buildCommand(tool, config)</code> (line 147).
+<code>buildCommand</code> (line 364): <code>copy(args, tool.Args)</code>
+then <code>append(args, &quot;--input&quot;, config.SourcePath)</code>,
+<code>append(args, &quot;--quantize&quot;, config.Quantization.Method)</code>,
+etc. — each user value is a DISTINCT slice element.</li>
+<li>User reachability CONFIRMED:
+<code>cmd/local_llm.go:799 runConvertModel</code> →
+<code>ConvertModel(ctx, config)</code> populates <code>config</code>
+from cobra flags <code>--format/--quantize/--optimize/--hardware</code>.
+This is genuine user input.</li>
+<li>WHY STILL SAFE:
+<code>exec.Command</code>/<code>CommandContext</code> exec the binary
+directly via <code>execve</code> — they do NOT spawn a shell. argv
+elements are passed verbatim; a value like <code>; rm -rf /</code>
+becomes one literal argument to <code>python</code>, not a new command.
+The command NAME (<code>tool.Command</code>) is never user-derived. This
+is precisely the arg-array (not shell-string) mitigation the rule
+recommends. Note: <code>$INPUT</code>/<code>$OUTPUT</code> literals in
+two tool arg templates are NOT shell-expanded by exec — they are passed
+verbatim and handled by the python tool itself.</li>
+<li><code>model_download_manager.go:479</code>
+<code>exec.Command(tool.Command, args...)</code>:
+<code>tool.Command</code> static <code>&quot;python&quot;</code>
+(<code>initializeConversionTools</code> line 715),
+<code>tool.Args</code> static with
+<code>{input}</code>/<code>{output}</code> placeholders
+(<code>strings.ReplaceAll</code>, line 467-469) replaced by file paths,
+passed as argv array. Same safe pattern.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<ul>
+<li><strong>SAFE: 4</strong> · <strong>REAL-RISK: 0</strong> ·
+<strong>UNCONFIRMED: 0</strong></li>
+<li>No real injection risk at any of the 4 sites. Findings 1 &amp; 2 use
+<code>bash -c</code> but only with hardcoded constants from the static
+<code>providerDefinitions</code> map. Findings 3 &amp; 4 use the
+arg-array pattern with a static command name; even genuine CLI-flag user
+input enters as discrete argv elements with no shell, so command
+injection is impossible.</li>
+<li>These are audit-class true-positives-by-pattern but
+false-positives-by-provenance. All 4 are candidates for
+<code>// nosemgrep: go.lang.security.audit.dangerous-exec-command &lt;reason&gt;</code>
+suppression (NOT applied here — READ-ONLY task).</li>
+<li>HARDENING NOTE (defense-in-depth, optional, NOT a current vuln): if
+<code>providerDefinitions</code> is ever made user/config-loadable in
+future, findings 1 &amp; 2 would flip to REAL-RISK because of the
+<code>bash -c</code> shell-string form. A guard test asserting
+<code>BuildScript</code> is never deserialized would lock this
+invariant.</li>
+</ul>
+</body>
+</html>

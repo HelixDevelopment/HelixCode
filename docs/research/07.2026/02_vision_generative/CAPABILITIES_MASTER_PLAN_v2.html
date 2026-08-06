@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CAPABILITIES_MASTER_PLAN_v2</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CAPABILITIES_MASTER_PLAN_v2</h1>
+</header>
+<h1 id="helixllm-full-local-capability-master-plan-v2-vision-generative-translation-embeddingsraghelixmemory-mcpokf-codegraphopendesign-helixqa">HelixLLM
+Full Local-Capability Master Plan v2 — Vision, Generative, Translation,
+Embeddings/RAG/HelixMemory, MCP+OKF, codegraph/opendesign, HelixQA</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td>Capabilities master plan v2 (phased implementation, danger-zone
+consolidation, HelixQA extension)</td>
+</tr>
+<tr>
+<td><strong>Path</strong></td>
+<td><code>docs/research/07.2026/02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code></td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>2 · <strong>Created</strong> 2026-07-08 · <strong>Revised</strong>
+2026-07-08 (§11.4.134 independent-review remediation: risk-register
+recount, VRAM re-baseline after vision-container teardown, StarVector
+caveat, doc-sibling correction)</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/feature/helixllm-full-extension)</code></td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>PLAN — extends, does NOT replace, the Phase-R/Phase-P research
+corpus</td>
+</tr>
+<tr>
+<td><strong>Does NOT duplicate</strong></td>
+<td><code>00_master/00_programme_master_plan.md</code>,
+<code>00_master/04_implementation_plan.md</code>,
+<code>99_risk_analysis/99_risk_bottleneck_analysis.md</code>,
+<code>02_vision_generative/02_vision_generative.md</code>,
+<code>00_master/IMAGE_GEN_PROVIDER.md</code>,
+<code>00_master/VIDEO_GEN_PROVIDER.md</code>,
+<code>03_translation/03_translation.md</code>,
+<code>04_embeddings_rag/04_embeddings_rag.md</code>,
+<code>00_master/EMBEDDINGS_PROVIDER.md</code>,
+<code>05_mcp_acp_protocols/05_mcp_acp_protocols.md</code>,
+<code>00_master/ACP_A2A_PROVIDER.md</code>,
+<code>07_stt_ocr_whisper_tesseract/07_stt_ocr_whisper_tesseract.md</code>,
+<code>08_codegraph_opendesign/08_codegraph_opendesign.md</code>,
+<code>12_helixqa_testing/12_helixqa_testing.md</code> — this document
+<strong>indexes, reconciles against live state, and sequences</strong>
+them into one ready-to-execute plan. Read the cited source doc for the
+full evidence chain before implementing any line item.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff notice (§11.4 / §11.4.123).</strong> Every model
+recommendation below carries a cited source (from the referenced sibling
+doc) or a freshly-captured host fact (marked
+<code>[LIVE, 2026-07-08]</code>). Design estimates are labelled
+<code>(EST — measure)</code>. <code>UNCONFIRMED:</code> /
+<code>PENDING_FORENSICS:</code> mark anything not yet proven. No
+placeholder or mocked implementation ships (§11.4.2 / CONST-050).</p>
+</blockquote>
+<hr />
+<h2 id="grounding-what-is-proven-vs-designed-vs-scaffold-right-now-2026-07-08">0.
+Grounding — what is PROVEN vs DESIGNED vs SCAFFOLD right now
+(2026-07-08)</h2>
+<p>Per RESUME.md (§11.4.131 standing resumption file) the branch is
+<strong>RELEASE-READY / RELEASE PUBLISHED</strong>
+(<code>helix-code-1.0.0-dev-0.0.1</code>). This document plans the
+<strong>next-tag scope</strong>, continuing the endless-loop (§11.4.126)
+past the release.</p>
+<h3 id="live-host-facts-captured-this-session-11.4.6">0.1 Live host
+facts (captured this session, §11.4.6)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPU</td>
+<td>RTX 5090, 32607 MiB total VRAM</td>
+<td><code>nvidia-smi</code> [LIVE, 2026-07-08]</td>
+</tr>
+<tr>
+<td>VRAM used / free right now</td>
+<td><strong>RE-BASELINED (§1.3): 19436 MiB used / 12685 MiB free ≈ 18.98
+GiB used / 12.39 GiB free</strong>, coder-only resident — supersedes the
+as-drafted reading of <code>24047 MiB used / 8074 MiB free</code>
+(≈23.48 GiB / <strong>≈7.89 GiB</strong> — the draft’s “8.07 GiB” label
+was <code>8074÷1000</code>, not the correct <code>÷1024</code>) captured
+earlier the same session while the vision container was still
+co-resident</td>
+<td><code>nvidia-smi --query-gpu=memory.total,memory.used,memory.free</code>
+[LIVE RE-BASELINE, 2026-07-08 03:45:27 local / 2026-07-07T22:45:27Z
+UTC]</td>
+</tr>
+<tr>
+<td>Resident containers</td>
+<td><strong>RE-BASELINED:</strong> only <code>helixllm-coder</code>
+(Qwen3-Coder-30B-A3B, port 8080/50052 internal, single process
+<code>llama-server</code> 19426 MiB) is resident now.
+<code>helixllm_visiongen_visiongen_1</code> (same image, was host port
+<code>18439</code>) has been <strong>TORN DOWN</strong> since this plan
+was first drafted (it was co-resident at the time of the original
+capture above)</td>
+<td><code>podman ps</code> [LIVE RE-BASELINE, 2026-07-08 03:45:27
+local]</td>
+</tr>
+<tr>
+<td>Vision model actually serving</td>
+<td><strong><code>Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf</code></strong> —
+<code>capabilities:[&quot;completion&quot;,&quot;multimodal&quot;]</code>,
+<code>n_ctx:16384</code>, <code>n_ctx_train:128000</code>,
+<code>n_params:3,085,938,688</code> (~3.09B), size <strong>1.92
+GB</strong> on disk. <strong>NOTE (re-baseline):</strong> this container
+is currently STOPPED (see Resident-containers row above) — config/model
+choice unchanged, restart on demand</td>
+<td><code>curl localhost:18439/v1/models</code> [LIVE, 2026-07-08 —
+pre-teardown capture]</td>
+</tr>
+<tr>
+<td>VRAM broker code</td>
+<td><code>submodules/helix_llm/internal/vrambroker/broker.go</code> (204
+lines) — <code>ClassCoder</code> (resident) / <code>ClassVLM</code> /
+<code>ClassImage</code> / <code>ClassVideo</code> (burst, single-owner)
+/ <code>ClassTranslate</code> (warm) / <code>ClassEmbed</code> (CPU,
+0-byte) — <strong>CORE implemented, reviewed GO</strong> (a12df57c);
+<code>admit(free, needBytes, headroom)</code> fail-closed on
+<code>free &lt; need+2GiB</code>; <strong>no eviction/pause-warm-tier
+logic yet</strong> (honest gap, §2.3 of
+<code>IMAGE_GEN_PROVIDER.md</code>/<code>VIDEO_GEN_PROVIDER.md</code>)</td>
+<td>Read <code>broker.go</code> this session</td>
+</tr>
+<tr>
+<td><code>submodules/helix_llm/docs/</code></td>
+<td><code>API_CONTRACT.md</code> (+html/pdf),
+<code>OPERATOR_GUIDE.md</code> (+html/pdf), <code>VRAM_BROKER.md</code>
+(<strong>.md only — verified on disk this pass: no
+<code>.html</code>/<code>.pdf</code> sibling exists</strong>), plus
+<code>qa/</code>, <code>research/</code>, <code>specs/</code>,
+<code>schemas/</code> — the canonical HelixLLM contract now EXISTS
+(closes G-GAP-A / DZ-05 from the risk register)</td>
+<td><code>ls -la submodules/helix_llm/docs/</code> [LIVE, verified
+2026-07-08]</td>
+</tr>
+<tr>
+<td>cognee bug</td>
+<td><code>submodules/helix_agent/docs/COGNEE_BUG.md</code> —
+<code>AttributeError: &#39;str&#39; object has no attribute &#39;nodes&#39;</code> in
+<code>cognee/tasks/memify/extract_subgraph_chunks.py:9</code>;
+<code>/api/v1/search</code>, <code>/api/v1/add</code>,
+<code>/api/v1/memify</code> all <strong>time out (30s)</strong>; health
++ auth work; <strong>STATUS: BLOCKED, waiting for upstream fix</strong>,
+cognee container running but disabled in config</td>
+<td>Read <code>COGNEE_BUG.md</code> this session + fresh web search
+(below) found no newer public fix for this exact trace</td>
+</tr>
+<tr>
+<td>Which “ACP”</td>
+<td><strong>Resolved operator decision</strong>: Google
+<strong>A2A</strong>, NOT Zed ACP
+(<code>00_master/03_open_clarifications.md</code> C3, honoured in
+<code>ACP_A2A_PROVIDER.md</code>)</td>
+<td>Read <code>ACP_A2A_PROVIDER.md</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="readiness-table-what-the-caller-asked-for">0.2 Readiness table
+(what the caller asked for)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Readiness</th>
+<th>Recommended local model (from cited research)</th>
+<th>Owning doc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vision (VLM)</strong></td>
+<td><strong>PROVEN</strong> (co-resident, 3B, proven live on :18439) —
+<strong>container currently STOPPED as of this revision’s
+re-baseline</strong> (§1.3, §0.1) — hardening/upsize is DESIGNED</td>
+<td>live-when-running: <code>Qwen2.5-VL-3B-Instruct-Q4_K_M</code> GGUF
+via llama.cpp <code>-ngl 999 --ctx-size 16384</code>; upgrade path:
+<code>Qwen3-VL-8B-Instruct</code> (co-resident, ~12-16 GB — fits within
+the current ≈12.39 GB free at the low end, or needs a burst-tier swap
+once vision+coder+8B all co-reside; re-measure
+<code>Budget().free</code>, never assume 8 GB) or keep 3B as the
+always-warm default and add 8B as an on-demand <code>ClassVLM</code>
+warm-swap</td>
+<td><code>02_vision_generative.md</code> §1;
+<code>VIDEO_GEN_PROVIDER.md</code>/<code>broker.go</code>
+<code>ClassVLM</code></td>
+</tr>
+<tr>
+<td><strong>Generative — image</strong></td>
+<td><strong>SCAFFOLD-COMPLETE</strong> (helix_llm <code>0f07559</code>,
+port 18442, broker-integrated, self-validated CLIPScore analyzer,
+RED-first) — <strong>RUNTIME PROOF PENDING</strong> operator coder-pause
+(pause now only needed for the flagship tier — see §1.3
+re-baseline)</td>
+<td>co-reside fallback: SDXL fp16 / FLUX.1-schnell-Q4 GGUF (sd.cpp, ~7-9
+GB) — <strong>fits the live ≈12.4 GB free NOW</strong> (vision container
+currently stopped; re-measure <code>Budget().free</code> at admission
+time, §1.3/§2.3 — residency is volatile); flagship: FLUX.1-schnell fp8
+via ComfyUI (~16-20 GB, still needs full burst)</td>
+<td><code>IMAGE_GEN_PROVIDER.md</code></td>
+</tr>
+<tr>
+<td><strong>Generative — video (WAN+LTX)</strong></td>
+<td><strong>SCAFFOLD-COMPLETE</strong> (helix_llm <code>9145505</code>,
+port 18443, <code>ClassVideo</code> broker-integrated,
+liveness+CLIPScore analyzer) — <strong>RUNTIME PROOF PENDING</strong>
+operator coder-pause (pause now only needed for the flagship tier — see
+§1.3 re-baseline)</td>
+<td>co-reside fast lane: LTX-Video 2B-distilled fp8 (~6-8 GB) or WAN 2.2
+TI2V-5B (~7-9 GB) — <strong>both fit the live ≈12.4 GB free NOW</strong>
+(vision container currently stopped; re-measure
+<code>Budget().free</code> at admission time, §1.3/§2.3 — residency is
+volatile); flagship: WAN 2.2 A14B MoE fp8 (~14-20 GB, still needs full
+burst)</td>
+<td><code>VIDEO_GEN_PROVIDER.md</code></td>
+</tr>
+<tr>
+<td><strong>Vectorize (pixel→SVG)</strong></td>
+<td><strong>NET-NEW</strong> (design in
+<code>02_vision_generative.md</code> §4, not yet a P3-Tx spike doc)</td>
+<td>vtracer (CPU, 0 GPU) raster-trace default — <strong>also the real
+path for natural-image/illustration/pixelized-graphic
+vectorization</strong>; StarVector-8B (VLM, ~12-16 GB) for a narrower
+smart-mode tier <strong>CAVEAT: per its own model card, StarVector “will
+not work for natural images or illustrations, as they have not been
+trained on those images” — it excels only at icons, logotypes, technical
+diagrams, graphs, and charts</strong> (<a href="https://huggingface.co/starvector/starvector-8b-im2svg">StarVector-8B
+model card</a>, accessed 2026-07-08); potrace for mono</td>
+<td><code>02_vision_generative.md</code> §4</td>
+</tr>
+<tr>
+<td><strong>Translation</strong></td>
+<td><strong>DESIGNED</strong> (P3-T5, no spike doc yet distinct from
+<code>03_translation.md</code>)</td>
+<td>NLLB-200-3.3B int8 via CTranslate2 (~3-4 GB, CPU-first, <strong>0
+GPU</strong> or tiny GPU footprint) as always-warm; TOWER+9B via vLLM
+(~18 GB, GPU, needs a warm-tier slot) for quality tier</td>
+<td><code>03_translation.md</code> §0/§1</td>
+</tr>
+<tr>
+<td><strong>STT (Whisper)</strong></td>
+<td><strong>IMPLEMENTED, reviewed GO</strong> (18437, per RESUME)</td>
+<td>faster-whisper large-v3 (CTranslate2, GPU int8, ~2-3 GB) already
+live; Parakeet-TDT-0.6B-v3 recommended add-on for
+streaming/no-hallucination</td>
+<td><code>07_stt_ocr_whisper_tesseract.md</code> §1</td>
+</tr>
+<tr>
+<td><strong>OCR (Tesseract)</strong></td>
+<td><strong>IMPLEMENTED, reviewed GO</strong> (18438, per RESUME)</td>
+<td>Tesseract 5.5 OEM1 <code>tessdata_best</code> tier-1;
+PaddleOCR/Surya confidence-triggered fallback</td>
+<td><code>07_stt_ocr_whisper_tesseract.md</code> §2</td>
+</tr>
+<tr>
+<td><strong>Embeddings + RAG</strong></td>
+<td><strong>IMPLEMENTED, PROVEN</strong> (55bdf9b6, bge-small via TEI,
+cos margin 0.3578) — Qdrant/rerank/HelixMemory-fusion still
+DESIGNED</td>
+<td>Qwen3-Embedding-4B (general+code) + BGE-M3 (sparse) via
+TEI/Infinity; bge-reranker-v2-m3; Qdrant vector DB</td>
+<td><code>04_embeddings_rag.md</code>;
+<code>EMBEDDINGS_PROVIDER.md</code></td>
+</tr>
+<tr>
+<td><strong>HelixMemory / cognee</strong></td>
+<td><strong>DESIGN DONE, IMPL BLOCKED</strong> by §11.4.174 (concurrent
+QA track’s foreign <code>helix_agent</code> go.mod/.qa_bak) AND by the
+live cognee upstream bug (§0.1)</td>
+<td>Primary durable store recommendation UNCHANGED from research:
+<strong>Zep/Graphiti</strong> (temporal KG) + mem0 (extraction) via MCP
+— cognee is a SEPARATE, already-integrated-but-broken component in
+<code>helix_agent</code>, not the P-OQ2-A design target</td>
+<td><code>04_embeddings_rag.md</code> §5;
+<code>scratchpad/design_helixmemory_cognee.md</code> referenced in
+RESUME but <strong>not found on disk this session</strong> — treat that
+reference as <strong>STALE/missing</strong>, re-author before
+implementing (see §4.7)</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td><strong>DESIGNED</strong> (official Go SDK identified, beta SDKs for
+2026-07-28 RC now published per fresh search) — HelixLLM/HelixAgent
+wiring NOT yet implemented</td>
+<td><code>github.com/modelcontextprotocol/go-sdk</code>
+(Google-co-maintained); stateless-first design</td>
+<td><code>05_mcp_acp_protocols.md</code> §1/§7</td>
+</tr>
+<tr>
+<td><strong>ACP → A2A</strong></td>
+<td><strong>DESIGNED</strong> (operator-resolved to Google A2A;
+Revision-2 spike distinguishes the pre-existing PROPRIETARY stub routes
+from the real A2A wire)</td>
+<td><code>a2aproject/A2A</code> v1.0.1 (Linux-Foundation),
+JSON-RPC+SSE+HTTP, official Go SDK</td>
+<td><code>ACP_A2A_PROVIDER.md</code></td>
+</tr>
+<tr>
+<td><strong>OKF (Google Open Knowledge Format)</strong></td>
+<td><strong>DESIGNED as content, not protocol</strong> — recommendation
+stands: OKF is the on-disk format for RAG/Skills knowledge, served
+through an MCP <code>resources</code> server</td>
+<td><code>05_mcp_acp_protocols.md</code> §3</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>codegraph as core provider</strong></td>
+<td><strong>DESIGN COMPLETE + defects PROBED</strong>
+(<code>.mcp.json</code> macOS-path rot, version drift 1.1.1↔︎1.2.0, index
+bloat 6.09 GB/102k files from vendored third-party) — wiring fix NOT YET
+LANDED</td>
+<td><code>codegraph</code> npm <code>1.2.0</code>,
+<code>serve --mcp</code> bare-command</td>
+<td><code>08_codegraph_opendesign.md</code> §1.1/§2/§4</td>
+</tr>
+<tr>
+<td><strong>opendesign as core provider</strong></td>
+<td><strong>DESIGN COMPLETE, fully unwired</strong> (disabled MCP entry,
+daemon down, <code>od</code>↔︎coreutils collision noted)</td>
+<td><code>open-design-mcp</code> npm <code>0.16.1</code>, daemon
+<code>:7456</code></td>
+<td><code>08_codegraph_opendesign.md</code> §1.2/§3/§5.2</td>
+</tr>
+<tr>
+<td><strong>HelixQA vision/full-capability testing</strong></td>
+<td><strong>DESIGN COMPLETE</strong> (9 banks A–I,
+<code>ContentAssertingResolver</code> + conduit +
+<code>pkg/vision</code>/<code>pkg/recordingqa</code> already shipped in
+HelixQA) — bank YAML + per-capability analyzers NOT yet authored;
+blocked on HelixLLM contract confirmation (<strong>now resolved,
+§0.1</strong> — <code>API_CONTRACT.md</code> exists)</td>
+<td>See <code>12_helixqa_testing.md</code> Parts 1-6; §5 of this
+document extends it</td>
+<td><code>12_helixqa_testing.md</code></td>
+</tr>
+<tr>
+<td><strong>Provider coverage
+(Poe/Perplexity/Sakana/Xiaomi/Tencent/…)</strong></td>
+<td>Out of THIS document’s scope (owned by
+<code>06_providers_coverage.md</code> / Phase 4) — noted for
+completeness only</td>
+<td>—</td>
+<td><code>06_providers_coverage.md</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="deep-multi-angle-research-delta-11.4.150-11.4.99-what-changed-was-added-since-2026-07-0607">1.
+Deep multi-angle research delta (§11.4.150 / §11.4.99) — what changed /
+was added since 2026-07-06/07</h2>
+<p>The 13-report Phase-R corpus is 24-48h old and already carries
+per-domain citations at the depth this task asks for. This section adds
+only the <strong>genuinely new</strong> facts found in this pass, each
+with URL + access date 2026-07-08.</p>
+<h3 id="mcp-beta-sdks-for-the-2026-07-28-rc-now-exist">1.1 MCP — beta
+SDKs for the 2026-07-28 RC now exist</h3>
+<ul>
+<li>The MCP blog confirms the RC was <strong>locked 2026-05-21</strong>,
+finalizes <strong>2026-07-28</strong> (20 days from today), and a
+<strong>companion post announces beta SDKs for the RC are now
+available</strong> — closing part of the
+<code>05_mcp_acp_protocols.md</code> §1.3 “UNCONFIRMED: Go SDK
+Streamable-HTTP transport” gap. <strong>Action for P4-T5:</strong>
+before wiring, pull the current <code>go-sdk</code> release notes and
+confirm the beta explicitly ships a Streamable-HTTP
+<strong>server</strong> transport (not just client) — the
+beta-availability fact is confirmed, the exact transport coverage is not
+yet re-verified this session. (<a href="https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/">MCP
+blog — 2026-07-28 RC</a>, accessed 2026-07-08; <a href="https://blog.modelcontextprotocol.io/posts/sdk-betas-2026-07-28/">MCP
+blog — Beta SDKs for 2026-07-28 RC</a>, accessed 2026-07-08)</li>
+<li>The stateless-core summary is reconfirmed independently by three
+secondary sources (Stacktree, MCP.Directory, jsmanifest): <em>“The
+initialize/initialized handshake is gone. The session header is gone.
+Every request is now self-contained.”</em> This validates the
+<code>05_mcp_acp_protocols.md</code> §7 design decision to build the
+HelixLLM/HelixAgent MCP gateway <strong>stateless-first</strong>, now
+with higher confidence since it is 20 days from finalization, not
+months. (<a href="https://stacktr.ee/blog/mcp-2026-spec-changes">Stacktree</a>; <a href="https://mcp.directory/blog/mcp-2026-07-28-release-candidate">MCP.Directory</a>;
+accessed 2026-07-08)</li>
+</ul>
+<h3 id="cognee-the-upstream-bug-has-no-newer-public-fix-found-negative-finding-11.4.99b">1.2
+cognee — the upstream bug has no newer public fix found (negative
+finding, §11.4.99(B))</h3>
+<p>A targeted search for the exact trace
+(<code>extract_subgraph_chunks</code>,
+<code>AttributeError: &#39;str&#39; object has no attribute &#39;nodes&#39;</code>)
+against <code>topoteretes/cognee</code> returned no matching issue in
+the indexed search results (issue numbers near the guessed range are
+unrelated: #2090 request-full-document, #2560 governance-validation,
+#2119 a <em>different</em> hang-on-<code>cognify()</code> bug on macOS
+with a local OpenAI-compatible LLM — itself relevant as a <strong>second
+known cognee/local-LLM interaction bug</strong>, worth flagging for when
+cognee is eventually re-enabled against HelixLLM’s local endpoint).
+<strong>Recommendation (unchanged from RESUME, now reinforced):</strong>
+do NOT re-attempt cognee wiring by hoping the bug is fixed; instead (a)
+pin and test a specific newer cognee release for this exact trace before
+any re-enable attempt, (b) treat
+<code>docs/topoteretes/cognee/issues</code> triage as its own tracked
+P-OQ2-B task, (c) proceed with the Zep/Graphiti + mem0 HelixMemory path
+(§4.7) as the primary durable-memory deliverable, independent of
+cognee’s fate. (<a href="https://github.com/topoteretes/cognee/issues">topoteretes/cognee
+issues</a>, accessed 2026-07-08 — negative finding, exact trace not
+found; <a href="https://github.com/topoteretes/cognee/issues/2119">topoteretes/cognee#2119
+— cognify() hangs with local OpenAI-compatible LLM on macOS</a>,
+accessed 2026-07-08, cited as an adjacent local-LLM-interaction
+risk)</p>
+<h3 id="live-state-reconciliation-with-the-design-docs-this-sessions-own-probe-corrected-re-baselined">1.3
+Live-state reconciliation with the design docs (this session’s own
+probe, corrected + re-baselined)</h3>
+<ul>
+<li><code>IMAGE_GEN_PROVIDER.md</code> and
+<code>VIDEO_GEN_PROVIDER.md</code> were both authored against a
+<strong>~12.7 GB free</strong> baseline (§0 of each doc, dated
+2026-07-07). <strong>A first live read this session</strong> found
+<code>24047 MiB used / 8074 MiB free</code> — i.e. ≈23.48 GiB used /
+<strong>≈7.89 GiB free</strong> (the plan’s original draft mislabeled
+this figure “8.07 GiB”; <code>8074 MiB ÷ 1024 = 7.885 GiB</code>, not
+<code>÷1000</code>; the used+free-vs-total gap —
+<code>24047+8074=32121</code> vs total <code>32607</code> — is a
+consistent ≈486 MiB reserved/driver-overhead artifact, reconciled below
+as an expected constant, not an anomaly), because the vision co-resident
+container (<code>helixllm_visiongen_visiongen_1</code>) was ALSO
+resident alongside the coder at that time (24047 MiB used vs the docs’
+assumed ~19.4 GB).</li>
+<li><strong>CRITICAL LIVE-STATE UPDATE (this revision pass, 2026-07-08
+03:45:27 local / 2026-07-07T22:45:27Z UTC):</strong> the vision
+co-resident container has since been <strong>TORN DOWN</strong> —
+<code>podman ps</code> now shows only <code>helixllm-coder</code>
+resident (single process <code>llama-server</code>, 19426 MiB). A fresh
+<code>nvidia-smi</code> read gives
+<code>19436 MiB used / 12685 MiB free</code> (total unchanged at 32607
+MiB; gap <code>19436+12685=32121</code> vs <code>32607</code> = the same
+≈486 MiB overhead as the first reading, confirming it is a stable
+driver-reservation constant rather than a measurement error) —
+i.e. <strong>≈18.98 GiB used / ≈12.39 GiB free</strong>,
+coder-only.</li>
+<li><strong>This re-baselines the co-reside admission math</strong>:
+<code>needBytes + 2 GiB headroom ≤ 12.39 GiB</code> ⇒
+<code>needBytes ≲ 10.39 GiB</code> — ROOMIER than both the stale ~12.7
+GiB design-doc assumption’s derived <code>≲10.7 GiB</code> and the
+mid-session tight reading’s corrected <code>≲5.89 GiB</code> (fixing the
+draft’s mislabeled <code>≲6.07 GiB</code>). Concretely, with vision now
+stopped:
+<ul>
+<li>Image co-reside fallback
+(<code>FLUX.1-schnell-Q4 GGUF ~7-9 GB</code> OR
+<code>SDXL ~7-9 GB</code>) <strong>fits again</strong>
+(<code>9+2=11 GiB ≤ 12.39 GiB free</code>) — the borderline/refused
+state found earlier this session (while vision was still resident) no
+longer applies at the current residency.</li>
+<li>Video co-reside fast lane
+(<code>LTX-Video 2B-distilled ~6-8 GB</code>) <strong>fits
+comfortably</strong> (<code>8+2=10 GiB ≤ 12.39 GiB free</code>), as does
+<code>WAN 2.2 TI2V-5B ~7-9 GB</code> (<code>9+2=11 ≤ 12.39</code>) — no
+longer “tight.”</li>
+<li>Flagship tiers still do <strong>NOT</strong> fit co-resident:
+<code>FLUX.1-schnell fp8 (~16-20 GB)</code> and
+<code>WAN 2.2 A14B MoE fp8 (~14-20 GB)</code> both exceed the
+<code>10.39 GiB</code> ceiling even now — these still require a
+scheduled full-burst window pausing the coder (§11.4.122 operator
+authorization, since pausing <code>helixllm-coder</code> is a live
+user-visible-latency change).</li>
+<li><strong>This is exactly the broker’s job to catch</strong>
+(fail-closed, <code>ErrBudgetExceeded</code>, never an OOM) — the
+practical effect is that the P3-T2/P3-T3 runtime-proof step no longer
+needs an operator-authorized <em>vision</em> pause for the
+fallback/fast-lane tiers (there is nothing to pause — vision is already
+stopped); it only needs the coder-pause path for the flagship tiers.
+<strong>Action:</strong> re-measure <code>Budget().free</code>
+immediately before every P3-T2′/T3′ admission attempt — do NOT carry
+forward either this session’s mid-point tight reading or this
+re-baseline as a cached constant. Residency state (which containers are
+up) demonstrably changed within this single session, moving the ceiling
+from ≈5.89 GiB to ≈10.39 GiB — proof that the number can move in EITHER
+direction, not only downward (tracked as DZ-23, re-scored Med,
+§2.3/§2.6).</li>
+</ul></li>
+</ul>
+<h3 id="vision-hardening-is-qwen2.5-vl-3b-hardened-or-does-it-need-the-qwen3-vl-upgrade-the-research-recommended">1.4
+Vision hardening — is Qwen2.5-VL-3B “hardened” or does it need the
+Qwen3-VL upgrade the research recommended?</h3>
+<p><code>02_vision_generative.md</code> §1.1 recommends
+<strong>Qwen3-VL-8B</strong> as “the local VLM to beat” and 3B only as
+an edge/fast tier. The LIVE deployment runs
+<strong>Qwen2.5-VL-3B</strong> (the prior generation, smallest tier) — a
+materially smaller/older model than the research’s primary
+recommendation. This is not a defect (3B is genuinely co-resident-safe
+and already proven working — real evidence beats a bigger unproven
+model) but IS the concrete “harden + full exposure” gap the operator
+asked about: 1. <strong>Accuracy gap</strong> — 3B dense vs 8B dense:
+per <code>codersera</code> (cited in
+<code>02_vision_generative.md</code> §1.1), MathVista improved 68.2→85.2
+across Qwen versions/sizes; a 3B-vs-8B gap on document/chart/OCR-heavy
+tasks is real and should be measured on HelixQA’s own vision fixtures
+(Bank B, §5) before deciding whether to upgrade the always-warm default
+or add an on-demand higher-quality tier. 2. <strong>Context</strong> —
+the live model reports <code>n_ctx:16384</code> (server-configured)
+against <code>n_ctx_train:128000</code> — plenty of headroom to raise
+<code>--ctx-size</code> if larger images/longer prompts are needed; no
+model change required for this. 3. <strong><code>Qwen2.5-VL</code> vs
+<code>Qwen3-VL</code></strong> — Qwen3-VL is confirmed (per the existing
+research) to be the <em>2026 successor</em>; no new finding this session
+changes that recommendation. <strong>Plan:</strong> keep the live 3B as
+the always-resident default (it fits comfortably at either re-baselined
+free-VRAM figure captured this session — ≈7.89 GiB with vision
+co-resident, or ≈12.39 GiB now that vision is stopped, see §1.3), and
+add Qwen3-VL-8B (or -30B-A3B) as a <code>ClassVLM</code>
+<strong>warm</strong> tier loaded on-demand for quality-sensitive
+HelixQA/agent requests, exactly as <code>broker.go</code>’s
+<code>ClassVLM</code> already anticipates. No new engine — same
+llama.cpp GGUF+mmproj path, model-id swap only (config-injected,
+§CONST-046).</p>
+<hr />
+<h2 id="multi-pass-danger-zone-analysis-11.4.92-5-pass-delta-over-99_risk_bottleneck_analysis.md">2.
+Multi-pass danger-zone analysis (§11.4.92 5-pass) — delta over
+<code>99_risk_bottleneck_analysis.md</code></h2>
+<p>The existing risk register (DZ-01…DZ-22, AB-01…AB-14, V-01…V-20) is
+comprehensive and NOT re-litigated here. This section adds
+capability-extension-specific danger zones surfaced by grounding this
+plan in the LIVE host state.</p>
+<h3 id="pass-1-goal-verification-delta">2.1 Pass 1 (goal verification) —
+delta</h3>
+<p>All capability elements the operator asked for (vision, generative
+image/video/vector/translation, embeddings/RAG/HelixMemory, STT/OCR,
+codegraph/opendesign, HelixQA extension) have a researched landing place
+(§0.2 table). <strong>No net-new capability gap.</strong> The one FRESH
+gap: <code>scratchpad/design_helixmemory_cognee.md</code>, cited in
+RESUME as “design DONE,” <strong>was not found on disk this
+session</strong> (<code>find</code> returned empty). Either it was never
+committed, lives in an uncommitted/gitignored scratchpad state, or the
+path changed. <strong>Action:</strong> treat the HelixMemory
+(Zep/Graphiti+mem0) design as <strong>NOT YET AUTHORED</strong> at a
+spike-doc level — <code>04_embeddings_rag.md</code> §5 has the
+recommendation but not the P3-T7-level implementation spec
+<code>EMBEDDINGS_PROVIDER.md</code>-style. This is now DZ-23
+(below).</p>
+<h3 id="pass-2-regression-blast-radius-delta">2.2 Pass 2 (regression /
+blast-radius) — delta</h3>
+<p>Two NEW touch points from this session’s grounding: - <strong>BR-11
+(new): the vision container
+(<code>helixllm_visiongen_visiongen_1</code>) is an
+unreviewed-by-this-document capability whose residency state is volatile
+— it was running when this plan was first drafted and has since been
+torn down (§1.3, re-confirmed via <code>podman ps</code> this revision
+pass).</strong> Any VRAM-budget change to the coder or any new
+capability container MUST re-measure <code>Budget().free</code> against
+WHATEVER is actually resident at that moment, never assume either
+“vision is up” or “vision is down” from this document. Guard: every
+P3-Tx acceptance step re-reads live
+<code>nvidia-smi</code>+<code>podman ps</code> immediately before
+admission (already the broker’s own discipline — this just flags that
+BOTH the design docs’ arithmetic AND this plan’s own §1.3 arithmetic go
+stale the moment residency changes, and must not be trusted at face
+value). - <strong>BR-12 (new): <code>submodules/helix_agent</code>’s
+COGNEE_BUG.md documents a cognee↔︎local-LLM interaction failure
+class</strong> (<code>cognify()</code> hangs with a local
+OpenAI-compatible LLM on macOS, per the fresh search #2119) that is
+DIFFERENT from the already-known <code>extract_subgraph_chunks</code>
+bug. Any future cognee-re-enable attempt against HelixLLM’s local
+OpenAI-compatible endpoint MUST test for BOTH failure modes, not just
+the one already documented.</p>
+<h3 id="pass-3-cross-feature-interaction-delta">2.3 Pass 3
+(cross-feature interaction) — delta</h3>
+<p><strong>DZ-23 (new, re-scored Med — was High at first draft): live
+free-VRAM residency is VOLATILE and MUST always be re-measured, never
+assumed from a cached design-doc OR this plan’s own prior
+draft.</strong> This plan’s first live read this session, taken while
+the vision co-resident container was still up, found free VRAM tighter
+than the design docs assumed (~7.89 GiB actual vs ~12.7 GiB assumed —
+corrected unit conversion, §1.3). <strong>A second live read taken
+during this revision pass (<code>nvidia-smi</code>, 2026-07-08 03:45:27
+local) found the vision container
+(<code>helixllm_visiongen_visiongen_1</code>, was on host port
+<code>18439</code>) has since been TORN DOWN</strong> — only
+<code>helixllm-coder</code> is resident now, and free VRAM is currently
+≈12.39 GiB (12685 MiB), roomier than either prior reading. New safe
+co-reside ceiling: <code>needBytes + 2 GiB headroom ≤ 12.39 GiB</code> ⇒
+<code>needBytes ≲ 10.39 GiB</code>. This REOPENS the image co-reside
+fallback (~7-9 GB, <code>9+2=11 ≤ 12.39</code> → fits) and the video
+co-reside fast lane (~6-8 GB, <code>8+2=10 ≤ 12.39</code> → fits) and
+<code>WAN 2.2 TI2V-5B</code> (~7-9 GB → fits) WITHOUT needing to pause
+anything, since vision is already stopped. Flagship tiers
+(FLUX.1-schnell fp8 ~16-20 GB; WAN 2.2 A14B MoE fp8 ~14-20 GB) still
+exceed the 10.39 GiB ceiling and still require a scheduled full-burst
+window (pause the coder, §11.4.122 operator authorization).
+<strong>Mitigation (unchanged in kind, re-targeted):</strong> (a) every
+P3-T2/T3 runtime-proof attempt MUST re-read <code>Budget().free</code>
+immediately before acquiring the lease — this session is itself the
+proof that the number moves in EITHER direction between two reads taken
+hours apart, not only downward; (b) do NOT assume the vision container
+is either up or down — check <code>podman ps</code> at proof time, not
+this document; (c) the “always-warm 3B vision as a <code>ClassVLM</code>
+warm-swappable member” trade-off from the prior draft is now
+LOWER-URGENCY (headroom is currently ample without evicting vision) but
+remains worth raising with the operator as a resilience measure for
+whenever vision IS resident again, not resolved unilaterally
+(§11.4.101).</p>
+<h3 id="pass-4-deep-research-validation-gaps-delta">2.4 Pass 4
+(deep-research validation gaps) — delta</h3>
+<ul>
+<li><strong>V-21 (new):</strong> Beta MCP Go SDK for the 2026-07-28 RC —
+confirm the SDK’s Streamable-HTTP <strong>server</strong> transport
+coverage before committing P4-T5’s gateway design to it (§1.1 above
+narrows but does not close the prior V-08 gap).</li>
+<li><strong>V-22 (new):</strong> cognee’s exact upstream-fix status for
+<code>extract_subgraph_chunks</code> — NOT found in this session’s
+search; must be re-verified against <code>topoteretes/cognee</code>’s
+live issue tracker + CHANGELOG before any re-enable attempt (never
+assume fixed-by-now).</li>
+<li><strong>V-23 (new):</strong> the live free-VRAM assumption in
+<code>IMAGE_GEN_PROVIDER.md</code>/<code>VIDEO_GEN_PROVIDER.md</code>
+(~12.7 GB) is a <strong>moving target, not a fixed drift</strong> — this
+session alone captured it at ≈7.89 GiB (coder+vision resident, first
+reading) and later, after the vision container was torn down, at ≈12.39
+GiB (coder-only, re-baselined 2026-07-08 03:45:27 local) — nearly back
+to the design docs’ original assumption. Every subsequent read of those
+docs’ §1.5 VRAM tables MUST re-measure live, never trust a cached number
+in either direction; the docs should carry a “re-measure, do not trust
+this table” banner when this plan lands (tracked as a follow-up
+doc-hygiene task, not blocking).</li>
+</ul>
+<h3 id="pass-5-anti-bluff-surface-delta">2.5 Pass 5 (anti-bluff surface)
+— delta</h3>
+<ul>
+<li><strong>AB-15 (new): “vision endpoint responds to
+<code>/v1/models</code>” is NOT proof the VLM correctly understands
+images.</strong> The live-endpoint check this session
+(<code>curl localhost:18439/v1/models</code>) is a
+<strong>metadata-only</strong> probe — it proves the process is up and
+the model file loaded, nothing about actual multimodal correctness. This
+is EXACTLY the §11.4.107(10)/HelixQA-Bank-B self-validated-analyzer gap
+the plan closes in §5 below — flagging here so it is not mistaken for a
+capability proof in any status doc.</li>
+<li><strong>AB-16 (new): a resident container list
+(<code>podman ps</code>) is not proof of VRAM-budget
+correctness.</strong> Two containers being “up” says nothing about
+whether their combined footprint already exceeds a safe margin for a
+third burst request — only a live <code>Budget().free</code> read + the
+broker’s <code>admit()</code> decision is authoritative (this is what
+DZ-23 exists to guard).</li>
+</ul>
+<h3 id="consolidated-new-danger-zone-register-this-session">2.6
+Consolidated NEW danger-zone register (this session)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Sev</th>
+<th>Owning phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DZ-23</td>
+<td>Live free-VRAM residency is volatile — re-measured 2026-07-08
+03:45:27 local at ≈12.39 GiB (coder-only, vision container torn down
+since drafting), was ≈7.89 GiB (coder+vision) at first capture —
+co-reside fallback/fast-lane tiers now fit again; flagship tiers still
+need a full burst</td>
+<td><strong>Med</strong> (was High)</td>
+<td>P3-T2/T3 runtime-proof step</td>
+</tr>
+<tr>
+<td>DZ-24</td>
+<td><code>scratchpad/design_helixmemory_cognee.md</code> referenced in
+RESUME not found on disk — HelixMemory (Zep/Graphiti+mem0) spike doc
+must be (re-)authored before P3-T7 implementation</td>
+<td>Med</td>
+<td>P3-T7 (this plan’s Phase 3.7)</td>
+</tr>
+<tr>
+<td>DZ-25</td>
+<td>cognee has a SECOND known local-LLM interaction bug
+(<code>cognify()</code> hangs on macOS with local OpenAI-compatible
+endpoints, #2119) distinct from the documented
+<code>extract_subgraph_chunks</code> bug — both must be tested before
+any re-enable</td>
+<td>Med</td>
+<td>Deferred, tracked (cognee is §11.4.174-blocked anyway)</td>
+</tr>
+<tr>
+<td>AB-15</td>
+<td><code>/v1/models</code> liveness ≠ VLM correctness — must not be
+cited as a vision-capability proof anywhere</td>
+<td>Med</td>
+<td>HelixQA Bank B (§5)</td>
+</tr>
+<tr>
+<td>AB-16</td>
+<td>Container-up (<code>podman ps</code>) ≠ VRAM-budget safety — only
+<code>Budget().free</code>+<code>admit()</code> is authoritative</td>
+<td>Med</td>
+<td>Broker-integration acceptance steps (already designed in
+<code>IMAGE_GEN_PROVIDER.md</code> §2/<code>VIDEO_GEN_PROVIDER.md</code>
+§2, reinforced here)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Danger-zone count this pass: 5 new (DZ-23, DZ-24, DZ-25,
+AB-15, AB-16)</strong>, on top of the 22 DZ + 14 AB + 20 V items already
+in <code>99_risk_bottleneck_analysis.md</code> (<strong>56 total
+prior</strong> — recounted 2026-07-08 via
+<code>grep -oE &#39;DZ-[0-9]+|AB-[0-9]+|V-[0-9]+&#39; 99_risk_bottleneck_analysis.md | sort -u</code>:
+DZ-01…DZ-22 (22) + AB-01…AB-14 (14) + V-01…V-20 (20) = 56, correcting
+this document’s earlier “41” miscount + 5 new = <strong>61 enumerated
+danger zones/anti-bluff surfaces</strong> across the whole programme as
+of this plan).</p>
+<hr />
+<h2 id="runtime-signature-contract-per-capability-11.4.108-quick-index">3.
+Runtime-signature contract per capability (§11.4.108) — quick index</h2>
+<p>Every capability below has its FULL runtime-signature spec already
+written in its owning sibling doc; this table is the one-hop index so
+implementation does not need to re-derive it.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Runtime signature (definition of done)</th>
+<th>Full spec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vision</td>
+<td>Golden-good/golden-bad VLM answer-correctness +
+hallucination/spatial/OCR-cross-check, self-validated analyzer</td>
+<td><code>12_helixqa_testing.md</code> Bank B;
+<code>02_vision_generative.md</code> §1</td>
+</tr>
+<tr>
+<td>Image-gen</td>
+<td>CLIPScore prompt-image correspondence + semantic-order margin vs
+unrelated control + non-trivial-content check, golden-good/bad
+fixtures</td>
+<td><code>IMAGE_GEN_PROVIDER.md</code> §5</td>
+</tr>
+<tr>
+<td>Video-gen</td>
+<td>ffprobe frame-count/codec/geometry + freeze-detection/frame-advance
+liveness + per-frame CLIPScore + semantic-order margin, golden-good/bad
+fixtures</td>
+<td><code>VIDEO_GEN_PROVIDER.md</code> §5</td>
+</tr>
+<tr>
+<td>Vectorize</td>
+<td>Raster→SVG round-trip: re-rasterize the produced SVG, assert
+perceptual similarity to source within tolerance</td>
+<td><code>04_implementation_plan.md</code> P3-T4; NEW spike needed
+(§4.3)</td>
+</tr>
+<tr>
+<td>Translation</td>
+<td>COMET/CometKiwi QE gate + back-translation metamorphic (X→Y→X′
+similarity) + entity/target-lang-preservation guard (catches a no-op
+“translator”)</td>
+<td><code>03_translation.md</code> §1.3;
+<code>12_helixqa_testing.md</code> Bank E</td>
+</tr>
+<tr>
+<td>Embeddings/RAG</td>
+<td>Real vectors stored+queryable, stable dim, NaN-free;
+Recall@K/MRR/nDCG on a labelled set; RAGAS faithfulness with a negative
+(unsupported-claim) case</td>
+<td><code>EMBEDDINGS_PROVIDER.md</code>;
+<code>12_helixqa_testing.md</code> Bank F</td>
+</tr>
+<tr>
+<td>STT</td>
+<td>WER/CER vs ground-truth transcript, RMS-floor non-silence pre-check,
+Parakeet no-hallucination path for the assertion lane</td>
+<td><code>07_stt_ocr_whisper_tesseract.md</code> §1;
+<code>12_helixqa_testing.md</code> Bank G</td>
+</tr>
+<tr>
+<td>OCR</td>
+<td>CER vs ground-truth + per-word confidence floor + ROI, chrome-label
+denylist reused from §11.4.137</td>
+<td><code>07_stt_ocr_whisper_tesseract.md</code> §2;
+<code>12_helixqa_testing.md</code> Bank H</td>
+</tr>
+<tr>
+<td>codegraph</td>
+<td>Cross-submodule symbol resolution probe (a fact obtainable ONLY via
+<code>codegraph_status</code>/<code>codegraph_explore</code>) + paired
+exclude-mutation (§11.4.79(5))</td>
+<td><code>08_codegraph_opendesign.md</code> §4.2</td>
+</tr>
+<tr>
+<td>opendesign</td>
+<td><code>od_list_projects</code> returns the seeded
+<code>helixcode-brand</code> project + a codegraph fact in the SAME
+unforgeable challenge (§11.4.78-style)</td>
+<td><code>08_codegraph_opendesign.md</code> §4.4</td>
+</tr>
+<tr>
+<td>MCP/A2A</td>
+<td>A live MCP <code>tools/list</code> round-trip returning real Helix
+tool schemas; a live A2A Agent-Card + task round-trip (not the
+pre-existing proprietary stub)</td>
+<td><code>05_mcp_acp_protocols.md</code> §7;
+<code>ACP_A2A_PROVIDER.md</code> §2 (rev 2 distinguishes real-wire from
+stub)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="phased-implementation-plan-extends-04_implementation_plan.md-phase-345-with-fine-grained-taskssubtasks">4.
+Phased implementation plan (extends
+<code>04_implementation_plan.md</code> Phase 3/4/5 with fine-grained
+tasks/subtasks)</h2>
+<p>This section is additive to the existing Phase 0-9 plan
+(<code>00_master/04_implementation_plan.md</code>). Phases 0-2 (GPU
+foundation, serving core, gateway) are marked complete/GO per RESUME;
+this plan picks up at <strong>Phase 3 (extended capabilities)</strong>
+and <strong>Phase 4/5 (protocols + core providers)</strong> with
+line-item granularity, plus the <strong>Phase 8 HelixQA
+extension</strong> worked out to bank level (§5).</p>
+<h3 id="phase-3-extended-capabilities-per-capability-model-container-broker-class-gateway-route-verifier-probe-helixqa-bank-captured-proof">Phase
+3 — Extended capabilities (per-capability: model → container → broker
+class → gateway route → verifier probe → HelixQA bank → captured
+proof)</h3>
+<h4 id="p3-t1-vision-hardening-extends-the-already-proven-3b-deployment">P3-T1′
+— Vision hardening (extends the already-PROVEN 3B deployment)</h4>
+<ul>
+<li><strong>T1′.1</strong> Capture a <code>Budget().free</code> baseline
+with BOTH coder+vision resident (captured earlier this session: ≈7.89
+GiB — corrected from the draft’s mislabeled “8.07 GiB”;
+<code>MiB÷1024</code>, not <code>÷1000</code>). Document it as the new
+“vision-hardening worst-case baseline” in
+<code>submodules/helix_llm/docs/VRAM_BROKER.md</code> (correction
+commit, since the design docs assumed ~12.7 GB). <strong>Also record the
+coder-only re-baseline</strong> (≈12.39 GiB, captured this revision pass
+after the vision container was torn down, §1.3) — both numbers matter
+since residency is volatile (§2.3 DZ-23).</li>
+<li><strong>T1′.2</strong> Add <code>Qwen3-VL-8B-Instruct</code>
+GGUF+mmproj as a SECOND, <code>ClassVLM</code>-<strong>warm</strong>
+(not resident) model behind the SAME <code>/v1/chat/completions</code>
+route, alias-selected (<code>model:&quot;helix-vision-hq&quot;</code> vs the
+existing default), config-injected model map (§CONST-046) — no new
+engine, no new port, a model-id/alias addition only.</li>
+<li><strong>T1′.3</strong> Author the HelixQA Bank B golden fixture
+corpus (<code>data/vision_gt/*.png</code> + expected-facts JSON) — reuse
+the exact <code>red_stop_sign.png</code>-style pattern from
+<code>12_helixqa_testing.md</code> §Bank B.</li>
+<li><strong>T1′.4</strong> Run Bank B against BOTH the 3B (always-warm)
+and 8B (on-demand) tiers; capture accuracy deltas as the FIRST real
+measured evidence closing the “3B vs 8B” question raised in §1.4.</li>
+<li><strong>Acceptance:</strong> Bank B PASS on both tiers + captured
+accuracy-delta table under
+<code>docs/qa/&lt;run-id&gt;/vision_hardening/</code>; self-validated
+analyzer golden-bad fixture FAILs (proves the oracle is not itself a
+bluff).</li>
+</ul>
+<h4 id="p3-t2-image-generation-runtime-proof-the-scaffold-is-done-this-is-the-missing-runtime-step">P3-T2′
+— Image generation runtime proof (the scaffold is DONE; this is the
+missing runtime step)</h4>
+<ul>
+<li><strong>T2′.1</strong> Re-measure <code>Budget().free</code> live
+(not the stale ~12.7 GB assumption) immediately before attempting the
+co-reside lane.</li>
+<li><strong>T2′.2</strong> <strong>Re-baselined 2026-07-08:</strong> the
+vision co-resident container is currently STOPPED (torn down since this
+plan was drafted — §1.3), so live <code>free</code> is ≈12.39 GiB and
+the fallback tiers (SDXL/FLUX-schnell-Q4, ~7-9 GB) already admit without
+pausing anything. If a fresh <code>Budget().free</code> read at proof
+time nonetheless shows <code>free &lt; needBytes+2GiB</code>
+(e.g. vision has been restarted since, or the attempt targets a flagship
+tier), request operator authorization (§11.4.122, since pausing a live
+capability is a user-visible-latency change) to temporarily stop
+whichever resident container(s) are blocking admission
+(<code>helixllm-coder</code> and/or a restarted vision container), OR
+schedule a full-burst window.</li>
+<li><strong>T2′.3</strong> Run
+<code>docs/qa/phase4_*/harness/run_proof.sh admit-check</code> (per
+RESUME’s documented entry point) then the full generate-and-verify cycle
+from <code>IMAGE_GEN_PROVIDER.md</code> §5 (CLIPScore
+matched/unrelated-control pair + golden-bad self-validation
+fixtures).</li>
+<li><strong>T2′.4</strong> Capture the runtime signature to
+<code>docs/qa/&lt;run-id&gt;/image_gen/</code> per §11.4.83; register
+the guard into the §11.4.135 standing regression suite.</li>
+<li><strong>Acceptance:</strong> the exact §5 signature from
+<code>IMAGE_GEN_PROVIDER.md</code> — real image, CLIPScore prompt-match,
+semantic-order margin, golden-good PASS + 4 golden-bad fixtures FAIL,
+paired §1.1 mutation on the analyzer itself.</li>
+</ul>
+<h4 id="p3-t3-video-generation-runtime-proof-mirrors-p3-t2">P3-T3′ —
+Video generation runtime proof (mirrors P3-T2′)</h4>
+<ul>
+<li>Same 4-subtask shape as P3-T2′ against
+<code>VIDEO_GEN_PROVIDER.md</code> §5’s signature (ffprobe geometry +
+freeze/frame-advance liveness + per-frame CLIPScore + 5 golden-bad
+fixtures). Video’s occupancy is MINUTES not seconds (§1.5 of that doc) —
+budget the operator-authorized window accordingly; this is an async-job
+route (§3 of that doc), never synchronous.</li>
+<li><strong>Acceptance:</strong> the exact §5 signature from
+<code>VIDEO_GEN_PROVIDER.md</code>.</li>
+</ul>
+<h4 id="p3-t4-vectorization-net-new-no-spike-doc-yet-author-one-before-coding-per-11.4.6">P3-T4′
+— Vectorization (NET-NEW, no spike doc yet — author one before coding,
+per §11.4.6)</h4>
+<ul>
+<li><strong>T4′.1</strong> Author
+<code>submodules/helix_llm/docs/VECTORIZE_PROVIDER.md</code> (mirrors
+the <code>IMAGE_GEN_PROVIDER.md</code> template): engine choice (vtracer
+CLI-wrapped, CPU, <code>ClassEmbed</code>-style 0-GPU broker class —
+call it a new <code>ClassCPUTool</code> member or reuse
+<code>ClassEmbed</code>’s zero-reservation semantics) as the DEFAULT and
+the real path for natural-image/illustration/pixelized-graphic
+vectorization; StarVector-8B as an OPTIONAL, narrower smart/VLM-backed
+tier (co-resident-capable at ~12-16 GB, competes with the vision warm
+tier for the SAME budget — cross-check against P3-T1′’s
+<code>ClassVLM</code> warm slot, since both are VLM-shaped GPU
+consumers). <strong>CAVEAT (§11.4.6/§11.4.99, confirmed via StarVector’s
+own HF model card):</strong> StarVector models explicitly do
+<strong>NOT</strong> work for natural images or illustrations —
+<em>“StarVector models will not work for natural images or
+illustrations, as they have not been trained on those images”</em> —
+they are scoped to icons, logotypes, technical diagrams, graphs, and
+charts only (<a href="https://huggingface.co/starvector/starvector-8b-im2svg">StarVector-8B
+model card</a>, accessed 2026-07-08). The operator’s directive named
+“illustration” and “vectorizing pixelized graphics” as in-scope use
+cases — <strong>these route to vtracer’s raster-trace default, NOT
+StarVector.</strong> StarVector’s smart-mode tier should be routed ONLY
+for icon/logo/diagram/chart-class inputs.</li>
+<li><strong>T4′.2</strong> API contract:
+<code>POST /vectorize {image, mode:&quot;fast&quot;|&quot;smart&quot;}</code> →
+<code>{svg, engine}</code> — <code>mode:&quot;smart&quot;</code> MUST fall back to
+the vtracer raster-trace path (not attempt StarVector) when the input is
+a natural image/illustration/photo rather than icon/logo/diagram/chart,
+per the caveat above.</li>
+<li><strong>T4′.3</strong> Runtime signature:
+raster→SVG→re-rasterize→perceptual-similarity-to-source ≥ a calibrated
+floor (§11.4.107(13)); golden-bad fixture = a degenerate/empty SVG that
+must FAIL the re-rasterize check.</li>
+<li><strong>Acceptance:</strong> signature above, captured under
+<code>docs/qa/&lt;run-id&gt;/vectorize/</code>.</li>
+</ul>
+<h4 id="p3-t5-translation-designed-in-03_translation.md-author-the-p3-t5-level-spike-land-the-cpu-first-nllb-tier">P3-T5′
+— Translation (DESIGNED in <code>03_translation.md</code>; author the
+P3-T5-level spike + land the CPU-first NLLB tier)</h4>
+<ul>
+<li><strong>T5′.1</strong> Author
+<code>submodules/helix_llm/docs/TRANSLATION_PROVIDER.md</code> (P3-T5
+spike, mirroring <code>EMBEDDINGS_PROVIDER.md</code>’s
+CPU-tier-ships-first pattern): NLLB-200-3.3B int8 via CTranslate2 is
+<strong>CPU-capable, <code>ClassTranslate</code>-warm OR
+zero-GPU</strong>, so — like embeddings — it does NOT need to wait for a
+GPU burst window; recommend shipping it FIRST, same as embeddings
+did.</li>
+<li><strong>T5′.2</strong> LibreTranslate-compatible
+<code>/translate</code> route + <code>/translate/document</code>
+(tokenize-protect-restore for markdown/code/HTML) +
+<code>/glossaries</code> CRUD.</li>
+<li><strong>T5′.3</strong> QE gate: CometKiwi referenceless
+quality-estimation BEFORE any “professional quality” claim (closes
+AB-07/DZ-14 metric-gaming risk).</li>
+<li><strong>T5′.4</strong> Runtime signature: back-translation
+metamorphic (X→Y→X′ similarity ≥ floor) +
+target-language/entity-preservation guard (catches a no-op identity
+“translator” — the exact mutation <code>12_helixqa_testing.md</code>
+Bank E specifies).</li>
+<li><strong>Acceptance:</strong> Bank E
+(<code>helixllm_translation.yaml</code>) PASS + golden-bad
+no-op-translator fixture FAILs.</li>
+</ul>
+<h4 id="p3-t6-embeddingsrag-completion-embeddings-cpu-tier-is-proven-this-closes-qdrant-rerank-graph-fusion">P3-T6′
+— Embeddings/RAG completion (embeddings CPU-tier is PROVEN; this closes
+Qdrant + rerank + graph-fusion)</h4>
+<ul>
+<li><strong>T6′.1</strong> Stand up Qdrant (CPU, no GPU) via the
+containers submodule; wire named-vector hybrid (dense
+Qwen3-Embedding-4B/bge-small + sparse BGE-M3).</li>
+<li><strong>T6′.2</strong> Wire bge-reranker-v2-m3 via TEI alongside the
+existing embeddings TEI container (same engine family, additive).</li>
+<li><strong>T6′.3</strong> Fuse codegraph graph-expansion
+(callers/callees) into the retrieval pipeline per
+<code>08_codegraph_opendesign.md</code> §5.1 point 3 — AFTER the
+codegraph exclude-list fix lands (P5-T1′ below), never before (DZ-08
+ordering rule).</li>
+<li><strong>Acceptance:</strong> Bank F
+(<code>helixllm_embeddings_rag.yaml</code>) — Recall@K/MRR/nDCG on a
+labelled fixture set + RAGAS faithfulness with a negative case + a
+retrieval-label-shuffle golden-bad mutation.</li>
+</ul>
+<h4 id="p3-t7-helixmemory-zepgraphiti-mem0-re-author-the-missing-spike-doc-first-closes-dz-24">P3-T7′
+— HelixMemory (Zep/Graphiti + mem0) — RE-AUTHOR the missing spike doc
+first (closes DZ-24)</h4>
+<ul>
+<li><strong>T7′.1</strong> Author
+<code>submodules/helix_llm/docs/HELIXMEMORY_PROVIDER.md</code> from
+scratch (the RESUME-referenced
+<code>scratchpad/design_helixmemory_cognee.md</code> is not on disk — do
+not assume its content, re-derive from <code>04_embeddings_rag.md</code>
+§5’s cited recommendation: Zep/Graphiti as the durable temporal-KG
+spine, mem0 as the lightweight extraction layer, exposed via MCP).</li>
+<li><strong>T7′.2</strong> This is INDEPENDENT of cognee (which lives in
+<code>helix_agent</code>, is §11.4.174-blocked for pointer-bump reasons
+AND has its own upstream bug per §1.2/§2.6 DZ-25) — HelixMemory
+(Zep/mem0) is a SEPARATE, unblocked deliverable that does not wait on
+cognee’s fate.</li>
+<li><strong>T7′.3</strong> MCP exposure:
+<code>add</code>/<code>search</code>/<code>update</code> tools,
+project-agnostic namespacing (§11.4.28).</li>
+<li><strong>Acceptance:</strong> injected-fact recall test (write a
+fact, retrieve it via a differently-worded query) + a temporal-validity
+test (a fact superseded by a later one is retrieved as the CURRENT
+value, not both) + faithfulness of retrieved-vs-injected content.</li>
+</ul>
+<h4 id="p3-t8-sttocr-wiring-everywhere-sweep-both-engines-proven-this-is-the-wired-everywhere-it-adds-capability-completion">P3-T8′
+— STT/OCR wiring-everywhere sweep (both engines PROVEN; this is the
+“wired everywhere it adds capability” completion)</h4>
+<ul>
+<li>Per <code>07_stt_ocr_whisper_tesseract.md</code> §3 table: wire STT
+into (a) the media-validation pipeline’s audio leg (§11.4.163), (b)
+<code>docs/qa/</code> raw-corpus transcription at release-prep
+(§11.4.128(3)), (c) an optional voice-input path for agent CLIs
+(Parakeet/Moonshine, deferred — not release-blocking); wire OCR into (a)
+the HelixQA pixel-oracle (§11.4.117, ALREADY the planned
+Bank-B/vision-testing substrate), (b) screenshot/error-dialog capture in
+workable-item tracking (nice-to-have, not release-blocking).</li>
+<li><strong>Acceptance:</strong> Bank G + Bank H (already specced) PASS;
+the media-validation pipeline’s audio leg demonstrably uses STT (not
+just a stub silence-check) on a real captured recording.</li>
+</ul>
+<h3 id="phase-45-protocols-core-providers-fine-grained-subtasks-extends-04_implementation_plan.md-p4p5">Phase
+4/5 — Protocols + core providers (fine-grained subtasks, extends
+<code>04_implementation_plan.md</code> P4/P5)</h3>
+<h4 id="p4-t5-mcp-gateway-re-verify-the-beta-sdk-transport-before-committing">P4-T5′
+— MCP gateway (re-verify the beta-SDK transport before committing)</h4>
+<ul>
+<li><strong>T5′.1</strong> Pull
+<code>github.com/modelcontextprotocol/go-sdk</code> latest release notes
+(post beta-SDK announcement, §1.1) — confirm Streamable-HTTP SERVER
+transport is present, not just client.</li>
+<li><strong>T5′.2</strong> If present: build the gateway MCP-server role
+(HelixAgent/HelixLLM expose Helix tools) stateless-first per the RC’s
+<code>server/discover</code> pattern.</li>
+<li><strong>T5′.3</strong> If absent/UNCONFIRMED still: fall back to
+stdio-only MCP exposure for this cycle + <code>mark3labs/mcp-go</code>
+as the documented fallback, re-visit after 2026-07-28 finalization.</li>
+<li><strong>Acceptance:</strong> a live <code>tools/list</code>
+round-trip via a real MCP client returns Helix’s actual tool schemas
+(not a stub).</li>
+</ul>
+<h4 id="p4-t4-a2a-already-designed-to-revision-2-land-the-real-wire-retirereplace-the-proprietary-stub-per-an-operator-decision">P4-T4′
+— A2A (already designed to Revision 2; land the real wire,
+retire/replace the proprietary stub per an operator decision)</h4>
+<ul>
+<li>Per <code>ACP_A2A_PROVIDER.md</code> Q6: the pre-existing
+<code>/api/v1/acp/{execute,broadcast,status}</code> canned-response
+routes are a KNOWN STUB
+(<code>cmd/api/main.go:211-215</code>,<code>:370-418</code>) — this is a
+§11.4.122 no-silent-removal case: <strong>ask the operator</strong>
+whether to (a) replace the stub in-place with the real A2A wire, or (b)
+add A2A alongside and deprecate the stub on a schedule. Do not
+unilaterally delete the stub routes.</li>
+<li><strong>Acceptance:</strong> a live A2A Agent-Card fetch + a real
+task round-trip (not the canned-response path), captured evidence
+distinguishing it from the retired/replaced stub.</li>
+</ul>
+<h4 id="p5-t1-codegraph-wiring-fix-fully-designed-in-08_codegraph_opendesign.md-4.14.24.3-land-it">P5-T1′
+— codegraph wiring fix (fully designed in
+<code>08_codegraph_opendesign.md</code> §4.1/§4.2/§4.3 — land it)</h4>
+<ul>
+<li><strong>T1′.1</strong> Rewrite <code>.mcp.json</code> codegraph
+entry to the portable bare-command form (§4.1 of that doc) — this is a
+small, well-specified, LOW-RISK fix; good candidate for the FIRST
+parallel stream dispatched off this plan.</li>
+<li><strong>T1′.2</strong> Add the exclude patterns closing the 6.09 GB
+/ 102k-file bloat (§4.2) — MUST land BEFORE P3-T6′.T6′.3 (codegraph→RAG
+fusion), per the existing DZ-08 ordering rule.</li>
+<li><strong>T1′.3</strong> Reconcile the 1.1.1↔︎1.2.0 version drift; wire
+the weekly <code>codegraph_update_and_resync.sh</code> cadence
+(§11.4.80).</li>
+<li><strong>Acceptance:</strong> <code>codegraph_validate.sh</code>
+cross-submodule probe PASSes + the exclude-then-restore paired §1.1
+mutation FAILs when own-org content is wrongly excluded
+(§11.4.79(5)).</li>
+</ul>
+<h4 id="p5-t2-opendesign-bring-up-fully-designed-in-08_codegraph_opendesign.md-4.45.2-land-it">P5-T2′
+— opendesign bring-up (fully designed in
+<code>08_codegraph_opendesign.md</code> §4.4/§5.2 — land it)</h4>
+<ul>
+<li><strong>T2′.1</strong> Install/start the opendesign daemon on
+<code>:7456</code>; health-gate before any use.</li>
+<li><strong>T2′.2</strong> <code>.env</code>
+<code>HELIX_OD_BYOK_*</code> secrets (§11.4.10) — point BYOK at the
+local HelixLLM/Ollama endpoint for a fully-local design engine if
+feasible (avoids third-party egress, matches the offline posture the
+rest of this programme follows).</li>
+<li><strong>T2′.3</strong> Seed the <code>helixcode-brand</code> project
+from <code>assets/</code> brand files.</li>
+<li><strong>T2′.4</strong> Wire <code>internal/theme</code> (TUI) + a
+Fyne-theme adapter (desktop) to read the generated
+<code>tokens.css</code>.</li>
+<li><strong>Acceptance:</strong> the §11.4.78-style unforgeable dual
+challenge (<code>od_list_projects</code> +
+<code>codegraph_status</code>) both resolve real facts in one
+script.</li>
+</ul>
+<hr />
+<h2 id="helixqa-extension-full-test-bank-autonomous-session-design-extends-12_helixqa_testing.md">5.
+HelixQA extension — full test-bank + autonomous-session design (extends
+<code>12_helixqa_testing.md</code>)</h2>
+<p><code>12_helixqa_testing.md</code> already specifies the complete
+design (Parts 1-6, banks A-I, the
+<code>ContentAssertingResolver</code>/conduit/<code>pkg/vision</code>/<code>pkg/recordingqa</code>
+substrate). This section adds the pieces that document identifies as
+still-needed plus the vision-specific emphasis the operator asked for
+(“ESPECIALLY vision”).</p>
+<h3 id="whats-already-shippable-right-now-no-blockers">5.1 What’s
+already shippable RIGHT NOW (no blockers)</h3>
+<p>The <code>12_helixqa_testing.md</code> Risk-1 blocker — “HelixLLM
+per-capability API contract is UNCONFIRMED” — is
+<strong>RESOLVED</strong>:
+<code>submodules/helix_llm/docs/API_CONTRACT.md</code> now exists
+(confirmed on disk this session, §0.1). <strong>First action of
+HelixQA-bank authoring is now unblocked</strong>: read
+<code>API_CONTRACT.md</code>, fill every <code># CONFIRM</code>
+placeholder in banks A-I with the real endpoint paths/schemas, THEN
+author the bank YAML files.</p>
+<h3 id="vision-first-bank-authoring-order-the-operators-especially-vision-emphasis">5.2
+Vision-first bank authoring order (the operator’s “ESPECIALLY vision”
+emphasis)</h3>
+<p>Sequenced by risk-descending priority (§11.4.132 —
+most-recently-worked, i.e. the JUST-PROVEN vision endpoint, goes
+first):</p>
+<ol type="1">
+<li><strong>Bank B (<code>helixllm_vision.yaml</code>) FIRST</strong> —
+VIS-UNDERSTAND-001, VIS-COUNT-001, VIS-OCR-READ-001, VIS-SPATIAL-001,
+VIS-SELF-VALIDATE-001 (mandatory), VIS-LIVENESS-001. Ground-truth corpus
+(<code>data/vision_gt/*.png</code>) authored fresh against the LIVE 3B
+model’s actual behaviour (never guessed) — run each candidate fixture
+against the live <code>:18439</code> endpoint during authoring to
+confirm the expected-answer baseline is genuinely achievable before
+committing it as a “must-match” fixture (prevents authoring an
+impossible fixture that would make the bank permanently RED for the
+wrong reason).</li>
+<li><strong>Bank I (<code>helixllm_providers.yaml</code>)</strong> next
+— cheap (mostly <code>requires_env</code> SKIP-gated), establishes the
+provider-coverage floor.</li>
+<li><strong>Bank A (<code>helixllm_llm.yaml</code>)</strong> —
+chat/tool-calling/streaming/concurrency, the coder-fleet’s own
+correctness (already informally proven via RESUME’s coder e2e evidence,
+but not yet a formal HelixQA bank).</li>
+<li><strong>Bank G/H (STT/OCR)</strong> — both engines are
+IMPLEMENTED+reviewed-GO, so these banks close the loop on
+already-shipped capabilities fastest.</li>
+<li><strong>Banks C/D (image/video gen)</strong> — gated on the
+P3-T2′/T3′ runtime-proof landing first (no bank can PASS against a
+capability whose runtime proof is still pending — author the bank YAML
+now, but its FIRST real run waits for P3-T2′/T3′).</li>
+<li><strong>Bank E/F (translation/embeddings-RAG)</strong> — gated on
+P3-T5′/T6′ landing.</li>
+</ol>
+<h3 id="autonomous-session-acceptance-additions-to-12_helixqa_testing.md-part-5">5.3
+Autonomous-session acceptance — additions to
+<code>12_helixqa_testing.md</code> Part 5</h3>
+<ul>
+<li><strong>Vision-specific conduit evidence:</strong> every Bank-B
+<code>challenge_verdict(PASS)</code> MUST be preceded by a
+<code>vision_call</code> conduit event (already a first-class event type
+per <code>pkg/conduit</code>) carrying model-id (3B vs 8B tier),
+latency, and token counts — so a live-tail of the autonomous session can
+distinguish “the 3B always-warm tier answered” from “the 8B on-demand
+tier answered,” closing AB-15 (metadata-only vision-liveness bluff) by
+construction: the conduit event’s presence + the
+<code>ContentAssertingResolver</code>’s content assertion together are
+the proof, never the bare <code>/v1/models</code> 200.</li>
+<li><strong>VRAM-aware bank scheduling:</strong> because Banks C/D
+(image/video-gen) are <code>ClassImage</code>/<code>ClassVideo</code>
+<strong>burst</strong> classes that CANNOT run concurrently with each
+other (§11.4.119, <code>broker.go</code>’s <code>IsBurst()</code>), and
+this session’s own finding (§2.6 DZ-23) shows they may ALSO now contend
+with the always-resident vision tier for headroom, the autonomous
+session’s <code>--banks</code> invocation MUST serialize C and D
+relative to each other (already true per the broker) AND treat B
+(vision, resident) as a standing occupant when computing whether C/D can
+co-reside — i.e., the autonomous runner should call
+<code>Budget().free</code> before dispatching C or D and either proceed
+(co-reside fits) or honestly report a
+<code>202</code>/queued/SKIP-with-reason state rather than attempting an
+admission the broker will refuse.</li>
+</ul>
+<h3 id="acceptance-criteria-for-the-helixqa-extension-as-a-whole-unchanged-from-12_helixqa_testing.md-part-5-restated-for-completeness">5.4
+Acceptance criteria for the HelixQA extension as a whole (unchanged from
+<code>12_helixqa_testing.md</code> Part 5, restated for
+completeness)</h3>
+<ol type="1">
+<li>Fully self-driving end-to-end, re-runnable at <code>-count=3</code>
+with self-cleaning state (§11.4.98).</li>
+<li>Live conduit trace:
+<code>challenge_start → llm_call/vision_call → evidence_captured(evidence_path) → challenge_verdict(PASS)</code>.</li>
+<li>Every PASS verdict artefact exists, is non-empty, satisfies its
+content assertion.</li>
+<li>Every self-validation case PASSes and its paired mutation FAILs
+(proof the oracles cannot bluff).</li>
+<li>Curated evidence committed under
+<code>docs/qa/&lt;run-id&gt;/</code>, one subdir per capability, raw
+corpus git-ignored (§11.4.128).</li>
+<li>Final verdict <code>PASS</code> with every capability GREEN or
+honestly SKIP/OPERATOR-BLOCKED with reasons — no capability silently
+absent (§11.4.118).</li>
+</ol>
+<hr />
+<h2 id="summary-of-danger-zones-enumerated-this-document">6. Summary of
+danger-zones enumerated (this document)</h2>
+<p><strong>5 NEW danger-zones/anti-bluff-surfaces</strong> (DZ-23,
+DZ-24, DZ-25, AB-15, AB-16) added on top of the <strong>56</strong>
+already enumerated in <code>99_risk_bottleneck_analysis.md</code>
+(recounted 2026-07-08: DZ-01…DZ-22 = 22, AB-01…AB-14 = 14, V-01…V-20 =
+20 → 22+14+20=56, correcting this document’s earlier “41”/“22+14+~5”
+self-contradicting miscount) — <strong>61 total enumerated across the
+programme as of 2026-07-08</strong>.</p>
+<hr />
+<h2 id="sources-verified-2026-07-08">Sources verified 2026-07-08</h2>
+<ul>
+<li>MCP 2026-07-28 RC (re-confirmed + beta SDKs):
+https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/
+; https://blog.modelcontextprotocol.io/posts/sdk-betas-2026-07-28/ ;
+https://stacktr.ee/blog/mcp-2026-spec-changes ;
+https://mcp.directory/blog/mcp-2026-07-28-release-candidate (all
+accessed 2026-07-08)</li>
+<li>cognee bug search (negative finding — exact trace not publicly
+indexed as of 2026-07-08): https://github.com/topoteretes/cognee/issues
+(accessed 2026-07-08); adjacent local-LLM interaction bug cited:
+https://github.com/topoteretes/cognee/issues/2119 (accessed
+2026-07-08)</li>
+<li>Live host facts: <code>nvidia-smi</code>, <code>podman ps</code>,
+<code>curl localhost:18439/v1/models</code>,
+<code>ls submodules/helix_llm/docs/</code>,
+<code>wc -l submodules/helix_llm/internal/vrambroker/broker.go</code>,
+<code>find … design_helixmemory_cognee.md</code> (empty),
+<code>cat submodules/helix_agent/docs/COGNEE_BUG.md</code> — all
+captured this session, 2026-07-08.</li>
+<li><strong>Independent-review remediation pass (this revision,
+2026-07-08 03:45:27 local / 2026-07-07T22:45:27Z UTC),
+§11.4.134/§11.4.150:</strong> fresh
+<code>nvidia-smi --query-gpu=memory.total,memory.used,memory.free</code>
++ <code>podman ps</code> re-read (confirmed
+<code>helixllm_visiongen_visiongen_1</code> torn down since the plan was
+drafted; only <code>helixllm-coder</code> resident, 19436 MiB used /
+12685 MiB free ≈ 12.39 GiB free) — re-baselines all
+§1.3/§2.3/§2.6/P3-T1′/P3-T2′ VRAM co-reside arithmetic; recount of
+<code>docs/research/07.2026/99_risk_analysis/99_risk_bottleneck_analysis.md</code>
+via <code>grep -oE &#39;DZ-[0-9]+|AB-[0-9]+|V-[0-9]+&#39; | sort -u</code> → 22
+DZ + 14 AB + 20 V = 56 prior items (corrects this document’s earlier
+“41” miscount); <code>ls -la submodules/helix_llm/docs/</code>
+(confirmed <code>VRAM_BROKER.md</code> has no
+<code>.html</code>/<code>.pdf</code> sibling, unlike
+<code>API_CONTRACT.md</code>/<code>OPERATOR_GUIDE.md</code>); <a href="https://huggingface.co/starvector/starvector-8b-im2svg">StarVector-8B
+model card</a> (accessed 2026-07-08 — confirms StarVector does not
+support natural-image/illustration vectorization).</li>
+<li>Prior Phase-R/Phase-P corpus (not re-cited individually; each
+sibling doc listed in the header carries its own full source list dated
+2026-07-06/07):
+<code>docs/research/07.2026/00_master/{00_programme_master_plan,04_implementation_plan}.md</code>,
+<code>docs/research/07.2026/99_risk_analysis/99_risk_bottleneck_analysis.md</code>,
+<code>docs/research/07.2026/02_vision_generative/02_vision_generative.md</code>,
+<code>docs/research/07.2026/00_master/{IMAGE_GEN_PROVIDER,VIDEO_GEN_PROVIDER,EMBEDDINGS_PROVIDER,ACP_A2A_PROVIDER}.md</code>,
+<code>docs/research/07.2026/03_translation/03_translation.md</code>,
+<code>docs/research/07.2026/04_embeddings_rag/04_embeddings_rag.md</code>,
+<code>docs/research/07.2026/05_mcp_acp_protocols/05_mcp_acp_protocols.md</code>,
+<code>docs/research/07.2026/07_stt_ocr_whisper_tesseract/07_stt_ocr_whisper_tesseract.md</code>,
+<code>docs/research/07.2026/08_codegraph_opendesign/08_codegraph_opendesign.md</code>,
+<code>docs/research/07.2026/12_helixqa_testing/12_helixqa_testing.md</code>,
+<code>docs/research/07.2026/00_master/RESUME.md</code>.</li>
+</ul>
+</body>
+</html>

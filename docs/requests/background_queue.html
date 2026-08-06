@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>background_queue</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">background_queue</h1>
+</header>
+<h1 id="background-work-queue-11.4.140-background-action-v2">Background
+Work Queue (§11.4.140 <code>BACKGROUND</code> action, v2)</h1>
+<p><strong>Revision:</strong> 1 <strong>Created:</strong> 2026-07-29
+<strong>Last modified:</strong> 2026-07-29T00:30Z
+<strong>Status:</strong> active <strong>Maintainer:</strong> CLI-agent
+main work stream</p>
+<p>Durable, append-only, NEVER-dropped queue of
+<code>BACKGROUND ::</code> requests.</p>
+<p>The <code>BACKGROUND</code> action’s expansion is explicit:
+<strong>the moment</strong> such a request is received it MUST be
+recorded here — with an id, a received-timestamp, a status and any
+blocker — so it can never be lost, dropped, or forgotten. It MUST then
+be executed: subagent-driven in parallel with all main work if capacity
+exists, otherwise left <code>Queued</code> with its blocker recorded,
+retried at the next opportunity <strong>including the next fresh
+session</strong>, and re-surfaced to the operator every session until it
+reaches a terminal state (<code>Done</code> or
+<code>Operator-cancelled</code>).</p>
+<p>Two rules that shape this file:</p>
+<ul>
+<li><strong>Non-interrupting (v2).</strong> A <code>BACKGROUND</code>
+request runs in PARALLEL with the main stream and must NOT interrupt,
+block, preempt, or divert it. If no genuine background capacity exists,
+the request stays <code>Queued</code> here rather than being run inline
+— running it inline would violate the action’s purpose.</li>
+<li><strong>Silently dropping, or deferring-and-forgetting, is
+FORBIDDEN.</strong></li>
+</ul>
+<p>Composes §11.4.87 / §11.4.94 / §11.4.97 / §11.4.103 / §11.4.126.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#queue">Queue</a></li>
+<li><a href="#status-vocabulary">Status vocabulary</a></li>
+</ul>
+<h2 id="queue">Queue</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Received (UTC)</th>
+<th>Request</th>
+<th>Tracked as</th>
+<th>Status</th>
+<th>Blocker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BG-001</td>
+<td>2026-07-29T00:26Z</td>
+<td>Fully incorporate the HelixSkills System
+(<code>git@github.com:HelixDevelopment/skills.git</code>) into HelixCode
+<strong>and</strong> HelixAgent — all power-features, nothing left out;
+exhaustive phase/task/subtask plan; full §11.4.169 test-type +
+Challenges + HelixQA coverage; all docs/manuals/guides/FAQs extended
+with illustrations, graphs and diagrams; every gap/weak-spot/danger-zone
+detected <strong>in advance</strong> during planning and paired with a
+rock-solid risk-free solution; progress tracked through continuation +
+memory/knowledge mechanisms; <strong>GitHub SpecKit</strong> for all
+phases, bridged to Superpowers, subagent-driven.</td>
+<td><strong>HXC-159</strong> (Task, Queued, High) — SSoT
+<code>docs/workable_items.db</code>; research tree
+<code>docs/research/fully_incorporate_the_helixskills_system_into_helixcode_heli_20260728T192622Z_2557683/</code>;
+scheduling evidence
+<code>qa-results/feature/HXC-159_20260728T192622Z/result.json</code></td>
+<td>In-progress</td>
+<td>none — background capacity available; dispatched subagent-driven in
+parallel with the main stream</td>
+</tr>
+</tbody>
+</table>
+<h2 id="status-vocabulary">Status vocabulary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Queued</code></td>
+<td>Recorded, not yet started. A <code>Blocker</code> MUST be
+stated.</td>
+</tr>
+<tr>
+<td><code>In-progress</code></td>
+<td>Actively running in background, parallel to the main stream.</td>
+</tr>
+<tr>
+<td><code>Blocked</code></td>
+<td>Started or startable but externally blocked; <code>Blocker</code>
+states what and the retry condition. Re-attempted next opportunity,
+including next fresh session.</td>
+</tr>
+<tr>
+<td><code>Done</code></td>
+<td>Terminal. Reached a genuinely completed, evidence-backed state
+(§11.4.197 — never merely acknowledged).</td>
+</tr>
+<tr>
+<td><code>Operator-cancelled</code></td>
+<td>Terminal. Explicitly cancelled by the operator; the reason is
+recorded.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Honest boundary (§11.4.6):</strong> this queue guarantees a
+<code>BACKGROUND</code> request is never lost or forgotten. It does NOT
+by itself guarantee the work is correct — each request’s output still
+crosses the same gates as any other change: independent review
+(§11.4.142 / §11.4.134), four-layer runtime-signature verification
+(§11.4.108), and the full-suite retest (§11.4.40).</p>
+</body>
+</html>

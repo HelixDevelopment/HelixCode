@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01_local_models_serving</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">01_local_models_serving</h1>
+</header>
+<h1 id="local-llm-serving-for-coding-cli-agent-work-on-rtx-5090-32-gb-blackwell-sm_120">Local
+LLM Serving for Coding + CLI-Agent Work on RTX 5090 (32 GB, Blackwell
+sm_120)</h1>
+<p><strong>Target hardware:</strong> Gigabyte RTX 5090 AORUS MASTER — 32
+GB GDDR7, ~1.79 TB/s memory bandwidth, Blackwell architecture, CUDA
+compute capability <strong>sm_120</strong>. Linux host, powerful
+CPU/RAM. <strong>Workload:</strong> 2–3 OpenCode / CLI-agent instances ×
+3–4 subagents = <strong>6–12 concurrent decode sequences</strong>,
+coding + agentic tool-calling, 16k–32k context, target &gt;30 tok/s per
+stream. <strong>Report date / sources verified:</strong> 2026-07-06.</p>
+<blockquote>
+<p><strong>Honesty / anti-bluff notes (read first).</strong> 1. Almost
+no <em>measured</em> Qwen2.5-Coder-32B tok/s number on a 5090 exists in
+a primary source; the tok/s figures below are a mix of one measured
+leaderboard (awesomeagents), vendor/estimate pages (modelfit explicitly
+says “estimates from memory bandwidth, not measured benchmarks”), and
+Blackwell-family (RTX PRO 6000, same sm_120) benchmarks. Each is tagged.
+2. The web-search environment surfaced several <strong>future/aggregator
+model names</strong> (GLM-4.7, GLM-5, Qwen3.5/3.6, DeepSeek V4) on
+low-quality sites with no primary benchmark. These are marked
+<strong>UNCONFIRMED</strong> and are NOT used as recommendation anchors.
+Recommendations rest on models with published model cards + benchmarks:
+Qwen2.5-Coder-32B, Qwen3-32B, Qwen3-Coder-30B-A3B, Devstral-Small-2507,
+GLM-4.5-Air. 3. KV-cache figures are computed from published model
+architecture (formula shown), not copied from aggregators (one
+aggregator quoted a 32 GB FP16 figure for a “32B” that does not match
+GQA math — corrected below).</p>
+</blockquote>
+<hr />
+<h2 id="executive-recommendation">1. Executive recommendation</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Question</th>
+<th>Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Primary model (does both coding + agentic
+tool-use)</strong></td>
+<td><strong>Qwen3-Coder-30B-A3B-Instruct</strong> (MoE, 30.5B total /
+3.3B active). Fast (~140 tok/s single-stream, cited), tiny KV cache (MoE
++ 4 KV heads) → best concurrency-per-GB, 256K native context,
+tool-calling fixes shipped in Unsloth GGUFs.</td>
+</tr>
+<tr>
+<td><strong>(a) Heavy pure-coding quality</strong></td>
+<td><strong>Qwen2.5-Coder-32B-Instruct</strong> (dense) — best measured
+code benchmarks (HumanEval 88.4, Aider 73.7) but slow (~45–58 tok/s) and
+expensive KV; use when quality &gt; throughput and concurrency is
+low.</td>
+</tr>
+<tr>
+<td><strong>(b) CLI-agent / tool-use focused</strong></td>
+<td><strong>Devstral-Small-2507</strong> (24B dense, SWE-bench Verified
+53.6%, #1 open agentic model July 2025, 128K ctx) OR
+Qwen3-Coder-30B-A3B. Devstral is purpose-built for coding
+<em>agents</em> (multi-file edits, codebase exploration).</td>
+</tr>
+<tr>
+<td><strong>Serving stack for 6–12 concurrent agents</strong></td>
+<td><strong>vLLM (built from source for sm_120)</strong> with an AWQ
+4-bit checkpoint — continuous batching + PagedAttention give by far the
+best aggregate throughput (≈8× Ollama at load, cited). <strong>Fallback
+/ easiest:</strong> <code>llama-server</code> (llama.cpp) with
+<code>--parallel --cont-batching -fa</code> — simpler on Blackwell, good
+for moderate concurrency.</td>
+</tr>
+<tr>
+<td><strong>Avoid for this GPU (now)</strong></td>
+<td>SGLang (FP8-blockwise unsupported on sm_120; kernel gaps),
+TensorRT-LLM (NVFP4 not wired for SM120 in trtllm-gen), Ollama for
+concurrency (collapses at 16+ users). GLM-4.5-Air / 70B-dense do
+<strong>not</strong> fit 32 GB at usable quant.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Max concurrent-agent capacity (32 GB, target ≥30 tok/s
+each):</strong> - <strong>Qwen3-Coder-30B-A3B, Q4/AWQ (~18 GB
+weights)</strong> → ~12–14 GB free for KV → <strong>12+ concurrent 16k
+sequences</strong> (q8 KV) or <strong>~8 concurrent 32k</strong>. This
+is the recommended config and comfortably covers 6–12 agents. -
+<strong>Qwen2.5-Coder-32B / Qwen3-32B, Q4 (~22 GB weights)</strong> →
+~8–9 GB free for KV → <strong>~4 concurrent 16k</strong> (q8 KV) or
+<strong>~2 concurrent 32k</strong>. Dense 32B is the concurrency
+bottleneck; keep it for low-parallelism heavy-coding lanes.</p>
+<hr />
+<h2 id="ranked-model-table">2. Ranked model table</h2>
+<p>Weights VRAM = 4-bit quant unless noted. tok/s = single-stream decode
+on RTX 5090 (32 GB) unless the source is flagged. Sources in §8.</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Model</th>
+<th>Params (active)</th>
+<th>Rec. quant</th>
+<th>Weights VRAM</th>
+<th>Native ctx</th>
+<th>Single-stream tok/s (5090)</th>
+<th>Coding bench</th>
+<th>Tool-calling / agentic</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Qwen3-Coder-30B-A3B-Instruct</strong></td>
+<td>30.5B MoE / <strong>3.3B active</strong>, 128 experts (8
+active)</td>
+<td>Q4_K_XL (llama.cpp) or AWQ (vLLM)</td>
+<td>~18 GB</td>
+<td><strong>256K</strong> (→1M YaRN)</td>
+<td><strong>~140</strong> [awesomeagents, measured]</td>
+<td>Strong on agentic-coding suites; 480B sibling hits Aider-Polyglot
+~61% — <strong>30B is materially lower (UNCONFIRMED exact)</strong></td>
+<td><strong>Best all-rounder here.</strong> MoE → cheap KV + high tok/s.
+Unsloth GGUF ships tool-calling fixes.</td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Qwen2.5-Coder-32B-Instruct</strong></td>
+<td>32B dense</td>
+<td>Q4_K_M</td>
+<td>~22 GB</td>
+<td>32K (128K YaRN)</td>
+<td><strong>~45</strong> [modelfit, est] / ~58 analogue [Qwen3-32B
+measured]</td>
+<td><strong>HumanEval 88.4, MBPP 84.0, MultiPL-E 75.4, LiveCodeBench
+51.2, Aider 73.7</strong></td>
+<td>Solid function-calling but no headline BFCL number found; dense KV
+expensive</td>
+<td><strong>Best raw code quality</strong> for a single/low-parallel
+lane. Slow + heavy KV.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Devstral-Small-2507</strong></td>
+<td>24B dense (from Mistral-Small-3.1)</td>
+<td>Q4_K_M</td>
+<td>~15 GB</td>
+<td><strong>128K</strong></td>
+<td>~55–65 (24B class, est)</td>
+<td>SWE-bench Verified <strong>53.6%</strong> (#1 open, Jul-2025)</td>
+<td>Purpose-built agentic: multi-file edits, codebase exploration, tool
+use</td>
+<td><strong>Best pure CLI-agent</strong> pick; lighter than 32B so more
+KV headroom.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Qwen3-32B</strong></td>
+<td>32B dense</td>
+<td>Q4_K_M</td>
+<td>~22.2 GB</td>
+<td>32K (128K YaRN)</td>
+<td><strong>~58</strong> [awesomeagents, measured]</td>
+<td>Strong general+code</td>
+<td><strong>BFCL v3 75.7%</strong> (2nd overall reported)</td>
+<td>Best if you want one dense reasoning+tool model and can accept 32B
+throughput.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Gemma 3 27B-it</strong></td>
+<td>27B dense</td>
+<td>Q4_K_M</td>
+<td>~22.5 GB</td>
+<td>128K</td>
+<td><strong>~62</strong> [measured]</td>
+<td>Good general, weaker on hard code</td>
+<td>Decent</td>
+<td>Alternative dense model; not coding-specialised.</td>
+</tr>
+<tr>
+<td>—</td>
+<td>GLM-4.5-Air</td>
+<td>106B MoE / 12B active</td>
+<td>—</td>
+<td>~60 GB Q4</td>
+<td>128K</td>
+<td>n/a</td>
+<td>BFCL v3 <strong>76.4</strong>, TAU-retail 77.9 (strong)</td>
+<td><strong>Does NOT fit 32 GB</strong> at usable quant — needs heavy
+CPU offload (slow). Listed for reference only.</td>
+<td></td>
+</tr>
+<tr>
+<td>—</td>
+<td>Llama-3.3-70B</td>
+<td>70B dense</td>
+<td>Q2–Q3</td>
+<td>~40–46 GB</td>
+<td>128K</td>
+<td>~23–35 [est]</td>
+<td>mediocre code at Q2/Q3</td>
+<td>ok</td>
+<td><strong>Not recommended</strong> — must overspill/degrade quality on
+32 GB.</td>
+</tr>
+<tr>
+<td>—</td>
+<td>GLM-4.7 / GLM-5 / Qwen3.5 / Qwen3.6 / DeepSeek V4</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>aggregator claims (e.g. “151 tok/s”)</td>
+<td><strong>UNCONFIRMED</strong></td>
+<td><strong>UNCONFIRMED</strong></td>
+<td>No primary model card / benchmark located; do not plan around
+these.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Coding-quality ordering (published benches):</strong>
+Qwen2.5-Coder-32B ≳ Qwen3-32B ≈ Qwen3-Coder-30B-A3B &gt;
+Devstral-Small-2507 &gt; Gemma-3-27B. <strong>Agentic/tool-use
+ordering:</strong> GLM-4.5-Air (doesn’t fit) &gt; Qwen3-32B (BFCL 75.7)
+≈ Qwen3-Coder-30B-A3B &gt; Devstral (SWE-agent specialist) &gt;
+Qwen2.5-Coder-32B. <strong>Throughput-under-concurrency
+ordering:</strong> Qwen3-Coder-30B-A3B (MoE) ≫ Devstral-24B &gt;
+Qwen3-32B ≈ Qwen2.5-Coder-32B.</p>
+<hr />
+<h2 id="serving-infra-decision-matrix-rtx-5090-blackwell-sm_120">3.
+Serving-infra decision matrix (RTX 5090 / Blackwell sm_120)</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Engine</th>
+<th>Concurrency throughput</th>
+<th>VRAM efficiency</th>
+<th>Blackwell sm_120 status (2025→2026)</th>
+<th>Ease on 5090</th>
+<th>Verdict for 6–12 agents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>vLLM</strong></td>
+<td><strong>Best.</strong> Continuous batching + PagedAttention:
+<strong>~793 TPS aggregate vs Ollama 41 TPS at load</strong>; 4 parallel
+= 341 TPS vs Ollama 123.</td>
+<td>Best (paged KV, no per-slot waste)</td>
+<td><strong>Works, but source build required.</strong> torch 2.9 cu128
+(nightly), <code>TORCH_CUDA_ARCH_LIST=&quot;12.0&quot;</code>,
+<code>VLLM_FLASH_ATTN_VERSION=2</code> (FA3 unsupported on Blackwell).
+Prebuilt wheels fail.</td>
+<td>Medium (one-time build/Docker)</td>
+<td><strong>PRIMARY.</strong> Use AWQ/GPTQ 4-bit checkpoint.</td>
+</tr>
+<tr>
+<td><strong>llama.cpp (<code>llama-server</code>)</strong></td>
+<td>Good, not great. Slot batching ~3.8× over sequential; scales worse
+than vLLM at high parallel.</td>
+<td>Good with q8 KV + <code>-fa</code>; per-slot KV split from one
+<code>--ctx-size</code> budget.</td>
+<td><strong>Easiest.</strong> CUDA backend builds cleanly for sm_120
+(<code>-DCMAKE_CUDA_ARCHITECTURES=120</code>); GGUF quant selection is
+trivial.</td>
+<td><strong>Easiest</strong></td>
+<td><strong>FALLBACK / low-friction.</strong> Best if you want zero
+build pain or many GGUF quant options.</td>
+</tr>
+<tr>
+<td><strong>SGLang</strong></td>
+<td>Excellent on supported HW (NVFP4 MoE up to 4× Hopper).</td>
+<td>Excellent</td>
+<td><strong>Risky on 5090:</strong> FP8-blockwise <strong>not
+supported</strong> on sm_120; users hit “no kernel image available” /
+CUDA-graph RMSNorm failures. NVFP4 partial.</td>
+<td>Hard</td>
+<td><strong>Avoid for now</strong> on 5090. Revisit when sm_120 kernels
+land.</td>
+</tr>
+<tr>
+<td><strong>TensorRT-LLM</strong></td>
+<td>Highest raw perf on datacenter Blackwell (B200/GB200/RTX PRO 6000)
+with NVFP4.</td>
+<td>Excellent (NVFP4)</td>
+<td><strong>NVFP4 gated to SM10x</strong> in trtllm-gen; <strong>SM120
+(5090) NVFP4 KV not wired</strong> (open issue #10241).</td>
+<td>Hard</td>
+<td><strong>Avoid</strong> — engine-build friction + missing
+consumer-Blackwell FP4 path.</td>
+</tr>
+<tr>
+<td><strong>Ollama</strong></td>
+<td>Poor under load — degrades badly at 16+ concurrent; ~41 TPS at peak
+vs vLLM 793.</td>
+<td>ok single-user</td>
+<td>Works (llama.cpp under the hood).</td>
+<td>Easiest</td>
+<td><strong>Single-user dev only</strong>, not for 6–12 agents.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="concurrency-vram-math-the-load-bearing-section">4. Concurrency /
+VRAM math (the load-bearing section)</h2>
+<p><strong>KV-cache per token</strong> =
+<code>2 (K+V) × n_layers × n_kv_heads × head_dim × bytes_per_elem</code>.
+<code>bytes_per_elem</code> = 2 (fp16) / 1 (q8_0) / 0.5 (q4). Quantised
+KV <strong>requires flash attention</strong> (<code>-fa</code>).</p>
+<h3 id="qwen2.5-coder-32b-qwen3-32b-dense-gqa-64-layers-8-kv-heads-head_dim-128">Qwen2.5-Coder-32B
+/ Qwen3-32B (dense, GQA: 64 layers, 8 KV heads, head_dim 128)</h3>
+<p>Per-token: fp16 = 2×64×8×128×2 = <strong>256 KB/tok</strong>; q8_0 =
+<strong>128 KB/tok</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>fp16 KV / seq</th>
+<th>q8_0 KV / seq</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8k</td>
+<td>2.0 GB</td>
+<td>1.0 GB</td>
+</tr>
+<tr>
+<td>16k</td>
+<td>4.0 GB</td>
+<td>2.0 GB</td>
+</tr>
+<tr>
+<td>32k</td>
+<td>8.0 GB</td>
+<td>4.0 GB</td>
+</tr>
+</tbody>
+</table>
+<p>Weights (Q4) ≈ 22 GB → <strong>~8–9 GB usable for KV</strong> (leave
+~1.5 GB headroom on 32 GB). → q8 KV: <strong>~4 concurrent <span class="citation" data-cites="16k">@16k</span></strong>, <strong>~2
+concurrent <span class="citation" data-cites="32k">@32k</span></strong>,
+~8 <span class="citation" data-cites="8k">@8k</span>. <strong>Dense 32B
+cannot serve 6–12 agents at 32k.</strong></p>
+<h3 id="qwen3-coder-30b-a3b-moe-48-layers-4-kv-heads-head_dim-128-head-count-approximateunconfirmed-exact">Qwen3-Coder-30B-A3B
+(MoE — 48 layers, ~4 KV heads, head_dim 128; head count
+approximate/UNCONFIRMED exact)</h3>
+<p>Per-token (approx): fp16 ≈ 2×48×4×128×2 = <strong>96 KB/tok</strong>;
+q8_0 ≈ <strong>48 KB/tok</strong> — roughly <strong>⅓</strong> of the
+dense 32B.</p>
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>fp16 KV / seq</th>
+<th>q8_0 KV / seq</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8k</td>
+<td>~0.75 GB</td>
+<td>~0.38 GB</td>
+</tr>
+<tr>
+<td>16k</td>
+<td>~1.5 GB</td>
+<td>~0.75 GB</td>
+</tr>
+<tr>
+<td>32k</td>
+<td>~3.0 GB</td>
+<td>~1.5 GB</td>
+</tr>
+</tbody>
+</table>
+<p>Weights (Q4) ≈ 18 GB → <strong>~12–13 GB usable for KV</strong>. → q8
+KV: <strong>~12–16 concurrent <span class="citation" data-cites="16k">@16k</span></strong>, <strong>~8 concurrent <span class="citation" data-cites="32k">@32k</span></strong>, many <span class="citation" data-cites="8k">@8k</span>. <strong>This is why the MoE
+model is the concurrency answer.</strong></p>
+<blockquote>
+<p><strong>Note on aggregator error:</strong> one source quoted “FP16 KV
+= 32 GB for a 32B <span class="citation" data-cites="32K">@32K</span>.”
+That does not match GQA (8 KV-head) math (8 GB) — likely a non-GQA or
+different-model config. Use the computed table above.</p>
+</blockquote>
+<hr />
+<h2 id="exact-launch-commands">5. Exact launch commands</h2>
+<h3 id="a.-vllm-primary-max-concurrency-qwen3-coder-30b-a3b-awq">5A.
+vLLM — PRIMARY (max concurrency), Qwen3-Coder-30B-A3B AWQ</h3>
+<p>Build once for sm_120 (host or container):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> venv <span class="at">--python</span> 3.12 <span class="at">--seed</span> <span class="kw">&amp;&amp;</span> <span class="bu">source</span> .venv/bin/activate</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">--pre</span> torch <span class="at">--index-url</span> https://download.pytorch.org/whl/nightly/cu128   <span class="co"># torch 2.9.x+cu128</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/vllm-project/vllm <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> vllm</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> use_existing_torch.py</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-r</span> requirements/build.txt</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">VLLM_FLASH_ATTN_VERSION</span><span class="op">=</span>2 <span class="va">TORCH_CUDA_ARCH_LIST</span><span class="op">=</span><span class="st">&quot;12.0&quot;</span> <span class="va">MAX_JOBS</span><span class="op">=</span>6</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">--no-build-isolation</span> <span class="at">-e</span> .</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Requires: NVIDIA driver &gt;=575.64.03, CUDA 12.8, Ubuntu 24.04+</span></span></code></pre></div>
+<p>Serve (single 5090, ~12 agents):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">vllm</span> serve Qwen/Qwen3-Coder-30B-A3B-Instruct-AWQ <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--tensor-parallel-size</span> 1 <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--gpu-memory-utilization</span> 0.90 <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--max-model-len</span> 32768 <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--max-num-seqs</span> 12 <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--enable-prefix-caching</span> <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--enable-auto-tool-choice</span> <span class="at">--tool-call-parser</span> qwen3_coder</span></code></pre></div>
+<p>Notes: <code>--enable-prefix-caching</code> is a big win for agents
+(shared system/tool preamble reused). If WSL2 or CUDA-graph instability
+appears, add <code>--enforce-eager</code> (costs ~40% decode — Linux
+bare-metal usually doesn’t need it). Drop
+<code>--gpu-memory-utilization</code> to <code>0.50</code> if you must
+co-locate another GPU process (vLLM’s default 0.9 pre-allocation starves
+neighbours).</p>
+<h3 id="b.-llama.cpp-llama-server-fallback-easiest-on-blackwell">5B.
+llama.cpp <code>llama-server</code> — FALLBACK (easiest on
+Blackwell)</h3>
+<p>Build:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-B</span> build <span class="at">-DGGML_CUDA</span><span class="op">=</span>ON <span class="at">-DCMAKE_CUDA_ARCHITECTURES</span><span class="op">=</span>120</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build <span class="at">--config</span> Release <span class="at">-j</span></span></code></pre></div>
+<p>Serve Qwen3-Coder-30B-A3B, 12 slots @ ~16k each (192k total KV
+budget, q8 KV):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./build/bin/llama-server</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-hf</span> unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF:Q4_K_XL <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-ngl</span> 99 <span class="at">--jinja</span> <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--parallel</span> 12 <span class="at">--cont-batching</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--ctx-size</span> 196608 <span class="dt">\ </span>           <span class="co"># total KV split across 12 slots =&gt; ~16k/slot</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-fa</span> on <span class="at">--cache-type-k</span> q8_0 <span class="at">--cache-type-v</span> q8_0 <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--temp</span> 0.7 <span class="at">--top-p</span> 0.8 <span class="at">--top-k</span> 20 <span class="at">--repeat-penalty</span> 1.05 <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--host</span> 0.0.0.0 <span class="at">--port</span> 8080</span></code></pre></div>
+<p>Key facts: <code>--ctx-size</code> is the <strong>total</strong> KV
+budget shared by <code>--parallel</code> slots (not per-request).
+<code>-fa on</code> is mandatory for q8 KV. Sampling values are Qwen’s
+recommended settings.</p>
+<p>Dense heavy-coding lane (Qwen2.5-Coder-32B, low parallelism):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./build/bin/llama-server</span> <span class="at">-hf</span> bartowski/Qwen2.5-Coder-32B-Instruct-GGUF:Q4_K_M <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-ngl</span> 99 <span class="at">--jinja</span> <span class="at">--parallel</span> 4 <span class="at">--cont-batching</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--ctx-size</span> 65536 <span class="at">-fa</span> on <span class="at">--cache-type-k</span> q8_0 <span class="at">--cache-type-v</span> q8_0 <span class="at">--port</span> 8081</span></code></pre></div>
+<hr />
+<h2 id="optimization-tricks-ranked-by-payoff-here">6. Optimization
+tricks (ranked by payoff here)</h2>
+<ol type="1">
+<li><strong>Flash attention (<code>-fa</code> / FA2 on vLLM).</strong>
+1.3–2× faster prefill + enables KV quant. FA3 is <strong>not</strong> on
+Blackwell yet → pin FA2 (<code>VLLM_FLASH_ATTN_VERSION=2</code>).</li>
+<li><strong>q8_0 KV cache</strong> (<code>--cache-type-k/v q8_0</code>).
+Halves KV VRAM vs fp16 with negligible quality loss → directly doubles
+concurrent-sequence capacity. (q4 KV = risky, more quality loss — avoid
+for coding.)</li>
+<li><strong>Prefix / prompt caching</strong> (vLLM
+<code>--enable-prefix-caching</code>; llama.cpp reuses slot prefix).
+Agents resend a large fixed system+tool preamble every turn → cache
+turns that into near-zero prefill. High payoff for CLI agents.</li>
+<li><strong>Continuous / in-flight batching</strong> (vLLM default;
+llama.cpp <code>--cont-batching</code>). The single biggest concurrency
+lever — CUDA graphs account for ~65–77% of vLLM’s advantage; keep them
+on (don’t <code>--enforce-eager</code> unless forced).</li>
+<li><strong>AWQ / GPTQ 4-bit + Marlin kernels</strong> (vLLM 0.19+ has
+AWQ-Marlin). On a 1.79 TB/s bus, 4-bit is a mild quality trade for big
+VRAM savings; note one Blackwell benchmark found 4-bit <em>slower</em>
+than BF16 for sub-20B models (bandwidth already ample) — so 4-bit is
+about <strong>fitting weights + KV headroom</strong>, not raw speed, for
+30–32B.</li>
+<li><strong>Speculative decoding — mostly skip.</strong> Recent
+llama.cpp benchmarks (incl. Blackwell RTX 5060 Ti, Ampere) show it is
+<strong>net-negative or neutral for MoE/A3B models</strong> and only
+wins in a narrow corner. vLLM MTP/EAGLE-3 can help dense models but is
+fiddly. Do <strong>not</strong> rely on it for the MoE primary.</li>
+<li><strong>NVFP4</strong> (native Blackwell 4-bit) is promising but
+<strong>not yet wired for sm_120 consumer cards</strong> in
+TensorRT-LLM/SGLang — revisit later.</li>
+</ol>
+<hr />
+<h2 id="rootless-podman-gpu-passthrough-cuda-blackwell">7. Rootless
+Podman + GPU passthrough (CUDA Blackwell)</h2>
+<p>Prereqs: recent NVIDIA driver (≥575.x for sm_120),
+<code>nvidia-container-toolkit</code>, Podman ≥4.1 (CDI in
+<code>--device</code>).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Generate CDI spec (rootless: write to user dir; else /etc/cdi needs root once)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi generate <span class="at">--output</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi/nvidia.yaml</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi list      <span class="co"># verify nvidia.com/gpu=all / =0 present</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Smoke test (rootless)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> run <span class="at">--rm</span> <span class="dt">\</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> nvidia.com/gpu=all <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--security-opt</span><span class="op">=</span>label=disable <span class="dt">\</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  nvcr.io/nvidia/cuda:12.8.0-base-ubuntu24.04 nvidia-smi</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. If GPU device access is group-gated:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> run <span class="at">--rm</span> <span class="at">--device</span> nvidia.com/gpu=all <span class="at">--group-add</span> keep-groups ... </span></code></pre></div>
+<p>Notes / caveats: - <strong>Base image:</strong> use CUDA
+<strong>12.8</strong>
+(<code>nvcr.io/nvidia/cuda:12.8.0-*-ubuntu24.04</code>) — 12.8 is the
+first toolkit with sm_120 (<code>nvcc -arch=sm_120</code>). Older 12.x
+images cannot compile Blackwell kernels. - Rootless CDI works but is the
+fragile path: there are documented cases (containers/podman #17539)
+where CDI devices resolve under root/privileged but not rootless. If
+<code>nvidia-smi</code> fails rootless, confirm the user can read the
+CDI spec dir and has device-file access
+(<code>ls -l /dev/nvidia*</code>), and pass
+<code>--cdi-spec-dir=$HOME/.config/cdi</code> explicitly. - For
+<strong>vLLM</strong>, run inside a CUDA 12.8 image, build vLLM as in
+§5A, then
+<code>podman run --device nvidia.com/gpu=all -p 8000:8000 &lt;image&gt; vllm serve ...</code>.
+- Per project constitution (§11.4.76 / §11.4.161): drive containers
+through the <code>vasic-digital/containers</code> submodule / rootless
+Podman — the commands above are the underlying mechanism, not a
+bypass.</p>
+<hr />
+<h2 id="sources-verified-2026-07-06">8. Sources verified 2026-07-06</h2>
+<ul>
+<li>vLLM vs Ollama on Blackwell (throughput 793 vs 41 TPS, VRAM,
+CUDA-graph impact, launch flags) —
+https://allenkuo.medium.com/vllm-or-ollama-on-blackwell-benchmarks-landmines-and-what-agents-actually-need-5dc539bb28ef</li>
+<li>RTX 5090 per-model tok/s + KV estimates (modelfit; explicitly
+estimates, not measured) — https://modelfit.io/gpu/rtx-5090/</li>
+<li>Home GPU LLM Leaderboard (measured 5090 tok/s: Qwen3-32B ~58,
+Qwen3-Coder-30B-A3B ~140, Llama-3.3-70B ~35, Gemma-3-27B ~62) —
+https://awesomeagents.ai/leaderboards/home-gpu-llm-leaderboard/</li>
+<li>Qwen2.5-Coder family blog (HumanEval 88.4, MBPP 84.0, MultiPL-E
+75.4, LiveCodeBench 51.2, Aider 73.7) —
+https://qwenlm.github.io/blog/qwen2.5-coder-family/</li>
+<li>Qwen2.5-Coder Technical Report —
+https://arxiv.org/html/2409.12186v3</li>
+<li>Qwen3-Coder-30B-A3B GGUF + tool-calling fixes —
+https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF</li>
+<li>Qwen3-Coder run-locally (llama.cpp flags, sampling temp 0.7/top_p
+0.8/top_k 20/rep 1.05, ctx) —
+https://unsloth.ai/docs/models/tutorials/qwen3-coder-how-to-run-locally</li>
+<li>Qwen3-Coder MoE spec (30.5B/128 experts/8 active/256K ctx) +
+Aider-Polyglot note —
+https://openrouter.ai/qwen/qwen3-coder-30b-a3b-instruct</li>
+<li>Devstral-Small-2507 (24B, SWE-bench Verified 53.6%, #1 open, 128K,
+RTX 4090-class) — https://mistral.ai/news/devstral-2507/ ,
+https://huggingface.co/mistralai/Devstral-Small-2507</li>
+<li>Berkeley Function Calling Leaderboard (BFCL) — GLM-4.5 76.7,
+Qwen3-32B 75.7 (v3) —
+https://gorilla.cs.berkeley.edu/leaderboard.html</li>
+<li>GLM-4.5 paper (GLM-4.5-Air BFCL v3 76.4, TAU-retail 77.9; 106B/12B
+active) — https://arxiv.org/pdf/2508.06471</li>
+<li>vLLM on RTX 5090 working setup (torch 2.9 cu128,
+TORCH_CUDA_ARCH_LIST=12.0, FA2, source build, driver 575.64.03) —
+https://discuss.vllm.ai/t/vllm-on-rtx5090-working-gpu-setup-with-torch-2-9-0-cu128/1492</li>
+<li>vLLM sm_120 feature/tracking issue —
+https://github.com/vllm-project/vllm/issues/13306 ; steps issue —
+https://github.com/vllm-project/vllm/issues/14452</li>
+<li>SGLang Blackwell sm_120 status (FP8-blockwise unsupported,
+kernel-image errors, NVFP4 partial) —
+https://github.com/sgl-project/sglang/discussions/9543 ,
+https://github.com/sgl-project/sglang/issues/9233</li>
+<li>TensorRT-LLM NVFP4 SM120 gap (open issue) —
+https://github.com/NVIDIA/TensorRT-LLM/issues/10241 ; TRT-LLM overview —
+https://nvidia.github.io/TensorRT-LLM/</li>
+<li>llama.cpp server README (<code>--parallel</code>,
+<code>--cont-batching</code>, <code>--cache-type-k/v</code>,
+<code>-fa</code>, KV types incl q8_0) —
+https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md</li>
+<li>llama.cpp batching/<code>--ctx-size</code> semantics —
+https://github.com/ggml-org/llama.cpp/discussions/4130</li>
+<li>llama.cpp speculative decoding (net-negative for A3B/MoE on consumer
+GPUs) — https://github.com/thc1006/qwen3.6-speculative-decoding-rtx3090
+,
+https://github.com/ggml-org/llama.cpp/blob/master/docs/speculative.md</li>
+<li>KV-cache calculation formula + q8/fp16/q4 bytes —
+https://lyceum.technology/magazine/kv-cache-memory-calculation-llm/ ,
+https://www.techplained.com/kv-cache-quantization</li>
+<li>NVIDIA Container Toolkit CDI support
+(<code>nvidia-ctk cdi generate</code>,
+<code>--device nvidia.com/gpu=all</code>, rootless notes) —
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/cdi-support.html</li>
+<li>Podman GPU access + rootless <code>--group-add keep-groups</code> —
+https://podman-desktop.io/docs/podman/gpu ; rootless CDI issue —
+https://github.com/containers/podman/issues/17539</li>
+</ul>
+<p><strong>UNCONFIRMED (excluded from recommendations):</strong> GLM-4.7
+/ GLM-5 / Qwen3.5 / Qwen3.6 / DeepSeek V4 tok-s and benchmark claims
+from aggregator sites (modelfit, spheron, insiderllm, dubesor) — no
+primary model card or reproducible benchmark located as of 2026-07-06;
+treat as speculative until a first-party source appears.</p>
+</body>
+</html>

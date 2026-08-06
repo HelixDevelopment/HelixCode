@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MULTITRACK_WORKTREE_RUNBOOK</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MULTITRACK_WORKTREE_RUNBOOK</h1>
+</header>
+<h1 id="multi-track-worktree-runbook">Multi-Track Worktree Runbook</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-11T00:00:00Z</p>
+<h2 id="purpose">Purpose</h2>
+<p>This runbook documents the multi-track parallel-development layer for
+<code>helix_code</code>, as it is actually wired in this checkout today:
+the per-host track topology, how an operator brings the tracks up, the
+<code>/mnt/track&lt;N&gt;</code> mount dependency and its safety
+boundary, and the work-claim / work-binding / device-lock / supervisor
+sub-systems that coordinate parallel work across tracks.</p>
+<p>The engine itself is <strong>not</strong> owned by
+<code>helix_code</code> — it lives in the constitution submodule at
+<code>constitution/scripts/multitrack/</code> and is consumed <strong>by
+reference</strong> (never copied) per §11.4.28(B) / §11.4.177 /
+§11.4.187. <code>helix_code</code> supplies only the per-host data file
+at <code>config/multitrack/&lt;hostname&gt;.yaml</code>. Everything
+below is a description of what the scripts in that directory actually do
+when driven with this project’s config, not a design proposal.</p>
+<p>This document is referenced from: -
+<code>config/multitrack/the-factory.yaml</code> (the per-host config,
+line 36) - <code>constitution/scripts/multitrack/multitrack.sh</code>
+(its own <code>up</code> / <code>status</code> output and
+<code>--help</code> text) -
+<code>constitution/scripts/multitrack/multitrack_bootstrap.sh</code>
+(the operator-hand-off note printed when a track’s drive is not
+mounted)</p>
+<h2 id="track-topology">1. Track topology</h2>
+<p>The per-host config for this host is
+<code>config/multitrack/the-factory.yaml</code>. It declares four
+tracks:</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 11%" />
+<col style="width: 50%" />
+<col style="width: 17%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr>
+<th>Track</th>
+<th>Role</th>
+<th>Branch</th>
+<th>Mount</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>track-1</td>
+<td>main</td>
+<td><code>feature/helixllm-full-extension</code></td>
+<td><code>/mnt/track1</code></td>
+<td>current working items; the conductor (this session) coordinates from
+<code>/home</code>, and track-1/main is <strong>never</strong>
+worktree-bound</td>
+</tr>
+<tr>
+<td>track-2</td>
+<td>feature</td>
+<td><code>feature/*</code> (branch pattern)</td>
+<td><code>/mnt/track2</code></td>
+<td>owned-submodule / feature work-stream A</td>
+</tr>
+<tr>
+<td>track-3</td>
+<td>feature</td>
+<td><code>feature/*</code> (branch pattern)</td>
+<td><code>/mnt/track3</code></td>
+<td>owned-submodule / feature work-stream B</td>
+</tr>
+<tr>
+<td>track-4</td>
+<td>feature</td>
+<td><code>feature/*</code> (branch pattern)</td>
+<td><code>/mnt/track4</code></td>
+<td>owned-submodule / feature work-stream C</td>
+</tr>
+</tbody>
+</table>
+<p>Each track entry also carries a <code>drive_serial</code> (the
+physical NVMe device backing that mount) and <code>fs: btrfs</code>.</p>
+<p><strong>Why track-1/main is never worktree-bound:</strong> git
+refuses to check out the same branch into two working trees at once.
+Since <code>main</code>’s branch
+(<code>feature/helixllm-full-extension</code> on this host) is also the
+branch the conductor’s own <code>/home</code> checkout is on, track-1
+cannot be a second worktree of that same branch — the config’s
+<code>focus</code> field for track-1 says exactly this (“conductor
+(claude2) coordinates from /home, track-1/main never worktree-bound”).
+Track-1’s row in <code>multitrack.sh status</code> / <code>up</code>
+therefore reports on the <strong>drive mount state only</strong>, not on
+a worktree living at <code>/mnt/track1</code>.</p>
+<p>The <code>worktree_subdir</code> key (<code>helix_code</code> in this
+config) is the subdirectory name created under each
+<em>feature</em>-role track’s mount — i.e. a feature-track worktree
+checkout lives at <code>/mnt/track&lt;N&gt;/helix_code</code>. Per
+§11.4.178’s multi-project-per-track clarification, a
+<code>/mnt/track&lt;N&gt;</code> mount is <strong>not</strong> exclusive
+to one project — other projects (e.g. ATMOSphere, helix_ota) may have
+their own subdirectories under the same mount; <code>helix_code</code>
+only ever creates and touches its own <code>helix_code</code>
+subdirectory.</p>
+<p><code>helix_code</code> has no physical test-device pool
+(<code>device_pool: []</code>, <code>lease_policy: {}</code> in the
+config) — unlike hardware-testing projects that use this same engine,
+there is nothing for the device-lock arbiter (§3 below) to lease on this
+host for this project; that sub-system is present because the engine is
+shared, not because <code>helix_code</code> uses it today.</p>
+<h2 id="bringing-tracks-up-multitrack.sh-status-up">2. Bringing tracks
+up: <code>multitrack.sh status</code> / <code>up</code></h2>
+<p>The entrypoint is
+<code>constitution/scripts/multitrack/multitrack.sh</code>, which binds
+together <code>multitrack_config.sh</code> (host/config resolution),
+<code>multitrack_registry.sh</code> (the
+<code>.ws_state/streams.tsv</code> state accessor), and
+<code>multitrack_device_lock.sh</code> (the device-lock arbiter
+described in §3) into one command surface. It does <strong>not</strong>
+reimplement any of those three — it only probes and reports.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack.sh status</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack.sh up</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack.sh help</span></code></pre></div>
+<p><strong><code>status</code></strong> is a pure, read-only report: for
+every configured track it (a) reads the registry’s recorded
+<code>mount_state</code> and <code>ws_state</code> via
+<code>multitrack_registry.sh get</code>, (b) does a live, read-only
+mount probe against <code>/proc/self/mounts</code> (falling back to
+<code>/proc/mounts</code>) to see whether that track’s mountpoint is
+<em>actually</em> mounted right now, and (c) prints a per-track table
+plus a device-lock pool section (via
+<code>multitrack_device_lock.sh status</code>). It always exits
+<code>0</code> — a blocked track is <em>data in the report</em>, never a
+failure of the <code>status</code> command itself.</p>
+<p><strong><code>up</code></strong> is the preflight step: for every
+track it re-runs the same live mount probe. If the mount
+<strong>is</strong> live but the registry disagrees
+(<code>mount_state != mounted</code>), it reconciles the registry via
+<code>multitrack_registry.sh set &lt;id&gt; mount_state mounted</code> —
+this is the <em>only</em> write <code>up</code> performs, and it is a
+no-op when the registry already agrees with reality. If the mount is
+<strong>not</strong> live, <code>up</code> prints
+<code>NOT-MOUNTED (registry=...) -&gt; OPERATOR-BLOCKED</code> for that
+track and increments a blocked counter; it does <strong>not</strong>
+attempt to mount, format, or otherwise touch the drive.</p>
+<p>Exit codes for <code>up</code>: - <strong><code>0</code></strong> —
+every configured track is live-mounted (“All tracks mounted — the
+multi-track layer is UP”). - <strong><code>20</code></strong> — one or
+more tracks are not mounted. This is the <code>OPBLOCKED_RC</code>
+constant in the script; <code>multitrack.sh</code> prints the §11.4.21
+operator-block note (reproduced in §4 below) and returns 20 rather than
+treating the unmounted state as an internal error. -
+<strong><code>2</code></strong> — usage error (no/unknown subcommand). -
+<strong><code>1</code></strong> — internal error (a sibling script is
+missing, or the per-host config cannot be resolved/parsed at all).</p>
+<p>Neither <code>status</code> nor <code>up</code> ever mounts,
+unmounts, or formats a physical drive under any circumstance — see
+§4.</p>
+<h2 id="work-claim-work-binding-device-lock-and-the-supervisor">3.
+Work-claim, work-binding, device-lock, and the supervisor</h2>
+<p>These four sub-systems are independent, composable pieces the engine
+provides for coordinating parallel tracks. <code>helix_code</code> on
+this host uses the work-claim and work-binding pieces (its work is done
+across tracks); the device-lock piece is present but has an empty pool
+for this project (§1); the supervisor is the ruler’s own
+crash-resilience layer.</p>
+<h3 id="work-claim-registry-multitrack_claim.sh-11.4.176-a">3.1
+Work-claim registry (<code>multitrack_claim.sh</code>) —
+§11.4.176-A</h3>
+<p>Guarantees <strong>exactly-once</strong> assignment of a workable
+item (or a logical group of items) to at most one track at a time, so
+that two parallel tracks never grab and duplicate/clobber the same
+work.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_claim.sh claim   <span class="op">&lt;</span>item-id<span class="op">&gt;</span> <span class="op">&lt;</span>track<span class="op">&gt;</span> [--ttl SEC] [--pid PID]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_claim.sh release <span class="op">&lt;</span>item-id<span class="op">&gt;</span> [--track <span class="op">&lt;</span>id<span class="op">&gt;</span>]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_claim.sh owner   <span class="op">&lt;</span>item-id<span class="op">&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_claim.sh status</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_claim.sh reap</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_claim.sh reconcile</span></code></pre></div>
+<p>Mechanically: <code>claim</code> is a check-and-claim performed
+inside one <code>flock</code> critical section — it succeeds if the item
+is free, is idempotent if the <em>same</em> track re-claims it
+(refreshing the TTL), and is refused with exit <code>3</code> (EBUSY) if
+a <em>different</em> track already holds it. Every claim carries an
+expiry (default <code>86400</code>s / 24h via
+<code>MT_CLAIM_TTL</code>); a crashed track’s claim auto-expires
+(<code>reap</code>) rather than being held hostage forever, per
+§11.4.147.</p>
+<p>State lives under <code>.ws_state/</code>: <code>claims.jsonl</code>
+is an append-only event log (CLAIM / RELEASE / REAP / DENY — never
+rewritten), <code>claims.snapshot</code> is the current-claims table
+(atomically rewritten, temp-then-rename), and <code>claims.lock</code>
+is the flock target.</p>
+<h3 id="work-to-trackbranch-binding-multitrack_work_binding.sh-11.4.191">3.2
+Work-to-track/branch binding (<code>multitrack_work_binding.sh</code>) —
+§11.4.191</h3>
+<p>Answers “does this changed-file set (or this ticket) belong to a
+logic-group whose canonical branch/track is <em>not</em> the current
+checkout?” It is a read-only resolver — <code>sqlite3</code> queries
+against the workable-items DB plus read-only <code>git</code> plumbing,
+no writes, no locks — consumed by both the preventive PreToolUse guard
+hook (<code>guard-work-track-binding.sh</code>) and the detective
+commit-wrapper / pre-build gate.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_work_binding.sh resolve <span class="at">--staged</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_work_binding.sh check <span class="at">--staged</span></span></code></pre></div>
+<p><code>resolve</code> maps each input (a file path, or a ticket via
+<code>--ticket ATM-NNN</code>) to its owning logic-group via the
+<code>group_paths</code> file-scope manifest (longest-glob-wins) or via
+<code>items.logic_group</code>, then prints that group’s authoritative
+destination branch and canonical track. <code>check --staged</code>
+derives the current branch
+(<code>git rev-parse --abbrev-ref HEAD</code>), the current track (from
+the <code>/mnt/track&lt;N&gt;</code> prefix of the cwd), and the
+changed-file set, and exits <code>2</code> (BLOCK, reason on stderr) if
+any matched input’s group destination disagrees with where the change is
+actually landing. An unreadable registry is a
+<strong>fail-closed</strong> <code>2</code>, never a silent allow
+(§11.4.6). Unclassified inputs (no glob owner, no ticket group) are
+treated as main-eligible and skipped — an honest partial-coverage gap,
+not a false block.</p>
+<h3 id="device-lock-multitrack_device_lock.sh-11.4.119-11.4.176-b">3.3
+Device lock (<code>multitrack_device_lock.sh</code>) — §11.4.119 /
+§11.4.176-B</h3>
+<p>Arbitrates exclusive use of a shared, scarce device pool across
+tracks, keyed by the <code>device_pool</code> /
+<code>lease_policy</code> entries in the per-host config. For
+<code>helix_code</code> that pool is <strong>empty</strong> (§1) so this
+sub-system currently has nothing to lease on this host; the commands
+below are documented for completeness since the arbiter is shared engine
+code:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_device_lock.sh pool</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_device_lock.sh status</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_device_lock.sh acquire <span class="at">--track</span> <span class="op">&lt;</span>id<span class="op">&gt;</span> --caps <span class="op">&lt;</span>c1,c2<span class="op">&gt;</span> [--count N] [--ttl SEC]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_device_lock.sh heartbeat <span class="at">--track</span> <span class="op">&lt;</span>id<span class="op">&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_device_lock.sh release <span class="at">--track</span> <span class="op">&lt;</span>id<span class="op">&gt;</span> [--device <span class="op">&lt;</span>id<span class="op">&gt;</span>]</span></code></pre></div>
+<p>The arbiter is deadlock-free by construction: multi-device
+<code>acquire</code> is all-or-nothing inside one critical section (no
+hold-and-wait), it never blocks — it either wins the whole requested set
+immediately or returns EBUSY (exit <code>3</code>) at once (no
+circular-wait), and a crashed holder’s lease auto-expires via TTL + reap
+(relaxed no-preemption). State lives under <code>MT_LOCK_DIR</code>
+(default
+<code>${XDG_RUNTIME_DIR:-/tmp}/&lt;project&gt;/multitrack/devicelock</code>,
+i.e. ephemeral tmpfs-class storage — correct, since a lease has no
+meaning across a host reboot).</p>
+<h3 id="ruler-self-supervisor-multitrack_supervisor.sh-11.4.187-11.4.147">3.4
+Ruler self-supervisor (<code>multitrack_supervisor.sh</code>) —
+§11.4.187 / §11.4.147</h3>
+<p>The multi-track <em>ruler</em> (the conductor session driving all
+tracks) is itself made crash-resilient: it periodically writes a durable
+<code>ruler_state.json</code> recording, per track, the bound alias /
+session id / worktree / last verdict, and a lightweight watchdog can
+detect a dead ruler PID and rehydrate every track’s known binding.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> constitution/scripts/multitrack/multitrack_supervisor.sh snapshot [--ruler-pid PID]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> constitution/scripts/multitrack/multitrack_supervisor.sh watch <span class="pp">[--</span><span class="ss">once</span><span class="pp">]</span> [--interval SECONDS] [--ruler-pid PID]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sh</span> constitution/scripts/multitrack/multitrack_supervisor.sh status</span></code></pre></div>
+<p><code>snapshot</code> reads the live, ephemeral session registry
+(<code>multitrack_sessions.sh</code>’s
+<code>tracks/&lt;track&gt;.json</code> files, falling back to replaying
+<code>events.jsonl</code> when a per-track file is itself missing) and
+merges it into the durable state file, written atomically
+(write-temp-then-rename). <code>watch</code> checks whether the recorded
+<code>ruler_pid</code> is still alive (<code>kill -0</code>); if it is
+dead (or no prior state exists), it rehydrates by re-running the same
+merge and claiming a fresh <code>ruler_pid</code>. The durable state
+directory resolves to
+<code>&lt;repo-root&gt;/.ws_state/multitrack</code> — deliberately
+<strong>never</strong> <code>${XDG_RUNTIME_DIR}</code> or a hardcoded
+<code>/tmp</code> path, since the whole point is to survive the loss of
+the ephemeral session registry.</p>
+<p><code>multitrack_bootstrap.sh</code> (the single idempotent wiring
+command — see §5 below) can optionally start this watchdog as a
+backgrounded daemon via <code>MT_SUPERVISOR_WATCH_ENABLE=1</code>; it is
+<strong>off by default</strong>.</p>
+<h3 id="host-budget-guard-multitrack_host_budget.sh">3.5 Host-budget
+guard (<code>multitrack_host_budget.sh</code>)</h3>
+<p>A sourced (not executed) pure-function library the ruler’s
+spawn/launch layer calls <strong>before</strong> starting any per-track
+worker process. It answers “is it safe to start one more worker right
+now?” by checking three independent conditions, all of which must
+hold:</p>
+<ol type="1">
+<li><strong>Pool cap</strong> — live worker count
+<code>&lt; MT_MAX_WORKERS</code> (default <code>4</code>, one per
+<code>/mnt/track&lt;N&gt;</code>). There is no <code>--force</code> /
+no-cap escape anywhere in the file.</li>
+<li><strong>Build-quiet</strong> — no heavy build (<code>m -j</code> /
+gradle / the JVM compile-daemon family) is currently in flight, per the
+same concurrency-hardening precedent as CLAUDE.md §12.7/§12.8.</li>
+<li><strong>§12.6 budget</strong> — the <em>projected</em> aggregate RSS
+of (live workers + one more) stays inside the 60%-of-RAM ceiling, using
+the same <code>host_safe_parallel_jobs()</code> arithmetic the build
+path already uses.</li>
+</ol>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span> constitution/scripts/multitrack/multitrack_host_budget.sh</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="ex">mt_host_budget_can_spawn</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">:</span> <span class="co"># proceed to spawn one more worker</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<p>Exit codes from <code>mt_host_budget_can_spawn</code>: <code>0</code>
+allow, <code>1</code> refuse (pool cap), <code>2</code> refuse (heavy
+build in flight), <code>3</code> refuse (would exceed the memory
+budget), <code>4</code> refuse (the host-safety library could not be
+resolved/sourced — an honest degrade, never a fake-pass). A
+human-readable reason line is always printed on stdout.</p>
+<h2 id="the-mnttrackn-mount-dependency-read-this-before-touching-a-drive">4.
+The <code>/mnt/track&lt;N&gt;</code> mount dependency — read this before
+touching a drive</h2>
+<p><strong>These drives are ATMOSphere-owned, LUKS2-encrypted btrfs
+volumes.</strong> <code>helix_code</code> coexists on the same
+track-parent mounts as other projects (ATMOSphere, helix_ota) per
+§11.4.178’s multi-project-per-track model; it only ever creates and uses
+its own <code>helix_code</code> subdirectory under an already-live
+mount.</p>
+<p><strong><code>helix_code</code> — and every script in
+<code>constitution/scripts/multitrack/</code> that this runbook
+documents — NEVER mounts, unmounts, formats, or partitions these
+drives.</strong> This is not a convenience choice; it is a hard
+constitutional boundary (§11.4.133: changes to the target system and its
+hardware must always be safe, and an autonomous agent must never perform
+an irreversible, high-blast-radius storage operation it cannot verify is
+safe). <code>multitrack.sh up</code>’s own operator-block note states
+this explicitly:</p>
+<blockquote>
+<p>mount each track’s LUKS2+btrfs NVMe drive at its
+<code>/mnt/track&lt;N&gt;</code>. … mounting needs <code>su</code> + the
+LUKS passphrase, which this agent does not hold, and §11.4.133 forbids
+autonomous mount/format of a physical drive. This is NOT a failure — it
+is a bounded operator hand-off (§11.4.101).</p>
+</blockquote>
+<p><strong>Operator unblock procedure</strong>, when
+<code>multitrack.sh status</code> or <code>up</code> reports a track as
+<code>unmounted-locked</code> / <code>OPERATOR-BLOCKED</code>:</p>
+<ol type="1">
+<li>The operator (with <code>su</code>/root on this host and the LUKS
+passphrase) mounts the affected track’s encrypted btrfs volume at its
+configured mountpoint (<code>/mnt/track1</code> ..
+<code>/mnt/track4</code>).</li>
+<li>If <code>helix_code</code>’s own project subdirectory does not yet
+exist under that mount (a fresh drive, or a freshly-mounted track this
+project has not used before), create it as
+<code>/mnt/track&lt;N&gt;/helix_code</code> — a plain directory create,
+never a partition/format operation — and populate it as a git
+worktree/checkout of this project (see the <code>worktree_subdir</code>
+config key in §1).</li>
+<li>Re-run
+<code>bash constitution/scripts/multitrack/multitrack.sh up</code>. A
+now-live mount reconciles the registry automatically (§2) and the track
+moves from <code>OPERATOR-BLOCKED</code> to <code>ACTIVE</code>.</li>
+</ol>
+<p>No script documented in this runbook will do steps 1 or 2 on its own,
+under any environment variable or flag.
+<code>multitrack_bootstrap.sh</code>’s own drive-prep step (§5, step 5)
+is explicitly read-only/informational for exactly this reason — it
+reports which tracks need an operator mount, and stops there.</p>
+<h2 id="bootstrap-for-reference">5. Bootstrap (for reference)</h2>
+<p><code>multitrack_bootstrap.sh</code> is the one idempotent command
+that wires the whole engine into a project out of the box (installs the
+toolkit cwd-hook symlink, validates the per-host config,
+seeds/reconciles the orchestrator’s alias↔︎track bindings, and reports —
+never acts on — any unmounted track). It is invoked automatically by the
+constitution submodule’s own auto-propagation seam on every constitution
+pull, and can also be run directly:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> constitution/scripts/multitrack/multitrack_bootstrap.sh <span class="pp">[</span><span class="ss">PROJECT_ROOT</span><span class="pp">]</span></span></code></pre></div>
+<p>Exit codes: <code>0</code> fully wired (or
+wired-except-informational-notes), <code>1</code> a required sibling
+script is missing or cwd-hook install failed, <code>2</code> no per-host
+config resolvable for this host (the genuinely fatal, §11.4.6 path — it
+prints the exact YAML template + the authoring step rather than
+inventing a default), <code>3</code> config resolved but failed to parse
+or had zero tracks, <code>4</code> orchestrator reconcile/status failed
+unexpectedly.</p>
+<h2 id="known-documentation-gap">Known documentation gap</h2>
+<p><code>multitrack.sh</code>‘s own header and help text also reference
+<code>docs/guides/MULTITRACK_ACTIVATION.md</code>. As of this writing
+that companion document does not exist in this checkout — this is a
+pre-existing gap this runbook does not close (out of scope for this
+PWU); it is flagged here rather than silently ignored, per §11.4.6.
+Likewise, none of the twelve-plus scripts under
+<code>constitution/scripts/multitrack/</code> yet have a
+<code>docs/scripts/*.md</code> companion per §11.4.18 — the supervisor
+and host-budget scripts’ own header blocks note this as a pre-existing
+gap, not a regression introduced here.</p>
+<h2 id="sources-verified-2026-07-11-constitutionscriptsmultitrackmultitrack.sh-constitutionscriptsmultitrackmultitrack-up-constitutionscriptsmultitrackmultitrack_bootstrap.sh-constitutionscriptsmultitrackmultitrack_claim.sh-constitutionscriptsmultitrackmultitrack_work_binding.sh-constitutionscriptsmultitrackmultitrack_device_lock.sh-constitutionscriptsmultitrackmultitrack_supervisor.sh-constitutionscriptsmultitrackmultitrack_resolve_worktree.sh-constitutionscriptsmultitrackmultitrack_host_budget.sh-configmultitrackthe-factory.yaml">Sources
+verified 2026-07-11: constitution/scripts/multitrack/multitrack.sh,
+constitution/scripts/multitrack/multitrack-up,
+constitution/scripts/multitrack/multitrack_bootstrap.sh,
+constitution/scripts/multitrack/multitrack_claim.sh,
+constitution/scripts/multitrack/multitrack_work_binding.sh,
+constitution/scripts/multitrack/multitrack_device_lock.sh,
+constitution/scripts/multitrack/multitrack_supervisor.sh,
+constitution/scripts/multitrack/multitrack_resolve_worktree.sh,
+constitution/scripts/multitrack/multitrack_host_budget.sh,
+config/multitrack/the-factory.yaml</h2>
+</body>
+</html>

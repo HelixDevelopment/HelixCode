@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>WS_ENDPOINT_AUTH_DESIGN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">WS_ENDPOINT_AUTH_DESIGN</h1>
+</header>
+<h1 id="ws-websocket-endpoint-authentication-design-design-only-no-code-change"><code>/ws</code>
+WebSocket Endpoint — Authentication Design (DESIGN ONLY, no code
+change)</h1>
+<table>
+<thead>
+<tr>
+<th>Revision</th>
+<th>Created</th>
+<th>Last modified</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2026-07-08</td>
+<td>2026-07-08</td>
+<td>draft</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Status summary:</strong> Design proposal for closing a
+confirmed unauthenticated-access gap on the <code>/ws</code> WebSocket
+endpoint. Awaits operator decision (§11.4.66) before any implementation
+work starts. No code touched by this document.</p>
+<p><strong>Issues / Fixed:</strong> none opened yet — this doc is the
+pre-work research + design artefact per §11.4.150 (deep research before
+fix) that a follow-up workable item will cite when the operator approves
+an option.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li><a href="#1-confirmed-finding-ws-is-genuinely-unauthenticated-today">1.
+Confirmed finding: <code>/ws</code> is genuinely unauthenticated
+today</a></li>
+<li><a href="#2-what-ws-actually-exposes">2. What <code>/ws</code>
+actually exposes</a></li>
+<li><a href="#3-why-this-is-a-real-if-partially-bounded-gap">3. Why this
+is a real, if partially bounded, gap</a></li>
+<li><a href="#4-the-core-constraint-browsers-cant-send-authorization-on-a-ws-handshake">4.
+The core constraint: browsers can’t send <code>Authorization</code> on a
+WS handshake</a></li>
+<li><a href="#5-research-standard-patterns-for-browser-websocket-auth">5.
+Research: standard patterns for browser WebSocket auth</a></li>
+<li><a href="#6-recommended-primary-option--implementation-sketch">6.
+Recommended primary option + implementation sketch</a></li>
+<li><a href="#7-regression-guard-test-plan-114135--red-plan-114115">7.
+Regression-guard test plan (§11.4.135) + RED plan (§11.4.115)</a></li>
+<li><a href="#8-operator-decision-114466">8. Operator decision
+(§11.4.66)</a></li>
+<li><a href="#9-honest-concerns--unconfirmed-items">9. Honest concerns /
+UNCONFIRMED items</a></li>
+<li><a href="#sources-verified">Sources verified</a></li>
+</ul>
+<hr />
+<h2 id="confirmed-finding-ws-is-genuinely-unauthenticated-today">1.
+Confirmed finding: <code>/ws</code> is genuinely unauthenticated
+today</h2>
+<p><strong>File:</strong>
+<code>helix_code/internal/server/server.go</code></p>
+<pre><code>430:    s.router.GET(&quot;/ws&quot;, s.handleWebSocket)</code></pre>
+<p>registered with <strong>zero middleware</strong> — contrast with the
+two DZ-05-hardened wire routes three lines above it:</p>
+<pre><code>426:    s.router.POST(&quot;/v1/chat/completions&quot;, s.wireFacadeAuthMiddleware(), s.chatCompletions)
+427:    s.router.POST(&quot;/v1/messages&quot;, s.wireFacadeAuthMiddleware(), s.anthropicMessages)</code></pre>
+<p>The handler itself (<code>server.go:623-625</code>):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Server<span class="op">)</span> handleWebSocket<span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    s<span class="op">.</span>mcp<span class="op">.</span>HandleWebSocket<span class="op">(</span>c<span class="op">.</span>Writer<span class="op">,</span> c<span class="op">.</span>Request<span class="op">)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>delegates straight into <code>internal/mcp/server.go</code>’s
+<code>MCPServer.HandleWebSocket</code>
+(<code>internal/mcp/server.go:142</code>), which upgrades the connection
+via <code>gorilla/websocket</code> with:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/mcp/server.go:100-112</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewMCPServer<span class="op">()</span> <span class="op">*</span>MCPServer <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>MCPServer<span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        upgrader<span class="op">:</span> websocket<span class="op">.</span>Upgrader<span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            CheckOrigin<span class="op">:</span> <span class="kw">func</span><span class="op">(</span>r <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                <span class="co">// In production, you should validate the origin</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="ot">true</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">...</span></span></code></pre></div>
+<p><code>CheckOrigin</code> unconditionally returns <code>true</code> —
+literally every origin is accepted, and the in-code comment is itself an
+admission this was never finished. There is no auth check anywhere
+between <code>router.GET(&quot;/ws&quot;, ...)</code> and the
+<code>Upgrade()</code> call. <strong>Confirmed: any client, from any
+origin, with no credential, can complete the WS handshake against
+<code>/ws</code> today.</strong></p>
+<p><code>server.go:87</code> constructs the <code>mcp.MCPServer</code>
+with <code>mcp.NewMCPServer()</code> and never wires an auth check on
+top of it before registering the route — so this is not a case of auth
+living elsewhere in the stack; it genuinely does not exist for this
+path.</p>
+<h2 id="what-ws-actually-exposes">2. What <code>/ws</code> actually
+exposes</h2>
+<p>The MCP session speaks a small JSON-RPC-shaped protocol
+(<code>internal/mcp/server.go:194-212</code>,
+<code>handleMessage</code>):</p>
+<table>
+<thead>
+<tr>
+<th><code>method</code></th>
+<th>Handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>initialize</code></td>
+<td><code>handleInitialize</code></td>
+</tr>
+<tr>
+<td><code>tools/list</code></td>
+<td><code>handleListTools</code></td>
+</tr>
+<tr>
+<td><code>tools/call</code></td>
+<td><code>handleCallTool</code></td>
+</tr>
+<tr>
+<td><code>notifications/capabilities</code></td>
+<td><code>handleCapabilities</code></td>
+</tr>
+<tr>
+<td><code>ping</code></td>
+<td><code>handlePing</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>tools/call</code> dispatches into
+<code>s.tools[name].Handler</code> — an arbitrary
+<code>ToolHandler func(ctx, session, args) (interface{}, error)</code> —
+i.e. this is a <strong>capability-execution surface</strong>, not merely
+an LLM token stream. That is a materially bigger blast radius than the
+two wire-facade routes DZ-05 already closed, which only drive
+<code>provider.Generate</code>/<code>GenerateStream</code>.</p>
+<p><strong>As-shipped mitigating fact (verified, not assumed):</strong>
+grepping every non-test <code>.go</code> file under
+<code>helix_code/</code> for calls to
+<code>(*mcp.MCPServer).RegisterTool</code> turns up exactly one call
+site — <code>internal/mcp/doc.go:30</code>, a doc-comment
+<em>example</em>, not executable wiring. <code>server.go:87</code>’s
+<code>mcp.NewMCPServer()</code> never has <code>RegisterTool</code>
+called on it anywhere in the production construction path.
+<strong>Today, <code>tools/list</code> returns an empty list and
+<code>tools/call</code> always fails with
+<code>-32601 Tool not found</code>.</strong> The capability-execution
+risk is currently latent, not live.</p>
+<h2 id="why-this-is-a-real-if-partially-bounded-gap">3. Why this is a
+real, if partially bounded, gap</h2>
+<p>Even with zero tools registered, the unauthenticated + any-origin
+<code>/ws</code> is a live defect on three independent axes:</p>
+<ol type="1">
+<li><strong>Resource exhaustion / DoS.</strong> Every successful
+handshake spawns a goroutine (<code>go s.handleSession(session)</code>,
+<code>server.go:166</code>) and inserts an entry into
+<code>s.sessions</code> (<code>sessionMux</code>-guarded map, unbounded
+growth) with no rate limit, no auth gate, and no idle/handshake timeout
+visible in <code>HandleWebSocket</code>/<code>handleSession</code>. Any
+anonymous client can open unlimited concurrent connections.</li>
+<li><strong>Forward-risk landmine.</strong> The moment anyone wires
+<code>RegisterTool</code> calls into <code>server.New</code>’s
+construction path (the natural next step for an MCP server whose entire
+purpose is exposing tools to MCP clients), <code>/ws</code> silently
+becomes an unauthenticated arbitrary-capability-execution surface with
+<strong>zero warning</strong> at that commit — because the auth gap is
+upstream of tool registration, not downstream.</li>
+<li><strong>CSWSH exposure independent of tool registration.</strong>
+<code>CheckOrigin: true</code> is exactly the anti-pattern OWASP’s
+WebSocket Security Cheat Sheet calls the primary Cross-Site WebSocket
+Hijacking (CSWSH) vector (§5 below) — any web page, anywhere, can script
+a same-user browser into opening this socket. Combined with
+<code>CORSMiddleware()</code> (<code>server.go:628-642</code>) also
+emitting <code>Access-Control-Allow-Origin: *</code> with
+<code>Access-Control-Allow-Credentials: true</code> (a related but
+<strong>out-of-scope</strong> finding — CORS
+wildcard-origin-with-credentials is itself invalid per the Fetch spec
+and should be tracked separately), this codebase has a consistent
+pattern of deferring origin validation that this design should not
+repeat.</li>
+</ol>
+<h2 id="the-core-constraint-browsers-cant-send-authorization-on-a-ws-handshake">4.
+The core constraint: browsers can’t send <code>Authorization</code> on a
+WS handshake</h2>
+<p>The native browser <code>WebSocket</code> constructor
+(<code>new WebSocket(url[, protocols])</code>) accepts only a URL and an
+optional subprotocol list — there is no way for browser JS to attach an
+<code>Authorization: Bearer ...</code> or <code>x-api-key</code> header
+to the handshake <code>GET</code> request. This is a deliberate,
+unchanged constraint of the WHATWG WebSocket API (confirmed by every
+source in §5). It is the reason <code>wireFacadeAuthMiddleware()</code>
+(<code>server.go:571-620</code>) — which reads
+<code>Authorization: Bearer</code> / <code>x-api-key</code> off
+<code>c.GetHeader(...)</code> — <strong>cannot be reused unmodified for
+browser-originated <code>/ws</code> connections</strong>, even though it
+is exactly the right pattern for non-browser clients (see §6, Option
+B).</p>
+<p>Note this constraint does <strong>not</strong> apply to non-browser
+MCP SDK / CLI clients (Go/Python/Node MCP client libraries,
+<code>curl</code>-style test harnesses) — those can set arbitrary
+headers on the pre-upgrade HTTP request, so
+<code>wireFacadeAuthMiddleware()</code>-style
+Bearer/<code>x-api-key</code> checking works for them today with no new
+infrastructure.</p>
+<h2 id="research-standard-patterns-for-browser-websocket-auth">5.
+Research: standard patterns for browser WebSocket auth</h2>
+<p>Deep research per §11.4.150/§11.4.99 against current (2025-2026)
+authoritative sources — OWASP’s dedicated WebSocket Security Cheat
+Sheet, websocket.org’s guide (Postman-affiliated, actively maintained),
+and the <code>websockets</code> Python library’s authentication
+documentation (a widely-cited reference implementation guide) — all
+independently converge on the same four patterns:</p>
+<h3 id="ticket-short-lived-one-time-token-pattern">5.1 Ticket /
+short-lived one-time-token pattern</h3>
+<p>Client calls an already-authenticated HTTPS endpoint (can reuse
+existing Bearer/x-api-key/session auth) to mint a short-TTL, single-use
+ticket. Client then opens the WS connection and presents the ticket —
+<strong>as the first message after connect (preferred)</strong> or as a
+query-string param (fallback, with a short TTL to bound exposure).</p>
+<ul>
+<li>OWASP: doesn’t name “ticket” explicitly but endorses token-based
+auth passed “via alternative methods” beyond Authorization headers, and
+explicitly flags query-string tokens as needing redaction from access
+logs.</li>
+<li>websocket.org: names first-message auth as keeping tokens “out of
+logs and browser history entirely,” at the cost of requiring an
+authentication timeout (recommends ~5s) plus IP-level rate limiting on
+unauthenticated sockets to bound resource exhaustion during that
+window.</li>
+<li><code>websockets</code> (readthedocs, Python reference lib, widely
+cited beyond just Python users): calls first-message token auth “fully
+reliable and the most secure mechanism,” explicitly because it operates
+at the application layer where the server controls validation timing,
+versus query-string tokens which “end up in logs, which leaks
+credentials.”</li>
+<li>AWS’s own WebSocket-API-Gateway guidance (below) independently
+recommends the query-string-token variant of this same family as its
+default, precisely because a Lambda authorizer can reject during the
+HTTP-upgrade phase before any compute is spent on the connection.</li>
+</ul>
+<p><strong>Tradeoff vs HelixCode’s existing scheme:</strong> requires a
+NEW minting endpoint + a short-TTL nonce store (single-use tracking) —
+new infrastructure, but the minting endpoint itself can be gated by the
+<em>existing</em>
+<code>wireFacadeAuthMiddleware()</code>/<code>HELIX_WIRE_FACADE_API_KEYS</code>
+check or the internal-user <code>authMiddleware()</code>/JWT check, so
+no new <em>credential class</em> is introduced, only a new
+<em>short-lived derived</em> one.</p>
+<h3 id="sec-websocket-protocol-subprotocol-as-token-channel">5.2
+<code>Sec-WebSocket-Protocol</code> subprotocol-as-token-channel</h3>
+<p>Browser JS <em>can</em> set the <code>Sec-WebSocket-Protocol</code>
+value even though it can’t set <code>Authorization</code> — some
+implementations (documented AWS API Gateway WebSocket blog
+posts/writeups) smuggle a JWT or user id through this header, with the
+server echoing back a recognized subprotocol value to complete the
+handshake per RFC 6455 §1.9/§4.</p>
+<ul>
+<li>AWS’s own more-current guidance (<code>readysetcloud.io</code>, AWS
+Compute Blog) explicitly <strong>recommends the query-string-token
+approach over subprotocol smuggling</strong> — “the recommendation is
+using the query string parameter approach because it is straightforward
+and does not repurpose the Sec-WebSocket-Protocol header.”</li>
+<li>Limitations independently confirmed: subprotocol values are still
+visible to intermediate proxies/logs (no better than query-string on
+that axis), values are constrained (comma-separated token list per RFC
+6455, awkward for anything beyond a short opaque id), and it repurposes
+a header whose actual purpose is protocol negotiation — a semantic
+overload that every source treats as a workaround rather than a
+recommended pattern.</li>
+</ul>
+<p><strong>Verdict:</strong> not recommended as primary; documented here
+because the task brief asked for it explicitly, but no current
+authoritative source recommends it over the ticket/first-message
+pattern.</p>
+<h3 id="cookie-based-auth-cswsh-risk">5.3 Cookie-based auth (+ CSWSH
+risk)</h3>
+<p>If the WS server shares a domain with the web app, the browser
+automatically attaches session cookies to the WS handshake (it’s still
+an HTTP <code>GET</code> request). Server validates the cookie exactly
+like any other HTTP request.</p>
+<ul>
+<li>OWASP: this is the <em>default</em> behaviour browsers exhibit and
+is explicitly named as <em>why</em> CSWSH exists — “browsers include
+cookies in WebSocket handshake requests, making WebSocket applications
+vulnerable to Cross-Site WebSocket Hijacking (CSWSH)” unless Origin is
+validated. OWASP’s primary CSWSH defense is <strong>explicit Origin
+allowlist validation on every handshake</strong> (“Use an allowlist, not
+a denylist. Avoid wildcards or substring matching.”) — which HelixCode’s
+<code>CheckOrigin: true</code> currently fails outright.</li>
+<li>websocket.org: notes cookie auth requires “zero client-side
+authentication code” but needs CSRF protection via Origin validation;
+<code>SameSite=Strict</code> cookies won’t even transmit cross-origin,
+which helps but isn’t sufficient alone (subdomains, and any same-site
+attacker page, still succeed).</li>
+<li><code>websockets</code> docs: flags a real gap in cookie auth for
+multi-tenant/shared parent-domain deployments — “the cookie would be
+shared with all subdomains of the parent domain… for a cookie containing
+credentials, this is unacceptable” in that topology.</li>
+</ul>
+<p><strong>Tradeoff vs HelixCode’s existing scheme:</strong> HelixCode’s
+internal-user auth today is Bearer-JWT-in-<code>Authorization</code>
+header (<code>authMiddleware()</code>, <code>server.go:488-543</code>),
+<strong>not</strong> cookie-based — adopting cookie auth for
+<code>/ws</code> would introduce a parallel credential-delivery
+mechanism not used anywhere else in the codebase, plus require
+confirming the frontend actually performs a cookie-issuing login flow
+today (<strong>UNCONFIRMED</strong> — see §9).</p>
+<h3 id="query-string-token-as-its-own-option-not-just-ticket-pattern-fallback">5.4
+Query-string token (as its own option, not just ticket-pattern
+fallback)</h3>
+<p>Every source above converges on the same tradeoff independently: fast
+rejection during the HTTP-upgrade phase (before any WS-frame compute is
+spent) vs the token appearing in access logs / proxy logs / browser
+history / <code>Referer</code> headers on outbound requests from the
+page. Universal mitigation across sources: make it short-TTL
+(websocket.org suggests 5-15 minutes) and single-use, and never put a
+long-lived credential (e.g. the raw
+<code>HELIX_WIRE_FACADE_API_KEYS</code> value) directly in a query
+string.</p>
+<h2 id="recommended-primary-option-implementation-sketch">6. Recommended
+primary option + implementation sketch</h2>
+<p><strong>Recommended: Option A — Ticket pattern for browser clients,
+layered on top of a direct Bearer/<code>x-api-key</code> check for
+non-browser clients, plus a mandatory Origin-allowlist fix regardless of
+which auth option is chosen.</strong> This is because (a) it’s the
+pattern every current authoritative source converges on for genuine
+browser JS clients where <code>Authorization</code> cannot be set at
+all, (b) it reuses HelixCode’s <em>existing</em> credential class
+(<code>HELIX_WIRE_FACADE_API_KEYS</code> or the internal JWT) to gate
+the ticket-minting endpoint rather than inventing a new standing secret,
+and (c) it composes cleanly with the non-browser lane (Option B, §8)
+which can ship independently and immediately at near-zero risk.</p>
+<h3 id="sketch-new-pieces-design-only-not-implemented">6.1 Sketch — new
+pieces (design only, not implemented)</h3>
+<ol type="1">
+<li><strong>New minting endpoint</strong>
+<code>POST /api/v1/ws-ticket</code>, gated by
+<code>s.wireFacadeAuthMiddleware()</code> (or
+<code>s.authMiddleware()</code> for internal-user sessions — whichever
+the caller already authenticates with). Handler mints a random 256-bit
+nonce, signs
+<code>{nonce, exp: now+30s, aud:&quot;ws&quot;, sub:&lt;caller id&gt;}</code>
+(reuse <code>s.auth</code>’s existing JWT signing machinery with a
+distinct, short <code>TokenExpiry</code> override — do
+<strong>not</strong> reuse the long-lived session JWT verbatim), and
+stores the nonce as <em>unconsumed</em> — in Redis
+(<code>s.redis</code>, already wired into <code>Server</code>) with a
+30-60s TTL if <code>s.redis</code> is enabled, else an in-process
+<code>sync.Map</code> with a background sweep (mirrors the
+<code>s.sessions</code> map pattern already in
+<code>mcp.MCPServer</code>) when Redis is disabled. Returns
+<code>{&quot;ticket&quot;: &quot;&lt;compact-token&gt;&quot;}</code>.</li>
+<li><strong><code>/ws</code> handshake gate, before
+<code>Upgrade()</code>:</strong>
+<ul>
+<li>If the pre-upgrade request carries
+<code>Authorization: Bearer</code> or <code>x-api-key</code> matching
+<code>HELIX_WIRE_FACADE_API_KEYS</code> (non-browser lane, Option B) →
+accept immediately, same fail-closed semantics as
+<code>wireFacadeAuthMiddleware()</code>.</li>
+<li>Else, require the connection’s <strong>first WebSocket
+message</strong> (not a query param, to keep the ticket out of access
+logs per §5.1/§5.4) to be an auth frame
+<code>{&quot;type&quot;:&quot;auth&quot;,&quot;ticket&quot;:&quot;&lt;ticket&gt;&quot;}</code> within a bounded
+timeout (5s, mirroring websocket.org’s guidance) — validate signature +
+expiry + single-use (atomically mark consumed in the
+Redis/<code>sync.Map</code> store; a second use of the same ticket is
+rejected). On success, proceed into the existing
+<code>handleSession</code> loop. On failure or timeout, close with WS
+close code <code>1008</code> (Policy Violation) and log the rejection
+(never log the ticket value itself, per OWASP’s “avoid logging sensitive
+data” guidance).</li>
+</ul></li>
+<li><strong>Origin allowlist fix (mandatory regardless of chosen
+option):</strong> replace <code>internal/mcp/server.go:104-107</code>’s
+<code>CheckOrigin: func(r *http.Request) bool { return true }</code>
+with an explicit allowlist sourced from config (new
+<code>cfg.Auth.WSAllowedOrigins []string</code>, analogous to
+<code>WireFacadeAPIKeys</code>), defaulting to same-origin-only when
+unset — never a wildcard.</li>
+<li><strong>Idle/unauthenticated-socket timeout, independent of the auth
+outcome:</strong> set a read deadline on the connection immediately
+after <code>Upgrade()</code>
+(<code>conn.SetReadDeadline(time.Now().Add(5*time.Second))</code>) so a
+client that never sends the auth frame at all cannot hold a goroutine +
+session-map entry open indefinitely — closes the DoS gap identified in
+§3.1 independently of whether auth itself is bypassed.</li>
+</ol>
+<h3 id="where-this-lives-in-the-existing-code-fileline-references-for-the-follow-up-implementation-task">6.2
+Where this lives in the existing code (file:line references for the
+follow-up implementation task)</h3>
+<ul>
+<li><code>helix_code/internal/config/config.go</code> — extend
+<code>AuthConfig</code> (currently ends around line 109 with
+<code>WireFacadeAPIKeys</code>) with <code>WSAllowedOrigins</code> and
+(if the ticket’s own short-TTL signing key should be distinct from
+<code>JWTSecret</code>) an optional
+<code>WSTicketSigningKey</code>.</li>
+<li><code>helix_code/internal/server/server.go:430</code> — replace the
+bare <code>s.router.GET(&quot;/ws&quot;, s.handleWebSocket)</code> registration
+with a new <code>s.wsAuthMiddleware()</code> (new middleware, sibling to
+<code>wireFacadeAuthMiddleware</code> at line 571) that implements the
+pre-upgrade Bearer/<code>x-api-key</code> check (Option B) and, if
+absent, passes a flag/context value telling <code>handleWebSocket</code>
+to require the post-upgrade first-message ticket check.</li>
+<li><code>helix_code/internal/mcp/server.go:100-112</code>
+(<code>NewMCPServer</code>) — accept an
+<code>allowedOrigins []string</code> (or a
+<code>CheckOrigin func(*http.Request) bool</code>) constructor parameter
+instead of hardcoding <code>return true</code>, and
+<code>internal/mcp/server.go:142</code> (<code>HandleWebSocket</code>) —
+accept the ticket-validation callback / set the post-upgrade read
+deadline described in §6.1.3-4.</li>
+<li>New file <code>helix_code/internal/server/ws_ticket.go</code> (or
+similar) — the <code>POST /api/v1/ws-ticket</code> handler + nonce
+store, following the existing file-per-facade convention
+(<code>wire_facade.go</code> is the precedent).</li>
+</ul>
+<h2 id="regression-guard-test-plan-11.4.135-red-plan-11.4.115">7.
+Regression-guard test plan (§11.4.135) + RED plan (§11.4.115)</h2>
+<p>Mirrors the DZ-05 precedent explicitly cited in
+<code>server.go</code>’s own comments
+(<code>wire_facade_auth_test.go</code>,
+<code>wire_facade_live_e2e_test.go</code>) — real gin router via
+<code>server.New(...)</code>/the actual route table, real
+<code>gorilla/websocket</code> client dial, no mocks (§11.4.27(A)
+unit-test-only exception does not apply here; this must be an
+integration-style test against the real router per CONST-050(A)).</p>
+<h3 id="red-pre-fix-11.4.115-polarity-red_mode1-default">7.1 RED
+(pre-fix, §11.4.115 polarity, <code>RED_MODE=1</code> default)</h3>
+<p><code>TestWebSocketUnauthenticatedHandshake_RED</code> — spins
+<code>httptest.NewServer</code> wrapping the real router, dials
+<code>ws://&lt;addr&gt;/ws</code> with
+<code>websocket.DefaultDialer.Dial(...)</code> and <strong>no</strong>
+Authorization header, no cookie, no ticket. <strong>On the current
+(pre-fix) code this MUST assert the dial SUCCEEDS</strong> (101
+Switching Protocols, no error) — this is the captured, reproducing proof
+of the defect described in §1, run against the actual broken artifact,
+not a synthetic scenario.</p>
+<h3 id="green-post-fix-red_mode0-same-test-source-polarity-flipped">7.2
+GREEN (post-fix, <code>RED_MODE=0</code>, same test source, polarity
+flipped)</h3>
+<p>Same test, same assertion site, flipped expectation: dial with no
+credential <strong>MUST fail</strong> — either the HTTP upgrade itself
+returns <code>401</code> (non-browser lane, if the fix rejects at
+<code>wsAuthMiddleware()</code> before <code>Upgrade()</code> even for a
+credential-less request) or the WS connection opens and is immediately
+closed with code <code>1008</code> within the 5s timeout (browser lane,
+ticket never sent). Both are acceptable “rejected” shapes; the test
+asserts one of them, not a specific status code, to avoid over-coupling
+to option A vs B’s exact mechanics.</p>
+<h3 id="standing-regression-guard-suite-registered-same-commit-as-the-fix-11.4.135">7.3
+Standing regression-guard suite (registered same commit as the fix,
+§11.4.135)</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No credential, no ticket</td>
+<td>Rejected (§7.2)</td>
+</tr>
+<tr>
+<td>Valid <code>HELIX_WIRE_FACADE_API_KEYS</code>
+Bearer/<code>x-api-key</code> on handshake</td>
+<td>Accepted (non-browser lane)</td>
+</tr>
+<tr>
+<td>Valid, unexpired, unconsumed ticket as first message</td>
+<td>Accepted (browser lane)</td>
+</tr>
+<tr>
+<td>Expired ticket (mint, sleep past TTL, then send)</td>
+<td>Rejected</td>
+</tr>
+<tr>
+<td>Already-consumed ticket (use once successfully, dial again with same
+ticket)</td>
+<td>Rejected — proves single-use</td>
+</tr>
+<tr>
+<td>Valid ticket but <code>Origin</code> header not in allowlist</td>
+<td>Rejected — proves Origin check is enforced independently of ticket
+validity</td>
+</tr>
+<tr>
+<td>Connection opened, no auth frame sent within 5s</td>
+<td>Server-initiated close within timeout — proves no unbounded resource
+hold</td>
+</tr>
+<tr>
+<td><code>/api/v1/ws-ticket</code> called with no/invalid
+Bearer/<code>x-api-key</code></td>
+<td><code>401</code>, mirrors <code>wireFacadeAuthMiddleware</code>
+fail-closed semantics</td>
+</tr>
+</tbody>
+</table>
+<p>Every PASS in this suite must carry the actual dial/response evidence
+(§11.4.5/§11.4.69) — a “no error returned” check without inspecting the
+actual close code / HTTP status is not sufficient per the §11.4
+anti-bluff covenant.</p>
+<h2 id="operator-decision-11.4.66">8. Operator decision (§11.4.66)</h2>
+<p>Minimum-viable operator input, framed as options:</p>
+<p><strong>Option A — Ticket pattern (browser lane) +
+Bearer/<code>x-api-key</code> (non-browser lane) + Origin-allowlist fix.
+[Recommended]</strong> Trade-off: most complete fix (closes browser
+CSWSH gap, non-browser gap, and the DoS/idle-socket gap in one pass);
+requires new minting endpoint + nonce store + two new test files; ~1-2
+days of implementation + test work. <em>After this answer:</em>
+implement §6’s sketch in full, land the regression suite in §7.3, verify
+against a live <code>/api/v1/ws-ticket</code> → <code>/ws</code> round
+trip from a real browser-equivalent client (per §11.4.98 full automation
+— no manual browser click-through as the only evidence).</p>
+<p><strong>Option B — Bearer/<code>x-api-key</code> on the pre-upgrade
+handshake only (mirror <code>wireFacadeAuthMiddleware</code>, reuse
+<code>HELIX_WIRE_FACADE_API_KEYS</code> verbatim), plus the
+Origin-allowlist fix. No ticket infrastructure.</strong> Trade-off:
+smallest, fastest change (essentially the same one-line pattern already
+applied to <code>/v1/chat/completions</code>/<code>/v1/messages</code>);
+closes the non-browser-client gap and the CSWSH/Origin gap immediately;
+<strong>does not close the gap for genuine browser-JS clients</strong>
+(the static web UI at <code>/</code>), because browser
+<code>WebSocket()</code> cannot set these headers — if nothing in
+HelixCode’s frontend currently opens <code>/ws</code> from browser JS,
+this option may be sufficient as a complete fix; if it does (or will),
+this option leaves that path unauthenticated or breaks it outright once
+the middleware is strict. <em>After this answer:</em> implement the
+middleware + Origin fix only, skip the ticket endpoint, and the doc’s §7
+suite drops the ticket-specific rows.</p>
+<p><strong>Option C — Cookie-based auth (httpOnly,
+<code>SameSite=Strict</code>) + strict Origin allowlist, contingent on
+confirming the frontend already performs cookie-issuing login.</strong>
+Trade-off: zero client-side WS-specific code once wired; but introduces
+a credential-delivery mechanism (cookies) not used anywhere else in this
+codebase today (everything else is Bearer-JWT-in-header), and does not
+help non-browser MCP SDK clients on its own (would still need Option B
+layered on top for those). <em>After this answer:</em> first confirm
+(read-only) whether <code>s.auth</code>’s login flow issues a session
+cookie anywhere today; if not, this option requires standing up new
+cookie-issuing infrastructure before <code>/ws</code> work can start,
+materially larger than A or B.</p>
+<p><strong>Option D — Ship Option B now (fast, closes the biggest and
+most certain gap: any-origin + any-client unauthenticated access), track
+Option A’s ticket lane as a fast-follow only if/when a genuine
+browser-JS <code>/ws</code> client is confirmed to exist or is
+planned.</strong> Trade-off: fastest path to closing the confirmed,
+currently-exploitable gap (§1-§3) without over-building for a browser
+use case that may not exist yet; requires a follow-up confirmation step
+(grep <code>web/frontend/**</code> for any <code>new WebSocket(</code>
+call) before deciding whether Option A is ever needed at all.</p>
+<h2 id="honest-concerns-unconfirmed-items">9. Honest concerns /
+UNCONFIRMED items</h2>
+<ul>
+<li><strong>UNCONFIRMED: does any current HelixCode client actually open
+<code>/ws</code> from browser JS today?</strong> This design assumed yes
+(the static web UI served at <code>server.go:433-434</code>,
+<code>/static</code> + <code>/</code>) is the plausible consumer, but
+this agent did not grep <code>web/frontend/**</code> for a live
+<code>new WebSocket(...)</code> call site within this task’s scope
+(read-only inspection was scoped to the server-side handler + auth
+patterns per the task brief). <strong>This is the single
+highest-leverage fact to confirm before choosing between Option A/D and
+Option B</strong> — if no browser client exists yet, Option B alone may
+be a complete, much cheaper fix.</li>
+<li><strong>UNCONFIRMED: does <code>s.auth</code>/the login flow issue
+any cookie today, or is every session strictly
+Bearer-JWT-in-header?</strong> Needed to evaluate whether Option C is
+even feasible without new infra. Not verified in this pass.</li>
+<li><strong>UNCONFIRMED:</strong> whether Redis (<code>s.redis</code>)
+is reliably enabled in every deployment profile this server ships — the
+ticket nonce store’s HA/TTL behavior differs meaningfully between the
+Redis-backed and in-process <code>sync.Map</code> fallback paths; the
+in-process fallback does not survive a process restart or work across
+multiple server replicas behind a load balancer (a ticket minted on
+replica A would not be recognized as consumed by replica B). If
+HelixCode ever runs multi-replica, Option A’s nonce store MUST be the
+Redis path, not an in-process map — flagging this now so the follow-up
+implementation task doesn’t silently pick the simpler-but-wrong
+variant.</li>
+<li><strong>Related but explicitly out-of-scope finding:</strong>
+<code>CORSMiddleware()</code> (<code>server.go:628-642</code>) emits
+<code>Access-Control-Allow-Origin: *</code> together with
+<code>Access-Control-Allow-Credentials: true</code> — invalid per the
+Fetch spec (a wildcard origin is not supposed to be paired with
+credentials) and a separate, pre-existing security smell independent of
+<code>/ws</code>. Not touched by this design; recommend a separate
+workable item.</li>
+<li>No secrets were read, generated, or logged in the course of this
+research (§11.4.10 compliant) — no <code>.env</code> file was
+opened.</li>
+</ul>
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>OWASP WebSocket Security Cheat Sheet — <a href="https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html" class="uri">https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html</a>
+(accessed 2026-07-08)</li>
+<li>websocket.org — WebSocket Authentication guide — <a href="https://websocket.org/guides/authentication/" class="uri">https://websocket.org/guides/authentication/</a> (accessed
+2026-07-08)</li>
+<li>websocket.org — WebSocket Security guide (CSWSH, Origin, rate
+limiting) — <a href="https://websocket.org/guides/security/" class="uri">https://websocket.org/guides/security/</a> (accessed
+2026-07-08, search-result summary; not separately WebFetched)</li>
+<li><code>websockets</code> (Python reference library) — Authentication
+topic guide — <a href="https://websockets.readthedocs.io/en/stable/topics/authentication.html" class="uri">https://websockets.readthedocs.io/en/stable/topics/authentication.html</a>
+(accessed 2026-07-08)</li>
+<li>AWS — “Intro to AWS WebSockets Part Two: Auth” (Ready, Set, Cloud!)
+— <a href="https://www.readysetcloud.io/blog/allen.helton/intro-to-aws-websockets-part-two/" class="uri">https://www.readysetcloud.io/blog/allen.helton/intro-to-aws-websockets-part-two/</a>
+(accessed 2026-07-08, search-result summary)</li>
+<li>AWS Compute Blog — “Managing sessions of anonymous users in
+WebSocket API-based applications” — <a href="https://aws.amazon.com/blogs/compute/managing-sessions-of-anonymous-users-in-websocket-api-based-applications/" class="uri">https://aws.amazon.com/blogs/compute/managing-sessions-of-anonymous-users-in-websocket-api-based-applications/</a>
+(accessed 2026-07-08, search-result summary)</li>
+<li>RFC 6455 (The WebSocket Protocol), §1.9/§4 —
+<code>Sec-WebSocket-Protocol</code> semantics (referenced, not
+re-fetched this session — well-established IETF standard)</li>
+</ul>
+<p>No source contradicted another on the core recommendation
+(ticket/first-message pattern preferred over query-string or
+subprotocol-smuggling for browser clients where log/history exposure
+matters); AWS’s own more-recent guidance independently agrees
+query-string tokens are preferable to
+<code>Sec-WebSocket-Protocol</code> smuggling when a query-string-class
+approach is used at all.</p>
+</body>
+</html>

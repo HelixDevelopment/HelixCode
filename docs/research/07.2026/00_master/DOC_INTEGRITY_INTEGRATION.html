@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DOC_INTEGRITY_INTEGRATION</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DOC_INTEGRITY_INTEGRATION</h1>
+</header>
+<h1 id="doc_integrity_integration.md-wiring-the-11.4.186-anti-divergence-engine-into-helixcodes-export-pipeline">DOC_INTEGRITY_INTEGRATION.md
+— Wiring the §11.4.186 Anti-Divergence Engine into HelixCode’s Export
+Pipeline</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Revision</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Created</td>
+<td>2026-07-08</td>
+</tr>
+<tr>
+<td>Last modified</td>
+<td>2026-07-08T12:00:00Z</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>active</td>
+</tr>
+<tr>
+<td>Status summary</td>
+<td>Design document for integrating the constitution submodule’s
+doc-integrity validator into HelixCode’s three doc-export/commit
+seams.</td>
+</tr>
+<tr>
+<td>Authority</td>
+<td>Constitution §11.4.186 (anti-divergence enforcement) + §11.4.106
+(Docs Chain) + §11.4.65 (universal markdown export)</td>
+</tr>
+<tr>
+<td>Author</td>
+<td>T1/main conductor</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="purpose">1. Purpose</h2>
+<p>This document describes how to wire the
+<strong>doc-integrity</strong> Go engine
+(<code>constitution/scripts/doc_integrity/</code>) into HelixCode’s
+three write-seams — export render, doc/DB sync <code>verify</code>, and
+doc-set commit — so that cross-document CONSISTENCY is enforced as a
+deterministic PASS/FAIL/SKIP gate that runs BEFORE any of those seams
+proceeds, as mandated by Constitution §11.4.186.</p>
+<hr />
+<h2 id="engine-overview-what-already-exists">2. Engine overview (what
+already exists)</h2>
+<p>A project-agnostic (§11.4.28) Go tool residing at
+<code>&lt;repo-root&gt;/constitution/scripts/doc_integrity/</code>,
+consumed <strong>by reference</strong> per §11.4.177 / §11.4.80-style
+inheritance (NEVER copied into HelixCode).</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Module</td>
+<td><code>github.com/HelixDevelopment/HelixConstitution/scripts/doc_integrity</code></td>
+</tr>
+<tr>
+<td>Go version</td>
+<td>1.25</td>
+</tr>
+<tr>
+<td>Stack</td>
+<td><code>excelize</code> (xlsx), <code>go-sqlite3</code>,
+<code>yaml.v3</code></td>
+</tr>
+<tr>
+<td>Entry</td>
+<td><code>cmd/doc_integrity/main.go</code> — subcommands:
+<code>verify</code>, <code>report</code>, <code>selfcheck</code>,
+<code>version</code></td>
+</tr>
+<tr>
+<td>Exit codes</td>
+<td>0 PASS, 1 FAIL, 2 config-error, 3 SKIP (source unavailable, honest
+§11.4.3)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="five-check-families">2.1 Five check families</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Family</th>
+<th>Rules</th>
+<th>Action on FAIL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DEDUP</strong></td>
+<td><code>DEDUP-01/02</code></td>
+<td>Duplicate feature descriptions with divergent
+timeline/status/release. Keyed on ticket OR normalised
+<code>(subject, scope)</code> — NOT bare subject substring
+(false-positive guard for distinct same-subject tasks, §11.4.6).</td>
+</tr>
+<tr>
+<td><strong>TIMELINE</strong></td>
+<td><code>TIME-01/01b/02/03/04</code></td>
+<td><code>start ≤ deadline</code>; no deadline-before-dependency; no DAG
+cycles; section span containment; GATED exempt-but-marked.</td>
+</tr>
+<tr>
+<td><strong>CROSS-DOC</strong></td>
+<td><code>XDOC-01</code></td>
+<td>The SAME feature across plan/MVP/summary/DB (joined by ticket,
+fuzzy-subject fallback) carries identical timeline/status/type against a
+NAMED authoritative source.</td>
+</tr>
+<tr>
+<td><strong>INTEGRITY</strong></td>
+<td><code>INTEG-01/02/03</code></td>
+<td>No orphan refs; Status-Type agreement (§11.4.33 Bug→Fixed /
+Feature→Implemented / Task→Completed); location↔︎status agreement.</td>
+</tr>
+<tr>
+<td><strong>STRUCTURAL</strong></td>
+<td><code>STRUCT-01/02</code></td>
+<td>Required columns present; item IDs unique + match
+<code>id_pattern</code> (+ opt-in monotonic).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="four-adapters-source-kinds">2.2 Four adapters (source
+kinds)</h3>
+<ul>
+<li><strong>xlsx</strong> (excelize) — for <code>.xlsx</code> plan
+files</li>
+<li><strong>markdown-table</strong> — for markdown pipe tables
+(Issues_Summary.md style)</li>
+<li><strong>markdown-headings</strong> — for Issues/Fixed.md H2-format
+records</li>
+<li><strong>sqlite</strong> (READ-ONLY) — for
+<code>docs/workable_items.db</code></li>
+</ul>
+<h3 id="anti-bluff-self-validation">2.3 Anti-bluff self-validation</h3>
+<p>The <code>selfcheck</code> subcommand runs embedded golden fixtures
+under <code>internal/selfcheck/golden/</code>:</p>
+<ul>
+<li><strong>golden-good</strong>: MUST PASS (validator does not
+false-positive)</li>
+<li><strong>golden-bad (one per family)</strong>: MUST FAIL, pinpointing
+the injected offender (validator catches real defects)</li>
+<li><strong>negative-control</strong>: distinct same-subject tasks that
+MUST PASS (validator does not false-positive on
+<code>(subject, scope)</code> distinction)</li>
+</ul>
+<p>A validator that PASSes a golden-bad fixture, or FAILs golden-good /
+the negative-control, is itself a §11.4 bluff and the gate’s meta-test
+catches it.</p>
+<h3 id="gate-hooks">2.4 Gate hooks</h3>
+<ol type="1">
+<li><strong><code>wire/doc_integrity_gate.sh &lt;checkset.yaml&gt; [repo_root] [--divergence-class-only]</code></strong>
+— the HARD gate hook. Called BEFORE any render in
+<code>sync_all_markdown_exports.sh</code> / Docs Chain
+<code>verify</code> / <code>commit_all.sh</code>; export/commit is
+REFUSED on exit 1.</li>
+<li><strong><code>wire/CM-DOC-INTEGRITY-VALIDATION.gate.sh</code></strong>
+— recommended pre-build gate stub with 5 invariants (i)–(v).</li>
+</ol>
+<p>The <code>--divergence-class-only</code> flag splits the finding
+families at §11.4.186 clause-6 honest boundary: INTEGRITY-class findings
+(orphan-ref / Status-Type / location-status DATA defects) become
+NON-refusing — plan-data correctness is an operator decision the gate
+SURFACES, never MAKES. Only DEDUP / TIMELINE / CROSS-DOC / STRUCTURAL
+still REFUSE. This is the recommended initial posture until plan data is
+cleaned up (§11.4.50 ratchet: strengthen monotonically over time).</p>
+<hr />
+<h2 id="helixcodes-exportdocument-landscape">3. HelixCode’s
+export/document landscape</h2>
+<h3 id="export-pipeline">3.1 Export pipeline</h3>
+<p>The canonical markdown export pipeline is at:</p>
+<pre><code>&lt;repo-root&gt;/scripts/testing/sync_all_markdown_exports.sh</code></pre>
+<p>This is a <strong>meta-repo-root</strong> script that renders all
+<code>docs/**/*.md</code> to <code>.html</code> + <code>.pdf</code>
+siblings via <code>pandoc</code> + <code>weasyprint</code>, with
+optional Mermaid-aware preprocessing (<code>mmdc</code>). It serves the
+ENTIRE meta-repo’s doc set (constitution docs, helix_code docs, heliqa
+docs, etc.).</p>
+<p>Key characteristics: - Mode: <code>--check-only</code>,
+<code>--regenerate-all</code>, <code>--file &lt;path&gt;</code> -
+Idempotent: stale-sibling detection by mtime - Mermaid-awareness:
+<code>effective_source()</code> preprocessor renders each
+<code>```mermaid</code> fence to a PNG before pandoc sees the doc
+(§11.4.168) - Invoked from the meta-repo root</p>
+<h3 id="helixcode-doc-set-what-the-checkset-would-register">3.2
+HelixCode doc-set (what the checkset would register)</h3>
+<p>The following docs under <code>&lt;repo-root&gt;</code> carry tracked
+data that could diverge across representations:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Document</th>
+<th>Format</th>
+<th>Adapter</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/research/07.2026/00_master/MASTER_IMPLEMENTATION_PLAN.md</code></td>
+<td>markdown (plan-style tables)</td>
+<td>markdown-table + markdown-headings</td>
+<td>HelixCode’s delivery plan</td>
+</tr>
+<tr>
+<td><code>docs/Issues.md</code></td>
+<td>markdown H2 entries</td>
+<td>markdown-headings</td>
+<td>Open work items</td>
+</tr>
+<tr>
+<td><code>docs/Issues_Summary.md</code></td>
+<td>markdown table</td>
+<td>markdown-table</td>
+<td>Open-item summary</td>
+</tr>
+<tr>
+<td><code>docs/Fixed.md</code></td>
+<td>markdown H2 entries</td>
+<td>markdown-headings</td>
+<td>Closed work items</td>
+</tr>
+<tr>
+<td><code>docs/Fixed_Summary.md</code></td>
+<td>markdown table</td>
+<td>markdown-table</td>
+<td>Closed-item summary</td>
+</tr>
+<tr>
+<td><code>docs/workable_items.db</code></td>
+<td>SQLite</td>
+<td>sqlite (READ-ONLY)</td>
+<td>Workable-items SSoT (§11.4.93/.95)</td>
+</tr>
+</tbody>
+</table>
+<p>The checkset registers these sources and their authoritative bindings
+(e.g., <code>workable_items.db</code> is authoritative for status/type,
+plan for timeline).</p>
+<h3 id="three-seams-that-must-be-gated">3.3 Three seams that must be
+gated</h3>
+<p>Per §11.4.186 clause 1, the single no-divergence verdict gates ALL
+THREE:</p>
+<ol type="1">
+<li><strong>Export seam</strong> —
+<code>scripts/testing/sync_all_markdown_exports.sh</code> (render
+HTML+PDF). Gate runs FIRST, before any render.</li>
+<li><strong>Doc/DB sync verify</strong> — Docs Chain <code>verify</code>
+command (§11.4.106) — register a <code>doc_integrity</code> check node
+in the consumer’s <code>.docs_chain/contexts/*.yaml</code>.</li>
+<li><strong>Doc-set commit</strong> — <code>scripts/commit_all.sh</code>
+or <code>scripts/commit_docs.sh</code> (§11.4.22). Refuse the doc-set
+commit class on FAIL.</li>
+</ol>
+<hr />
+<h2 id="integration-design">4. Integration design</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                     Three seam gates (same binary)                   │
+│                                                                      │
+│  ┌────────────────────────────────────┐                             │
+│  │   Seam 1: Export render             │                             │
+│  │   sync_all_markdown_exports.sh      │                             │
+│  │                                     │                             │
+│  │   1. doc_integrity_gate.sh          │                             │
+│  │      checkset.yaml                  │                             │
+│  │      --divergence-class-only        │                             │
+│  │   2. exit 0? → proceed              │                             │
+│  │      exit 1? → abort                │                             │
+│  │   3. render HTML+PDF per existing   │                             │
+│  │      logic                          │                             │
+│  └────────────────────────────────────┘                             │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────┐               │
+│  │   Seam 2: Docs Chain verify                      │               │
+│  │   docs_chain verify &lt;context&gt;                     │               │
+│  │                                                  │               │
+│  │   New check node: doc_integrity                   │               │
+│  │   → doc-integrity verify checkset.yaml            │               │
+│  │                                                   │               │
+│  └──────────────────────────────────────────────────┘               │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────┐               │
+│  │   Seam 3: Doc-set commit                         │               │
+│  │   commit_all.sh / commit_docs.sh                  │               │
+│  │                                                  │               │
+│  │   Pre-flight: doc_integrity_gate.sh              │               │
+│  │   checkset.yaml (full strict mode)                │               │
+│  │   exit 0? → commit proceeds                       │               │
+│  │   exit 1? → commit refused                        │               │
+│  └──────────────────────────────────────────────────┘               │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="seam-1-export-render-gate">4.1 Seam 1: Export render gate</h3>
+<p>Insert into <code>scripts/testing/sync_all_markdown_exports.sh</code>
+BEFORE the loop that renders siblings.</p>
+<p><strong>Change:</strong> At line ~60, after variable setup and before
+<code>collect the .md source set</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- §11.4.186 doc-integrity gate (anti-divergence enforcement) ---</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Runs BEFORE any export render — a FAIL here refuses the export.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">CHECKSET</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$REPO_ROOT</span><span class="st">/.helix_code/doc_integrity/checkset.yaml&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-f</span> <span class="st">&quot;</span><span class="va">$CHECKSET</span><span class="st">&quot;</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">command</span> <span class="at">-v</span> bash <span class="op">&gt;</span>/dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="fu">bash</span> constitution/scripts/doc_integrity/wire/doc_integrity_gate.sh <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;</span><span class="va">$CHECKSET</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$REPO_ROOT</span><span class="st">&quot;</span> <span class="at">--divergence-class-only</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># exit 1 means hard FAIL; exit 3 means SKIP (source unavailable — proceed</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># with warning). Only exit 1 aborts.</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">rc</span><span class="op">=</span><span class="va">$?</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$rc</span><span class="st">&quot;</span> <span class="ot">-eq</span> 1 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>      <span class="bu">echo</span> <span class="st">&quot;FATAL §11.4.186: doc-integrity FAIL — export REFUSED. Fix cross-doc&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>           <span class="st">&quot;divergences before exporting.&quot;</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>      <span class="bu">exit</span> 1</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">&quot;WARN §11.4.186/§11.4.3: checkset not found at </span><span class="va">$CHECKSET</span><span class="st"> — gate skipped&quot;</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># --- end doc-integrity gate ---</span></span></code></pre></div>
+<p>The <code>--divergence-class-only</code> flag is used for the export
+seam (tolerates INTEGRITY-class plan-data correctness issues; only
+catches genuine DEDUP/TIMELINE/CROSS-DOC/STRUCTURAL divergences). The
+commit seam (Seam 3) uses full-strict mode (no flag) so no integrity
+issue can land.</p>
+<h3 id="seam-2-docs-chain-verify">4.2 Seam 2: Docs Chain verify</h3>
+<p>Register a <code>doc_integrity</code> check node in the consumer’s
+Docs Chain context at
+<code>.docs_chain/contexts/doc_integrity.yaml</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .docs_chain/contexts/doc_integrity.yaml</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.186 check node — cross-document consistency gate</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">checks</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> doc_integrity</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">    command</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      constitution/scripts/doc_integrity/wire/doc_integrity_gate.sh \</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        .helix_code/doc_integrity/checkset.yaml &quot;$REPO_ROOT&quot; \</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        --divergence-class-only</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">    description</span><span class="kw">: </span><span class="ch">&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      Run the doc-integrity validator against the registered doc-set.</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      REFUSES on any DEDUP/TIMELINE/CROSS-DOC/STRUCTURAL finding.</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      INTEGRITY-class findings are surfaced but non-refusing</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      (--divergence-class-only).</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">exit_on_fail</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<h3 id="seam-3-doc-set-commit-gate">4.3 Seam 3: Doc-set commit gate</h3>
+<p>Insert into <code>scripts/commit_all.sh</code> (or a delegated
+<code>scripts/commit_docs.sh</code> per §11.4.22) BEFORE the staging
+step, using FULL strict mode (no
+<code>--divergence-class-only</code>):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.186 pre-commit doc-integrity gate (full strict)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">CHECKSET</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$REPO_ROOT</span><span class="st">/.helix_code/doc_integrity/checkset.yaml&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-f</span> <span class="st">&quot;</span><span class="va">$CHECKSET</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ot">! </span><span class="fu">bash</span> constitution/scripts/doc_integrity/wire/doc_integrity_gate.sh <span class="dt">\</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>       <span class="st">&quot;</span><span class="va">$CHECKSET</span><span class="st">&quot;</span> <span class="st">&quot;</span><span class="va">$REPO_ROOT</span><span class="st">&quot;</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">rc</span><span class="op">=</span><span class="va">$?</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$rc</span><span class="st">&quot;</span> <span class="ot">-eq</span> 1 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="bu">echo</span> <span class="st">&quot;FATAL §11.4.186: doc-integrity FAIL — commit REFUSED.&quot;</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="bu">exit</span> 1</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<hr />
+<h2 id="consumer-checkset">5. Consumer checkset</h2>
+<p>The checkset is the <strong>consumer-owned</strong> configuration
+file (§11.4.28, decoupled from the engine) at
+<code>&lt;repo-root&gt;/.helix_code/doc_integrity/checkset.yaml</code>.
+It registers HelixCode’s doc-set and the authoritative-source
+bindings.</p>
+<h3 id="schema-reference">5.1 Schema reference</h3>
+<p>Full schema documented in the engine’s design at
+<code>constitution/scripts/doc_integrity/DESIGN.md §1.4</code>. Key
+elements:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sources</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;workable_items_db&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> sqlite</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;docs/workable_items.db&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">query</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;SELECT atm_id AS ticket, type, status, subject_norm, date(created) AS start FROM items&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;plan_v9_xlsx&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">kind</span><span class="kw">:</span><span class="at"> xlsx</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;docs/research/07.2026/00_master/plan.xlsx&quot;</span><span class="co">  # if maintained</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sheet</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Plan&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">columns</span><span class="kw">:</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">ticket</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;A&quot;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">subject</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;B&quot;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;C&quot;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">deadline</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;D&quot;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">status</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;E&quot;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;F&quot;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="fu">crossdoc_join</span><span class="kw">:</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authoritative</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;workable_items_db&quot;</span><span class="co">  # DB is the SSoT per §11.4.95</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">compare</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;status&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;type&quot;</span><span class="kw">]</span><span class="co">         # timeline comparison opt-in when plans are maintained</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;subject_norm&quot;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="fu">thresholds</span><span class="kw">:</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">subject_similarity</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.80</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="fu">id_pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;^ATM-</span><span class="sc">\\</span><span class="st">d+$&quot;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="fu">check_families</span><span class="kw">:</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> DEDUP</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> TIMELINE</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> CROSS-DOC</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> INTEGRITY</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> STRUCTURAL</span></span></code></pre></div>
+<h3 id="initial-posture-phased-ratchet-per-11.4.50">5.2 Initial posture
+(phased ratchet per §11.4.50)</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Condition</th>
+<th>Flag</th>
+<th>What it enforces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 (initial)</td>
+<td>Seam 1 (export)</td>
+<td><code>--divergence-class-only</code></td>
+<td>DEDUP/TIMELINE/CROSS-DOC/STRUCTURAL only. Plan-data correctness
+errors surfaced but non-blocking.</td>
+</tr>
+<tr>
+<td>2 (ratchet)</td>
+<td>Seam 3 (commit)</td>
+<td>(no flag, full strict)</td>
+<td>ALL five families including INTEGRITY. No integrity finding can land
+in a commit.</td>
+</tr>
+<tr>
+<td>3 (future)</td>
+<td>Seam 1 (export)</td>
+<td>(drop <code>--divergence-class-only</code>)</td>
+<td>Full strict on export too — once plan data is clean, strengthen
+monotonically.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pre-build-gate">6. Pre-build gate</h2>
+<p>The existing <code>CM-DOC-INTEGRITY-VALIDATION.gate.sh</code> stub
+(at <code>constitution/scripts/doc_integrity/wire/</code>) asserts the 5
+DESIGN §5.2 invariants:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Invariant</th>
+<th>What it checks</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(i)</td>
+<td>doc_integrity module exists AND builds</td>
+<td>READY (module on disk, <code>go build ./...</code> proven)</td>
+</tr>
+<tr>
+<td>(ii)</td>
+<td><code>selfcheck</code> exits 0 (golden fixtures wired)</td>
+<td>READY (embedded golden/good/bad/negative-control)</td>
+</tr>
+<tr>
+<td>(iii)</td>
+<td>export seam invokes the gate</td>
+<td><strong>PENDING</strong> — requires the Seam 1 insertion from
+§4.1</td>
+</tr>
+<tr>
+<td>(iv)</td>
+<td>consumer checkset exists and parses</td>
+<td><strong>PENDING</strong> — requires authoring the checkset from
+§5</td>
+</tr>
+<tr>
+<td>(v)</td>
+<td><code>verify</code> over the LIVE doc-set exits 0</td>
+<td><strong>PENDING</strong> — depends on (iv) + the live doc-set being
+clean</td>
+</tr>
+</tbody>
+</table>
+<p>The gate stub reports (iii)+(iv)+(v) as PENDING (honest, §11.4.6)
+until the checkset and seam edits land. Once all five pass, the gate
+goes green.</p>
+<hr />
+<h2 id="anti-bluff-self-validation-for-helixcodes-integration">7.
+Anti-bluff self-validation for HelixCode’s integration</h2>
+<p>Per §11.4.107(10) and §11.4.186 clause 4:</p>
+<ol type="1">
+<li>The <strong>engine</strong> is self-validated by its own
+<code>selfcheck</code> (golden-good PASS, golden-bad per family MUST
+FAIL, negative-control PASS). This runs as invariant (ii) of the
+pre-build gate.</li>
+<li>The <strong>integration</strong> must be mutation-tested
+independently. A paired §1.1 mutation at the Seam-1 level: temporarily
+remove the <code>doc_integrity_gate.sh</code> invocation from
+<code>sync_all_markdown_exports.sh</code> and assert the gate’s
+invariant (iii) FAILs. Revert after assertion.</li>
+<li>The <strong>checkset</strong> must be validated:
+<code>doc-integrity verify &lt;checkset&gt;</code> with a deliberately
+corrupted checkset path must exit 2 (config-error) — never a fake PASS.
+This is covered by the gate’s own behaviour (missing checkset → exit 3
+SKIP, malformed → exit 2).</li>
+</ol>
+<hr />
+<h2 id="composition-with-existing-mandates">8. Composition with existing
+mandates</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mandate</th>
+<th>How they compose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>§11.4.65 / CONST-066</strong> (universal markdown
+export)</td>
+<td>The export pipeline already exists. The doc-integrity gate runs
+BEFORE the render loop — it does NOT replace any check, it ADDS a
+pre-flight consistency check.</td>
+</tr>
+<tr>
+<td><strong>§11.4.168</strong> (exported-doc visual validation)</td>
+<td>Independent validator for the output artifact (PDF/HTML).
+Doc-integrity validates INPUT consistency. Both compose: the source must
+be internally consistent (doc-integrity) AND the output must be readable
+(visual validation). Neither substitutes for the other.</td>
+</tr>
+<tr>
+<td><strong>§11.4.106</strong> (Docs Chain)</td>
+<td>Doc-integrity becomes a new check node in the Docs Chain verify,
+registered via the consumer’s
+<code>.docs_chain/contexts/*.yaml</code>.</td>
+</tr>
+<tr>
+<td><strong>§11.4.108</strong> (four-layer fix-verification)</td>
+<td>Doc-integrity is a SOURCE-layer gate (pre-export/commit),
+complementing the ARTIFACT (post-build) and RUNTIME-ON-CLEAN-TARGET
+(post-deploy) layers.</td>
+</tr>
+<tr>
+<td><strong>§11.4.86</strong> (roster-backed auto-sync)</td>
+<td>The checkset fingerprint (sha256 of sorted member key set) triggers
+re-verification on ANY input change. The fingerprint check runs as part
+of the gate invocation.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="implementation-order">9. Implementation order</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Step</th>
+<th>Dependencies</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Author <code>.helix_code/doc_integrity/checkset.yaml</code>
+registering the doc-set from §3.2</td>
+<td>Must know which docs are tracked</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Insert gate into
+<code>scripts/testing/sync_all_markdown_exports.sh</code> per §4.1</td>
+<td>Checkset exists</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Register the <code>doc_integrity</code> check node in
+<code>.docs_chain/contexts/</code> per §4.2</td>
+<td>Docs Chain context directory exists</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Insert gate into commit wrapper per §4.3</td>
+<td>Checkset exists</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Wire the pre-build gate stub into the project’s pre-build
+verification script</td>
+<td>Steps 1-2 done</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Author the paired §1.1 mutation (strip gate from export seam →
+invariant FAILs)</td>
+<td>Steps 2 done</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Run <code>doc-integrity verify &lt;checkset&gt;</code> against the
+live doc-set, fix any surfaced divergences</td>
+<td>Steps 1 done (data cleanup may be iterative)</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Ratchet: when plan data is clean, drop
+<code>--divergence-class-only</code> from Seam 1</td>
+<td>Step 7 done</td>
+<td>Low</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="overview">10. Overview</h2>
+<p>The doc-integrity engine is <strong>already built</strong> and
+<strong>self-validated</strong>. What remains for HelixCode is
+consumer-side configuration and seam wiring — the YAML checkset, three
+Bash-level gate insertions, and one pre-build gate entry. The engine’s
+exit behaviour (0 PASS / 1 FAIL / 2 config-error / 3 SKIP) is designed
+for exactly this kind of non-invasive integration: the gate hook handles
+toolchain absence gracefully (exit 3 SKIP) and the
+<code>--divergence-class-only</code> flag allows phased ratchet per
+§11.4.50 so plan-data-cleanup and gate-enforcement can proceed
+independently.</p>
+</body>
+</html>

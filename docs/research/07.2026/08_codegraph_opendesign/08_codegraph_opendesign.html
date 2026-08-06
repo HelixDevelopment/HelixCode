@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>08_codegraph_opendesign</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">08_codegraph_opendesign</h1>
+</header>
+<h1 id="codegraph-opendesign-as-core-under-the-hood-providers">CodeGraph
++ OpenDesign as CORE Under-the-Hood Providers</h1>
+<p><strong>Scope:</strong> Wire <code>codegraph</code> (§11.4.78–80) and
+<code>opendesign</code> (§11.4.162) as first-class, portable,
+under-the-hood providers across <strong>HelixCode → HelixAgent →
+HelixLLM → LLMsVerifier</strong>, so end-user productivity exceeds
+industry norms (Gemini CLI / Claude Code).</p>
+<p><strong>Date:</strong> 2026-07-06 <strong>Author:</strong> T1
+deep-research + design subagent <strong>Classification:</strong>
+research + design (no source mutated in this pass)</p>
+<blockquote>
+<p>Governance: §11.4.6 (facts, not guesses — every “current state” claim
+below is a probe result), §11.4.28 / CONST-045 (no hardcoded host
+paths), §11.4.78–80 (CodeGraph), §11.4.99 (latest-source verification —
+see the Sources footer), §11.4.162 (OpenDesign).</p>
+</blockquote>
+<hr />
+<h2 id="current-state-probed-2026-07-06-11.4.6">1. Current State (probed
+2026-07-06 — §11.4.6)</h2>
+<h3 id="codegraph">1.1 CodeGraph</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Value (probed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.mcp.json</code> <code>codegraph.command</code></td>
+<td><code>/Users/milosvasic/.local/bin/codegraph</code> —
+<strong>macOS-absolute, broken on this Linux host</strong></td>
+</tr>
+<tr>
+<td><code>.mcp.json</code> <code>codegraph.args</code></td>
+<td><code>[&quot;serve&quot;,&quot;--mcp&quot;,&quot;--path&quot;,&quot;/Volumes/T7/Projects/helix_code&quot;]</code>
+— <strong>macOS <code>/Volumes</code> path, broken</strong></td>
+</tr>
+<tr>
+<td>Binary actually on PATH</td>
+<td><code>/home/milos/.local/bin/codegraph</code></td>
+</tr>
+<tr>
+<td>PATH binary <code>--version</code></td>
+<td><strong><code>1.1.1</code></strong></td>
+</tr>
+<tr>
+<td>npm global <code>@colbymchenry/codegraph</code></td>
+<td><strong><code>1.2.0</code></strong> (drift — PATH binary is NOT the
+npm-global build; §11.4.80 update lever)</td>
+</tr>
+<tr>
+<td>npm latest published</td>
+<td><code>1.2.0</code> (published ~2026-07-05)</td>
+</tr>
+<tr>
+<td><code>.codegraph/config.json</code></td>
+<td>present, <code>version:1</code>, broad <code>include</code>, large
+<code>exclude</code></td>
+</tr>
+<tr>
+<td><code>.codegraph/codegraph.db</code></td>
+<td>present, <strong>6.09 GB</strong>; index = <strong>102,708 files /
+1.78M nodes / 6.75M edges</strong></td>
+</tr>
+<tr>
+<td>node / npm</td>
+<td>node v24.18.0, npm 11.16.0</td>
+</tr>
+</tbody>
+</table>
+<p>Consequences: (a) the <code>.mcp.json</code> entry cannot launch on
+Linux (path rot — the exact CONST-045 / §11.4.28 hardcoded-host-path
+defect); (b) a <strong>version skew</strong> — the launched binary would
+be 1.1.1 while the org-mandated latest is 1.2.0; (c) the index is
+<strong>bloated</strong> — 102k files / 6 GB is far more than HelixCode
++ own-org submodules; it is pulling in
+<code>submodules/helix_qa/tools/opensource/**</code> (appium,
+unstructured, docling, midscene, marker, ui-tars …) —
+<strong>third-party vendored trees that §11.4.79 says must be
+EXCLUDED</strong>, not indexed.</p>
+<p><code>.codegraph/config.json</code> <strong>exclude</strong> already
+drops third-party at the repo root (<code>dependencies/LLama_CPP</code>,
+<code>dependencies/Ollama</code>,
+<code>dependencies/HuggingFace_Hub</code>, <code>cli_agents/**</code>,
+<code>cli_agents_resources/**</code>,
+<code>github_pages_website/**</code>, <code>awesome-ai-memory/**</code>)
+— but it does <strong>not</strong> exclude the vendored subtree inside
+<code>submodules/helix_qa/tools/opensource/**</code>, nor
+<code>dependencies/HelixDevelopment/helix_llm/**</code> (a duplicate of
+<code>submodules/helix_llm</code>). Own-org submodules
+(<code>submodules/helix_agent</code>, <code>submodules/helix_llm</code>,
+<code>submodules/llms_verifier</code>,
+<code>submodules/llm_orchestrator</code>,
+<code>submodules/llm_provider</code>,
+<code>submodules/vision_engine</code>,
+<code>submodules/doc_processor</code>,
+<code>submodules/challenges</code>, <code>submodules/security</code>,
+<code>submodules/containers</code>, <code>submodules/helix_qa</code>
+<strong>source</strong>) are <strong>not</strong> excluded → they ARE
+indexed (satisfies §11.4.79 (a)); the gap is that vendored third-party
+under them is ALSO indexed (violates §11.4.79 (b) and bloats the
+DB).</p>
+<p>Reference scripts already present (consumed <strong>by
+reference</strong>, §11.4.80 — do not copy):
+<code>constitution/scripts/codegraph_update.sh</code>,
+<code>codegraph_sync.sh</code>,
+<code>codegraph_update_and_resync.sh</code>; local
+<code>scripts/codegraph_setup.sh</code> +
+<code>codegraph_validate.sh</code>;
+<code>docs/codegraph/Status.md</code> + <code>Status_Summary.md</code>
+(+ html/pdf) ledgers exist.</p>
+<h3 id="opendesign">1.2 OpenDesign</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Value (probed)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.mcp.json</code> <code>open-design</code></td>
+<td><code>disabled: true</code></td>
+</tr>
+<tr>
+<td><code>open-design.command</code></td>
+<td><code>npx -y open-design-mcp</code></td>
+</tr>
+<tr>
+<td><code>open-design.env</code></td>
+<td><code>OD_DAEMON_URL=http://localhost:7456</code></td>
+</tr>
+<tr>
+<td>npm <code>open-design-mcp</code> latest</td>
+<td><code>0.16.1</code> (the MCP shim package — resolvable)</td>
+</tr>
+<tr>
+<td>OD daemon on <code>:7456</code></td>
+<td><strong>NOT running</strong>
+(<code>curl http://localhost:7456/api/health</code> empty)</td>
+</tr>
+<tr>
+<td><code>od</code> on PATH</td>
+<td><strong><code>/usr/bin/od</code> = GNU coreutils octal-dump — NAME
+COLLISION</strong>; the OpenDesign <code>od</code> CLI is NOT
+installed</td>
+</tr>
+<tr>
+<td>OpenDesign usage in HelixCode source</td>
+<td><strong>none</strong> (greenfield — only the disabled MCP
+entry)</td>
+</tr>
+<tr>
+<td>od MCP tools available in-session (deferred)</td>
+<td><code>od_list_projects</code>, <code>od_get_project</code>,
+<code>od_create_project</code>, <code>od_update_project</code>,
+<code>od_delete_project</code>, <code>od_compose_brief</code>,
+<code>od_generate_design</code>, <code>od_lint_artifact</code>,
+<code>od_save_artifact</code>, <code>od_save_project_file</code></td>
+</tr>
+</tbody>
+</table>
+<p>Consequences: (a) OpenDesign is fully unwired — disabled MCP + no
+daemon + no source consumption; (b) the <strong><code>od</code> command
+name collides with coreutils</strong> on Linux, so the constitution’s
+“<code>od mcp install</code>” one-liner is unusable as-is here —
+OpenDesign must be driven via the <strong>daemon +
+<code>npx open-design-mcp</code> MCP shim</strong> (or an explicit
+non-<code>od</code> binary path), never bare <code>od</code>; (c)
+enabling it requires the OD daemon up on <code>:7456</code> with BYOK
+env.</p>
+<h3 id="helixcode-helixagent-helixllm-integration-seams-probed">1.3
+HelixCode / HelixAgent / HelixLLM integration seams (probed)</h3>
+<ul>
+<li><strong>HelixCode</strong> <code>helix_code/internal/</code>:
+<code>repomap</code> (Aider-style repo map / file ranker for prompt
+context), <code>context</code>, <code>memory</code>,
+<code>projectmemory</code>, <code>cognee</code>, <code>rules</code>,
+<code>mcp</code> (an MCP <strong>client</strong> —
+lifecycle/config/transport), <code>provider</code> +
+<code>providers</code> (LLM providers), <code>editor</code>,
+<code>theme</code> (5 semantic roles × ANSI16/256/truecolor — the
+<strong>TUI token surface</strong>).</li>
+<li><strong>HelixCode UI surfaces</strong>
+<code>helix_code/applications/</code>: <code>desktop</code> (Fyne),
+<code>terminal_ui</code> (tview/tcell), plus
+<code>ios/android/aurora_os/harmony_os</code>;
+<code>internal/theme/{types,loader, builtin,detect}.go</code> is the
+theme engine (light/dark auto-detect + loader).</li>
+<li><strong>HelixAgent</strong>
+<code>submodules/helix_agent/internal/</code>: <code>rag</code>
+(<code>hybrid</code>, <code>hyde</code>, <code>advanced</code>
+pipeline), <code>mcp</code>, <code>memory</code>, <code>storage</code> —
+the retrieval/agent-context layer.</li>
+<li><strong>HelixLLM</strong> <code>submodules/helix_llm/</code>:
+provider/serving layer (<code>cmd</code>, <code>internal</code>,
+<code>pkg</code>); no RAG/embedding package — it serves models;
+code-context is assembled <strong>upstream</strong> in
+HelixCode/HelixAgent, not inside HelixLLM.</li>
+<li><strong>LLMsVerifier</strong> <code>submodules/llms_verifier</code>:
+the CONST-036 single source of truth for model/provider/capability
+metadata (unchanged by this work; it is a consumer of the same MCP
+wiring, not a code-context producer).</li>
+</ul>
+<hr />
+<h2 id="codegraph-latest-interface-verified-2026-07-06-11.4.99">2.
+CodeGraph — latest interface (verified 2026-07-06, §11.4.99)</h2>
+<p>Ground truth from <code>codegraph --help</code> on this host + the
+upstream README:</p>
+<ul>
+<li><p><strong>Start MCP server:</strong>
+<code>codegraph serve --mcp</code> (stdio). <code>-p/--path</code> is
+<strong>optional in MCP mode — it uses <code>rootUri</code> from the
+client</strong>; <code>--no-watch</code> disables the file watcher
+(useful on slow FS).</p></li>
+<li><p><strong>Portable <code>.mcp.json</code>
+(upstream-recommended):</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span> <span class="dt">&quot;mcpServers&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;codegraph&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;stdio&quot;</span><span class="fu">,</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;codegraph&quot;</span><span class="fu">,</span> <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;serve&quot;</span><span class="ot">,</span><span class="st">&quot;--mcp&quot;</span><span class="ot">]</span> <span class="fu">}</span> <span class="fu">}</span> <span class="fu">}</span></span></code></pre></div>
+<p><code>command: &quot;codegraph&quot;</code> (bare, resolved on PATH) —
+<strong>no host path, no <code>--path</code></strong> → satisfies
+§11.4.28 / CONST-045.</p></li>
+<li><p><strong>MCP tools:</strong> primary
+<code>codegraph_explore</code> (“how does X work / how does X reach Y /
+survey an area” in one call); unlisted-by-default
+<code>codegraph_node</code>, <code>codegraph_search</code>,
+<code>codegraph_callers</code>, <code>codegraph_callees</code>,
+<code>codegraph_impact</code>, <code>codegraph_files</code>,
+<code>codegraph_status</code> — re-enable via env
+<code>CODEGRAPH_MCP_TOOLS=explore,node,search,callers,…</code>.</p></li>
+<li><p><strong>Permissions:</strong> auto-allow with
+<code>&quot;permissions&quot;: { &quot;allow&quot;: [&quot;mcp__codegraph__*&quot;] }</code> in
+<code>.claude/settings.json</code>.</p></li>
+<li><p><strong>CLI parity (for scripts/agents):</strong>
+<code>codegraph explore|node|query|callers|callees|impact| affected|files|status|sync|index</code>
+— same output as the MCP tools, callable from bash.</p></li>
+<li><p><strong>Config:</strong> <code>.codegraph/config.json</code>
+(present) — <code>include</code> / <code>exclude</code>
+(gitignore-style, repo-root-relative), <code>maxFileSize</code> (default
+1 MiB), <code>extractDocstrings</code>, <code>trackCallSites</code>,
+<code>extensions</code> (map custom ext → language).
+<code>codegraph install</code> writes the MCP entry into Claude Code /
+Cursor / Codex / opencode / Hermes automatically (no hand-editing
+needed).</p></li>
+<li><p><strong>Lifecycle:</strong> <code>init</code> (first index),
+<code>sync</code> (incremental), <code>index</code> (full rebuild),
+<code>upgrade</code> (self-update). <code>.codegraph/codegraph.db</code>
+is the SQLite graph — gitignored, with <code>codegraph index</code> as
+its §11.4.77 regeneration mechanism.</p></li>
+</ul>
+<h2 id="opendesign-latest-interface-verified-2026-07-06-11.4.99">3.
+OpenDesign — latest interface (verified 2026-07-06, §11.4.99)</h2>
+<ul>
+<li><strong>Architecture:</strong> a local-first desktop app +
+<strong>daemon on <code>:7456</code></strong> (web UI at
+<code>http://localhost:7456</code>) + an <strong>MCP server</strong>
+(<code>open-design-mcp</code>, npm <code>0.16.1</code>). Your coding
+agent is the design engine (BYOK); artifacts export to HTML/PDF/PPTX/MP4
+as real files.</li>
+<li><strong>Design systems / tokens:</strong> portable Markdown
+<code>DESIGN.md</code> (9-section schema — Color, Typography, Spacing,
+Layout, Components, Motion, Voice, Brand, Anti-patterns) under
+<code>design-systems/&lt;brand&gt;/</code>, each with <strong>light +
+dark</strong> variants and a generated <code>tokens.css</code>. “Switch
+a system → the next render uses the new tokens.” This is the token/theme
+source of truth §11.4.162 mandates.</li>
+<li><strong>MCP tools (this session’s schemas):</strong>
+<code>od_create_project</code> / <code>od_get_project</code> /
+<code>od_update_project</code> / <code>od_list_projects</code> /
+<code>od_delete_project</code> (project + stored
+<code>customInstructions</code> / brand rules),
+<code>od_compose_brief</code>, <code>od_generate_design</code> (BYOK
+render — needs <code>BYOK_BASE_URL</code> + <code>BYOK_API_KEY</code> +
+<code>BYOK_MODEL</code>,
+<code>kind ∈ {prototype,deck,template,image,video,audio}</code>,
+<code>maxTokens</code> up to 200k), <code>od_lint_artifact</code>
+(design-lint a rendered artifact), <code>od_save_artifact</code> /
+<code>od_save_project_file</code>.</li>
+<li><strong>BYOK proxy:</strong>
+<code>POST /api/proxy/{anthropic,openai,azure,google,ollama,senseaudio}/stream</code>.
+Env: <code>OD_DAEMON_URL</code>, <code>BYOK_BASE_URL</code>,
+<code>BYOK_API_KEY</code>, <code>BYOK_MODEL</code>,
+<code>OD_BIND_HOST</code> (default <code>127.0.0.1</code>),
+<code>OD_ALLOWED_ORIGINS</code>, <code>OD_ALLOWED_INTERNAL_HOSTS</code>
+(SSRF opt-out for a local Ollama/HelixLLM base URL).</li>
+<li><strong>CLI caveat (Linux):</strong> the OpenDesign CLI is
+<code>od</code>, which <strong>collides with coreutils
+<code>/usr/bin/od</code></strong>. Do <strong>not</strong> rely on bare
+<code>od</code>; drive OpenDesign through the daemon +
+<code>npx open-design-mcp</code> MCP shim, and if a CLI is needed
+install it under an unambiguous name (e.g. <code>opendesign</code>) or
+an explicit path — never shadow coreutils.</li>
+</ul>
+<hr />
+<h2 id="portable-wiring-fix-linux-correct-host-agnostic">4. Portable
+Wiring Fix (Linux-correct, host-agnostic)</h2>
+<h3 id="mcp.json-replace-both-entries">4.1 <code>.mcp.json</code> —
+replace both entries</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;mcpServers&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;codegraph&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;stdio&quot;</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;codegraph&quot;</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;serve&quot;</span><span class="ot">,</span> <span class="st">&quot;--mcp&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;env&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;CODEGRAPH_MCP_TOOLS&quot;</span><span class="fu">:</span> <span class="st">&quot;explore,node,search,callers,callees,impact,files,status&quot;</span> <span class="fu">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;open-design&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;stdio&quot;</span><span class="fu">,</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;command&quot;</span><span class="fu">:</span> <span class="st">&quot;npx&quot;</span><span class="fu">,</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;args&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;-y&quot;</span><span class="ot">,</span> <span class="st">&quot;open-design-mcp&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;env&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;OD_DAEMON_URL&quot;</span><span class="fu">:</span> <span class="st">&quot;http://localhost:7456&quot;</span><span class="fu">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;BYOK_BASE_URL&quot;</span><span class="fu">:</span> <span class="st">&quot;${HELIX_OD_BYOK_BASE_URL}&quot;</span><span class="fu">,</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;BYOK_API_KEY&quot;</span><span class="fu">:</span>  <span class="st">&quot;${HELIX_OD_BYOK_API_KEY}&quot;</span><span class="fu">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;BYOK_MODEL&quot;</span><span class="fu">:</span>    <span class="st">&quot;${HELIX_OD_BYOK_MODEL}&quot;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;disabled&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;autoApprove&quot;</span><span class="fu">:</span> <span class="ot">[]</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;media-validator&quot;</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">&quot;...unchanged...&quot;</span> <span class="fu">}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>Key changes (each maps to a probed defect): 1.
+<strong>codegraph</strong> → bare <code>codegraph</code> on PATH, drop
+the macOS binary path AND the <code>/Volumes</code> <code>--path</code>
+(rootUri supplies it). CONST-045 / §11.4.28 satisfied; portable to
+macOS/Linux/WSL. Add <code>CODEGRAPH_MCP_TOOLS</code> so
+<code>impact</code>/<code>callers</code>/<code>callees</code> (the
+high-value graph tools) are exposed, not just <code>explore</code>. 2.
+<strong>open-design</strong> → <code>disabled:false</code>; BYOK keys
+come from <strong>env expansion of <code>.env</code> secrets</strong>
+(<code>HELIX_OD_BYOK_*</code>, mode-0600, gitignored — §11.4.10 /
+CONST-042), never inline. Point <code>BYOK_BASE_URL</code> at a
+HelixLLM/Ollama base for a fully-local design engine (add its host to
+<code>OD_ALLOWED_INTERNAL_HOSTS</code>). 3.
+<code>.claude/settings.json</code> →
+<code>&quot;permissions&quot;: { &quot;allow&quot;: [&quot;mcp__codegraph__*&quot;,    &quot;mcp__open-design__*&quot;] }</code>
+for zero-friction use.</p>
+<h3 id="codegraph-index-scope-enforce-11.4.79-own-org-in-third-party-out">4.2
+CodeGraph index scope — enforce §11.4.79 (own-org IN, third-party
+OUT)</h3>
+<p>Add to <code>.codegraph/config.json</code> <code>exclude</code>
+(keeps own-org <strong>source</strong> indexed, drops vendored
+third-party bloat that inflated the DB to 6 GB / 102k files):</p>
+<pre><code>&quot;submodules/helix_qa/tools/opensource/**&quot;,
+&quot;submodules/**/vendor/**&quot;,
+&quot;submodules/**/node_modules/**&quot;,
+&quot;dependencies/HelixDevelopment/**&quot;        // duplicate of submodules/helix_llm; index once</code></pre>
+<p>Leave <code>submodules/helix_agent/**</code>,
+<code>submodules/helix_llm/**</code>,
+<code>submodules/llms_verifier/**</code>,
+<code>submodules/llm_orchestrator/**</code>,
+<code>submodules/llm_provider/**</code>,
+<code>submodules/vision_engine/**</code>,
+<code>submodules/doc_processor/**</code>,
+<code>submodules/security/**</code>,
+<code>submodules/containers/**</code> <strong>indexed</strong> (own-org,
+§11.4.79 (a)). Record the include/exclude rationale in a
+<code>.codegraph/config.json</code> comment sidecar (§11.4.79 audit
+trail). Then <code>bash scripts/codegraph_setup.sh</code> (re-index) +
+<code>bash scripts/codegraph_validate.sh</code> with a probe resolving a
+symbol that lives ONLY inside an own-org submodule (the §11.4.79 (4)
+cross-submodule proof) + the §1.1 paired mutation (temporarily exclude
+that submodule → validate MUST FAIL → restore).</p>
+<h3 id="version-drift-weekly-automation-11.4.80">4.3 Version drift +
+weekly automation (§11.4.80)</h3>
+<ul>
+<li>Reconcile the PATH binary (1.1.1) with npm-global (1.2.0): run
+<code>constitution/scripts/codegraph_update.sh</code> (npm-installs
+latest, anti-bluff verifies <code>codegraph --version</code> reflects
+it) then <code>codegraph_sync.sh</code>. Ensure the npm-global bin dir
+precedes <code>/home/milos/.local/bin</code> on PATH, or repoint
+<code>/home/milos/.local/bin/codegraph</code>.</li>
+<li>Schedule <code>codegraph_update_and_resync.sh</code> weekly
+(§11.4.80 cadence floor); append results to
+<code>docs/codegraph/Status.md</code> + export html/pdf via the §11.4.65
+exporter.</li>
+</ul>
+<h3 id="opendesign-bring-up-one-time-outside-test-execution-11.4.98b">4.4
+OpenDesign bring-up (one-time, outside test execution —
+§11.4.98(B))</h3>
+<ol type="1">
+<li>Install the OpenDesign desktop/daemon (per upstream) — start daemon
+on <code>:7456</code> (<code>OD_BIND_HOST=127.0.0.1</code>).
+Health-gate: <code>curl -fsS localhost:7456/api/health</code>.</li>
+<li>Put <code>HELIX_OD_BYOK_*</code> in <code>.env</code> (0600,
+gitignored); add HelixLLM/Ollama host to
+<code>OD_ALLOWED_INTERNAL_HOSTS</code> if BYOK points local.</li>
+<li><code>od_create_project</code> a
+<strong><code>helixcode-brand</code></strong> project seeded with
+HelixCode brand assets (<code>assets/</code> logos/themes) +
+<code>customInstructions</code> = the HelixCode design rules → becomes
+the stored brand contract every <code>od_generate_design</code>
+merges.</li>
+<li>Add a §11.4.78-style unforgeable challenge: an agent fact obtainable
+only via an <code>od_*</code> MCP call
+(e.g. <code>od_list_projects</code> returns
+<code>helixcode-brand</code>) + a codegraph fact
+(<code>codegraph_status</code> node count) → proves both providers are
+genuinely wired, not faked.</li>
+</ol>
+<hr />
+<h2 id="core-provider-integration-design">5. Core-Provider Integration
+Design</h2>
+<p>Both tools become <strong>under-the-hood providers</strong> (services
+the platform calls transparently), not operator-facing add-ons. Two
+clean seams already exist: HelixCode/HelixAgent each ship an <strong>MCP
+client</strong> (<code>internal/mcp</code>), and HelixCode ships a
+<strong>repo-map/context</strong> layer and a <strong>theme</strong>
+engine. We plug the two MCP servers into those.</p>
+<h3 id="codegraph-the-code-intelligence-provider-rag-agent-context-retrieval">5.1
+CodeGraph = the code-intelligence provider (RAG + agent context +
+retrieval)</h3>
+<pre><code>                ┌──────────────── codegraph serve --mcp (stdio, 100% local SQLite graph) ───────────────┐
+                │  tools: explore · node · search · callers · callees · impact · affected · files       │
+                └───────────────────────────────────────────────────────────────────────────────────────┘
+                        ▲ MCP                              ▲ MCP                         ▲ CLI (bash)
+        HelixCode internal/mcp client         HelixAgent internal/mcp client    scripts / gates / CI-less
+                        │                                   │                              │
+   ┌────────────────────┴───────────┐        ┌──────────────┴───────────┐      codegraph impact &lt;sym&gt;
+   │ internal/repomap  (file ranker) │        │ internal/rag pipeline    │      → §11.4.145 blast-radius,
+   │ internal/context  (prompt asm)  │        │  (hybrid · hyde · adv.)  │      §11.4.108 runtime-sig scope
+   │ internal/memory / cognee / rules│        │ internal/memory          │
+   └─────────────────────────────────┘        └──────────────────────────┘</code></pre>
+<p>Concrete seams:</p>
+<ol type="1">
+<li><strong><code>internal/repomap</code> → CodeGraph-backed
+ranking.</strong> Today repomap builds an Aider-style map from
+tree-sitter + a heuristic <code>file_ranker</code>. Add a
+<code>CodeGraphSource</code> that, given the current task/query, calls
+<code>codegraph_explore</code> / <code>codegraph_node</code> (via
+<code>internal/mcp</code>) and returns graph-ranked symbols + call
+trails. This is the single biggest productivity lever: the model gets a
+<strong>precise dependency-aware slice</strong> instead of a whole-file
+dump — the documented CodeGraph “90% fewer exploration tokens / tool
+calls” effect. Keep the tree-sitter path as the offline fallback when
+the MCP server is down (§11.4.6 honest degradation).</li>
+<li><strong><code>internal/context</code> / <code>cognee</code> /
+<code>memory</code> → CodeGraph as a retrieval source.</strong> When
+assembling an LLM prompt, add codegraph results as a first-class context
+contributor (symbol source + callers/callees), deduped against
+memory/RAG. Cache by symbol so repeated turns don’t re-query.</li>
+<li><strong>HelixAgent <code>internal/rag</code> → CodeGraph as a
+retriever alongside the vector store.</strong> The <code>hybrid</code>
+retriever already fuses sources; register a <code>codegraph</code>
+retriever whose “hits” are graph nodes/edges. <code>hyde</code>
+(hypothetical-doc) queries can be grounded by first resolving the real
+symbols via <code>codegraph_search</code>, cutting hallucinated file
+paths.</li>
+<li><strong>Impact-aware agent actions.</strong> Before an edit, agents
+call <code>codegraph_impact &lt;symbol&gt;</code> /
+<code>codegraph affected &lt;files&gt;</code> to enumerate blast radius
+(§11.4.145 impact-research angle 2, §11.4.108 runtime-signature scoping)
+and to pick the tests to run — turning “run the whole suite” into “run
+the affected suite” (§11.4.82 iteration-speedup).</li>
+<li><strong>LLMsVerifier / HelixLLM.</strong> HelixLLM stays a pure
+serving layer; it does <strong>not</strong> import codegraph
+(code-context is assembled upstream). LLMsVerifier remains the
+model-metadata SoT and simply shares the same MCP wiring. No coupling
+added — preserves §11.4.28 decoupling.</li>
+</ol>
+<p>Provider contract (Go interface sketch, HelixCode side — lives in
+<code>internal/provider</code> or a new
+<code>internal/codeintel</code>):
+<code>type CodeIntel interface { Explore(ctx, query) ([]Symbol, error); Node(ctx, name) (Symbol, error); Impact(ctx, symbol) ([]Ref, error); Affected(ctx, files) ([]TestFile, error) }</code>,
+with an <code>mcpCodeIntel</code> impl over <code>internal/mcp</code>
+and a <code>nullCodeIntel</code> fallback. Decoupled: the submodules
+never hardcode a codegraph path — they consume the interface / the MCP
+endpoint injected by config (§11.4.28 / CONST-045).</p>
+<h3 id="opendesign-the-design-system-provider-all-helixcode-ui-tokensthemes">5.2
+OpenDesign = the design-system provider (all HelixCode UI
+tokens/themes)</h3>
+<pre><code>   design-systems/helixcode/{DESIGN.md, tokens.css}  ◄── od_create/update_project (brand rules, light+dark)
+                 │  (single source of design truth — §11.4.162)
+     ┌───────────┼─────────────────────────────┬────────────────────────────┐
+     ▼           ▼                             ▼                            ▼
+  TUI theme   Desktop (Fyne)              Web frontend               od_lint_artifact
+  internal/   applications/desktop        (od_generate_design →       (visual/design gate
+  theme       fyne.Theme adapter          real HTML/CSS from tokens)  in review, §11.4.162)
+  (roles →                                                            
+  token map)                                                          </code></pre>
+<p>Concrete seams:</p>
+<ol type="1">
+<li><strong>Token single-source.</strong> Create
+<code>design-systems/helixcode/</code> (via
+<code>od_create_project</code> + <code>od_save_project_file</code>)
+holding <code>DESIGN.md</code> (9-section, light+dark) and generated
+<code>tokens.css</code>. This is the §11.4.162 mandated token/theme
+source; brand colors come from <code>assets/</code> (no ad-hoc CSS
+anywhere).</li>
+<li><strong>TUI (<code>internal/theme</code>) adapter.</strong>
+<code>internal/theme</code> maps 5 semantic roles (info/warn/
+error/highlight/dim) × ANSI depths. Add a <code>loader.go</code> path
+that reads the OpenDesign <code>tokens.css</code> (semantic → hex) and
+down-samples to ANSI16/256/truecolor, so the terminal UI and the
+web/desktop UIs share one palette. <code>detect.go</code> already picks
+light/dark → select the matching OpenDesign variant.</li>
+<li><strong>Desktop (Fyne) adapter.</strong> Implement
+<code>fyne.Theme</code> backed by the OpenDesign tokens (Color/Font/Size
+lookups → token values), giving the Fyne GUI the same brand +
+light/dark.</li>
+<li><strong>Web frontend generation.</strong> Use
+<code>od_generate_design</code> (BYOK → HelixLLM/Ollama) to render
+HTML/CSS <strong>from the tokens</strong> rather than hand-CSS;
+<code>od_lint_artifact</code> becomes a design gate wired into the
+§11.4.162 / §11.4.125 review (no overlaps, no font collisions,
+WCAG-adjacent checks), each UI change carrying a visual-regression
+artifact.</li>
+<li><strong>Decoupling (§11.4.28).</strong> OpenDesign is consumed by
+reference (daemon + MCP); HelixCode never vendors it. The brand project
+is HelixCode-owned data; the engine stays project-agnostic. If a needed
+UI primitive is missing, extend OpenDesign upstream (§11.4.74
+extend-don’t-reimplement), never fork a local CSS hack.</li>
+</ol>
+<h3 id="why-this-beats-industry-norms-productivity-levers">5.3 Why this
+beats industry norms (productivity levers)</h3>
+<ul>
+<li><strong>Fewer tokens / fewer tool calls per task.</strong>
+CodeGraph-ranked context replaces read-the-whole-file exploration — the
+documented ~90% exploration-cost cut — directly serving §11.4.141
+token-efficiency. Gemini/Claude Code re-grep and re-read;
+HelixCode/Agent query a pre-built local graph.</li>
+<li><strong>Impact-scoped edits + tests.</strong>
+<code>impact</code>/<code>affected</code> turn full-suite runs into
+affected-set runs (§11.4.82), and feed §11.4.145 blast-radius +
+§11.4.108 runtime-signature scoping — a correctness lever competitors
+lack out of the box.</li>
+<li><strong>One brand, every surface, no drift.</strong> OpenDesign
+tokens govern TUI + desktop + web from a single light/dark source with a
+machine <code>od_lint_artifact</code> gate — eliminating the per-surface
+CSS divergence that plagues multi-frontend products.</li>
+<li><strong>100% local, zero-cloud, BYOK.</strong> CodeGraph SQLite is
+local; OpenDesign BYOK can point at HelixLLM/Ollama — no data egress, no
+per-call SaaS cost, aligned with the offline mandates.</li>
+<li><strong>Recursive reuse.</strong> Both are org-wide providers
+(§11.4.79 indexes every own-org submodule; §11.4.162 governs every UI),
+so the leverage compounds across HelixAgent/HelixLLM/LLMsVerifier rather
+than being a HelixCode-only tweak.</li>
+</ul>
+<hr />
+<h2 id="top-risks">6. Top Risks</h2>
+<ol type="1">
+<li><strong>CodeGraph index bloat / staleness.</strong> 6 GB / 102k
+files today because vendored third-party is indexed; without the §4.2
+excludes, re-index is slow and RAG hits are polluted by
+appium/docling/etc. Mitigation: the exclude patches + weekly
+<code>sync</code> (§11.4.80) + a size budget in
+<code>codegraph_validate.sh</code>. Also reconcile the 1.1.1↔︎1.2.0 drift
+before wiring.</li>
+<li><strong>OpenDesign operational fragility.</strong> The daemon must
+be up on <code>:7456</code> with BYOK secrets, and the
+<code>od</code>↔︎coreutils name collision breaks the upstream one-liner
+on Linux. If the daemon is down, <code>od_generate_design</code> fails →
+UI generation blocked. Mitigation: daemon health-gate before use, honest
+§11.4.3 SKIP-with-reason when absent (never a faked design PASS), BYOK
+pointed at local HelixLLM/Ollama, drive only via
+<code>npx open-design-mcp</code> (never bare <code>od</code>).</li>
+<li><strong>Coupling / decoupling regressions (§11.4.28 /
+CONST-045).</strong> Re-introducing a hardcoded host path (the original
+defect) or letting an own-org submodule reach into a codegraph/OD host
+path would break portability + reuse. Mitigation: bare-command MCP
+entries, env-injected BYOK, the interface-based <code>CodeIntel</code>
+seam, and a §11.4.109-class guard/gate that greps <code>.mcp.json</code>
++ submodule sources for absolute
+<code>/Users</code>/<code>/Volumes</code>/<code>/home/&lt;user&gt;</code>
+paths.</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>CodeGraph npm (latest <code>1.2.0</code>):
+https://www.npmjs.com/package/<span class="citation" data-cites="colbymchenry/codegraph">@colbymchenry/codegraph</span></li>
+<li>CodeGraph repo + README (MCP tools, <code>serve --mcp</code>,
+<code>.mcp.json</code>, config schema):
+https://github.com/colbymchenry/codegraph ·
+https://github.com/colbymchenry/codegraph/blob/main/README.md</li>
+<li>CodeGraph releases / changelog:
+https://github.com/colbymchenry/codegraph/releases ·
+https://github.com/colbymchenry/codegraph/blob/main/CHANGELOG.md</li>
+<li>CodeGraph CLI ground truth: <code>codegraph --help</code> /
+<code>codegraph serve --help</code> / <code>codegraph status</code> on
+host <code>/home/milos/.local/bin/codegraph</code> (binary
+<code>--version</code> = 1.1.1; npm-global = 1.2.0), 2026-07-06.</li>
+<li>OpenDesign repo + README (daemon <code>:7456</code>, MCP server,
+DESIGN.md 9-section tokens, light/dark, BYOK proxy):
+https://github.com/nexu-io/open-design ·
+https://raw.githubusercontent.com/nexu-io/open-design/main/README.md</li>
+<li>OpenDesign releases (v0.8.0 “Plugin Everything”):
+https://github.com/nexu-io/open-design/releases</li>
+<li>OpenDesign QUICKSTART:
+https://github.com/nexu-io/open-design/blob/main/QUICKSTART.md</li>
+<li>npm <code>open-design-mcp</code> (latest <code>0.16.1</code>):
+<code>npm view open-design-mcp version</code>, 2026-07-06.</li>
+<li>OpenDesign <code>od_*</code> MCP tool schemas: this session’s loaded
+tool definitions (<code>od_generate_design</code>,
+<code>od_list_projects</code>, <code>od_create_project</code>,
+<code>od_update_project</code>, <code>od_lint_artifact</code>,
+<code>od_compose_brief</code>, <code>od_save_artifact</code>,
+<code>od_save_project_file</code>, <code>od_get_project</code>,
+<code>od_delete_project</code>).</li>
+<li>Local probes (2026-07-06): <code>.mcp.json</code>,
+<code>.codegraph/config.json</code>, <code>codegraph status</code>
+(102,708 files / 1.78M nodes / 6.09 GB),
+<code>curl localhost:7456</code> (daemon down),
+<code>command -v od</code> → <code>/usr/bin/od</code> (coreutils
+collision), <code>.env</code>
+<code>HELIX_RELEASE_PREFIX=helixcode</code>.</li>
+</ul>
+</body>
+</html>

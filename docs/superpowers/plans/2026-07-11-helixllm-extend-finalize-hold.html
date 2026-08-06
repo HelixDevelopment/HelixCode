@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2026-07-11-helixllm-extend-finalize-hold</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">2026-07-11-helixllm-extend-finalize-hold</h1>
+</header>
+<h1 id="helixllm-full-extension-extend-finalize-hold-implementation-plan">HelixLLM
+Full-Extension — EXTEND → FINALIZE → HOLD Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use
+<code>superpowers:subagent-driven-development</code> (recommended) or
+<code>superpowers:executing-plans</code> to implement this plan
+task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for
+tracking. This plan is a <strong>roadmap over already-landed
+work</strong> — it does NOT re-derive detail already written in the
+three GO domain plans
+(<code>01_local_models_serving/IMPLEMENTATION_PLAN_v2.md</code>,
+<code>02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code>,
+<code>06_providers_coverage/EXPANSION_PLAN_v2.md</code>) or the
+consolidated <code>00_master/MASTER_IMPLEMENTATION_PLAN.md</code>; it
+cites them (§11.4.74 anti-duplication). Read the cited source before
+implementing a task.</p>
+</blockquote>
+<p><strong>Goal:</strong> Take the released HelixLLM full-extension
+(<code>feature/helixllm-full-extension</code>, tag
+<code>helix-code-1.1.0-dev-0.0.1</code>, pushed to github+gitlab)
+through one more cycle: <strong>(A) EXTEND</strong> the remaining
+capabilities, <strong>(B) FINALIZE</strong> (review + cleanup +
+refresh), <strong>(C) HOLD</strong> at a clean release terminal — per
+operator directive 2026-07-11 (“Do 3, then 1, and finally 1”).</p>
+<p><strong>Architecture:</strong> Local-first multi-instance LLM serving
+on one RTX 5090 (32 GB) via rootless podman + the
+<code>containers</code> submodule (§11.4.76/§11.4.161). Single always-on
+coder (Qwen3-Coder-30B-A3B @ <code>:18434</code>, ~19.4 GiB) is Lane A;
+every other capability is admission-gated against live free VRAM by the
+VRAM broker (§11.4.119 single-owner burst). LLMsVerifier is the single
+source of truth for model/provider/capability metadata (CONST-036/040).
+Every capability ships with a self-validated golden-good/golden-bad
+analyzer + paired §1.1 mutation (§11.4.107/.137/.163).</p>
+<p><strong>Tech Stack:</strong> Go 1.26 (inner
+<code>dev.helix.code</code>), llama.cpp (cuda12.8-sm120), podman
+rootless + CDI GPU passthrough, TEI (embeddings), faster-whisper CT2,
+Tesseract, FLUX/WAN/LTX (generative), go-sdk MCP v1.6.1
+(Streamable-HTTP), a2a-go SDK, PostgreSQL/pgvector + Redis,
+pandoc+weasyprint+mmdc (doc export).</p>
+<hr />
+<h2 id="global-constraints">Global Constraints</h2>
+<p><em>Every task’s requirements implicitly include this section. Copied
+from the constitution + reconciled ground truth.</em></p>
+<ul>
+<li><strong>Anti-bluff
+(§11.4/§11.4.5/§11.4.6/§11.4.107/§11.4.123):</strong> every PASS carries
+captured PHYSICAL evidence from a real run; metadata-only / config-only
+/ absence-of-error / grep-without-runtime PASS is a violation.
+Unclear-how-to-test ⇒ deep web research first (§11.4.150), never a
+metadata pass. Honest SKIP-with-reason (§11.4.3), never a fake
+PASS.</li>
+<li><strong>CODER IS DOWN (2026-07-11 FACT):</strong>
+<code>helixllm-coder</code> will not boot — CDI pins stale
+<code>/dev/dri/card0</code>; host has
+<code>card1</code>+<code>renderD128</code> (§11.4.111). No CDI spec
+generated (<code>nvidia-ctk cdi list</code>=0; <code>/etc/cdi</code>
+absent). <strong>Task A0 (coder restore) gates every live-coder
+task.</strong> Until A0 lands, no task may claim a
+live-<code>:18434</code> proof.</li>
+<li><strong>§11.4.174 foreign-work exclusion:</strong> NEVER touch
+<code>submodules/helix_agent</code> go.mod/go.sum/.qa_bak (foreign
+QA-track dirt), and NEVER touch <code>/mnt/track1</code> or its 3 adb
+device serials (<code>66ff9c4f…</code>, <code>93f4f1fd…</code>,
+<code>998fd36…</code> — the ATMOSphere T1 project’s live device
+recording).</li>
+<li><strong>No force-push (§11.4.113):</strong> every push is ff-only
+merge-onto-latest-main; outward push is operator-authorized (R35
+decision-2: github+gitlab; GitFlic+GitVerse not yet configured).</li>
+<li><strong>No silent removal (§11.4.122):</strong> the A2A stub, any
+capability, or any component may not be removed without an explicit
+operator keep/remove decision via §11.4.66.</li>
+<li><strong>Coder-never-casually-restart (D8/§11.4.122):</strong> all
+Lane-A-affecting changes batch into ONE operator-authorized coder-pause
+window.</li>
+<li><strong>VRAM volatility (DZ-23):</strong> re-read
+<code>nvidia-smi</code>/<code>Budget().free</code> live immediately
+before EVERY admission decision; never trust a cached number.</li>
+<li><strong>Every change reviewed (§11.4.142) + iterate-to-GO
+(§11.4.134):</strong> independent reviewer distinct from author; loop
+until zero findings + zero warnings.</li>
+<li><strong>Real-content media/journey tests (§11.4.136/§11.4.143),
+window-scoped project-prefixed recordings
+(§11.4.154/§11.4.155/§11.4.159), device-independent host-rendered UI
+proof (§11.4.170)</strong> where applicable.</li>
+<li><strong>Naming/version (§11.4.29/§11.4.151):</strong> lowercase
+snake_case; release tags prefixed <code>helix-code-</code> (from
+<code>HELIX_RELEASE_PREFIX</code> else lowercased root dir).</li>
+<li><strong>Manual QA-team final confirmation (§11.4.185)</strong> is
+the terminal sufficiency gate before any scope is “fully done.”</li>
+</ul>
+<hr />
+<h2 id="reconciled-baseline-landed-proven-do-not-re-plan-11.4.74">Reconciled
+Baseline — LANDED + PROVEN (do NOT re-plan — §11.4.74)</h2>
+<p>Per <code>00_master/MASTER_IMPLEMENTATION_PLAN.md</code> §1 + git log
+through HEAD <code>536ac9c6</code>, ALREADY landed, reviewed-GO, pushed,
+and tagged (<code>helix-code-1.0.0-dev-0.0.1</code> @
+<code>10c40c85</code>, <code>helix-code-1.1.0-dev-0.0.1</code> @
+<code>dfa6a2c2</code>):</p>
+<ul>
+<li>GPU foundation (rootless CDI sm_120 + real 30B inference); coder
+fleet @ <code>:18434</code>; HelixAgent→HelixLLM e2e (Postgres/Redis
+persistence); LLMsVerifier C1→C5 chain (fail-closed resolver).</li>
+<li>Capabilities PROVEN: embeddings (bge-small/TEI), vision-VLM
+(Qwen2.5-VL-3B), translation-NLLB (<code>:18436</code>), Whisper STT
+(<code>:18437</code>), Tesseract OCR (<code>:18438</code>), RAG-TEI
+(<code>:18440</code>), ACP→A2A (<code>:18441</code>), network-provider
+(LAN/VPN), VRAM broker CORE
+(<code>ClassCoder/VLM/Image/Video/Translate/Embed/Agent</code>), Lane-B
+Mistral-Nemo-12B (163 tok/s co-resident), MCP-gateway (Bearer +
+coder-proxy), dual-wire facade (OpenAI+Anthropic) with auth.</li>
+<li><strong>Jul-9 additions (already committed, under review by R41
+stream a98894382fe3bbcf8):</strong> FLUX.1-schnell image-gen proof
+(<code>d8593b63</code>), WAN2.2 TI2V-5B video-gen proof
+(<code>f2c71d07</code>), HelixQA concurrency/chaos/DDoS/memory/benchmark
+banks
+(<code>dfa6a2c2</code>/<code>536ac9c6</code>/<code>54e91e8a</code>),
+provider live-proofs Groq/Mistral/Codestral/Cohere/Cerebras
+(<code>4b07bb6f</code>/<code>f8c38181</code>), i18n + security-test
+§11.4.120 reconciliations.</li>
+</ul>
+<p><strong>Implication:</strong> the image/video HF_TOKEN gate and much
+of Phase-1 are already cleared. What remains is (A0) coder restore, a
+thin set of coder-independent-now items, coder-up hardening,
+operator-gated bursts/keys, and the finalize/hold convergence.</p>
+<hr />
+<h2 id="gating-map-the-honest-reality-read-before-picking-a-task">Gating
+Map (the honest reality — read before picking a task)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Bucket</th>
+<th>What</th>
+<th>Blocked by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Now, coder-independent</strong></td>
+<td>R41 fleet (delta review, doc integrity, governance, external
+provider proofs), codegraph reindex verify, provider §11.4.99 currency
+audit</td>
+<td>nothing — dispatchable</td>
+</tr>
+<tr>
+<td><strong>A0 — coder restore</strong></td>
+<td>regenerate CDI spec + recreate container device binding</td>
+<td>host GPU + root/sudo → <strong>operator</strong> (§11.4.133)</td>
+</tr>
+<tr>
+<td><strong>Coder-up, non-operator-gated</strong></td>
+<td>Lane-B production wiring, fast-lane image/video runtime proof (fits
+free VRAM), vision 8B hardening, HelixQA live banks vs model,
+MCP-gateway live e2e, dual-wire live round-trip</td>
+<td>A0</td>
+</tr>
+<tr>
+<td><strong>Operator-gated</strong></td>
+<td>flagship image/video (coder-pause), Lane-A
+<code>--kv-unified</code>/batch tuning (coder-pause), broad provider
+proofs (API keys §11.4.10), cognee wire (§11.4.174), A2A stub retire
+(§11.4.122), merge→main + prod tag (§11.4.167), GitFlic/GitVerse
+remotes</td>
+<td><strong>operator</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="phase-a-extend-operator-option-3">PHASE A — EXTEND (operator
+option 3)</h1>
+<p>Build the remaining capability surface. Ordered by dependency; each
+task cites its source-plan detail.</p>
+<h2 id="task-a0-restore-the-live-coder-cdi-passthrough-fix-prerequisite-for-all-live-coder-tasks">Task
+A0: Restore the live coder (CDI passthrough fix) — <strong>PREREQUISITE
+for all live-coder tasks</strong></h2>
+<p><strong>Root cause (diagnosed 2026-07-11, §11.4.111):</strong> the
+container’s CDI device list references <code>/dev/dri/card0</code>; the
+DRM node re-enumerated as <code>card1</code> on the Jul-9 reboot, and no
+CDI spec is currently generated.</p>
+<p><strong>Files/host:</strong> <code>/etc/cdi/nvidia.yaml</code> (to
+regenerate), the <code>helixllm-coder</code> container device
+binding.</p>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>A0.1</strong> Capture
+baseline: <code>ls -la /dev/dri</code>,
+<code>ls -la /dev/nvidia*</code>, <code>nvidia-ctk cdi list</code>,
+<code>podman inspect helixllm-coder --format &#39;{{json .HostConfig.Devices}}{{json .Config.Annotations}}&#39;</code>
+→ evidence file.</label></li>
+<li><label><input type="checkbox"></input><strong>A0.2</strong> Regenerate the
+CDI spec so it resolves by GPU identity, not stale index (needs root):
+<code>sudo nvidia-ctk cdi generate --device-name-strategy=index --output=/etc/cdi/nvidia.yaml</code>
+then <code>nvidia-ctk cdi list</code> (expect ≥1 device).</label></li>
+<li><label><input type="checkbox"></input><strong>A0.3</strong>
+Recreate/refresh the coder’s device binding to
+<code>nvidia.com/gpu=all</code> (CDI name, not
+<code>/dev/dri/card0</code> index), or recreate the container from its
+Containerfile with the regenerated spec. <strong>Reversible</strong> —
+preserve the old container config first (§9.2).</label></li>
+<li><label><input type="checkbox"></input><strong>A0.4</strong>
+<code>podman start helixllm-coder</code>; poll
+<code>:18434/v1/models</code> until the 30B model loads;
+<code>nvidia-smi</code> shows ~19.4 GiB resident.</label></li>
+<li><label><input type="checkbox"></input><strong>A0.5 Acceptance
+(§11.4.5):</strong> <code>POST :18434/v1/chat/completions</code> with a
+fresh nonce returns real Go output echoing the nonce, real tok/s +
+usage; capture to <code>docs/qa/</code>. Container up, GPU
+resident.</label></li>
+<li><label><input type="checkbox"></input><strong>A0.6</strong> Add a
+permanent §11.4.111/§11.4.135 guard: a boot script/preflight that
+resolves the DRM node by identity (not <code>card0</code>) and
+regenerates CDI if absent, so the next reboot doesn’t re-break
+this.</label></li>
+</ul>
+<p><strong>Gating:</strong> A0.2/A0.3 need root (host GPU, §11.4.133) →
+<strong>operator-run</strong> (one-liner surfaced separately) OR
+conductor if passwordless sudo is available and reversible.
+<strong>Acceptance evidence is mandatory before any A2/A3 task claims a
+live proof.</strong></p>
+<h2 id="task-a1-coder-independent-hardening-dispatchable-now-real-evidence-no-coder">Task
+A1: Coder-independent hardening (dispatchable NOW — real evidence, no
+coder)</h2>
+<p>These are in flight or immediately dispatchable; none needs the
+coder.</p>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>A1.1 Delta independent
+review</strong> (§11.4.142) of <code>10c40c85..536ac9c6</code> —
+anti-bluff spot-check the Jul-9 headline claims against committed
+evidence. <em>(R41 stream <code>a98894382fe3bbcf8</code> — in
+flight.)</em> Acceptance: verdict GO/GO-WITH-FINDINGS + per-claim
+REAL/BLUFF table.</label></li>
+<li><label><input type="checkbox"></input><strong>A1.2 Exported-doc
+integrity</strong> (§11.4.168) — pdftotext leak-check + regen of
+committed PDFs. <em>(R41 stream <code>aee493fe18836074a</code> — in
+flight.)</em> Acceptance: 0 raw-Mermaid leaks, images present, mtime
+parity.</label></li>
+<li><label><input type="checkbox"></input><strong>A1.3 Governance sweep +
+5-carrier lockstep</strong> (§11.4.32/§11.4.157). <em>(R41 stream
+<code>adfa11ec20cf72570</code> — in flight.)</em> Acceptance: sweep
+pass/fail enumerated, carriers in lockstep, debt
+closed-or-honest-tracked.</label></li>
+<li><label><input type="checkbox"></input><strong>A1.4 External provider
+live-proof re-run</strong> (§11.4.99) — fresh nonce-challenged proofs
+for key-present providers. <em>(R41 stream
+<code>a343804597c06cab9</code> — in flight.)</em> Acceptance:
+per-provider LIVE/SKIP table with redacted raw output, retired-model
+currency notes.</label></li>
+<li><label><input type="checkbox"></input><strong>A1.5 codegraph reindex
+verify (HXC-041)</strong> — CPU/disk, no coder. Confirm own-org
+submodules resolve, third-party purged, <code>codegraph.json</code> is
+the effective config. Acceptance: <code>codegraph_validate.sh</code>
+cross-submodule probe PASS + exclude-mutation
+FAIL-then-restore.</label></li>
+<li><label><input type="checkbox"></input><strong>A1.6 Provider config
+§11.4.99 currency audit</strong> — static audit of the 13 config rows +
+10 CONST-039 providers for retired/renamed default models
+(e.g. DeepSeek-V4 mapping); flag without inventing endpoints (§11.4.6).
+Acceptance: audit doc listing each row’s advertised-vs-configured
+model.</label></li>
+</ul>
+<h2 id="task-a2-coder-up-capability-hardening-gated-on-a0-only-non-operator">Task
+A2: Coder-up capability hardening (gated on A0 only — non-operator)</h2>
+<p>Cite <code>01_.../IMPLEMENTATION_PLAN_v2.md</code> +
+<code>02_.../CAPABILITIES_MASTER_PLAN_v2.md</code> for full task detail.
+Each re-reads <code>Budget().free</code> live before admission
+(DZ-23).</p>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>A2.1 Lane-B production
+wiring</strong> — promote Mistral-Nemo-12B from benchmark spike to a
+broker-admission-gated production instance via <code>ClassAgent</code>
+(serving-plan Task 2.2). Acceptance: co-resident with coder, benchmark
+p50/p95/p99 + tool-calling correctness, teardown clean, coder
+untouched.</label></li>
+<li><label><input type="checkbox"></input><strong>A2.2 Fast-lane image/video
+runtime proof</strong> (fits free VRAM, no pause — capabilities-plan
+P3-T2′/T3′) — FLUX-schnell-Q4 / SDXL image + LTX-Video/WAN-TI2V-5B
+video; real generate → CLIPScore + freeze-liveness (§11.4.107) +
+golden-bad. Acceptance: real artifact + analyzer verdict, registered as
+§11.4.135 guard.</label></li>
+<li><label><input type="checkbox"></input><strong>A2.3 HelixQA live banks vs
+model</strong> — run the vision + capability banks against the restored
+live services; self-validated analyzers + §1.1 mutation. Acceptance:
+real Dispatcher PASS/SKIP with mutation proofs.</label></li>
+<li><label><input type="checkbox"></input><strong>A2.4 MCP-gateway + dual-wire
+live e2e</strong> — real go-sdk MCP client round-trip (401 → tools/list
+→ generate) + facade <code>/v1/chat/completions</code> +
+<code>/v1/messages</code> live nonce round-trip through the restored
+coder. Acceptance: captured real responses, auth fail-closed
+proven.</label></li>
+<li><label><input type="checkbox"></input><strong>A2.5 Vision 8B warm-tier
+hardening</strong> (capabilities-plan P3-T1′) — re-measure 8B VRAM;
+admit only if fits ceiling. Acceptance: real multimodal completion or
+honest SKIP if over-budget.</label></li>
+</ul>
+<h2 id="task-a3-operator-gated-extend-surface-do-not-force">Task A3:
+Operator-gated extend (surface, do not force)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>A3.1</strong> Flagship
+image/video (FLUX-fp8 / WAN-A14B) — coder-pause burst window (§5
+decision 1).</label></li>
+<li><label><input type="checkbox"></input><strong>A3.2</strong> Lane-A
+<code>--kv-unified</code> + batch/parallel tuning + GGUF re-pull —
+single coder-pause window (§5 decision 2).</label></li>
+<li><label><input type="checkbox"></input><strong>A3.3</strong> Broad provider
+coverage completion — needs API keys (§5 decision 3,
+§11.4.10).</label></li>
+<li><label><input type="checkbox"></input><strong>A3.4</strong> cognee wire /
+HelixMemory-only path (§5 decision 5, §11.4.174-blocked).</label></li>
+<li><label><input type="checkbox"></input><strong>A3.5</strong> A2A stub
+retirement — §11.4.122 keep/replace operator decision (§5 decision
+9).</label></li>
+</ul>
+<hr />
+<h1 id="phase-b-finalize-operator-option-1-first-pass">PHASE B —
+FINALIZE (operator option 1, first pass)</h1>
+<p>Converge everything Phase A produced into a clean, reviewed, taggable
+state.</p>
+<h2 id="task-b1-close-the-r41-review-loop">Task B1: Close the R41 review
+loop</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>B1.1</strong> Ingest each
+R41 stream’s report; for any Critical/Important finding, dispatch a fix
+subagent (§11.4.134 iterate-to-GO), re-review until zero findings + zero
+warnings.</label></li>
+<li><label><input type="checkbox"></input><strong>B1.2</strong> Fold Minor
+findings into the whole-branch review triage list.</label></li>
+</ul>
+<h2 id="task-b2-whole-branch-final-review-sdd-end-gate">Task B2:
+Whole-branch final review (SDD end-gate)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>B2.1</strong>
+<code>git merge-base main HEAD</code>; generate the review package for
+<code>&lt;merge-base&gt;..HEAD</code>.</label></li>
+<li><label><input type="checkbox"></input><strong>B2.2</strong> Dispatch an
+independent whole-branch reviewer (most-capable model) — 3 lenses:
+anti-bluff, security (§11.4.174 no foreign sweep, no unauth routes, no
+secrets), integration/release-readiness. Iterate to GO.</label></li>
+<li><label><input type="checkbox"></input><strong>B2.3 Acceptance:</strong>
+VERDICT GO, 0 push-blockers; captured review evidence.</label></li>
+</ul>
+<h2 id="task-b3-working-tree-hygiene">Task B3: Working-tree hygiene</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>B3.1</strong> Confirm (from
+R41 audit) that all genuine QA evidence is committed; the 35
+<code>phase1_fullhttp_e2e</code> loop dirs + superseded
+coder-bench/provider re-runs are redundant residue whose canonical
+evidence already landed.</label></li>
+<li><label><input type="checkbox"></input><strong>B3.2</strong> With operator
+sign-off (§11.4.124/§9.2 — do not <code>git clean</code> unreviewed),
+remove the confirmed-redundant residue OR relocate to a gitignored
+scratch archive. Do NOT delete anything with unique uncommitted
+content.</label></li>
+<li><label><input type="checkbox"></input><strong>B3.3</strong> Verify tree
+quiescence (§11.4.84): no mutation markers, only intended files, foreign
+<code>helix_agent</code> untouched.</label></li>
+</ul>
+<h2 id="task-b4-submodule-pointer-bumps-11.4.98-re-runnability">Task B4:
+Submodule pointer bumps (§11.4.98 re-runnability)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>B4.1</strong> For each owned
+submodule advanced past its gitlink (helix_llm, llms_verifier, helix_qa
+— NOT foreign helix_agent), bump the root gitlink to the reviewed HEAD
+in one commit. §11.4.174-careful: gitlink-only, never sweep foreign
+uncommitted work.</label></li>
+<li><label><input type="checkbox"></input><strong>B4.2 Acceptance:</strong>
+<code>git submodule status</code> shows no owned submodule lagging its
+reviewed HEAD.</label></li>
+</ul>
+<h2 id="task-b5-resume-ledger-refresh-11.4.131">Task B5: RESUME + ledger
+refresh (§11.4.131)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>B5.1</strong> Refresh
+<code>docs/research/07.2026/00_master/RESUME.{md,html,pdf}</code> to
+true HEAD/state (coder-boot status, what’s proven, what’s
+operator-gated) with §11.4.65 siblings.</label></li>
+<li><label><input type="checkbox"></input><strong>B5.2</strong> Append the
+final R41 outcome to the SDD ledger.</label></li>
+</ul>
+<hr />
+<h1 id="phase-c-hold-release-terminal-operator-option-1-second-pass">PHASE C
+— HOLD / RELEASE TERMINAL (operator option 1, second pass)</h1>
+<p>The §11.4.126 release-scope terminal. Every item here is
+operator-gated by design.</p>
+<h2 id="task-c1-pre-tag-validation-if-a-new-tag-is-in-scope">Task C1:
+Pre-tag validation (if a new tag is in scope)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>C1.1</strong> §11.4.40
+full-suite pre-tag sweep on owned scope; capture the log;
+regression-isolate any FAIL against <code>merge-base..HEAD</code> (empty
+diff ⇒ pre-existing, not a blocker).</label></li>
+<li><label><input type="checkbox"></input><strong>C1.2</strong> Live coder
+re-proven at tag time (§11.4.5) — requires A0 done.</label></li>
+</ul>
+<h2 id="task-c2-merge-to-main-production-tag-operator-decision-11.4.167">Task
+C2: Merge-to-main + production tag — <strong>operator decision
+(§11.4.167)</strong></h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>C2.1</strong> On explicit
+operator approval only: merge
+<code>feature/helixllm-full-extension</code> → <code>main</code> via
+merge-onto-latest (§11.4.113 ff-only, no force), cascade to touched
+owned submodules at reviewed HEADs.</label></li>
+<li><label><input type="checkbox"></input><strong>C2.2</strong> Cut the next
+prefixed tag (<code>helix-code-&lt;version&gt;</code>, §11.4.151) across
+main repo + owned submodules identically.</label></li>
+<li><label><input type="checkbox"></input><strong>C2.3</strong> Push to all
+configured remotes (§2.1); if operator provides GitFlic/GitVerse URLs,
+add them first (§6.W allows 4).</label></li>
+</ul>
+<h2 id="task-c3-manual-qa-team-final-confirmation-operator-side-11.4.185">Task
+C3: Manual QA-team final confirmation — <strong>operator-side
+(§11.4.185)</strong></h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>C3.1</strong> Hand off the
+released build to the QA team for manual final confirmation; the agent
+WAITS (does not self-certify), while progressing any other non-blocked
+item.</label></li>
+<li><label><input type="checkbox"></input><strong>C3.2 Terminal:</strong>
+scope is “fully done” only after QA-team manual sign-off.</label></li>
+</ul>
+<h2 id="task-c4-session-handoff-11.4.12711.4.131">Task C4: Session
+handoff (§11.4.127/§11.4.131)</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>C4.1</strong> Ensure the
+standing resumption file is moment-valid so a fresh session resumes with
+zero loss.</label></li>
+</ul>
+<hr />
+<h2 id="self-review-writing-plans-checklist">Self-Review (writing-plans
+checklist)</h2>
+<ul>
+<li><strong>Spec coverage:</strong> every master-plan §2 phase + §5
+operator decision + §6 immediate item maps to a task above (A0–A3,
+B1–B5, C1–C4). Gaps: none new — the master plan’s own gated items are
+surfaced in A3/C, not silently dropped.</li>
+<li><strong>Placeholder scan:</strong> no “TBD/handle-edge-cases” —
+gated tasks explicitly cite their source plan for full task detail
+(§11.4.74), which is a citation, not a placeholder.</li>
+<li><strong>Type/reference consistency:</strong>
+<code>ClassAgent</code>, <code>Budget().free</code>, the port map (18434
+coder / 18435 Lane-B / 18436 translate / 18437 whisper / 18438 tesseract
+/ 18439 vision / 18440 RAG-TEI / 18441 A2A / 18442 image / 18443 video /
+MCP-gw) are consistent with the broker source + ledger.</li>
+<li><strong>Honest boundary (§11.4.6):</strong> this plan does NOT claim
+autonomous progress on coder-up or operator-gated tasks — those are
+explicitly parked on A0 / operator input. The genuinely-now-actionable
+set is Task A1 (the 4 R41 streams + A1.5/A1.6) plus Phase B items that
+don’t need the coder.</li>
+</ul>
+<h2 id="sources">Sources</h2>
+<ul>
+<li><code>docs/research/07.2026/00_master/MASTER_IMPLEMENTATION_PLAN.md</code>
+(+ the 3 GO domain plans it consolidates)</li>
+<li><code>.superpowers/sdd/progress.md</code> (R1–R41 ledger, reconciled
+ground truth)</li>
+<li>Live diagnosis 2026-07-11: <code>nvidia-smi</code>,
+<code>podman ps -a</code>, <code>ls /dev/dri</code>,
+<code>nvidia-ctk cdi list</code>, <code>git log/tag/remote</code></li>
+</ul>
+</body>
+</html>

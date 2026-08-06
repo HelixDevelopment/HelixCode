@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>05_branch_registry</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">05_branch_registry</h1>
+</header>
+<h1 id="canonical-branch-name-registry-11.4.181-helixllm-full-extension-programme">Canonical
+Branch-Name Registry (§11.4.181) — HelixLLM Full-Extension
+Programme</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Single source of truth for the ONE canonical feature-branch name
+(§11.4.181). Every repo touched by this programme uses this EXACT name —
+never a per-repo variant. Look up here, never re-invent (§11.4.6).</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1 · <strong>Created</strong> 2026-07-06 · Track
+<code>(T1/main)</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-one-canonical-name">The one canonical name</h2>
+<table>
+<colgroup>
+<col style="width: 46%" />
+<col style="width: 53%" />
+</colgroup>
+<thead>
+<tr>
+<th>Axis</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Feature slug</strong> (§11.4.29 lowercase kebab)</td>
+<td><code>helixllm-full-extension</code></td>
+</tr>
+<tr>
+<td><strong>Branch name</strong> (§11.4.167-D / §11.4.181) — identical
+on EVERY touched repo</td>
+<td><code>feature/helixllm-full-extension</code></td>
+</tr>
+<tr>
+<td><strong>Release tag axis</strong> (§11.4.151 prefix =
+<code>HELIX_RELEASE_PREFIX</code> else <code>helix_code</code>)</td>
+<td><code>&lt;prefix&gt;-&lt;base&gt;-feat-helixllm-full-extension</code></td>
+</tr>
+<tr>
+<td><strong>Logic group</strong></td>
+<td><code>helixllm-full-extension</code> (Phase-R/P complete; Phase 0→9
+pending)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="repos-in-scope-each-uses-featurehelixllm-full-extension-when-branched">Repos
+in scope (each uses <code>feature/helixllm-full-extension</code> when
+branched)</h2>
+<ul>
+<li><strong>main meta-repo</strong> — <code>helix_code</code> (this
+repo)</li>
+<li><strong>submodules/helix_llm</strong> — the primary extension
+target</li>
+<li><strong>submodules/helix_agent</strong> — provider gateway +
+adapters + A2A/MCP</li>
+<li><strong>submodules/llms_verifier</strong> — capability probes +
+local verification (+ the vendored <code>submodules/LLMsVerifier</code>
+inside claude_toolkit)</li>
+<li><strong>submodules/containers</strong> — GPU/compose primitives
+(upstream PR for the GPU-field gap)</li>
+<li><strong>submodules/helix_qa</strong> — new capability test
+banks</li>
+<li><strong>SIBLING repo</strong> <code>../claude_toolkit</code> —
+HelixAgent provider recognition (separate repo, <strong>same</strong>
+canonical branch name)</li>
+</ul>
+<h2 id="rules-11.4.181">Rules (§11.4.181)</h2>
+<ol type="1">
+<li><strong>One name, everywhere.</strong> Any submodule branched for
+this programme MUST use <code>feature/helixllm-full-extension</code> —
+no per-repo drift. An untouched submodule stays on its base branch (not
+force-branched).</li>
+<li><strong>Look up, never re-invent.</strong> Every branch creation
+reads this registry; a second stream working this group reads the same
+name.</li>
+<li><strong>Risk-free reconciliation.</strong> A mis-named/duplicate
+branch is reconciled by merge-onto-canonical preserving every commit
+(§11.4.113 / §9.2), never delete-before-merge, never force-push.</li>
+</ol>
+<h2 id="physical-branch-creation-deferred-with-reason-11.4.6">Physical
+branch creation — DEFERRED (with reason, §11.4.6)</h2>
+<p>Branches are NOT yet created. This meta-repo runs an
+<strong>auto-commit daemon</strong> that commits to <code>main</code>
+(observed: <code>Auto-commit</code> commits advancing HEAD + submodule
+pointers). Before creating <code>feature/helixllm-full-extension</code>
+in any repo, INVESTIGATE how that daemon selects its target branch, so a
+feature branch is not silently committed-over or reset by the daemon (a
+§11.4.6 unknown — do not guess). Until then: - Research/planning docs
+(this workspace) remain on <code>main</code> (additive documentation,
+correctly daemon-committed). - The canonical name is REGISTERED (this
+file) satisfying §11.4.181’s single-source-of-truth requirement. -
+Physical branch creation happens per-repo at first CODE modification,
+after the daemon-interaction investigation (tracked as a Phase-0
+prerequisite).</p>
+</body>
+</html>

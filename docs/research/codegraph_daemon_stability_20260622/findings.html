@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="codegraph-daemon-850-watchdog-stability-findings">CodeGraph
+Daemon #850 Watchdog Stability — Findings</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>2026-06-22</td>
+</tr>
+<tr>
+<td>Symptom</td>
+<td>Recurring “Main thread unresponsive ~60s — killing wedged process
+(#850)”</td>
+</tr>
+<tr>
+<td>Verdict</td>
+<td>Index massively oversized because
+<code>.codegraph/config.json</code> is INERT</td>
+</tr>
+<tr>
+<td>Query reliability</td>
+<td>Reliable (sub-ms reads); only intermittent fail inside the ~60s
+wedge window</td>
+</tr>
+</tbody>
+</table>
+<h2 id="root-cause-fact-evidence-backed">Root cause (FACT,
+evidence-backed)</h2>
+<p>CodeGraph v1.0.1 is <strong>zero-config</strong> and excludes
+<strong>only via <code>.gitignore</code></strong> (official docs,
+accessed 2026-06-22). The repo’s <code>.codegraph/config.json</code>
+(legacy schema, dated Jun 3) is <strong>no longer read</strong> — it is
+inert.</p>
+<p>Proof — the live DB tracks <code>.gitignore</code>, NOT config.json:
+- config.json excludes <code>cli_agents/**</code>, yet <strong>36,099
+cli_agents files are indexed</strong>
+(<code>git check-ignore cli_agents</code> → NOT IGNORED; root
+<code>.gitignore</code> still lists the pre-CONST-052 name
+<code>Example_Projects/</code>, never the renamed
+<code>cli_agents/</code>). - <code>cli_agents_resources/</code> (514)
+and <code>github_pages_website/</code> (9) also “excluded” in config but
+indexed (not in <code>.gitignore</code>). -
+<code>dependencies/{LLama_CPP,Ollama,HuggingFace_Hub}</code> = 0 indexed
+only because they are uninitialized (empty) submodules — NOT because the
+config worked.</p>
+<p>Result: <strong>96,674 files, 1,664,519 nodes, 3,829,858 edges → 4.38
+GB DB</strong> (<code>submodules/</code> 57,456 +
+<code>cli_agents/</code> 36,099 + nested vendored submodule trees with
+generated <code>*.gen.ts</code> /
+<code>worker-configuration.d.ts</code>). Each watcher re-walk/sync over
+that tree blocks the main thread &gt;60s on an 18 GB host under heavy
+memory pressure (vm_stat: ~87 MB free, ~7.6 GB compressed) → the
+<strong>#850 watchdog SIGKILLs and restarts</strong> in a loop.
+Compounding: <strong>two daemons run</strong> (one with
+<code>--path</code>, one without), doubling load.</p>
+<h2 id="critical-corollary-codegraph_validate.sh-is-a-pass-bluff">CRITICAL
+corollary — <code>codegraph_validate.sh</code> is a PASS-bluff</h2>
+<p><code>codegraph_validate.sh</code> returned <strong>18/18
+PASS</strong> by checking <code>config.json</code>’s include/exclude
+lists — but the tool ignores that file. The validator certifies an
+exclusion that does not happen. Third-party <code>cli_agents/**</code>
+IS indexed despite the “✅ cli_agents/** is excluded” line. This is a
+§11.4 PASS-bluff at the validation layer and partially invalidates the
+earlier §11.4.79 “own-org included / third-party excluded” conclusion
+(own-org IS included — confirmed by live explore — but third-party is
+NOT actually excluded).</p>
+<h2 id="timeline">Timeline</h2>
+<p>Current <code>daemon.log</code> (40 lines, one window): <strong>9
+watchdog kills</strong>, 13 restarts, 4 clean idle-timeouts. Lines 1–20:
+tight start→wedge→kill→restart loop (7× back-to-back, ~1–2 min apart);
+calm middle (3 idle shutdowns); then 3 more kills. Every kill = main
+thread blocked ≥60s (the <code>node -e</code> sidecar’s 60000 ms timer,
+confirmed via <code>ps</code>).</p>
+<h2 id="query-reliability">Query reliability</h2>
+<p><strong>Reliable.</strong> All 4 live <code>codegraph_explore</code>
+calls returned full correct results incl. own-org submodule symbols
+(<code>submodules/helix_qa</code>, <code>submodules/database</code>,
+<code>submodules/llms_verifier</code>,
+<code>submodules/containers</code>). SQLite reads sub-ms even at 4.38
+GB; the stall is in the sync/index path, not the read path. Index grew
+96,674→96,676 mid-session (watcher actively re-walking). Caveat: a read
+landing in the ~60s wedge can intermittently fail and need a retry.</p>
+<h2 id="recommended-mitigation-recommendation-only-not-applied">Recommended
+mitigation (recommendation only — NOT applied)</h2>
+<ul>
+<li><strong>A. Fix scope via the mechanism CodeGraph honors
+(<code>.gitignore</code> / <code>.git/info/exclude</code>), not
+config.json.</strong> Exclude <code>cli_agents/</code>,
+<code>cli_agents_resources/</code>, <code>github_pages_website/</code>,
+nested <code>submodules/**/submodules/**</code> +
+<code>submodules/**/cli_agents/**</code>, and generated
+<code>**/*.gen.ts</code> / <code>**/worker-configuration.d.ts</code>.
+Since cli_agents must stay git-tracked, prefer non-tracking
+<code>.git/info/exclude</code> over editing committed
+<code>.gitignore</code>; confirm mechanism with operator.</li>
+<li><strong>B.</strong> Stop daemon(s), delete
+<code>codegraph.db*</code>, re-run <code>codegraph index</code> — DB
+should shrink to a fraction; stalls disappear.</li>
+<li><strong>C.</strong> Reconcile MCP config to ONE
+<code>serve --mcp --path …</code> daemon, not two.</li>
+<li><strong>D.</strong> Watchdog tuning
+(<code>CODEGRAPH_WATCHDOG_TIMEOUT_MS</code> /
+<code>CODEGRAPH_NO_WATCHDOG=1</code>) is a stop-gap only — disabling
+reintroduces the 100%-CPU hang #850 prevents; fix scope first.</li>
+<li><strong>E. Constitution-level (§11.4.78/§11.4.79):</strong> document
+exclude source-of-truth = <code>.gitignore</code> NOT config.json; add
+to <code>codegraph_validate.sh</code>: (1) index-size budget
+<ul>
+<li><code>SELECT COUNT(*) FROM files WHERE path LIKE &#39;&lt;excluded&gt;/%&#39;</code>
+MUST be 0 (non-zero = inert exclude = release-blocker, mirroring
+§11.4.79’s “index that lies is a PASS-bluff”); (2) daemon-health probe
+that FAILs if <code>#850</code> fired in recent log;</li>
+</ul>
+<ol start="3" type="1">
+<li>one-daemon-per-path invariant; (4) CONST-052 renames MUST cascade
+into ignore files in the same change.</li>
+</ol></li>
+</ul>
+<h2 id="sources-verified-2026-06-22">Sources (verified 2026-06-22)</h2>
+<ul>
+<li>https://github.com/colbymchenry/codegraph/releases</li>
+<li>https://colbymchenry.github.io/codegraph/getting-started/configuration/</li>
+<li>https://colbymchenry.github.io/codegraph/guides/indexing/</li>
+<li>https://colbymchenry.github.io/codegraph/troubleshooting/</li>
+</ul>
+</body>
+</html>

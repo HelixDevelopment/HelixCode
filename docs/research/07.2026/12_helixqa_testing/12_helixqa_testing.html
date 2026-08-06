@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>12_helixqa_testing</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">12_helixqa_testing</h1>
+</header>
+<h1 id="extending-helixqa-to-fully-test-helixllm-capabilities-esp.-vision-cited-research-design">Extending
+HelixQA to Fully Test HelixLLM Capabilities (esp. Vision) — Cited
+Research + Design</h1>
+<p><strong>Doc ID:</strong> 12_helixqa_testing <strong>Date:</strong>
+2026-07-06 <strong>Author:</strong> T1 deep-research + design subagent
+<strong>Scope:</strong> Design a HelixQA extension that tests every
+HelixLLM capability — LLM chat/tool-calling/streaming,
+<strong>vision/VLM</strong>, image-gen, video-gen, translation,
+embeddings/RAG, STT, OCR, provider-coverage — with rock-solid captured
+proofs and zero bluff, wired into autonomous QA sessions.
+<strong>Governance:</strong> §11.4.107
+(liveness/freeze/frame-advance/self-validated analyzers), §11.4.117
+(CV/OCR pixel-oracle), §11.4.137 (content-correctness oracle),
+§11.4.158–160 (intensive window-scoped recording + read-the-screen
+vision validation + HelixQA bridge + media-validation pipeline),
+§11.4.163 (universal media validation), §11.4.116 (real-time sync
+channel), §11.4.98 (full-autonomous, no manual step), CONST-050(B) (all
+test types), §11.4.6 (no-guessing — every mechanism below is quoted from
+source).</p>
+<blockquote>
+<p><strong>§11.4.6 honesty boundary — HelixLLM contract
+UNCONFIRMED.</strong> No single canonical <code>HelixLLM</code> service
+spec was found in the tree (<code>grep -rilE &quot;helixllm|helix_llm&quot;</code>
+returns only i18n bundles and generic app files, not an API contract).
+This design therefore targets the <strong>standard capability
+set</strong> and the <strong>existing HelixCode LLM/provider
+surface</strong>
+(<code>helix_code/internal/{llm,provider,providers,verifier}</code>, the
+<code>/api/v1/llm/generate</code> endpoint in root
+<code>CLAUDE.md §9</code>, the LLMsVerifier CONST-036/039 provider
+list). <strong>Before implementation, the exact HelixLLM endpoint paths,
+request/response schemas, and which capabilities ship must be
+confirmed</strong> and the bank
+<code>http</code>/<code>dispatches_to</code> values filled from that
+contract. All bank YAML below uses placeholder paths marked
+<code># CONFIRM</code>.</p>
+</blockquote>
+<hr />
+<h2 id="part-1-helixqas-actual-mechanisms-read-from-submoduleshelix_qa-11.4.6">Part
+1 — HelixQA’s ACTUAL Mechanisms (read from
+<code>submodules/helix_qa</code>, §11.4.6)</h2>
+<p>HelixQA is an <strong>anti-bluff QA orchestration framework</strong>
+(<code>README.md</code>): “the bar for shipping is not <em>tests
+pass</em> but <em>users can use the feature</em>. Every PASS HelixQA
+emits MUST carry positive runtime evidence.” Five concrete mechanisms
+are load-bearing for this design.</p>
+<h3 id="test-bank-format-pkgtestbankschema.go">1.1 Test-bank format —
+<code>pkg/testbank/schema.go</code></h3>
+<p>YAML banks in <code>banks/*.yaml</code> load into
+<code>TestCase</code> structs. The user-facing fields are
+<code>id, name, description, category, priority, platforms, steps[], tags, documentation_refs, estimated_duration, expected_result</code>.
+The <strong>anti-bluff / executable</strong> fields (the ones this
+design leans on) are:</p>
+<ul>
+<li><strong><code>Steps[].Action</code> typed by
+<code>ActionType</code></strong> (executable, not prose):
+<code>http</code> (<code>&quot;&lt;METHOD&gt; &lt;PATH&gt;&quot;</code> +
+<code>Body/Headers/ExpectStatus/ExpectJSONPath/ExpectBodyContains/AuthMode</code>),
+<code>shell</code>, <code>adb_shell</code>, <code>playback_check</code>
+(<code>dumpsys media_session</code> state==3), <code>frame_diff</code>
+(screenshot→wait→screenshot, fail if frozen), <code>assert</code>
+(<code>status_eq/json_path_eq/body_contains/header_eq</code>),
+<code>screenshot/tap/keypress/sleep</code>. The comment on
+<code>ActionTypeHTTP</code> records that prose-only
+<code>description</code> actions were a real bluff (“4034
+PROSE_HELIXQA_ACTION findings”) — <strong>so a new bank MUST use
+executable action types, never prose.</strong></li>
+<li><strong><code>DispatchesTo string</code></strong> — names a consumer
+on-device/host script that IS the Challenge body; its <strong>real exit
+code drives PASS/FAIL</strong> via the consumer-injected
+<code>DeviceExec</code> hook.</li>
+<li><strong><code>RequiredEvidence []string</code></strong> — the
+§11.4.69 evidence-ledger gate: globs/keys that must each resolve to a
+real, non-empty artefact (or a conduit <code>evidence_captured</code>
+event with non-empty path) before PASS. Missing → FAIL with the
+list.</li>
+<li><strong><code>Metadata map[string]any</code></strong> — opaque
+consumer data; the loader preserves it verbatim. Used e.g. for
+<code>metadata.recvalidate_options.{reply_markers,chrome_line_patterns,expected_replies}</code>
+forwarded to the recording oracle.</li>
+<li><code>feature_class</code> (maps to the §11.4.69 taxonomy),
+<code>domains[]</code> (single-resource-owner partitioning),
+<code>requires_env[]</code> (honest SKIP-OK when hardware/keys absent),
+<code>challenge_id</code>.</li>
+</ul>
+<h3 id="the-evidence-oracle-pkgtestbankcontent_evidence.go-contentassertingresolver">1.2
+The evidence oracle — <code>pkg/testbank/content_evidence.go</code>
+<code>ContentAssertingResolver</code></h3>
+<p><strong>This is the key anti-bluff primitive.</strong>
+<code>GlobEvidenceResolver</code> only checks a file exists +
+<code>Size()&gt;0</code> — a “non-empty-but-WRONG file
+(<code>echo stereo &gt; codec.txt</code>)” bluff-PASSes.
+<code>ContentAssertingResolver</code> upgrades a
+<code>RequiredEvidence</code> token to a generic <strong>declarative
+assertion grammar</strong>, project-agnostic (HelixQA hardcodes no
+value; the bank supplies the regex/key/threshold):</p>
+<pre><code>&lt;path-or-glob&gt; | &lt;assertion&gt; [ | &lt;assertion&gt; ... ]
+  nonempty
+  match:&lt;regex&gt;            (case-insensitive)
+  not_match:&lt;regex&gt;
+  json:&lt;dotted.path&gt;&lt;op&gt;&lt;val&gt;   ops: == != &gt;= &lt;= &gt; &lt;    e.g. json:video_live==true
+  min_int:&lt;field&gt;:&lt;n&gt;           first int after &lt;field&gt; token &gt;= n</code></pre>
+<p>Every capability bank below expresses its correctness assertion as a
+<code>RequiredEvidence</code> token in this grammar — that is the seam
+that makes a PASS mean the produced artefact is <em>right</em>, not
+merely present.</p>
+<h3 id="dispatcher-scoring-pkgtestbankdispatch.go-dispatcher.run">1.3
+Dispatcher scoring — <code>pkg/testbank/dispatch.go</code>
+<code>Dispatcher.Run</code></h3>
+<p>Sequence: (1) run <code>DispatchesTo</code> via
+<code>DeviceExec</code>; non-zero exit → <strong>FAIL</strong>; (2)
+enforce the <code>RequiredEvidence</code> ledger via the resolver; any
+missing → <strong>FAIL</strong> even if the script exited 0 (closes the
+“green exit, no proof” hole); (3) else <strong>PASS</strong>, citing
+satisfied evidence. Every verdict folds into a conduit
+<code>challenge_verdict</code> event. <code>requires_env</code> unmet →
+<code>SKIP</code>.</p>
+<h3 id="real-time-sync-channel-pkgconduit-11.4.116">1.4 Real-time sync
+channel — <code>pkg/conduit</code> (§11.4.116)</h3>
+<p>Dependency-free, two transports: an <strong>append-only JSONL event
+stream</strong> (one <code>Event</code> per line,
+<code>Seq</code>-numbered, tailed by <code>Monitor</code> like
+<code>tail -f</code>) + an <strong>atomically-overwritten status
+snapshot</strong> (<code>Status</code> with live <code>Counts</code>).
+Closed event set: <code>session_start/end</code>,
+<code>phase_start/complete/error/progress</code>,
+<code>challenge_start/step/verdict</code>,
+<strong><code>evidence_captured</code> (carries
+<code>evidence_path</code>+<code>evidence_kind</code>)</strong>,
+<strong><code>llm_call</code></strong>,
+<strong><code>vision_call</code></strong>, <code>error</code>,
+<code>log</code>. Verdict vocabulary:
+<code>PASS/FAIL/SKIP/OPERATOR-BLOCKED</code>. <strong>A verdict event’s
+backing evidence is auditable by the conductor</strong> — a PASS
+<code>challenge_verdict</code> with no preceding
+<code>evidence_captured</code> for that challenge is a contradiction
+(§11.4.116). <code>llm_call</code>/<code>vision_call</code> already
+exist as first-class events — the LLM/vision banks light them up
+natively.</p>
+<h3 id="vision-media-toolchain-already-shipped">1.5 Vision + media
+toolchain (already shipped)</h3>
+<ul>
+<li><strong><code>pkg/vision</code></strong>: <code>OllamaClient</code>
+(LLaVA VLM: <code>AnalyzeImage(img, prompt)</code> → structured
+<code>UIAnalysisResult</code>; <code>CheckOllamaAvailable</code>,
+<code>GetAvailableModels</code>, <code>PullModel</code>);
+<strong>Tesseract OCR</strong> (<code>ocr_tesseract.go</code>:
+<code>DetectText/DetectTextString</code>,
+<code>GetAvailableLanguages</code>, per-word TSV with confidence);
+<strong>PaddleOCR</strong> (<code>ocr_paddle.go</code>);
+<strong><code>ElementDetector</code></strong> (CV contours);
+<code>diff.go</code>/<code>perceptual/</code>/<code>hash/</code>/<code>template/</code>
+(freeze / frame-advance / perceptual-hash — the §11.4.107 liveness
+primitives).</li>
+<li><strong><code>pkg/recordingqa</code></strong>
+(<code>recordingqa.go</code>): the <strong>media-validation
+orchestrator</strong> (§11.4.163). PASS <strong>only if</strong> mp4
+non-empty <strong>AND</strong> injected <code>VideoValidator</code>
+(Panoptic <code>recvalidate</code> / <code>recording-analyzer</code>)
+matches every <code>ExpectedReply</code> with NO error text
+<strong>AND</strong> stderr log has NONE of the error patterns.
+<code>VideoOptions{ExpectedReplies, ChromeLinePatterns, ReplyMarkers}</code>
+excludes chrome-as-reply (§11.4.137). Ships <strong>golden-good +
+golden-bad + paired §1.1 mutation</strong> tests
+(<code>recordingqa_test.go</code>: dropping chrome forwarding makes the
+golden-bad bluff-PASS → mutation proves the guard is real).</li>
+<li><strong><code>cmd/</code> analyzers</strong>:
+<code>recording-analyzer</code> (frame OCR + §11.4.107 liveness),
+<code>helixqa-recvalidate</code>, <code>helixqa-omniparser</code>,
+<code>helixqa-uitars</code>, <code>helixqa-lpips</code>,
+<code>helixqa-dreamsim</code> (perceptual/full-reference metrics),
+<code>qa-audio-probe</code>, <code>helixqa-{x11grab,kmsgrab}</code>
+(window-scoped capture, §11.4.159),
+<code>helixqa-conduit-monitor</code>.</li>
+<li><strong>Autonomous session</strong>: <code>pkg/autonomous</code>
+(<code>SessionCoordinator</code>, <code>PlatformWorker</code>,
+<code>PhaseManager</code>, <code>pipeline.go</code>,
+<code>http_executor.go</code>, <code>structured_executor.go</code>,
+<code>findings_bridge.go</code>);
+<code>cmd/helixqa run|autonomous|bank-session</code>.</li>
+</ul>
+<p><strong>Gap this design fills:</strong> HelixQA has the
+vision/OCR/liveness/recording/evidence/conduit machinery and generic
+banks, but has <strong>no HelixLLM-capability banks</strong> — no bank
+that sends an image to a VLM and self-validates the answer, no bank that
+validates image/video-gen output is real media, no
+translation/embeddings/RAG/STT banks. All new work is bank YAML + a thin
+per-capability <code>dispatches_to</code> analyzer that emits a JSON
+verdict the <code>ContentAssertingResolver</code> gates on — <strong>no
+core-engine change</strong>, per CONST-051(B) decoupling.</p>
+<hr />
+<h2 id="part-2-best-practice-research-cited-today-2026-07-06">Part 2 —
+Best-Practice Research (cited; today 2026-07-06)</h2>
+<h3 id="a-local-llm-serving-endpoint-correctness-tool-calling-streaming-concurrencyload">(a)
+Local LLM serving endpoint — correctness, tool-calling, streaming,
+concurrency/load</h3>
+<p>Two orthogonal test classes: <strong>correctness</strong>
+(deterministic-answerable prompts, assert exact/normalized match —
+e.g. word-number→digit) and <strong>load</strong> (Gatling, ray-project
+<strong>LLMPerf</strong>, NVIDIA GenAI-Perf, vLLM bench, Locust+SSE).
+Streaming must test the <strong>SSE</strong> path: <strong>TTFT</strong>
+(time-to-first-token) is the dominant user-perceived metric; measure
+inter-token latency, output-tokens/s, <strong>p99 TTFT under
+concurrency</strong>, 5xx-rate-at-spike. Error paths (429/503/timeout,
+truncated output) must themselves be load-tested. Realistic traffic
+varies prompt length/domain — never identical short prompts. [Gatling;
+LLMPerf; LoadForge; PremAI 2026]</p>
+<h3 id="b-vlm-vision-endpoint-send-image-assert-correct-understanding">(b)
+VLM / vision endpoint (send image → assert correct understanding)</h3>
+<p><strong>VLM-as-a-judge</strong> and automated pipelines (Auto-Bench,
+Stanford VHELM’s nine aspects) are the state of the art. Practical
+automated signals: <strong>image-text alignment via CLIP cosine &gt;0.8
+= strong</strong>; <strong>hallucination rate 10–30% typical on complex
+scenes</strong>; spatial-reasoning accuracy 50–60%. Key anti-bluff
+lesson: measure against <strong>ground-truth Q/A pairs</strong> where
+the answer is knowable, and <strong>self-validate the analyzer</strong>
+with a golden-good/golden-bad pair (§11.4.107(10)) so the judge itself
+can’t bluff. [Stanford VHELM; Nature s41598-026-55179-4; arXiv
+2311.14580 LLM-as-Aligner; Label Your Data 2026]</p>
+<h3 id="c-image-video-generation-validate-output-is-real-media-not-a-stub">(c)
+Image / video generation (validate output is REAL media, not a
+stub)</h3>
+<p>Image: <strong>CLIP score</strong> (prompt adherence),
+<strong>FID</strong> (realism vs a real-image distribution,
+lower=better) — combine automated metrics with periodic human
+validation. Video:
+<strong><code>ffprobe -select_streams v:0 -count_frames -show_entries stream=nb_read_frames</code></strong>
+for real decoded-frame count; assert non-zero frames + expected
+codec/resolution/fps + <strong>frame-advance</strong> (not a frozen
+single frame, §11.4.107). [ffmpeg.org/ffprobe; OTTVerse; Labelbox;
+ImageBench prompt-fidelity]</p>
+<h3 id="d-translation-quality-comet-back-translation-metamorphic">(d)
+Translation quality (COMET / back-translation / metamorphic)</h3>
+<p><strong>COMET</strong> neural metric correlates &gt;0.8 with human
+judgment, beating BLEU; <strong>COMET-QE</strong> referenceless exploits
+source↔︎target symmetry (back-translation intuition).
+<strong>Back-translation metamorphic check</strong>: translate X→Y→X′,
+assert semantic similarity(X, X′) high — no reference needed, fully
+autonomous. WMT25 ESA quality-estimation is the current shared-task
+baseline. [Grokipedia MT-eval; arXiv 2508.18549 COMET-poly; TACL
+Conformalizing MT Eval]</p>
+<h3 id="e-embeddings-rag-retrieval-quality">(e) Embeddings / RAG
+(retrieval quality)</h3>
+<p>Retrieval: <strong>Recall@K</strong> (most actionable),
+<strong>MRR</strong> (rank-1 precision), <strong>nDCG</strong>
+(correlates best with end-to-end RAG quality). Generation:
+<strong>faithfulness</strong> (proportion of answer claims verifiable
+against retrieved chunks — RAGAS LLM-as-judge), answer-relevancy,
+context-relevancy. Version index/embeddings/rerankers/eval-sets;
+<strong>index-integrity test</strong> (embeddings stored + queryable).
+[langcopilot RAG-101; Confident AI; getmaxim 2025; Label Your Data]</p>
+<h3 id="f-stt-ocr">(f) STT / OCR</h3>
+<p>STT: <strong>WER</strong> (word-level) + <strong>CER</strong>
+(char-level; CER for CJK where word boundaries are ambiguous);
+Whisper-Large-v3 ≈ 2.7% WER clean / 8–12% real-world (MLPerf v5.1
+reference). OCR: <strong>CER</strong> (edit-distance/GT-chars) primary;
+printed-text 98–99% is excellent, 2025 avg ≈96.5%; per-word confidence
+floor + ROI to avoid false-pos/neg (§11.4.137(12)). [MLCommons Whisper
+v5.1; whisperapi WER; TowardsDataScience CER/WER; HandwritingOCR
+CER]</p>
+<hr />
+<h2 id="part-3-helixqa-extension-per-capability-test-banks">Part 3 —
+HelixQA Extension: Per-Capability Test Banks</h2>
+<p><strong>Design pattern (uniform, anti-bluff, decoupled).</strong>
+Each capability gets a bank
+<code>banks/helixllm_&lt;capability&gt;.yaml</code>. Each
+<code>TestCase</code>: 1. drives the <strong>real HelixLLM
+endpoint</strong> (<code>http</code> step or a
+<code>dispatches_to</code> analyzer that calls it), 2. writes a
+machine-readable <strong>verdict artefact</strong>
+(<code>*_verdict.json</code>) capturing the metric + the raw response +
+the ground-truth, 3. gates PASS on a <code>RequiredEvidence</code>
+<strong>content assertion</strong> (§1.2 grammar) over that artefact —
+so PASS ⇒ the metric passed, not “a file exists”, 4. sets
+<code>feature_class</code> for the §11.4.69 taxonomy,
+<code>requires_env</code> for keys/hardware (honest SKIP), and (media
+capabilities) <code>metadata.recvalidate_options</code> for the
+§11.4.163 pipeline, 5. ships a <strong>paired §1.1 mutation</strong> (a
+golden-bad fixture the analyzer must FAIL).</p>
+<p>Each capability’s analyzer is a small
+<strong><code>cmd/helixqa-verify-&lt;cap&gt;</code></strong> Go tool
+(consumer-injected <code>DeviceExec</code>), reusing existing
+<code>pkg/vision</code> (VLM/OCR), <code>pkg/recordingqa</code>, and
+stdlib — <strong>no core change</strong>.</p>
+<h3 id="bank-a-helixllm_llm.yaml-chat-correctness-tool-calling-streaming-concurrency">Bank
+A — <code>helixllm_llm.yaml</code> (chat correctness + tool-calling +
+streaming + concurrency)</h3>
+<ul>
+<li><strong>LLM-CORRECT-001</strong> deterministic-answer prompts
+(arithmetic, word→digit, JSON-shape).
+<code>http POST &lt;llm/generate&gt; #CONFIRM</code>;
+<code>RequiredEvidence: &quot;qa/llm/correct_001_verdict.json | json:exact_match==true&quot;</code>.
+Anti-bluff: prompt has ONE correct answer; analyzer normalizes then
+compares; <strong>no LLM-judge for objectively-checkable
+answers</strong> (avoids judge-bluff).</li>
+<li><strong>LLM-TOOL-001</strong> tool-calling: send a prompt that must
+emit a tool call with specific args; assert the returned tool-call
+name+args JSON exactly.
+<code>... | json:tool.name==get_weather | json:tool.args.city==Belgrade</code>.</li>
+<li><strong>LLM-STREAM-001</strong> SSE streaming: analyzer opens the
+stream, records <strong>TTFT</strong>, inter-token gaps, total tokens;
+asserts <code>json:ttft_ms&lt;=&lt;budget&gt;</code> +
+<code>json:token_count&gt;=2</code> +
+<code>json:monotonic_stream==true</code> (proves genuine incremental
+delivery, not one buffered blob).
+<code>feature_class: llm_stream</code>.</li>
+<li><strong>LLM-CONCURRENCY-001</strong> (stress, §11.4.85): N≥10
+parallel generations via LLMPerf-style driver; assert
+<code>json:p99_ttft_ms&lt;=&lt;budget&gt;</code> +
+<code>json:error_rate==0</code> + <code>json:deadlocks==0</code>.
+<code>domains:[llm]</code> single-owner if endpoint is exclusive.</li>
+<li><strong>LLM-ERROR-001</strong> inject over-limit/429 and assert
+graceful typed error, not a crash/silent-empty.</li>
+<li><strong>Mutation:</strong> a fixture where the model returns a wrong
+digit ⇒ <code>exact_match</code> analyzer must emit <code>false</code> ⇒
+gate FAILs.</li>
+</ul>
+<h3 id="bank-b-helixllm_vision.yaml-vlm-the-headline-capability">Bank B
+— <code>helixllm_vision.yaml</code> (VLM — THE headline capability)</h3>
+<p>Uses <code>pkg/vision.OllamaClient</code> <strong>or</strong> the
+HelixLLM vision endpoint. Ground-truth image corpus committed under
+<code>data/vision_gt/</code> with per-image expected facts. -
+<strong>VIS-UNDERSTAND-001</strong> send a known image
+(<code>data/vision_gt/red_stop_sign.png</code>) + prompt “What shape and
+color is the sign?”; analyzer checks the VLM answer contains the GT
+tokens →
+<code>qa/vision/understand_001_verdict.json | json:matched_facts==2 | json:hallucinated==false</code>.
+Emits a <code>vision_call</code> conduit event.
+<code>feature_class: video_display</code>/<code>image_understanding</code>.
+- <strong>VIS-COUNT-001 / VIS-OCR-READ-001 / VIS-SPATIAL-001</strong>
+counting (“how many cats”), text-in-image reading (cross-check VLM
+answer against <strong>Tesseract OCR</strong> of the same image —
+two-oracle agreement), spatial (“is the red box left of the blue?”).
+Each <code>RequiredEvidence</code> asserts the GT via <code>json:</code>
+or <code>match:</code>. - <strong>VIS-CLIP-001</strong> (optional, if a
+CLIP embed endpoint exists) assert image-text
+<code>json:clip_cosine&gt;=0.8</code> for aligned pair AND
+<code>&lt;0.5</code> for a deliberately mismatched pair (metamorphic). -
+<strong>VIS-SELF-VALIDATE-001 (mandatory §11.4.107(10)):</strong> run
+the analyzer on a <strong>golden-good</strong> pair (answer correct →
+must PASS) AND a <strong>golden-bad</strong> pair (VLM given a
+mismatched GT → must FAIL). The paired mutation strips the fact-matching
+assertion and asserts the golden-bad then bluff-PASSes — proving the
+vision oracle itself cannot bluff. This is the single most important new
+test. - <strong>VIS-LIVENESS-001</strong> for any “describe the live
+screen” flow: window-scoped capture (<code>helixqa-x11grab</code>,
+§11.4.159) → freeze-detection (<code>pkg/vision/diff</code>) → assert
+not-stale before the VLM judges it.</p>
+<h3 id="bank-c-helixllm_imagegen.yaml">Bank C —
+<code>helixllm_imagegen.yaml</code></h3>
+<ul>
+<li><strong>IMG-GEN-001</strong> prompt→image; analyzer asserts (1) real
+image bytes decode (<code>image.Decode</code> ok, non-trivial dimensions
+— not a 1×1 stub), (2) <strong>CLIP prompt-adherence</strong>
+<code>json:clip_score&gt;=&lt;cal&gt;</code>, (3) optional
+<strong>FID</strong> vs a reference set.
+<code>RequiredEvidence: &quot;qa/imagegen/gen_001.png | nonempty&quot; , &quot;qa/imagegen/gen_001_verdict.json | json:decodes==true | json:clip_score&gt;=0.25&quot;</code>.
+Thresholds <strong>calibrated on our own fixtures</strong> (§11.4.6),
+not literature-copied.</li>
+<li><strong>Mutation:</strong> feed the analyzer a solid-gray/blank PNG
+⇒ CLIP-adherence FAILs (proves it rejects stubs).</li>
+</ul>
+<h3 id="bank-d-helixllm_videogen.yaml">Bank D —
+<code>helixllm_videogen.yaml</code></h3>
+<ul>
+<li><strong>VIDGEN-001</strong> prompt→video; analyzer runs
+<strong><code>ffprobe -count_frames</code></strong> →
+<code>json:nb_frames&gt;=&lt;min&gt;</code> + expected
+<code>codec/width/height/fps</code> + <strong>frame-advance</strong>
+over the clip (perceptual-hash distance between sampled frames &gt; ε →
+not a frozen loop, §11.4.107) + first-frame≠last-frame not-stale. Feeds
+<code>pkg/recordingqa</code> (§11.4.163).
+<code>feature_class: mediacodec_decode</code>.</li>
+<li><strong>Mutation:</strong> a 0-frame / single-repeated-frame mp4 ⇒
+frame-advance FAILs.</li>
+</ul>
+<h3 id="bank-e-helixllm_translation.yaml">Bank E —
+<code>helixllm_translation.yaml</code></h3>
+<ul>
+<li><strong>TR-BT-001 metamorphic back-translation</strong> (no
+reference needed, fully autonomous): X(en)→Y(sr)→X′(en); analyzer
+computes semantic similarity(X,X′) (embedding cosine or
+<strong>COMET-QE</strong>) →
+<code>json:round_trip_sim&gt;=&lt;cal&gt;</code>.</li>
+<li><strong>TR-COMET-001</strong> where a reference exists:
+<code>json:comet&gt;=&lt;cal&gt;</code>.</li>
+<li><strong>TR-INVARIANT-001</strong> metamorphic invariants
+(numbers/named-entities/URLs preserved verbatim across translation) →
+<code>match:</code> on entity preservation.</li>
+<li><strong>Mutation:</strong> identity “translation” (returns source
+unchanged) ⇒ back-translation sim is trivially 1.0 but the
+entity/target-language check (<code>json:target_lang==sr</code>) FAILs —
+proving BT alone isn’t enough and the guard catches a no-op
+translator.</li>
+</ul>
+<h3 id="bank-f-helixllm_embeddings_rag.yaml">Bank F —
+<code>helixllm_embeddings_rag.yaml</code></h3>
+<ul>
+<li><strong>EMB-INTEGRITY-001</strong> embed N texts; assert vectors
+stored + queryable + stable dim (<code>json:dim==&lt;D&gt;</code> +
+<code>json:nan_count==0</code>).</li>
+<li><strong>EMB-SIM-001</strong> metamorphic: sim(paraphrase-pair) &gt;
+sim(unrelated-pair) → <code>json:relative_order_ok==true</code>.</li>
+<li><strong>RAG-RECALL-001 / RAG-MRR-001 / RAG-NDCG-001</strong> over a
+labelled Q→relevant-doc set →
+<code>json:recall_at_5&gt;=&lt;cal&gt;</code>,
+<code>json:mrr&gt;=&lt;cal&gt;</code>,
+<code>json:ndcg&gt;=&lt;cal&gt;</code>.</li>
+<li><strong>RAG-FAITHFULNESS-001</strong> RAGAS-style:
+<code>json:faithfulness&gt;=&lt;cal&gt;</code> (fraction of answer
+claims grounded in retrieved chunks) + a <strong>negative</strong> case
+(answer with an unsupported claim → faithfulness must drop).</li>
+<li><strong>Mutation:</strong> shuffle the retrieval labels ⇒ Recall@K
+collapses ⇒ gate FAILs.</li>
+</ul>
+<h3 id="bank-g-helixllm_stt.yaml">Bank G —
+<code>helixllm_stt.yaml</code></h3>
+<ul>
+<li><strong>STT-WER-001</strong> known-transcript audio
+(<code>data/stt_gt/*.wav</code> + <code>.txt</code>); analyzer computes
+<strong>WER/CER</strong> vs GT → <code>json:wer&lt;=&lt;cal&gt;</code>
+(<code>json:cer&lt;=&lt;cal&gt;</code> for CJK).
+<code>qa-audio-probe</code> confirms the WAV is non-silent (RMS floor)
+first (§11.4.68).
+<code>requires_env:[HELIXQA_LAB_HAS_AUDIO_GT]</code>.</li>
+<li><strong>Mutation:</strong> feed silence/empty transcript ⇒ WER=100%
+⇒ FAIL.</li>
+</ul>
+<h3 id="bank-h-helixllm_ocr.yaml">Bank H —
+<code>helixllm_ocr.yaml</code></h3>
+<ul>
+<li><strong>OCR-CER-001</strong> GT-text images;
+<strong>Tesseract/Paddle</strong> (<code>pkg/vision</code>) →
+<strong>CER</strong> vs GT → <code>json:cer&lt;=&lt;cal&gt;</code> +
+per-word <code>json:min_confidence&gt;=&lt;floor&gt;</code> + ROI
+(§11.4.137(12)). Multi-language via
+<code>GetAvailableLanguages</code>.</li>
+<li><strong>Mutation:</strong> blank/noise image asserted against real
+GT ⇒ CER high ⇒ FAIL.</li>
+</ul>
+<h3 id="bank-i-helixllm_providers.yaml-const-036039-provider-coverage">Bank
+I — <code>helixllm_providers.yaml</code> (CONST-036/039
+provider-coverage)</h3>
+<ul>
+<li><strong>PROV-COVER-001</strong> for each verifier-supported provider
+(OpenAI, Anthropic, Gemini, DeepSeek, Groq, Mistral, xAI, OpenRouter,
+Ollama, Llama.cpp): a minimal live generate + one capability probe.
+<code>requires_env:[&lt;PROVIDER&gt;_API_KEY]</code> → honest
+<strong>SKIP</strong> when the key is absent (never a faked PASS,
+§11.4.98/§11.5). Cross-checks the model list is verifier-sourced, not
+hardcoded (CONST-036).</li>
+</ul>
+<hr />
+<h2 id="part-4-anti-bluff-captured-evidence-spec-applies-to-every-bank">Part
+4 — Anti-Bluff Captured-Evidence Spec (applies to every bank)</h2>
+<ol type="1">
+<li><strong>PASS requires a content assertion, never
+file-exists.</strong> Every <code>RequiredEvidence</code> token carries
+at least one
+<code>json:</code>/<code>match:</code>/<code>min_int:</code> clause over
+the verdict artefact (§1.2). A bare <code>nonempty</code> PASS is
+forbidden for a correctness claim.</li>
+<li><strong>The verdict artefact embeds the raw response + the
+ground-truth + the metric</strong>, so the conductor (and a human) can
+recompute it — the analyzer’s own conclusion is auditable, not
+trusted.</li>
+<li><strong>Self-validated analyzers (§11.4.107(10)) are
+mandatory</strong> for VLM, image-gen, video-gen, translation,
+embeddings, STT, OCR: each ships a golden-good (must PASS) + golden-bad
+(must FAIL) fixture pair, wired into the meta-test; the <strong>paired
+§1.1 mutation</strong> strips the discriminating assertion and asserts
+the golden-bad then bluff-PASSes.</li>
+<li><strong>Conduit evidence linkage (§11.4.116):</strong> every PASS
+<code>challenge_verdict</code> is preceded by an
+<code>evidence_captured</code> event whose <code>evidence_path</code> is
+the verdict artefact; <code>llm_call</code>/<code>vision_call</code>
+events carry model + latency + token counts in <code>Fields</code>. A
+PASS with no backing <code>evidence_captured</code> is a channel-layer
+bluff → treated as FAIL.</li>
+<li><strong>Liveness for any on-screen judgement
+(§11.4.107/159):</strong> window-scoped capture only, freeze-detection +
+frame-advance before a VLM/OCR reads a live surface; not-stale
+cross-check.</li>
+<li><strong>Media validation (§11.4.163):</strong> video/image/recording
+artefacts flow through <code>pkg/recordingqa</code> +
+<code>ffprobe</code>/<code>recording-analyzer</code>; a missing tool
+surfaces a typed <code>ToolAbsentError</code> → honest
+<strong>SKIP-with-reason</strong>, never a fake PASS.</li>
+<li><strong>Honest SKIP, never fake PASS:</strong> absent
+key/hardware/GT ⇒ <code>requires_env</code> SKIP-OK; genuinely
+infeasible autonomous path ⇒ <code>OPERATOR-BLOCKED</code> (§11.4.52),
+tracked, never green.</li>
+<li><strong>Thresholds calibrated on our own fixtures</strong>
+(§11.4.6), recorded in the bank next to the assertion — never copied
+from a paper.</li>
+</ol>
+<hr />
+<h2 id="part-5-autonomous-session-keep-it-running-live-testable-acceptance-11.4.98">Part
+5 — Autonomous-Session “keep-it-running + live-testable” Acceptance
+(§11.4.98)</h2>
+<p><strong>Operator command (single, no manual step after
+startup):</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> submodules/helix_qa</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># infra: HelixLLM/Ollama endpoint + provider keys from .env (the only pre-test bootstrap, §11.4.98(B))</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/helixqa</span> autonomous <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--banks</span> banks/helixllm_llm.yaml,banks/helixllm_vision.yaml,banks/helixllm_imagegen.yaml,<span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>banks/helixllm_videogen.yaml,banks/helixllm_translation.yaml,banks/helixllm_embeddings_rag.yaml,<span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>banks/helixllm_stt.yaml,banks/helixllm_ocr.yaml,banks/helixllm_providers.yaml <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--platform</span> all <span class="at">--conduit-dir</span> qa-results/helixllm_<span class="op">&lt;</span>run-id<span class="op">&gt;</span>/conduit <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--evidence-dir</span> qa-results/helixllm_<span class="op">&lt;</span>run-id<span class="op">&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># live-watch in a second pane (real-time §11.4.116 scoreboard):</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/helixqa-conduit-monitor</span> <span class="at">--stream</span> qa-results/helixllm_<span class="op">&lt;</span>run-id<span class="op">&gt;</span>/conduit/events.jsonl</span></code></pre></div>
+<p><strong>Acceptance criteria (all must hold):</strong> 1. The session
+is <strong>fully self-driving</strong> end-to-end — after key/endpoint
+bootstrap, zero human action; re-runnable at <code>-count=3</code> with
+self-cleaning state (§11.4.98(C)). 2. The conductor tails
+<code>events.jsonl</code> and sees, per capability,
+<code>challenge_start → llm_call/vision_call → evidence_captured(evidence_path=…_verdict.json) → challenge_verdict(PASS)</code>
+— a live, greppable trace. 3. <strong>Every PASS’s verdict artefact
+exists, is non-empty, and satisfies its content assertion</strong> (the
+<code>ContentAssertingResolver</code> already enforced this; the
+operator re-checks a sample by opening the JSON). 4. <strong>The
+self-validation cases PASS and their paired mutations FAIL</strong> in
+the meta-test run (<code>make test</code> in
+<code>submodules/helix_qa</code> + the golden-bad mutation sweep) —
+proof the oracles can’t bluff. 5. Curated evidence (verdict JSONs,
+sample images/video/recordings, the conduit stream + final status
+snapshot, a rendered summary) is committed under
+<strong><code>docs/qa/&lt;run-id&gt;/</code></strong> (§11.4.83), one
+subdir per capability, at release-prep only (raw corpus git-ignored per
+§11.4.128). 6. The final <code>Status.FinalVerdict</code> is
+<code>PASS</code> with <code>Counts</code> showing every capability’s
+cases GREEN or honestly SKIP/OPERATOR-BLOCKED with reasons — <strong>no
+capability silently absent</strong> (§11.4.118 enumerated coverage).</p>
+<hr />
+<h2 id="part-6-top-3-risks">Part 6 — Top 3 Risks</h2>
+<ol type="1">
+<li><strong>HelixLLM contract is UNCONFIRMED (§11.4.6).</strong>
+Endpoint paths, request/response schemas, and which capabilities
+actually ship were not found in-tree. Every
+<code>http</code>/<code>dispatches_to</code>/<code>json:</code> path
+below is a placeholder — <strong>implementation is blocked until the
+real HelixLLM API surface is confirmed</strong>; guessing it would
+itself be a bluff. <em>Mitigation:</em> first task of implementation =
+read/confirm the HelixLLM service spec, fill the <code># CONFIRM</code>
+values.</li>
+<li><strong>Analyzer-is-the-bluff risk.</strong> A metric analyzer
+(CLIP-score, COMET, WER, faithfulness) that is miscalibrated or lenient
+PASSes broken output — the §11.4.107(10) failure mode.
+<em>Mitigation:</em> the mandatory golden-good/golden-bad +
+paired-mutation self-validation on <strong>every</strong> analyzer is
+non-negotiable; thresholds calibrated on committed fixtures, never
+literature-copied.</li>
+<li><strong>Non-determinism + threshold flakiness.</strong> LLM/VLM/gen
+outputs vary run-to-run; a too-tight assertion flakes, a too-loose one
+bluffs. <em>Mitigation:</em> prefer objectively-checkable prompts
+(exact-match, entity-preservation, ffprobe frame count) over LLM-judge
+where possible; for genuinely fuzzy metrics use metamorphic relations
+(back-translation symmetry, relative-order sim, golden-bad separation)
+and <code>-count=3</code> determinism proof (§11.4.50); temperature
+pinned low for correctness banks.</li>
+</ol>
+<p><strong>Report path:</strong>
+<code>/home/milos/Factory/projects/tools_and_research/helix_code/docs/research/07.2026/12_helixqa_testing/12_helixqa_testing.md</code></p>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>LLM endpoint / load / streaming:
+https://gatling.io/blog/load-testing-an-llm-api ·
+https://github.com/ray-project/llmperf ·
+https://loadforge.com/guides/ai-llm/load-testing-llm-apis-streaming-non-streaming
+·
+https://blog.premai.io/load-testing-llms-tools-metrics-realistic-traffic-simulation-2026/
+·
+https://www.truefoundry.com/blog/llm-locust-a-tool-for-benchmarking-llm-performance</li>
+<li>VLM evaluation: https://arxiv.org/pdf/2311.14580 (LLMs as Automated
+Aligners) · https://www.nature.com/articles/s41598-026-55179-4 (VLMs for
+automated quality control) ·
+https://labelyourdata.com/articles/machine-learning/vision-language-models
+· https://arxiv.org/pdf/2508.19294</li>
+<li>Image/video-gen validation:
+https://labelbox.com/guides/a-comprehensive-approach-to-evaluating-text-to-image-models/
+· https://imagebench.ai/learn/prompt-fidelity ·
+https://ffmpeg.org/ffprobe.html ·
+https://ottverse.com/extract-frame-count-using-ffprobe-ffmpeg/</li>
+<li>Translation quality:
+https://grokipedia.com/page/Evaluation_of_machine_translation ·
+https://arxiv.org/pdf/2508.18549 (COMET-poly) ·
+https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00711/125277/Conformalizing-Machine-Translation-Evaluation</li>
+<li>RAG / embeddings:
+https://langcopilot.com/posts/2025-09-17-rag-evaluation-101-from-recall-k-to-answer-faithfulness
+·
+https://www.confident-ai.com/blog/rag-evaluation-metrics-answer-relevancy-faithfulness-and-more
+·
+https://www.getmaxim.ai/articles/complete-guide-to-rag-evaluation-metrics-methods-and-best-practices-for-2025/
+· https://labelyourdata.com/articles/llm-fine-tuning/rag-evaluation</li>
+<li>STT / OCR: https://mlcommons.org/2025/09/whisper-inferencev5-1/ ·
+https://whisperapi.com/word-error-rate-wer ·
+https://towardsdatascience.com/evaluating-ocr-output-quality-with-character-error-rate-cer-and-word-error-rate-wer-853175297510/
+·
+https://www.handwritingocr.com/blog/character-error-rate-explained</li>
+<li>HelixQA source (read 2026-07-06):
+<code>submodules/helix_qa/{README.md, pkg/testbank/schema.go, pkg/testbank/content_evidence.go, pkg/testbank/dispatch.go, pkg/conduit/{event,emit,monitor}.go, pkg/vision/{llm_ollama,ocr_tesseract,detector,diff}.go, pkg/recordingqa/recordingqa.go, banks/atmosphere_subtitles.yaml, cmd/}</code></li>
+</ul>
+</body>
+</html>

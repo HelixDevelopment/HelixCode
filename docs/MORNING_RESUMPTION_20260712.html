@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MORNING_RESUMPTION_20260712</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MORNING_RESUMPTION_20260712</h1>
+</header>
+<h1 id="morning-resumption-helix_code-overnight-autonomous-session-2026-07-12">Morning
+Resumption — helix_code overnight autonomous session (2026-07-12)</h1>
+<p><strong>Short resume prompt:</strong> Read this file +
+<code>.superpowers/sdd/discovery_sweep_progress.md</code>, then
+<code>git fetch --all</code>. HEAD = <code>f96fadbd</code> on
+<code>feature/helixllm-full-extension</code> (all pushed, all 3
+mirrors), build STABLE. The SSoT DB <code>docs/workable_items.db</code>
+is the authoritative status — <strong>12 Queued</strong> remain.
+Continue the endless loop: pull the highest-priority Queued item, fix it
+as a gated source increment (full <code>make verify-compile</code> +
+tests + independent review → commit → push ff-only no-force → close it
+in the DB via the fixed <code>workable-items</code> tool with a diff=0
+gate), repeat. NEVER commit a closed item without its source fix (the
+HXC-132 index.lock race lesson — always verify <code>git status</code>
+post-commit).</p>
+<h2 id="session-2-complete-state-operator-authorized-unblock-program-fully-executed">SESSION-2
+COMPLETE STATE (operator-authorized unblock program fully executed)</h2>
+<p>Both F-DBTOOL bugs fixed cross-repo (constitution
+<code>0fcc00b</code>, all 7 mirrors) + CONST-040 Phase-2
+(HXC-117/118/119) + infra full-suite (rootless-podman, security 272
+PASS, evidence <code>docs/qa/infra_fulltest_20260712/</code>) +
+infra/submodule defect fixes. ~24 helix_code commits + 3 constitution
+commits, all pushed. <strong>Closed this session:</strong>
+HXC-115/116/120/121/123/124/125/127/128/129/130/132/133/137
+(fixed/completed) + HXC-044/131 (obsolete). <strong>12 REMAINING
+Queued</strong> (fix these in the loop): HXC-117/118/119 (CONST-040
+Phase-3 full user-visibility — needs LLMsVerifier service to emit caps /
+durable vector index / ACP Phase-5 permission-map), HXC-122 (run
+infra-gated tests now that HXC-132 made server URL configurable),
+HXC-126 (move-drift — date-preserving relocate of section rows stuck in
+Issues; F-DBTOOL tool is clean now), HXC-134 (llms_verifier model_id
+int64→string, submodule), HXC-135 (llms_verifier emit capability keys,
+submodule), HXC-136 (ddos/scaling/stress/ui/ux test-types), HXC-138 (e2e
+challenge exec — needs a running server), <strong>HXC-139 (High:
+helix_agent vendored Continue fixture breaks module build — isolate the
+non-Go fixtures)</strong>, HXC-140 (helix_qa mutex-copy + testbank
+fail), HXC-141 (mcp_module Docker-adapter nil-ptr on stop-not-started).
+Operator decision still open: whether to open an item for
+Aurora/HarmonyOS targets.</p>
+<h2 id="latest-state-operator-returned-mid-session-authorized-unblocks-2026-07-12-later">LATEST
+STATE (operator returned mid-session + authorized unblocks — 2026-07-12
+later)</h2>
+<p>The F-DBTOOL “morning steps” section below is now MOSTLY DONE —
+superseded by this: - <strong>F-DBTOOL-1 LANDED cross-repo:</strong>
+constitution <code>3302587</code> (representation-scoping fix +
+regression test) pushed to all 7 mirrors; helix_code
+<code>7ce471ee</code> bumped the pointer + applied the copy-validated
+hygiene subset → <strong>closed HXC-125/127/129 + backfilled 79
+severities</strong>, DB <code>diff=0</code>/<code>validate OK</code>. -
+<strong>F-DBTOOL-2 LANDED:</strong> constitution <code>0fcc00b</code>
+(update –description no longer re-renders table-rep bodies + regression
+test) pushed all mirrors; helix_code applied the 31 descriptions →
+<strong>closed HXC-128</strong>, DB diff=0. Only <strong>HXC-126
+(move-drift)</strong> remains — a <em>separate</em>
+location-normalization (section rows stuck in Issues), not a tool bug;
+needs a date-preserving relocate. - <strong>CONST-040 Phase-2
+LANDED</strong> (<code>edbd5a49</code>): HXC-117 (verifier caps from
+real LLMsVerifier path; honest: live service doesn’t emit keys yet),
+HXC-118 (real Ollama-embedder RAG retriever + default-OFF handleGenerate
+hook), HXC-119 (ACP Prompt→real GenerateStream). All additive/opt-in,
+full build green. <strong>HXC-117/118/119 stay Queued</strong> (Phase-2
+landed; full user-visibility needs: LLMsVerifier service to emit caps /
+a durable vector index / ACP Phase-5 permission-map). - <strong>Infra
+full-suite COMPLETE:</strong> rootless-podman 17-container stack,
+teardown clean; <strong>security 272 PASS</strong>, memory 3,
+integration 189-pkg-ok (evidence
+<code>docs/qa/infra_fulltest_20260712/</code>). HXC-122 = infra boots +
+tests run (the skip-by-default gap is server:8080 hardcoding — a
+test-config fix). Surfaced 6 defects. - <strong>W5 infra-defects
+FIXED</strong> (<code>eb233785</code>): Azure
+<code>NewAzureProvider</code> nil-ptr SIGSEGV (endpoint-trim + hermetic
+test), stale <code>test/integration</code> reconciled to current API,
+e2e runner <code>-all</code> flag added. make verify-compile GREEN. -
+<strong>REMAINING FOLLOW-UPS (all documented, none blocking the
+build):</strong> HXC-126 move-drift (date-preserving relocate); HXC-124
+HelixQA <code>TokenField:&quot;token&quot;</code> consumer fix (root-caused in the
+infra SUMMARY); INFRA-4 cognee auth/bearer drift; INFRA-5 compose
+Dockerfile.test path + server:8080 test-config; HXC-117/118/119 full
+user-visibility (LLMsVerifier service to emit caps / durable vector
+index / ACP Phase-5 permission-map); Aurora/Harmony needs operator
+confirm on opening a new item. - <strong>HXC-108 correction:</strong>
+it’s a <em>Completed Video-QA task</em>, NOT the Aurora/Harmony item the
+old prompt claimed — took no action; Aurora/Harmony has no formal open
+item (scaffolds only under applications/{aurora_os,harmony_os}).</p>
+<hr />
+<h2 id="state-at-handoff-all-evidence-backed-zero-bluff">State at
+handoff (all evidence-backed, zero bluff)</h2>
+<ul>
+<li><strong>HEAD:</strong> <code>ca76e14b</code>
+<code>feature/helixllm-full-extension</code>; <strong>all 3 mirrors
+(github/gitlab/upstream) at <code>ca76e14b</code></strong> (ff-only, no
+force ever). <code>main</code> untouched on remotes
+(<code>6bf1be7</code>) — feature is ahead by 2 commits (§11.4.167
+no-merge-until-approved).</li>
+<li><strong>Build: STABLE.</strong> <code>make verify-compile</code>
+(nogui full build) = “✅ All packages compile successfully” at HEAD.
+Anti-bluff scan clean. mock-in-production 0.</li>
+<li>Five commits landed + pushed tonight (all 3 mirrors, ff-only
+no-force), each fully tested + independently reviewed +
+captured-evidence:
+<ul>
+<li><code>3d3f3326</code> wave-1: 6 fixes (HXC-115 CONST-046 gate
+portability, HXC-120 CORS stale-test, HXC-121 provider tests, HXC-123
+security_scan tests, HXC-116 multitrack runbook, HXC-130 GUI build-env
+doc) + 16-item backlog materialized (HXC-115..130). Evidence:
+<code>docs/qa/discovery_hardening_20260711T212548Z/</code>.</li>
+<li><code>ca76e14b</code> wave-2/3 source: HXC-117 Phase-1 (6 verifier
+CONST-040 capability fields), HXC-119 Phase-1 (ACP scaffold via
+<code>coder/acp-go-sdk v0.13.5</code> — <code>helixcode acp</code>
+opt-in stdio cmd, real handshake tests), HXC-125
+(<code>make test-integration-tag</code>, 123 PASS), + W2-A design doc.
+Evidence:
+<code>docs/qa/discovery_hardening_wave2src_20260711T220325Z/</code>.</li>
+<li><code>52b41448</code> this handoff doc. <code>54a76c3c</code>
+HXC-118 Phase-1 RAG adapter (<code>internal/rag</code>, default-OFF, 5
+tests). <code>d0be2462</code> F-DBTOOL ROOTCAUSE doc.</li>
+</ul></li>
+</ul>
+<h2 id="deep-analysis-verdict-11.4.118-discovery-sweep-of-the-203-distinct-item-all-terminal-tree">Deep-analysis
+verdict (§11.4.118 discovery sweep of the “203-distinct-item,
+all-terminal” tree)</h2>
+<p>The system is genuinely real (0 bluff-scan hits, all 10 CONST-039
+providers real HTTP, <code>/api/v1/llm/generate|stream</code> wired e2e,
+24/25 sampled closed items verified-present, unit 153/153, QA/Challenges
+suites real+executed). Real gaps found + tracked as HXC-115..130.</p>
+<h2 id="f-dbtool-root-caused-fixed-tested-validated-ready-for-a-2-minute-operator-commit">F-DBTOOL
+— ROOT-CAUSED + FIXED + TESTED (validated), ready for a 2-minute
+operator commit</h2>
+<p>Root cause (see
+<code>docs/research/f_dbtool_20260712/ROOTCAUSE.md</code>, committed):
+the workable-items schema PK is
+<code>(atm_id, current_location, representation)</code>, but
+<code>loadItem</code> +
+<code>update</code>/<code>close</code>/<code>reopen</code>/<code>block</code>/<code>obsolete-details</code>
+scoped their WHERE by only <code>(atm_id, current_location)</code> —
+IGNORING representation — so on the one dual-representation item
+(HXC-044) an edit clobbered BOTH the <code>section</code> and
+<code>table</code> rows, and a glue/newline bug then corrupted ~188
+downstream items’ parse → the 176–190 DB↔︎MD diff explosion. <strong>FIX
+(validated, UNCOMMITTED in the <code>constitution</code> submodule
+working tree):</strong>
+<code>constitution/scripts/workable-items/cmd/workable-items/{crud,db,mutate,obsolete}.go</code>
+scope every WHERE by representation + fix the glue/idempotency bugs; +
+regression test <code>f_dbtool_representation_scope_test.go</code> (3
+tests incl. a load-bearing reproduce-first proof). Tool
+<code>go test -count=3 ./...</code> PASS; re-running the exact repro on
+a live-DB <strong>copy</strong> now gives
+<code>diff: DB and Markdown are in sync</code> (was 190). <strong>Why
+not committed overnight (zero-risk §11.4.101):</strong> the constitution
+submodule is 1 commit BEHIND remote <code>main</code>
+(<code>91aa99d</code> vs <code>c793ba6</code>) with 8+ upstream mirrors;
+committing to the canonical-root repo that cascades to every project is
+highest-blast-radius — left for operator awareness. <strong>MORNING
+STEPS to land F-DBTOOL (each low-risk):</strong> (1)
+<code>cd constitution &amp;&amp; git pull --ff-only origin main</code>
+(integrate the 1 upstream commit; resolve if it touched workable-items).
+(2) commit the 5 files (4 fix + 1 test, scripts-only, NOT
+<code>git add -A</code>) + push ff/no-force to all constitution mirrors
+(§11.4.113). (3)
+<code>cd ..; git add constitution &amp;&amp; commit</code> the pointer
+bump. (4) rebuild <code>wi</code> from the fixed source; on a DB
+<strong>copy</strong> re-apply the wave-2 hygiene (close HXC-125;
+obsolete-details+close HXC-127; apply+close HXC-128 descriptions +
+HXC-129 severities from
+<code>scratch/discovery/fixes/W2C_hygiene_proposals.jsonl</code>) →
+<code>validate</code> + <code>diff</code>=in-sync → repeat on live
+<code>docs/workable_items.db</code> → <code>export</code> → commit
+helix_code (DB+trackers) + push. <strong>HXC-117/118/119 stay
+Queued</strong> (Phase-1 only — do NOT close them, that would be a
+bluff). <strong>The live DB is currently CLEAN + in-sync — safe to leave
+as-is.</strong></p>
+<h2 id="items-with-source-landed-but-db-still-shows-queued-db-close-deferred-per-f-dbtool-honest">Items
+with SOURCE landed but DB still shows Queued (DB-close deferred per
+F-DBTOOL — honest)</h2>
+<p>HXC-117, HXC-119 (Phase 1 each), HXC-125, HXC-127/128/129 (hygiene
+reverted). The W2C hygiene proposals (31 descriptions + 79 severities,
+validated) are saved at
+<code>scratch/discovery/fixes/W2C_hygiene_proposals.jsonl</code> for
+careful re-apply once F-DBTOOL is fixed.</p>
+<h2 id="in-flight-at-handoff">In flight at handoff</h2>
+<ul>
+<li>W3-118 (RAG adapter Phase 1, <code>internal/rag</code>) — running
+(agent a5b59e8fbe2612032).</li>
+<li>D2 (owned-submodule build/vet/test audit → Phase F) — long-running;
+may not have completed.</li>
+</ul>
+<h2 id="remaining-backlog-queued-in-db">Remaining backlog (Queued in
+DB)</h2>
+<p>HXC-118 (RAG — Phase 1 in flight; Phase 2 = cmd/cli wiring), HXC-119
+(ACP Phase 4 turn-gen + Phase 5 permission-map — SECURITY-SENSITIVE,
+needs review, do not rush overnight), HXC-117 (Phase 2 = wire
+mcp/lsp/skills/plugins to read verifier flags), HXC-122
+(memory/automation infra-gated tests — needs
+<code>make test-infra-up</code>), HXC-124 (HelixQA JWT-mint gap —
+submodule + security), HXC-126 (tracker move-drift — needs F-DBTOOL
+fix), plus Phase F submodule findings from D2, plus <strong>F-DBTOOL
+itself</strong>.</p>
+<h2 id="binding-constraints-unchanged">Binding constraints
+(unchanged)</h2>
+<p>Anti-bluff §11.4; no force-push §11.4.113 (ff-only,
+merge-onto-latest-main); source-only commits gated by full
+<code>make verify-compile</code> + tests + independent review;
+workable-items DB frozen until F-DBTOOL fixed; feature branch only,
+never <code>main</code>.</p>
+<h2 id="sources-verified-2026-07-12-local-git-git-ls-remote-make-verify-compile-wi-validatediff.">Sources
+verified 2026-07-12: local git (<code>git ls-remote</code>),
+<code>make verify-compile</code>,
+<code>wi validate</code>/<code>diff</code>.</h2>
+</body>
+</html>

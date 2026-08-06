@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="semgrep-onboarding-findings-11.4.166">Semgrep Onboarding
+Findings — §11.4.166</h1>
+<p><strong>Date:</strong> 2026-06-22 <strong>Scope:</strong> Install +
+validate + real-scan semgrep per constitution §11.4.166 (Universal
+Semgrep static analysis mandate). Wiring edits (.mcp.json / shell rc /
+pre-commit hook) deliberately NOT applied — left to the conductor’s
+meta-repo commit. <strong>Working dir:</strong>
+/Volumes/T7/Projects/helix_code</p>
+<hr />
+<h2 id="constitution-scripts-what-each-does">1. Constitution scripts —
+what each does</h2>
+<p><code>constitution/scripts/semgrep/</code> (POSIX-sh,
+§11.4.67-compliant):</p>
+<ul>
+<li><strong>semgrep_setup.sh</strong> — install/build integration.
+<code>semgrep_setup_check()</code> returns 0 if semgrep on PATH +
+functional; <code>semgrep_setup_install()</code> does
+<code>pip install --user semgrep</code> (falls back pip3/pip), re-checks
+<code>~/.local/bin</code>/<code>/usr/local/bin</code>/<code>~/.cargo/bin</code>,
+anti-bluff verifies <code>semgrep --version</code> non-empty after
+(install exit 0 != working binary); <code>semgrep_setup_build()</code>
+builds from the <code>submodules/semgrep</code> OCaml source when
+toolchain present, else falls back to pip. Logs events to
+<code>constitution/docs/semgrep/Status.md</code>. Exit codes 0=ok,
+1=bluff-caught, 2=env problem.</li>
+<li><strong>semgrep_path.sh</strong> — sourced from .bashrc/.zshrc.
+Prepends <code>~/.local/bin</code>, <code>~/.cargo/bin</code>,
+<code>/usr/local/bin</code>, <code>/opt/homebrew/bin</code>,
+<code>~/bin</code> to PATH (dedup via <code>case</code> match), exports
+PATH. Does not require semgrep pre-installed.</li>
+<li><strong>semgrep_validate.sh</strong> — anti-bluff validation
+(§107/§11.4.69). <code>semgrep_validate_check()</code> runs
+<code>semgrep scan --config auto --json</code> on a generated C
+buffer-overflow fixture + asserts valid JSON with “results” (python3
+json.tool, grep fallback), writes evidence JSON;
+<code>semgrep_validate_rules()</code> runs
+<code>semgrep --config-registry --dump-config-rules | head -5</code> as
+a registry-reachability probe. Emits <code>ab_pass_with_evidence</code>
+/ <code>ab_fail</code> lines + logs to Status.md. Exit
+0=PASS,1=FAIL,2=env.</li>
+<li><strong>semgrep_ci_test.sh</strong> — CI integration test, evidence
+under <code>qa-results/&lt;run-id&gt;/</code>. 4 tests: (1) semgrep on
+PATH, (2) <code>--version</code> non-zero, (3) known-vuln detection
+(Python <code>eval(input())</code> fixture, checks JSON
+<code>check_id</code> count &gt;=1, cross-checks with
+<code>--error</code> exit 2), (4) shell-script scan of
+<code>scripts/</code> *.sh (no-crash, exit 0 or 2). Records
+PASS/FAIL/SKIP counts; exit 1 if any FAIL.</li>
+</ul>
+<h2 id="is-semgrep-installed">2. Is semgrep installed?</h2>
+<p><strong>YES — already installed before this session.</strong></p>
+<pre><code>$ semgrep --version
+1.167.0
+$ command -v semgrep
+/opt/homebrew/bin/semgrep      (Homebrew, not pip --user)</code></pre>
+<p>No install needed. <code>semgrep --version</code> confirms working
+binary (not just a present file).</p>
+<h2 id="semgrep_validate.sh-verdict">3. semgrep_validate.sh verdict</h2>
+<pre><code>$ sh constitution/scripts/semgrep/semgrep_validate.sh
+PASS: semgrep scan produced valid JSON with results [evidence: constitution/docs/.semgrep/scan_2026-06-22T09:40:16Z.json]
+PASS: semgrep registry reachable (dump-config-rules returned output) [evidence: constitution/docs/.semgrep/registry_2026-06-22T09:40:16Z.txt]
+=== semgrep validation: ALL PASS ===
+(exit 0)</code></pre>
+<h2 id="real-scan-evidence-helix_codeinternalauth-helix_codeinternalllm">4.
+Real scan evidence — helix_code/internal/auth +
+helix_code/internal/llm</h2>
+<pre><code>$ semgrep scan --config auto helix_code/internal/auth helix_code/internal/llm
+Scanning 112 files tracked by git with 1059 Code rules (Community registry):
+  &lt;multilang&gt; 47 rules / 112 files ; go 84 / 100 ; yaml 31 / 2
+Ran 161 rules on 112 files: 4 findings.
+Scan completed successfully. Findings: 4 (4 blocking). Rules run: 161. Targets scanned: 112. Parsed ~100%.
+(exit 0  — semgrep OSS exits 0 even with findings; use --error for non-zero)</code></pre>
+<p>SEMGREP_APP_TOKEN absent → registry/Community rulepacks used (Pro/app
+tier honestly SKIPPED per §11.4.3; <code>--config auto</code> works
+without a token). Full output: <code>scan_auth_llm.txt</code>
+(sibling).</p>
+<h3 id="findings-all-go.lang.security.audit.dangerous-exec-command-blocking-all-in-helix_codeinternalllm">4
+findings — ALL
+<code>go.lang.security.audit.dangerous-exec-command</code> (Blocking),
+all in helix_code/internal/llm/:</h3>
+<ul>
+<li><code>auto_llm_manager.go:520</code> —
+<code>cmd := exec.Command(&quot;bash&quot;, &quot;-c&quot;, script)</code></li>
+<li><code>local_llm_manager.go:439</code> —
+<code>cmd := exec.CommandContext(ctx, &quot;bash&quot;, &quot;-c&quot;, provider.BuildScript)</code></li>
+<li><code>model_converter.go:303</code> —
+<code>cmd := exec.CommandContext(ctx, tool.Command, job.Args...)</code></li>
+<li><code>model_download_manager.go:479</code> —
+<code>cmd := exec.Command(tool.Command, args...)</code></li>
+</ul>
+<p>Rule: non-static command in exec.Command — audit input for
+code-injection if unverified user data reaches the call site
+(https://sg.run/W8lA). These are audit-class findings (not confirmed
+exploits); each needs an input-provenance audit. NOTE these are the real
+exec paths the constitution’s anti-bluff BLUFF-003 demanded (real
+os/exec, not simulated) — the finding is about input trust, not about
+the exec being a bluff.</p>
+<h2 id="wiring-still-needed-not-applied-for-the-conductor">5. WIRING
+STILL NEEDED (NOT applied — for the conductor)</h2>
+<p>All four §11.4.166 wiring points are currently ABSENT:</p>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>.mcp.json “semgrep” MCP
+server</strong> — present servers: codegraph, media-validator,
+open-design. <code>semgrep</code> NOT present. Add a
+<code>semgrep</code> mcpServers entry (per §11.4.78 step-3 CodeGraph
+pattern; the <code>semgrep</code> MCP plugin is available in this
+environment as
+<code>mcp__plugin_semgrep_semgrep__*</code>).</label></li>
+<li><label><input type="checkbox"></input><strong>.bashrc/.zshrc PATH
+integration</strong> — neither <code>~/.zshrc</code> nor
+<code>~/.bashrc</code> source
+<code>constitution/scripts/semgrep/semgrep_path.sh</code>. (Currently
+moot since semgrep is on PATH via Homebrew, but §11.4.166(2) requires
+the rc source line for all-users/all-shells availability.)</label></li>
+<li><label><input type="checkbox"></input><strong>pre-commit
+<code>semgrep scan</code> hook</strong> —
+<code>.git/hooks/pre-commit</code> exists but has NO semgrep reference.
+Reference hook already shipped at
+<code>constitution/scripts/hooks/semgrep_precommit.sh</code>
+(executable) — wire it into the installed pre-commit (or
+<code>scripts/install_git_hooks.sh</code>) to run
+<code>semgrep scan --config auto --error</code> (blocks commit/push on
+any finding) per §11.4.166(3).</label></li>
+<li><label><input type="checkbox"></input><strong>docs_chain context</strong>
+— <code>.docs_chain/contexts/semgrep_status.yaml</code> absent
+(§11.4.166(6)).</label></li>
+</ul>
+<p>Scripts are inherited by reference from the constitution submodule
+per §11.4.28/§11.4.35 — wire, do not copy.</p>
+<h2 id="sources-verified-2026-06-22">Sources verified 2026-06-22</h2>
+<ul>
+<li>constitution/Constitution.md §11.4.166 (Universal Semgrep static
+analysis mandate)</li>
+<li>semgrep 1.167.0 <code>--config auto</code> Community registry
+behaviour (observed this session)</li>
+</ul>
+</body>
+</html>

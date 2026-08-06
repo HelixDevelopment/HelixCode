@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02_cross_cutting_foundations_ADR</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">02_cross_cutting_foundations_ADR</h1>
+</header>
+<h1 id="adr-0001-cross-cutting-foundations-blackwell-toolchain-gpu-residency-rootless-cdi-unified-v1-gateway">ADR-0001
+— Cross-Cutting Foundations (Blackwell toolchain · GPU residency ·
+rootless CDI · unified /v1 gateway)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Type</strong></td>
+<td>Architecture Decision Record (foundational)</td>
+</tr>
+<tr>
+<td><strong>Status</strong></td>
+<td>ACCEPTED (cross-validated by ≥4 independent research streams)</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td>2026-07-06 · Revision 1</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/main)</code></td>
+</tr>
+<tr>
+<td><strong>Evidence basis</strong></td>
+<td>Streams 01 (serving), 02 (vision), 03 (translation), 04 (embeddings)
+independently converged; host baseline
+<code>01_host_baseline_evidence.md</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>These are the load-bearing decisions every capability container
+depends on. They are cross-validated FACT (the same constraint named by
+≥3 independent streams), not a single agent’s claim (§11.4.6). Each
+still gets a runtime proof at build/deploy time (§11.4.108) — “the docs
+agree” is not “it ran on the card.”</p>
+</blockquote>
+<hr />
+<h2 id="context">Context</h2>
+<p>One host, one <strong>RTX 5090 (32 GB, Blackwell sm_120)</strong>,
+CUDA-12.8 driver 570.169, podman 5.7.1 rootless, 64 cores / 251 GiB RAM.
+The programme must run <em>many</em> local AI services (coding LLM, VLM,
+image-gen, video-gen, translation, embeddings, reranker, vector DB,
+memory, STT, OCR) and serve 6–12 concurrent agents — all in
+rootless-podman containers via the <code>containers</code>
+submodule.</p>
+<p>Four independent streams surfaced the <strong>same two hard
+constraints</strong> and the <strong>same mitigations</strong>.</p>
+<h2 id="decision-1-pinned-blackwell-sm_120-toolchain-baseline">Decision
+1 — Pinned Blackwell (sm_120) toolchain baseline</h2>
+<p>Every from-source GPU engine (vLLM, CTranslate2 GPU, llama.cpp CUDA,
+ComfyUI/torch, TEI) MUST be built/run against a <strong>single pinned
+CUDA-12.8 toolchain</strong>, because Blackwell sm_120 is new and
+prebuilt wheels frequently fail:</p>
+<ul>
+<li><strong>CUDA 12.8</strong> (host driver already 12.8 ✓); base image
+= a pinned <strong>CUDA 12.8 devel/runtime</strong> image.</li>
+<li><strong>PyTorch 2.9.x + cu128</strong> (nightly at time of research)
+for torch-based engines (vLLM, ComfyUI, TEI, TOWER+).</li>
+<li><strong><code>TORCH_CUDA_ARCH_LIST=&quot;12.0&quot;</code></strong> /
+<strong><code>-DCMAKE_CUDA_ARCHITECTURES=120</code></strong> for source
+builds.</li>
+<li><strong>FlashAttention 2</strong>, NOT FA3
+(<code>VLLM_FLASH_ATTN_VERSION=2</code>) — FA3 unsupported on sm_120
+(streams 01, 03).</li>
+<li>Driver ≥ 575 recommended by stream 01 (host is 570.169 —
+<strong>verify/upgrade decision needed</strong>; flag).</li>
+<li><strong>NOT viable on consumer Blackwell (do not plan
+around):</strong> SGLang (FP8-blockwise/kernel-image errors),
+TensorRT-LLM (NVFP4/SM120 unwired) — stream 01. <code>nvcc</code> absent
+on host → build inside the CUDA devel container, never pollute host
+(G-HOST-2).</li>
+</ul>
+<p><strong>Consequence:</strong> a single tracked
+<code>Dockerfile.cuda-base</code> (or <code>containers</code>-submodule
+base spec) pins this once; every capability image FROM it. Each image
+ships a <strong>real inference/embed/transcribe proof</strong> (tok/s +
+<code>nvidia-smi</code> VRAM delta) at build — build-success alone is
+not acceptance (§11.4.108).</p>
+<h2 id="decision-2-rootless-gpu-passthrough-via-nvidia-container-toolkit-cdi">Decision
+2 — Rootless GPU passthrough via NVIDIA Container Toolkit + CDI</h2>
+<p>All four streams specified the identical mechanism; host lacks it
+(G-HOST-1):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one-time host setup (Phase-1 prerequisite; captured-proof verified)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  install nvidia-container-toolkit (distro pkg)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi generate <span class="at">--output</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi/nvidia.yaml   <span class="co"># USER-space CDI (rootless)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># per container:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> run <span class="at">--device</span> nvidia.com/gpu=all <span class="at">--security-opt</span><span class="op">=</span>label=disable <span class="op">&lt;</span>cuda-12.8 image<span class="op">&gt;</span> nvidia-smi</span></code></pre></div>
+<p>Acceptance proof (§11.4.69): <code>podman run … nvidia-smi</code>
+inside a container prints the RTX 5090 — a real passthrough, not a
+config-only claim. <strong>Known risk:</strong> rootless CDI can fail
+where privileged works (podman #17539) — fallback path documented, but
+rootless is the §11.4.161 target.</p>
+<h2 id="decision-3-single-gpu-vram-residency-orchestration-no-naive-co-hosting">Decision
+3 — Single-GPU VRAM residency orchestration (no naive co-hosting)</h2>
+<p>32 GB <strong>cannot</strong> co-host a 30B VLM + FLUX + WAN 2.2 + a
+30B coder simultaneously (streams 01, 02, 04). Adopt <strong>tiered
+residency</strong>, not all-resident:</p>
+<ul>
+<li><strong>Always-resident:</strong> the primary coding/agent model
+(Qwen3-Coder-30B-A3B, MoE, ~18 GB Q4 leaving ~12–13 GB for KV) + the
+small embedding model (Qwen3-Embedding-4B / can run CPU/off-peak) — the
+hot path for the agent fleet.</li>
+<li><strong>On-demand load/unload:</strong> VLM, image-gen (FLUX),
+video-gen (LTX/WAN), TOWER+ quality-translation — loaded when a request
+of that class arrives, evicted under pressure. NMT (NLLB via CTranslate2
+int8, ~3.5 GB) is light enough to keep warm.</li>
+<li><strong>Single-resource-owner discipline (§11.4.119):</strong> heavy
+request classes serialize on the GPU; concurrent drivers of the same
+VRAM would cross-contaminate/ OOM. A VRAM budget-broker gates
+admission.</li>
+<li><strong>Per-engine memory caps</strong>
+(<code>--gpu-memory-utilization</code>, llama.cpp
+<code>--parallel</code>/ctx caps) enforce the budget; §11.4.133
+target-safety — never exceed the card’s safe envelope, capture thermal
+evidence under sustained load.</li>
+</ul>
+<p><strong>Consequence:</strong> HelixLLM/HelixAgent need a
+<strong>model-residency scheduler / VRAM broker</strong> (a new
+component) that admits/evicts model containers by request class and a
+VRAM budget. This is a first-class Phase-1/3 design item.</p>
+<h2 id="decision-4-one-unified-openaianthropic-compatible-v1-gateway-surface">Decision
+4 — One unified OpenAI/Anthropic-compatible <code>/v1</code> gateway
+surface</h2>
+<p>Streams 02 + 03 (and the inventory) independently arrived at a
+<strong>LiteLLM-style single <code>/v1</code> gateway</strong>: every
+capability (chat, vision chat, <code>/v1/images/generations</code>,
+async video jobs, <code>/v1/embeddings</code>, rerank,
+<code>/translate</code>, <code>/v1/audio/transcriptions</code>, OCR) is
+presented behind ONE OpenAI/Anthropic-compatible surface with a single
+<code>/v1/models</code> list — so <strong>Claude Code / HelixCode
+auto-recognize everything</strong>. HelixAgent already ships an
+OpenAI/Anthropic/Google-compatible server (inventory) → <strong>extend
+it as this gateway</strong> rather than add a new one (§11.4.74
+reuse-don’t-reimplement). Non-standard surfaces (video gen) are exposed
+as async job endpoints + advertised via capability flags (CONST-040 /
+stream 05).</p>
+<h2 id="converged-risk-register-feeds-stream-99">Converged risk register
+(feeds stream 99)</h2>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 66%" />
+<col style="width: 24%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Risk (streams that named it)</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CX-01</td>
+<td>Blackwell sm_120 build friction — prebuilt wheels fail
+(01,02,03,04)</td>
+<td>pinned CUDA-12.8 devel container + source builds + per-image runtime
+proof</td>
+</tr>
+<tr>
+<td>CX-02</td>
+<td>32 GB VRAM contention — can’t co-host all services (01,02,04)</td>
+<td>tiered residency + VRAM broker + §11.4.119 single-owner
+serialization</td>
+</tr>
+<tr>
+<td>CX-03</td>
+<td>Rootless CDI GPU passthrough may fail where privileged works
+(02,03,04)</td>
+<td>verified <code>nvidia-smi</code>-in-container proof; documented
+fallback</td>
+</tr>
+<tr>
+<td>CX-04</td>
+<td>Benchmark/name drift — many 2026 tok/s figures + model names are
+aggregator-only (01,02,03,04)</td>
+<td>every headline number re-measured on the actual card before commit
+(§11.4.6); UNCONFIRMED names flagged</td>
+</tr>
+<tr>
+<td>CX-05</td>
+<td>Metric-gaming (COMET contamination in translation; MTEB in
+embeddings) (03,04)</td>
+<td>QE + human/MQM spot-checks; verify against model cards/primary
+papers</td>
+</tr>
+<tr>
+<td>CX-06</td>
+<td>License traps (Jina reranker CC-BY-NC weights) (04)</td>
+<td>ship only Apache/MIT weights self-hosted</td>
+</tr>
+<tr>
+<td>CX-07</td>
+<td>Large weights unversioned → fresh clone can’t run (all)</td>
+<td>§11.4.77 <code>fetch_weights.sh</code> +
+<code>.gitignore-meta</code> re-obtain, wired into
+<code>setup.sh</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="model-selections-locked-by-evidence-subject-to-on-card-re-measure">Model
+selections locked by evidence (subject to on-card re-measure)</h2>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 26%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Primary</th>
+<th>Serving</th>
+<th>Approx VRAM</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coding+agent (fleet)</td>
+<td><strong>Qwen3-Coder-30B-A3B-Instruct</strong> (MoE)</td>
+<td>vLLM (sm_120 build) / llama-server fallback</td>
+<td>~18 GB Q4 + KV</td>
+<td>12+ agents <span class="citation" data-cites="16k">@16k</span>; ~⅓
+KV of dense 32B</td>
+</tr>
+<tr>
+<td>Heavy-coding lane</td>
+<td>Qwen2.5-Coder-32B</td>
+<td>llama-server</td>
+<td>~22 GB</td>
+<td>low-parallel; HumanEval 88.4</td>
+</tr>
+<tr>
+<td>Agent tool-use lane</td>
+<td>Devstral-Small-2507 (24B)</td>
+<td>vLLM</td>
+<td>~</td>
+<td>SWE-bench Verified 53.6%</td>
+</tr>
+<tr>
+<td>Vision (VLM)</td>
+<td>Qwen3-VL-8B (30B high-q)</td>
+<td>vLLM / llama.cpp+mmproj</td>
+<td>~12–16 GB</td>
+<td>on-demand</td>
+</tr>
+<tr>
+<td>Image gen</td>
+<td>FLUX.1-dev fp8 / schnell</td>
+<td>ComfyUI</td>
+<td>on-demand</td>
+<td>Blackwell FP8</td>
+</tr>
+<tr>
+<td>Video gen</td>
+<td>LTX-Video/LTX-2 + WAN 2.2 14B fp8</td>
+<td>ComfyUI</td>
+<td>on-demand</td>
+<td>both fit 32 GB ✓</td>
+</tr>
+<tr>
+<td>Vectorize</td>
+<td>vtracer (+ StarVector-8B)</td>
+<td>FastAPI / VLM</td>
+<td>CPU / on-demand</td>
+<td>raster→SVG</td>
+</tr>
+<tr>
+<td>Translation NMT</td>
+<td>NLLB-200-3.3B</td>
+<td>CTranslate2 int8</td>
+<td>~3.5 GB</td>
+<td>warm; 200 langs</td>
+</tr>
+<tr>
+<td>Translation quality</td>
+<td>TOWER+ 9B</td>
+<td>vLLM</td>
+<td>~18 GB</td>
+<td>on-demand; XCOMET 84.38</td>
+</tr>
+<tr>
+<td>Embedding</td>
+<td>Qwen3-Embedding-4B (+BGE-M3 sparse)</td>
+<td>TEI / Infinity</td>
+<td>~8 GB</td>
+<td>general+code</td>
+</tr>
+<tr>
+<td>Reranker</td>
+<td>bge-reranker-v2-m3</td>
+<td>TEI</td>
+<td>small</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td>Vector DB</td>
+<td>Qdrant</td>
+<td>podman</td>
+<td>CPU</td>
+<td>hybrid dense+sparse</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Zep/Graphiti + mem0</td>
+<td>podman</td>
+<td>CPU</td>
+<td>HelixMemory spine, MCP-exposed</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Every row above is a research recommendation with a cited source in
+the stream reports; each becomes a runtime-proven FACT only after an
+on-card measurement at build/deploy (§11.4.108 / §11.4.123).</p>
+</blockquote>
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>11_claude_toolkit</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">11_claude_toolkit</h1>
+</header>
+<h1 id="claude_toolkit-helixagent-provider-auto-detection-research-design">claude_toolkit
+⇄ HelixAgent provider auto-detection — research &amp; design</h1>
+<p><strong>Date:</strong> 2026-07-06 <strong>Scope:</strong> design how
+the SIBLING project <code>claude_toolkit</code>
+(<code>/home/milos/Factory/projects/tools_and_research/claude_toolkit</code>,
+OUTSIDE the helix_code monorepo) auto-recognises
+<strong>HelixAgent</strong> as an LLM provider when the
+<code>helixagent</code> binary is on the system <code>PATH</code>,
+registers a HelixAgent provider alias exposing <strong>all</strong>
+HelixAgent-served models (the AI Debate Ensemble, HelixLLM, and any
+other <code>/v1/models</code> entries), validates that alias with a
+comprehensive real-request test like every other provider alias, and
+updates + re-incorporates its vendored <strong>LLMsVerifier</strong>.
+<strong>Method:</strong> read the actual claude_toolkit + helix_agent
+source (no guessing, §11.4.6). All file/line citations below are FACTs
+from the current checkout.</p>
+<hr />
+<h2 id="current-state-map-how-claude_toolkit-registers-providers-aliases-today">1.
+Current-state map — how claude_toolkit registers providers + aliases
+TODAY</h2>
+<h3 id="the-resolution-pipeline-env-key-driven-not-path-driven">1.1 The
+resolution pipeline (env-key-driven, NOT PATH-driven)</h3>
+<p>The provider system is entirely <strong>API-key-variable-NAME
+driven</strong>. The grounding fact from the inventory is confirmed: a
+provider only comes into existence because an <strong>env-key variable
+name</strong> is present in the keys file — there is no binary/PATH
+detection anywhere in the pipeline.</p>
+<p>Entry point: <code>scripts/claude-providers.sh</code> (the
+<code>sync</code> subcommand is default).</p>
+<p>Pipeline (<code>cmd_sync</code>, lines 170–266):</p>
+<ol type="1">
+<li><strong><code>present_key_vars()</code></strong>
+(<code>claude-providers.sh:129–156</code>) — extracts API-key variable
+<strong>NAMES</strong> (never values) from the keys file
+(<code>$CMA_KEYS_FILE</code>, default <code>~/api_keys.sh</code>) by
+grepping <code>^[[:space:]]*(export )?VAR=</code> lines, then sources
+the file in a subshell and keeps only names whose VALUE is non-empty.
+Output: a list of key-var names.</li>
+<li><strong><code>ensure_catalog()</code></strong>
+(<code>:88–126</code>) — fetches + caches the
+<strong>models.dev</strong> catalog
+(<code>https://models.dev/api.json</code>) to
+<code>~/.local/share/claude-multi-account/providers/models.dev.cache.json</code>
+(24 h TTL; offline uses cache).</li>
+<li><strong><code>resolve_records()</code></strong>
+(<code>:161–167</code>) → runs
+<strong><code>providers_resolve.py</code></strong> with
+<code>--models-dev CACHE --keys &quot;A_API_KEY,B_API_KEY,…&quot; --key-aliases … --overrides …</code>.</li>
+<li>For each <code>resolved</code> record: optionally verify (§1.4),
+then write a per-provider <strong>env file</strong> + <strong>shell
+alias</strong> + <strong>config dir</strong> (§1.3).</li>
+</ol>
+<h3 id="providers_resolve.py-the-dynamic-brain-pure-offline">1.2
+<code>providers_resolve.py</code> — “the dynamic brain” (pure,
+offline)</h3>
+<p><code>scripts/providers_resolve.py</code> (244 lines) maps each
+key-var name → a concrete provider record. Key mechanics:</p>
+<ul>
+<li><strong><code>classify(key_var)</code></strong>
+(<code>:54–64</code>) — a key-var name is <code>llm</code>,
+<code>vcs</code>, or <code>infra</code> by regex on the NAME
+(e.g. <code>^GITHUB_</code> → vcs, <code>^FIREBASE</code> → infra,
+<code>GITHUB_MODELS</code> exempt → llm). Only <code>llm</code> keys
+become aliases.</li>
+<li><strong><code>find_provider_by_env(catalog, key_var)</code></strong>
+(<code>:67–73</code>) — matches the key-var name against each models.dev
+provider’s <code>env</code> array; OR
+<strong><code>key_aliases.get(key_var)</code></strong> short-circuits it
+(<code>:165</code>).</li>
+<li><strong><code>select_models(provider)</code></strong>
+(<code>:89–137</code>) — picks
+<code>(strong, fast, context_limit, max_output)</code> from the
+models.dev metadata (reasoning → newest → largest context → highest
+output-cost for strong; lowest input-cost tool-capable for fast).</li>
+<li><strong><code>transport_for(provider)</code></strong>
+(<code>:76–83</code>) — <code>native</code> iff the provider’s
+models.dev <code>npm</code>/<code>api</code> ends with
+<code>anthropic</code>, else <code>router</code>.</li>
+<li><strong><code>overrides.json</code></strong> per-provider pins
+override
+<code>alias / base_url / transport / strong_model / fast_model</code>
+(<code>:190–193</code>).</li>
+<li>A <code>router</code> record <strong>with no
+<code>base_url</code></strong> is downgraded to <code>unmapped</code>
+(<code>:198–203</code>) — it cannot be configured for
+<code>ccr</code>.</li>
+</ul>
+<p>Record shape (<code>:22–27</code>):
+<code>{key_var, classification, provider_id, alias, base_url, transport, strong_model, fast_model, context_limit, max_output, status, reason}</code>;
+<code>status ∈ {resolved, unmapped, skipped}</code>.</p>
+<h3 id="the-two-human-editable-config-files-where-aliases-live">1.3 The
+two human-editable config files — where aliases “live”</h3>
+<p><code>scripts/providers/</code>:</p>
+<ul>
+<li><strong><code>key-aliases.json</code></strong> — maps a key-var NAME
+→ a models.dev provider id (name normalisation). Current content:
+<code>ZAI_API_KEY→zai-coding-plan</code>,
+<code>CODESTRAL_API_KEY→mistral</code>, <code>POE_API_KEY→poe</code>,
+etc.</li>
+<li><strong><code>overrides.json</code></strong> — per-provider manual
+pins (transport/base_url/models). E.g. <code>deepseek</code> pinned to
+<code>transport:native, base_url: https://api.deepseek.com/anthropic</code>;
+<code>kimi-for-coding</code> pinned to a native <code>/coding/</code>
+endpoint. <strong>This is the file where a local, non-models.dev
+provider gets its base_url + models pinned.</strong></li>
+</ul>
+<p>Adding a provider mapping without editing code:
+<code>claude-providers add --from-key VAR --id PROVIDER_ID</code>
+(<code>cmd_add</code>, <code>:385–402</code>) writes the
+<code>key-aliases.json</code> entry then re-runs <code>sync</code>.</p>
+<h3 id="what-a-provider-alias-physically-is">1.4 What a “provider alias”
+physically IS</h3>
+<p>Per resolved provider, three artefacts are written by
+<code>lib.sh</code> helpers:</p>
+<ul>
+<li><strong>env file</strong>
+<code>~/.local/share/claude-multi-account/providers/&lt;id&gt;.env</code>
+(<code>cma_provider_write_env</code>, <code>lib.sh:898</code>) —
+<strong>non-secret</strong> fields only:
+<code>CMA_PROVIDER_ID / KEYVAR / TRANSPORT / BASE_URL / MODEL / FAST_MODEL / CONFIG_DIR / CONTEXT_LIMIT / MAX_OUTPUT / ALIAS</code>.
+The secret is NEVER written; only the key-var <strong>NAME</strong> is
+stored, resolved at launch.</li>
+<li><strong>shell alias</strong> in
+<code>~/.local/share/claude-multi-account/aliases.sh</code>
+(<code>cma_provider_write_alias</code>, <code>lib.sh:954</code>):
+<code>alias &lt;name&gt;=&quot;cma_run_provider &lt;id&gt;&quot;</code>.</li>
+<li><strong>config dir</strong> <code>~/.claude-prov-&lt;id&gt;</code>
+with all shared plugins symlinked (<code>cma_link_shared_items</code>,
+<code>lib.sh:801</code>).</li>
+</ul>
+<p><code>cma_run_provider()</code> (<code>lib.sh:476</code>) is the
+launch wrapper: it sources the env file, reads the secret from the named
+key-var at run time, sets
+<code>ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN / ANTHROPIC_MODEL</code>
+(native transport) or routes through <code>ccr</code> (router
+transport), and launches Claude Code — gated on verified/activation
+status.</p>
+<h3 id="verification-the-multi-layer-adapter">1.5 Verification (the
+multi-layer adapter)</h3>
+<p><code>providers-verify.sh</code>
+(<code>scripts/providers-verify.sh</code>) is the pluggable adapter,
+tried in order:</p>
+<ol type="1">
+<li><strong>LLMsVerifier binary</strong> — if
+<code>submodules/LLMsVerifier/bin/model-verification</code> is
+executable, run <code>--provider … --model … --verbose</code>; PASS iff
+stdout has <code>Status: verified</code> AND
+<code>Can See Code: true</code> (<code>:46–52</code>).</li>
+<li><strong>HTTP probe</strong> — else
+<code>curl {BASE_URL}/models</code> with a bearer token passed via
+<code>--config &lt;(printf …)</code> (never argv);
+<code>200</code>→verified, <code>401/403</code>→failed, else→unverified
+(<code>:56–68</code>).</li>
+<li>Else <code>unverified</code> (not a failure; alias still
+usable).</li>
+</ol>
+<p>Layer 3 = <strong>semantic code-visibility</strong>
+(<code>providers-semantic.sh</code>), layer 4 = <strong>live
+superpowers-TUI</strong> (<code>verify_superpowers_tui.sh</code>).
+<code>cmd_sync</code> records the verdict + first failing layer into the
+status cache (<code>claude-providers.sh:226–260</code>).</p>
+<h3 id="how-existing-provider-aliases-are-tested-the-mirror-to-copy">1.6
+How existing provider aliases are TESTED (the mirror to copy)</h3>
+<ul>
+<li><strong><code>scripts/tests/verify_providers_live.sh</code></strong>
+(181 lines, read-only, SKIP when no aliases installed) — the canonical
+live proof: asserts every <code>&lt;id&gt;.env</code> has required
+non-secret fields, <strong>contains NO secret values</strong>
+(structural: only <code>CMA_PROVIDER_*=</code> lines), each alias
+resolves to <code>cma_run_provider</code>, and runs layer-3 semantic +
+layer-4 superpowers per installed provider, writing raw evidence to
+<code>scripts/tests/proof/</code> with a secret-redactor. Includes a
+<strong>negative case</strong> (a neutral prompt must NOT match the
+engagement marker) — the anti-bluff seam (§11.4.107(10)).</li>
+<li><strong><code>scripts/tests/test_providers.sh</code></strong> (71
+KB) — the hermetic unit/integration suite (uses a fake
+<code>models.dev</code> catalog + a <code>fakebin</code> PATH + a fake
+keys file).</li>
+<li><strong><code>scripts/alias_e2e_test.py</code></strong>,
+<strong><code>scripts/tests/verify_aliases_live.sh</code></strong> —
+end-to-end alias exercises.</li>
+<li>Evidence lives in <code>scripts/tests/proof/*.txt</code>
+(e.g. <code>50-providers-live.txt</code>,
+<code>60-xiaomi-live.txt</code>, <code>70-zen-live.txt</code>).</li>
+</ul>
+<hr />
+<h2 id="the-vendored-llmsverifier-path-version-incorporation-update">2.
+The vendored LLMsVerifier — path, version, incorporation, update</h2>
+<h3 id="where-how-incorporated">2.1 Where + how incorporated</h3>
+<ul>
+<li><strong>Git submodule</strong> declared in <code>.gitmodules</code>:
+<code>path = submodules/LLMsVerifier</code>,
+<code>url = git@github.com:vasic-digital/LLMsVerifier.git</code>,
+<code>branch = main</code>.</li>
+<li><strong>Go module</strong> lives one level down at
+<code>submodules/LLMsVerifier/llm-verifier/</code> — <code>go.mod</code>
+module id <strong><code>digital.vasic.llmsverifier</code></strong> (the
+same module helix_agent imports as
+<code>digital.vasic.llmsverifier/pkg/cliagents</code>).</li>
+<li>Build targets under <code>llm-verifier/cmd/</code>:
+<code>code-verification</code>, <code>model-verification</code>,
+<code>full-verify</code>, <code>quick-verify</code>,
+<code>crush-config-converter</code>, <code>partners</code>, …</li>
+<li><strong>Consumers inside claude_toolkit:</strong>
+<ul>
+<li><code>providers-verify.sh</code> expects a prebuilt binary at
+<code>submodules/LLMsVerifier/bin/model-verification</code> (strategy
+1).</li>
+<li><code>claude-verify-providers.sh</code> <strong>builds on
+demand</strong> (cached):
+<code>go build -o .local-cache/code-verification ./cmd/code-verification/</code>
+inside <code>llm-verifier/</code>, rebuilding when
+<code>cmd/code-verification/main.go</code> is newer than the cached
+binary (<code>:57–63</code>); runs with
+<code>--config code_verification_config.json</code>.</li>
+<li><code>claude-semantic-visibility.sh</code> /
+<code>providers-semantic.sh</code> build + run the
+semantic-code-visibility command (layer 3).</li>
+<li><code>config/containers/llmsverifier/</code> — a container build
+(<code>Dockerfile.nezha</code> copies
+<code>LLMsVerifier/llm-verifier/</code>) + a Grafana dashboard.</li>
+</ul></li>
+</ul>
+<h3 id="current-version-drift-fact-captured-2026-07-06">2.2 Current
+version / drift (FACT, captured 2026-07-06)</h3>
+<ul>
+<li>Vendored HEAD: <code>17b4bfb6</code>
+(<code>merge: reconcile v1.12.1 (I-1 exit-3 + CONST-069) with origin/main</code>),
+<code>git describe</code> →
+<code>helixcode-v1.1.0-13-g17b4bfb6</code>.</li>
+<li><code>git fetch origin</code> → <strong>origin/main =
+<code>0e7d6949</code></strong>, local is <strong>1 commit
+behind</strong> (<code>git rev-list --count HEAD..origin/main</code> =
+1).</li>
+</ul>
+<h3 id="update-re-incorporate-procedure">2.3 Update + re-incorporate
+procedure</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> claude_toolkit</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> fetch <span class="at">--all</span> <span class="at">--prune</span>                              <span class="co"># §11.4.60 fetch-before-edit</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> submodules/LLMsVerifier</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> fetch origin <span class="at">--prune</span> <span class="at">--tags</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> log <span class="at">--oneline</span> HEAD..origin/main                  <span class="co"># investigate the delta (§11.4.71)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout main <span class="kw">&amp;&amp;</span> <span class="fu">git</span> merge <span class="at">--ff-only</span> origin/main <span class="co"># merge-onto-latest-main (§11.4.113); NO force</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../..</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-incorporate: bump the parent gitlink + rebuild the consumed binaries</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add submodules/LLMsVerifier</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Rebuild caches so the new codebase is actually exercised (§11.4.108 artifact layer):</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-f</span> .local-cache/code-verification                 <span class="co"># force rebuild on next run</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/claude-verify-providers.sh</span> <span class="at">--help</span> <span class="op">&gt;</span>/dev/null <span class="co"># triggers cached go build</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span> <span class="bu">cd</span> submodules/LLMsVerifier/llm-verifier <span class="dt">\</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">&amp;&amp;</span> <span class="ex">go</span> build <span class="at">-o</span> ../bin/model-verification ./cmd/model-verification/ <span class="kw">)</span>   <span class="co"># strategy-1 binary</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate: run the toolkit&#39;s own verify suites against the rebuilt binary</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tests/test_verify_providers.sh</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/tests/verify_providers_live.sh          <span class="co"># captures proof/*.txt</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;chore(LLMsVerifier): bump submodule to &lt;sha&gt; + rebuild verifier binaries&quot;</span></span></code></pre></div>
+<p>Notes: (a) <code>test_verify_providers.sh:23</code> asserts
+<code>.gitmodules</code> declares <code>submodules/LLMsVerifier</code>,
+so the submodule wiring is gate-protected; (b) the Go toolchain is
+required (<code>claude-verify-providers.sh:47</code>); (c) a
+<code>bin/model-verification</code> prebuilt binary is what strategy-1
+wants but it is NOT currently committed — the re-incorporation SHOULD
+build it (or the toolkit falls back to strategy-2 HTTP probe / on-demand
+build).</p>
+<hr />
+<h2 id="helixagent-current-model-surface-fact-from-helix_agent-source">3.
+HelixAgent current model surface (FACT, from helix_agent source)</h2>
+<p>Source:
+<code>helix_code/submodules/helix_agent/cmd/helixagent/main.go</code>.</p>
+<ul>
+<li><strong>Binary name: <code>helixagent</code></strong> (built from
+<code>cmd/helixagent/</code>).</li>
+<li>Serves an <strong>OpenAI-compatible HelixLLM REST API</strong> at
+<code>http://&lt;HELIXAGENT_HOST|localhost&gt;:&lt;PORT|8100&gt;/v1</code>
+— endpoints <strong><code>/v1/models</code></strong>,
+<strong><code>/v1/chat/completions</code></strong>
+(<code>main.go:2564</code>, <code>:3137</code> comments; base =
+<code>fmt.Sprintf(&quot;http://%s:%s&quot;, host, port)</code> at
+<code>:2404–2413</code>, default host <code>localhost</code>, default
+<code>PORT=8100</code>, <code>ServerPort:&quot;8100&quot;</code> at
+<code>:1321</code>).</li>
+<li>A <strong>native HelixLLM endpoint</strong> at
+<code>https://localhost:8443</code> (self-signed TLS, auto-trust
+configured by <code>configureHelixLLMTLS</code>, <code>:2027</code>),
+env <code>HELIX_LLM_ENDPOINT</code> /
+<code>HELIX_LLM_API_KEY</code>.</li>
+<li><strong>Auth:</strong> <code>HELIXAGENT_API_KEY</code> (bearer / API
+key; <code>--generate-api-key</code> generates one,
+<code>--api-key-env-file</code> writes it; <code>:2385</code>,
+<code>:87</code>, <code>:94</code>).</li>
+<li><strong>Exposed models</strong> (from
+<code>--generate-opencode-config</code>, <code>:2437–2447+</code>): a
+single provider <strong>“Helix Agent”</strong> (<code>helixagent</code>,
+npm <code>@ai-sdk/openai-compatible</code>,
+<code>BaseURL: baseURL+&quot;/v1&quot;</code>, <code>APIKey: apiKey</code>) with
+models <strong><code>helix-debate</code></strong> (“Helix AI Debate
+Ensemble”, ctx 128000/out 8192) and
+<strong><code>helix-llm</code></strong> (“fast local inference via
+HelixLLM”). The authoritative, non-hardcoded enumeration is the live
+<strong><code>GET /v1/models</code></strong> response.</li>
+<li>Relevant CLI flags: <code>--generate-api-key</code>,
+<code>--generate-opencode-config</code>,
+<code>--generate-crush-config</code>,
+<code>--generate-agent-config &lt;agent&gt;</code>,
+<code>--list-agents</code>, <code>--version</code>.</li>
+</ul>
+<hr />
+<h2 id="design">4. DESIGN</h2>
+<p>Because the whole pipeline is keyed on an <strong>env-key variable
+name</strong>, HelixAgent (a local binary with no cloud API key) needs a
+<strong>new PATH-detection path</strong> that (a) synthesises a provider
+record without a models.dev entry, (b) enumerates models from
+HelixAgent’s live <code>/v1/models</code>, and (c) supplies base_url + a
+key-var so the existing env/alias/verify machinery works unchanged.</p>
+<h3 id="a-path-detection-mechanism-register-a-helixagent-provider-alias">4.a
+PATH-detection mechanism → register a HelixAgent provider + alias</h3>
+<p>Add a small, self-contained detector invoked once at the top of
+<code>cmd_sync</code> (and <code>cmd_sync_multi</code>), BEFORE
+<code>resolve_records</code>. Keep it decoupled (§11.4.28): no
+HelixAgent-specific logic inside <code>providers_resolve.py</code> (that
+stays pure / models.dev-only) — the detector produces a
+<code>resolved</code>-shaped record and feeds it through the SAME
+<code>cma_provider_write_env</code> /
+<code>cma_provider_write_alias</code> / verification code path.</p>
+<p>New helper <code>detect_helixagent()</code> (in <code>lib.sh</code>
+or a new <code>scripts/providers/detect_local.sh</code>),
+pseudo-contract:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Is HelixAgent on PATH? (config-driven binary name, default &quot;helixagent&quot;)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">:</span> <span class="st">&quot;</span><span class="va">${CMA_HELIXAGENT_BIN</span><span class="op">:=</span>helixagent<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">:</span> <span class="st">&quot;</span><span class="va">${CMA_HELIXAGENT_ID</span><span class="op">:=</span>helixagent<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">:</span> <span class="st">&quot;</span><span class="va">${CMA_HELIXAGENT_HOST</span><span class="op">:=</span>localhost<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="bu">:</span> <span class="st">&quot;</span><span class="va">${CMA_HELIXAGENT_PORT</span><span class="op">:=</span>8100<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="bu">:</span> <span class="st">&quot;</span><span class="va">${CMA_HELIXAGENT_KEYVAR</span><span class="op">:=</span>HELIXAGENT_API_KEY<span class="va">}</span><span class="st">&quot;</span>   <span class="co"># the key-var NAME (not value)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">detect_helixagent()</span> <span class="kw">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="bu">command</span> <span class="at">-v</span> <span class="st">&quot;</span><span class="va">$CMA_HELIXAGENT_BIN</span><span class="st">&quot;</span> <span class="op">&gt;</span>/dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">||</span> <span class="cf">return</span> <span class="dv">1</span>   <span class="co"># PATH gate</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">base</span><span class="op">=</span><span class="st">&quot;http://</span><span class="va">${CMA_HELIXAGENT_HOST}</span><span class="st">:</span><span class="va">${CMA_HELIXAGENT_PORT}</span><span class="st">/v1&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Health/liveness: is the server actually up? (honest — a binary on PATH</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># is not a running server, §11.4.6). If down, register alias but mark</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># &#39;unverified&#39; rather than fabricate a model list.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<p>Two design sub-decisions:</p>
+<ol type="1">
+<li><strong>Detection is by PATH, but the record still flows as a
+<code>resolved</code> JSON record</strong> so the
+dedupe-by-<code>provider_id</code>, env-write, alias-write, and
+verification loop in <code>cmd_sync</code> (<code>:197–262</code>) is
+reused verbatim. The detector emits ONE extra TSV/JSON record appended
+to <code>resolve_records</code> output. Concretely:
+<code>resolve_records()</code> becomes
+<code>resolve_records() { python3 &quot;$RESOLVER&quot; …; detect_helixagent_record; }</code>
+merged via <code>jq -s add</code>.</li>
+<li><strong>transport = <code>native</code> vs
+<code>router</code>.</strong> HelixAgent’s <code>/v1</code> is
+<strong>OpenAI-compatible</strong>, NOT Anthropic-native, so
+<code>cma_run_provider</code>’s native path (which sets
+<code>ANTHROPIC_BASE_URL</code>) would NOT work directly for Claude
+Code. Therefore the HelixAgent alias MUST use
+<strong><code>transport: router</code></strong> so the toolkit routes
+through <code>ccr</code> (claude-code-router), which translates
+Anthropic↔︎OpenAI — exactly as every other OpenAI-style provider alias
+does. (If HelixAgent later exposes an Anthropic-native
+<code>/anthropic</code> endpoint like deepseek’s override, a future
+<code>overrides.json</code> pin can promote it to
+<code>native</code>.)</li>
+</ol>
+<p>To keep it override-driven (no hardcoding, §11.4.6 /
+CONST-045-style), ship a default <code>overrides.json</code> block plus
+the PATH gate:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;helixagent&quot;</span><span class="er">:</span> <span class="fu">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;transport&quot;</span><span class="fu">:</span> <span class="st">&quot;router&quot;</span><span class="fu">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;base_url&quot;</span><span class="fu">:</span> <span class="st">&quot;http://localhost:8100/v1&quot;</span><span class="fu">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;strong_model&quot;</span><span class="fu">:</span> <span class="st">&quot;helix-debate&quot;</span><span class="fu">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;fast_model&quot;</span><span class="fu">:</span> <span class="st">&quot;helix-llm&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>…but the base_url/models are <strong>discovered</strong> at detection
+time (4.b) and only fall back to these pins when discovery fails — so a
+running HelixAgent with a different port/model set is honoured, and a
+down one still yields a usable (unverified) alias.</p>
+<h3 id="b-enumerating-helixagents-exposed-models-all-of-them">4.b
+Enumerating HelixAgent’s exposed models (all of them)</h3>
+<p>Query the live OpenAI-compatible endpoint — the single source of
+truth (§11.4.6, mirrors CONST-036 “no hardcoded model lists”):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">helixagent_models()</span> <span class="kw">{</span>   <span class="co"># echoes model ids, one per line</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">base</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span> <span class="va">keyvar</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$2</span><span class="st">&quot;</span> <span class="va">key</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${</span><span class="op">!</span><span class="va">keyvar</span><span class="er">:-</span><span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">curl</span> <span class="at">-s</span> <span class="at">--max-time</span> 8 <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">--config</span> <span class="op">&lt;(</span><span class="bu">printf</span> <span class="st">&#39;header = &quot;Authorization: Bearer %s&quot;\n&#39;</span> <span class="st">&quot;</span><span class="va">$key</span><span class="st">&quot;</span><span class="op">)</span> <span class="dt">\</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;</span><span class="va">${base</span><span class="op">%</span>/<span class="va">}</span><span class="st">/models&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">jq</span> <span class="at">-r</span> <span class="st">&#39;.data[].id&#39;</span>          <span class="co"># OpenAI /v1/models shape: {data:[{id,...}]}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div>
+<ul>
+<li><strong>strong</strong> model = <code>helix-debate</code> if present
+(the AI Debate Ensemble — best quality), else the first id;
+<strong>fast</strong> = <code>helix-llm</code> if present, else the
+cheapest/first. Selection is data-driven from the returned ids, never a
+static list. In <code>--multi</code> mode, feed ALL returned ids into
+<code>model_verify.py</code> / <code>providers_generate.py</code> so one
+alias per model is created (<code>helixagent</code>,
+<code>helixagent2</code>, …) exactly like other multi-providers.</li>
+<li>If <code>/v1/models</code> is unreachable (server down) → emit the
+record with <code>status: resolved</code> but let verification mark it
+<code>unverified</code>, and default the model pair to the
+<code>overrides.json</code> pins so the alias still exists (an honest
+“installed but not yet verified” state, not a bluff PASS).</li>
+<li>The auth token comes from the <strong>key-var NAME</strong>
+<code>HELIXAGENT_API_KEY</code> resolved at run time (same non-secret
+discipline as every other alias) — the operator puts
+<code>export HELIXAGENT_API_KEY=…</code> in <code>~/api_keys.sh</code>,
+OR the detector calls
+<code>helixagent --generate-api-key --api-key-env-file ~/api_keys.sh</code>
+to bootstrap it (documented, opt-in — never auto-writes secrets
+silently).</li>
+</ul>
+<h3 id="c-base-url-auth-record-for-a-local-helixagent">4.c base-URL +
+auth record for a local HelixAgent</h3>
+<p>The written <code>helixagent.env</code> (non-secret) will
+contain:</p>
+<pre><code>CMA_PROVIDER_ID=helixagent
+CMA_PROVIDER_KEYVAR=HELIXAGENT_API_KEY        # NAME only, resolved at launch
+CMA_PROVIDER_TRANSPORT=router                 # OpenAI-compat → route via ccr
+CMA_PROVIDER_BASE_URL=http://localhost:8100/v1
+CMA_PROVIDER_MODEL=helix-debate               # strong (AI Debate Ensemble)
+CMA_PROVIDER_FAST_MODEL=helix-llm             # fast (HelixLLM)
+CMA_PROVIDER_CONFIG_DIR=/home/&lt;u&gt;/.claude-prov-helixagent
+CMA_PROVIDER_CONTEXT_LIMIT=128000
+CMA_PROVIDER_MAX_OUTPUT=8192
+CMA_PROVIDER_ALIAS=helixagent</code></pre>
+<p>Host/port/binary/key-var are all env-overridable
+(<code>CMA_HELIXAGENT_*</code>) so the detector is reusable/decoupled
+(§11.4.28) — no project-specific paths baked in. For the native HelixLLM
+<code>https://localhost:8443</code> endpoint (self-signed TLS), the
+detector can additionally trust the cert exactly as helix_agent’s
+<code>configureHelixLLMTLS</code> does (point <code>SSL_CERT_FILE</code>
+at the combined CA bundle) — optional, only if the operator selects the
+native endpoint.</p>
+<h3 id="d-comprehensive-verification-test-mirrors-existing-alias-tests">4.d
+Comprehensive verification test (mirrors existing alias tests)</h3>
+<p>Add
+<strong><code>scripts/tests/verify_helixagent_live.sh</code></strong>,
+modelled 1:1 on <code>verify_providers_live.sh</code> (§1.6), read-only
++ honest-SKIP when HelixAgent is not on PATH / not running (§11.4.3 —
+never a faked PASS):</p>
+<ol type="1">
+<li><strong>PATH + record checks</strong> —
+<code>command -v helixagent</code> present; a
+<code>helixagent.env</code> exists with all required
+<code>CMA_PROVIDER_*</code> fields and <strong>no secret values</strong>
+(reuse the structural “only <code>CMA_PROVIDER_*=</code> lines”
+assert).</li>
+<li><strong>Live <code>/v1/models</code></strong> — real
+<code>curl</code> to <code>${BASE_URL}/models</code> returns HTTP 200
+and a non-empty <code>.data[].id</code> list that <strong>includes the
+alias’s <code>CMA_PROVIDER_MODEL</code></strong>; capture the raw JSON
+to <code>proof/80-helixagent-models.txt</code> (redacted). (§11.4.69
+sink-side positive evidence — a non-empty enumerated model list, not a
+config-only pass.)</li>
+<li><strong>Real chat round-trip (no mock, §11.4.50/CONST-035)</strong>
+— POST to <code>${BASE_URL}/chat/completions</code> with model
+<code>helix-debate</code> and a deterministic prompt
+(<code>&quot;Reply with exactly the word HELIXOK&quot;</code>), assert the
+response body contains a real assistant completion
+(<code>choices[0].message.content</code> non-empty and matches
+<code>HELIXOK</code>), capture to
+<code>proof/81-helixagent-chat.txt</code>. This is the anti-bluff proof
+the ensemble genuinely answers — not just that a port is open.</li>
+<li><strong>Alias launch coherence</strong> —
+<code>cma_run_provider helixagent -p &quot;…&quot; --output-format json</code>
+through the router path returns a real model response (reuse the
+<code>verify_providers_live.sh</code> launch harness + secret-redactor +
+throwaway cwd).</li>
+<li><strong>Negative case</strong> — a neutral prompt must NOT falsely
+match the engagement-marker regex (copy the §1.6 negative-case block) —
+proves the analyzer itself can’t bluff (§11.4.107(10)).</li>
+<li>Optionally wire strategy-1 <strong>LLMsVerifier</strong> at the
+HelixAgent endpoint
+(<code>providers-verify.sh --provider helixagent --model helix-debate --base-url …/v1</code>)
+so the same “Do you see my code?” contract runs.</li>
+</ol>
+<p>All evidence lands under
+<code>scripts/tests/proof/8x-helixagent-*.txt</code>; the test is NOT
+named <code>test_*.sh</code> (so <code>run-all.sh</code> won’t auto-pick
+a live network test), and SKIPs cleanly when preconditions are absent —
+matching the repo convention.</p>
+<p>Also extend the hermetic
+<strong><code>test_providers.sh</code></strong> with a
+fake-<code>helixagent</code> on the <code>fakebin</code> PATH + a fake
+<code>/v1/models</code> responder, asserting the detector produces the
+expected record and env/alias — so detection has both a hermetic gate
+AND a live proof (four-layer, §11.4.4(b)).</p>
+<hr />
+<h2 id="web-research-needed">5. Web research needed</h2>
+<p>The design is derived entirely from the two codebases (no external
+dependency for correctness), so no web research was required for THIS
+report. For the IMPLEMENTATION, two best-practice cross-checks are worth
+a quick §11.4.99 latest-source verification before coding:</p>
+<ol type="1">
+<li><strong>OpenAI <code>/v1/models</code> +
+<code>/v1/chat/completions</code> response shapes</strong> — confirm
+<code>{&quot;data&quot;:[{&quot;id&quot;:…}]}</code> and
+<code>choices[0].message.content</code> against the current OpenAI API
+reference (HelixAgent claims OpenAI-compatibility; verify the exact JSON
+before asserting on it).</li>
+<li><strong>CLI provider auto-detection patterns</strong> — how tools
+like <code>ollama</code>,
+<code>llama.cpp</code>/<code>llama-server</code>, and
+<code>aider</code>/<code>opencode</code> detect a local
+OpenAI-compatible server (PATH probe + a <code>/models</code> or
+<code>/health</code> liveness ping, with graceful
+“installed-but-not-running” state) — to confirm the
+PATH-gate-then-liveness-ping shape in §4.a matches established
+practice.</li>
+</ol>
+<p>(No web fetches were performed in this session; the two items above
+are flagged as pre-implementation verification, not completed
+research.)</p>
+<hr />
+<h2 id="top-3-risks">6. Top 3 risks</h2>
+<ol type="1">
+<li><strong>Transport mismatch (OpenAI-compat vs
+Anthropic-native).</strong> HelixAgent’s <code>/v1</code> is
+OpenAI-shaped; Claude Code speaks Anthropic. The alias MUST route via
+<code>ccr</code> (<code>transport:router</code>) — if mistakenly pinned
+<code>native</code> it will send Anthropic-format requests to an OpenAI
+endpoint and fail at launch. Mitigate: default
+<code>overrides.json</code> pins <code>router</code>; the live test’s
+chat round-trip (§4.d step 3) catches a wrong transport
+immediately.</li>
+<li><strong>PATH-present ≠ server-running.</strong>
+<code>command -v helixagent</code> succeeding does NOT mean the
+<code>:8100/v1</code> server is up, nor that
+<code>HELIXAGENT_API_KEY</code> is set. Registering a “verified” alias
+off a mere PATH hit would be a §11.4 PASS-bluff. Mitigate: PATH gate
+registers the alias, but model-enumeration + verdict come from a real
+<code>/v1/models</code> + chat probe; server-down → honest
+<code>unverified</code>, not a fake pass.</li>
+<li><strong>LLMsVerifier re-incorporation drift.</strong> The vendored
+copy is 1 commit behind <code>origin/main</code>, and strategy-1 expects
+a <code>bin/model-verification</code> binary that is not committed — a
+bump without rebuilding the consumed binaries leaves the toolkit
+exercising STALE verifier code (§11.4.108 SOURCE→ARTIFACT gap).
+Mitigate: the §2.3 procedure force-rebuilds
+<code>.local-cache/code-verification</code>
+<ul>
+<li><code>bin/model-verification</code> and re-runs
+<code>test_verify_providers.sh</code> +
+<code>verify_providers_live.sh</code> before committing the gitlink
+bump.</li>
+</ul></li>
+</ol>
+<hr />
+<p><strong>Report path:</strong>
+<code>/home/milos/Factory/projects/tools_and_research/helix_code/docs/research/07.2026/11_claude_toolkit/11_claude_toolkit.md</code></p>
+</body>
+</html>

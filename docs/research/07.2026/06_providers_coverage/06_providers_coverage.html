@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>06_providers_coverage</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">06_providers_coverage</h1>
+</header>
+<h1 id="provider-coverage-research-llmsverifier-helixagent">Provider-Coverage
+Research — LLMsVerifier + HelixAgent</h1>
+<p><strong>Scope:</strong> Deep multi-angle web research to enable an
+adapter to be written for every provider/model the operator named, plus
+the highest-value additional providers. <strong>Grounding fact:</strong>
+HelixAgent already implements ~45 provider adapters under
+<code>submodules/helix_agent/internal/llm/providers/*</code> (openai,
+anthropic, claude, gemini, deepseek, groq, mistral, ollama, lmstudio,
+cerebras, chutes, together, nvidia, sambanova, openrouter, huggingface,
+helixllm, vertex, azure, cohere, …). LLMsVerifier is the single source
+of truth for model/provider metadata (CONST-036/037).
+<strong>Author:</strong> T1/main deep-research subagent. <strong>Access
+date for ALL citations:</strong> 2026-07-06. <strong>Anti-bluff
+(§11.4.6):</strong> nothing below was invented. Any endpoint/model I
+could not confirm from an official/authoritative source is marked
+<code>UNCONFIRMED:</code> or <code>NEEDS-CLARIFICATION</code>.</p>
+<blockquote>
+<p><strong>Revision:</strong> 1 · <strong>Last modified:</strong>
+2026-07-06 · <strong>Status summary:</strong> initial research pass.</p>
+</blockquote>
+<hr />
+<h2 id="legend">Legend</h2>
+<ul>
+<li><strong>Status</strong> = confidence of the provider having a real,
+public, callable API:
+<ul>
+<li><code>CONFIRMED</code> — public API + base URL verified from an
+official/authoritative source.</li>
+<li><code>UNCONFIRMED</code> — provider/model is real, but a specific
+API detail (base URL, auth, compat) could NOT be verified from an
+official source this pass.</li>
+<li><code>NEEDS-CLARIFICATION</code> — the operator’s name is ambiguous
+or does not map to a callable LLM API; operator input required before an
+adapter can be scoped.</li>
+</ul></li>
+<li><strong>OAI</strong> = OpenAI-compatible
+<code>/v1/chat/completions</code>. <strong>Anth</strong> =
+Anthropic-compatible <code>/v1/messages</code>.</li>
+</ul>
+<hr />
+<h2 id="group-a-confirmed-public-api-adapter-ready-operator-named-targets">GROUP
+A — CONFIRMED, public API, adapter-ready (operator-named targets)</h2>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Base URL</th>
+<th>Auth</th>
+<th>OAI</th>
+<th>Anth</th>
+<th>Models endpoint</th>
+<th>Flagship / latest models</th>
+<th>Tools</th>
+<th>Vision</th>
+<th>Status</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Poe (Quora)</strong></td>
+<td><code>https://api.poe.com/v1</code> (OpenAI-compatible
+interface)</td>
+<td>Bearer API key (Poe account)</td>
+<td>Yes</td>
+<td>Partial (proxies Anthropic models <em>through</em> OAI iface)</td>
+<td>via OpenAI-style <code>/models</code> (100+ bots)</td>
+<td>Aggregator: routes to GPT, Claude, Gemini, Grok + image/video/voice
+(Imagen 4, Veo 3, Flux, Kling, ElevenLabs) + community bots</td>
+<td>Yes (per underlying model)</td>
+<td>Yes (multimodal)</td>
+<td>CONFIRMED (API launched 2025‑07‑31; point-based billing, not
+per-token)</td>
+<td><a href="https://techcrunch.com/2025/07/31/quoras-poe-is-releasing-an-api-for-developers-to-easily-access-a-boquet-of-models/">TechCrunch</a>
+· <a href="https://hyper.ai/en/stories/cd3cd6a39b8b109839aa301d2a150f76">HyperAI</a></td>
+</tr>
+<tr>
+<td><strong>Perplexity (Sonar)</strong></td>
+<td><code>https://api.perplexity.ai</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>No</td>
+<td>(OAI client libs; Sonar models are fixed set)</td>
+<td><code>sonar</code>, <code>sonar-pro</code>,
+<code>sonar-reasoning-pro</code>, <code>sonar-deep-research</code>
+(web-grounded)</td>
+<td>Yes (structured outputs)</td>
+<td>Yes (image/file handling)</td>
+<td>CONFIRMED</td>
+<td><a href="https://docs.perplexity.ai/docs/sonar/quickstart">docs.perplexity.ai</a>
+· <a href="https://www.perplexity.ai/api-platform">API platform</a></td>
+</tr>
+<tr>
+<td><strong>Sakana AI (Fugu)</strong></td>
+<td><code>https://api.sakana.ai/v1</code> (per-account base URL shown in
+console)</td>
+<td>Bearer API key (console.sakana.ai)</td>
+<td>Yes</td>
+<td>No (native OAI; also supports Responses API)</td>
+<td><code>GET /v1/models</code></td>
+<td><code>fugu</code>, <code>fugu-ultra</code>
+(<code>fugu-ultra-20260615</code>) — multi-agent orchestration exposed
+as a single model</td>
+<td>Yes</td>
+<td>UNCONFIRMED (multimodal not verified)</td>
+<td>CONFIRMED (launched 2026‑06‑22)</td>
+<td><a href="https://sakana.ai/fugu/">sakana.ai/fugu</a> · <a href="https://console.sakana.ai/models">console models</a> · <a href="https://console.sakana.ai/get-started">get-started</a></td>
+</tr>
+<tr>
+<td><strong>Xiaomi (MiMo)</strong></td>
+<td>OAI: <code>https://api.xiaomimimo.com/v1</code> · Anthropic:
+<code>https://api.xiaomimimo.com/anthropic</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>OAI <code>/v1/models</code></td>
+<td><code>mimo-v2.5-pro</code> (flagship), <code>MiMo-V2-Pro</code>
+(&gt;1T total / 42B active, 1M ctx), <code>MiMo-V2-Flash</code>
+(309B/15B MoE), <code>MiMo-7B</code></td>
+<td>Yes</td>
+<td>Yes (v2.5 pro)</td>
+<td>CONFIRMED (open platform, ~$0.1/M input)</td>
+<td><a href="https://mimo.mi.com/">mimo.mi.com</a> · <a href="https://docs.litellm.ai/docs/providers/xiaomi_mimo">litellm/xiaomi_mimo</a>
+· <a href="https://github.com/xiaomimimo/mimo">GitHub
+XiaomiMiMo/MiMo</a></td>
+</tr>
+<tr>
+<td><strong>Tencent Hunyuan</strong></td>
+<td><code>https://api.hunyuan.cloud.tencent.com/v1</code></td>
+<td>Tencent Cloud API key (Bearer)</td>
+<td>Yes</td>
+<td>No (OAI-only verified)</td>
+<td>OAI <code>/v1/models</code></td>
+<td><code>hunyuan-t1</code> (reasoning, TurboS Hybrid Transformer‑Mamba
+MoE), <code>hunyuan-t1-vision-20250916</code>, <code>hunyuan</code>
+general chat, HY‑2.0‑Instruct; also open 0.5B/1.8B/4B/7B</td>
+<td>Yes</td>
+<td>Yes (T1‑Vision)</td>
+<td>CONFIRMED</td>
+<td><a href="https://hunyuan.tencent.com/">hunyuan.tencent.com</a> · <a href="https://intl.cloud.tencent.com/ind/document/product/1290/79463">Tencent
+Cloud AI Gateway doc</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="notes-on-group-a-operator-targets">Notes on Group A operator
+targets</h3>
+<ul>
+<li><strong>Poe</strong> is an <strong>aggregator/gateway</strong> (like
+OpenRouter), not a first-party model house. Billing is Poe
+<strong>points</strong> tied to subscription tiers
+(<code>$4.99</code>→<code>$249.99</code>/mo) + <code>$30</code>/1M extra
+points — NOT a per-token API key with usage billing. An adapter treats
+it as an OpenAI-compatible gateway; model discovery returns 100+ bot
+IDs.</li>
+<li><strong>Tencent Yuanbao</strong> = the <strong>consumer assistant
+app</strong> (first released 2024‑05‑30) front-ending Hunyuan; it is
+<strong>NOT a separate developer API</strong>. The programmatic surface
+is the <strong>Hunyuan</strong> API above. A community
+“yuanbao-free-api” reverse-proxy exists (<a href="https://github.com/chenwr727/yuanbao-free-api">chenwr727/yuanbao-free-api</a>)
+but is unofficial and MUST NOT be used as an official adapter target.
+<strong>Adapter target = Hunyuan.</strong></li>
+</ul>
+<hr />
+<h2 id="group-b-needs-clarification-operator-name-ambiguous-not-a-callable-llm-api">GROUP
+B — NEEDS-CLARIFICATION (operator name ambiguous / not a callable LLM
+API)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Operator term</th>
+<th>What it actually is (verified)</th>
+<th>Callable LLM API?</th>
+<th>Recommended action</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Google “OKF”</strong></td>
+<td><strong>Open Knowledge Format</strong> — a Google Cloud <strong>open
+specification</strong> (markdown + YAML frontmatter) for representing
+agent context/knowledge, published <strong>2026‑06‑12</strong>. It is a
+<em>data/metadata format</em>, <strong>NOT a model and NOT an LLM
+provider/API.</strong></td>
+<td><strong>No</strong></td>
+<td><strong>Do not scope a model adapter.</strong> OKF is relevant to
+HelixAgent’s <em>context/knowledge</em> layer, not the provider layer.
+If the operator meant a Google <em>model</em> API, the target is Gemini
+(already implemented) / Vertex (already implemented). Operator
+clarification required.</td>
+<td><a href="https://x.com/GoogleCloudTech/status/2067012903337664886">Google
+Cloud Tech (X)</a> · <a href="https://www.explainx.ai/blog/google-open-knowledge-format-okf-ai-agents-2026">explainx
+OKF</a></td>
+</tr>
+<tr>
+<td><strong>“GPT SOL”</strong></td>
+<td>Most-probable match: <strong>OpenAI GPT‑5.6 “Sol”</strong>
+(Sol/Terra/Luna family, announced <strong>2026‑06‑26</strong>) —
+<strong>limited preview to select partners only</strong>, no
+broad/public API yet. (Alt reading “Solar” = Upstage Solar Pro/Mini, a
+<em>different</em> vendor with its own API.)</td>
+<td><strong>Not yet public</strong> (Sol) / Yes (if Upstage Solar)</td>
+<td>Clarify which is meant. If <strong>GPT‑5.6 Sol</strong>: it will be
+served via the <strong>existing OpenAI adapter</strong> once GA — no new
+adapter, just a model-id add. If <strong>Upstage Solar</strong>: that is
+a distinct provider needing its own adapter.</td>
+<td><a href="https://www.datacamp.com/blog/gpt-5-6-sol-luna-terra">DataCamp
+GPT‑5.6 Sol</a> · <a href="https://www.upstage.ai/solar-llm">Upstage
+Solar</a></td>
+</tr>
+<tr>
+<td><strong>GOT family</strong></td>
+<td><strong>GOT‑OCR2.0</strong> — open-source <strong>OCR</strong>
+vision-text model (580M params, VitDet encoder + Qwen‑0.5B decoder, 8K
+ctx), Apache-style research release by Haoran Wei et al.</td>
+<td>Self-host only (no first-party hosted API)</td>
+<td>Adapter is feasible ONLY as a <strong>self-hosted /
+HF-inference</strong> target (like the existing huggingface/ollama
+path), and it is an <strong>OCR</strong> model, not a general chat LLM.
+Confirm the operator wants OCR coverage.</td>
+<td><a href="https://huggingface.co/docs/transformers/en/model_doc/got_ocr2">HF
+GOT‑OCR2 docs</a> · <a href="https://arxiv.org/pdf/2409.01704">arXiv
+2409.01704</a> · <a href="https://github.com/Ucas-HaoranWei/GOT-OCR2.0">GitHub
+Ucas‑HaoranWei/GOT‑OCR2.0</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="group-c-confirmed-provider-but-distribution-model-needs-an-operator-decision">GROUP
+C — CONFIRMED provider, but distribution model needs an operator
+decision</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>What it is</th>
+<th>API shape</th>
+<th>Status</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Subquadratic (SubQ)</strong></td>
+<td>Miami frontier-AI startup (founded 2026, CEO Justin Dangel, CTO
+Alexander Whedon). Model <strong>SubQ 1M‑Preview</strong> — “fully
+subquadratic” SSA attention, 12M-token research context.</td>
+<td>Three products in <strong>private beta</strong>: an API exposing the
+full context window, <code>SubQ Code</code> CLI,
+<code>SubQ Search</code>. Base URL / auth <strong>NOT publicly
+documented</strong> yet.</td>
+<td>UNCONFIRMED (real company + model; <strong>no public API endpoint
+verified</strong> — private beta only; independent verification of
+claims still disputed)</td>
+<td><a href="https://subq.ai/introducing-subq">subq.ai/introducing-subq</a> ·
+<a href="https://www.technologyreview.com/2026/06/19/1139313/a-startup-claims-it-broke-through-a-bottleneck-thats-holding-back-llms/">MIT
+Tech Review</a> · <a href="https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof">VentureBeat</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> Subquadratic cannot be
+adapter-scoped until it exposes a public API with a documented base
+URL/auth. Track for GA; the API is expected OpenAI-shaped per the beta
+description but this is <strong>UNCONFIRMED</strong>.</p>
+<hr />
+<h2 id="group-d-confirmed-single-models-to-run-via-existing-self-host-paths-no-new-hosted-adapter">GROUP
+D — CONFIRMED single models to run via existing self-host paths (no new
+hosted adapter)</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>What it is</th>
+<th>How to call</th>
+<th>Status</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Qwythos 9B</strong>
+(<code>empero-ai/Qwythos-9B-Claude-Mythos-5-1M</code>)</td>
+<td>Full-parameter reasoning model on a Qwen3.5‑9B base, 1M-token ctx,
+native Qwen function-calling, Apache‑2.0, released by <strong>Empero
+AI</strong> June 2026. <strong>No first-party hosted API.</strong></td>
+<td>Self-host via <strong>vLLM / SGLang / Transformers</strong>; GGUF
+quant runs on <strong>llama.cpp / Ollama / LM Studio / Jan /
+KoboldCpp</strong> → reachable through HelixAgent’s <strong>existing
+<code>ollama</code> / <code>lmstudio</code> / <code>huggingface</code>
+adapters.</strong></td>
+<td>CONFIRMED (as a downloadable model; <strong>not</strong> a hosted
+provider)</td>
+<td><a href="https://huggingface.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M">HF
+empero-ai/Qwythos‑9B</a> · <a href="https://knightli.com/en/2026/06/24/qwythos-9b-claude-mythos-1m-context-guide/">deployment
+guide</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation:</strong> No new adapter needed — register
+Qwythos-9B as a model behind the Ollama/LM Studio/HF-local providers
+already implemented. Confirm the “Claude-Mythos / uncensored” provenance
+is acceptable per policy before shipping.</p>
+<hr />
+<h2 id="group-e-highest-value-additional-providers-to-add-not-in-the-45-list-all-confirmed">GROUP
+E — Highest-value ADDITIONAL providers to add (not in the ~45 list) —
+all CONFIRMED</h2>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Base URL</th>
+<th>Auth</th>
+<th>OAI</th>
+<th>Anth</th>
+<th>Models endpoint</th>
+<th>Flagship / latest</th>
+<th>Tools</th>
+<th>Vision</th>
+<th>Status</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>xAI (Grok)</strong></td>
+<td><code>https://api.x.ai/v1</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>Yes (Anthropic SDK supported)</td>
+<td><code>GET /v1/models</code></td>
+<td><code>grok-4.3</code> (1M ctx, agentic), <code>grok-4.1-fast</code>
+(2M ctx, cheap); older <code>grok-4*</code> slugs redirect</td>
+<td>Yes (strong)</td>
+<td>Yes</td>
+<td>CONFIRMED — <strong>top priority add</strong></td>
+<td><a href="https://docs.x.ai/developers/models">docs.x.ai/developers/models</a>
+· <a href="https://x.ai/api">x.ai/api</a></td>
+</tr>
+<tr>
+<td><strong>Moonshot AI (Kimi)</strong></td>
+<td><code>https://api.moonshot.ai/v1</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>Yes (OpenAI <em>and</em> Anthropic compatible)</td>
+<td>OAI <code>/v1/models</code></td>
+<td><code>kimi-k2.6</code> (latest), <code>kimi-k2.7-code</code>,
+<code>kimi-k2.5</code> (vision + thinking)</td>
+<td>Yes</td>
+<td>Yes (k2.5)</td>
+<td>CONFIRMED — <strong>top priority add</strong></td>
+<td><a href="https://platform.moonshot.ai/">platform.moonshot.ai</a> ·
+<a href="https://github.com/moonshotai/kimi-k2">GitHub
+MoonshotAI/Kimi-K2</a></td>
+</tr>
+<tr>
+<td><strong>Zhipu AI (GLM / Z.ai)</strong></td>
+<td>OAI: <code>https://open.bigmodel.cn/api/paas/v4/</code> · Anthropic:
+<code>https://open.bigmodel.cn/api/anthropic</code> (intl alias
+<code>https://api.z.ai/...</code>)</td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>OAI v4 models</td>
+<td><code>GLM-4.6</code>, <code>GLM-4.5</code></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>CONFIRMED — <strong>top priority add</strong> (region-aware routing
+intl vs CN)</td>
+<td><a href="https://pypi.org/project/zhipuai/">zhipuai PyPI</a> · <a href="https://ai-sdk.dev/providers/community-providers/zhipu">ai-sdk
+zhipu</a> · <a href="https://docs.roocode.com/providers/zai">Roo Code
+Z.ai</a></td>
+</tr>
+<tr>
+<td><strong>Fireworks AI</strong></td>
+<td><code>https://api.fireworks.ai/inference/v1</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>No</td>
+<td>OAI <code>/v1/models</code></td>
+<td>Hosted open models (Llama, Qwen, DeepSeek, Kimi, GLM, GPT‑OSS);
+model ids like
+<code>accounts/fireworks/models/deepseek-v3p1-terminus</code></td>
+<td>Yes</td>
+<td>Yes (per model)</td>
+<td>CONFIRMED — high value (open-model serving)</td>
+<td><a href="https://docs.fireworks.ai/tools-sdks/openai-compatibility">docs.fireworks.ai
+openai-compatibility</a></td>
+</tr>
+<tr>
+<td><strong>DeepInfra</strong></td>
+<td><code>https://api.deepinfra.com/v1/openai</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>No</td>
+<td>OAI <code>/v1/openai/models</code></td>
+<td>Broad open-model catalog (Llama/Qwen/DeepSeek/…) pay-per-use</td>
+<td>Yes</td>
+<td>Yes (per model)</td>
+<td>CONFIRMED</td>
+<td><a href="https://deepinfra.com/docs/openai_api">deepinfra.com/docs/openai_api</a></td>
+</tr>
+<tr>
+<td><strong>Novita AI</strong></td>
+<td><code>https://api.novita.ai/v3/openai</code> (legacy
+<code>…/openai</code>)</td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>No</td>
+<td>OAI models</td>
+<td>Open-model catalog (Llama 3, DeepSeek, Qwen, …)</td>
+<td>Yes</td>
+<td>Yes (per model)</td>
+<td>CONFIRMED</td>
+<td><a href="https://novita.ai/docs/guides/llm-api">novita.ai/docs/guides/llm-api</a></td>
+</tr>
+<tr>
+<td><strong>AI21 Labs</strong></td>
+<td><code>https://api.ai21.com/studio/v1</code> (also on Bedrock/Azure
+Foundry)</td>
+<td>Bearer API key</td>
+<td>Partial (native REST + OAI-ish)</td>
+<td>No</td>
+<td>REST <code>/v1/*</code></td>
+<td><code>jamba-large</code> (→ <code>jamba-large-1.7</code>),
+<code>jamba-mini</code> (→ <code>jamba-mini-2</code>) — long-context
+SSM/Transformer hybrid</td>
+<td>Yes</td>
+<td>No</td>
+<td>CONFIRMED (native API shape; verify exact
+<code>/chat/completions</code> path)</td>
+<td><a href="https://docs.ai21.com/docs/jamba-foundation-models">docs.ai21.com
+Jamba</a> · <a href="https://docs.litellm.ai/docs/providers/ai21">litellm/ai21</a></td>
+</tr>
+<tr>
+<td><strong>Reka AI</strong></td>
+<td><code>https://api.reka.ai/v1</code> (v0 legacy
+<code>https://api.reka.ai/</code>)</td>
+<td>Bearer API key</td>
+<td>Yes (fully OAI-compatible)</td>
+<td>No</td>
+<td>OAI models</td>
+<td><code>reka-core</code>, <code>reka-flash</code>,
+<code>reka-edge</code>, <code>reka-flash-research</code></td>
+<td>Yes</td>
+<td>Yes (multimodal)</td>
+<td>CONFIRMED</td>
+<td><a href="https://docs.reka.ai/">docs.reka.ai</a> · <a href="https://docs.reka.ai/quickstart">quickstart</a></td>
+</tr>
+<tr>
+<td><strong>Hyperbolic</strong></td>
+<td><code>https://api.hyperbolic.xyz/v1</code></td>
+<td>Bearer API key</td>
+<td>Yes</td>
+<td>No</td>
+<td>OAI models</td>
+<td>Open-model GPU inference (Llama, Qwen, DeepSeek)</td>
+<td>Yes</td>
+<td>Yes (per model)</td>
+<td>UNCONFIRMED (base URL from LiteLLM 3rd-party, not fetched from
+official docs this pass)</td>
+<td><a href="https://docs.litellm.ai/docs/providers/hyperbolic">litellm/hyperbolic</a></td>
+</tr>
+<tr>
+<td><strong>Baseten</strong></td>
+<td>Model-specific / dedicated-deploy endpoints (Model APIs
+<code>https://inference.baseten.co/v1</code> per model)</td>
+<td>Bearer API key</td>
+<td>Yes (OAI-compatible Model APIs)</td>
+<td>No</td>
+<td>per-deployment</td>
+<td>Bring-your-own + hosted open models (Model APIs)</td>
+<td>Yes</td>
+<td>per model</td>
+<td>UNCONFIRMED (per-model deploy model; treat like a self-host gateway
+— confirm exact base URL from official docs before adapter)</td>
+<td><a href="https://apimart.ai/blog/mai-models-fireworks-ai-baseten-open-router">apimart
+MAI on Baseten</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="recommendation-summary-what-to-build">Recommendation summary —
+what to build</h2>
+<ol type="1">
+<li><strong>Add first (CONFIRMED, mainstream, OAI+Anth):</strong>
+<strong>xAI Grok</strong>, <strong>Moonshot Kimi</strong>, <strong>Zhipu
+GLM</strong> — all three are dual OpenAI+Anthropic compatible with
+documented base URLs and are widely used. Highest ROI.</li>
+<li><strong>Add next (CONFIRMED open-model gateways, OAI):</strong>
+<strong>Fireworks</strong>, <strong>DeepInfra</strong>,
+<strong>Novita</strong> — thin OpenAI-compatible adapters, large
+catalogs, cheap.</li>
+<li><strong>Add (CONFIRMED first-party model houses):</strong>
+<strong>AI21 Jamba</strong>, <strong>Reka</strong> — smaller but
+distinctive (long-context SSM; multimodal).</li>
+<li><strong>Operator-named CONFIRMED, adapter-ready:</strong>
+<strong>Perplexity Sonar</strong>, <strong>Xiaomi MiMo</strong>,
+<strong>Tencent Hunyuan</strong>, <strong>Sakana Fugu</strong>,
+<strong>Poe</strong> (as an OAI gateway). Note Poe = points billing;
+Yuanbao = the Hunyuan API.</li>
+<li><strong>Self-host path, no new hosted adapter:</strong>
+<strong>Qwythos 9B</strong> (Ollama/LM Studio/HF),
+<strong>GOT‑OCR2.0</strong> (HF/self-host, OCR-specific).</li>
+<li><strong>Verify base URL before coding:</strong>
+<strong>Hyperbolic</strong>, <strong>Baseten</strong> (3rd-party sourced
+this pass).</li>
+<li><strong>Blocked pending public API:</strong> <strong>Subquadratic
+SubQ</strong> (private beta, no public endpoint).</li>
+<li><strong>Not a provider — clarify with operator:</strong>
+<strong>Google “OKF”</strong> (a knowledge <em>format</em>, not a
+model), <strong>“GPT SOL”</strong> (likely OpenAI GPT‑5.6 Sol → existing
+OpenAI adapter once GA; or Upstage Solar → separate adapter).</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>Poe/Quora API:
+https://techcrunch.com/2025/07/31/quoras-poe-is-releasing-an-api-for-developers-to-easily-access-a-boquet-of-models/
+, https://hyper.ai/en/stories/cd3cd6a39b8b109839aa301d2a150f76</li>
+<li>Perplexity Sonar: https://docs.perplexity.ai/docs/sonar/quickstart ,
+https://www.perplexity.ai/api-platform</li>
+<li>Sakana Fugu: https://sakana.ai/fugu/ ,
+https://console.sakana.ai/get-started ,
+https://console.sakana.ai/models</li>
+<li>Xiaomi MiMo: https://mimo.mi.com/ ,
+https://docs.litellm.ai/docs/providers/xiaomi_mimo ,
+https://github.com/xiaomimimo/mimo</li>
+<li>Tencent Hunyuan / Yuanbao: https://hunyuan.tencent.com/ ,
+https://intl.cloud.tencent.com/ind/document/product/1290/79463 ,
+https://aiwiki.ai/wiki/tencent_yuanbao</li>
+<li>Google OKF: https://x.com/GoogleCloudTech/status/2067012903337664886
+,
+https://www.explainx.ai/blog/google-open-knowledge-format-okf-ai-agents-2026</li>
+<li>GOT-OCR2.0:
+https://huggingface.co/docs/transformers/en/model_doc/got_ocr2 ,
+https://arxiv.org/pdf/2409.01704 ,
+https://github.com/Ucas-HaoranWei/GOT-OCR2.0</li>
+<li>“GPT SOL” (GPT-5.6 Sol / Upstage Solar):
+https://www.datacamp.com/blog/gpt-5-6-sol-luna-terra ,
+https://www.upstage.ai/solar-llm</li>
+<li>Subquadratic SubQ: https://subq.ai/introducing-subq ,
+https://www.technologyreview.com/2026/06/19/1139313/a-startup-claims-it-broke-through-a-bottleneck-thats-holding-back-llms/
+,
+https://venturebeat.com/technology/miami-startup-subquadratic-claims-1-000x-ai-efficiency-gain-with-subq-model-researchers-demand-independent-proof</li>
+<li>Qwythos 9B:
+https://huggingface.co/empero-ai/Qwythos-9B-Claude-Mythos-5-1M ,
+https://knightli.com/en/2026/06/24/qwythos-9b-claude-mythos-1m-context-guide/</li>
+<li>xAI Grok: https://docs.x.ai/developers/models ,
+https://x.ai/api</li>
+<li>Moonshot Kimi: https://platform.moonshot.ai/ ,
+https://github.com/moonshotai/kimi-k2</li>
+<li>Zhipu GLM / Z.ai: https://pypi.org/project/zhipuai/ ,
+https://ai-sdk.dev/providers/community-providers/zhipu ,
+https://docs.roocode.com/providers/zai</li>
+<li>Fireworks:
+https://docs.fireworks.ai/tools-sdks/openai-compatibility</li>
+<li>DeepInfra: https://deepinfra.com/docs/openai_api</li>
+<li>Novita: https://novita.ai/docs/guides/llm-api</li>
+<li>AI21 Jamba: https://docs.ai21.com/docs/jamba-foundation-models ,
+https://docs.litellm.ai/docs/providers/ai21</li>
+<li>Reka: https://docs.reka.ai/ , https://docs.reka.ai/quickstart</li>
+<li>Hyperbolic: https://docs.litellm.ai/docs/providers/hyperbolic</li>
+<li>Baseten:
+https://apimart.ai/blog/mai-models-fireworks-ai-baseten-open-router</li>
+</ul>
+</body>
+</html>

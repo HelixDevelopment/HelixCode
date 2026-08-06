@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02_vision_generative</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">02_vision_generative</h1>
+</header>
+<h1 id="local-vision-generative-media-stack-on-rtx-5090-32-gb-blackwell-linux-rootless-podman">Local
+Vision + Generative Media Stack on RTX 5090 (32 GB, Blackwell), Linux,
+Rootless Podman</h1>
+<p><strong>Research date:</strong> 2026-07-06 <strong>Target
+hardware:</strong> 1× NVIDIA RTX 5090 (32 GB GDDR7, Blackwell
+<code>sm_120</code>), Linux host, all workloads in <strong>rootless
+Podman</strong> containers. <strong>Goal:</strong> give a local LLM
+system (“HelixLLM”) full vision + generative media capability (image
+understanding, image gen, video gen incl. WAN + LTX, vectorization)
+behind <strong>OpenAI-compatible</strong> endpoints so Claude Code /
+HelixCode auto-recognize them.</p>
+<blockquote>
+<p><strong>Evidence discipline (§11.4.6 / §11.4.99):</strong> every
+recommendation below carries a source URL + access date. Numbers taken
+from third-party benchmarks are marked as such; where a figure could not
+be independently corroborated it is flagged
+<strong>UNCONFIRMED</strong>. Blackwell (<code>sm_120</code>) is a 2025
+architecture — several toolchains still require
+nightly/<code>cu128</code> builds; those caveats are called out
+explicitly.</p>
+</blockquote>
+<hr />
+<h2 id="executive-summary-recommended-stack">0. Executive summary —
+recommended stack</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Recommended local model</th>
+<th>Serving engine (rootless container)</th>
+<th>Standard API surface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VLM (image/screenshot/OCR understanding)</strong></td>
+<td><strong>Qwen3-VL-8B-Instruct</strong> (all-rounder) or
+<strong>Qwen3-VL-30B-A3B</strong> (MoE, more capable, still fits)</td>
+<td><strong>vLLM</strong> (throughput, native OpenAI server) or
+<strong>llama.cpp <code>llama-server</code> + mmproj GGUF</strong>
+(simplicity)</td>
+<td><code>POST /v1/chat/completions</code> with image content parts</td>
+</tr>
+<tr>
+<td><strong>Image generation</strong></td>
+<td><strong>FLUX.1-dev (fp8)</strong> for quality +
+<strong>FLUX.1-schnell</strong> for speed; SDXL / SD3.5-Large as
+alternates</td>
+<td><strong>ComfyUI</strong> (workflow engine) + OpenAI-image bridge
+node</td>
+<td><code>POST /v1/images/generations</code> (via bridge) or ComfyUI
+<code>/prompt</code></td>
+</tr>
+<tr>
+<td><strong>Video generation</strong></td>
+<td><strong>LTX-Video / LTX-2</strong> (fast, near-real-time) +
+<strong>WAN 2.2 14B (fp8)</strong> (quality)</td>
+<td><strong>ComfyUI</strong> (WanVideoWrapper / native LTX nodes) or
+<strong>LTX self-host server</strong></td>
+<td>LTX self-host OpenAI-compatible <code>base_url</code>; ComfyUI
+<code>/prompt</code> for WAN</td>
+</tr>
+<tr>
+<td><strong>Vectorization / illustration</strong></td>
+<td><strong>vtracer</strong> (raster→SVG, deterministic) +
+<strong>StarVector-8B</strong> (ML im2svg) + potrace (mono)</td>
+<td>vtracer as CLI microservice; StarVector via vLLM/transformers (it is
+a VLM)</td>
+<td>Small FastAPI wrapper → <code>POST /vectorize</code>; StarVector via
+<code>/v1/chat/completions</code></td>
+</tr>
+</tbody>
+</table>
+<p>All four capability servers run as <strong>separate rootless Podman
+containers</strong> sharing the single RTX 5090 via CDI
+(<code>--device nvidia.com/gpu=all</code>). VRAM is time-shared, not
+partitioned — run them <strong>serially per request class</strong> or
+accept the memory-pressure risk (see §7 risks).</p>
+<hr />
+<h2 id="vision-language-models-vlms">1. Vision-Language Models
+(VLMs)</h2>
+<h3 id="what-fits-in-32-gb-and-what-to-pick">1.1 What fits in 32 GB and
+what to pick</h3>
+<p><strong>Qwen3-VL is the 2026 successor to Qwen2.5-VL and is currently
+the local VLM to beat.</strong> Sizes: 2B, 4B, 8B (dense), 30B-A3B (MoE,
+~3B active), 32B (dense), 235B (MoE, does <strong>not</strong> fit). (<a href="https://github.com/QwenLM/Qwen3-VL">QwenLM/Qwen3-VL GitHub</a>,
+accessed 2026-07-06; <a href="https://localaimaster.com/blog/qwen-3-vl-local-setup">Local AI
+Master — Qwen3-VL local setup</a>, accessed 2026-07-06)</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>Params</th>
+<th>Approx. VRAM (quant)</th>
+<th>Fits 32 GB?</th>
+<th>Notes / benchmark</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3-VL-4B</td>
+<td>4B dense</td>
+<td>~6 GB (Q4_K_M)</td>
+<td>✅ huge headroom</td>
+<td>edge/fast</td>
+</tr>
+<tr>
+<td><strong>Qwen3-VL-8B</strong></td>
+<td>8B dense</td>
+<td>~12 GB (Q4_K_M); 12–16 GB for large images</td>
+<td>✅</td>
+<td>“best local all-rounder”; DocVQA leader at size; MathVista 68.2→85.8
+vs 2.5 (<a href="https://codersera.com/blog/qwen3-vl-4b-vs-qwen3-vl-8b-benchmarks-vram-guide/">codersera</a>,
+accessed 2026-07-06)</td>
+</tr>
+<tr>
+<td><strong>Qwen3-VL-30B-A3B</strong></td>
+<td>30B MoE / 3B active</td>
+<td>~14–16 GB</td>
+<td>✅</td>
+<td>best capability/VRAM ratio; MoE keeps active set small</td>
+</tr>
+<tr>
+<td>Qwen3-VL-32B</td>
+<td>32B dense</td>
+<td>21+ GB (Q4/FP8)</td>
+<td>✅ (tight w/ big KV)</td>
+<td>max dense quality</td>
+</tr>
+<tr>
+<td>Qwen2.5-VL-32B</td>
+<td>32B dense</td>
+<td>~fits (FP8/Q4)</td>
+<td>✅</td>
+<td>prior gen, strong; (<a href="https://apidog.com/blog/qwen2-5-vl-32b-locally-mlx/">apidog</a>,
+accessed 2026-07-06)</td>
+</tr>
+<tr>
+<td>Qwen2.5-VL-72B</td>
+<td>72B dense</td>
+<td>~72 GB+ (FP8)</td>
+<td>❌</td>
+<td>needs multi-GPU</td>
+</tr>
+</tbody>
+</table>
+<p>VRAM figures: (<a href="https://codersera.com/blog/qwen3-vl-4b-vs-qwen3-vl-8b-benchmarks-vram-guide/">codersera</a>,
+<a href="https://unsloth.ai/docs/models/tutorials/qwen3-how-to-run-and-fine-tune/qwen3-vl-how-to-run-and-fine-tune">Unsloth
+Qwen3-VL run guide</a>, <a href="https://localaimaster.com/blog/qwen-3-vl-local-setup">Local AI
+Master</a>; all accessed 2026-07-06).</p>
+<p><strong>Other 32 GB-capable VLMs</strong> (all runnable via llama.cpp
+mmproj GGUF — see §1.2): InternVL 2.5/3 (1B–14B), MiniCPM-V (~8B), Gemma
+3 (4B/12B/27B), SmolVLM, Pixtral-12B, Mistral-Small-3.1-24B,
+Llama-4-Scout-17B, Moondream2. (<a href="https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md">llama.cpp
+multimodal.md</a>, accessed 2026-07-06). Llama-3.2-Vision (11B/90B) is
+supported in the broader ecosystem but Qwen3-VL now outclasses it on
+doc/chart/OCR — <strong>UNCONFIRMED</strong> whether 90B is worth the
+multi-GPU cost; not recommended here.</p>
+<p><strong>Throughput reference (Qwen2.5-VL-7B, NVIDIA A100, vLLM,
+concurrency 50):</strong> 20.89 req/s for images, 7.35 req/s for video.
+RTX 5090 has lower memory bandwidth than A100 but native FP8 Tensor
+Cores — treat A100 numbers as a same-order proxy, not identical. (<a href="https://github.com/vllm-project/vllm/issues/24728">vLLM issue
+#24728 multi-modal benchmark</a>, accessed 2026-07-06)</p>
+<h3 id="serving-engines">1.2 Serving engines</h3>
+<p><strong>Option A — vLLM (recommended for throughput + clean OpenAI
+server).</strong> vLLM ships a native OpenAI-compatible server
+(<code>vllm serve &lt;model&gt;</code> →
+<code>/v1/chat/completions</code> with image parts) and supports
+Qwen2.5-VL / Qwen3-VL and SGLang-class multimodal. On Blackwell
+(<code>sm_120</code>) vLLM needs <strong>PyTorch 2.9.0 + CUDA 12.8
+(cu128)</strong> or nightly; stock wheels only cover ≤
+<code>sm_90</code>. Working community config:
+<code>TORCH_CUDA_ARCH_LIST=&quot;12.0+PTX&quot;</code>,
+<code>NVCC_GENCODE=&quot;-gencode=arch=compute_120,code=sm_120&quot;</code>. FP8
+native on Blackwell (bare-metal Linux; note the WSL2 FP8 fallback
+caveat). (<a href="https://github.com/vllm-project/vllm/issues/13306">vLLM issue
+#13306 RTX 5090</a>; <a href="https://github.com/vllm-project/vllm/issues/37242">vLLM issue
+#37242 sm_120 benchmarks</a>; <a href="https://discuss.vllm.ai/t/vllm-on-rtx5090-working-gpu-setup-with-torch-2-9-0-cu128/1492">vLLM
+forum: torch 2.9.0 cu128 working</a>; all accessed 2026-07-06)</p>
+<p><strong>Option B — SGLang.</strong> Documented Qwen2.5-VL path with
+OpenAI-compatible endpoints and <code>sglang.bench_serving</code>
+tooling; comparable to vLLM. (<a href="https://lmsysorg.mintlify.app/cookbook/autoregressive/Qwen/Qwen2.5-VL">SGLang
+Qwen2.5-VL cookbook</a>, accessed 2026-07-06)</p>
+<p><strong>Option C — llama.cpp <code>llama-server</code> + mmproj GGUF
+(recommended for simplicity/portability).</strong> Vision via a separate
+multimodal projector (<code>--mmproj</code>). One command exposes an
+OpenAI-compatible <code>/v1/chat/completions</code> that accepts images.
+Runs the whole Qwen3-VL family from ready-made <code>ggml-org</code> /
+<code>Qwen/*-GGUF</code> repos. (<a href="https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md">llama.cpp
+multimodal.md</a>; <a href="https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF">Qwen3-VL-8B-Instruct-GGUF</a>;
+<a href="https://simonwillison.net/2025/May/10/llama-cpp-vision/">Simon
+Willison — llama.cpp vision</a>; all accessed 2026-07-06)</p>
+<p><strong>Recommendation:</strong> expose vision through
+<strong>Qwen3-VL-8B</strong> as the default (fast, 12–16 GB), with
+<strong>Qwen3-VL-30B-A3B</strong> or <strong>-32B</strong> as a
+“high-quality” profile loaded on demand. Use <strong>vLLM</strong> if
+you want max concurrency and native FP8; use <strong>llama.cpp</strong>
+if you want a single self-contained binary and easy GGUF weight
+management.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># llama.cpp OpenAI-compatible vision server (GGUF + mmproj)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">llama-server</span> <span class="at">-hf</span> Qwen/Qwen3-VL-8B-Instruct-GGUF <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--mmproj-url</span> <span class="op">&lt;</span>mmproj.gguf<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--host</span> 0.0.0.0 <span class="at">--port</span> 8090 <span class="at">-ngl</span> 999 <span class="at">--ctx-size</span> 32768</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; POST http://localhost:8090/v1/chat/completions  (image_url content parts)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># vLLM OpenAI-compatible vision server (Blackwell cu128 build required)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">vllm</span> serve Qwen/Qwen3-VL-8B-Instruct <span class="dt">\</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--host</span> 0.0.0.0 <span class="at">--port</span> 8090 <span class="at">--max-model-len</span> 32768 <span class="at">--gpu-memory-utilization</span> 0.85</span></code></pre></div>
+<hr />
+<h2 id="image-generation">2. Image generation</h2>
+<h3 id="models-and-rtx-5090-performance">2.1 Models and RTX 5090
+performance</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>Precision</th>
+<th>RTX 5090 speed</th>
+<th>VRAM</th>
+<th>Fits 32 GB?</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SDXL Base+Refiner</strong></td>
+<td>fp16</td>
+<td>6.21 s / 1 img (batch1); 15.11 s / 4 imgs (~3.78 s/img batched)</td>
+<td>~24 GB (b1) → ~32 GB (b4)</td>
+<td>✅</td>
+<td><a href="https://www.databasemart.com/blog/stable-diffusion-benchmark-in-comfyui-on-rtx5090">databasemart
+SDXL@5090</a></td>
+</tr>
+<tr>
+<td><strong>FLUX.1-dev</strong></td>
+<td>fp8 (native Blackwell)</td>
+<td>fast; FP8 cuts VRAM ~40% vs BF16</td>
+<td>comfortably &lt; 32 GB at fp8</td>
+<td>✅</td>
+<td><a href="https://medium.com/@furkangozukara/rtx-5090-tested-against-flux-dev-sd-3-5-ff4e35a07ab8">Furkan/SECourses
+5090 tests</a></td>
+</tr>
+<tr>
+<td><strong>FLUX.1-schnell</strong></td>
+<td>fp8</td>
+<td>very fast (few-step distilled)</td>
+<td>&lt; 32 GB</td>
+<td>✅</td>
+<td>ComfyUI built-in</td>
+</tr>
+<tr>
+<td><strong>SD3.5-Large</strong></td>
+<td>fp8/fp16</td>
+<td>benchmarked on 5090 (fp8 vs fp16)</td>
+<td>fits at fp8</td>
+<td>✅</td>
+<td><a href="https://github.com/FurkanGozukara/Stable-Diffusion/wiki/RTX-5090-Tested-Against-FLUX-DEV-SD-35-Large-SD-35-Medium-SDXL-SD-15-AMD-9950X-RTX-3090-TI">Furkan/SECourses</a></td>
+</tr>
+</tbody>
+</table>
+<p>Blackwell RTX 5090 has <strong>native FP8 Tensor Cores</strong> →
+~40% VRAM reduction and speedup vs BF16 for FLUX/SD3.5. (<a href="https://www.databasemart.com/blog/stable-diffusion-benchmark-in-comfyui-on-rtx5090">databasemart</a>;
+<a href="https://medium.com/@furkangozukara/rtx-5090-tested-against-flux-dev-sd-3-5-ff4e35a07ab8">Furkan
+Medium</a>; accessed 2026-07-06). <strong>2026 successors</strong>
+(e.g. FLUX.2 / newer SD lineages) are appearing but concrete 5090
+VRAM/speed numbers are <strong>UNCONFIRMED</strong> at this date —
+FLUX.1-dev/schnell remain the safe, well-benchmarked pick.</p>
+<p><strong>Best pick for the card:</strong> <strong>FLUX.1-dev
+fp8</strong> (quality) + <strong>FLUX.1-schnell</strong> (latency), both
+in one ComfyUI instance; keep SDXL/SD3.5-Large as alternate
+checkpoints.</p>
+<h3 id="serving">2.2 Serving</h3>
+<p><strong>ComfyUI</strong> is the de-facto engine (graph/workflow API
+at <code>POST /prompt</code>, results polled or via webhook). Expose an
+<strong>OpenAI images API</strong> on top with the
+<strong><code>comfyui-vllm-omni</code></strong> node set, which
+implements <code>POST /v1/images/generations</code> (DALL·E-format) in
+front of a ComfyUI workflow. Alternatives: SwarmUI (ComfyUI backend),
+RunPod/Salad serverless templates (FLUX.1-dev-fp8). (<a href="https://github.com/dougbtv/comfyui-vllm-omni/">comfyui-vllm-omni</a>;
+<a href="https://www.runpod.io/blog/deploy-comfyui-as-a-serverless-api-endpoint">RunPod
+ComfyUI serverless</a>; <a href="https://docs.salad.com/container-engine/how-to-guides/ai-machine-learning/deploy-stable-diffusion-comfy">Salad
+ComfyUI deploy</a>; accessed 2026-07-06)</p>
+<hr />
+<h2 id="video-generation-wan-ltx-required">3. Video generation (WAN +
+LTX required)</h2>
+<h3 id="models-on-32-gb-rtx-5090">3.1 Models on 32 GB RTX 5090</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>RTX 5090 gen time (≈5 s clip)</th>
+<th>Resolution</th>
+<th>VRAM</th>
+<th>Fits 32 GB?</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LTX-Video / LTX-2 (LTXVideo 13B / LTX-2.3)</strong></td>
+<td>~4 s (near real-time, LTX-2.3); LTX-0.9.5 ~90 s on 4090</td>
+<td>up to 4K/50fps (LTX-2.3, official 32 GB target); 768×512
+(0.9.5)</td>
+<td>12 GB (0.9.5) → 32 GB official (LTX-2.3)</td>
+<td>✅</td>
+<td><strong>Speed champion</strong>, synced audio (LTX-2)</td>
+</tr>
+<tr>
+<td><strong>WAN 2.2 14B (fp8)</strong></td>
+<td>8–12 min</td>
+<td>1280×720 native</td>
+<td>24 GB min → full native at 32 GB</td>
+<td>✅</td>
+<td><strong>Quality leader</strong> (photoreal/humans)</td>
+</tr>
+<tr>
+<td><strong>HunyuanVideo 1.5 (fp8/Q8)</strong></td>
+<td>10–15 min</td>
+<td>720×1280</td>
+<td>base 60 GB+ FP; Q8 fits 32 GB</td>
+<td>✅ (quantized)</td>
+<td>natural motion/physics</td>
+</tr>
+<tr>
+<td><strong>CogVideoX-5B</strong></td>
+<td>—</td>
+<td>—</td>
+<td>12 GB</td>
+<td>✅</td>
+<td>older, quality now behind LTX/WAN</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: (<a href="https://localaimaster.com/blog/local-ai-video-generation">Local AI
+Master — local AI video</a>; <a href="https://www.aimagicx.com/blog/open-source-ai-video-models-comparison-2026">AI
+Magicx — WAN 2.2 vs Hunyuan 1.5 vs LTX 13B</a>; <a href="https://www.spheron.network/blog/gpu-cloud-video-ai-2026/">Spheron
+GPU cloud video AI 2026</a>; <a href="https://github.com/Wan-Video/Wan2.2">Wan-Video/Wan2.2 GitHub</a>;
+<a href="https://docs.comfy.org/tutorials/video/wan/wan2_2">ComfyUI WAN
+2.2 native workflow</a>; all accessed 2026-07-06). <strong>All four run
+on a 32 GB RTX 5090</strong> per the Local AI Master compatibility
+table; note generation time is architecture-bound, not VRAM-bound (a
+4090 vs 5090 differ mainly in bandwidth).</p>
+<p><strong>Recommendation:</strong> run <strong>LTX-Video/LTX-2</strong>
+as the default fast path and <strong>WAN 2.2 14B fp8</strong> as the
+quality path — this satisfies the explicit WAN + LTX requirement.
+Hunyuan 1.5 optional for motion-heavy shots.</p>
+<h3 id="serving-api-exposure">3.2 Serving / API exposure</h3>
+<ul>
+<li><strong>WAN 2.2</strong>: ComfyUI native workflow +
+<code>ComfyUI-WanVideoWrapper</code> (Kijai) nodes; drive via ComfyUI
+<code>/prompt</code>. Public weights:
+<code>Wan-AI/Wan2.2-I2V-A14B</code> / <code>Wan2.2-T2V-A14B</code>
+(HF/ModelScope). (<a href="https://docs.comfy.org/tutorials/video/wan/wan2_2">ComfyUI WAN
+2.2</a>; <a href="https://github.com/Wan-Video/Wan2.2">Wan2.2
+GitHub</a>; <a href="https://www.spheron.network/blog/image-to-video-gpu-cloud-ltx-wan-hunyuan/">Spheron
+image-to-video</a>; accessed 2026-07-06)</li>
+<li><strong>LTX-Video / LTX-2</strong>: has an <strong>OpenAI-compatible
+self-host server pattern</strong> — deploy the open-source model behind
+a server and point an OpenAI client’s <code>base_url</code> at it to
+generate video (Lightricks documents this; community Modal deployment
+exposes a <code>…serve.modal.run</code> base_url usable from the OpenAI
+SDK). Also available as ComfyUI nodes. (<a href="https://support.ltx.studio/hc/en-us/categories/30053379933330-LTX-2-API">LTX
+API &amp; self-hosting help center</a>; <a href="https://huggingface.co/Lightricks/LTX-2/discussions/26">HF
+Lightricks/LTX-2 self-hosted API discussion</a>; <a href="https://docs.ltx.video/welcome">LTX docs</a>; accessed
+2026-07-06)</li>
+</ul>
+<p>Because OpenAI has no standardized <em>video</em> endpoint, expose
+video as either (a) the LTX self-host OpenAI-shaped route, or (b) a thin
+custom <code>POST /v1/videos/generations</code> async-job wrapper over
+ComfyUI. HelixCode should treat video as an async job (submit → poll →
+fetch artifact).</p>
+<hr />
+<h2 id="vectorization-illustration-rastersvg">4. Vectorization /
+illustration / raster→SVG</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Type</th>
+<th>Strength</th>
+<th>Serve as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>vtracer</strong> (visioncortex)</td>
+<td>Rust, rule-based, colored high-res raster→SVG</td>
+<td>fast, deterministic, no GPU, handles color/photos</td>
+<td>CLI microservice (<code>vtracer --input x.png --output x.svg</code>)
+behind FastAPI <code>POST /vectorize</code></td>
+</tr>
+<tr>
+<td><strong>potrace</strong></td>
+<td>monochrome bitmap→SVG</td>
+<td>sharpest results on B/W line art</td>
+<td>same CLI-wrapper pattern</td>
+</tr>
+<tr>
+<td><strong>StarVector-8B / -1B</strong> (CVPR 2025)</td>
+<td>VLM, image/text → SVG <strong>code</strong></td>
+<td>icons/logos/diagrams; leverages full SVG syntax (paths, polygons,
+text)</td>
+<td>it is a vision-language model → serve via vLLM/transformers,
+<code>/v1/chat/completions</code> (image in → SVG code out)</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: (<a href="https://github.com/visioncortex/vtracer">visioncortex/vtracer</a>;
+<a href="https://starvector.github.io/starvector/">StarVector
+project</a> + <a href="https://openaccess.thecvf.com/content/CVPR2025/papers/Rodriguez_StarVector_Generating_Scalable_Vector_Graphics_Code_from_Images_and_Text_CVPR_2025_paper.pdf">CVPR2025
+paper</a>; <a href="https://huggingface.co/starvector/starvector-8b-im2svg">starvector-8b-im2svg</a>;
+<a href="https://comfyui-wiki.com/en/news/2025-03-26-starvector-svg-generation">ComfyUI-Wiki
+StarVector</a>; accessed 2026-07-06)</p>
+<p><strong>Recommendation:</strong> <strong>vtracer</strong> as the
+default deterministic vectorizer (CPU, trivially containerized, no
+VRAM), <strong>StarVector-8B</strong> as the “smart” vectorizer for
+clean logo/icon/diagram SVG code (fits 32 GB as an 8B VLM),
+<strong>potrace</strong> for pure monochrome line art. Line-art / sketch
+and illustration <em>generation</em> is best served by the §2 image
+models (FLUX/SDXL with line-art LoRAs) rather than a dedicated
+model.</p>
+<hr />
+<h2 id="standard-openai-compatible-api-surface-so-helixcode-auto-detects">5.
+Standard OpenAI-compatible API surface (so HelixCode auto-detects)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Endpoint</th>
+<th>Backend</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chat + vision</td>
+<td><code>POST /v1/chat/completions</code> (image content parts)</td>
+<td>vLLM or llama.cpp <code>llama-server</code> (Qwen3-VL)</td>
+</tr>
+<tr>
+<td>Model list</td>
+<td><code>GET /v1/models</code></td>
+<td>same</td>
+</tr>
+<tr>
+<td>Image generation</td>
+<td><code>POST /v1/images/generations</code></td>
+<td><code>comfyui-vllm-omni</code> bridge → ComfyUI (FLUX)</td>
+</tr>
+<tr>
+<td>Vectorization (StarVector)</td>
+<td><code>POST /v1/chat/completions</code></td>
+<td>vLLM (StarVector-8B)</td>
+</tr>
+<tr>
+<td>Vectorization (vtracer/potrace)</td>
+<td><code>POST /vectorize</code> (custom)</td>
+<td>FastAPI CLI wrapper</td>
+</tr>
+<tr>
+<td>Video generation</td>
+<td>LTX self-host OpenAI <code>base_url</code>, or custom async
+<code>POST /v1/videos/generations</code></td>
+<td>LTX server / ComfyUI (WAN)</td>
+</tr>
+</tbody>
+</table>
+<p>Put a lightweight <strong>gateway/router</strong> (e.g. LiteLLM or a
+small reverse proxy) in front that presents ONE <code>/v1</code> surface
+and fans out to the per-capability containers; register the OpenAI
+base_url + a dummy key with Claude Code / HelixCode so vision +
+image-gen models are auto-recognized. (<a href="https://docs.servicestack.net/ai-server/usage">AI Server usage /
+OpenAI-compatible surfaces</a>; <a href="https://github.com/dougbtv/comfyui-vllm-omni/">comfyui-vllm-omni</a>;
+accessed 2026-07-06)</p>
+<hr />
+<h2 id="rootless-podman-deployment">6. Rootless Podman deployment</h2>
+<h3 id="one-time-host-setup-cdi-gpu-passthrough">6.1 One-time host setup
+(CDI GPU passthrough)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1) Install NVIDIA Container Toolkit (Ubuntu/Debian)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-fsSL</span> https://nvidia.github.io/libnvidia-container/gpgkey <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sudo</span> gpg <span class="at">--dearmor</span> <span class="at">-o</span> /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> <span class="at">-L</span> https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sed</span> <span class="st">&#39;s#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g&#39;</span> <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sudo</span> tee /etc/apt/sources.list.d/nvidia-container-toolkit.list</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get update <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> apt-get install <span class="at">-y</span> nvidia-container-toolkit</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Generate a CDI spec in USER space (rootless)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/.config/cdi</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ex">nvidia-ctk</span> cdi generate <span class="at">--output</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi/nvidia.yaml</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3) Smoke-test rootless GPU access</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="ex">podman</span> <span class="at">--cdi-spec-dir</span><span class="op">=</span><span class="va">$HOME</span>/.config/cdi run <span class="at">--rm</span> <span class="dt">\</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--device</span> nvidia.com/gpu=all <span class="at">--security-opt</span><span class="op">=</span>label=disable <span class="dt">\</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  nvidia/cuda:12.8.0-base-ubuntu24.04 nvidia-smi <span class="at">-L</span></span></code></pre></div>
+<p>Sources: (<a href="https://oneuptime.com/blog/post/2026-03-18-run-nvidia-gpu-containers-podman/view">OneUptime
+— NVIDIA GPU containers with Podman</a>; <a href="https://podman-desktop.io/docs/podman/gpu">Podman Desktop GPU
+access</a>; <a href="https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/1.14.2/cdi-support.html">NVIDIA
+CDI support docs</a>; accessed 2026-07-06). <strong>Blackwell
+note:</strong> use a <strong>CUDA 12.8+ base image</strong> and a recent
+toolkit; older <code>12.3</code> base images predate
+<code>sm_120</code>. If the CDI spec ever goes stale after a driver
+update, regenerate it (step 2). Rootless caveat:
+<code>--security-opt=label=disable</code> (or a matching SELinux policy)
+is required; <code>no-cgroups</code> handling is managed by the CDI
+path.</p>
+<h3 id="per-capability-containers">6.2 Per-capability containers</h3>
+<ul>
+<li><strong>Base images:</strong> <code>vllm/vllm-openai</code>
+(Blackwell build / cu128 nightly tag — verify <code>sm_120</code>
+support before pinning; <strong>UNCONFIRMED</strong> which published tag
+is Blackwell-ready, build from source with
+<code>TORCH_CUDA_ARCH_LIST=12.0+PTX</code> if needed),
+<code>ghcr.io/ggml-org/llama.cpp:server-cuda</code> (llama.cpp), a
+ComfyUI image (e.g. community <code>comfyui</code> + custom nodes), a
+slim <code>python:3.12</code> + vtracer/StarVector image.</li>
+<li><strong>Run pattern (each container):</strong>
+<code>podman run -d --device nvidia.com/gpu=all --security-opt=label=disable -v hf-cache:/models -p 8090:8090 &lt;image&gt; &lt;serve-cmd&gt;</code>.</li>
+<li><strong>VRAM sharing:</strong> the 5090’s 32 GB is time-shared
+across containers. Cap each engine
+(<code>--gpu-memory-utilization</code> for vLLM, <code>-ngl</code>/ctx
+for llama.cpp) and <strong>stagger heavy jobs</strong> (a WAN 2.2 render
++ a FLUX batch will not co-reside comfortably). A router that serializes
+GPU-heavy request classes is the safe design.</li>
+</ul>
+<h3 id="model-weight-volume-strategy-11.4.77-re-obtain-mechanism">6.3
+Model-weight volume strategy + §11.4.77 re-obtain mechanism</h3>
+<ul>
+<li>Mount <strong>one shared HF cache volume</strong>
+(<code>-v hf-cache:/models</code>, <code>HF_HOME=/models</code>) across
+all containers so weights download once and are reused.</li>
+<li>Weights are <strong>large and gitignored</strong> (§11.4.30) —
+provide the mandated §11.4.77 regeneration mechanism: a non-interactive
+<code>scripts/fetch_weights.sh</code> that runs
+<code>huggingface-cli download &lt;repo&gt;</code> for each model into
+the cache, plus a <code>.gitignore-meta/&lt;slug&gt;.yaml</code>
+declaring repo id, expected disk size, integrity,
+<code>requires-network: true</code>, <code>requires-credentials</code>
+(HF token for gated repos). Wire it into <code>setup.sh</code>
+post-clone and gate a pre-build check on a
+<code>.regenerated/&lt;slug&gt;.ok</code> stamp. Example weights to
+declare: <code>Qwen/Qwen3-VL-8B-Instruct</code>(+GGUF),
+<code>black-forest-labs/FLUX.1-dev</code>,
+<code>Wan-AI/Wan2.2-I2V-A14B</code>, <code>Lightricks/LTX-Video</code>
+(LTX-2), <code>starvector/starvector-8b-im2svg</code>.</li>
+</ul>
+<hr />
+<h2 id="top-risks">7. Top risks</h2>
+<ol type="1">
+<li><strong>Blackwell toolchain immaturity (highest).</strong> vLLM /
+PyTorch require <strong>cu128 + torch ≥ 2.9</strong> for
+<code>sm_120</code>; stock wheels fail with “sm_120 not compatible.”
+Native FP8 works on bare-metal Linux but <strong>not</strong> through
+WSL2 (dxgkrnl fallback). Mitigation: pin cu128 images, prefer bare-metal
+Linux, keep llama.cpp as a lower-risk fallback engine. (<a href="https://github.com/vllm-project/vllm/issues/13306">vLLM
+#13306</a>; <a href="https://discuss.vllm.ai/t/vllm-on-rtx5090-working-gpu-setup-with-torch-2-9-0-cu128/1492">vLLM
+forum cu128</a>)</li>
+<li><strong>Single-GPU VRAM contention.</strong> 32 GB cannot
+simultaneously hold a 30B VLM + FLUX + WAN 2.2. Concurrent heavy jobs
+will OOM. Mitigation: a router that serializes GPU-heavy request
+classes; per-engine memory caps; on-demand model load/unload.</li>
+<li><strong>Non-standard video API + benchmark drift.</strong> No OpenAI
+<code>videos</code> standard → custom async contract needed, and several
+perf/VRAM figures come from third-party blogs (2025–2026) that may not
+match your exact driver/quant. Mitigation: treat cited times as
+order-of-magnitude, re-benchmark on the actual 5090 before publishing
+SLAs; wrap video as async jobs.</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>Qwen3-VL: https://github.com/QwenLM/Qwen3-VL ;
+https://codersera.com/blog/qwen3-vl-4b-vs-qwen3-vl-8b-benchmarks-vram-guide/
+;
+https://unsloth.ai/docs/models/tutorials/qwen3-how-to-run-and-fine-tune/qwen3-vl-how-to-run-and-fine-tune
+; https://localaimaster.com/blog/qwen-3-vl-local-setup ;
+https://insiderllm.com/guides/vision-models-locally/</li>
+<li>Qwen2.5-VL / serving:
+https://apidog.com/blog/qwen2-5-vl-32b-locally-mlx/ ;
+https://lmsysorg.mintlify.app/cookbook/autoregressive/Qwen/Qwen2.5-VL ;
+https://github.com/vllm-project/vllm/issues/24728 ;
+https://discuss.vllm.ai/t/speeding-up-vllm-inference-for-qwen2-5-vl/615</li>
+<li>llama.cpp multimodal:
+https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md ;
+https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct-GGUF ;
+https://simonwillison.net/2025/May/10/llama-cpp-vision/</li>
+<li>vLLM on Blackwell: https://github.com/vllm-project/vllm/issues/13306
+; https://github.com/vllm-project/vllm/issues/37242 ;
+https://discuss.vllm.ai/t/vllm-on-rtx5090-working-gpu-setup-with-torch-2-9-0-cu128/1492
+; https://github.com/vllm-project/vllm/issues/16515</li>
+<li>Image gen on RTX 5090:
+https://www.databasemart.com/blog/stable-diffusion-benchmark-in-comfyui-on-rtx5090
+; https://medium.com/<span class="citation" data-cites="furkangozukara/rtx-5090-tested-against-flux-dev-sd-3-5-ff4e35a07ab8">@furkangozukara/rtx-5090-tested-against-flux-dev-sd-3-5-ff4e35a07ab8</span>
+;
+https://github.com/FurkanGozukara/Stable-Diffusion/wiki/RTX-5090-Tested-Against-FLUX-DEV-SD-35-Large-SD-35-Medium-SDXL-SD-15-AMD-9950X-RTX-3090-TI
+; https://www.spheron.network/blog/comfyui-gpu-cloud-2026/</li>
+<li>ComfyUI API / OpenAI image bridge:
+https://github.com/dougbtv/comfyui-vllm-omni/ ;
+https://www.runpod.io/blog/deploy-comfyui-as-a-serverless-api-endpoint ;
+https://docs.salad.com/container-engine/how-to-guides/ai-machine-learning/deploy-stable-diffusion-comfy
+; https://docs.servicestack.net/ai-server/usage</li>
+<li>Video gen (WAN/LTX/Hunyuan/CogVideoX):
+https://localaimaster.com/blog/local-ai-video-generation ;
+https://www.aimagicx.com/blog/open-source-ai-video-models-comparison-2026
+; https://www.spheron.network/blog/gpu-cloud-video-ai-2026/ ;
+https://github.com/Wan-Video/Wan2.2 ;
+https://docs.comfy.org/tutorials/video/wan/wan2_2 ;
+https://www.spheron.network/blog/image-to-video-gpu-cloud-ltx-wan-hunyuan/</li>
+<li>LTX self-host / API:
+https://support.ltx.studio/hc/en-us/categories/30053379933330-LTX-2-API
+; https://docs.ltx.video/welcome ;
+https://huggingface.co/Lightricks/LTX-2/discussions/26</li>
+<li>Vectorization: https://github.com/visioncortex/vtracer ;
+https://starvector.github.io/starvector/ ;
+https://openaccess.thecvf.com/content/CVPR2025/papers/Rodriguez_StarVector_Generating_Scalable_Vector_Graphics_Code_from_Images_and_Text_CVPR_2025_paper.pdf
+; https://huggingface.co/starvector/starvector-8b-im2svg ;
+https://comfyui-wiki.com/en/news/2025-03-26-starvector-svg-generation</li>
+<li>Rootless Podman + NVIDIA CDI:
+https://oneuptime.com/blog/post/2026-03-18-run-nvidia-gpu-containers-podman/view
+; https://podman-desktop.io/docs/podman/gpu ;
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/1.14.2/cdi-support.html</li>
+</ul>
+</body>
+</html>

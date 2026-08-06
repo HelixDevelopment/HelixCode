@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ROOTCAUSE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ROOTCAUSE</h1>
+</header>
+<h1 id="f-dbtool-workable-items-editsync-round-trip-desync-root-cause-fix">F-DBTOOL
+— workable-items edit→sync round-trip desync — root cause + fix</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-12T03:45:00Z</p>
+<h2 id="zero-risk-statement">Zero-risk statement</h2>
+<p>All investigation and validation below was performed exclusively
+against <strong>copies</strong> of <code>docs/workable_items.db</code>
+under <code>/tmp/wifix_work/</code>. The live
+<code>docs/workable_items.db</code>, <code>docs/Issues.md</code>, and
+<code>docs/Fixed.md</code> were never opened for writing; their
+checksums are unchanged from session start
+(<code>docs/workable_items.db</code>=<code>66da65b31dc629ae9d8fbbce45aa1960</code>,
+<code>docs/Issues.md</code>=<code>9f2c6a4a34a37b7ba032cc30245306a2</code>,
+<code>docs/Fixed.md</code>=<code>c9e37c9931a700d90146c1b3cc585273</code>).
+No <code>git add</code> / <code>git commit</code> was run. The fix below
+is landed <strong>only</strong> in the working tree of the
+<code>constitution</code> submodule (uncommitted), touching exactly four
+source files.</p>
+<h2 id="root-cause">1. Root cause</h2>
+<p><strong>Primary defect (data corruption):</strong> every mutating
+subcommand that reads an item via
+<code>loadItem(db, id, location)</code> and then writes it back with
+<code>UPDATE items SET ... WHERE atm_id=? AND current_location=?</code>
+— i.e. <code>update</code>, <code>block</code>, <code>reopen</code>, and
+<code>obsolete-details</code> — was blind to the schema’s true 3-tuple
+PRIMARY KEY <code>(atm_id, current_location, representation)</code> (GAP
+A / §11.4.90 dual-representation support, added so the SAME ticket can
+exist both as a pipe-table closure row
+(<code>representation=&#39;table&#39;</code>) and a full H2 narrative section
+(<code>representation=&#39;section&#39;</code>) in the same tracker — the
+HXC-044 shape). <code>loadItem</code> never even populated
+<code>it.Representation</code> (Go zero-value <code>&quot;&quot;</code>, which
+<code>repOrDefault()</code> silently reports as <code>&quot;section&quot;</code>
+regardless of which row was actually read), and its <code>SELECT</code>
+had no <code>ORDER BY</code>, so on a dual-representation item like
+HXC-044 it returned <em>whichever</em> row SQLite scanned first —
+nondeterministic. The subsequent
+<code>UPDATE ... WHERE atm_id=? AND current_location=?</code> (also
+missing <code>representation</code>) then matched <strong>both</strong>
+rows and overwrote <strong>both</strong> with the same
+<code>body_md</code> — clobbering the sibling representation’s
+content.</p>
+<p><code>constitution/scripts/workable-items/cmd/workable-items/crud.go:368</code>
+(pre-fix <code>loadItem</code>) and the four call-sites’
+<code>UPDATE</code> statements in <code>mutate.go</code>
+(<code>updateCmd</code> ~L196, <code>reopenCmd</code> ~L332,
+<code>blockCmd</code> ~L449) and <code>obsolete.go</code>
+(<code>obsoleteDetailsCmd</code> ~L132) are the exact locations.</p>
+<p><strong>Amplifying defect #1 (idempotency bug,
+<code>obsolete.go:injectObsoleteDetails</code>, pre-fix
+~L156-189):</strong> the function dropped a pre-existing
+<code>**Obsolete-Details:**</code> line and, in the <em>same</em> pass,
+scanned for the insertion point by looking one line ahead
+(<code>lines[i+1]</code>) to decide whether the current meta line was
+the <em>last</em> contiguous meta field. When a body already carried an
+Obsolete-Details line (the normal, “this operation should be idempotent”
+case), that stale line was itself shaped like a generic
+<code>**Field:** value</code> meta line, so the lookahead saw it and
+concluded the <em>real</em> last field (“<code>**Assigned-To:**</code>”)
+was <strong>not</strong> the last one — the loop never found an
+insertion point and fell through to the “append at the very end”
+fallback. Because <code>strings.Join</code> never adds a trailing
+separator, the new Obsolete-Details line landed as the body’s
+<strong>last byte, with no trailing newline</strong> — right after the
+prose paragraph instead of in its correct position inside the
+heading-adjacent meta block.</p>
+<p><strong>Amplifying defect #2 (<code>db.go:renderDocument</code>’s
+<code>appendSegment</code>, pre-fix ~L654-659):</strong> the
+glue-prevention logic that inserts a separating <code>\n</code> when the
+accumulated buffer doesn’t end in one only fired when the
+<strong>next</strong> segment’s content started with <code>&quot;## &quot;</code>
+(a heading). A newline-less body followed by anything else — in
+particular a pipe-<strong>table</strong> row (starts <code>&quot;| &quot;</code>)
+— was concatenated with <strong>zero separation</strong>. Once defect #1
+left HXC-044’s <code>section</code>-representation body newline-less,
+and the missing- representation-scope defect (primary) had <em>also</em>
+copied that exact newline-less body onto HXC-044’s
+<code>table</code>-representation row, the very next document segment
+(the next chronologically-closed item’s pipe row) glued directly onto
+HXC-044’s tail. From that byte onward <code>parseFixed</code> no longer
+saw line-start <code>##</code>/<code>|</code> boundaries, so it silently
+absorbed <strong>every subsequent item in Fixed.md</strong> into
+HXC-044’s parsed body — reported by <code>diff</code> as those ~188
+items being “present in DB, absent in Markdown”, plus HXC-044 itself
+showing <code>body differs (md=99497 bytes db=656 bytes)</code> — the
+exact shape described in the task (“md body=33796B vs db
+body_md=663B”).</p>
+<h2 id="minimal-reproduction-on-a-copy-tmpwifix_workcopya.db-untouched">2.
+Minimal reproduction (on a COPY; <code>/tmp/wifix_work/copyA.db</code> =
+untouched</h2>
+<p>DB copy, <code>copyC.db</code> = mutated copy)</p>
+<pre><code>$ /tmp/wi_fix sync db-to-md --db copyA.db --out-issues IssuesA.md --out-fixed FixedA.md
+$ /tmp/wi_fix diff --db copyA.db --issues IssuesA.md --fixed FixedA.md
+diff: DB and Markdown are in sync          # untouched DB round-trips cleanly
+
+$ cp copyA.db copyC.db
+$ /tmp/wi_fix obsolete-details HXC-044 --db copyC.db \
+    --since 2026-07-12 --reason not-reproducible --superseding none \
+    --evidence evidence/HXC-044.txt
+$ sqlite3 copyC.db &quot;SELECT atm_id, representation, length(body_md) FROM items WHERE atm_id=&#39;HXC-044&#39;;&quot;
+HXC-044|section|652
+HXC-044|table|652                          # &lt;-- BOTH rows now byte-identical (corruption)
+
+$ /tmp/wi_fix sync db-to-md --db copyC.db --out-issues IssuesC.md --out-fixed FixedC.md
+$ /tmp/wi_fix diff --db copyC.db --issues IssuesC.md --fixed FixedC.md
+~ HXC-044 body differs (md=99497 bytes db=656 bytes)
+~ HXC-044 body differs (md=657 bytes db=656 bytes)
+- FIX-2026-05-19 present in DB, absent in Markdown
+... (186 more &quot;present in DB, absent in Markdown&quot; lines) ...
+diff: 190 difference(s)</code></pre>
+<p><code>update --id HXC-044 --location Fixed --severity High</code> on
+the same untouched copy reproduces an equivalent 189-difference desync
+via the identical missing-<code>representation</code>-scope defect (no
+idempotency-bug interaction, so a smaller — but still severe — blast
+radius). <code>close</code> was also tested (on <code>HXC-122</code>, a
+non-dual-representation item) and, as expected, does
+<strong>not</strong> reproduce the corruption by itself: the corruption
+requires a <strong>dual-representation item</strong> as the mutation
+target, and HXC-044 is currently the <em>only</em> item in the live DB
+carrying both representations (verified:
+<code>SELECT representation, count(*) FROM items GROUP BY representation</code>
+→ <code>section|136</code>, <code>table|188</code>; only HXC-044 has
+both for the same id+location).</p>
+<h2 id="fix-validated-landed-in-the-working-tree-uncommitted">3. Fix —
+validated, landed in the working tree (uncommitted)</h2>
+<p>Files touched (all inside
+<code>constitution/scripts/workable-items/cmd/workable-items/</code>):</p>
+<ul>
+<li><strong><code>crud.go</code></strong> — <code>loadItem</code>:
+SELECT + Scan the row’s real <code>representation</code>;
+<code>ORDER BY CASE WHEN representation=&#39;section&#39; THEN 0 ELSE 1 END LIMIT 1</code>
+so a dual-representation item deterministically yields its
+<code>section</code> row (matching every existing caller’s semantic
+intent — narrative-content mutation) while a single-representation item
+(the overwhelming majority — every closure-only pipe row) is returned
+unchanged. <code>closeCmd</code>’s Issues-side <code>DELETE</code> is
+now scoped <code>AND representation=?</code>, and its Fixed-side
+<code>INSERT</code> now carries the source row’s own
+<code>representation</code> instead of relying on the schema’s implicit
+<code>&#39;section&#39;</code> default (closes the same defect class on the
+Issues→Fixed move path; currently dormant — no Issues-side dual-rep item
+exists today — but symmetric with the confirmed defect).</li>
+<li><strong><code>mutate.go</code></strong> — <code>updateCmd</code>,
+<code>reopenCmd</code>, <code>blockCmd</code>: each
+<code>UPDATE</code>’s <code>WHERE</code> clause now includes
+<code>AND representation=?</code> bound to the loaded item’s
+<code>repOrDefault()</code>, so the write only ever touches the row that
+was actually read.</li>
+<li><strong><code>obsolete.go</code></strong> —
+<code>obsoleteDetailsCmd</code>’s <code>UPDATE</code> scoped by
+representation identically; <strong>and</strong>
+<code>injectObsoleteDetails</code> rewritten to drop stale
+<code>**Obsolete-Details:**</code> line(s) in a first pass and run the
+insertion-point scan over the <em>cleaned</em> list, so the lookahead
+can never mistake a soon-to-be-removed line for a genuine blocking meta
+field. Idempotent re-runs now correctly replace the line in place
+(verified — see §4).</li>
+<li><strong><code>db.go</code></strong> — <code>renderDocument</code>’s
+<code>appendSegment</code> glue-prevention generalised from “insert a
+separator only before a heading” to “insert a separator whenever the
+buffer doesn’t already end in a newline” — closes the <em>whole</em>
+glue-defect class (not just the heading instance) as defense-in-depth,
+so a future body-generation bug that leaves a body newline-less can
+corrupt at most that one item’s parse, never cascade through the rest of
+the document. Proven a strict no-op for every well-formed body: the full
+existing test suite (which includes several byte-identical round-trip
+fixtures) stays green.</li>
+</ul>
+<p>All four fixes are minimal (each is a <code>WHERE</code>-clause scope
+addition, a <code>SELECT</code>/<code>ORDER BY</code> addition, an
+insertion-order correction, or a one-line condition generalisation) and
+backward-compatible: every single-representation item (the vast majority
+of the DB) is read/written identically to before.</p>
+<h2 id="validation-evidence-captured-this-session-on-copies-only">4.
+Validation evidence (captured this session, on copies only)</h2>
+<pre><code>$ cd constitution/scripts/workable-items &amp;&amp; go build -o /tmp/wi_fix ./cmd/workable-items   # exit 0
+$ go vet ./...                                                                              # exit 0, no output
+$ go test -count=3 ./...                                                                    # ok (all pre-existing tests, 3x for determinism)
+
+# Re-run the EXACT original repro against the FIXED binary:
+$ cp copyA.db copyC2.db
+$ /tmp/wi_fix obsolete-details HXC-044 --db copyC2.db --since 2026-07-12 \
+    --reason not-reproducible --superseding none --evidence evidence/HXC-044.txt
+$ sqlite3 copyC2.db &quot;SELECT atm_id, representation, length(body_md) FROM items WHERE atm_id=&#39;HXC-044&#39;;&quot;
+HXC-044|section|652
+HXC-044|table|516                          # &lt;-- sibling representation UNTOUCHED (was clobbered to 652 pre-fix)
+$ /tmp/wi_fix sync db-to-md --db copyC2.db --out-issues IssuesC2.md --out-fixed FixedC2.md
+$ /tmp/wi_fix diff --db copyC2.db --issues IssuesC2.md --fixed FixedC2.md
+diff: DB and Markdown are in sync          # 0 differences (was 190 pre-fix)
+
+# update --severity on the same dual-rep item:
+$ cp copyA.db copyD2.db
+$ /tmp/wi_fix update --db copyD2.db --id HXC-044 --location Fixed --severity High
+$ /tmp/wi_fix sync db-to-md --db copyD2.db --out-issues IssuesD2.md --out-fixed FixedD2.md
+$ /tmp/wi_fix diff --db copyD2.db --issues IssuesD2.md --fixed FixedD2.md
+diff: DB and Markdown are in sync          # 0 differences (was 189 pre-fix)
+
+# Idempotent re-run of obsolete-details on the already-obsoleted item (2nd call):
+$ cp copyC2.db copyC3.db
+$ /tmp/wi_fix obsolete-details HXC-044 --db copyC3.db --since 2026-07-13 \
+    --reason duplicate-of --superseding HXC-999 --evidence evidence/HXC-044.txt
+$ /tmp/wi_fix sync db-to-md --db copyC3.db --out-issues IssuesC3.md --out-fixed FixedC3.md
+$ /tmp/wi_fix diff --db copyC3.db --issues IssuesC3.md --fixed FixedC3.md
+diff: DB and Markdown are in sync          # correctly replaces the Obsolete-Details line in place
+
+# validate on both mutated copies:
+$ /tmp/wi_fix validate --db copyC2.db | tail -1
+validate: OK — 324 items, all invariants satisfied
+$ /tmp/wi_fix validate --db copyE.db | tail -1     # copyE = close HXC-125 (non-dual-rep) on the fixed binary
+validate: OK — 324 items, all invariants satisfied
+
+# Untouched-DB baseline (still clean after the fix, proving no regression):
+$ /tmp/wi_fix sync db-to-md --db copyA.db --out-issues IssuesA.md --out-fixed FixedA.md
+$ /tmp/wi_fix diff --db copyA.db --issues IssuesA.md --fixed FixedA.md
+diff: DB and Markdown are in sync</code></pre>
+<h2 id="related-but-out-of-scope-findings-not-fixed-in-this-pass">5.
+Related-but-out-of-scope findings (not fixed in this pass)</h2>
+<ul>
+<li><code>mutate.go:reopenCmd</code>’s <code>doc_segments</code>
+relocation (<code>removeItemSegment</code> / <code>appendSegment</code>)
+is still representation-blind (deletes/re-adds without a
+<code>representation</code> filter/column). This is the <em>segment</em>
+analogue of the fixed <em>items</em>-table bug, but it is currently
+<strong>dormant</strong>: no item that is both dual-representation and
+eligible for <code>reopen</code> exists in the live tree (HXC-044, the
+only dual-rep item, carries a terminal <code>Obsolete</code> status).
+Flagging per §11.4.124 (investigate-before-remove/fix; not silently
+patched here to keep this change minimal and precisely scoped to the
+confirmed, reproduced defect).</li>
+<li><code>crud.go:closeCmd</code>’s
+<code>renderItemBody(...)</code>-based full body regeneration
+(discarding any body content beyond title/type/severity/description) is
+the same <em>class</em> of truncation bug already fixed for
+<code>update</code> (the “SPK-481” comment in <code>mutate.go</code>)
+but was never extended to <code>close</code>. It does
+<strong>not</strong> cause a <code>diff</code> desync (both DB and
+freshly-regenerated Markdown get the same regenerated body), so it is
+orthogonal to the reported defect — a genuine data-loss risk, but a
+separate ticket.</li>
+<li><code>group.go</code>’s <code>group set</code> command has the same
+unscoped-by-representation <code>UPDATE</code> pattern, but it only ever
+writes <code>logic_group</code>/<code>destination</code> (classification
+metadata), not <code>body_md</code> — cross-representation duplication
+there is comparatively low-severity and was left untouched.</li>
+</ul>
+<h2 id="summary">6. Summary</h2>
+<p>Root cause:
+<code>constitution/scripts/workable-items/cmd/workable-items/crud.go</code>
+(<code>loadItem</code>) plus the four write-paths in
+<code>mutate.go</code> (<code>update</code>/<code>reopen</code>/
+<code>block</code>) and <code>obsolete.go</code>
+(<code>obsolete-details</code>) were blind to the schema’s 3-tuple
+primary key’s <code>representation</code> component, so on the DB’s one
+dual-representation item (HXC-044) a write clobbered both its
+<code>section</code> and <code>table</code> rows with the same content;
+a second, independent bug in <code>obsolete.go</code>’s
+<code>injectObsoleteDetails</code> then left that clobbered body
+newline-less, which a third gap (the heading-only glue guard in
+<code>db.go:renderDocument</code>) failed to separate from the next
+document segment — cascading the corruption into an unparseable tail
+that swallowed ~188 subsequent items, producing exactly the
+176-190-difference <code>diff</code> explosion reported.</p>
+<p><strong>Fix status: VALIDATED.</strong> All four files are fixed in
+the <code>constitution</code> submodule’s working tree (uncommitted, per
+instructions). <code>go build</code>, <code>go vet</code>, and
+<code>go test -count=3 ./...</code> all pass. The exact original
+reproduction (<code>obsolete-details HXC-044</code> and
+<code>update --severity HXC-044</code> on fresh copies of the live DB)
+now produces <code>diff: DB and Markdown are in sync</code> (0
+differences) where it previously produced 190 / 189 differences, and the
+untouched-DB baseline round-trip remains clean (no regression).</p>
+</body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>07_phase2_synthesis</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">07_phase2_synthesis</h1>
+</header>
+<h1 id="hxc-159-phase-2-specification-implementation-plan-synthesis">HXC-159
+Phase 2 — Specification + implementation-plan synthesis</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td><code>07_phase2_synthesis.md</code></td>
+</tr>
+<tr>
+<td><strong>Work item</strong></td>
+<td>HXC-159 (Task, In-progress, High)</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td>2 — SpecKit specification + phase/task/subtask implementation
+plan</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Last modified</strong></td>
+<td>2026-07-29</td>
+</tr>
+<tr>
+<td><strong>Author</strong></td>
+<td><code>(T1/main - claude1 - opus - xhigh)</code></td>
+</tr>
+<tr>
+<td><strong>Status summary</strong></td>
+<td>Specification and plan authored at
+<code>specs/001-helixskills-incorporation/</code>. <strong>63
+tasks</strong> across <strong>13 phases</strong> in 2 concurrent tracks.
+<strong>29 register risks → 29 mitigations → task coverage</strong>,
+plus <strong>3 new risks</strong> found during planning. <strong>9
+<code>UNCONFIRMED:</code> items</strong> carried, 2 resolved during this
+phase. Nothing implemented.</td>
+</tr>
+<tr>
+<td><strong>Anchors</strong></td>
+<td>§11.4.6 · §11.4.8 · §11.4.35 · §11.4.74 · §11.4.108 · §11.4.118 ·
+§11.4.122 · §11.4.169 · §11.4.201 · §11.4.224 · CONST-051(C) ·
+CONST-059</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Phase 2 does not re-derive Phase 1.</strong> Its value is
+synthesis: turning the six Phase-1 documents into a specification with
+per-feature dispositions, a sequenced plan, and a risk→mitigation→task
+map. Where Phase 2 <em>corrected</em> a Phase-1 or brief-level claim,
+the correction is recorded in §2 rather than silently absorbed.</p>
+<h2 id="table-of-contents">Table of contents</h2>
+<ol type="1">
+<li><a href="#1-deliverables">Deliverables</a></li>
+<li><a href="#2-corrections-to-inherited-framings">Corrections to
+inherited framings</a></li>
+<li><a href="#3-the-six-open-decisions-resolved">The six open decisions,
+resolved</a></li>
+<li><a href="#4-sequencing-rationale">Sequencing rationale</a></li>
+<li><a href="#5-risk-coverage">Risk coverage</a></li>
+<li><a href="#6-what-was-written-vs-planned">What was written vs
+planned</a></li>
+<li><a href="#7-honest-boundary">Honest boundary</a></li>
+</ol>
+<hr />
+<h2 id="deliverables">1. Deliverables</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Artefact</th>
+<th>Path</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Specification</strong></td>
+<td><code>specs/001-helixskills-incorporation/spec.md</code></td>
+<td>5 prioritised user stories · <strong>50 functional + 4
+non-functional requirements</strong> · all <strong>57</strong> upstream
+capability rows dispositioned · all <strong>23</strong>
+constitution-derived extensions dispositioned · all <strong>7</strong>
+Bridge layers dispositioned · 14 success criteria · 9
+<code>UNCONFIRMED:</code> items</td>
+</tr>
+<tr>
+<td><strong>Implementation plan</strong></td>
+<td><code>specs/001-helixskills-incorporation/plan.md</code></td>
+<td>Technical context · constitution check · structure decision ·
+<strong>13-phase / 2-track</strong> architecture with per-phase
+rationale · finding-by-finding handling · risk→mitigation→gate→mutation
+table · test strategy · <strong>22-entry runtime-signature
+registry</strong> · complexity tracking · doc deliverables</td>
+</tr>
+<tr>
+<td><strong>Task breakdown</strong></td>
+<td><code>specs/001-helixskills-incorporation/tasks.md</code></td>
+<td><strong>63 tasks</strong>, each with scope / §11.4.169 test types /
+§11.4.108 runtime signature / acceptance evidence / risks, decomposed
+into <strong>~230 subtasks</strong> · dependency graph ·
+parallel-execution guidance</td>
+</tr>
+<tr>
+<td><strong>SpecKit constitution pointer</strong></td>
+<td><code>.specify/memory/constitution.md</code></td>
+<td>R-23 mitigation — <strong>written, not merely planned</strong>
+(§6)</td>
+</tr>
+</tbody>
+</table>
+<p>SpecKit conventions were followed for the
+<code>specs/&lt;###-feature&gt;/{spec,plan,tasks}.md</code> layout and
+the template section structure.
+<strong><code>create-new-feature.sh</code> was deliberately not
+run</strong>: it creates a git branch, and branch creation in a shared
+tree with eleven live agents is out of this task’s remit. The directory
+was created at the path the script would have chosen.</p>
+<hr />
+<h2 id="corrections-to-inherited-framings">2. Corrections to inherited
+framings</h2>
+<p>Three claims arrived with the Phase-2 brief. Each was checked against
+the artifact (§11.4.6), and two needed correcting. Recorded here because
+a plan built on a mis-framing inherits the mis-framing.</p>
+<h3 id="the-upstream-repo-is-nearly-empty-of-implementation-partially-wrong">2.1
+“The upstream repo is nearly empty of implementation” —
+<strong>PARTIALLY WRONG</strong></h3>
+<p><strong>Measured</strong> (<code>02</code> §1, §4, §11): 237 Go files
+· 1 418 top-level declarations · <strong>755 exported symbols</strong> ·
+26 packages · 13 extension-point interfaces · 12 migrations · 13 MCP
+tools · 27 CLI subcommands · <strong>0 parse errors</strong>. That is a
+production-shaped service, not an empty repository.</p>
+<p>What <em>is</em> true is the narrower and sharper statement, and it
+is the one the plan uses:</p>
+<ul>
+<li><strong>0 <code>.go</code> files outside <code>docs/</code></strong>
+— every one is under
+<code>docs/research/mvp/Agent_AI_Skill_Tree_Development/project/</code>;</li>
+<li><strong>no root <code>go.mod</code></strong>, so <code>go get</code>
+against the repository URL cannot resolve it;</li>
+<li>the declared module path
+<code>github.com/helixdevelopment/skill-system</code> <strong>disagrees
+with the repository URL</strong>
+<code>github.com/HelixDevelopment/skills</code> in <em>both name and
+case</em>;</li>
+<li><strong>no release tags</strong>, so any pin must be a raw SHA.</li>
+</ul>
+<p><strong>Why the distinction changes the plan.</strong> “Nearly empty”
+implies <em>write it</em>. The measurement says <em>relocate and
+reconcile it</em> — a smaller, safer operation that preserves 755
+exported symbols instead of reinventing them. The brief’s operative
+conclusions survive intact (<strong>extend, not reuse</strong>;
+<strong>raw-SHA pin</strong>); only the size of the work changes, and it
+shrinks.</p>
+<p><code>06</code>’s R-01 heading (“ships nothing to incorporate”) is
+consistent with this once read precisely: nothing <em>consumable at a
+resolvable module path</em>. Phase 2 states it that way to remove the
+ambiguity.</p>
+<h3 id="of-7-bridge-layers-exist-superseded-mid-phase">2.2 “2 of 7
+Bridge layers exist” — <strong>SUPERSEDED mid-phase</strong></h3>
+<p>A dedicated layer-health probe landed during this phase with a
+materially different and better-resolved result:</p>
+<p><strong><code>WIRED: L1, L2, L6</code> · <code>PARTIAL: L7</code> ·
+<code>DESIGNED-ONLY: L3, L4</code> ·
+<code>NONEXISTENT: L5</code>.</strong></p>
+<p>The load-bearing change is that <strong>the remedy is mixed, not
+uniform</strong> — three absences need three different responses, and a
+uniform installer would necessarily contain a step that can never
+succeed:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Class</th>
+<th>Layers</th>
+<th>Correct response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ABSENT-BUT-OBTAINABLE</strong></td>
+<td>L3, L4</td>
+<td>An installer genuinely fixes these — but <strong>must use an
+explicit <code>--from</code> release URL</strong>, because the bare
+<code>specify extension add</code> fails on a default install (the
+first-party catalogue holds 4 entries, all <code>spec-kit-core</code>;
+the bridges live in the community catalogue)</td>
+</tr>
+<tr>
+<td><strong>NONEXISTENT</strong></td>
+<td>L5</td>
+<td><strong>Delete the tier.</strong> No installer can help — there is
+nothing to install</td>
+</tr>
+<tr>
+<td><strong>ABSENT-BUT-BUILDABLE</strong></td>
+<td>L7</td>
+<td>A <strong>build flag</strong> (<code>-DGGML_RPC=ON</code>; the
+submodule is already in-tree and already builds
+<code>llama-server</code>), not a procurement item</td>
+</tr>
+</tbody>
+</table>
+<p><strong>L6 was a false negative</strong>, and the mechanism matters
+more than the correction:
+<code>systemctl list-unit-files | grep -i helix</code> at
+<strong>system</strong> scope returns nothing because all seven Helix
+units are <strong>user</strong>-scope. A scope-limited probe produced a
+<em>confident</em> wrong answer — the §11.4.201 false-null class. FR-046
+therefore requires the probe to enumerate both scopes, so the trap is
+<strong>encoded rather than remembered</strong>. This is logged as new
+risk <strong>R-30</strong>.</p>
+<h3 id="the-work-items-own-environment-facts-are-stale">2.3 The work
+item’s own environment facts are <strong>stale</strong></h3>
+<p>HXC-159’s <code>PRE-VERIFIED ENVIRONMENT FACTS</code> block states
+SpecKit <em>“is NOT yet initialized in this repo (no
+<code>.specify/</code> and no <code>specs/</code> directory
+present)”</em> and that <em>“Initialization is therefore an explicit
+early task.”</em> <code>.specify/</code> <strong>exists</strong> with
+full scaffolding and ten registered <code>speckit-*</code> skills; the
+item’s own later addendum says so. The tracker contradicts itself and
+<strong>the addendum is correct</strong>.</p>
+<p>Consequence: <strong>no L2 initialisation task is planned</strong>
+(FR-045). Logged as <strong>R-31</strong>, with the general mitigation
+<em>re-derive environment facts from the artifact at phase start</em>
+(task T-P0.01) — because a plan that re-plans a completed step is
+working against a description instead of against the artifact.</p>
+<hr />
+<h2 id="the-six-open-decisions-resolved">3. The six open decisions,
+resolved</h2>
+<p><code>03</code> §8 left six decisions to Phase 2. All six are taken
+in <code>spec.md</code> §2; summarised here with the evidence that
+forced each.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Forced by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D-1</strong> Canonical schema = <strong>Agent Skills open
+standard</strong>; the two proprietary dialects become profiled
+extensions with round-trip converters</td>
+<td>It is now an open cross-vendor standard with ~45 implementations.
+Picking either dialect strands the other; picking the standard strands
+neither and yields §11.4.228 portability for free</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>D-2</strong> All three upstream layers in scope, ordered L1
+→ L3 → L2, with <strong>L2 never linked into a consumer
+binary</strong></td>
+<td>The <code>internal/</code> visibility wall + R-25
+(<code>replace</code> ignored outside the main module)</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>D-3</strong> Contract crosses the module boundary
+<strong>over the wire (MCP) plus a pure-data <code>pkg/</code>
+loader</strong></td>
+<td><code>03</code> §2/§6: <code>pkg/</code> and the wire are the
+<em>only two proven</em> cross-module seams. <code>03b</code> §5 calls
+the MCP-config path “the cleanest cross-consumer integration path in the
+entire analysis”</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>D-4</strong> <strong>HelixAgent does not depend on
+HelixSkills</strong> — it becomes a client</td>
+<td>Upstream’s own <code>helix-deps.yaml</code> declares HelixAgent a
+dependency <em>of</em> HelixSkills. Inverting it risks a cycle
+CONST-051(C) forbids. Enforced mechanically by T-P6.05’s module-graph
+gate</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>D-5</strong> Fix the two HelixCode structural defects
+<strong>first</strong></td>
+<td>No exported <code>Skill</code> constructor blocks the loader seam;
+the discarded CLI dispatcher kills auto-trigger on the exact surface the
+runtime signature is taken from</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>D-6</strong> The 1 174-file corpus <strong>does not
+migrate</strong> in this feature</td>
+<td>Relocating it removes a tree from HelixAgent — a §11.4.122 event
+needing an operator <em>yes</em> before, not a report after. It stays
+<code>vendored</code>-tier and <strong>unactivated</strong> (which R-19
+requires anyway)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sequencing-rationale">4. Sequencing rationale</h2>
+<p>Ten Track-A phases plus three Track-B phases, running concurrently
+and joining at P7.</p>
+<p>The ordering is forced by measurement in four places, and each is
+easy to get wrong:</p>
+<ol type="1">
+<li><strong>P2 (shadowing benchmark) precedes every activation
+policy.</strong> The published effect is established; its magnitude
+<em>on this corpus</em> is not. Setting a ceiling before the curve
+exists would be exactly the §11.4.6 guess this plan exists to avoid — so
+the benchmark is a <strong>deliverable</strong>, not an input. This is
+the plan’s most schedule-surprising decision and the one the evidence
+forces most directly.</li>
+<li><strong>P1 (hygiene) precedes P4 (loader).</strong> The loader is
+fail-closed by design, so it will error immediately against today’s
+corpus — <code>multitrack</code> has a <code>register.sh</code> and no
+<code>SKILL.md</code>. Normalising first means P4’s first red is a real
+defect, not a known one.</li>
+<li><strong>P3 (upstream extension) precedes P4.</strong> R-01’s
+mitigation is explicit: <em>“an incorporation phase MUST NOT be
+scheduled before Phase C exists.”</em></li>
+<li><strong>P5 and P6 run in parallel, never sequential-copy.</strong>
+Parity proven by two independent integrations is evidence; parity proven
+by copying one integration twice is a tautology.</li>
+</ol>
+<p>Track B starts immediately because <strong>no phase may declare a
+layer dependency before the real layer state is measured</strong> — and
+because B3 (deleting L5) is a design correction that blocks nothing and
+unblocks the honest statement of what the Bridge is.</p>
+<hr />
+<h2 id="risk-coverage">5. Risk coverage</h2>
+<p><strong>All 29 register rows are dispositioned; none is left as a
+note.</strong> 26 open rows map to task groups with a named gate and a
+paired §1.1 mutation; 3 were already resolved in the register and are
+carried as design inputs (R-15 → pure-data skills; R-16 → R-23; R-17 →
+R-25). The full table is <code>plan.md</code> §7.</p>
+<p><strong>Three risks were found during planning</strong> and are new
+to the register:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Risk</th>
+<th>Sev</th>
+<th>Mitigation</th>
+<th>Task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>R-29</strong></td>
+<td>Two independent installers provisioning into one
+<code>.claude/skills/</code> tree. Claude Code <strong>neither errors
+nor warns</strong> on a skill-name collision — it resolves silently —
+and the upstream namespacing request was <strong>closed as not
+planned</strong>. The collision happens in the <em>filesystem</em>,
+before Claude Code reads the directory, so no upstream mechanism
+observes it</td>
+<td>HIGH</td>
+<td>Install-time collision detection shipped by this feature: pre-write
+enumeration, abort-never-overwrite, reserved prefixes, manifest-driven
+regeneration. <strong>§11.4.8:
+<code>NO external solution found — original work</code></strong></td>
+<td>T-P1.04</td>
+</tr>
+<tr>
+<td><strong>R-30</strong></td>
+<td>Scope-limited probes yield <em>confident</em> false negatives (the
+L6 case, §2.2)</td>
+<td>MED</td>
+<td>Every presence probe enumerates all applicable scopes and records
+which it checked — encoded in the probe, not remembered</td>
+<td>T-B1.01</td>
+</tr>
+<tr>
+<td><strong>R-31</strong></td>
+<td>The work item’s own environment facts are stale (§2.3)</td>
+<td>MED</td>
+<td>Re-derive environment facts from the artifact at phase start; record
+contradictions rather than reconciling them silently</td>
+<td>T-P0.01</td>
+</tr>
+</tbody>
+</table>
+<p>The risk register itself (<code>06</code>) is <strong>not</strong>
+edited by this document — it is a Phase-1b artefact at Revision 2, and
+amending a sibling agent’s committed deliverable in a shared tree is not
+this task’s remit. R-29/R-30/R-31 live in <code>plan.md</code> §7 and
+are proposed for a future Revision 3.</p>
+<hr />
+<h2 id="what-was-written-vs-planned">6. What was written vs planned</h2>
+<p><strong>Planned only</strong> (no production code touched):
+everything in <code>specs/</code>.</p>
+<p><strong>Written</strong>:
+<code>.specify/memory/constitution.md</code> — replaced SpecKit’s stock
+2 346-byte placeholder with a CONST-059 inheritance pointer to
+<code>constitution/Constitution.md</code>.</p>
+<p>Rationale for acting rather than scheduling: the file is a
+<strong>governance pointer, not production code</strong>, and the
+placeholder was <strong>live</strong> — read by every
+<code>/speckit-plan</code> Constitution Check run, including this
+feature’s own. Leaving it would have allowed a generic template to
+shadow the real constitution during the very workflow this specification
+mandates. The unmodified SpecKit template remains untouched at
+<code>.specify/templates/constitution-template.md</code>, and the gate
+that makes the fix durable (<code>CM-CANONICAL-ROOT-CLARITY</code>
+extension) is scheduled as T-P1.06.4 rather than claimed.</p>
+<p>No other file outside <code>specs/</code> and this research tree was
+modified. No submodule pointer was touched. No branch was created.
+Nothing was pushed. <code>docs/Issues.md</code>,
+<code>docs/Fixed.md</code> and the summaries were <strong>not</strong>
+regenerated, per the coordinator’s standing deferral.</p>
+<hr />
+<h2 id="honest-boundary">7. Honest boundary</h2>
+<p><strong>Verified</strong>: every factual claim traces to a cited
+section of the Phase-1 research tree or to a probe captured in this
+session. Two runtime observables were verified directly so the signature
+registry names real commands rather than plausible ones:
+<code>helix_code/cmd/cli/main.go:3306</code> (the <code>skills</code>
+subcommand dispatcher) and
+<code>submodules/helix_agent/internal/router/router.go:1363-1368</code>
+(<code>GET /v1/skills</code>, <code>/categories</code>,
+<code>/:category</code>, <code>POST /match</code>).</p>
+<p><strong>Not verified — nothing was built, run or wired.</strong> This
+is a planning phase. Under §11.4.108 every claim here is SOURCE-layer at
+best; no runtime signature in the registry has been observed, no gate
+exists, and no mitigation has been proven. None of them is “done” until
+verified on a clean target.</p>
+<p><strong>Not read</strong>: the six Bridge documents Phase 1 also left
+unread (NANO_TASK_ENGINE, EXTENSION_DEVELOPMENT, TDD_INTEGRATION,
+CONSTITUTION_INTEGRATION, SECURITY, APPENDIX). Obligations stated only
+there are not reflected in FR-044…FR-050 — task T-B2.04 closes this and
+<strong>must complete before the installer is considered final</strong>
+(U-7).</p>
+<p><strong>Nine <code>UNCONFIRMED:</code> items</strong> are carried in
+<code>spec.md</code> §12, each with what would settle it. Two were
+resolved during this phase (U-1 → L6 is WIRED; U-2 → no longer
+load-bearing because L5 is deleted rather than substituted). Seven
+remain open: the local shadowing magnitude (<strong>U-3 — blocking; no
+threshold may be chosen before it</strong>), the GitLab group
+enumeration (U-4), HelixAgent’s unsurveyed <code>Toolkit/</code> and
+<code>MCP/</code> trees (U-5), CONST-040 capability sourcing (U-6), the
+unread Bridge documents (U-7), the four stale upstream branch diffs
+(U-8), and the upstream module’s true maturity (U-9).</p>
+<p><strong>Where the plan is weakest</strong>: P2’s cost is genuinely
+unestimable before its task set exists; U-5 could reshape P6’s
+attachment point; and assumption A-2 (upstream is writable by this team)
+is an assumption, not a verified fact — if it fails, P3 becomes a mirror
+and the plan’s shape changes at its root.</p>
+<hr />
+<h2 id="sources">Sources</h2>
+<p>Phase-1 tree, this directory: <code>01_speckit_init.md</code> ·
+<code>02_upstream_feature_inventory.md</code> ·
+<code>03_consumer_integration_surfaces.md</code> ·
+<code>03b_extension_integration.md</code> ·
+<code>04_deep_research.md</code> · <code>05_catalogue_survey.md</code> ·
+<code>06_risk_register.md</code>.</p>
+<p>Local verification, 2026-07-29:
+<code>sqlite3 docs/workable_items.db</code> (HXC-159 description) ·
+<code>.specify/{templates,memory,scripts}</code> inspection ·
+<code>helix_code/cmd/cli/main.go</code> ·
+<code>submodules/helix_agent/internal/router/router.go</code>.</p>
+<p>Bridge layer-health probe, 2026-07-29 (sibling stream): per-layer
+WIRED/PARTIAL/ DESIGNED-ONLY/NONEXISTENT verdicts, supply-chain
+measurements for SuperSpec / SuperB / <code>speckit-community</code> /
+<code>erophames/superpowers-mcp</code>, and the spec-kit catalogue-scope
+finding.</p>
+</body>
+</html>

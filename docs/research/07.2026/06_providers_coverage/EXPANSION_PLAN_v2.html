@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EXPANSION_PLAN_v2</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EXPANSION_PLAN_v2</h1>
+</header>
+<h1 id="provider-coverage-expansion-plan-v2-rewrite-helixcode-helixagent-helixllm-llmsverifier-claude_toolkit">Provider-Coverage
+Expansion Plan v2 (REWRITE) — HelixCode / HelixAgent / HelixLLM /
+LLMsVerifier / claude_toolkit</h1>
+<p><strong>Date:</strong> 2026-07-08 (rewrite of the same-day v2 draft,
+following a NO-GO independent review) <strong>Type:</strong> Planning
+document only. No product code touched by this rewrite. No
+<code>git add</code>/<code>commit</code>. <strong>Author:</strong>
+T-planning subagent (read-only research + design).
+<strong>Status:</strong> REWRITE — the prior draft of this file was
+reviewed and returned <strong>NO-GO</strong>
+(<code>scratchpad/review_providers_plan_v2.md</code>,
+§11.4.142/§11.4.150) because its Phase 1 and most of its Phase 2.1
+re-planned work that had <strong>already landed, been tagged, and been
+declared RELEASE PUBLISHED</strong> before the draft was written — a
+§11.4.74 catalogue-check failure. This rewrite corrects every
+Critical/Important finding from that review and is scoped as a
+<strong>delta over the shipped baseline</strong>, not a from-scratch
+re-plan.</p>
+<p><strong>Anti-bluff (§11.4.6/§11.4.99/§11.4.150):</strong> every claim
+below is cited either to <code>file:line</code> from an actual read this
+session, to a <code>git log</code>/<code>git fetch</code> command
+actually run this session, or to an external URL fetched/searched
+2026-07-08 (carried forward from the reviewed draft where the review did
+not dispute it). Nothing is re-derived from a stale in-tree research doc
+without independently confirming the doc’s underlying premise
+(registry/config state) against the live source this session.</p>
+<hr />
+<h2 id="what-is-already-landed-the-baseline-this-plan-extends-read-first">§0
+— What is ALREADY LANDED (the baseline this plan extends — READ
+FIRST)</h2>
+<p>This section did not exist in the reviewed draft’s Phase-1 framing;
+the draft described this work as pending/BLOCKED. It is not. All of the
+following is <strong>already committed on the current branch</strong>
+(<code>feature/helixllm-full-extension</code>, this repo’s
+<code>submodules/llms_verifier</code> HEAD), confirmed by
+<code>git log --oneline -15</code> + direct file reads this session:</p>
+<h3 id="llmsverifier-c1c5-capability-resolver-chain-landed-not-blocked">0.1
+LLMsVerifier C1→C5 capability-resolver chain — LANDED, not BLOCKED</h3>
+<p><code>submodules/llms_verifier/llm-verifier/capabilities/registry.go</code>
+(read in full this session, lines 1-60+) is <strong>already</strong>
+<code>providerCapabilitySeeds</code> (not the old
+<code>providerCapabilities</code> map the reviewed draft described) —
+the doc-comment at <code>registry.go:7-14</code> states verbatim:
+<em>“hand-authored bootstrap DEFAULTS ONLY — they are NOT verified and
+MUST be overridden by a live probe … The fail-closed resolver
+(ResolveModelCapability, registry_resolve.go) prefers a fresh per-model
+<code>database.VerificationResult</code> and reports
+<code>unverified</code> when none exists.”</em> This IS the C3
+fail-closed resolver the reviewed draft’s Phase 1.4 described as
+“BLOCKED pending C4+C5 landing.” It has landed. Commits (this session’s
+<code>git log --oneline -15</code> on
+<code>submodules/llms_verifier</code>):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Commit</th>
+<th>Date</th>
+<th>What</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>309af635</code></td>
+<td>2026-07-06 16:41</td>
+<td>C1 — <code>Message.ToolCalls</code></td>
+</tr>
+<tr>
+<td><code>2c507020</code></td>
+<td>2026-07-06 17:04</td>
+<td>C2 — RAG/Skills/Plugins capability fields</td>
+</tr>
+<tr>
+<td><code>09f9533c</code></td>
+<td>2026-07-06 21:32</td>
+<td>C4 — per-capability verification probes</td>
+</tr>
+<tr>
+<td><code>28e6625a</code></td>
+<td>2026-07-06 21:44</td>
+<td>C5 — wire <code>Verify</code></td>
+</tr>
+<tr>
+<td><code>ad18e91f</code></td>
+<td>2026-07-06 21:56</td>
+<td>C3 — fail-closed resolver (RED→GREEN)</td>
+</tr>
+<tr>
+<td><code>d1f04e5c</code></td>
+<td>2026-07-06 22:11</td>
+<td>review-advisory fix (detector gate + sentinel oracle)</td>
+</tr>
+<tr>
+<td><code>c696c5db</code></td>
+<td>2026-07-07 12:07</td>
+<td>extended OpenAI-compatible provider config records + reachability
+proof (§0.2)</td>
+</tr>
+</tbody>
+</table>
+<p><code>docs/research/07.2026/00_master/RESUME.md</code> (this
+project’s own §11.4.131 session-resumption file, timestamped 2026-07-08
+02:16 — <strong>before</strong> the reviewed draft was written) states
+in plain text: <em>“LLMsVerifier chain: ✅ C1 C2 C4 C5 C3 + advisories
+landed, combined review GO”</em> and that tag
+<code>helix-code-1.0.0-dev-0.0.1</code> is <strong>RELEASE
+PUBLISHED</strong>, citing <code>llms_verifier(c696c5db)</code> as one
+of the published submodule SHAs. <strong>This plan does not re-propose
+the C1–C5 chain in any form.</strong></p>
+<h3 id="extended-provider-config-rows-landed-with-partial-live-proof-not-pending">0.2
+Extended-provider config rows — LANDED with partial live proof, not
+pending</h3>
+<p><code>submodules/llms_verifier/llm-verifier/providers/config.go</code>
+(grep run this session, <code>registerDefaultProviders()</code>, 1396
+lines) already registers <strong>13 provider config rows</strong> beyond
+the long-standing core set — confirmed by direct grep for
+<code>pr.providers[&quot;&lt;id&gt;&quot;] =</code>:</p>
+<p><code>poe</code> (1086), <code>perplexity</code> (1109),
+<code>sakana</code> (1132), <code>hunyuan</code> (1155),
+<code>xai</code> (1179), <code>moonshot</code> (1203), <code>zai</code>
+(1228), <code>fireworks</code> (1251), <code>deepinfra</code> (1274),
+<code>ai21</code> (1297), <code>reka</code> (1321) — plus pre-existing
+<code>hyperbolic</code> (687, real endpoint
+<code>https://api.hyperbolic.xyz/v1</code>, NOT a stub) and
+<code>xiaomi</code> (1028). <strong><code>Baseten</code> is genuinely
+absent</strong> (confirmed — no <code>pr.providers[&quot;baseten&quot;]</code>
+hit).</p>
+<p>Commit <code>c696c5db</code> (2026-07-07, one day before the reviewed
+draft) — <em>“feat(providers): extended OpenAI-compatible provider
+config records + reachability proof (CONST-036/§11.4.28)”</em> — landed
+these rows with a live reachability test
+(<code>providers/extended_providers_test.go</code>) that captured REAL
+evidence at <code>docs/qa/phase4_extended_providers_20260707/</code>:
+<strong>poe LIVE-PROVEN (341 models), zai LIVE-PROVEN (8 models), novita
+LIVE-PROVEN (143 models)</strong>, fireworks reachable-but-billing-
+blocked (HTTP 412 → honest SKIP), 9 credential-absent honest SKIPs.</p>
+<p><strong>This plan does not re-propose adding these 13 config
+rows.</strong> The genuinely remaining work is narrower: (a) extend the
+live-proof coverage from 3 fully-proven + 1 partial to the remaining ~9
+rows once API keys are available (operator-gated, §11.4.10 — tracked in
+§3.4 below, not scriptable today); (b) reconcile the <strong>separate,
+sibling</strong> <code>claude_toolkit</code> repo’s own
+alias/key-routing files against this list (§2 below — that file lives in
+a different repo and was NOT touched by <code>c696c5db</code>).</p>
+<h3 id="operator-resolved-clarifications-already-answered-not-open-questions">0.3
+Operator-resolved clarifications — already answered, not open
+questions</h3>
+<p><code>docs/research/07.2026/00_master/03_open_clarifications.md</code>
+(created 2026-07-06, last updated 2026-07-08 — same day as, but before,
+the reviewed draft) already records <strong>operator-resolved</strong>
+answers for the four items the reviewed draft re-derived
+independently:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Operator resolution (already recorded,
+<code>03_open_clarifications.md</code> C1–C4)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPT-Sol</td>
+<td>✅ OpenAI GPT-5.6 “Sol” — no new adapter; add model IDs to the
+existing OpenAI adapter at GA</td>
+</tr>
+<tr>
+<td>Google OKF</td>
+<td>✅ RAG/Skills knowledge format via MCP <code>resources</code> server
+— NOT a provider, out of scope</td>
+</tr>
+<tr>
+<td>ACP</td>
+<td>✅ Google A2A (agent↔︎agent) — NOT Zed ACP; a protocol thread, not a
+provider</td>
+</tr>
+<tr>
+<td>Subquadratic</td>
+<td>✅ BLOCKED-until-GA — no public base URL/auth; no adapter work
+possible</td>
+</tr>
+</tbody>
+</table>
+<p><code>PROVIDER_COVERAGE.md</code> (same directory) independently
+arrives at matching conclusions via its own research pass and cites the
+same four items — this rewrite treats
+<code>03_open_clarifications.md</code> as the operator-authoritative
+record and does not re-litigate any of the four (§11.4.74 — the reviewed
+draft’s independent re-derivation of the same four answers was itself
+flagged by the review as duplicated effort; not repeated here).</p>
+<hr />
+<h2 id="corrections-applied-per-the-no-go-review-traceability">§1 —
+Corrections applied per the NO-GO review (traceability)</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Review finding</th>
+<th>Correction applied in this rewrite</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>C1</strong> — Phase 1 (C1→C5) presented as
+pending/BLOCKED</td>
+<td>§0.1 above states plainly it is LANDED, cites the same 6 commits the
+review found, and the phased plan below (§3) contains
+<strong>zero</strong> C1–C5 re-implementation tasks</td>
+</tr>
+<tr>
+<td><strong>C2</strong> — Phase 2.1 (Poe/Sakana/Hunyuan registration)
+duplicated <code>c696c5db</code>’s already-landed config rows;
+<code>PROVIDER_COVERAGE.md</code>/<code>03_open_clarifications.md</code>
+operator resolutions not discovered/cited</td>
+<td>§0.2 cites <code>c696c5db</code> + the exact config.go line numbers
++ the captured evidence path; §0.3 cites the operator-resolved four
+items instead of re-deriving them; §2 below reconciles ONLY the
+claude_toolkit-side gap that genuinely remains
+(sakana/hunyuan/moonshot/fireworks/deepinfra/ai21/reka aliases — checked
+this session, see §2.1)</td>
+</tr>
+<tr>
+<td><strong>C3</strong> — claude_toolkit’s vendored LLMsVerifier
+freshness claim made with no <code>git fetch</code>; wrong target branch
+for Phase 7</td>
+<td>Ran <code>git fetch --all --prune</code> in
+<code>claude_toolkit</code> this session (read-only) — confirmed
+<code>claude_toolkit</code>’s own <code>origin/main</code> has NO new
+commits (<code>HEAD..origin/main</code> empty, HEAD
+<code>9d12347</code>). Ran <code>git fetch origin --prune --tags</code>
+inside <code>claude_toolkit/submodules/LLMsVerifier</code> this session
+— confirmed local <code>17b4bfb6</code> is now 3 commits behind that
+remote’s <code>origin/main</code> (<code>ae41f5a0</code>), AND confirmed
+via <code>git merge-base --is-ancestor c696c5db origin/main</code> →
+<strong>NO</strong> — <code>c696c5db</code> lives on
+<code>origin/feature/helixllm-full-extension</code>, not
+<code>origin/main</code>, on the SAME upstream
+(<code>vasic-digital/LLMsVerifier</code>) both this meta-repo’s
+<code>submodules/llms_verifier</code> and <code>claude_toolkit</code>’s
+vendored copy point at. §3.5 below re-scopes the Phase-7-equivalent task
+honestly: it is <strong>blocked on an operator-approved merge of
+<code>feature/helixllm-full-extension</code> →
+<code>main</code></strong> (§11.4.167 — no trunk merge without explicit
+approval), not a script that can run today against
+<code>origin/main</code></td>
+</tr>
+<tr>
+<td><strong>I1</strong> — every <code>helix_code/helix_code/...</code>
+citation is a doubled, non-existent path</td>
+<td>Confirmed this session: <code>ls helix_code/helix_code</code> → no
+such directory; the real paths are
+<code>helix_code/internal/server/*.go</code> and
+<code>helix_code/internal/llm/openai_provider.go</code> (single level,
+per this project’s own <code>CLAUDE.md</code> §3.2.1). Every citation
+below uses the corrected single-level path. The underlying finding
+(HelixCode’s own server registers no <code>/v1/chat/completions</code>
+or <code>/v1/messages</code> route) is unchanged — re-confirmed by
+<code>grep -rn &quot;chat/completions\|/v1/messages\|router.POST&quot; helix_code/internal/server/*.go</code>
+this session, zero hits</td>
+</tr>
+<tr>
+<td><strong>I2</strong> — “Xiaomi dual OAI+Anthropic” conflated vendor
+API with local adapter</td>
+<td>Confirmed this session (<code>grep</code> on
+<code>submodules/helix_agent/internal/llm/providers/xiaomi/xiaomi.go</code>,
+605 lines): the local adapter implements <strong>only</strong>
+<code>https://api.xiaomimimo.com/v1/chat/completions</code>
+(OpenAI-style) — zero occurrences of <code>/v1/messages</code>,
+<code>anthropic-version</code>, or <code>x-api-key</code>. Xiaomi’s
+<em>vendor</em> API additionally documents an Anthropic-compatible
+surface (<code>03_open_clarifications.md</code>), but the <strong>local
+HelixAgent adapter does not implement or need it</strong> — the
+“already-wired” classification for Xiaomi stands (the dedicated adapter
+is real, substantial code), the “dual wire” framing is now scoped
+correctly as describing the external vendor, not local code</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Preserved unchanged</strong> (review confirmed these accurate
+— not re-derived, not altered): the 1-net-new-adapter conclusion (dual
+OpenAI+Anthropic wire facade for HelixCode’s own server, §3.1 below);
+the <code>generic/generic.go:27-30</code> config-only seam;
+claude_toolkit’s PATH-detection implementation state + the R5
+port-ownership hardening as a genuinely-open gap (confirmed this session
+— <code>detect_helixagent_record()</code> at
+<code>claude-providers.sh:178-</code> accepts <em>any</em> non-empty
+<code>data[].id</code> list via
+<code>jq -r &#39;.data[].id? // empty&#39;</code> rather than asserting the
+known <code>helix-debate</code>/<code>helix-llm</code> ids are present,
+lines 185-186/207/210); GPT-Sol and Subquadratic held at
+<code>UNCONFIRMED-needs-endpoint</code> (re-searched 2026-07-08, still
+no public GA/base-URL — see the reviewed draft’s Step-2 citations, not
+disputed by the review and not re-searched again here to avoid duplicate
+WebSearch spend); §11.4.6 honesty markers throughout.</p>
+<hr />
+<h2 id="claude_toolkit-alias-reconciliation-the-genuinely-remaining-slice-of-the-old-phase-2.1">§2
+— claude_toolkit alias reconciliation (the genuinely-remaining slice of
+the old Phase 2.1)</h2>
+<p>Checked this session
+(<code>cat scripts/providers/key-aliases.json scripts/providers/overrides.json</code>
+in <code>claude_toolkit</code>, a <strong>separate sibling repo</strong>
+at
+<code>/home/milos/Factory/projects/tools_and_research/claude_toolkit</code>
+— NOT touched by <code>c696c5db</code>, which only landed in
+<code>submodules/llms_verifier</code>’s <code>config.go</code>):</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider (from §0.2’s landed config.go list)</th>
+<th>Already in claude_toolkit’s own alias files?</th>
+<th>Action needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>poe</code></td>
+<td><strong>YES</strong> — <code>POE_API_KEY→poe</code> (+
+<code>ApiKey_Poe</code>) in <code>key-aliases.json</code>;
+<code>poe.strong_model/fast_model</code> pinned in
+<code>overrides.json</code></td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>xai</code></td>
+<td><strong>YES</strong> — <code>xai.base_url</code> pinned in
+<code>overrides.json</code></td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>zai</code></td>
+<td><strong>YES</strong> — as <code>zai-coding-plan</code>
+(<code>ZAI_API_KEY→zai-coding-plan</code>)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>xiaomi</code></td>
+<td><strong>YES</strong> — <code>XIAOMI_MIMO_API_KEY→xiaomi</code>,
+native transport + base_url pinned</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>hunyuan</code></td>
+<td><strong>PARTIAL/AMBIGUOUS</strong> —
+<code>TENCENT_CLOUD_API_KEY→tencent-tokenhub</code> exists, but there is
+no <code>hunyuan</code> alias and <code>tencent-tokenhub</code> is not
+confirmed to be the same endpoint as
+<code>https://api.hunyuan.cloud.tencent.com/v1</code></td>
+<td><strong>Genuinely open</strong> — reconcile whether
+<code>tencent-tokenhub</code> already targets Hunyuan or is a distinct
+Tencent product, before adding a possibly-duplicate <code>hunyuan</code>
+alias (§11.4.122 no-silent-removal applies in reverse: don’t silently
+ADD a duplicate either)</td>
+</tr>
+<tr>
+<td><code>sakana</code></td>
+<td><strong>NO</strong></td>
+<td><strong>Genuinely open</strong> — no existing alias/override; safe
+to add</td>
+</tr>
+<tr>
+<td><code>moonshot</code></td>
+<td><strong>AMBIGUOUS</strong> — <code>kimi-for-coding</code> exists
+with <code>base_url: https://api.kimi.com/coding/</code>, distinct from
+<code>PROVIDER_COVERAGE.md</code>’s
+<code>https://api.moonshot.ai/v1</code> general-chat endpoint;
+<code>config.go</code>’s own comment at line 1202 notes moonshot is
+“distinct from the pre-existing ‘kimi’ record (api.moonshot.cn, China
+endpoint)”</td>
+<td><strong>Genuinely open</strong> — three possibly-distinct
+Kimi/Moonshot surfaces (China <code>kimi.cn</code>, international
+<code>moonshot.ai</code>, coding-specific <code>kimi.com/coding</code>)
+need reconciling before adding an alias, not a blind add</td>
+</tr>
+<tr>
+<td><code>fireworks</code>, <code>deepinfra</code>, <code>ai21</code>,
+<code>reka</code></td>
+<td><strong>NO</strong></td>
+<td><strong>Genuinely open</strong> — no existing alias/override; safe
+to add once operator confirms priority (these are lower-salience per the
+original Wave-2 rollout ordering, which the review did not dispute)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Corrected task (replaces the old Phase 2.1):</strong> a
+pre-flight reconciliation pass — NOT a blind “add three aliases” task —
+resolving the <code>hunyuan</code>/<code>tencent-tokenhub</code> and
+<code>moonshot</code>/<code>kimi-for-coding</code> ambiguities via a
+live endpoint comparison (does <code>tencent-tokenhub</code>’s pinned
+base_url, if any, resolve to the Hunyuan API?) before any new alias is
+written, then adding <code>sakana</code> (unambiguous) + the four
+lower-priority providers
+(<code>fireworks</code>/<code>deepinfra</code>/<code>ai21</code>/<code>reka</code>)
+with the SAME <code>transport: router</code> convention already used for
+HelixAgent (OpenAI-shaped, not <code>native</code>).</p>
+<hr />
+<h2 id="phased-plan-genuinely-remaining-work-only">§3 — Phased plan
+(genuinely-remaining work only)</h2>
+<p>Every phase below is a <strong>delta task</strong> — nothing here
+re-implements §0’s landed baseline.</p>
+<h3 id="phase-a-helixllm-as-tracked-provider-registration-in-llmsverifier-still-open">Phase
+A — HelixLLM-as-tracked-provider registration in LLMsVerifier (still
+open)</h3>
+<p>This is the ONE piece of the old Phase 1 that was genuinely NOT yet
+landed (the C1–C5 chain is a generic capability-resolver mechanism;
+HelixLLM itself registering as a tracked provider instance is a
+separate, still-open task). <code>submodules/helix_llm/README.md</code>
+(read this session) confirms HelixLLM exposes both OpenAI-compatible
+(<code>/v1/chat/completions</code>, <code>/v1/models</code>) and
+Anthropic- compatible (<code>/v1/messages</code>) surfaces on one server
+(default port <code>8443</code> TLS; proven-live plain-HTTP
+<code>llama-server</code> sidecar at <code>:18434</code> per
+<code>RESUME.md</code>’s live-server section — base URL WITHOUT
+<code>/v1</code> per the corrected
+<code>PHASE2_BLOCKERS_INVESTIGATION.md</code> OQ1 finding).</p>
+<p><strong>A.1</strong> Register a <code>helixllm</code>
+<code>ProviderDescriptor</code> in the now-landed seed/resolver
+mechanism (<code>registry.go</code> seeds +
+<code>registry_resolve.go</code>’s fail-closed resolver), sourcing
+<code>BaseURL</code> from <code>HELIX_LLM_LOCAL_OPENAI_ENDPOINT</code>
+(no <code>/v1</code> suffix), <code>Wire:&quot;openai&quot;</code>, health path
+<code>/internal/health</code>. <strong>A.2</strong> If the landed
+resolver supports only one wire per logical provider ID, register a
+second ID (e.g. <code>helixllm-anthropic</code>) pointed at the same
+base URL with <code>Wire:&quot;anthropic&quot;</code> for the
+<code>/v1/messages</code> surface — confirm against the landed
+<code>registry_resolve.go</code> implementation (genuinely not yet
+checked this session — a real open sub-task, not carried forward as a
+guess). <strong>A.3</strong> Acceptance: a real
+<code>curl {endpoint}/v1/models</code> (or the resolved endpoint)
+non-empty <code>data[]</code>, captured to
+<code>docs/qa/&lt;run-id&gt;/helixllm_verifier_registration/models.json</code>,
+plus a real <code>VerificationResult</code> row for
+<code>provider=&quot;helixllm&quot;</code> from the landed C4 probe mechanism —
+<code>Responsive=true</code>, at least one <code>Supports*</code> flag
+backed by a real probe artifact, never a config-only “registered”
+claim.</p>
+<h3 id="phase-b-claude_toolkit-alias-reconciliation-2-above">Phase B —
+claude_toolkit alias reconciliation (§2 above)</h3>
+<p><strong>B.1</strong> Resolve the <code>tencent-tokenhub</code> vs
+<code>hunyuan</code> ambiguity and the <code>kimi-for-coding</code> vs
+<code>moonshot</code> ambiguity by comparing live-resolved base URLs (§2
+table) — a one-command check, not a design change. <strong>B.2</strong>
+Add <code>sakana</code> (unambiguous, no existing alias) +
+<code>fireworks</code>/<code>deepinfra</code>/<code>ai21</code>/<code>reka</code>
+(lower priority, add after B.1 resolves) to
+<code>key-aliases.json</code>/<code>overrides.json</code> with
+<code>transport: router</code> (OpenAI-shaped). <strong>B.3</strong>
+Acceptance: <code>claude-providers sync</code> with real keys produces
+new <code>&lt;id&gt;.env</code> files with correct
+<code>CMA_PROVIDER_BASE_URL</code>/<code>TRANSPORT</code>;
+<code>scripts/tests/verify_providers_live.sh</code> produces
+<code>proof/&lt;n&gt;-sakana-live.txt</code> etc. showing a real,
+non-simulated round-trip — mirroring the existing evidence pattern
+already in that repo.</p>
+<h3 id="phase-c-claude_toolkit-helixagent-provider-r5-port-ownership-hardening-still-open-confirmed">Phase
+C — claude_toolkit HelixAgent-provider R5 port-ownership hardening
+(still open, confirmed)</h3>
+<p><strong>C.1</strong> <code>detect_helixagent_record()</code>
+(<code>claude-providers.sh:178-</code>) currently accepts any non-empty
+<code>data[].id</code> list from a <code>:8100</code> responder. Harden
+it to assert the returned id set contains <code>helix-debate</code> OR
+<code>helix-llm</code> (the
+<code>CMA_HELIXAGENT_STRONG</code>/<code>_FAST</code> env-overridable
+defaults already declared at lines 185-186) before treating the port as
+HelixAgent’s — prevents a false-positive registration against an
+unrelated service coincidentally listening on the same port (a
+§11.4.174-class port-ownership hazard). <strong>C.2</strong> Acceptance:
+(1) real <code>/v1/models</code> response containing the known ids,
+captured; (2) a NEGATIVE-case test proving a fake responder returning
+<code>{&quot;data&quot;:[]}</code> or an unrelated JSON shape does NOT get
+registered as the <code>helixagent</code> alias.</p>
+<h3 id="phase-d-dual-openai-style-anthropic-style-wire-facade-for-helixcodes-own-api-the-one-net-new-adapter-unchanged-from-the-reviewed-drafts-phase-5-review-confirmed-accurate">Phase
+D — Dual OpenAI-style + Anthropic-style wire facade for HelixCode’s own
+API (the one net-new adapter — unchanged from the reviewed draft’s Phase
+5, review-confirmed accurate)</h3>
+<p>Confirmed gap, corrected paths (I1):
+<code>grep -rn &quot;chat/completions\|/v1/messages\|router.POST&quot; helix_code/internal/server/*.go</code>
+this session — zero hits; HelixCode’s own server
+(<code>server.go</code>, <code>handlers.go</code>,
+<code>llm_generate.go</code>, <code>qa_handlers.go</code>,
+<code>specify.go</code>) registers only its own custom
+<code>/api/v1/llm/generate</code> shape, never serves an OpenAI or
+Anthropic wire to external callers.</p>
+<p><strong>D.1</strong> Read HelixLLM’s own dual-facade implementation
+(not yet read this session — first sub-task) as the worked precedent,
+per the fork points already enumerated in the reviewed draft’s R4
+(request-shape <code>system</code>-field handling, response-shape
+content-block-array-vs-flat-string, SSE-framing divergence, tool-calling
+schema translation, auth-header divergence) — none of that enumeration
+was disputed by the review, carried forward unchanged.
+<strong>D.2</strong> Design a shared internal
+<code>GenerateRequest</code>/<code>GenerateResult</code> extending
+<code>helix_code/internal/server/llm_generate.go</code>’s existing
+generate/stream core. <strong>D.3</strong> Add
+<code>POST /v1/chat/completions</code> + <code>POST /v1/messages</code>
+route groups to <code>helix_code/internal/server/server.go</code>, both
+delegating to the shared core, with two distinct SSE encoders.
+<strong>D.4</strong> Bidirectional tool-calling schema translation
+(JSON-Schema wrapper-key difference only). <strong>D.5</strong> Register
+both routes with the landed LLMsVerifier resolver as a
+<code>helixcode</code>/ <code>helixcode-anthropic</code> provider pair
+(mirrors Phase A.2). <strong>D.6</strong> Acceptance: real curl
+round-trips on both endpoints (non-empty
+<code>choices[0].message.content</code> / <code>content[0].text</code>),
+streaming variants with correct SSE framing, a tool-call round-trip on
+both shapes — all captured to
+<code>docs/qa/&lt;run-id&gt;/dual_wire_facade/</code>, no metadata-only
+pass accepted.</p>
+<h3 id="phase-e-setuppath-install-script-gap-fill-small-unchanged-from-reviewed-draft-1.7phase-4-not-disputed">Phase
+E — Setup/PATH-install script gap-fill (small, unchanged from reviewed
+draft §1.7/Phase 4 — not disputed)</h3>
+<p><code>install_helix_path.sh</code> (304 lines, read in full in the
+reviewed draft’s session) already builds+installs all four binaries
+(<code>helixcode</code>, <code>helixagent</code>, <code>helixllm</code>,
+<code>llms-verifier</code>), no sudo, idempotent rc-patching, black-box
+<code>--version</code> probe per binary. The review did not dispute
+this. Remaining gaps:</p>
+<p><strong>E.1</strong> (optional) A fifth component row symlinking
+<code>claude_toolkit</code>’s own CLI entry point, compliant with
+§11.4.177 (the symlink target resolves its own <code>SCRIPT_DIR</code>,
+never a copy). <strong>E.2</strong> Extend the existing black-box test
+with a <code>helixllm --help | grep -q &#39;\-\-mode&#39;</code> sanity
+assertion (confirms the mode-flag surface the README documents is
+actually present in the built binary) — one additional assertion within
+the existing philosophy, not a new mechanism.</p>
+<h3 id="phase-f-provider-verification-test-extension-scoped-to-what-phase-ab-actually-add">Phase
+F — Provider-verification test extension (scoped to what Phase A/B
+actually add)</h3>
+<p><strong>F.1</strong> Confirm whether
+<code>verify_providers_live.sh</code>‘s provider-iteration loop is
+already env-file-driven (and therefore automatically picks up new
+<code>&lt;id&gt;.env</code> files from Phase B) or has a hardcoded
+provider-id list needing the new ids appended — a read-only check, not
+yet performed this session. <strong>F.2</strong> Extend
+<code>test_providers.sh</code>’s hermetic fixture set with the
+Phase-B-added providers’ fake catalog entries, so the resolver’s
+classification logic is exercised without live network calls.
+<strong>F.3</strong> Once keys are available (operator-gated, §11.4.10),
+extend the <code>c696c5db</code> live-proof harness
+(<code>providers/extended_providers_test.go</code>) from its current
+3-fully-proven-of-13 state toward full coverage of the
+already-registered §0.2 config rows — this is NOT new adapter work, it
+is closing the evidence gap the tag’s own §11.4.138 honesty-correction
+entry
+(<code>docs/research/07.2026/00_master/PROVIDER_COVERAGE.md</code>,
+bottom section) already tracks as a named follow-up.</p>
+<h3 id="phase-g-operator-gated-non-actionable-today-items-tracked-not-scheduled">Phase
+G — Operator-gated / non-actionable-today items (tracked, not
+scheduled)</h3>
+<p><strong>G.1</strong> claude_toolkit’s vendored
+<code>submodules/LLMsVerifier</code> bump — per §1’s C3 correction, this
+is <strong>honestly blocked</strong>, not scriptable today: the C1–C5 +
+extended-provider commits live on
+<code>origin/feature/helixllm-full-extension</code> of
+<code>vasic-digital/LLMsVerifier</code>, not <code>origin/main</code>.
+Two honest paths, either requiring an explicit operator decision
+(§11.4.66):   (a) wait for <code>feature/helixllm-full-extension</code>
+→ <code>main</code> merge (operator-approved per §11.4.167), then run
+the existing <code>11_claude_toolkit.md</code> §2.3 fetch/merge/rebuild
+procedure against the now-correct <code>origin/main</code>; or   (b) if
+the operator wants the extended-provider work in
+<code>claude_toolkit</code> sooner, point its vendored submodule at the
+feature branch explicitly (a deviation from the “always track main”
+convention that needs its own operator sign-off). No script is authored
+for either path until the operator picks one — scripting path (a)
+against today’s <code>origin/main</code> would reproduce exactly the bug
+the review caught (Phase 7’s own acceptance criterion would fail on a
+live run, as the review demonstrated). <strong>G.2</strong> Qwythos-9B
+training-data-provenance operator sign-off (<code>dev.ua</code>’s
+“trained on Claude-distilled data” finding) — unchanged from the
+reviewed draft, not yet asked. <strong>G.3</strong> GPT-Sol /
+Subquadratic — held at <code>UNCONFIRMED-needs-endpoint</code> /
+<code>BLOCKED-until-GA</code>, per
+<code>03_open_clarifications.md</code>’s already-operator-resolved
+verdicts (§0.3). No adapter work; revisit only on a GA/public-API
+announcement. <strong>G.4</strong> Baseten — confirmed genuinely absent
+from <code>config.go</code> (unlike Hyperbolic, which already has a real
+config row per §0.2). Per-deployment base URL, no single global endpoint
+— needs a concrete deployment URL injected before any work, per the
+reviewed draft’s original §1.2 note (not disputed by the review).</p>
+<hr />
+<h2 id="net-new-work-count-post-reconciliation">§4 — Net-new-work count
+(post-reconciliation)</h2>
+<p><strong>Zero</strong> re-implementation of the landed C1–C5 chain or
+the 13 landed config rows. <strong>Genuinely remaining, actionable-today
+items: 6</strong> (Phase A HelixLLM-registration, Phase B alias
+reconciliation, Phase C R5 hardening, Phase D dual-wire facade — the one
+net-new adapter, Phase E setup-script gap-fill, Phase F test extension).
+<strong>Operator-gated, not scriptable today: 4</strong> (Phase
+G.1–G.4). This plan does not re-plan any shipped work; every task above
+is either newly-discovered this session (Phase A.2’s resolver-capacity
+question, §2’s alias ambiguities) or a review-confirmed still-open gap
+(Phase C, Phase D, Phase E).</p>
+<hr />
+<h2 id="sources-verified-2026-07-08">Sources verified 2026-07-08</h2>
+<p>In-tree source read/grepped THIS rewrite session (facts, no guessing
+— §11.4.6): -
+<code>submodules/llms_verifier/llm-verifier/capabilities/registry.go:1-60</code>
+(full seed-map header + first provider block) -
+<code>submodules/llms_verifier/llm-verifier/providers/config.go</code>
+(full <code>pr.providers[&quot;&lt;id&gt;&quot;] =</code> grep, 1396 lines) -
+<code>git -C submodules/llms_verifier log --oneline -15</code>,
+<code>git -C submodules/llms_verifier branch   --show-current</code>,
+<code>git -C submodules/llms_verifier remote -v</code> -
+<code>docs/research/07.2026/00_master/RESUME.md</code> (full) -
+<code>docs/research/07.2026/00_master/PROVIDER_COVERAGE.md</code> (full)
+- <code>docs/research/07.2026/00_master/03_open_clarifications.md</code>
+(full) - <code>helix_code/internal/server/</code> directory listing +
+<code>grep -rn &quot;chat/completions\|/v1/messages\|   router.POST&quot; helix_code/internal/server/*.go</code>
+(zero hits, corrected single-level path per I1) -
+<code>submodules/helix_agent/internal/llm/providers/xiaomi/xiaomi.go</code>
+(grep for wire-shape markers, 605 lines total — confirmed OpenAI-only) -
+<code>/home/milos/Factory/projects/tools_and_research/claude_toolkit</code>:
+<code>git fetch --all --prune</code> (read-only),
+<code>git log --oneline -1</code> (HEAD <code>9d12347</code>),
+<code>git log --oneline HEAD..origin/main</code> (empty) -
+<code>claude_toolkit/submodules/LLMsVerifier</code>:
+<code>git fetch origin --prune --tags</code> (read-only),
+<code>git log --oneline -1</code> (local <code>17b4bfb6</code>),
+<code>git log --oneline origin/main -1</code> (<code>ae41f5a0</code>),
+<code>git merge-base --is-ancestor c696c5db origin/main</code> → NO,
+<code>git branch -r --contains c696c5db</code> →
+<code>origin/feature/helixllm-full-extension</code> -
+<code>claude_toolkit/scripts/providers/key-aliases.json</code> +
+<code>overrides.json</code> (full contents, this session) -
+<code>claude_toolkit/scripts/claude-providers.sh</code> (grep for
+<code>detect_helixagent_record</code>, <code>data[].id</code>,
+<code>helix-debate</code>/<code>helix-llm</code> — lines 178-210)</p>
+<p>Carried forward, NOT re-searched this rewrite session (the review did
+not dispute these; re- searching would be duplicate WebSearch spend
+against a same-day finding): Sakana Fugu vendor- confirmed OpenAI-compat
+wire shape, Subquadratic private-beta status, Google OKF / MCP-resources
+classification, GPT-5.6 “Sol” limited-preview status, Qwythos-9B
+self-host + provenance flag — all originally cited in the reviewed
+draft’s Step-2 table with URLs accessed 2026-07-08, unchanged by this
+rewrite’s corrections (which are structural/state corrections, not
+provider-identity corrections).</p>
+<p><strong>Review this rewrite responds to:</strong>
+<code>scratchpad/review_providers_plan_v2.md</code> (NO-GO, Critical
+C1/C2/C3, Important I1/I2 — all addressed above; see §1 traceability
+table).</p>
+</body>
+</html>

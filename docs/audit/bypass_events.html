@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>bypass_events</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">bypass_events</h1>
+</header>
+<ul>
+<li>2026-07-11 commit 358ddc13 –no-verify: §11.4.84 residue-check
+false-positive on scripts/secret_scan_test.sh (mutation-test file
+legitimately holds the marker string); both files verified secret-clean
+via scripts/secret_scan.sh exit 0. Follow-up: exempt mutation-test files
+from residue check.</li>
+<li>2026-07-11 root push HEAD 9e4de2ba –no-verify: pre-push
+scan-secrets.sh false-positives on ~40 FABRICATED test fixtures /
+doc-examples / scanner-literals / untracked r41-report mentions across
+the tree (mostly pre-existing submodule test files). Stricter
+content-based secret_scan.sh confirms 0 real secrets; git tree verified
+secret-clean. ff-only (no force). Follow-up: complete scan-secrets.sh
+allowlist / consolidate the 2 scanners / scope pre-push to
+pushed-commits not full working tree.</li>
+</ul>
+<h2 id="sources-verified-2026-07-27-internally-derived-this-file-is-the-11.4.75---no-verify-bypass-audit-trail-it-has-no-external-source-and-cites-none.-its-entries-are-derived-solely-from-this-repositorys-own-state-and-each-referenced-artefact-was-confirmed-present-on-this-host-in-this-pass-the-two-cited-commits-resolve-in-local-git-history-git-log---oneline--1-358ddc13-featsecurity-add-huggingface-hf_-token-pattern-to-secret-scan-guard-11.4.138-git-log---oneline--1-9e4de2ba-featops-11.4.111-coder-boot-script-regenerate-cdi-spec-rootless-start-and-the-two-scanners-plus-the-hook-set-the-entries-describe-exist-at-scriptssecret_scan.sh-scriptsscan-secrets.sh-and-scriptsgit_hookspre-commitpre-pushpost-commitcommit-msg.-source-of-truth-for-every-future-row-the-local-git-history-of-the-bypassing-commitpush-plus-the-scanner-output-captured-at-bypass-time-never-an-external-url.-honest-boundary-11.4.6-11.4.99b-no-external-documentation-applies-to-or-was-consulted-for-this-document-and-the-follow-up-items-recorded-above-remain-open.">Sources
+verified 2026-07-27: INTERNALLY DERIVED — this file is the §11.4.75
+<code>--no-verify</code> bypass audit trail; it has NO external source
+and cites none. Its entries are derived solely from this repository’s
+own state, and each referenced artefact was confirmed present on this
+host in this pass: the two cited commits resolve in local git history
+(<code>git log --oneline -1 358ddc13</code> → “feat(security): add
+HuggingFace hf_ token pattern to secret-scan guard (§11.4.138)”;
+<code>git log --oneline -1 9e4de2ba</code> → “feat(ops): §11.4.111
+coder-boot script — regenerate CDI spec + rootless start”), and the two
+scanners plus the hook set the entries describe exist at
+<code>scripts/secret_scan.sh</code>,
+<code>scripts/scan-secrets.sh</code>, and
+<code>scripts/git_hooks/{pre-commit,pre-push,post-commit,commit-msg}</code>.
+Source of truth for every future row: the local git history of the
+bypassing commit/push plus the scanner output captured at bypass time —
+never an external URL. Honest boundary (§11.4.6 / §11.4.99(B)): no
+external documentation applies to or was consulted for this document,
+and the follow-up items recorded above remain open.</h2>
+</body>
+</html>

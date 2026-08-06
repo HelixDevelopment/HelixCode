@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01_host_baseline_evidence</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">01_host_baseline_evidence</h1>
+</header>
+<h1 id="host-baseline-captured-evidence-11.4.5-11.4.6">Host Baseline —
+Captured Evidence (§11.4.5 / §11.4.6)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Captured</strong></td>
+<td>2026-07-06, this session, read-only (no power/control writes —
+§11.4.133/§12)</td>
+</tr>
+<tr>
+<td><strong>Purpose</strong></td>
+<td>Ground the HelixLLM programme in ACTUAL host facts, not
+assumptions</td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="captured-facts-verbatim-from-nvidia-smi-podman-shell">Captured
+facts (verbatim from <code>nvidia-smi</code> / <code>podman</code> /
+shell)</h2>
+<h3 id="gpu">GPU</h3>
+<pre><code>NVIDIA GeForce RTX 5090, driver 570.169, 32607 MiB total, 2 MiB used, 38°C, 21.26 W / 600.00 W limit
+CUDA Version (driver runtime): 12.8</code></pre>
+<ul>
+<li>✅ Target card confirmed: <strong>RTX 5090, ~32 GB VRAM</strong>,
+idle at capture (headroom full).</li>
+<li>✅ Driver <strong>570.169</strong> + <strong>CUDA 12.8</strong> —
+CUDA 12.8 is the branch that adds Blackwell <strong>sm_120</strong>
+support ⇒ RZ-01 de-risked to a build/passthrough-config problem, not a
+compatibility unknown.</li>
+<li>Power limit 600 W; idle 21 W, 38 °C — thermal/power headroom
+present; §11.4.133 target-safety must cap sustained load with captured
+thermal evidence.</li>
+</ul>
+<h3 id="cuda-toolkit">CUDA toolkit</h3>
+<ul>
+<li>❌ <code>nvcc</code> <strong>ABSENT</strong> — no CUDA toolkit
+installed. Building the vendored <code>llama.cpp</code> for sm_120
+requires either installing the CUDA toolkit or compiling inside a CUDA
+devel container. <strong>[G-HOST-2]</strong></li>
+</ul>
+<h3 id="container-runtime-11.4.161">Container runtime (§11.4.161)</h3>
+<ul>
+<li>✅ <code>podman 5.7.1</code>, <strong>rootless = true</strong> —
+§11.4.161 satisfied at runtime level.</li>
+<li>❌ <code>nvidia-ctk</code> <strong>ABSENT</strong>, no CDI specs in
+<code>/etc/cdi</code> or <code>/var/run/cdi</code> — <strong>NVIDIA
+Container Toolkit not installed</strong>, so rootless-podman GPU
+passthrough is not yet possible. Requires install +
+<code>nvidia-ctk cdi generate</code>. <strong>[G-HOST-1]</strong>
+(blocks any containerized GPU workload — Phase-1 prerequisite).</li>
+</ul>
+<h3 id="existing-serving-binaries">Existing serving binaries</h3>
+<ul>
+<li>❌ <code>llama-server</code>, <code>llama-cli</code>,
+<code>ollama</code>, <code>vllm</code> — none on PATH.</li>
+<li>✅ <code>dependencies/LLama_CPP</code> contains the
+<strong>llama.cpp source tree</strong> (CMakeLists.txt, cmake/, app/, …)
+— <strong>vendored but NOT built</strong>. <strong>[G-HOST-3]</strong>
+build for Blackwell is a Phase-1 task.</li>
+</ul>
+<h3 id="cpu-ram">CPU / RAM</h3>
+<pre><code>64 CPU cores | 251 GiB RAM total, 223 GiB available</code></pre>
+<ul>
+<li>✅ Large headroom: CPU-offload fallback, many concurrent container
+services, generous page cache for model weights.</li>
+</ul>
+<h2 id="derived-setup-prerequisites-feed-phase-1-setup-scripts-stream-09">Derived
+setup prerequisites (feed Phase-1 setup scripts + stream 09)</h2>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 43%" />
+<col style="width: 25%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Prerequisite</th>
+<th>Blocks</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G-HOST-1</td>
+<td>Install NVIDIA Container Toolkit +
+<code>nvidia-ctk cdi generate</code></td>
+<td>ALL rootless-podman GPU workloads</td>
+<td>verify rootless CDI passthrough with a real
+<code>nvidia-smi</code>-in-container proof (§11.4.69)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>G-HOST-1 / V-03 RESOLVED (2026-07-06, captured):</strong> OS
+= <strong>ALT Workstation 11.1</strong> (<code>altlinux</code>).
+<code>nvidia-container-toolkit 1.18.2-alt1</code> <strong>IS available
+in the configured ALT repos</strong> (Sisyphus) — plain
+<code>apt-get install</code>, NO from-source / NO NVIDIA rpm repo needed
+(V-03 was the top UNCONFIRMED). <code>libnvidia-container1</code> /
+<code>-tools</code> also available.
+<code>/dev/nvidia{0,ctl,-modeset,-uvm,-uvm-tools}</code> device nodes
+present + world-readable (<code>crw-rw-rw-</code>); driver 570.169;
+<code>libcudart-12.8.1</code> installed. NOT yet installed:
+<code>libnvidia-container</code>, <code>nvidia-container-*</code>
+binaries. <strong>The install is the one sudo-gated action; everything
+after (rootless <code>nvidia-ctk cdi generate</code> →
+<code>~/.config/cdi</code>, verify) is non-privileged.</strong> Install
+command (operator, once):</p>
+<pre><code>sudo apt-get update &amp;&amp; sudo apt-get install -y nvidia-container-toolkit</code></pre>
+<div class="line-block">G-HOST-2 | CUDA build toolchain (toolkit or
+CUDA-devel container) | building llama.cpp / any-from-source GPU engine
+| prefer a pinned CUDA 12.8 devel container to avoid host pollution
+|<br />
+G-HOST-3 | Build <code>dependencies/LLama_CPP</code> for sm_120
+(<code>-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=120</code>) | local
+serving | capture a real inference proof (tok/s +
+<code>nvidia-smi</code> VRAM delta) — not a build-success-only claim
+(§11.4.108) |</div>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<p>These are point-in-time captured facts. The exact llama.cpp CUDA
+build flags for Blackwell, and whether vLLM/SGLang have stable sm_120
+wheels, are being verified by research stream 01 (cited sources) — do
+not assume; confirm before the Phase-1 build.</p>
+</body>
+</html>

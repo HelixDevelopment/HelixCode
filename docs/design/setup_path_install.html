@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>setup_path_install</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">setup_path_install</h1>
+</header>
+<h1 id="design-install_helix_path.sh-path-install-for-helixcode-power-sub-systems">Design:
+<code>install_helix_path.sh</code> — PATH-install for HelixCode power
+sub-systems</h1>
+<p>Track <code>(T1/feature/helixllm-full-extension)</code>. §11.4.70
+design pass.</p>
+<h2 id="investigation-findings-real-build-targets-cited-fileline">Investigation
+findings (real build targets, cited file:line)</h2>
+<p>All paths below are relative to the HelixCode meta-repo root
+(<code>/home/milos/Factory/projects/tools_and_research/helix_code</code>).</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 40%" />
+<col style="width: 38%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Build target</th>
+<th>Real output binary</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HelixCode (inner app)</td>
+<td><code>helix_code/Makefile</code> → <code>make build</code></td>
+<td><code>helix_code/bin/helixcode</code></td>
+<td><code>helix_code/Makefile:4</code>
+(<code>BINARY_NAME=helixcode</code>),
+<code>helix_code/Makefile:98-101</code>
+(<code>$(GO_BUILD) ... -o bin/$(BINARY_NAME) ./$(CMD_DIR)/server</code>)</td>
+</tr>
+<tr>
+<td>HelixCode CLI client</td>
+<td><strong>no dedicated Makefile target</strong> (see open question
+below)</td>
+<td><code>helix_code/bin/cli</code> (best-effort direct
+<code>go build</code>)</td>
+<td><code>helix_code/cmd/cli/</code> contains real source
+(<code>main_commands.go</code>, <code>root.go</code>, …) but
+<code>helix_code/Makefile</code> has no <code>bin/cli</code> /
+<code>cli:</code> recipe (grepped, zero hits)</td>
+</tr>
+<tr>
+<td>HelixAgent</td>
+<td><code>submodules/helix_agent/Makefile</code> →
+<code>make build</code></td>
+<td><code>submodules/helix_agent/bin/helixagent</code></td>
+<td><code>submodules/helix_agent/Makefile:23-25</code>
+(<code>build:</code> →
+<code>go build -mod=mod -ldflags=&quot;-w -s&quot; -o bin/helixagent ./cmd/helixagent</code>)</td>
+</tr>
+<tr>
+<td>HelixLLM</td>
+<td><code>submodules/helix_llm/Makefile</code> →
+<code>make build</code></td>
+<td><code>submodules/helix_llm/bin/helixllm</code></td>
+<td><code>submodules/helix_llm/Makefile:4</code>
+(<code>BINARY := helixllm</code>),
+<code>submodules/helix_llm/Makefile:11-12</code> (<code>build:</code> →
+<code>go build $(GOFLAGS) -o bin/$(BINARY) ./cmd/helixllm</code>)</td>
+</tr>
+<tr>
+<td>LLMsVerifier</td>
+<td><code>submodules/llms_verifier/Makefile</code> →
+<code>make build</code></td>
+<td><code>submodules/llms_verifier/bin/llm-verifier</code></td>
+<td><code>submodules/llms_verifier/Makefile:35-36</code>
+(<code>build:</code> →
+<code>go build -o bin/llm-verifier ./cmd</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="open-question-honest-gap-11.4.6-not-guessed-not-invented">Open
+question (honest gap, §11.4.6 — not guessed, not invented)</h3>
+<p><code>helix_code/cmd/cli/</code> is a real, compilable command
+package (per CLAUDE.md §3.2.1’s own claim “CLI client entry → bin/cli”),
+but the <strong>inner Makefile does not wire a target that produces
+<code>bin/cli</code></strong> — <code>make build</code> only builds the
+server binary (<code>bin/helixcode</code>). This is a genuine gap
+between the documented architecture (§3.2.1) and the actual Makefile.
+The install script therefore treats <code>bin/cli</code> as
+<strong>best-effort</strong>: it attempts a direct
+<code>go build -o bin/cli ./cmd/cli</code> (not
+<code>make</code>-driven) and reports it distinctly so the
+INSTALLED/MISSING table never silently claims a Makefile target that
+does not exist. If a maintainer later adds a real <code>cli:</code> Make
+target, the script’s Makefile-target step should be preferred over the
+direct-build fallback (left as a documented follow-up, not invented
+here).</p>
+<h2 id="design">Design</h2>
+<p><code>install_helix_path.sh</code> (POSIX-ish bash,
+<code>set -euo pipefail</code>):</p>
+<ol type="1">
+<li><strong>Resolve repo root from script location</strong>
+(§11.4.28/§11.4.177 decoupling) —
+<code>SCRIPT_DIR=&quot;$(cd &quot;$(dirname &quot;${BASH_SOURCE[0]}&quot;)&quot; &amp;&amp; pwd)&quot;</code>.
+The script is designed to be <em>placed</em> at the HelixCode repo root
+(<code>helix_code/install_helix_path.sh</code>), so
+<code>REPO_ROOT=&quot;$SCRIPT_DIR&quot;</code> by default, overridable via
+<code>HELIX_REPO_ROOT</code> env var — no hardcoded absolute host
+path.</li>
+<li><strong>Component table</strong> (bash associative-array-free —
+POSIX arrays for portability): for each of the 5 build units above,
+records
+<code>name|build_dir|make_target|expected_bin_relpath|final_bin_name</code>.</li>
+<li><strong>Build phase</strong> — for each component: if the expected
+binary already exists AND <code>--skip-build</code> not passed, skip;
+otherwise <code>cd &quot;$build_dir&quot; &amp;&amp; make &quot;$make_target&quot;</code>
+(or the direct <code>go build</code> fallback for <code>cli</code>,
+clearly logged as “non-Makefile-driven”). Build failures are captured
+(stdout+stderr to a per-component log under
+<code>$REPO_ROOT/qa-results/path_install/&lt;ts&gt;/&lt;component&gt;.log</code>,
+§11.4.5/§11.4.69 evidence) and reported, but do not abort the whole run
+(continue with the other components) — final exit code reflects whether
+ANY component failed.</li>
+<li><strong>Install phase (no sudo, user-writable PATH)</strong> —
+target dir <code>${HELIX_BIN_DIR:-$HOME/.local/bin}</code> (mkdir -p; no
+root, §11.4.161 spirit). For each successfully-built binary,
+create/refresh a symlink
+<code>$HELIX_BIN_DIR/&lt;final_bin_name&gt; -&gt; &lt;absolute path of built binary&gt;</code>
+(<code>ln -sf</code>, so a rebuild is picked up automatically — no stale
+copy).</li>
+<li><strong>Idempotent PATH export</strong> — appends
+<code>export PATH=&quot;$HOME/.local/bin:$PATH&quot;</code> to the user’s shell rc
+(<code>~/.bashrc</code> and <code>~/.zshrc</code> if present, else
+<code>~/.profile</code>), guarded by a sentinel comment
+(<code># &gt;&gt;&gt; HelixCode PATH (managed) &gt;&gt;&gt;</code> /
+<code># &lt;&lt;&lt; HelixCode PATH (managed) &lt;&lt;&lt;</code>) so
+re-running the script never double-appends — it rewrites the block
+between the sentinels if already present (classic idempotent-block
+pattern).</li>
+<li><strong>Anti-bluff verification (§11.4.80 lesson: install exit 0 ≠
+working binary)</strong> — for every symlinked binary: (a)
+<code>command -v &lt;name&gt;</code> (in a subshell with
+<code>PATH=&quot;$HELIX_BIN_DIR:$PATH&quot;</code>, since the <em>current</em>
+shell may not have re-sourced its rc yet); (b) execute a lightweight
+health probe — try <code>&lt;bin&gt; --version</code>, falling back to
+<code>&lt;bin&gt; version</code>, falling back to
+<code>&lt;bin&gt; --help</code> (first one that exits 0 wins) — and
+capture the first output line as proof-of-life. Never assume; if all
+three probes fail the component is reported
+<strong>BUILT-BUT-NOT-VERIFIED</strong>, distinct from
+<strong>MISSING</strong> (honest 3-state result, §11.4.6).</li>
+<li><strong>Report</strong> — final per-component table to stdout:
+<code>INSTALLED</code> (built + symlinked + verified),
+<code>BUILT-BUT-NOT-VERIFIED</code>, <code>BUILD-FAILED</code>, or
+<code>MISSING</code> (source dir not found — e.g. submodule not checked
+out). Exit code = 0 only if every mandatory component (all except the
+best-effort <code>cli</code>) is <code>INSTALLED</code>.</li>
+<li><strong>No secrets, no CI wiring</strong> (§11.4.156) — pure local
+script, never invoked by any CI hook.</li>
+</ol>
+<h2 id="usage-once-placed-at-helixcode-root">Usage (once placed at
+HelixCode root)</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./install_helix_path.sh</span>                 <span class="co"># build missing + install + verify</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./install_helix_path.sh</span> <span class="at">--skip-build</span>    <span class="co"># install/verify only, using existing bin/*</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_BIN_DIR</span><span class="op">=</span>/custom/bin <span class="ex">./install_helix_path.sh</span></span></code></pre></div>
+<h2 id="files-produced-by-this-design-pass-scratch-only-per-task-constraint">Files
+produced by this design pass (scratch only, per task constraint)</h2>
+<ul>
+<li><code>design_setup_path_install.md</code> (this file)</li>
+<li><code>install_helix_path.sh</code> (complete,
+<code>bash -n</code>-clean, ready to be reviewed + placed at the
+HelixCode repo root by the conductor/operator — NOT placed automatically
+by this design subagent, per the “write only to scratch”
+constraint)</li>
+</ul>
+<h2 id="sources-verified">Sources verified</h2>
+<p>Sources verified 2026-07-08: this is an internal HelixCode design
+document describing a repo-internal PATH-install script for HelixCode’s
+own build outputs. Its factual claims (Makefile targets, binary output
+paths, build-dir layout) are verified directly against this repository’s
+own Makefiles — see the “Investigation findings” table above, which
+cites the exact <code>file:line</code> for every claim
+(<code>helix_code/Makefile</code>,
+<code>submodules/helix_agent/Makefile</code>,
+<code>submodules/helix_llm/Makefile</code>,
+<code>submodules/llms_verifier/Makefile</code>). No third-party service,
+library, SDK, or public API is documented in this file, so there is no
+external online source to cross-reference per §11.4.99; the repository
+itself (via CodeGraph/grep-verified file:line citations) is the
+authoritative source for every instruction here.</p>
+</body>
+</html>

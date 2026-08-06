@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>precommit_wiring</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">precommit_wiring</h1>
+</header>
+<h1 id="pre-commit-semgrep-wiring-exact-change">Pre-commit semgrep
+wiring — exact change</h1>
+<p><strong>Constitution:</strong> §11.4.166(3) — pre-commit
+<code>semgrep scan --config auto --error</code> blocks the commit on any
+finding. §11.4.28/§11.4.35 — invoke the constitution reference hook by
+reference, never copy it.</p>
+<p><strong>Date:</strong> 2026-06-22 <strong>Target hook:</strong>
+<code>/Volumes/T7/Projects/helix_code/.git/hooks/pre-commit</code>
+<strong>Reference script (already shipped, executable):</strong>
+<code>constitution/scripts/hooks/semgrep_precommit.sh</code></p>
+<blockquote>
+<p>NOT applied by the onboarding agent (live-hook edit + meta-git race
+avoidance). The conductor/operator applies this.</p>
+</blockquote>
+<hr />
+<h2 id="current-state-fact">Current state (FACT)</h2>
+<p>The live <code>.git/hooks/pre-commit</code> is <strong>NOT</strong> a
+semgrep hook — it is the <code>guard-forbidden-commands.sh</code>
+PreToolUse-style guard (§11.4.109). It currently has
+<strong>zero</strong> semgrep reference. The semgrep wiring MUST be
+<strong>ADDITIVE</strong>: it must not remove or weaken the existing
+guard. Two options:</p>
+<h3 id="option-a-append-a-sourcing-block-to-the-existing-pre-commit-recommended">Option
+A — append a sourcing block to the existing pre-commit
+(RECOMMENDED)</h3>
+<p>The existing hook ends with:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --------------------------------------------------------------------------</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Nothing matched (or only allow-marked warnings fired) → allow the command.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># --------------------------------------------------------------------------</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
+<p>The guard hook is <code>set -euo pipefail</code> and ends in
+<code>exit 0</code>, so a new block must run <strong>before</strong>
+that final <code>exit 0</code>. Replace the trailing <code>exit 0</code>
+with a call into the semgrep reference hook, so its exit code governs
+the commit:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --------------------------------------------------------------------------</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># §11.4.166(3) — semgrep static-analysis gate (additive). Runs the constitution</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># reference hook by reference (§11.4.28/§11.4.35 — never copied). It is</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># graceful-degrading (skips cleanly when semgrep is absent) and blocks the</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># commit (exit 1) only when `semgrep scan --config auto --error` finds issues.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># --------------------------------------------------------------------------</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="va">_SEMGREP_HOOK</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="fu">git</span> rev-parse <span class="at">--show-toplevel</span><span class="va">)</span><span class="st">/constitution/scripts/hooks/semgrep_precommit.sh&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-x</span> <span class="st">&quot;</span><span class="va">$_SEMGREP_HOOK</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;</span><span class="va">$_SEMGREP_HOOK</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="bu">exit</span> 1</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div>
+<p>(Place this block immediately before the existing final
+<code>exit 0</code>, replacing that single trailing <code>exit 0</code>
+line. The guard’s own earlier <code>exit 2</code>/<code>exit 0</code>
+paths are untouched — only the fall-through “allow” path now
+additionally runs semgrep.)</p>
+<blockquote>
+<p>Caveat (§11.4.6): the existing guard runs under
+<code>set -euo pipefail</code>. The
+<code>&quot;$_SEMGREP_HOOK&quot; || exit 1</code> form is <code>-e</code>-safe
+(the <code>||</code> consumes the non-zero). Do NOT write a bare
+<code>&quot;$_SEMGREP_HOOK&quot;</code> line — under <code>-e</code> a non-zero
+from the reference hook would abort with the hook’s own exit code rather
+than the intended <code>exit 1</code>, which is acceptable but less
+explicit.</p>
+</blockquote>
+<h3 id="option-b-wire-via-scriptsinstall_git_hooks.sh-if-the-project-uses-a-hook-installer">Option
+B — wire via <code>scripts/install_git_hooks.sh</code> (if the project
+uses a hook installer)</h3>
+<p>If the project installs hooks through a chained installer
+(<code>scripts/install_git_hooks.sh</code> per §11.4.75), register
+<code>constitution/scripts/hooks/semgrep_precommit.sh</code> as an
+additional pre-commit stage there instead of hand-editing
+<code>.git/hooks/pre-commit</code>, so a hook re-install does not drop
+the semgrep stage. Prefer this if the installer exists.</p>
+<hr />
+<h2 id="exact-one-liner-if-a-minimal-in-place-edit-is-preferred">Exact
+one-liner (if a minimal in-place edit is preferred)</h2>
+<p>If the operator wants the smallest possible change and accepts
+running semgrep inline (rather than via the reference hook), insert
+before the final <code>exit 0</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff <span class="at">--cached</span> <span class="at">--name-only</span> <span class="at">--diff-filter</span><span class="op">=</span>ACM <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&#39;\.(py|js|ts|go|java|kt|rb|c|cpp|h|hpp|ya?ml|json|sh|bash)$&#39;</span> <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="kw">{</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">_f</span> <span class="kw">&amp;&amp;</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$_f</span><span class="st">&quot;</span><span class="kw">;</span> <span class="fu">cat</span><span class="kw">;</span> <span class="kw">}</span> <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-r</span> semgrep scan <span class="at">--config</span> auto <span class="at">--error</span> <span class="kw">||</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span></code></pre></div>
+<p><strong>RECOMMENDED is Option A</strong> — it reuses the constitution
+reference hook (graceful degradation, staged-file filtering, evidence
+messaging already built in) per §11.4.28/§11.4.74
+(reuse-don’t-reimplement).</p>
+<hr />
+<h2 id="apply-checklist-conductor">Apply checklist (conductor)</h2>
+<ol type="1">
+<li><code>cd /Volumes/T7/Projects/helix_code</code></li>
+<li>Confirm reference hook is executable:
+<code>test -x constitution/scripts/hooks/semgrep_precommit.sh &amp;&amp; echo OK</code></li>
+<li>Edit <code>.git/hooks/pre-commit</code>: replace the single trailing
+<code>exit 0</code> with the Option-A block above.</li>
+<li>Verify: stage a file with a known finding and attempt a commit — it
+MUST be blocked with
+<code>[semgrep-precommit] SEMGREP FOUND ISSUES — COMMIT BLOCKED</code>.
+Stage a clean file — commit MUST proceed.</li>
+<li>Confirm the guard hook still fires (e.g. a <code>sudo</code> Bash
+call is still blocked).</li>
+</ol>
+<h2 id="sources-verified-2026-06-22">Sources verified 2026-06-22</h2>
+<ul>
+<li><code>constitution/scripts/hooks/semgrep_precommit.sh</code> (read
+this session)</li>
+<li><code>.git/hooks/pre-commit</code> live content (read this
+session)</li>
+<li>Constitution §11.4.166(3); §11.4.28/§11.4.35/§11.4.74/§11.4.75</li>
+</ul>
+</body>
+</html>

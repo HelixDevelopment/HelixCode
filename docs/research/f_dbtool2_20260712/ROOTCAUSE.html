@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ROOTCAUSE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ROOTCAUSE</h1>
+</header>
+<h1 id="f-dbtool-2-root-cause-fix-update---description-desyncs-table-representation-items">F-DBTOOL-2
+— Root Cause + Fix: <code>update --description</code> desyncs
+table-representation items</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-12T00:00:00Z <strong>Status:</strong> Fixed (validated on DB
+copies only — no live-DB write, no commit performed by this
+investigation)</p>
+<h2 id="scope-note-11.4.6-zero-risk-constraint">Scope note (§11.4.6 /
+zero-risk constraint)</h2>
+<p>This investigation operated <strong>exclusively on copies</strong> of
+<code>docs/workable_items.db</code>. The live database
+(<code>/home/milos/Factory/projects/tools_and_research/helix_code/docs/workable_items.db</code>)
+was <strong>never opened for writing</strong>. Its md5sum before and
+after this session is identical:
+<code>187b0a51a86be4b2fa22dfca2311d61a</code>. <strong>No
+<code>git commit</code> was executed.</strong> The fix is a working-tree
+edit to
+<code>constitution/scripts/workable-items/cmd/workable-items/mutate.go</code>
+plus a new regression-test file, both uncommitted at the time of
+writing.</p>
+<h2 id="context">Context</h2>
+<p>F-DBTOOL-1 (already committed at constitution submodule HEAD
+<code>3302587</code>) fixed a representation-scoping bug in
+<code>loadItem</code>/<code>update</code>/<code>close</code>/<code>reopen</code>/<code>block</code>/
+<code>obsolete-details</code>’s <code>WHERE</code> clauses. F-DBTOOL-2
+is a <strong>separate, still-open</strong> bug in the same tool:
+applying the 31 <code>field==&quot;description&quot;</code> hygiene proposals from
+<code>docs/qa/fdbtool_hygiene_20260712T071056Z/W2C_hygiene_proposals.jsonl</code>
+(identical content to
+<code>docs/qa/discovery_hardening_wave2_20260711T214502Z/W2C_hygiene_proposals.jsonl</code>)
+via
+<code>wi update --id &lt;atm&gt; --description &lt;val&gt; --location Fixed</code>,
+then <code>sync db-to-md</code> + <code>diff</code>, produced ~81
+spurious differences (38 “body differs”, 31 “present in DB, absent in
+Markdown”, 12 status/type mismatches), all on
+<code>FIX-2026-05-19#N</code> items.</p>
+<h2 id="phase-1-reproduction-minimal">Phase 1 — Reproduction
+(minimal)</h2>
+<p>Built the tool
+(<code>go build -o /tmp/wi2 ./cmd/workable-items</code>), copied the
+live DB to a scratch path, and applied <strong>a single</strong>
+description update:</p>
+<pre><code>$ /tmp/wi2 update --id &quot;FIX-2026-05-19#10&quot; --db f2_copy.db --location Fixed \
+    --description &quot;This task added translation support to five short help texts ...&quot;
+update: FIX-2026-05-19#10 updated in Fixed (status=Implemented (→ Fixed.md), type=Feature)
+
+$ /tmp/wi2 sync db-to-md --db f2_copy.db --out-issues out_Issues.md --out-fixed out_Fixed.md
+$ /tmp/wi2 diff --db f2_copy.db --issues out_Issues.md --fixed out_Fixed.md
+~ FIX-2026-05-19#10 body differs (md=214 bytes db=387 bytes)
+~ FIX-2026-05-19#11 body differs (md=261 bytes db=214 bytes)
+~ FIX-2026-05-19#12 body differs (md=187 bytes db=261 bytes)
+~ FIX-2026-05-19#13 body differs (md=217 bytes db=187 bytes)
+... (64 lines total, cascading through every later same-dated row)</code></pre>
+<p>A <strong>single</strong> targeted update already produces the full
+cascading-diff signature — confirming the bug is triggered by the shape
+of the mutation itself, not by volume.</p>
+<p>The DB query for the mutated item <strong>before</strong> the
+update:</p>
+<pre><code>atm_id             current_location  representation  status                     type     len(body_md)  len(description)
+FIX-2026-05-19#10  Fixed             table            Implemented (→ Fixed.md)  Feature  221            47
+body_md = &quot;| 2026-05-19 | panoptic × 5 cobra Short descriptions migration | Feature | Implemented (→ Fixed.md) | 99a | 3074c77 + c4e50d8 | 8 tests + mutation; ... |&quot;</code></pre>
+<p><code>FIX-2026-05-19#10</code> is a
+<strong><code>representation=&#39;table&#39;</code></strong> item — a legacy
+Fixed.md pipe-table closure row
+(<code>| date | title | type | status | round | commit(s) | evidence |</code>),
+parsed by <code>parseFixed</code>’s <code>emitLegacyTable</code>
+(<code>cmd/workable-items/parse.go:802-865</code>). It has no H2 heading
+and no <code>**Status:**</code> block; <code>body_md</code> is the
+single verbatim pipe-row line.</p>
+<h2 id="phase-2-root-cause-fact-cited-fileline">Phase 2 — Root cause
+(FACT, cited file:line)</h2>
+<h3 id="defect-a-update---description-ignores-representation-when-regenerating-body_md">Defect
+A — <code>update --description</code> ignores
+<code>representation</code> when regenerating <code>body_md</code></h3>
+<p><code>cmd/workable-items/mutate.go</code>, <code>updateCmd</code>,
+pre-fix lines 170-172:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> newBody <span class="dt">string</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> set<span class="op">[</span><span class="st">&quot;description&quot;</span><span class="op">]</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    newBody <span class="op">=</span> renderItemBody<span class="op">(</span>cur<span class="op">.</span>AtmID<span class="op">,</span> cur<span class="op">.</span>Title<span class="op">,</span> cur<span class="op">.</span>Type<span class="op">,</span> cur<span class="op">.</span>Severity<span class="op">,</span> cur<span class="op">.</span>Description<span class="op">,</span> cur<span class="op">.</span>Status<span class="op">,</span> cur<span class="op">.</span>CreatedBy<span class="op">,</span> cur<span class="op">.</span>AssignedTo<span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>renderItemBody</code>
+(<code>cmd/workable-items/crud.go:528-544</code>)
+<strong>unconditionally</strong> emits the H2-section shape:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Fprintf<span class="op">(&amp;</span>b<span class="op">,</span> <span class="st">&quot;## %s — %s</span><span class="ch">\n\n</span><span class="st">&quot;</span><span class="op">,</span> id<span class="op">,</span> title<span class="op">)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Fprintf<span class="op">(&amp;</span>b<span class="op">,</span> <span class="st">&quot;**Status:** %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> status<span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Fprintf<span class="op">(&amp;</span>b<span class="op">,</span> <span class="st">&quot;**Type:** %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> typ<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span></code></pre></div>
+<p>For a <code>representation=&#39;table&#39;</code> item this REPLACES the
+single pipe-row line with a multi-line H2 block — a shape the pipe-table
+structure of Fixed.md never expects at that position
+(<code>renderDocument</code>,
+<code>cmd/workable-items/db.go:632-696</code>, looks up
+<code>bodyByKey[atmID+&quot;\x00&quot;+rep]</code> for an <code>item</code>-kind
+<code>doc_segment</code> and appends it verbatim via
+<code>appendSegment</code> — it has no knowledge of what shape that body
+“should” be).</p>
+<h3 id="defect-b-the-regenerated-heading-is-unparseable-and-same-dated-legacy-rows-are-positionally-not-stably-identified">Defect
+B — the regenerated heading is unparseable, AND same-dated legacy rows
+are positionally (not stably) identified</h3>
+<p>Two cooperating consequences fire once the wrong-shaped body is
+re-parsed by <code>parseFixed</code>:</p>
+<p><strong>B1 — unparseable heading.</strong>
+<code>FIX-2026-05-19#10</code>’s injected line
+<code>## FIX-2026-05-19#10 — &lt;title&gt;</code> matches
+<strong>none</strong> of parseFixed’s heading shapes: -
+<code>issueHeadingRe</code> (<code>parse.go:21</code>):
+<code>^## ([A-Z]{3}-[0-9A-Za-z]+)(?: \([^)]*\))? — (.+)$</code> — the
+capture group <code>[0-9A-Za-z]+</code> stops at the SECOND
+<code>-</code> (in <code>-05-19</code>), so nothing after
+<code>FIX-2026</code> can complete the match; the trailing
+<code>#10</code> guarantees failure regardless. -
+<code>atmShape1HeadingRe</code>/<code>atmShape2HeadingRe</code>/<code>atmShape3HeadingRe</code>
+(<code>parse.go:59-61</code>): require a trailing <code>.</code>, a
+bracketed <code>[XXX-nnn]</code>, or a leading <code>§</code>
+respectively — none present.</p>
+<p>So the injected block is never recognised as a heading; it is
+absorbed into <code>rawBuf</code> as raw prose (<code>parseFixed</code>,
+<code>parse.go:735-745</code>), and <code>emitLegacyTable</code>
+(<code>parse.go:802-865</code>) finds no
+<code>fixedRowRe</code>-matching lines inside it either — the mutated
+item <strong>stops existing as an item</strong> on re-parse.</p>
+<p><strong>B2 — positional (non-stable) synthetic IDs cascade the
+damage.</strong> <code>emitLegacyTable</code>,
+<code>parse.go:820-836</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>titleCell <span class="op">:=</span> m<span class="op">[</span><span class="dv">2</span><span class="op">]</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>idm <span class="op">:=</span> fixedTitleIDRe<span class="op">.</span>FindStringSubmatch<span class="op">(</span>titleCell<span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> id <span class="dt">string</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> idm <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    id <span class="op">=</span> idm<span class="op">[</span><span class="dv">1</span><span class="op">]</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// No ticket id (legacy narrative rows). Synthesize a stable,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// document-unique key so the row still round-trips + validates.</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    id <span class="op">=</span> <span class="st">&quot;FIX-&quot;</span> <span class="op">+</span> m<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="co">// date-based</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> n<span class="op">,</span> ok <span class="op">:=</span> seenID<span class="op">[</span>id<span class="op">];</span> ok <span class="op">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    seenID<span class="op">[</span>id<span class="op">]</span> <span class="op">=</span> n <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    id <span class="op">=</span> id <span class="op">+</span> <span class="st">&quot;#&quot;</span> <span class="op">+</span> itoa<span class="op">(</span>n<span class="op">+</span><span class="dv">1</span><span class="op">)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    seenID<span class="op">[</span>id<span class="op">]</span> <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>None of the <code>FIX-2026-05-19#N</code> rows’ title cells start
+with a leading <code>[A-Z]{3}-[0-9A-Za-z]+</code> ticket id
+(<code>fixedTitleIDRe</code>, <code>parse.go:702</code>), so
+<code>idm</code> is <code>nil</code> for every one of them, and
+<code>id</code> is synthesized as <code>&quot;FIX-&quot; + &lt;date&gt;</code> —
+<strong>identical for every row sharing that date</strong> — then
+disambiguated purely by an <strong>in-scan occurrence counter</strong>
+(<code>seenID</code>). This counter is <strong>not a stored,
+content-addressed identifier</strong>; it is recomputed from scratch, in
+top-to-bottom scan order, on every <code>parseFixed</code> call. The
+comment “Synthesize a <strong>stable</strong>, document-unique key” is
+aspirational, not actual: stability holds only as long as every
+same-dated row keeps matching <code>fixedRowRe</code> in the same
+order.</p>
+<p>Once defect B1 removes one row from that matching sequence (it is no
+longer line-shaped as a pipe row at all), every <strong>later</strong>
+same-dated row’s occurrence count shifts down by one, so its re-derived
+id collides with the id the corrupted row used to hold. Concretely, with
+rows R1..Rn on date <code>2026-05-19</code> (R1 → id
+<code>FIX-2026-05-19</code>, Rk → id <code>FIX-2026-05-19#(k-1)</code>
+for k≥2): corrupting R11 (id <code>#10</code>) means the re-parse’s 11th
+<strong>recognised</strong> occurrence is now R12 (whose
+<em>content</em> is unchanged) — so it gets re-labeled <code>#10</code>,
+R13 gets re-labeled <code>#11</code>, etc. This exactly matches the
+observed diff:</p>
+<pre><code>~ FIX-2026-05-19#10 body differs (md=214 bytes db=387 bytes)   &lt;- md[#10] holds R12&#39;s content
+~ FIX-2026-05-19#11 body differs (md=261 bytes db=214 bytes)   &lt;- db[#11]=214 == R12&#39;s own (unmodified) stored length</code></pre>
+<p><code>db=214</code> on the <code>#11</code> line is byte-identical to
+the untouched R12’s stored <code>body_md</code> length reported on the
+<code>#10</code> line as <code>md=214</code> — confirming the shift
+empirically, not by inference.</p>
+<h3 id="why-31-absent-38-body-differs-12-statustype-mismatches-bulk-case">Why
+“31 absent” + “38 body differs” + “12 status/type mismatches” (bulk
+case)</h3>
+<p>Each of the 31 targeted updates independently corrupts its own row
+(defect A), and each corrupted row independently triggers a downstream
+one-position shift for every later same-dated row (defect B) — the
+shifts compound across the batch (a later corrupted row’s shift
+interacts with an earlier one’s), producing the ~81-line aggregate
+signature reported in the task.</p>
+<h2 id="phase-3-fix-minimal-backward-compatible">Phase 3 — Fix (minimal,
+backward-compatible)</h2>
+<p><strong>File touched:</strong>
+<code>constitution/scripts/workable-items/cmd/workable-items/mutate.go</code>
+(single-condition change, ~30 lines of explanatory comment added).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// F-DBTOOL-2 fix (2026-07-12): ...</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> newBody <span class="dt">string</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> set<span class="op">[</span><span class="st">&quot;description&quot;</span><span class="op">]</span> <span class="op">&amp;&amp;</span> cur<span class="op">.</span>repOrDefault<span class="op">()</span> <span class="op">!=</span> <span class="st">&quot;table&quot;</span> <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    newBody <span class="op">=</span> renderItemBody<span class="op">(</span>cur<span class="op">.</span>AtmID<span class="op">,</span> cur<span class="op">.</span>Title<span class="op">,</span> cur<span class="op">.</span>Type<span class="op">,</span> cur<span class="op">.</span>Severity<span class="op">,</span> cur<span class="op">.</span>Description<span class="op">,</span> cur<span class="op">.</span>Status<span class="op">,</span> cur<span class="op">.</span>CreatedBy<span class="op">,</span> cur<span class="op">.</span>AssignedTo<span class="op">)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    newBody <span class="op">=</span> cur<span class="op">.</span>BodyMD</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> set<span class="op">[</span><span class="st">&quot;title&quot;</span><span class="op">]</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        newBody <span class="op">=</span> replaceHeadingTitle<span class="op">(</span>newBody<span class="op">,</span> cur<span class="op">.</span>AtmID<span class="op">,</span> cur<span class="op">.</span>Title<span class="op">)</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    newBody <span class="op">=</span> canonicalizeBodyStatusLine<span class="op">(</span>newBody<span class="op">,</span> cur<span class="op">.</span>Status<span class="op">)</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Rationale for correctness/safety:</p>
+<ul>
+<li><code>items.description</code> (the DB column) is <strong>still
+updated</strong> unconditionally earlier in <code>updateCmd</code>
+(<code>cur.Description = *description</code>) — the field update itself
+is not lost, only the <code>body_md</code> regeneration is skipped for
+<code>representation=&#39;table&#39;</code> items.</li>
+<li>A pipe-table row has <strong>no dedicated description cell</strong>
+to receive the new text — <code>Description</code> is <em>derived</em>
+from <code>Title</code> + the <code>Evidence</code> cell at parse time
+(<code>deriveDescription</code>, called from
+<code>emitLegacyTable</code>, <code>parse.go:859</code>), so there is no
+lossless place to inject an updated description into the row’s
+single-line shape without inventing new structure. Preserving
+<code>body_md</code> verbatim (the same field-only path already used,
+and already proven safe, for
+<code>--severity</code>/<code>--status</code>-only updates) is the
+correct minimal behaviour.</li>
+<li><code>replaceHeadingTitle</code> (<code>crud.go:526-539</code>)
+requires a line prefixed <code>## &lt;id&gt; —</code>; a pipe-row body
+has no such line, so it is a no-op (returns <code>body</code> unchanged)
+— verified by inspection of its guard condition.</li>
+<li><code>canonicalizeBodyStatusLine</code>
+(<code>parse.go:496-516</code>) requires a
+<code>**Status:**</code>-prefixed line (via <code>lastBodyStatus</code>
+→ <code>metaLineRe</code>, which matches
+<code>^\*\*([A-Za-z-]+):\*\*</code>); a pipe-row body has no
+<code>**</code>-bold text at all, so <code>lastBodyStatus</code> returns
+<code>(&quot;&quot;, false)</code> and the function is a no-op — verified by
+inspection.</li>
+<li>Does not touch, weaken, or interact with the F-DBTOOL-1
+representation-scoped <code>WHERE</code> clause (already correct) or the
+close/obsolete-details paths.</li>
+</ul>
+<h2 id="phase-4-validation-copies-only">Phase 4 — Validation (copies
+only)</h2>
+<p>All commands below ran against <strong>scratch copies</strong> of the
+live DB under <code>/tmp/.private/.../scratchpad/f2work/</code>. The
+live DB was re-checksummed after this session and is unchanged
+(<code>187b0a51a86be4b2fa22dfca2311d61a</code>).</p>
+<h3 id="a.-tools-own-test-suite">4a. Tool’s own test suite</h3>
+<pre><code>$ cd constitution/scripts/workable-items &amp;&amp; go test -count=3 ./...
+ok      github.com/HelixDevelopment/HelixConstitution/scripts/workable-items/cmd/workable-items 1.708s</code></pre>
+<p>3 consecutive runs, all green (§11.4.50
+deterministic-consistency).</p>
+<h3 id="b.-new-regression-test-11.4.115-reproduce-first">4b. New
+regression test (§11.4.115 reproduce-first)</h3>
+<p>New file:
+<code>constitution/scripts/workable-items/cmd/workable-items/f_dbtool2_description_table_representation_test.go</code></p>
+<ul>
+<li><code>TestUpdateDescription_TableRepresentation_RenderItemBodyCorruptsRoundTrip</code>
+— RED / load-bearing companion. Reproduces the exact PRE-FIX behaviour
+(calls <code>renderItemBody</code> directly against a
+table-representation item, bypassing the new guard) on a 3-row
+same-dated pipe-table fixture, and proves the third row’s content gets
+relabeled under the second row’s id after a <code>sync db-to-md</code> +
+re-parse — i.e. proves this guard is load-bearing, not a tautology.</li>
+<li><code>TestUpdateDescription_TableRepresentation_RoundTripsCleanly</code>
+— GREEN confirmation. Drives the real <code>updateCmd</code> →
+<code>syncDBToMD</code> → <code>diffCmd</code> production subcommands
+end-to-end and asserts <code>diffCmd</code> returns <code>exitOK</code>
+(zero differences), and that <code>items.description</code> was
+genuinely updated while <code>body_md</code> stayed the untouched
+pipe-row line.</li>
+</ul>
+<pre><code>$ go test -count=1 -run &#39;TestUpdateDescription_TableRepresentation&#39; -v ./cmd/workable-items/...
+=== RUN   TestUpdateDescription_TableRepresentation_RoundTripsCleanly
+--- PASS: TestUpdateDescription_TableRepresentation_RoundTripsCleanly (0.01s)
+=== RUN   TestUpdateDescription_TableRepresentation_RenderItemBodyCorruptsRoundTrip
+    ...RED reproduced: after a pre-fix renderItemBody UPDATE on a table-representation item,
+    db-to-md + re-parse relabels the THIRD row&#39;s original content under the SECOND row&#39;s id
+    (&quot;FIX-2026-05-19#1&quot;) — proving the table-representation guard in updateCmd (mutate.go) is
+    load-bearing, not a tautology
+--- PASS: TestUpdateDescription_TableRepresentation_RenderItemBodyCorruptsRoundTrip (0.00s)
+PASS</code></pre>
+<h3 id="c.-full-31-description-batch-on-a-fresh-copy-of-the-live-db">4c.
+Full 31-description batch on a fresh copy of the live DB</h3>
+<pre><code>$ cp docs/workable_items.db f2_copy_final.db
+$ python3 &lt;apply all 31 field==&quot;description&quot; proposals via /tmp/wi2 update --location Fixed&gt;
+applied 31
+
+$ /tmp/wi2 sync db-to-md --db f2_copy_final.db --out-issues final_Issues.md --out-fixed final_Fixed.md
+wrote .../final_Issues.md (101900 bytes)
+wrote .../final_Fixed.md (166020 bytes)
+
+$ /tmp/wi2 diff --db f2_copy_final.db --issues final_Issues.md --fixed final_Fixed.md
+diff: DB and Markdown are in sync
+
+$ /tmp/wi2 validate --db f2_copy_final.db
+validate: OK — 324 items, all invariants satisfied
+
+$ md5sum docs/workable_items.db
+187b0a51a86be4b2fa22dfca2311d61a   &lt;- unchanged from before this session</code></pre>
+<p><strong>diff = 0 confirmed. validate = OK confirmed. Live DB
+untouched confirmed.</strong></p>
+<h3 id="d.-no-regression-on-the-f-dbtool-1-fix-or-severityclose-hygiene">4d.
+No regression on the F-DBTOOL-1 fix or severity/close hygiene</h3>
+<p>The full 31-description batch above ran against a DB that already
+carries the (previously-applied, per the task framing) severity hygiene
++ F-DBTOOL-1 representation-scope fix;
+<code>diff</code>/<code>validate</code> sweep the
+<strong>entire</strong> DB, not just the 31 touched rows, and both
+stayed green — no regression introduced.</p>
+<h2 id="deliverable-summary">Deliverable summary</h2>
+<ul>
+<li><strong>Root cause:</strong> <code>mutate.go</code>
+<code>updateCmd</code>‘s <code>--description</code> path called
+<code>renderItemBody</code> (H2-section shape) unconditionally,
+corrupting <code>representation=&#39;table&#39;</code> pipe-row items;
+<code>parse.go</code>’s <code>emitLegacyTable</code> derives un-ID’d
+legacy rows’ ids <strong>positionally</strong> (occurrence-counted at
+parse time, not content-addressed), so one corrupted row cascades a
+relabeling shift across every later same-dated row.</li>
+<li><strong>Fix exists and is validated:</strong> yes —
+<code>mutate.go</code>, single-condition change
+(<code>cur.repOrDefault() != &quot;table&quot;</code>), ~30 lines including
+explanatory comment.</li>
+<li><strong>Copy-validated proof:</strong> 31 descriptions →
+<code>diff: DB and Markdown are in sync</code> (0 differences) +
+<code>validate: OK — 324 items, all invariants satisfied</code>.</li>
+<li><strong>Regression tests:</strong>
+<code>TestUpdateDescription_TableRepresentation_RoundTripsCleanly</code>
+(GREEN) +
+<code>TestUpdateDescription_TableRepresentation_RenderItemBodyCorruptsRoundTrip</code>
+(RED/load-bearing).</li>
+<li><strong>No live-DB writes. No git commits.</strong></li>
+</ul>
+</body>
+</html>

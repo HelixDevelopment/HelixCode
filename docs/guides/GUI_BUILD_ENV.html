@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>GUI_BUILD_ENV</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">GUI_BUILD_ENV</h1>
+</header>
+<h1 id="gui-build-environment-x11-gl-dependencies">GUI Build Environment
+(X11 / GL Dependencies)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-11T00:00:00Z</p>
+<h2 id="summary">Summary</h2>
+<p>A plain <code>go build ./...</code> (or <code>go test ./...</code>)
+from <code>helix_code/</code> <strong>fails</strong> on this host (and
+on any Linux host without X11/OpenGL development headers installed)
+because several packages transitively depend on Fyne’s desktop-GUI
+stack, which in turn depends on <code>go-gl/glfw</code> and
+<code>go-gl/gl</code>, both of which are cgo packages requiring system
+X11 and OpenGL development headers to compile.</p>
+<p>This is not a project bug — it is an environment dependency the
+project’s own <code>Makefile</code> already accounts for via a
+<code>nogui</code> build tag (see §3). This document exists so that
+dependency is no longer undocumented: an agent or operator hitting this
+failure should reach for <code>make verify-compile</code>, not chase a
+phantom Go-level compile error.</p>
+<h2 id="what-actually-fails-and-why">1. What actually fails, and
+why</h2>
+<p>Verified on this host (ALT Workstation 11.1) on 2026-07-11:</p>
+<pre><code>$ cd helix_code &amp;&amp; go build ./...
+# github.com/go-gl/gl/v2.1/gl
+# [pkg-config --cflags  -- gl gl]
+Package gl was not found in the pkg-config search path.
+Perhaps you should add the directory containing `gl.pc&#39;
+to the PKG_CONFIG_PATH environment variable
+No package &#39;gl&#39; found
+...
+# github.com/go-gl/glfw/v3.3/glfw
+In file included from ./glfw/src/internal.h:188,
+                 from ./glfw/src/context.c:30,
+                 from .../github.com/go-gl/glfw/v3.3/glfw@.../c_glfw.go:4:
+./glfw/src/x11_platform.h:33:10: fatal error: X11/Xlib.h: No such file or directory
+   33 | #include &lt;X11/Xlib.h&gt;
+      |          ^~~~~~~~~~~~
+compilation terminated.</code></pre>
+<p><code>helix_code/go.mod</code> pulls in
+<code>fyne.io/fyne/v2 v2.7.0</code> (the Fyne GUI toolkit — see
+CLAUDE.md §3.1, “UI: Fyne v2.7.0 (desktop GUI)”), which depends
+transitively on:</p>
+<ul>
+<li><code>github.com/go-gl/gl/v2.1/gl</code> — a cgo binding that
+resolves its OpenGL headers/link flags via <code>pkg-config gl</code> at
+build time.</li>
+<li><code>github.com/go-gl/glfw/v3.3/glfw</code> — a cgo binding whose C
+sources (<code>glfw/src/x11_platform.h</code> and friends) directly
+<code>#include &lt;X11/Xlib.h&gt;</code> and the sibling
+Xrandr/Xcursor/Xinerama/Xi/Xxf86vm headers on Linux.</li>
+</ul>
+<p>Neither <code>gl.pc</code> (the pkg-config metadata for OpenGL) nor
+<code>X11/Xlib.h</code> are present by default on a minimal ALT Linux
+install — confirmed on this host: <code>pkg-config --exists gl</code>
+fails, and <code>/usr/include/X11/Xlib.h</code> does not exist.</p>
+<p><strong>Packages affected</strong> in this tree (i.e. packages that
+import Fyne or go-gl, directly or transitively, and therefore require
+these headers to build with the default build tags):</p>
+<ul>
+<li><code>applications/desktop/</code> — the Fyne desktop GUI
+application. Its own <code>main.go</code> / <code>main_nogui.go</code>
+split (see §3) is exactly the accommodation for this dependency.</li>
+<li><code>applications/aurora_os/</code> — imports the same Fyne stack
+(<code>theme.go</code>, <code>main_nogui.go</code> present here
+too).</li>
+<li><code>applications/harmony_os/</code> — same dependency chain
+(<code>distributed.go</code>, i18n bundle files).</li>
+<li><code>tests/ui/</code> — <code>desktop_widget_test.go</code> and
+<code>ui_harness.go</code> reference <code>fyne.io</code> directly, so
+<code>go test ./tests/ui/...</code> without the <code>nogui</code> tag
+hits the same wall.</li>
+</ul>
+<h2 id="installing-the-headers-operator-action-needs-rootpkg-manager">2.
+Installing the headers (operator action — needs root/pkg-manager)</h2>
+<p>This is an <strong>operator action</strong>, not something an AI
+agent should do autonomously in a shared/production-adjacent environment
+— installing system packages requires root and mutates host state
+outside this repository’s control (per §11.4.133’s spirit: changes
+outside the target project’s own tree, made with elevated privilege, are
+an operator decision). The commands below are documented for the
+operator’s convenience, not executed by any automation in this repo.</p>
+<h3 id="alt-linux-this-hosts-distro-alt-workstation-11.1-apt-rpm">ALT
+Linux (this host’s distro — ALT Workstation 11.1, apt-rpm)</h3>
+<p>Package names verified present in the <code>apt-cache search</code>
+index on this host on 2026-07-11 (verification means the package NAMES
+exist in the configured repos — it does NOT mean they were installed or
+that installing them was tested end-to-end; that step still requires
+root and was not performed by this task):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get update</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install libGL-devel libX11-devel <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    libXrandr-devel libXcursor-devel libXinerama-devel <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    libXi-devel libXxf86vm-devel pkg-config</span></code></pre></div>
+<ul>
+<li><code>libGL-devel</code> — “Development files for Mesa Library” —
+provides <code>gl.pc</code> for <code>pkg-config gl</code>.</li>
+<li><code>libX11-devel</code> — “X11 Libraries and Header Files” —
+provides <code>X11/Xlib.h</code>.</li>
+<li><code>libXrandr-devel</code> / <code>libXcursor-devel</code> /
+<code>libXinerama-devel</code> / <code>libXi-devel</code> /
+<code>libXxf86vm-devel</code> — the standard sibling X11 extension
+headers GLFW’s Linux backend also needs (RandR, Cursor, Xinerama,
+XInput2, XF86VidMode). <strong>UNCONFIRMED:</strong> this task verified
+only that <code>libGL-devel</code> and <code>libX11-devel</code> are the
+two packages actually missing on this host and blocking the build (per
+the exact compiler error above); the five X11-extension
+<code>-devel</code> packages are included because they are GLFW’s
+documented standard Linux dependency set, but their necessity was not
+individually re-proven by triggering their specific missing-header
+errors on this host.</li>
+<li><code>pkg-config</code> — already installed on this host
+(<code>pkg-config-0.29.2-alt3.x86_64</code> via
+<code>rpm -q pkg-config</code>); listed here only for hosts where it is
+not yet present.</li>
+</ul>
+<h3 id="debianubuntu-apt-for-reference-other-supported-dev-hosts">Debian/Ubuntu
+(apt) — for reference, other supported dev hosts</h3>
+<p>Not this host’s distro; package names below follow the standard
+Debian/Ubuntu GLFW build-dependency set and were <strong>not</strong>
+individually verified against a live apt index in this task:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install libgl1-mesa-dev libx11-dev <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    libxrandr-dev libxcursor-dev libxinerama-dev <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    libxi-dev libxxf86vm-dev pkg-config</span></code></pre></div>
+<h3 id="fedorarhel-dnf-for-reference">Fedora/RHEL (dnf) — for
+reference</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install mesa-libGL-devel libX11-devel <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    libXrandr-devel libXcursor-devel libXinerama-devel <span class="dt">\</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    libXi-devel libXxf86vm-devel pkgconfig</span></code></pre></div>
+<h3 id="macos-windows">macOS / Windows</h3>
+<p>Fyne’s desktop backend uses the platform’s native OpenGL framework
+(Cocoa/OpenGL.framework on macOS, WGL on Windows) via <code>cgo</code>
+and the platform C toolchain (Xcode Command Line Tools / MSVC or MinGW),
+not X11 — the X11-specific failure documented in §1 is Linux-only. See
+the upstream Fyne “Getting Started” docs for the platform prerequisites
+if building the GUI target on those platforms.</p>
+<h2 id="the-sanctioned-no-x11-path-make-verify-compile">3. The
+sanctioned no-X11 path: <code>make verify-compile</code></h2>
+<p>The project’s own <code>helix_code/Makefile</code> already has the
+accommodation for hosts without these headers — a <code>nogui</code>
+build tag:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dv">verify-compile:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="er">    </span><span class="ch">@</span><span class="fu">echo </span><span class="st">&quot;🔍 Verifying code compilation (nogui — no X11 system libs required)...&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="ch">@$(</span><span class="dt">GO</span><span class="ch">)</span><span class="fu"> build -tags=nogui ./... &amp;&amp; echo </span><span class="st">&quot;✅ All packages compile successfully&quot;</span></span></code></pre></div>
+<p>i.e. <code>make verify-compile</code> is exactly
+<code>go build -tags=nogui ./...</code>. Verified GREEN on this host on
+2026-07-11 (no X11/GL headers installed):</p>
+<pre><code>$ make verify-compile
+🔍 Verifying code compilation (nogui — no X11 system libs required)...
+✅ All packages compile successfully</code></pre>
+<p>The <code>nogui</code> tag works by build-tag-gating an alternate,
+headless entry point in each GUI-touching package — e.g.
+<code>applications/desktop/main_nogui.go</code>,
+<code>applications/desktop/specify_nogui.go</code>,
+<code>applications/desktop/generate_nogui.go</code>,
+<code>applications/aurora_os/main_nogui.go</code> — so the package
+compiles without ever importing the Fyne/go-gl chain. The Makefile also
+exposes this explicitly as its own target:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> desktop-nogui   <span class="co"># builds bin/helix-desktop-cli via -tags nogui</span></span></code></pre></div>
+<p><strong>Use <code>make verify-compile</code> (or
+<code>go build -tags=nogui ./...</code> /
+<code>go test -tags=nogui ./...</code>) as the default dev/CI-equivalent
+compile check on any host that does not have the X11/GL headers
+installed.</strong> Only reach for a bare <code>go build ./...</code> /
+<code>go test ./...</code> (no tags), or <code>make desktop</code> /
+<code>make desktop-linux</code> (which build the real GUI binary), on a
+host where §2’s headers are confirmed installed.</p>
+<h2 id="this-is-the-11.4.77-regeneration-mechanism-for-this-dependency">4.
+This is the §11.4.77 regeneration mechanism for this dependency</h2>
+<p>Per Constitution §11.4.77 (regeneration-mechanism-required mandate):
+any artefact or environment dependency the project relies on but does
+not version-control must have a documented, non-interactive mechanism to
+re-obtain or re-generate it. The X11/OpenGL development headers are
+exactly such a dependency:</p>
+<ul>
+<li><strong>Not versioned, and correctly so</strong> — these are host
+operating-system packages (shared libraries + C headers), not project
+source; they are never meant to live in this git tree, and no
+<code>.gitignore</code> entry is needed for them since nothing here ever
+writes them into the tree.</li>
+<li><strong>Re-obtained via the OS package manager</strong> — §2 above
+IS the regeneration mechanism:
+<code>apt-get install libGL-devel libX11-devel ...</code> (or the
+distro-appropriate equivalent) deterministically restores the missing
+dependency on any fresh host, from the distro’s own package index —
+nothing project-specific needs to be rebuilt or regenerated.</li>
+<li><strong>The honest fallback is
+<code>make verify-compile</code></strong> — a host where the operator
+has not yet run §2 (or cannot, e.g. a locked-down CI runner) is not
+blocked from verifying the codebase compiles: <code>-tags nogui</code>
+is the documented, always-available fallback that requires zero system
+packages, exercising every package’s headless code path instead of
+skipping the check entirely.</li>
+<li><strong>Honest boundary:</strong> <code>make verify-compile</code>
+(nogui) proves the headless/CLI code paths compile. It does
+<strong>not</strong> prove the actual GUI binary
+(<code>make desktop</code> / <code>make desktop-linux</code>, which link
+against real Fyne/go-gl) builds or runs — that still requires the
+operator to install the §2 headers on a host that needs to produce or
+test the GUI artifact. This document does not claim a full GUI build was
+executed or passed on this host; only <code>make verify-compile</code>
+was run and confirmed green here (§3).</li>
+</ul>
+<h2 id="sources-verified-2026-07-11-helix_codego.mod-helix_codemakefile-verify-compile-desktop-nogui-desktop-targets-live-go-build-....-output-on-this-host-alt-workstation-11.1-live-apt-cache-search-package-name-lookups-on-this-host-pkg-config---exists-gl-usrincludex11xlib.h-presence-checks-on-this-host-rpm--q-pkg-config-on-this-host.">Sources
+verified 2026-07-11: helix_code/go.mod, helix_code/Makefile
+(verify-compile / desktop-nogui / desktop targets), live
+<code>go build ./...</code> output on this host (ALT Workstation 11.1),
+live <code>apt-cache search</code> package-name lookups on this host,
+<code>pkg-config --exists gl</code> +
+<code>/usr/include/X11/Xlib.h</code> presence checks on this host,
+<code>rpm -q pkg-config</code> on this host.</h2>
+</body>
+</html>

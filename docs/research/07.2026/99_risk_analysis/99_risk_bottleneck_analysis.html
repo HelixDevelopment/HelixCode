@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>99_risk_bottleneck_analysis</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">99_risk_bottleneck_analysis</h1>
+</header>
+<h1 id="helixllm-full-extension-programme-multi-pass-danger-zone-weakness-bottleneck-analysis">HelixLLM
+Full-Extension Programme — Multi-Pass Danger-Zone / Weakness /
+Bottleneck Analysis</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Document</strong></td>
+<td>Stream 99 — final risk-synthesis (§11.4.92 5-pass evaluation)</td>
+</tr>
+<tr>
+<td><strong>Path</strong></td>
+<td><code>docs/research/07.2026/99_risk_analysis/99_risk_bottleneck_analysis.md</code></td>
+</tr>
+<tr>
+<td><strong>Revision</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Created</strong></td>
+<td>2026-07-06</td>
+</tr>
+<tr>
+<td><strong>Author</strong></td>
+<td>T1/main risk-synthesis subagent</td>
+</tr>
+<tr>
+<td><strong>Inputs</strong></td>
+<td>ALL 13 prior reports (00 master + inventory + host baseline + ADR +
+clarifications + streams 01–12)</td>
+</tr>
+<tr>
+<td><strong>Method</strong></td>
+<td>§11.4.92 five-pass evaluation; §11.4.6 no-guessing (every claim
+traces to a cited stream report + its captured/cited evidence)</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/main)</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Anti-bluff notice (§11.4 / §11.4.6 / §11.4.123).</strong>
+This is a <em>risk</em> document. It makes NO “works” claim. Every
+danger zone below traces to a specific prior report’s finding (captured
+host fact <code>[G-*]</code>, cited web source, or read-of-source FACT).
+Where a prior report marked something <code>UNCONFIRMED</code>, it stays
+<code>UNCONFIRMED</code> here and is escalated to a
+must-verify-before-commit item (Pass 4). Design estimates are labelled;
+nothing here is a runtime proof.</p>
+</blockquote>
+<hr />
+<h2 id="one-paragraph-orientation">0. One-paragraph orientation</h2>
+<p>The programme is an <strong>extend</strong>, not a greenfield build:
+HelixLLM already serves OpenAI + Anthropic APIs with a real llama.cpp
+HTTP client and a scored provider-fallback chain; HelixAgent already
+ships ~45 provider adapters + an OpenAI/Anthropic/Google REST server;
+LLMsVerifier already has the DB schema for CONST-040 capability booleans
+and an endpoint-agnostic probe engine; the <code>containers</code>
+submodule already has boot/compose/health + a GPU health-check. The
+danger is <strong>not</strong> “can we build the pieces” — the pieces
+largely exist. The danger is concentrated in <strong>four load-bearing
+seams that ALL 12 streams independently collided with</strong>: (1) the
+Blackwell sm_120 toolchain, (2) rootless GPU passthrough that
+<strong>does not yet exist on this host</strong>, (3) <strong>one 32 GB
+card</strong> asked to host ~10 GPU services + 6–12 agents, and (4) a
+fleet of anti-bluff traps where a green test hides a dead feature. Those
+four are the spine of the register below.</p>
+<hr />
+<h2 id="pass-1-goal-verification-does-the-proposed-architecture-achieve-the-mandate">PASS
+1 — Goal Verification (does the proposed architecture achieve the
+mandate?)</h2>
+<p><strong>Mandate decomposed</strong> (from
+<code>00_programme_master_plan.md §1–2</code>): extend HelixLLM → local
+models on RTX 5090 → expose via HelixAgent to HelixCode/CLI agents
+(OpenAI + Anthropic REST) → near-frontier coding/agent quality at 6–12
+concurrency → add vision, generative (image/video WAN+LTX/vector),
+translation, embeddings/RAG/HelixMemory, MCP/ACP, Whisper/Tesseract,
+codegraph/opendesign → all rootless-podman via <code>containers</code>
+submodule → LLMsVerifier + claude_toolkit integration → setup/PATH →
+full test + Challenges + HelixQA → keep running for live operator
+testing.</p>
+<p><strong>Coverage verdict — every capability HAS a researched, cited
+landing place:</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mandate element</th>
+<th>Covered by</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local coding/agent model, 6–12 concurrency</td>
+<td>01 (Qwen3-Coder-30B-A3B MoE, vLLM/llama-server, KV math)</td>
+<td>✅ covered, on-card re-measure pending</td>
+</tr>
+<tr>
+<td>Vision VLM</td>
+<td>02 (Qwen3-VL-8B/30B-A3B)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Image gen</td>
+<td>02 (FLUX.1 fp8, ComfyUI + OpenAI bridge)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Video gen WAN + LTX (mandatory)</td>
+<td>02 (LTX-2 fast + WAN 2.2 14B fp8)</td>
+<td>✅ both fit 32 GB</td>
+</tr>
+<tr>
+<td>Vectorize pixel→SVG</td>
+<td>02 (vtracer + StarVector-8B + potrace)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Translation local + cloud</td>
+<td>03 (NLLB/MADLAD CT2 + TOWER+ + DeepL/Google/Azure/AWS)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Embeddings + RAG + HelixMemory</td>
+<td>04 (Qwen3-Embed-4B + BGE-M3 + Qdrant + Zep/mem0)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>MCP + ACP + tool-calling + OKF</td>
+<td>05 (MCP Go SDK, Zed ACP, JSON-Schema+constrained decoding,
+OKF=content)</td>
+<td>✅ w/ clarifications</td>
+</tr>
+<tr>
+<td>Provider coverage (Poe/Perplexity/Sakana/Xiaomi/Tencent/…)</td>
+<td>06 (adapter matrix)</td>
+<td>✅ (some parked/blocked)</td>
+</tr>
+<tr>
+<td>Whisper STT + Tesseract OCR</td>
+<td>07 (faster-whisper/Parakeet + Tesseract 5.5 tiers)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>codegraph + opendesign core providers</td>
+<td>08 (wiring-fix + CodeIntel interface + token adapters)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Rootless-podman via containers submodule</td>
+<td>09 (boot/compose/health API mapped)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>LLMsVerifier extension (local + new providers, CONST-040)</td>
+<td>10 (probe design + fail-closed flags)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>claude_toolkit HelixAgent provider + aliases</td>
+<td>11 (PATH-detect → resolved-record path)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>HelixQA vision + full test matrix</td>
+<td>12 (9 capability banks + self-validated analyzers)</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Goals NOT (fully) covered — the genuine research
+holes:</strong></p>
+<ul>
+<li><p><strong>G-GAP-A — HelixLLM canonical API contract is unconfirmed
+at the capability level.</strong> Two reports disagree: the inventory
+(<code>00_codebase_inventory §1</code>) FOUND HelixLLM serving OpenAI +
+Anthropic surfaces; but stream 12 (<code>§Part-1 honesty boundary</code>
++ Risk 1) could NOT locate a canonical HelixLLM service spec (endpoint
+paths / request-response schemas / which capabilities actually ship) and
+marks every HelixQA <code>http</code>/<code>json:</code> path a
+<code># CONFIRM</code> placeholder. <strong>Net: the transport exists;
+the exact per-capability contract the tests and the gateway must bind to
+is UNCONFIRMED.</strong> This blocks HelixQA bank authoring and the
+gateway’s per-capability routing until the real surface is
+read/confirmed. (Owner: Phase-P task 0 — read the HelixLLM API surface
+before writing any bank/gateway route.)</p></li>
+<li><p><strong>G-GAP-B — the VRAM residency broker / model-scheduler is
+a NEW component with no design depth yet.</strong> The ADR
+(<code>Decision 3</code>) and streams 01/02/04/09 all name it as
+required, but no report designs its admission algorithm, eviction
+policy, request-class queue, or its interaction with vLLM sleep-mode /
+Ollama keep-alive at the code level. It is the single largest
+<strong>new-build</strong> in the programme and currently only a sketch.
+(Owner: dedicated Phase-1/3 design item.)</p></li>
+<li><p><strong>G-GAP-C — HelixLLM is not a pinned own-org submodule at
+the meta-repo root</strong> (inventory §1 GAP): two on-disk checkouts
+(<code>submodules/helix_llm</code> +
+<code>dependencies/HelixDevelopment/helix_llm</code>) with no root
+<code>.gitmodules</code> entry → version-drift risk + codegraph
+double-indexing. A structural gap the plan must fix before building on
+it.</p></li>
+<li><p><strong>G-GAP-D — end-to-end PATH-install / setup story is
+absent.</strong> Inventory §9 GAP: “no single top-level target builds
+llama.cpp→helix_llm→helix_agent→CLI aliases end-to-end.” Mandate 2.E
+requires it; no report delivers the install script design.</p></li>
+<li><p><strong>G-GAP-E — driver-version decision unresolved.</strong>
+Host is driver <strong>570.169</strong> (host baseline); stream 01 + ADR
+recommend <strong>≥575</strong> for sm_120 (vLLM working config cites
+575.64.03). Whether 570.169 suffices or a host driver upgrade is
+required is <strong>UNCONFIRMED</strong> and is an operator/ host
+action, not a code task. (See RZ/CX Pass-4.)</p></li>
+<li><p><strong>Parked operator clarifications (do not block, but scope 4
+items):</strong> GPT SOL, Google OKF role, which ACP (Zed strongly
+implied), Subquadratic (blocked-until-GA) —
+<code>03_open_clarifications.md</code>.</p></li>
+</ul>
+<p><strong>Pass-1 conclusion:</strong> architecture achieves the mandate
+on paper; five real gaps (A–E) must be closed in Phase-P before
+implementation is grounded. None is a dead end; A and B are the two that
+most change the plan.</p>
+<hr />
+<h2 id="pass-2-regression-blast-radius-what-existing-working-behavior-could-this-break">PASS
+2 — Regression / Blast-Radius (what EXISTING working behavior could this
+break?)</h2>
+<p>Every touch point below is real code the programme WILL modify. Each
+is a §11.4.92-Pass-2 contract that must be preserved (proven by a
+runtime signature per §11.4.108, not assumed).</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Existing working behavior</th>
+<th>Where</th>
+<th>How the programme touches it</th>
+<th>Regression risk</th>
+<th>Guard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BR-01</td>
+<td>HelixLLM scored provider-fallback chain, <strong>llamacpp always
+last resort</strong></td>
+<td><code>helix_llm cmd/helixllm/main.go:327</code></td>
+<td>GPU wiring + new local model registry changes llama-server
+launch/config</td>
+<td>Wrong GPU config → local last-resort dies → fallback chain has no
+floor → total serving outage</td>
+<td>Runtime-signature: <code>nvidia-smi</code> VRAM delta + real tok/s
+from local before trusting; keep CPU-offload degrade path</td>
+</tr>
+<tr>
+<td>BR-02</td>
+<td>HelixAgent ~45 provider adapters + provider registry</td>
+<td><code>helix_agent internal/llm/providers/*</code>,
+<code>services/provider_registry.go</code></td>
+<td>Adding stream-06 providers + local HelixAgent-as-provider +
+CONST-040 fields</td>
+<td>New adapters or struct fields break
+<code>createProviderFromConfig</code> switch / registry init → existing
+providers stop registering</td>
+<td>Additive-only struct changes; per-provider live test (bank I);
+registry init test</td>
+</tr>
+<tr>
+<td>BR-03</td>
+<td>LLMsVerifier single-source-of-truth (CONST-036/037) drives BOTH
+HelixLLM fallback scoring AND HelixAgent
+<code>InitializeFromStartupVerifier</code></td>
+<td><code>llms_verifier</code>; <code>helix_llm main.go:328</code>;
+<code>helix_agent provider_registry.go:588</code></td>
+<td>Demote static registry flags → probe-derived; add RAG/Skills/Plugins
+columns + migration</td>
+<td>DB migration or flag-semantics change → both consumers mis-score /
+hide models → agents lose providers</td>
+<td>Migration test; fail-closed default (no evidence ⇒
+<code>false</code>); 24h/60s policy behind existing
+<code>VerifiedAt</code> plumbing</td>
+</tr>
+<tr>
+<td>BR-04</td>
+<td>claude_toolkit provider aliases (env-key-driven resolution)</td>
+<td><code>claude_toolkit scripts/claude-providers.sh</code>,
+<code>providers_resolve.py</code></td>
+<td>Add PATH-detect for HelixAgent WITHOUT polluting the pure
+resolver</td>
+<td>HelixAgent logic leaking into <code>providers_resolve.py</code>
+breaks the hermetic <code>test_providers.sh</code> + every existing
+alias</td>
+<td>Keep resolver pure; detector emits a <code>resolved</code>-shaped
+record fed through unchanged env/alias path (11 §4.a)</td>
+</tr>
+<tr>
+<td>BR-05</td>
+<td>claude_toolkit vendored LLMsVerifier (1 commit behind
+origin/main)</td>
+<td><code>claude_toolkit submodules/LLMsVerifier</code></td>
+<td>Bump + re-incorporate to latest</td>
+<td>Bump WITHOUT rebuilding <code>.local-cache/code-verification</code>
++ <code>bin/model-verification</code> → toolkit exercises STALE verifier
+(SOURCE→ARTIFACT gap §11.4.108)</td>
+<td>11 §2.3 force-rebuild + re-run <code>verify_providers_live.sh</code>
+before gitlink commit</td>
+</tr>
+<tr>
+<td>BR-06</td>
+<td><code>.mcp.json</code> MCP servers (codegraph, media-validator
+enabled; opendesign disabled)</td>
+<td>root <code>.mcp.json</code></td>
+<td>Rewrite codegraph entry (drop macOS path), enable opendesign</td>
+<td>A malformed <code>.mcp.json</code> breaks ALL MCP servers for Claude
+Code, incl. the working media-validator</td>
+<td>Validate JSON; bare-command portable entries (08 §4.1); keep
+media-validator block byte-unchanged</td>
+</tr>
+<tr>
+<td>BR-07</td>
+<td>codegraph index (6.09 GB / 102,708 files, live on host)</td>
+<td><code>.codegraph/</code>, PATH binary 1.1.1 vs npm 1.2.0</td>
+<td>Re-scope excludes (§11.4.79) + reconcile version drift +
+re-index</td>
+<td>Wrong exclude drops own-org source → agents lose symbols (an index
+that lies §11.4.79); re-index churn</td>
+<td>Cross-submodule probe in <code>codegraph_validate.sh</code> + paired
+mutation (08 §4.2)</td>
+</tr>
+<tr>
+<td>BR-08</td>
+<td>HelixQA existing banks + anti-bluff engine
+(<code>ContentAssertingResolver</code>, conduit)</td>
+<td><code>helix_qa pkg/testbank</code>, <code>pkg/conduit</code></td>
+<td>Add 9 new HelixLLM banks + per-cap analyzers</td>
+<td>New bank with prose actions (the “4034 PROSE_HELIXQA_ACTION” bluff)
+or an unvalidated analyzer regresses the anti-bluff posture</td>
+<td>Executable action types only; mandatory golden-good/bad + paired
+mutation per analyzer (12 Part-4)</td>
+</tr>
+<tr>
+<td>BR-09</td>
+<td>HelixAgent OpenAI/Anthropic REST server (the model-list surface
+Claude Code reads)</td>
+<td><code>helix_agent internal/handlers/openai_compatible.go</code></td>
+<td>Extend as the unified <code>/v1</code> gateway (ADR Decision 4) +
+add <code>capabilities</code> block to <code>/v1/models</code></td>
+<td>Changing <code>/v1/models</code> shape breaks HelixCode
+<code>handleListModels</code> auto-recognition</td>
+<td>Additive <code>capabilities</code> sub-object; contract test on
+<code>/v1/models</code></td>
+</tr>
+<tr>
+<td>BR-10</td>
+<td>HelixCode CLI <code>HELIX_LLM_PROVIDER</code> /
+<code>HELIX_LLM_USE_LLAMACPP</code> env wiring</td>
+<td><code>helix_code/cmd/cli/main.go</code>,
+<code>helix_agent providers/helixllm</code></td>
+<td>Repoint at new local serving</td>
+<td>Env/header contract drift (<code>X-Helix-LLM-Use-LlamaCpp</code>)
+silently disables local path</td>
+<td>Preserve env+header names; e2e challenge (existing
+<code>cli_agent_*_helixllm_e2e_challenge.sh</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pass-2 conclusion:</strong> the highest-blast-radius touch
+points are <strong>BR-01 (fallback floor), BR-03 (verifier SoT feeds two
+consumers), BR-06/BR-09 (the surfaces Claude Code/HelixCode
+auto-recognize)</strong>. All are additive-safe if the discipline is:
+additive struct/JSON changes, fail-closed defaults, and a runtime
+signature proving the OLD contract still holds on a clean deploy
+(§11.4.108).</p>
+<hr />
+<h2 id="pass-3-cross-feature-interaction-shared-state-timing-hardware-contention">PASS
+3 — Cross-Feature Interaction (shared state / timing / hardware
+contention)</h2>
+<p>The programme’s defining property: <strong>one host, one 32 GB GPU,
+~10 GPU-hungry services, 6–12 concurrent agents.</strong> Everything
+contends.</p>
+<h3 id="single-gpu-vram-contention-the-master-cross-feature-risk-cx-02">3.1
+Single-GPU VRAM contention (the master cross-feature risk — CX-02)</h3>
+<ul>
+<li><strong>Fact (ADR Decision 3 + 01 §4 + 02 §7 + 04 §8 + 09
+§3):</strong> 32 GB CANNOT co-host a 30B coder + 30B VLM + FLUX + WAN
+2.2 simultaneously. Aggregate resident VRAM ≫ 32 GB.</li>
+<li><strong>Time-slicing under CDI has NO memory isolation</strong> (09
+§3.1, cited): two services each grab 20 GB → one OOMs. MIG is
+datacenter-only (not on GeForce 5090) → ruled out.</li>
+<li><strong>The interaction chain:</strong> coding-agent fleet
+(always-resident, ~18 GB Q4 + KV) ↔︎ embedder (~8 GB or drop to 0.6B) ↔︎
+on-demand VLM/FLUX/WAN/TOWER+. If a video render fires while 12 agents
+hold KV, the burst OOMs the fleet — a user-visible outage of the primary
+path.</li>
+<li><strong>Mitigation (converged across streams):</strong> tiered
+residency (always-resident ≤ ~6 GB; one warm model; burst =
+single-owner) + explicit per-engine caps
+(<code>--gpu-memory-utilization</code>,
+<code>CUDA_MPS_PINNED_DEVICE_MEM_LIMIT</code>,
+<code>OLLAMA_GPU_OVERHEAD</code>) + <strong>the VRAM budget-broker
+(G-GAP-B)</strong> + <strong>§11.4.119 single-resource-owner</strong>
+serialization of burst classes + <code>GPUHealthCheck</code> VRAM floor
+gating each start (09 §1.4/§3.2).</li>
+</ul>
+<h3 id="concurrency-612-agents-vs-on-demand-model-swap-latency">3.2
+Concurrency (6–12 agents) vs on-demand model-swap latency</h3>
+<ul>
+<li><strong>Interaction:</strong> the fleet wants low TTFT under load;
+on-demand VLM/gen wants VRAM the fleet is holding. A cold model reload
+is seconds-to-minutes; <strong>vLLM sleep-mode wake is 18–200× faster
+than cold reload</strong> (09 §3.1) and is the lever that makes swap
+tolerable. Ollama keep-alive is the fallback.</li>
+<li><strong>Danger:</strong> if the broker evicts the resident coder to
+serve a one-off vision request, all 12 agents stall on the reload → a
+latency cliff. <strong>Policy must protect the always-resident fleet
+model from eviction</strong> and serialize burst classes instead
+(§11.4.119).</li>
+<li><strong>KV math is the capacity gate (01 §4):</strong> MoE
+Qwen3-Coder-30B-A3B (~⅓ KV of a dense 32B) is what makes 12 <span class="citation" data-cites="16k">@16k</span> feasible; a dense 32B tops
+out at ~4 <span class="citation" data-cites="16k">@16k</span>. Choosing
+the dense model for the fleet silently caps concurrency at 4 — a
+cross-feature trap.</li>
+</ul>
+<h3 id="port-endpoint-conflicts-shared-host-namespace">3.3 Port /
+endpoint conflicts (shared host namespace)</h3>
+<p>Observed/claimed ports across reports: HelixAgent <code>:8100</code>
+(11), HelixLLM native <code>:8443</code> (11) + llama-server
+<code>:8080</code>/<code>:8081</code> (01), vision <code>:8090</code>
+(02), OpenDesign daemon <code>:7456</code> (08), Qdrant
+<code>:6333</code> (inventory §1.4), STT <code>:8000</code> (07), vLLM
+<code>:8000</code> (01/02). <strong><code>:8000</code> collides between
+vLLM and the STT service; <code>:8080</code>/<code>:8090</code> are
+reused across capability examples.</strong> Under one rootless-podman
+pod network these must be centrally allocated. (Owner: a single port-map
+ADR in Phase-P; the unified <code>/v1</code> gateway (ADR Decision 4)
+hides most of them behind one surface, but the backing containers still
+need distinct host/pod ports.)</p>
+<h3 id="shared-config-secrets">3.4 Shared config / secrets</h3>
+<ul>
+<li><strong>Secrets sprawl:</strong> HelixAgent
+<code>HELIXAGENT_API_KEY</code>, HelixLLM
+<code>HELIX_LLM_API_KEY</code>, OpenDesign <code>HELIX_OD_BYOK_*</code>,
+per-cloud-provider keys, HF token (gated weights), translation cloud
+keys — all must live in <code>.env</code> (0600, gitignored,
+CONST-042/§11.4.10), never in <code>.mcp.json</code> / compose / argv.
+Cross-feature risk: one leaked key in a committed compose file or a
+proof artefact. Guard: the §11.4.109 PreToolUse guard + secret-redactor
+in every proof capture (already present in claude_toolkit tests, 11
+§1.6).</li>
+<li><strong>Config single-source:</strong> LLMsVerifier is the
+model-metadata SoT for BOTH HelixLLM and HelixAgent — a config change
+(endpoint map, freshness policy) ripples to both (BR-03).</li>
+</ul>
+<h3 id="codegraph-index-bloat-vs-11.4.79">3.5 codegraph index bloat vs
+§11.4.79</h3>
+<ul>
+<li><strong>Fact (08 §1.1):</strong> the live index is 6.09 GB / 102,708
+files because it indexes vendored third-party under
+<code>submodules/helix_qa/tools/opensource/**</code> and the duplicate
+<code>dependencies/HelixDevelopment/helix_llm/**</code> —
+<strong>violating §11.4.79(b)</strong> (third-party must be EXCLUDED)
+and polluting RAG hits with appium/docling/etc.</li>
+<li><strong>Interaction with the RAG stack (04):</strong> if codegraph
+is fused into the retriever (04 §4.2, 08 §5.1) while the index is
+bloated, agent context gets polluted → worse answers, more tokens
+(defeats §11.4.141). Excludes (08 §4.2) must land BEFORE codegraph is
+wired as a RAG source.</li>
+</ul>
+<h3 id="cuda-graph-flashattention-shared-assumption">3.6 CUDA-graph /
+FlashAttention shared assumption</h3>
+<p>Every torch-based engine (vLLM, ComfyUI, TEI, CTranslate2-GPU) shares
+the SAME toolchain constraint (ADR Decision 1): CUDA 12.8, torch 2.9
+cu128, <strong>FA2 not FA3</strong>
+(<code>VLLM_FLASH_ATTN_VERSION=2</code>). A single mismatched image
+silently falls back to a slow path or fails to load FP8/FP4 kernels. One
+pinned <code>Dockerfile.cuda-base</code> is the shared dependency; a
+drift in it breaks every capability image at once (blessing and
+curse).</p>
+<p><strong>Pass-3 conclusion:</strong> the cross-feature risks are
+dominated by <strong>VRAM contention + swap latency + the broker that
+must arbitrate them</strong> (3.1/3.2), then <strong>port
+allocation</strong> (3.3) and <strong>index bloat feeding RAG</strong>
+(3.5). These are not independent — the broker (G-GAP-B) is the keystone
+that, done wrong, cascades into the fleet-outage failure mode.</p>
+<hr />
+<h2 id="pass-4-deep-research-validation-gaps-every-unconfirmed-must-verify-before-commit">PASS
+4 — Deep-Research Validation Gaps (every UNCONFIRMED →
+must-verify-before-commit)</h2>
+<p>Per §11.4.6 nothing UNCONFIRMED may be treated as fact at commit.
+Each row = a gate the implementation MUST pass with captured evidence
+before the dependent work proceeds.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>UNCONFIRMED claim</th>
+<th>Report</th>
+<th>Verification command / proof (captured-evidence gate)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>V-01</td>
+<td>vLLM/PyTorch prebuilt wheels work on sm_120</td>
+<td>01 §3, 02 §7</td>
+<td>Build from source (torch 2.9 cu128,
+<code>TORCH_CUDA_ARCH_LIST=12.0</code>, FA2); prove with
+<code>vllm serve … &amp;&amp; curl /v1/chat/completions</code> returning
+real output + <code>nvidia-smi</code> VRAM delta</td>
+</tr>
+<tr>
+<td>V-02</td>
+<td>llama.cpp CUDA build for sm_120</td>
+<td>01 §5B, host G-HOST-3</td>
+<td><code>cmake -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=120 &amp;&amp; cmake --build</code>;
+then a real inference proof (tok/s + VRAM delta), NOT build-success-only
+(§11.4.108)</td>
+</tr>
+<tr>
+<td>V-03</td>
+<td><strong>ALT-Linux packages
+<code>nvidia-container-toolkit</code></strong></td>
+<td>09 §2.1 R1, host</td>
+<td><code>nvidia-ctk --version</code> after install; if absent, NVIDIA
+rpm repo or from-source <code>nvidia-ctk</code>. <strong>This gates ALL
+GPU work — verify FIRST.</strong></td>
+</tr>
+<tr>
+<td>V-04</td>
+<td>Rootless CDI GPU passthrough actually works here</td>
+<td>host G-HOST-1, 01 §7, 09 §2.4</td>
+<td><code>podman run --device nvidia.com/gpu=all … nvidia-smi</code>
+prints the RTX 5090 (podman #17539 rootless-fails-where-privileged-works
+risk)</td>
+</tr>
+<tr>
+<td>V-05</td>
+<td>Driver 570.169 sufficient vs ≥575 recommended</td>
+<td>host baseline, ADR Decision 1, 01</td>
+<td>Attempt the V-01/V-02 builds on 570.169; if kernels fail, host
+driver upgrade decision → operator (G-GAP-E)</td>
+</tr>
+<tr>
+<td>V-06</td>
+<td>CTranslate2 ships sm_120 GPU int8 kernels (prebuilt)</td>
+<td>03 §2.2/§7, negative finding</td>
+<td>Build CT2 in the CUDA-12.8 image; assert GPU int8 inference visible
+in <code>nvidia-smi</code> at image-build; else CPU-int8 fallback</td>
+</tr>
+<tr>
+<td>V-07</td>
+<td><code>podman-compose</code> (pip) honors CDI <code>devices:</code>
+where <code>podman compose</code> drops them</td>
+<td>09 GAP-2 (cited podman #28436)</td>
+<td>Preflight-assert <code>detectComposeCmd()</code> ==
+<code>podman-compose</code>; boot a CUDA container via compose, assert
+<code>nvidia-smi</code> sees the GPU</td>
+</tr>
+<tr>
+<td>V-08</td>
+<td>Official Go MCP SDK ships a Streamable-HTTP server transport</td>
+<td>05 §1.3</td>
+<td>Read <code>go-sdk/mcp</code> package docs + a spike server before
+committing the remote-gateway design; else <code>mark3labs/mcp-go</code>
+fallback</td>
+</tr>
+<tr>
+<td>V-09</td>
+<td><strong>No first-party Go ACP SDK exists</strong></td>
+<td>05 §2.4/§7, 08</td>
+<td>Hand-roll the ACP v1 JSON-RPC-over-stdio surface in Go (LSP-sized)
+OR bridge TS/Rust; budget the work</td>
+</tr>
+<tr>
+<td>V-10</td>
+<td>Benchmark tok/s (Qwen3-Coder ~140, dense 32B ~45–58, whisper RTFx
+~33×, etc.)</td>
+<td>01, 02, 03, 07 (all “estimate/aggregator”)</td>
+<td>Re-measure EVERY headline number on the actual 5090 with our
+fixtures before any SLA/claim (§11.4.6/§11.4.107(13))</td>
+</tr>
+<tr>
+<td>V-11</td>
+<td>2026 model names GLM-4.7/5, Qwen3.5/3.6, DeepSeek V4</td>
+<td>01 §2 (UNCONFIRMED)</td>
+<td>Excluded from recommendations; do NOT plan around them until a
+first-party model card appears</td>
+</tr>
+<tr>
+<td>V-12</td>
+<td>Qwen3-Coder-30B-A3B exact KV-head count (drives concurrency
+math)</td>
+<td>01 §4 (approx)</td>
+<td>Read the model config.json; recompute the KV table before sizing the
+fleet</td>
+</tr>
+<tr>
+<td>V-13</td>
+<td>Model-card specs behind ¹ (Qwen3-Embedding dims/ctx/MTEB, Stella,
+gte)</td>
+<td>04 §1.2</td>
+<td>Verify each against the model card before pinning dims/context</td>
+</tr>
+<tr>
+<td>V-14</td>
+<td>LongMemEval 63.8 vs 49.0 (Zep vs mem0)</td>
+<td>04 §5</td>
+<td>Verify against the primary Zep/Graphiti paper before treating as
+canonical</td>
+</tr>
+<tr>
+<td>V-15</td>
+<td>COMET/BLEU as quality proof (contamination)</td>
+<td>03 §1.3, 12 (d)</td>
+<td>Gate professional-quality claims on QE + human/MQM spot-check, never
+COMET alone</td>
+</tr>
+<tr>
+<td>V-16</td>
+<td>Hyperbolic / Baseten base URLs (3rd-party sourced)</td>
+<td>06 GROUP-E</td>
+<td>Fetch official docs before writing those two adapters</td>
+</tr>
+<tr>
+<td>V-17</td>
+<td>Parakeet-TDT vs WhisperX word-timestamp accuracy</td>
+<td>07 negative finding</td>
+<td>Verify against NeMo docs before using Parakeet timings for the
+subtitle oracle</td>
+</tr>
+<tr>
+<td>V-18</td>
+<td>BabelDOC / TranslateGemma / Tower-scaling future-dated arXiv
+ids</td>
+<td>03 sources</td>
+<td>Treat as UNCONFIRMED; do not cite their exact numbers</td>
+</tr>
+<tr>
+<td>V-19</td>
+<td>codegraph MCP tool set + <code>.mcp.json</code> shape on THIS
+host</td>
+<td>08 §2 (probed 1.1.1 vs npm 1.2.0)</td>
+<td>Reconcile version drift, then <code>codegraph_validate.sh</code>
+cross-submodule probe</td>
+</tr>
+<tr>
+<td>V-20</td>
+<td>HelixLLM per-capability API contract</td>
+<td>12 Risk-1, G-GAP-A</td>
+<td>Read the real HelixLLM endpoint/schema surface; fill every
+<code># CONFIRM</code> before authoring banks/gateway routes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pass-4 conclusion:</strong> the toolchain cluster
+<strong>V-01…V-07 is the critical-path validation front</strong> — none
+of the AI stack runs until they pass, and <strong>V-03 (ALT-Linux
+toolkit packaging) is the very first unknown to resolve</strong> because
+it gates the CDI setup that gates everything. V-10 (re-measure all
+benchmarks) and V-15/V-20 (metric + contract honesty) are the anti-bluff
+front.</p>
+<hr />
+<h2 id="pass-5-anti-bluff-surface-where-could-a-testgate-pass-while-the-feature-is-broken">PASS
+5 — Anti-Bluff Surface (where could a test/gate PASS while the feature
+is broken?)</h2>
+<p>Each row: the bluff, the report that flagged it, the
+§-mitigation.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>AB-#</th>
+<th>Bluff (green test, dead feature)</th>
+<th>Flagged by</th>
+<th>Mitigation (mechanical)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AB-01</td>
+<td><strong>Frozen/stale-frame vision</strong> — one captured frame
+“shows a picture” but it’s a stuck decoder / previous content</td>
+<td>02, 12 (b/c), §11.4.107</td>
+<td>Freeze-detection + frame-advance oracle + not-stale cross-check;
+<code>ffprobe -count_frames</code>; self-validated analyzer
+golden-good/bad</td>
+</tr>
+<tr>
+<td>AB-02</td>
+<td><strong>Silence-hallucination STT</strong> — Whisper invents words
+on silence → “expected words present” PASSes on nothing</td>
+<td>07 §5.1, §11.4.68</td>
+<td>Parakeet (no silence-hallucination) for the assertion path; VAD +
+no-speech-prob gating for Whisper; <code>qa-audio-probe</code> RMS floor
+first; self-validated audio fixtures</td>
+</tr>
+<tr>
+<td>AB-03</td>
+<td><strong>Static-registry capability flags</strong> — CONST-040
+MCP/ACP/LSP set from a literal, not a probe</td>
+<td>10 §1.4 Risk-2, CONST-040</td>
+<td>Demote <code>registry.go</code> to seed-only; probe-derived flag +
+<code>CapabilityEvidence</code>; <strong>no evidence ⇒
+<code>false</code> (fail-closed)</strong>; blocked on adding
+<code>Message.ToolCalls</code> field (10 §2.4)</td>
+</tr>
+<tr>
+<td>AB-04</td>
+<td><strong>PATH-present ≠ server-running</strong> —
+<code>command -v helixagent</code> succeeds → alias marked “verified”
+while <code>:8100</code> is down</td>
+<td>11 §Risk-2, §4.a</td>
+<td>PATH gate registers alias but model-enum + verdict come from a live
+<code>/v1/models</code> + real chat probe; server-down ⇒ honest
+<code>unverified</code></td>
+</tr>
+<tr>
+<td>AB-05</td>
+<td><strong>LLMsVerifier bump-without-rebuild</strong> — gitlink bumped,
+<code>.local-cache</code>/<code>bin</code> binaries stale → toolkit
+tests STALE code (SOURCE→ARTIFACT)</td>
+<td>11 §Risk-3, §2.3, §11.4.108</td>
+<td>Force-rebuild <code>code-verification</code> +
+<code>model-verification</code>; re-run
+<code>verify_providers_live.sh</code> before committing the bump</td>
+</tr>
+<tr>
+<td>AB-06</td>
+<td><strong>podman-compose drops CDI devices silently</strong> —
+<code>podman compose</code> starts the container with NO GPU, health
+passes on the port</td>
+<td>09 GAP-2 (podman #28436)</td>
+<td>Pin <code>podman-compose</code> (pip); preflight-assert the resolved
+backend; <code>GPUHealthCheck</code> VRAM-floor + in-container
+<code>nvidia-smi</code> gate</td>
+</tr>
+<tr>
+<td>AB-07</td>
+<td><strong>Metric-gaming (COMET/MTEB)</strong> — COMET/BLEU green while
+human quality is not (Tower-v2-70B #1 COMET, lost 9/11 human)</td>
+<td>03 §1.3, 04 §8, 12 (d)</td>
+<td>QE (CometKiwi) + human/MQM spot-check gate; back-translation
+metamorphic; per-langpair quality ledger</td>
+</tr>
+<tr>
+<td>AB-08</td>
+<td><strong>codegraph index that lies</strong> — own-org submodule
+silently excluded → agent “can’t find” a symbol that exists</td>
+<td>08 §4.2, §11.4.79</td>
+<td>Cross-submodule symbol probe in <code>codegraph_validate.sh</code> +
+paired mutation (exclude → validate MUST FAIL → restore)</td>
+</tr>
+<tr>
+<td>AB-09</td>
+<td><strong>Analyzer-is-the-bluff</strong> — CLIP/COMET/WER/faithfulness
+analyzer miscalibrated or lenient PASSes broken output</td>
+<td>12 Risk-2, §11.4.107(10)</td>
+<td>Mandatory golden-good + golden-bad + paired §1.1 mutation on EVERY
+analyzer; thresholds calibrated on OUR fixtures, never literature</td>
+</tr>
+<tr>
+<td>AB-10</td>
+<td><strong>Build-success ≠ works</strong> — image builds, but kernels
+don’t load on sm_120 / feature dead on clean deploy</td>
+<td>ADR Decision 1, 01, §11.4.108</td>
+<td>Per-image runtime proof (real inference/embed/transcribe +
+<code>nvidia-smi</code> delta) at build; runtime-signature on clean
+deploy</td>
+</tr>
+<tr>
+<td>AB-11</td>
+<td><strong>File-exists ≠ correct</strong> — HelixQA
+<code>GlobEvidenceResolver</code> passes on
+<code>echo stereo &gt; codec.txt</code></td>
+<td>12 §1.2</td>
+<td><code>ContentAssertingResolver</code> grammar
+(<code>json:</code>/<code>match:</code>/<code>min_int:</code>) over the
+verdict artefact; bare <code>nonempty</code> forbidden for a correctness
+claim</td>
+</tr>
+<tr>
+<td>AB-12</td>
+<td><strong>Subtitle chrome-as-dialogue</strong> — OCR reads a menu
+label as a caption</td>
+<td>07 §5.2, §11.4.137</td>
+<td>Chrome-label denylist + position-band + cadence≥2 + fuzzy-match vs
+source cue; honest SKIP on FLAG_SECURE black frames</td>
+</tr>
+<tr>
+<td>AB-13</td>
+<td><strong>Verdict-without-evidence</strong> — a PASS
+<code>challenge_verdict</code> with no preceding
+<code>evidence_captured</code></td>
+<td>12 §1.4, §11.4.116</td>
+<td>Conductor treats a PASS with no backing
+<code>evidence_captured</code> as a contradiction ⇒ FAIL</td>
+</tr>
+<tr>
+<td>AB-14</td>
+<td><strong>Freshness stamped without a run</strong> —
+<code>VerifiedAt=time.Now()</code> with no probe</td>
+<td>10 §2.5</td>
+<td>Timestamps come from real <code>CompletedAt</code> of a real probe;
+24h/60s policy bound to actual runs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pass-5 conclusion:</strong> the anti-bluff machinery to catch
+all 14 largely <strong>already exists</strong> (HelixQA
+<code>ContentAssertingResolver</code> + conduit, LLMsVerifier
+evidence-backed flags, claude_toolkit proof capture, §11.4.107
+liveness). The programme’s job is to <strong>use it, not weaken
+it</strong> — the two NEW hazards are <strong>AB-03 (fail-closed
+capability flags, blocked on <code>Message.ToolCalls</code>)</strong>
+and <strong>AB-06 (the silent no-GPU compose backend)</strong>, both of
+which need a mechanical gate, not vigilance.</p>
+<hr />
+<h2 id="consolidated-danger-zone-bottleneck-register">CONSOLIDATED
+DANGER-ZONE / BOTTLENECK REGISTER</h2>
+<p>Severity: <strong>Critical</strong> = blocks the whole programme or
+causes a user-visible primary-path outage / a §11.4 PASS-bluff.
+<strong>High</strong> = blocks a capability or a major regression.
+<strong>Med</strong> = localized.</p>
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 9%" />
+<col style="width: 6%" />
+<col style="width: 28%" />
+<col style="width: 18%" />
+<col style="width: 14%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Sev</th>
+<th>Streams that flagged</th>
+<th>Blast radius</th>
+<th>Mitigation</th>
+<th>Owning phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DZ-01</strong></td>
+<td>Rootless GPU passthrough does NOT exist yet (nvidia-ctk + CDI
+absent)</td>
+<td><strong>Critical</strong></td>
+<td>host, 01, 02, 03, 04, 07, 09</td>
+<td>ALL GPU work — nothing serves until fixed</td>
+<td>§2 of stream 09: install toolkit → <code>no-cgroups</code> →
+<code>cdi generate</code> → in-container <code>nvidia-smi</code> proof;
+V-03 ALT-Linux packaging FIRST</td>
+<td>Phase-1 prereq (task 0)</td>
+</tr>
+<tr>
+<td><strong>DZ-02</strong></td>
+<td>Blackwell sm_120 toolchain fragility (wheels fail; source build
+required)</td>
+<td><strong>Critical</strong></td>
+<td>01, 02, 03, 04, 09, ADR CX-01</td>
+<td>Every GPU image (vLLM/llama.cpp/ComfyUI/TEI/CT2)</td>
+<td>One pinned <code>Dockerfile.cuda-base</code> (CUDA 12.8, torch 2.9
+cu128, FA2); per-image runtime proof; V-01/V-02/V-05/V-06</td>
+<td>Phase-1</td>
+</tr>
+<tr>
+<td><strong>DZ-03</strong></td>
+<td>32 GB VRAM contention across ~10 services + 6–12 agents</td>
+<td><strong>Critical</strong></td>
+<td>01, 02, 04, 09, ADR CX-02, RZ-03</td>
+<td>Primary coding-agent path (fleet OOM)</td>
+<td>Tiered residency + VRAM broker (G-GAP-B) + per-engine caps +
+§11.4.119 single-owner + <code>GPUHealthCheck</code> floor</td>
+<td>Phase-1/3</td>
+</tr>
+<tr>
+<td><strong>DZ-04</strong></td>
+<td>VRAM residency broker is a NEW, under-designed component</td>
+<td><strong>Critical</strong></td>
+<td>ADR Decision 3, 01, 02, 04, 09</td>
+<td>Arbitrates DZ-03; wrong policy → fleet-eviction latency cliff</td>
+<td>Dedicated design: admission by request-class + VRAM budget; protect
+fleet model from eviction; vLLM sleep-mode</td>
+<td>Phase-1/3 (design first)</td>
+</tr>
+<tr>
+<td><strong>DZ-05</strong></td>
+<td>HelixLLM per-capability API contract UNCONFIRMED</td>
+<td><strong>High</strong></td>
+<td>12 Risk-1, inventory (partial)</td>
+<td>HelixQA banks + gateway routing blocked</td>
+<td>Phase-P task 0: read the real HelixLLM surface; fill every
+<code># CONFIRM</code></td>
+<td>Phase-P</td>
+</tr>
+<tr>
+<td><strong>DZ-06</strong></td>
+<td>LLMsVerifier static capability flags (CONST-040 bluff) + missing
+<code>Message.ToolCalls</code></td>
+<td><strong>High</strong></td>
+<td>10 §1.4/Risk-1/Risk-2</td>
+<td>Both HelixLLM + HelixAgent consume the SoT</td>
+<td>Add <code>ToolCalls</code> field (highest-leverage change);
+probe+evidence flags; fail-closed</td>
+<td>Phase-2</td>
+</tr>
+<tr>
+<td><strong>DZ-07</strong></td>
+<td>podman-compose backend silently drops CDI GPU devices</td>
+<td><strong>High</strong></td>
+<td>09 GAP-2</td>
+<td>Any GPU service booted via wrong backend → no-GPU, green health</td>
+<td>Pin <code>podman-compose</code> (pip); preflight-assert backend;
+upstream <code>containers</code> extension #3</td>
+<td>Phase-1</td>
+</tr>
+<tr>
+<td><strong>DZ-08</strong></td>
+<td>codegraph index bloat (6 GB/102k) indexes third-party (violates
+§11.4.79)</td>
+<td><strong>High</strong></td>
+<td>08 §1.1/§4.2</td>
+<td>RAG-fused agent context polluted; slow re-index</td>
+<td>Exclude patches (§4.2) + cross-submodule validate probe + version
+reconcile 1.1.1↔︎1.2.0</td>
+<td>Phase-4 (before RAG fuse)</td>
+</tr>
+<tr>
+<td><strong>DZ-09</strong></td>
+<td>HelixLLM not a pinned root submodule (2 checkouts, drift)</td>
+<td><strong>High</strong></td>
+<td>inventory §1, 08</td>
+<td>Version drift + double-index</td>
+<td>Add root <code>.gitmodules</code> entry; pick one canonical
+checkout</td>
+<td>Phase-P/1</td>
+</tr>
+<tr>
+<td><strong>DZ-10</strong></td>
+<td>claude_toolkit LLMsVerifier bump-without-rebuild
+(SOURCE→ARTIFACT)</td>
+<td><strong>High</strong></td>
+<td>11 §Risk-3</td>
+<td>Toolkit exercises stale verifier</td>
+<td>Force-rebuild binaries + re-run live tests before gitlink bump</td>
+<td>Phase-5</td>
+</tr>
+<tr>
+<td><strong>DZ-11</strong></td>
+<td>Frozen-frame / silence-hallucination / analyzer-bluff family</td>
+<td><strong>High</strong></td>
+<td>02, 07, 12, ADR RZ-05</td>
+<td>Every media/vision/STT test could pass-bluff</td>
+<td>§11.4.107/.137/.117/.163 self-validated golden-good/bad + paired
+mutation</td>
+<td>Phase-7</td>
+</tr>
+<tr>
+<td><strong>DZ-12</strong></td>
+<td><code>.mcp.json</code> host-rot (macOS paths; opendesign
+disabled)</td>
+<td><strong>Med</strong></td>
+<td>05, 08</td>
+<td>Claude Code can’t launch codegraph/opendesign; a malformed edit
+breaks all MCP</td>
+<td>Portable bare-command entries; env-injected BYOK; keep
+media-validator block unchanged; JSON-validate</td>
+<td>Phase-4</td>
+</tr>
+<tr>
+<td><strong>DZ-13</strong></td>
+<td>Port/endpoint collisions (<code>:8000</code> vLLM↔︎STT; reused
+<code>:8080/8090</code>)</td>
+<td><strong>Med</strong></td>
+<td>01, 02, 07, 08, 11</td>
+<td>Boot failures / silent wrong-service</td>
+<td>One port-map ADR; gateway hides backends behind one
+<code>/v1</code></td>
+<td>Phase-P</td>
+</tr>
+<tr>
+<td><strong>DZ-14</strong></td>
+<td>Metric-gaming (COMET/MTEB/BLEU green ≠ quality)</td>
+<td><strong>Med</strong></td>
+<td>03, 04, 12, ADR CX-05</td>
+<td>False “professional quality” claims</td>
+<td>QE + human/MQM gate; metamorphic (back-translation); calibrated
+thresholds</td>
+<td>Phase-3/7</td>
+</tr>
+<tr>
+<td><strong>DZ-15</strong></td>
+<td>Large weights unversioned → fresh clone can’t run (§11.4.77)</td>
+<td><strong>Med</strong></td>
+<td>02, 03, 04, 07, 09, ADR CX-07, RZ-07</td>
+<td>Reproducibility / fresh-clone build</td>
+<td><code>fetch_weights.sh</code> + <code>.gitignore-meta/*.yaml</code>
+per weight, wired into <code>setup.sh</code> + pre-build stamp</td>
+<td>Phase-6</td>
+</tr>
+<tr>
+<td><strong>DZ-16</strong></td>
+<td>Go SDK gaps (MCP Streamable-HTTP UNCONFIRMED; no first-party Go ACP
+SDK)</td>
+<td><strong>Med</strong></td>
+<td>05 §Risk-1</td>
+<td>MCP remote gateway + ACP editor-recognition</td>
+<td>Verify <code>go-sdk/mcp</code> docs; hand-roll ACP v1 in Go; pin
+versions</td>
+<td>Phase-4</td>
+</tr>
+<tr>
+<td><strong>DZ-17</strong></td>
+<td>License traps (Jina reranker/embeddings CC-BY-NC)</td>
+<td><strong>Med</strong></td>
+<td>04 §8, ADR CX-06</td>
+<td>Shipping non-commercial weights</td>
+<td>Ship only Apache/MIT (Qwen3/BGE/Stella/nomic/mxbai) self-hosted</td>
+<td>Phase-3</td>
+</tr>
+<tr>
+<td><strong>DZ-18</strong></td>
+<td>Driver 570.169 vs ≥575 recommended</td>
+<td><strong>Med</strong></td>
+<td>host, ADR, 01, 04</td>
+<td>May block sm_120 kernels</td>
+<td>Attempt builds on 570.169; upgrade decision → operator
+(G-GAP-E)</td>
+<td>Phase-1</td>
+</tr>
+<tr>
+<td><strong>DZ-19</strong></td>
+<td>Host safety while driving GPU hard (thermal/power §11.4.133)</td>
+<td><strong>Med</strong></td>
+<td>00 RZ-08, ADR</td>
+<td>Host/hardware safety</td>
+<td>Thermal-aware caps; captured thermal evidence under sustained load;
+no unverified GPU-control writes</td>
+<td>Phase-1/7</td>
+</tr>
+<tr>
+<td><strong>DZ-20</strong></td>
+<td>Operator-ambiguous provider names (GPT SOL/OKF/ACP/SubQ)</td>
+<td><strong>Med</strong></td>
+<td>06, 05, clarifications</td>
+<td>Wasted cycle building the wrong thing</td>
+<td>Batched operator question at Phase-R→P; SubQ blocked-until-GA; never
+fake (§11.4.6)</td>
+<td>Phase-P</td>
+</tr>
+<tr>
+<td><strong>DZ-21</strong></td>
+<td>End-to-end setup/PATH-install absent (G-GAP-D)</td>
+<td><strong>Med</strong></td>
+<td>inventory §9</td>
+<td>Mandate 2.E unmet; operator can’t install the stack</td>
+<td>Design a top-level install target building
+llama.cpp→helix_llm→helix_agent→aliases</td>
+<td>Phase-6</td>
+</tr>
+<tr>
+<td><strong>DZ-22</strong></td>
+<td>Poe points-billing (not per-token) + verify-before-code adapters
+(Hyperbolic/Baseten)</td>
+<td><strong>Low</strong></td>
+<td>06</td>
+<td>Adapter surprises</td>
+<td>Treat Poe as OAI gateway; fetch official docs for Hyperbolic/Baseten
+before coding</td>
+<td>Phase-2</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="critical-path-sequencing-analysis">CRITICAL-PATH / SEQUENCING
+ANALYSIS</h2>
+<p>The programme has a <strong>hard serial prefix</strong> — a chain
+where each link is impossible until the prior link is proven with
+captured evidence (§11.4.108). Get the order wrong and every downstream
+task builds on sand.</p>
+<pre><code>[0] HOST PREREQ — GPU passthrough (DZ-01, blocks EVERYTHING GPU)
+     ├─ V-03  Install nvidia-container-toolkit on ALT-Linux   (verify nvidia-ctk --version)
+     ├─       nvidia-ctk config --set …no-cgroups (rootless)
+     ├─       nvidia-ctk cdi generate → ~/.config/cdi/nvidia.yaml
+     └─ V-04  PROOF: podman run --device nvidia.com/gpu=all … nvidia-smi prints RTX 5090
+                 ⇩ (nothing below runs until this prints)
+[1] TOOLCHAIN BASELINE (DZ-02) — pinned Dockerfile.cuda-base (CUDA 12.8, torch 2.9 cu128, FA2)
+     ├─ V-05  decide driver 570.169 vs upgrade ≥575
+     ├─ V-01  build vLLM from source for sm_120  → real /v1/chat/completions proof + VRAM delta
+     ├─ V-02  build llama.cpp -DCMAKE_CUDA_ARCHITECTURES=120 → real tok/s proof
+     └─ V-07  pin podman-compose (pip); assert CDI devices honored (DZ-07)
+                 ⇩
+[2] PRIMARY SERVING CORE (DZ-03/04 begin)
+     ├─ V-12  confirm Qwen3-Coder-30B-A3B KV heads → recompute concurrency
+     ├─       llama-server / vLLM serving the fleet model on GPU (real inference)
+     ├─       VRAM broker DESIGN (G-GAP-B) — tiered residency, protect fleet model
+     └─       HelixLLM GPU launch wiring (BR-01 preserve fallback floor)
+                 ⇩
+[3] GATEWAY + VERIFIER (DZ-06)
+     ├─       add Message.ToolCalls (unblocks tool-call/MCP probes)
+     ├─       LLMsVerifier local + new-provider probes, fail-closed CONST-040 flags
+     ├─       HelixAgent unified /v1 gateway + /v1/models capabilities block (BR-03/09)
+     └─       DZ-09 pin HelixLLM as root submodule
+                 ⇩
+[4] EXTENDED CAPABILITIES (each on-demand via broker; parallelizable AFTER [2] broker exists)
+     ├─ vision (Qwen3-VL)   ├─ image-gen (FLUX)   ├─ video (LTX/WAN)   ├─ vectorize
+     ├─ translation (NLLB CT2 + TOWER+ ; V-06 CT2 sm_120)             ├─ embeddings/RAG/HelixMemory
+     └─ Whisper STT + Tesseract OCR (DZ-11 self-validated analyzers)
+                 ⇩
+[5] INTEGRATIONS  — codegraph/opendesign wiring fix (.mcp.json DZ-12) + exclude re-scope (DZ-08)
+                    + MCP/ACP (DZ-16 hand-roll Go ACP)
+                 ⇩
+[6] claude_toolkit (DZ-10 rebuild-before-bump) + setup/PATH install (DZ-21) + weights re-obtain (DZ-15)
+                 ⇩
+[7] FULL TEST — HelixQA 9 banks (DZ-05 confirm contract first) + Challenges + autonomous session
+                 ⇩
+[8] LIVE RUN + resumption doc (§11.4.131)</code></pre>
+<p><strong>Hard dependency rules (violating any = building on
+sand):</strong> 1. <strong>Nothing GPU exists until [0] prints
+<code>nvidia-smi</code> in a rootless container.</strong> DZ-01 is the
+universal gate. <strong>V-03 (ALT-Linux toolkit packaging) is the first
+unknown to resolve.</strong> 2. <strong>No capability image is trusted
+until [1] proves a real inference on the card</strong> — build success
+is not acceptance (§11.4.108/AB-10). 3. <strong>The VRAM broker ([2]
+design) must exist before ANY extended capability ([4]) is loaded
+on-demand</strong> — otherwise the first VLM/gen request OOMs the fleet
+(DZ-03/04). 4. <strong><code>Message.ToolCalls</code> ([3]) blocks
+truthful CONST-040 tool/MCP flags</strong> — do it early. 5.
+<strong>codegraph excludes (DZ-08) must land before codegraph is fused
+into RAG ([4] embeddings)</strong> — else the RAG context is polluted.
+6. <strong>The HelixLLM contract (DZ-05) must be confirmed before
+HelixQA banks ([7]) are authored</strong> — guessing it is itself a
+bluff.</p>
+<hr />
+<h2 id="top-10-things-most-likely-to-go-wrong-and-how-each-is-caught-early">TOP
+10 THINGS MOST LIKELY TO GO WRONG (and how each is caught EARLY)</h2>
+<ol type="1">
+<li><strong>ALT-Linux has no <code>nvidia-container-toolkit</code>
+package (V-03/DZ-01).</strong> → Caught at task 0 by
+<code>nvidia-ctk --version</code> failing; fallback = NVIDIA rpm repo or
+from-source <code>nvidia-ctk</code>. <em>If not caught early, every GPU
+task in the plan is blocked and the schedule is fiction.</em></li>
+<li><strong>Rootless CDI resolves privileged but not rootless (podman
+#17539) (V-04/DZ-01).</strong> → Caught by the in-container
+<code>nvidia-smi</code> proof BEFORE any stack boot; fallback path
+documented.</li>
+<li><strong>vLLM/llama.cpp source build fails on driver 570.169
+(V-05/DZ-02/DZ-18).</strong> → Caught at [1] by the real-inference
+proof; triggers the operator driver-upgrade decision immediately, not
+after the whole stack is wired.</li>
+<li><strong>First on-demand VLM/gen request OOMs the 12-agent fleet
+(DZ-03/04).</strong> → Caught by the <code>GPUHealthCheck</code> VRAM
+floor refusing the start + a stress bank (LLM-CONCURRENCY-001 + a
+burst-during-load chaos test §11.4.85) BEFORE it hits a user.</li>
+<li><strong><code>podman compose</code> silently starts GPU containers
+with NO GPU (AB-06/DZ-07).</strong> → Caught by the preflight
+backend-assert (<code>detectComposeCmd()==podman-compose</code>) +
+in-container <code>nvidia-smi</code>; a green port-health is NOT
+accepted as GPU proof.</li>
+<li><strong>CONST-040 flags stay literal-sourced because
+<code>Message.ToolCalls</code> is missing (AB-03/DZ-06).</strong> →
+Caught by the fail-closed rule (no evidence ⇒ <code>false</code>) + the
+analyzer self-validation golden-bad fixture; the field is scheduled as
+the first [3] change.</li>
+<li><strong>claude_toolkit bump ships stale verifier binaries
+(AB-05/DZ-10).</strong> → Caught by the §2.3 force-rebuild +
+<code>verify_providers_live.sh</code> proof-capture gate BEFORE the
+gitlink commit.</li>
+<li><strong>codegraph re-index pollutes RAG with vendored third-party
+(AB-08/DZ-08).</strong> → Caught by the
+<code>codegraph_validate.sh</code> cross-submodule probe + a DB-size
+budget + the paired mutation, run before codegraph is wired as a
+retriever.</li>
+<li><strong>A media/STT/VLM analyzer is itself the bluff
+(AB-01/02/09/DZ-11).</strong> → Caught by the MANDATORY golden-good +
+golden-bad + paired §1.1 mutation on every analyzer, in the meta-test —
+a lenient analyzer FAILs its own golden-bad.</li>
+<li><strong>HelixLLM API contract guessed wrong → banks/gateway routes
+bind to a non-existent surface (DZ-05).</strong> → Caught by making
+“read the real HelixLLM API surface” the FIRST Phase-P task; every
+dependent <code># CONFIRM</code> placeholder is a hard gate that cannot
+be closed by guessing.</li>
+</ol>
+<hr />
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<p>This synthesis reduces the <em>known</em> risk surface; it does not
+prove the programme will succeed. The four Critical zones (DZ-01…04) are
+all <strong>host/hardware-empirical</strong> — their true state is
+knowable ONLY by running the V-01…V-07 proofs on THIS card, which has
+not happened. Until then the toolchain, passthrough, and VRAM-broker
+viability are <code>UNCONFIRMED</code> in the strict sense. The register
+is complete against the 13 input reports; a capability or constraint not
+surfaced by any of the 12 streams is, by construction, not here — the
+§11.4.118 discovery-pass at implementation time remains mandatory.</p>
+<hr />
+<h2 id="sources">Sources</h2>
+<p>All claims trace to the 13 prior reports under
+<code>docs/research/07.2026/</code>
+(00_master/{00_programme_master_plan, 00_codebase_inventory,
+01_host_baseline_evidence, 02_cross_cutting_foundations_ADR,
+03_open_clarifications}, 01_local_models_serving, 02_vision_generative,
+03_translation, 04_embeddings_rag, 05_mcp_acp_protocols,
+06_providers_coverage, 07_stt_ocr_whisper_tesseract,
+08_codegraph_opendesign, 09_containers_deployment,
+10_llmsverifier_helixagent, 11_claude_toolkit, 12_helixqa_testing), each
+of which carries its own cited web sources + captured host evidence. No
+new web research or source mutation was performed in this synthesis pass
+(§11.4.6).</p>
+</body>
+</html>

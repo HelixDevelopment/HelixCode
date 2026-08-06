@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SYSTEMD</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SYSTEMD</h1>
+</header>
+<h1 id="helix-platform-systemd-boot-integration">Helix Platform —
+systemd Boot Integration</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-28 <strong>Maintainer:</strong> HelixCode platform</p>
+<p>The whole Helix platform — HelixCode, HelixAgent, HelixLLM and their
+infrastructure — is installed as systemd <strong>user</strong> units
+that start on host boot and survive restarts.</p>
+<hr />
+<h2 id="quick-reference">Quick reference</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./setup.sh</span>                                  <span class="co"># install everything (units included)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./setup.sh</span> <span class="at">--start</span>                          <span class="co"># ... and start it now</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> start   helix.target       <span class="co"># bring the whole platform up</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> stop    helix.target       <span class="co"># bring it all down</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> status  helixagent         <span class="co"># one service</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> list-units <span class="st">&#39;helix*&#39;</span>        <span class="co"># all of them</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">journalctl</span> <span class="at">--user</span> <span class="at">-u</span> helixagent <span class="at">-f</span>          <span class="co"># follow one service&#39;s logs</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install_systemd_units.sh</span>            <span class="co"># re-install after editing a unit</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install_systemd_units.sh</span> <span class="at">--start</span>    <span class="co"># install + enable + start</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install_systemd_units.sh</span> <span class="at">--uninstall</span></span></code></pre></div>
+<p>Prove the platform is actually <em>serving</em>, not merely
+<code>active</code> (§11.4.108):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span>      http://localhost:8100/api/scores        <span class="co"># llmsverifier</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sk</span>     https://localhost:8443/internal/health  <span class="co"># helixllm-gateway (TLS)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span>      http://localhost:7061/health            <span class="co"># helixagent</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span>      http://localhost:8081/health            <span class="co"># helixcode-server</span></span></code></pre></div>
+<hr />
+<h2 id="units">Units</h2>
+<p><code>helix.target</code> is the umbrella; each service declares
+<code>WantedBy=helix.target</code>, so enabling a service wires it in
+automatically.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Unit</th>
+<th>Type</th>
+<th>Port</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix.target</code></td>
+<td>target</td>
+<td>—</td>
+<td>Umbrella — start/stop the platform as one</td>
+</tr>
+<tr>
+<td><code>helixcode-infra.service</code></td>
+<td>oneshot</td>
+<td>see below</td>
+<td>11 containers via podman compose — Postgres, Redis, memcached,
+Ollama, Selenium, chromedp, Weaviate, ChromaDB, Qdrant, Cognee, plus a
+<code>multicast-router</code> sidecar that publishes no host port</td>
+</tr>
+<tr>
+<td><code>llmsverifier.service</code></td>
+<td>simple</td>
+<td>8100</td>
+<td>LLMsVerifier — model/provider verification + scoring API</td>
+</tr>
+<tr>
+<td><code>helixllm-coder.service</code></td>
+<td>oneshot</td>
+<td>18434</td>
+<td>Local Qwen3-Coder-30B model container</td>
+</tr>
+<tr>
+<td><code>helixllm-gateway.service</code></td>
+<td>simple</td>
+<td>8443 (TLS)</td>
+<td>HelixLLM multi-provider LLM router</td>
+</tr>
+<tr>
+<td><code>helixagent.service</code></td>
+<td>simple</td>
+<td>7061</td>
+<td>HelixAgent runtime (HTTP/1.1+2 on TCP, HTTP/3 on UDP)</td>
+</tr>
+<tr>
+<td><code>helixcode-server.service</code></td>
+<td>simple</td>
+<td>8081</td>
+<td>HelixCode API server</td>
+</tr>
+</tbody>
+</table>
+<p>Start ordering: <code>infra</code> → <code>llmsverifier</code> →
+<code>llm-coder</code> / <code>llm-gateway</code> →
+<code>helixagent</code> → <code>helixcode-server</code>.</p>
+<p>Dependency strength is deliberate per service:</p>
+<ul>
+<li><code>helixagent</code> uses
+<code>Requires=helixcode-infra.service</code> — its startup dependency
+verification is mandatory and hard-fails, so starting without infra is
+pointless.</li>
+<li><code>helixllm-gateway</code> uses
+<code>Wants=llmsverifier.service</code> — the gateway polls
+<code>{verifier}/api/scores</code> and falls back to a static score
+table when it is unreachable. That fallback is a real working mode, so a
+down verifier must not prevent the gateway from starting and
+routing.</li>
+<li><code>helixcode-server</code> uses <code>Wants=</code> for the same
+reason: it has its own infra-boot fallback path.</li>
+</ul>
+<p><strong>Live state captured 2026-07-28</strong> — a point-in-time
+observation, not a standing guarantee; re-probe before relying on it.
+All six units <code>active</code>, <code>enabled</code>,
+<code>NRestarts=0</code>; 14 containers running on the host, 11 healthy,
+0 unhealthy; each of the four HTTP health routes in the Quick reference
+returned <code>200</code>.</p>
+<h3 id="port-map">Port map</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Port</th>
+<th>Service</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8081</td>
+<td>helixcode-server</td>
+<td><code>config/replica-8081.yaml</code></td>
+</tr>
+<tr>
+<td>8443</td>
+<td>helixllm-gateway</td>
+<td><strong>TLS</strong> — use <code>https://</code>. Health route is
+<code>/internal/health</code> (registered in
+<code>submodules/helix_llm/internal/server/server.go:167</code>).
+<em>Not</em> <code>/v1/models</code> — that is the path the gateway uses
+to probe <strong>downstream</strong> providers, and it answers
+<code>{&quot;object&quot;:&quot;list&quot;,&quot;data&quot;:null}</code> until provider keys are
+configured, so it is a misleading health signal</td>
+</tr>
+<tr>
+<td>7061</td>
+<td>helixagent</td>
+<td>TCP <em>and</em> UDP (QUIC)</td>
+</tr>
+<tr>
+<td>8100</td>
+<td>llmsverifier</td>
+<td>the address the gateway looks for; the binary’s own default is 8080,
+so the unit passes <code>--port 8100</code> explicitly</td>
+</tr>
+<tr>
+<td>18434</td>
+<td>helixllm-coder</td>
+<td>local model</td>
+</tr>
+<tr>
+<td>5433</td>
+<td>infra postgres</td>
+<td>not 5432 — 5432 belongs to an unrelated stack on this host</td>
+</tr>
+<tr>
+<td>6380</td>
+<td>infra redis</td>
+<td>not 6379, same reason</td>
+</tr>
+<tr>
+<td>8083</td>
+<td>infra weaviate</td>
+<td>HTTP; moved off 8081, which helixcode-server owns</td>
+</tr>
+<tr>
+<td>50051</td>
+<td>infra weaviate</td>
+<td>gRPC</td>
+</tr>
+<tr>
+<td>8082</td>
+<td>infra chromadb</td>
+<td></td>
+</tr>
+<tr>
+<td>8000</td>
+<td>infra cognee</td>
+<td></td>
+</tr>
+<tr>
+<td>6333/6334</td>
+<td>infra qdrant</td>
+<td></td>
+</tr>
+<tr>
+<td>11434</td>
+<td>infra ollama</td>
+<td></td>
+</tr>
+<tr>
+<td>11211</td>
+<td>infra memcached</td>
+<td></td>
+</tr>
+<tr>
+<td>4444/7900</td>
+<td>infra selenium</td>
+<td></td>
+</tr>
+<tr>
+<td>9222</td>
+<td>infra chromedp</td>
+<td></td>
+</tr>
+<tr>
+<td>—</td>
+<td>infra multicast-router</td>
+<td>sidecar; container-network only, publishes no host port</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="boot-chain">Boot chain</h2>
+<p>These are <strong>user</strong> units, not system units, because the
+services run rootless podman (§11.4.161) as the invoking user and read
+that user’s <code>~/.config/cdi</code> GPU specs.</p>
+<p>Boot therefore depends on three links, <strong>all</strong> of which
+must hold:</p>
+<pre><code>loginctl Linger=yes                        # user manager runs without a login
+  └─ default.target.wants/helix.target     # helix.target enabled
+       └─ helix.target.wants/*.service     # each service enabled</code></pre>
+<ol type="1">
+<li><strong>Linger.</strong> User units normally start at
+<em>login</em>. <code>loginctl enable-linger $USER</code> is what makes
+them start at <em>boot</em> instead — the installer enables it and
+reports whether it succeeded. Without linger the platform only comes up
+once someone logs in. This is the link most often missing.</li>
+<li><strong><code>helix.target</code> enabled.</strong> The target
+declares <code>WantedBy=default.target</code>, so enabling it creates
+the <code>default.target.wants/helix.target</code> symlink that pulls
+the platform in at boot.</li>
+<li><strong>Each service enabled.</strong> Every service declares
+<code>WantedBy=helix.target</code>, so
+<code>systemctl --user enable &lt;unit&gt;</code> creates the
+<code>helix.target.wants/&lt;unit&gt;</code> symlink. The target file
+itself enumerates no members — it is populated purely by these symlinks,
+which is why adding or removing a service never requires editing the
+target.</li>
+</ol>
+<h3 id="enable-disable">Enable / disable</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># enable everything (what the installer does)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> enable helix.target</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> enable helixcode-infra helixllm-coder helixllm-gateway <span class="dt">\</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                        llmsverifier helixagent helixcode-server</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">loginctl</span> enable-linger <span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># disable one service — removes only its helix.target.wants/ symlink</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> disable helixcode-server</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># stop the platform coming up at boot, leaving the units installed</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> disable helix.target</span></code></pre></div>
+<p><code>enable</code> only wires a unit into the boot graph; it does
+not start it. Add <code>--now</code>, or
+<code>systemctl --user start helix.target</code>, to do both.</p>
+<p>Verify all three links:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">loginctl</span> show-user <span class="st">&quot;</span><span class="va">$USER</span><span class="st">&quot;</span> <span class="at">-p</span> Linger             <span class="co"># expect Linger=yes</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~/.config/systemd/user/default.target.wants/  <span class="co"># expect helix.target</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~/.config/systemd/user/helix.target.wants/    <span class="co"># expect the six services</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> is-enabled helix.target helixagent</span></code></pre></div>
+<hr />
+<h2 id="unit-templating">Unit templating</h2>
+<p>The units in <code>scripts/systemd/</code> are
+<strong>templates</strong> containing <code>@HELIX_ROOT@</code> and
+<code>@HELIXLLM_BIN@</code>.
+<code>scripts/install_systemd_units.sh</code> expands them for the
+current checkout when installing into
+<code>~/.config/systemd/user/</code>.</p>
+<p>Never hand-edit the installed copies — edit the template in
+<code>scripts/systemd/</code> and re-run the installer, otherwise the
+change is lost on the next install and a fresh clone cannot reproduce
+it. The installer refuses to install a unit that still contains an
+unexpanded placeholder.</p>
+<hr />
+<h2 id="secrets">Secrets</h2>
+<p><code>helixagent</code> needs <code>DB_PASSWORD</code> and
+<code>JWT_SECRET</code>; both are read from <code>.env</code> via
+<code>EnvironmentFile=</code> and are <strong>never</strong> inlined
+into unit files, which are world-readable and version-controlled
+(CONST-042 / §12.1). <code>.env</code> is mode 0600 and gitignored.</p>
+<p>If <code>.env</code> is missing, <code>EnvironmentFile=-</code>
+(leading <code>-</code>) makes it optional, so the service fails with a
+clear dependency error rather than a unit-file parse error.</p>
+<hr />
+<h2 id="gotchas">Gotchas</h2>
+<h3 id="a-unit-env-var-the-binary-never-reads-fails-silently">A unit env
+var the binary never reads fails <strong>silently</strong></h3>
+<p>These binaries are env-configured through <code>envconfig</code>
+struct tags, not through a config flag. If a unit sets a variable name
+the struct does not declare, the setting is simply
+<strong>inert</strong> — no parse error, no warning, no failed unit. The
+service starts, reports <code>active (running)</code>, and quietly runs
+on the compiled-in default. This is the worst failure shape in the whole
+file: everything is green and the intent never took effect.</p>
+<p>Two instances of this class, both found and fixed on 2026-07-28 in
+<code>helixllm-gateway.service</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Unit set</th>
+<th>Binary actually reads</th>
+<th>Consequence of the mismatch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HELIX_CACHE_REDIS_HOST</code> /
+<code>HELIX_CACHE_REDIS_PORT</code></td>
+<td><code>HELIX_REDIS_HOST</code> / <code>HELIX_REDIS_PORT</code>
+(<code>config.go:121-122</code>, port default <code>6379</code>)</td>
+<td>Redis fell back to <code>:6379</code>, where nothing listens</td>
+</tr>
+<tr>
+<td><em>(unset)</em></td>
+<td><code>HELIX_MODELS_DIR</code> (<code>config.go:70</code>, default
+<code>/models</code>)</td>
+<td>Default is a <strong>container</strong> path; running natively,
+every model auto-download failed</td>
+</tr>
+</tbody>
+</table>
+<p>Symptoms the gateway logged on every start, before the fix:</p>
+<pre><code>dial tcp 127.0.0.1:6379: connect: connection refused
+KV cache: Redis unreachable, falling back to in-memory
+downloader: create models dir /models: mkdir /models: permission denied</code></pre>
+<p>Note that both fell back to a <em>working degraded mode</em> —
+in-memory cache, no downloads — which is precisely why they survived
+unnoticed.</p>
+<p><strong>Rule: when adding or changing an <code>Environment=</code>
+line, diff the name against the binary’s actual env tags. Never infer
+the name from the config <em>key</em>.</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># every env var the binary really reads</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-rn</span> <span class="st">&#39;env:&quot;&#39;</span> submodules/helix_llm/internal/shared/config/config.go</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># every env var the unit sets</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-o</span> <span class="st">&#39;Environment=[A-Z_]*&#39;</span> scripts/systemd/helixllm-gateway.service</span></code></pre></div>
+<p>Compiled-in defaults aimed at a container (<code>/models</code>,
+<code>:5432</code>, <code>:6379</code>, <code>:8001</code>) are a
+recurring source of this: they are plausible, they are wrong for a
+native user service, and they never announce themselves.</p>
+<h3 id="active-does-not-mean-listening-the-gateway-proves-it"><code>active</code>
+does not mean <em>listening</em> — the gateway proves it</h3>
+<p><code>helixllm-gateway</code> downloads models
+<strong>before</strong> it binds its listener. Between
+<code>ExecStart</code> and the first accepted connection the unit is
+already <code>active (running)</code> while <code>:8443</code> refuses
+connections. On a first boot after a model-cache wipe that window is
+<strong>several minutes</strong> long.</p>
+<p>So a green <code>systemctl --user status</code> during that window is
+accurate and useless. Probe the port, not the unit state
+(§11.4.108):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-sk</span> https://localhost:8443/internal/health   <span class="co"># the real readiness signal</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">journalctl</span> <span class="at">--user</span> <span class="at">-u</span> helixllm-gateway <span class="at">-f</span>          <span class="co"># watch the download progress</span></span></code></pre></div>
+<p>Raising <code>TimeoutStartSec</code> does not help here: the unit is
+<code>Type=simple</code>, so systemd considers it started the moment the
+process forks — it is not waiting on readiness at all.</p>
+<h3 id="podman-ps-is-not-a-reachability-oracle"><code>podman ps</code>
+is not a reachability oracle</h3>
+<p><code>helixcode-infra.service</code> sets
+<code>KillMode=process</code>. <code>podman compose up -d</code> returns
+immediately but leaves <code>conmon</code> and <code>rootlessport</code>
+(the host-side port forwarders) in the unit’s cgroup. Under the default
+<code>KillMode=control-group</code>, any stop <em>or failure</em> makes
+systemd SIGKILL the whole cgroup — killing the port forwarders of every
+container in the stack while the containers themselves survive.</p>
+<p>When that happens <code>podman ps</code> still reports
+<code>Up (healthy) 0.0.0.0:5433-&gt;5432/tcp</code>, because the
+container is alive; only the forwarder is gone. Nothing on the host can
+connect.</p>
+<p><strong>Always confirm reachability with <code>ss -ltn</code> or
+<code>curl</code>, never with <code>podman ps</code>.</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># what is ACTUALLY reachable</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> 5433 6380 8083 8082 8000 6333 11434<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">ss</span> <span class="at">-ltn</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-q</span> <span class="st">&quot;:</span><span class="va">$p</span><span class="st"> &quot;</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;ok </span><span class="va">$p</span><span class="st">&quot;</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;DEAD </span><span class="va">$p</span><span class="st">&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<h3 id="helixagent-serves-http3-so-it-binds-udp-too"><code>helixagent</code>
+serves HTTP/3, so it binds UDP too</h3>
+<p><code>ss -ltn</code> (TCP only) will not show the QUIC listener. Use
+<code>ss -ltn</code> <em>and</em> <code>ss -lun</code>, or
+<code>ss -an | grep 7061</code>.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> status <span class="op">&lt;</span>unit<span class="op">&gt;</span> -l          <span class="co"># why it failed</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">journalctl</span> <span class="at">--user</span> <span class="at">-u</span> <span class="op">&lt;</span>unit<span class="op">&gt;</span> -n 50          <span class="co"># recent log</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">journalctl</span> <span class="at">--user</span> <span class="at">-u</span> <span class="op">&lt;</span>unit<span class="op">&gt;</span> --since today  <span class="co"># today&#39;s log</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> reset-failed              <span class="co"># clear failed state before retrying</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> cat <span class="op">&lt;</span>unit<span class="op">&gt;</span>                <span class="co"># the installed (expanded) unit</span></span></code></pre></div>
+<p><strong>A unit is <code>active (running)</code> but nothing is
+listening.</strong> Unit state is not proof the service works
+(§11.4.108). Check the journal for where startup stalled, and probe the
+port directly. For <code>helixllm-gateway</code> this is expected
+behaviour during model download, not a fault — see <em>Gotchas</em>.</p>
+<p><strong>Infra fails with
+<code>address already in use</code>.</strong> Something else on the host
+holds the port. Identify the owner <em>before</em> acting — it may
+belong to another project (§11.4.174):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-ltnp</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&#39;:&lt;port&gt;&#39;</span></span></code></pre></div>
+<hr />
+<h2 id="known-gaps">Known gaps</h2>
+<p>Recorded honestly rather than papered over (§11.4.6):</p>
+<ul>
+<li><p><strong><code>distributed_locks</code> table has no
+schema.</strong> HelixAgent references it from three Go files but no
+migration or <code>.sql</code> file defines it, so it logs
+<code>Error cleaning locks: ERROR: relation &quot;distributed_locks&quot; does not exist (SQLSTATE 42P01)</code>
+every 60 s. Still present on 2026-07-28 (15 occurrences in a 30-minute
+journal window). Non-fatal — the service runs normally. Needs a
+migration authored by someone who can specify the intended columns; not
+invented here.</p></li>
+<li><p><strong>The gateway’s tracked unit template is behind its
+installed copy.</strong> Verified 2026-07-28: the two
+<code>Environment=</code> fixes described under <em>Gotchas</em>
+(<code>HELIX_REDIS_HOST</code>/<code>PORT</code>,
+<code>HELIX_MODELS_DIR</code>) are present in the installed
+<code>~/.config/systemd/user/helixllm-gateway.service</code> but
+<strong>absent</strong> from the tracked template
+<code>scripts/systemd/helixllm-gateway.service</code>, which still
+carries the inert <code>HELIX_CACHE_REDIS_*</code> names. The next
+<code>scripts/install_systemd_units.sh</code> run therefore silently
+reverts both fixes, and a fresh clone never had them — the exact loss
+the <em>Unit templating</em> section warns about. Until the template is
+updated, the running platform and the repository disagree:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># shows the drift</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> <span class="op">&lt;(</span><span class="fu">sed</span> <span class="st">&quot;s|@HELIX_ROOT@|</span><span class="va">$PWD</span><span class="st">|g; s|@HELIXLLM_BIN@|</span><span class="va">$HOME</span><span class="st">/.local/bin/helixllm|g&quot;</span> <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>        scripts/systemd/helixllm-gateway.service<span class="op">)</span> <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>     ~/.config/systemd/user/helixllm-gateway.service</span></code></pre></div></li>
+<li><p><strong><code>helixllm-gateway</code> lists no models</strong> —
+<code>GET /v1/models</code> returns
+<code>{&quot;object&quot;:&quot;list&quot;,&quot;data&quot;:null}</code> (re-confirmed 2026-07-28)
+until provider API keys are configured in <code>.env</code>. The API
+itself works; use <code>/internal/health</code> for readiness.</p></li>
+<li><p><strong>QUIC receive-buffer warning</strong> from
+<code>helixllm-gateway</code>
+(<code>failed to sufficiently increase receive buffer size</code>) — a
+host sysctl tuning matter (<code>net.core.rmem_max</code>), not a
+service defect. Carried over from an earlier captured run; <strong>not
+re-observed in the 2026-07-28 pass</strong>, so treat its current
+presence as unconfirmed.</p></li>
+</ul>
+<h3 id="resolved-since-revision-1">Resolved since Revision 1</h3>
+<ul>
+<li><strong>LLMsVerifier now publishes real scores.</strong> Revision 1
+recorded <code>GET :8100/api/scores</code> returning
+<code>{&quot;scores&quot;:{}}</code> (“nothing measured yet”). As of 2026-07-28 it
+returns
+<code>{&quot;scores&quot;:{&quot;llamacpp&quot;:{&quot;total&quot;:96,&quot;model_count&quot;:1}}}</code> — the
+verifier seeds its providers from the consumer-owned
+<code>config/llmsverifier/config.yaml</code> and has published its first
+real aggregate, so the gateway can adopt it instead of its static
+fallback table. Coverage is one provider so far; the remaining providers
+stay unscored until a verification pass runs with their API keys
+configured.</li>
+</ul>
+<hr />
+<h2 id="sources-verified-2026-07-28-revision-2">Sources verified
+2026-07-28 (Revision 2)</h2>
+<p>PRIMARILY INTERNALLY DERIVED — this document describes THIS
+repository’s own systemd user-unit installation, so its authoritative
+sources are the tracked unit definitions, the installer, and the
+consuming binaries’ own configuration code. Verified in this pass:</p>
+<ul>
+<li><strong>The six installed units</strong> at
+<code>~/.config/systemd/user/</code> read directly:
+<code>helixcode-infra</code>, <code>llmsverifier</code>,
+<code>helixllm-coder</code>, <code>helixllm-gateway</code>,
+<code>helixagent</code>, <code>helixcode-server</code>. The
+<code>Requires=</code> / <code>Wants=</code> /
+<code>WantedBy=helix.target</code> claims above are quoted from those
+files.</li>
+<li><strong>The boot chain</strong>, by listing
+<code>default.target.wants/</code> (contains <code>helix.target</code>),
+<code>helix.target.wants/</code> (contains all six services), and
+<code>loginctl show-user -p Linger</code>
+(<code>Linger=yes</code>).</li>
+<li><strong>Env-tag claims</strong>, by <code>grep -n &#39;env:&quot;&#39;</code>
+over <code>submodules/helix_llm/internal/shared/config/config.go</code>:
+<code>HELIX_MODELS_DIR</code> default <code>/models</code> at line 70;
+<code>HELIX_REDIS_HOST</code> line 121; <code>HELIX_REDIS_PORT</code>
+default <code>6379</code> line 122. The <code>HELIX_CACHE_REDIS_*</code>
+names the template still sets appear nowhere in that file.</li>
+<li><strong>The gateway health route</strong>, by locating its
+registration at
+<code>submodules/helix_llm/internal/server/server.go:167</code>
+(<code>s.engine.GET(&quot;/internal/health&quot;, …)</code>), and confirming
+<code>/v1/models</code> is the <em>downstream-provider</em> probe path
+(<code>internal/a2a/downstream.go:72</code>,
+<code>internal/mcpgateway/downstream.go:69</code>).</li>
+<li><strong>The port map</strong>, against the <code>ports:</code>
+entries of <code>compose.helixcode-infra.yml</code> (including
+weaviate’s second mapping <code>50051</code>, previously undocumented)
+and the 11 services it defines.</li>
+<li><strong>The template drift</strong>, by expanding
+<code>scripts/systemd/helixllm-gateway.service</code> and diffing it
+against the installed copy.</li>
+<li><strong>Runtime state</strong>, by read-only HTTP GETs
+(<code>/api/scores</code>, <code>/internal/health</code>, two
+<code>/health</code> routes — all <code>200</code>) and a read-only
+<code>journalctl --user</code> window for the
+<code>distributed_locks</code> gap.</li>
+</ul>
+<p>Honest boundary (§11.4.6 / §11.4.99(B)) — three explicit gaps: (1)
+the upstream systemd manual pages (<code>systemd.unit</code>,
+<code>systemd.service</code>, <code>systemd.target</code>,
+<code>journalctl</code>) were NOT re-fetched in this pass, so the
+generic systemd semantics described here rest on the in-repo unit files
+alone and carry no external-currency claim; (2) no
+<code>systemctl</code> start/stop/restart/enable was executed in this
+pass — the platform was already running and was deliberately not
+mutated, because other work is live on this shared host (§11.4.174), so
+the enable/disable commands above are documented from the units’
+<code>[Install]</code> sections and the installer, not from an executed
+enable cycle; (3) the QUIC receive-buffer warning is carried over from
+an earlier run and was not re-observed, as flagged in <em>Known
+gaps</em>. Re-verify against the official systemd documentation per the
+§11.4.99 180-day staleness window before this guide is used as
+external-facing operator authority.</p>
+</body>
+</html>

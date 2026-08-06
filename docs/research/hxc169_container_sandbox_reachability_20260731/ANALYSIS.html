@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ANALYSIS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ANALYSIS</h1>
+</header>
+<h1 id="hxc-169-container-sandbox-advisory-reachability-determination">HXC-169
+— Container-sandbox advisory reachability determination</h1>
+<p><strong>Revision:</strong> 1 <strong>Date:</strong> 2026-07-31
+<strong>Status:</strong> Resolved — UNREACHABLE IN OUR CONFIGURATION
+<strong>Guard:</strong>
+<code>scripts/gates/openhands_docker_sandbox_unwired_gate.sh</code>
+(<code>CM-OPENHANDS-DOCKER-SANDBOX-UNWIRED</code>), committed
+<code>95c27998</code></p>
+<hr />
+<h2 id="why-this-document-exists">Why this document exists</h2>
+<p>The gate committed in <code>95c27998</code> cites this path in two
+places, including the remediation text it prints on failure. The agent
+that produced the determination could not write it: its harness blocks
+subagents from authoring analysis <code>.md</code> files. It flagged the
+conflict and the resulting dangling reference rather than routing around
+the guard, which is the correct behaviour — so the doc is written here,
+from that agent’s reported evidence plus the claims independently re-run
+and named as such below.</p>
+<hr />
+<h2 id="verdict">Verdict</h2>
+<p>The five advisories affecting <code>github.com/docker/docker</code>
+are <strong>not reachable in any binary this project ships</strong>. The
+sandbox that calls the affected operations exists, compiles, and is
+genuinely vulnerable — and <strong>nothing imports it</strong>.</p>
+<p>This is <em>not</em> “the risk is low”. It is a structural claim: the
+package is absent from the link graph of every <code>cmd/</code>, so the
+vulnerable code is never present in a shipped artifact at all.</p>
+<h2 id="reconciling-the-apparent-contradiction">Reconciling the apparent
+contradiction</h2>
+<p>The tracker item states an automated analysis DID trace calls from
+our sandbox code to the affected functions. A predecessor agent found
+ZERO importers of that sandbox code. Both are true simultaneously, and
+the reconciliation IS the answer:</p>
+<blockquote>
+<p>The sandbox code calls the vulnerable functions. Nothing calls the
+sandbox code.</p>
+</blockquote>
+<p>The root cause of the confusion is mechanical. The originating sweep
+(HXC-166) ran <code>govulncheck ./...</code>, which treats <strong>every
+package as an analysis root</strong> — including packages no binary
+imports. Scoped correctly, the result inverts:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>govulncheck ./internal/clis/openhands/...</code></td>
+<td><strong>exit 3</strong> — traces
+<code>sandbox.go:298 CopyTo → CopyToContainer</code>,
+<code>sandbox.go:312 CopyFrom → CopyFromContainer</code></td>
+</tr>
+<tr>
+<td><code>govulncheck ./cmd/...</code></td>
+<td><strong>exit 0</strong> — “No vulnerabilities found”, zero
+<code>docker/docker</code> mentions even in verbose</td>
+</tr>
+</tbody>
+</table>
+<h2 id="independently-re-verified-by-the-orchestrator-not-taken-on-report">Independently
+re-verified (by the orchestrator, not taken on report)</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Command</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Binaries carry no docker dependency</td>
+<td><code>go list -deps ./cmd/...</code> in
+<code>submodules/helix_agent</code></td>
+<td>1097 deps, <strong>0</strong> <code>github.com/docker/docker</code>,
+<strong>0</strong> <code>clis/openhands</code></td>
+</tr>
+<tr>
+<td>The wired sibling is a different package</td>
+<td>read <code>internal/clis/agents/master/master.go:19</code></td>
+<td>imports <code>dev.helix.agent/internal/clis/agents/openhands</code>
+— NOT <code>internal/clis/openhands</code></td>
+</tr>
+<tr>
+<td>Never wired, ever</td>
+<td><code>git log --all -S &#39;clis/openhands&quot;&#39;</code></td>
+<td>zero commits in all history</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-trap-that-makes-this-easy-to-get-wrong">The trap that makes
+this easy to get wrong</h2>
+<p><strong>Two packages share the name
+<code>openhands</code>:</strong></p>
+<ul>
+<li><code>internal/clis/openhands</code> — the Docker sandbox. Imports
+<code>docker/docker</code>. <strong>Unwired.</strong></li>
+<li><code>internal/clis/agents/openhands</code> — <strong>wired</strong>
+via <code>agents/master/master.go:19,48</code>. Uses
+<code>os/exec</code> to drive the external OpenHands CLI binary. No
+Docker import; it mentions <code>&quot;docker&quot;</code> only as a
+<code>SandboxType</code> config <em>string</em>.</li>
+</ul>
+<p>A name-based search conflates them and concludes the sandbox is live.
+Only the import graph separates them.</p>
+<h2 id="hidden-reference-mechanisms-ruled-out-11.4.124">Hidden-reference
+mechanisms ruled out (§11.4.124)</h2>
+<p>“Zero importers ⇒ unreachable” is a <strong>guess</strong> until each
+hidden-reference path is excluded. Per the reporting agent:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mechanism</th>
+<th>Ruled out by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Build tags</td>
+<td>No <code>//go:build</code> in <code>sandbox.go</code>; the scan is
+text-based so it sees files any build tag would exclude — zero hits</td>
+</tr>
+<tr>
+<td><code>init()</code> side effects</td>
+<td>No <code>func init()</code> in the package; and <code>init</code>
+runs only if linked, which requires an import</td>
+</tr>
+<tr>
+<td>Reflection / dynamic dispatch</td>
+<td>Go reflection cannot instantiate a type from a package not linked
+into the binary — structural, not empirical</td>
+</tr>
+<tr>
+<td>Code generation</td>
+<td>No <code>go:generate</code> referencing openhands/sandbox</td>
+</tr>
+<tr>
+<td>Go <code>plugin</code> loading</td>
+<td>Nothing imports stdlib <code>&quot;plugin&quot;</code>; matches are the
+<em>string</em> <code>&quot;plugin&quot;</code> in config key-sets</td>
+</tr>
+<tr>
+<td>Name-based registry / DI</td>
+<td>The <code>openhands</code> strings elsewhere name the external CLI
+binary and resolve to the wired sibling</td>
+</tr>
+<tr>
+<td>Test-only wiring</td>
+<td><code>TestImports</code> and <code>XTestImports</code> both
+empty</td>
+</tr>
+<tr>
+<td>helix_code importing it</td>
+<td><strong>Compiler-enforced impossible</strong> —
+<code>dev.helix.agent/internal/...</code> is importable only within
+<code>dev.helix.agent/...</code>; helix_code is module
+<code>dev.helix.code</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-advisories-five-not-four">The advisories — five, not
+four</h2>
+<p>The tracker item and HXC-166’s prose say four; HXC-166’s own table
+lists five. Fetched live 2026-07-31 from GitHub Advisory DB + OSV +
+pkg.go.dev/vuln (§11.4.99):</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>GHSA</th>
+<th>CVE</th>
+<th>Severity</th>
+<th>Affected</th>
+<th>Fixed in</th>
+<th>Layer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GHSA-rg2x-37c3-w2rh</td>
+<td>CVE-2026-42306</td>
+<td>High 7.2</td>
+<td>≤ 28.5.2</td>
+<td><strong>none</strong></td>
+<td>daemon</td>
+</tr>
+<tr>
+<td>GHSA-x86f-5xw2-fm2r</td>
+<td>CVE-2026-41567</td>
+<td>High 7.2</td>
+<td>≤ 28.5.2</td>
+<td><strong>none</strong></td>
+<td>daemon</td>
+</tr>
+<tr>
+<td>GHSA-x744-4wpc-v9h2</td>
+<td>CVE-2026-34040</td>
+<td>High 8.8</td>
+<td>&lt; 29.3.1</td>
+<td>29.3.1</td>
+<td>daemon</td>
+</tr>
+<tr>
+<td>GHSA-vp62-88p7-qqf5</td>
+<td>CVE-2026-41568</td>
+<td>Moderate 6.1</td>
+<td>≤ 28.5.2</td>
+<td><strong>none</strong></td>
+<td>daemon</td>
+</tr>
+<tr>
+<td>GHSA-pxq6-2prw-chj9</td>
+<td>CVE-2026-33997</td>
+<td>Moderate 6.8</td>
+<td>&lt; 29.3.1</td>
+<td>29.3.1</td>
+<td>daemon</td>
+</tr>
+</tbody>
+</table>
+<p>All five list our pin as affected. The three without a fix are
+patched only on the separate, still-beta
+<code>moby/moby/v2@2.0.0-beta.14</code>.</p>
+<p><strong>Material nuance:</strong> all five are
+<strong>daemon-side</strong>, and the two carrying Go symbol data name
+unexported daemon methods we never import
+(<code>Daemon.openContainerFS</code>,
+<code>Daemon.containerExtractToDir</code>). Client-side use is not
+irrelevant — a client copy is what <em>opens</em> the daemon’s TOCTOU
+window — which is exactly why “do we ever issue those copies?” was the
+right question to ask.</p>
+<h2 id="correction-to-the-tracker">Correction to the tracker</h2>
+<p>The code lives in
+<strong><code>submodules/helix_agent</code></strong>, not helix_code.
+HXC-166’s paths are relative to that submodule. helix_code’s own
+<code>go.mod</code>/<code>go.sum</code> contain <strong>zero</strong>
+docker references.</p>
+<h2 id="why-it-is-unwired-git-history-per-11.4.124">Why it is unwired
+(git history, per §11.4.124)</h2>
+<p><code>git log --all -S &#39;clis/openhands&quot;&#39;</code> returns <strong>zero
+commits across all history</strong>: the package was never wired at any
+point. A port landed in <code>a5f2857d</code> and was never connected.
+This is <strong>never-completed wiring</strong>, not a deleted call site
+and not a regression. Under §11.4.124 that means it is
+<strong>not</strong> deleted on sight — removal of a shipped capability
+additionally requires operator sign-off (§11.4.122).</p>
+<h2 id="why-no-containment-change-was-implemented">Why no containment
+change was implemented</h2>
+<ul>
+<li><em>Disable the feature</em> — not applicable; nothing enables it.
+There is no env var, config key, feature flag, or build tag that
+constructs a sandbox. It requires a Go caller, and none exists. The
+“deciding file” is the <strong>absence of an importer</strong>.</li>
+<li><em>Constrain the copy paths</em> — would add unexercised,
+unvalidatable code: a bluff surface rather than a mitigation.</li>
+<li><em>Isolate the container socket</em> — concerns different
+subsystems (see open item below).</li>
+</ul>
+<h2 id="the-guard-and-why-an-unreachability-claim-needs-one">The guard,
+and why an unreachability claim needs one</h2>
+<p>An unreachability verdict with no guard rots silently the moment
+someone wires the package up.
+<code>CM-OPENHANDS-DOCKER-SANDBOX-UNWIRED</code> asserts:</p>
+<ul>
+<li><strong>(A)</strong> no <code>.go</code> file outside the package
+imports it — a text scan, deliberately build-tag-independent, with a
+trailing quote to exclude the wired sibling; honest §11.4.3 SKIP if the
+submodule is absent;</li>
+<li><strong>(B)</strong> <code>github.com/docker/docker</code> stays out
+of helix_code’s module files.</li>
+</ul>
+<p>Paired §1.1 self-test against hermetic temp fixtures (never writes
+inside a repo, §11.4.84): <strong>golden-good = 0, golden-bad =
+1</strong>. Real run: 5 assertions, 0 violations. On failure it
+instructs reopening HXC-169 and forbids weakening the assertion
+(§11.4.120).</p>
+<h2 id="open-requires-operator-decision">Open — requires operator
+decision</h2>
+<ol type="1">
+<li><strong>Finish the sandbox, or drop it?</strong>
+<ul>
+<li><em>Keep as-is</em> — zero risk today, but ~450 lines of unexercised
+code keep five advisories appearing in every future scan.</li>
+<li><em>Wire it up</em> — makes all five genuinely live, three of them
+with no fix available.</li>
+<li><em>Remove it</em> — ends the scan noise and drops the dependency,
+but needs a §11.4.124 separate removal commit and §11.4.90
+<code>Obsolete / feature-removed</code> classification.</li>
+</ul></li>
+<li><strong>Four read-write <code>/var/run/docker.sock</code>
+mounts</strong> (<code>docker-compose.helix.yml:39</code>,
+<code>docker-compose.test.yml:202</code>,
+<code>helix_code/docker-compose.builder.yml:30</code>,
+<code>helix_code/docker/docker-compose.yml:369</code>) plus two
+<code>:ro</code>. <strong>UNCONFIRMED, not cleared.</strong> Not what
+these advisories turn on, and none of those services runs this sandbox —
+tracked separately rather than used to close HXC-169.</li>
+</ol>
+<h2 id="honest-limits-11.4.6">Honest limits (§11.4.6)</h2>
+<ul>
+<li>This is a <strong>source-and-link-graph</strong> determination, not
+a runtime one. It says nothing about a human running
+<code>docker cp</code> by hand.</li>
+<li>Advisory state is a <strong>2026-07-31 snapshot</strong>. Re-verify
+before <strong>2026-10-29</strong> (§11.4.99 90-day bound for
+risk-classified sources).</li>
+<li>Toolchain runs used default <code>linux/amd64</code>. The guard’s
+text scan is platform-independent; the <code>go list</code> /
+<code>govulncheck</code> runs are not.</li>
+<li>The socket mounts above are <strong>UNCONFIRMED, not
+cleared</strong>.</li>
+<li>This speaks only to the Rank-1 docker cluster; the full HXC-166
+sweep was not re-run.</li>
+<li><code>helix_agent</code> was read-only throughout the determination.
+It carried other agents’ concurrent edits, none of which any assertion
+depends on.</li>
+</ul>
+<h2 id="sources-verified-2026-07-31">Sources verified 2026-07-31</h2>
+<ul>
+<li>GitHub Advisory Database — https://github.com/advisories (per-GHSA
+pages listed above)</li>
+<li>OSV — https://osv.dev</li>
+<li>Go vulnerability database — https://pkg.go.dev/vuln</li>
+</ul>
+</body>
+</html>

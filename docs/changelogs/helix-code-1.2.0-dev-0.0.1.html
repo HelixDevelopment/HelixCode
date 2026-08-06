@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>helix-code-1.2.0-dev-0.0.1</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">helix-code-1.2.0-dev-0.0.1</h1>
+</header>
+<h1 id="helixcode-release-changelog-helix-code-1.2.0-dev-0.0.1">HelixCode
+Release Changelog — helix-code-1.2.0-dev-0.0.1</h1>
+<p><strong>Revision:</strong> 2 <strong>Last modified:</strong>
+2026-07-28T15:21:59Z <strong>Maintainer:</strong> HelixCode release
+engineering (documentation draft, AI-agent authored; independently
+reviewed per §11.4.142/§11.4.194 — see “Independent review” section
+below)</p>
+<hr />
+<blockquote>
+<p><strong>DRAFT — pinned to a stated HEAD, this is not a cut
+tag.</strong> No git tag has been created by this document. Everything
+below was derived by reading real git history (<code>git log</code>,
+<code>git show</code>) on 2026-07-28 at approximately 13:11 UTC.
+Multiple background work streams were actively landing commits in this
+repo and its submodules while this draft was written (constitution
+§11.4.103 / §11.4.192 continuous multi-track work), so HEAD will have
+moved by the time this is read. <strong>Re-derive the commit ranges
+below before treating any of this as final</strong> — do not copy the
+SHAs or counts forward without checking.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Stated HEAD (this draft)</th>
+<th>Relative to its configured remotes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>main (this repo)</td>
+<td><code>c29e1dcc9fad029f64a8836148d8d5ddfc32f0fb</code></td>
+<td>8 commits ahead, 0 behind — <strong>not pushed</strong></td>
+</tr>
+<tr>
+<td><code>submodules/helix_agent</code></td>
+<td><code>69a5ab8dc2469f73ddf3afa0bced01103df8b656</code></td>
+<td>2 commits ahead of its remotes; working tree dirty (14 modified, 4
+untracked)</td>
+</tr>
+<tr>
+<td><code>submodules/tool_schema</code></td>
+<td><code>8cec90baadad281eb26a5671b792921f03eb7386</code></td>
+<td>1 commit ahead of its remotes; working tree clean</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Format note:</strong> <code>docs/changelogs/</code> did not
+exist in this repository before this draft — it was created now. The
+repository’s existing root <code>CHANGELOG.md</code> uses a
+<code>## [tag] — date</code> per-release section with Added / Changed /
+Fixed / Known-gaps groups; this draft follows that convention but adds
+explicit short-SHA citations per entry and a per-repo commit inventory,
+so every claim traces back to a real, readable commit (constitution
+§11.4.6 — no invented history). Per the task scope, nothing here was
+committed with <code>git add -A</code> or similar — only this one file
+is staged, by explicit path.</p>
+</blockquote>
+<h2 id="version">Version</h2>
+<p><strong><code>helix-code-1.2.0-dev-0.0.1</code></strong> — draft, not
+yet tagged.</p>
+<p>Prefix resolves to <code>helix-code</code> from <code>.env</code>
+<code>HELIX_RELEASE_PREFIX</code> (§11.4.151).</p>
+<p>Prior tags in this lineage:</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>helix-code-1.0.0-dev-0.0.1</code></td>
+<td>2026-07-08</td>
+</tr>
+<tr>
+<td><code>helix-code-1.1.0-dev-0.0.1</code></td>
+<td>2026-07-09</td>
+</tr>
+<tr>
+<td><code>helix-code-1.1.0-dev-0.0.2</code></td>
+<td>2026-07-13</td>
+</tr>
+<tr>
+<td><code>helix-code-1.1.0-dev-0.0.3</code></td>
+<td>2026-07-24</td>
+</tr>
+</tbody>
+</table>
+<p><strong>On the version jump:</strong>
+<code>helix-code-1.2.0-dev-0.0.1</code> is a <strong>1.1.x → 1.2.0 minor
+bump</strong>, not the next <code>-1.1.0-dev-0.0.4</code> patch in the
+existing sequence. This was named explicitly by the operator as this
+release’s target tag; per instruction for this task, that is recorded
+here as an <strong>operator decision</strong>, not re-litigated or
+treated as unexplained drift.</p>
+<h2 id="summary-what-this-release-actually-delivers-for-a-user">Summary
+— what this release actually delivers for a user</h2>
+<ul>
+<li><strong>Model identity is now honest end-to-end.</strong> A client
+asking for an alias (e.g. <code>&quot;model&quot;:&quot;default&quot;</code>) previously got
+that same alias echoed back in the response, on both the
+OpenAI-compatible and Anthropic-compatible wires, streaming and
+non-streaming. The response now names the model that actually served the
+request (e.g. the real <code>.gguf</code> path), matching CONST-036/037.
+Live SSE evidence was captured against a real running coder backend for
+both wires. One honest exception remains: Anthropic’s streaming
+<code>message_start</code> event fires before any chunk exists, so it
+still carries the requested model — documented in-source, not silently
+left as a gap.</li>
+<li><strong><code>tool_schema</code> translations now work regardless of
+where you run from.</strong> Previously, calling into this library’s
+i18n from any working directory other than its own module root silently
+returned raw translation keys instead of translated text
+(e.g. <code>toolschema_git_desc_commit</code> instead of “Create git
+commit”). Bundles are now compiled into the binary
+(<code>go:embed</code>), so this can no longer happen.</li>
+<li><strong>A large batch of false test failures in
+<code>helix_agent</code> is fixed.</strong> A liveness check used to
+accept <em>any</em> HTTP response under 500 as “the server is up” — so
+when a different local service (LLMsVerifier) held the same default
+port, its 404 response was read as a healthy HelixAgent, and roughly a
+dozen test packages failed against the wrong service with nothing
+actually wrong in the product.</li>
+<li><strong>The whole platform can now be installed and booted as
+systemd units</strong> (<code>./setup.sh</code>) — HelixCode server,
+HelixAgent, HelixLLM gateway + coder, infra
+(Postgres/Redis/Weaviate/Qdrant/ChromaDB/Cognee/Ollama), and now
+LLMsVerifier — with real HTTP health checks and a verified stop/start
+cycle, rather than requiring manual, host-specific setup.</li>
+<li><strong>LLMsVerifier is wired to real provider data and publishing
+real scores</strong> instead of an empty <code>{}</code> — the gateway
+now routes on measured scores instead of always falling back to its
+static table.</li>
+<li><strong><code>go test ./...</code> no longer breaks on generated
+challenge output</strong> — a gitignored-but-still-scanned results
+directory could fail three otherwise unrelated packages depending on
+what an LLM happened to answer during a challenge run.</li>
+<li><strong><code>helix_agent</code> boot no longer requires
+ChromaDB/Cognee on their compiled-in ports</strong>, and no longer hangs
+indefinitely trying to start a vector store that is already running
+under a different owner (committed in <code>helix_agent</code> but see
+the pinning note below).</li>
+</ul>
+<h2 id="fixed">Fixed</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>SHA</th>
+<th>Repo</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>e330149f</code></td>
+<td>main</td>
+<td>LLM response now reports the model that actually served the request
+(OpenAI + Anthropic wires, streaming + non-streaming), not the requested
+alias. Four layers: <code>llm.LLMResponse.Model</code> field + JSON
+round-trip, <code>OpenAICompatibleProvider</code> populating it from
+both non-stream and per-chunk stream responses, and both wire facades
+preferring the served model. Guards at
+<code>internal/server/wire_facade_model_identity_test.go</code> and
+<code>internal/llm/openai_compatible_stream_model_test.go</code>, each
+proven to fail when its fix is reverted.</td>
+</tr>
+<tr>
+<td><code>66d6fb29</code></td>
+<td>main</td>
+<td><code>go test ./...</code> no longer descends into
+<code>tests/e2e/challenges/test-results/</code> (renamed to
+<code>_test-results/</code>, the Go toolchain’s own “not a package”
+convention) and tries to compile an LLM’s prose answer as Go source.
+Unblocked 3 packages.</td>
+</tr>
+<tr>
+<td><code>3268fd73</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td><code>testutil.ServerAvailable</code> now requires a real
+HelixAgent-shaped health payload (HTTP 200 + identity check), not just
+“any status under 500”. Fixes a false-failure cluster of roughly a dozen
+packages caused by a different local service (LLMsVerifier) answering on
+the same default port. Three additional call sites that bypassed the
+shared helper entirely (a raw TCP dial, an error-only skip check) were
+also fixed.</td>
+</tr>
+<tr>
+<td><code>0165ab1d</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td>Precondition gate’s container-ownership check fixed in both
+directions: it no longer flags an unrelated third-party Postgres as
+“our” duplicate instance (false positive from
+<code>{port, port+10000}</code> guessing), and it no longer silently
+no-ops because it ran the wrong runtime command (false negative).
+Ownership is now established from the actual container runtime, filtered
+to this project’s own containers.</td>
+</tr>
+<tr>
+<td><code>0dfa69e1</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td>HelixAgent boot no longer hardcodes ChromaDB (<code>:8001</code>) /
+Cognee (<code>:8000</code>) endpoints — both resolve via
+<code>HELIXAGENT_DEP_HOST</code> / <code>HELIXAGENT_PORT_CHROMADB</code>
+/ <code>HELIXAGENT_PORT_COGNEE</code> with the old literals as fallback.
+Vector-store startup now checks reachability first instead of
+unconditionally trying to become a second owner of an already-running
+store, which had been blocking the HTTP listener bind indefinitely.</td>
+</tr>
+<tr>
+<td><code>8cec90b</code></td>
+<td>tool_schema <em>(pinned)</em></td>
+<td>Translation bundles are <code>go:embed</code>-ed, so
+<code>tr()</code> lookups no longer depend on the process’s current
+working directory. Previously any consumer calling in from outside this
+module’s own root got raw key strings back instead of translations.</td>
+</tr>
+<tr>
+<td><code>69a5ab8d</code></td>
+<td>helix_agent <strong>(committed, NOT yet pinned — see Known
+gaps)</strong></td>
+<td>Fixes a goroutine leak in the Ollama provider’s
+<code>CompleteStream</code>: 4 of 6 channel-send sites had no
+<code>ctx.Done()</code> escape hatch, so a caller that cancelled its
+context and stopped draining left the background goroutine parked
+forever. RED/GREEN regression guard added, driven via a real
+stuck-HTTP-response scenario and a live goroutine-stack inspection.</td>
+</tr>
+<tr>
+<td><code>a345c551</code></td>
+<td>helix_agent <strong>(committed, NOT yet pinned — see Known
+gaps)</strong></td>
+<td>Two <code>tests/unit</code> test defects fixed (product behavior was
+correct in both cases): <code>TestCompletionHandler_Models</code> now
+wires a real model source instead of asserting on an intentionally-empty
+list; <code>TestCompletionHandler_Stream</code> now distinguishes an
+honest empty response (client-gone, request-timeout path) from an actual
+failure, instead of treating the httptest recorder’s default
+<code>200</code> as an unconditional pass signal.</td>
+</tr>
+<tr>
+<td><code>dd3c0c3b</code></td>
+<td>main</td>
+<td>Closes the third confirmed instance of an “unprioritized
+<code>select</code>” race this session: <code>autoSaveLoop</code>’s
+per-tick <code>select</code> between <code>&lt;-ticker.C</code> and
+<code>&lt;-stop</code> had no priority ordering, so a
+coincidentally-pending tick could still fire one more
+<code>SaveAll()</code> after <code>DisableAutoSave()</code> had already
+closed <code>stop</code> — the cause of
+<code>TestAutoSaveLifecycle_ReEnableTicks</code>’s “disabled auto-save
+must not tick” flake. Fixed by extracting the per-iteration select into
+<code>autoSaveTick(tickerC, stop)</code> with a non-blocking priority
+pre-check on <code>stop</code>. Full RED/GREEN/pre-fix/post-fix polarity
+evidence captured (§11.4.115): 2488/5000 forced-race hits pre-fix with
+the priority check disabled, 0/5000 post-fix. <strong>Found missing from
+this changelog’s original draft during independent review — added in
+revision 2; see “Independent review” section below.</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="added">Added</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>SHA</th>
+<th>Repo</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>c4115c73</code></td>
+<td>main</td>
+<td><code>./setup.sh</code> now installs and boots the entire platform
+as systemd units (<code>helix.target</code> + 5 services) — HelixCode
+server, HelixAgent, HelixLLM gateway, HelixLLM coder, and infra — with a
+documented port map, boot-persistence via <code>Linger=yes</code>, and a
+verified full stop/start cycle. Fixes a
+<code>KillMode=control-group</code> bug that had been silently killing
+all ten infra containers’ port forwarders whenever the infra unit’s own
+health check failed.</td>
+</tr>
+<tr>
+<td><code>d3e2c6e7</code></td>
+<td>main</td>
+<td>Adds LLMsVerifier as a 7th systemd unit, wired to the gateway.
+Implements the <code>/api/scores</code> endpoint upstream in the
+submodule (project-agnostic; consumer supplies the port via the unit).
+Gateway’s log changed from “verifier unreachable” to actually reaching
+the verifier and correctly falling back on an empty score map.</td>
+</tr>
+<tr>
+<td><code>98db7d79</code></td>
+<td>main</td>
+<td>LLMsVerifier is now seeded with a real, reachable provider
+(<code>llamacpp</code> → the local llama.cpp coder server) via a
+consumer-owned <code>config/llmsverifier/config.yaml</code>, instead of
+the submodule’s own empty <code>llms: []</code> default. First real
+verification score published (0.96) from genuine inference, replacing
+the previously-empty <code>/api/scores</code>.</td>
+</tr>
+<tr>
+<td><code>410afda5</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td>Hyper provider discovery, registry, and verifier types.</td>
+</tr>
+<tr>
+<td><code>1296d328</code></td>
+<td>main</td>
+<td>Adds <code>scripts/setup.sh</code> scaffolding (157 lines) and two
+systemd unit files (<code>helixcode-infra.service</code>,
+<code>helixllm-gateway.service</code>) — precursor work later built out
+by <code>c4115c73</code> / <code>d3e2c6e7</code>. Commit message is the
+literal <code>Auto-commit</code>; see Known gaps.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="changed">Changed</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>SHA</th>
+<th>Repo</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>925aa859</code></td>
+<td>main</td>
+<td>Backfills the constitution’s §11.4.182 TRUNK RULE (work on trunk is
+always labelled Track 1) across this project’s five root governance
+carriers, and bumps the <code>helix_agent</code> and
+<code>tool_schema</code> submodule pins to the commits described
+above.</td>
+</tr>
+<tr>
+<td><code>f14a3f89</code></td>
+<td>main</td>
+<td>Bumps the <code>helix_agent</code> submodule pointer (Hyper
+provider).</td>
+</tr>
+<tr>
+<td><code>565506f6</code></td>
+<td>main</td>
+<td>Bumps HelixLLM to <code>helixllm-0.2.0</code> (CPU inference).</td>
+</tr>
+<tr>
+<td><code>c20215bd</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td>Chaos/compliance/automation test hardening carried in from prior
+sessions and committed so it is not lost — chaos/api, chaos/auth,
+module-compliance, config-generation automation, plus new
+<code>helix_endpoint</code> contract tests. <code>go build ./...</code>
+verified exit 0; the commit itself is explicit that the full suite was
+not independently reviewed or proven green at the time.</td>
+</tr>
+<tr>
+<td><code>4b5f2867</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td><code>gofmt</code> alignment and comment-spacing pass across the
+module.</td>
+</tr>
+<tr>
+<td><code>36597718</code></td>
+<td>helix_agent <em>(pinned)</em></td>
+<td>Search test reconciled to a reordered <code>UnknownType</code>
+check; adds coverage for the reachability short-circuit.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="infrastructure-governance-qa-evidence">Infrastructure /
+Governance / QA evidence</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>SHA</th>
+<th>Repo</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>578de68d</code></td>
+<td>main</td>
+<td>Lands §11.4.83 end-user QA evidence for 7 feature commits, captured
+against a freshly rebuilt binary (111 assertions, 0 FAIL, 0 SKIP).
+Explicitly documents that an earlier evidence pass had validated a
+15-day-stale binary and was therefore invalid and re-run.</td>
+</tr>
+<tr>
+<td><code>1c9fdcf2</code></td>
+<td>main</td>
+<td>§11.4.83 evidence against live paid providers (Cerebras, Cohere) and
+a real MCP wire for 3 further commits; drops the qa-evidence-gate
+violation count from 6 to 3.</td>
+</tr>
+<tr>
+<td><code>e952f4d1</code></td>
+<td>main</td>
+<td>§11.4.83 evidence for the last 3 non-feature commits (CORS
+allowlist, Fyne desktop build docs, cognee determinism), each carrying
+an explicit “honest scope statement” about limited/no end-user surface.
+<strong>Drives the qa-evidence gate (G7) from 13 to 0 violations across
+28 feature-shipping commits.</strong></td>
+</tr>
+<tr>
+<td><code>d8c44618</code></td>
+<td>main</td>
+<td>§11.4.83 evidence specifically for the <code>e330149f</code>
+model-identity fix (8/8 assertions PASS, mutation table proving each
+guard fails when deleted).</td>
+</tr>
+<tr>
+<td><code>a5462e35</code></td>
+<td>main</td>
+<td>Live SSE proof, against the real coder backend, that
+<code>stream:true</code> reports the served model on every chunk (13
+frames captured, 1 distinct model id, 0 frames carrying the alias).</td>
+</tr>
+<tr>
+<td><code>c29e1dcc</code></td>
+<td>main</td>
+<td>Live proof for the Anthropic wire (<code>POST /v1/messages</code>
+returns the real served-model path) and for the <code>tool_schema</code>
+i18n fix (a compiled consumer binary resolves translations from
+unrelated working directories).</td>
+</tr>
+<tr>
+<td><code>cf26a173</code></td>
+<td>main</td>
+<td>Bumps 4 owned submodule gitlinks (constitution, challenges,
+helix_qa, helix_agent) after pushing them to their upstreams. Commit
+itself states the full test sweep was <strong>not</strong> green at the
+time and no tag was cut.</td>
+</tr>
+<tr>
+<td><code>0a4eb8d0</code></td>
+<td>main</td>
+<td>Corrects stale live-state anchors in <code>RESUME.md</code> after
+the above push — the exact “stale handoff doc” trap the project’s own
+governance warns about, caught and fixed in the same session.</td>
+</tr>
+<tr>
+<td><code>56f7edf7</code></td>
+<td>main</td>
+<td>Message is the literal <code>Auto-commit</code> (no descriptive
+body). Diffstat shows real, substantive content: nil-request guards for
+the Replicate and Together LLM providers, a malformed-URL guard for the
+llamacpp provider, a <code>security_scan</code> tool rewrite, and an
+overhaul of <code>verify_qa_evidence.sh</code> /
+<code>verify-governance-cascade.sh</code> /
+<code>obsolete_details_gate.sh</code> /
+<code>summary_sync_gate.sh</code>, plus a <code>helix_agent</code>
+pointer bump. See Known gaps.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="per-repo-commit-inventory">Per-repo commit inventory</h2>
+<h3 id="main-this-repo-19-commits-since-helix-code-1.1.0-dev-0.0.3-5ab97d8c">main
+(this repo) — 19 commits since <code>helix-code-1.1.0-dev-0.0.3</code>
+(<code>5ab97d8c</code>)</h3>
+<p><em>(Revision 2: corrected from 18 to 19 — <code>dd3c0c3b</code> was
+omitted from the original draft despite being this changelog’s own
+direct parent commit. See “Independent review” below.)</em></p>
+<pre><code>dd3c0c3b fix(persistence): close unprioritized-select race in autoSaveLoop (3rd instance)
+c29e1dcc docs(qa): LIVE proof for the Anthropic wire and the i18n cwd fix
+a5462e35 docs(qa): LIVE proof that stream:true reports the served model
+e952f4d1 docs(qa): §11.4.83 evidence for the three non-feature commits — G7 reaches 0
+1c9fdcf2 docs(qa): §11.4.83 evidence for the Cerebras, Cohere and MCP-concurrency commits
+d8c44618 docs(qa): §11.4.83 evidence for e330149f model-identity fix
+925aa859 docs(governance): backfill the §11.4.182 TRUNK RULE + bump two submodule pins
+e330149f fix(llm/server): report the model that ACTUALLY served the request
+578de68d docs(qa): land §11.4.83 end-user QA evidence for 7 feature commits
+0a4eb8d0 docs(resume): correct live-state anchors after the end-of-session push
+cf26a173 chore(submodules): bump gitlinks after end-of-session sync
+56f7edf7 Auto-commit
+66d6fb29 fix(e2e): stop go test compiling generated challenge output (3 packages unblocked)
+98db7d79 feat(llmsverifier): seed real providers via consumer-owned config; first real scores published
+d3e2c6e7 feat(systemd): add LLMsVerifier as the seventh unit, wired to the gateway
+c4115c73 feat(systemd): install and boot the whole platform — HelixCode + HelixAgent + HelixLLM + infra
+1296d328 Auto-commit
+565506f6 chore: bump HelixLLM to helixllm-0.2.0 (CPU inference)
+f14a3f89 chore: bump HelixAgent (Hyper provider)</code></pre>
+<h3 id="submoduleshelix_agent-9-commits-since-the-previously-pinned-55ad06c6">submodules/helix_agent
+— 9 commits since the previously-pinned <code>55ad06c6</code></h3>
+<p><strong>Pinned into main’s current gitlink (<code>3268fd73</code>) —
+7 commits:</strong></p>
+<pre><code>3268fd73 fix(testutil/tests): verify the server is HelixAgent, not just that a port answers
+0165ab1d fix(precondition): establish container ownership from the runtime, not port math
+c20215bd test(helix_agent): chaos/compliance/automation hardening + live-endpoint guards
+4b5f2867 style: gofmt alignment and comment spacing across helix_agent
+36597718 test(search): reconcile UnknownType assertion to the reordered type check; cover the reachability short-circuit
+0dfa69e1 fix(boot): resolve dependency endpoints from env; don&#39;t block startup on an already-reachable vector store
+410afda5 feat: Hyper provider discovery + registry + verifier types</code></pre>
+<p><strong>Committed in <code>helix_agent</code>’s own history but NOT
+yet reflected in main’s gitlink — 2 commits (see Known
+gaps):</strong></p>
+<pre><code>69a5ab8d fix(ollama): close goroutine-leak in CompleteStream on ctx cancellation
+a345c551 fix(tests/unit): wire the model source; stop reading recorder-default 200 as success</code></pre>
+<h3 id="submodulestool_schema-1-commit-since-the-previously-pinned-cb7bf675-fully-pinned">submodules/tool_schema
+— 1 commit since the previously-pinned <code>cb7bf675</code>, fully
+pinned</h3>
+<pre><code>8cec90b fix(i18n): embed translation bundles so lookups work from any directory</code></pre>
+<h2 id="known-gaps-not-yet-verified">Known gaps / not yet verified</h2>
+<p>This section exists so this document does not read as more finished
+than the underlying work is. None of these were papered over.</p>
+<ol type="1">
+<li><p><strong>§11.4.185 manual QA-team confirmation has not been
+given.</strong> No record of a manual QA sign-off for this scope exists
+anywhere in this repository. Per this project’s own governance,
+automated green is necessary but not sufficient — a manual QA pass is
+required before this scope can be called fully complete, and it has not
+happened.</p></li>
+<li><p><strong>Desktop GUI packages do not build on this host.</strong>
+Directly attempted <code>go build ./applications/...</code> in
+<code>helix_code/</code> on this host and it fails with two real,
+host-environment errors, not code defects:</p>
+<ul>
+<li><code>github.com/go-gl/gl/v2.1/gl</code>: <code>pkg-config</code>
+cannot find <code>gl.pc</code>.</li>
+<li><code>github.com/go-gl/glfw/v3.3/glfw</code>:
+<code>fatal error: X11/Xlib.h: No such file or directory</code>. This is
+not a new discovery — a prior commit in this cycle
+(<code>d6c05f76</code>, already merged before this release’s commit
+range) documented this same gap and verified the README’s claimed error
+text is byte-identical to the real one on this host. Re-confirmed here,
+not re-litigated. Any package depending on the Fyne desktop GUI stack is
+affected.</li>
+</ul></li>
+<li><p><strong>The zero-skip full integration test stack was not booted
+for the last sweep.</strong> Checked directly (<code>podman ps</code>):
+the containers currently running on this host
+(<code>helixcode-infra-postgres</code>, <code>-redis</code>,
+<code>-weaviate</code>, <code>-qdrant</code>, <code>-chromadb</code>,
+<code>-cognee</code>, <code>-ollama</code>, etc., all systemd-managed
+via <code>compose.helixcode-infra.yml</code>) are the
+<strong>production-like platform infra</strong>, not the
+<code>docker-compose.full-test.yml</code> zero-skip test stack (which
+would run containers named <code>helixcode-postgres-full</code>,
+<code>helixcode-redis-full</code>, etc. — none of those are present).
+Any integration-test result gathered without first running
+<code>make test-infra-up</code> for that specific stack is
+environmental, not a confirmed pass or fail, until it is booted and the
+sweep re-run against it.</p></li>
+<li><p><strong>The full <code>go test</code> suite has not concluded
+cleanly on a quiet host for this cycle.</strong>
+<code>docs/CONTINUATION.md</code>’s own rev-18 audit (not independently
+re-run as part of this documentation-only task, to avoid adding more
+load to a host other agents are actively building/testing on) records
+one completed <code>helix_agent</code> full-suite run on a contended
+host reporting 18 <code>FAIL</code> packages, and attributes this to
+ambient host contention (constitution §11.4.119) consistent with this
+project’s own documented pattern — but that specific 18-package list has
+not itself been re-run on a quiet host and confirmed clean. Treat as
+<strong>unconfirmed</strong>, not cleared.</p></li>
+<li><p><strong><code>helix_agent</code>’s goroutine-leak fix
+(<code>69a5ab8d</code>) and test fix (<code>a345c551</code>) are real,
+committed work but are NOT yet part of this release’s pinned
+artifact.</strong> Main’s current gitlink for
+<code>submodules/helix_agent</code> points at <code>3268fd73</code>; the
+submodule’s own <code>HEAD</code> is two commits further, at
+<code>69a5ab8d</code>. Until the gitlink is bumped and re-verified, this
+release does not actually ship the Ollama goroutine-leak fix even though
+the fix exists and is committed.</p></li>
+<li><p><strong><code>helix_agent</code>’s working tree is dirty</strong>
+(modified tracked files and untracked new test files observed at read
+time) and <strong>2 commits ahead of its own configured remotes</strong>
+— i.e. not yet pushed anywhere outside this host. This draft does not
+push anything.</p></li>
+<li><p><strong>main is 8 commits ahead of every configured
+remote</strong> (<code>0</code> behind), i.e. also not yet pushed. This
+document commits only itself; per this task’s constraints, nothing is
+pushed and no tag is created.</p></li>
+<li><p><strong>Two commits carry the literal message
+<code>Auto-commit</code></strong> (<code>56f7edf7</code>,
+<code>1296d328</code>) with no descriptive body. Real, substantive
+content was recovered from their diffstats (see the Infrastructure /
+Added tables above) rather than invented, but the commit messages
+themselves do not describe intent, verification, or evidence — a
+documentation-clarity gap at the commit-message layer, flagged rather
+than silently backfilled.</p></li>
+<li><p><strong>No claim in this document was accepted from a stale
+project artifact without independent re-derivation of the specific git
+facts it depends on</strong> (HEAD SHAs, gitlink pins, tag list,
+container names) — those were each re-checked directly against the live
+repositories at draft time. The one exception is item 4 above, which is
+explicitly attributed to <code>docs/CONTINUATION.md</code> rather than
+re-run, and is labeled unconfirmed for exactly that reason.</p></li>
+<li><p><strong><code>helix_agent</code> has moved further since this
+draft’s stated pin (<code>69a5ab8d</code>), adding a third sibling to
+the same defect class this document already tracks.</strong> Commit
+<code>e2f42b12</code>
+(<code>fix(llm,database): prioritize cancellation in racy select statements</code>)
+fixes exactly the two “sibling” locations <code>dd3c0c3b</code>’s commit
+message names as instances of the same unprioritized-<code>select</code>
+pattern — <code>internal/llm/lazy_provider.go</code>’s
+<code>createProviderWithContext</code> and
+<code>internal/database/debate_log_repository.go</code>’s
+<code>StartCleanupWorker</code> — with the same RED/GREEN
+polarity-evidence discipline (§11.4.115). It is real, committed work,
+but as of this revision it is <strong>not yet part of this release’s
+pinned artifact</strong>: main’s gitlink for
+<code>submodules/helix_agent</code> still points at
+<code>3268fd73</code>, four commits behind <code>helix_agent</code>’s
+own current <code>HEAD</code> (<code>3268fd73</code> →
+<code>a345c551</code> → <code>69a5ab8d</code> → <code>e2f42b12</code>).
+This compounds Known gap 5 rather than replacing it — do not treat
+<code>69a5ab8d</code> as the current unpinned tip; re-derive
+<code>submodules/helix_agent</code>’s actual <code>HEAD</code> before
+citing it, per this document’s own opening warning.</p></li>
+</ol>
+<h2 id="independent-review">Independent review</h2>
+<p>Per constitution §11.4.142 (every change gets an independent review,
+no exception) and §11.4.194 (exhaustive all-scenario review), this
+document received a full independent review after its original commit
+(<code>8bdac5b0</code>) landed. The authoring agent had been killed by
+an API session limit immediately after committing and never reported, so
+this changelog had zero review until now.</p>
+<p><strong>Method:</strong> every cited short SHA in the Fixed / Added /
+Changed / Infrastructure tables and the per-repo commit inventories was
+checked to exist and to actually do what its entry claims, via
+<code>git show --stat</code> and full <code>git show</code> against this
+repository, <code>submodules/helix_agent</code>, and
+<code>submodules/tool_schema</code> — not accepted on the strength of
+the subject line alone. Quantitative claims (assertion counts, PASS/FAIL
+tallies, live scores, frame counts) were spot-checked against the cited
+commits’ own bodies. <code>git log --oneline 8bdac5b0..HEAD</code> was
+run in this repo (empty — main has not moved) and, using the changelog’s
+own stated submodule pins as the base, in
+<code>submodules/helix_agent</code> (one further commit,
+<code>e2f42b12</code> — see Known gap 10) and
+<code>submodules/tool_schema</code> (none). The <code>.env</code>
+<code>HELIX_RELEASE_PREFIX</code> resolution, the §11.4.44 revision
+header, and the “3 desktop packages fail to build” claim
+(<code>applications/desktop</code>, <code>applications/aurora_os</code>,
+<code>applications/harmony_os</code> — confirmed all three import the
+Fyne stack, so all three are genuinely covered by
+<code>go build ./applications/...</code> and by the stated X11/OpenGL
+failure) were all independently re-verified rather than taken on
+trust.</p>
+<p><strong>Finding (blocking, now fixed in revision 2):</strong> commit
+<code>dd3c0c3b</code> — this changelog’s own direct parent commit,
+committed roughly 90 seconds before <code>8bdac5b0</code> — was
+completely absent from every section of the original draft despite being
+real, substantive, in-scope work covered by the document’s own stated
+data-collection window. It has been added to the Fixed table, the
+per-repo commit inventory, and cross-referenced against its
+<code>helix_agent</code> sibling fix (Known gap 10).</p>
+<p><strong>Verdict:</strong> no invented history was found anywhere in
+this document — every other cited SHA, quantitative claim, and
+Known-gaps disclosure checked out exactly as stated. With the one
+finding above corrected, this document is independently confirmed
+accurate as of this revision (2026-07-28T15:21:59Z).</p>
+<h2 id="sources-verified">Sources verified</h2>
+<p>All SHAs, commit subjects, commit bodies, tag names/dates, gitlink
+pins, container names, and the <code>go build</code> error text above
+were read directly from this repository,
+<code>submodules/helix_agent</code>, and
+<code>submodules/tool_schema</code> via <code>git log</code>,
+<code>git show</code>, <code>git tag</code>, <code>git ls-tree</code>,
+<code>podman ps</code>, and a direct <code>go build</code> invocation on
+2026-07-28. No claim in the Fixed / Added / Changed tables above is
+unsourced from a real commit; anything that could not be traced to a
+commit was left out rather than inferred.</p>
+</body>
+</html>

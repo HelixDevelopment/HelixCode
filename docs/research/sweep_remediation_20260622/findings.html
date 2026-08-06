@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="sweep-remediation-recipes-2026-06-22">§11.4.55 Sweep Remediation
+Recipes — 2026-06-22</h1>
+<p><strong>Scope:</strong> READ-ONLY remediation report for the 6
+failing gates of <code>scripts/verify-all-constitution-rules.sh</code>
+(G2 already fixed this session). No source/governance files were edited
+or committed. (One transient G12 in-place regen was performed to MEASURE
+the diff, then immediately reverted — working tree is back to its
+pre-investigation state apart from the pre-existing parallel-session
+semgrep changes.)</p>
+<p><strong>Live sweep verdict (this run):</strong>
+<code>Gates run: 14 · Failures: 6</code> <strong>G2 now PASS</strong>
+(“zero production bluff markers”) — disproves the stale “7-fail” figure;
+the live count is <strong>6/14 failing</strong>.</p>
+<table>
+<colgroup>
+<col style="width: 9%" />
+<col style="width: 12%" />
+<col style="width: 27%" />
+<col style="width: 22%" />
+<col style="width: 28%" />
+</colgroup>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Anchor</th>
+<th>One-line verdict</th>
+<th>Pre-existing?</th>
+<th>Safe to auto-fix?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>§11.9 + CONST-047 cascade</td>
+<td>213 cascade failures (63 PASS); the queued 62/64-repo fleet 142→166
+backfill</td>
+<td>pre-existing (queued)</td>
+<td>NO — operator-scoped fleet cascade (do not run inline)</td>
+</tr>
+<tr>
+<td>G7</td>
+<td>§11.4.83 docs/qa</td>
+<td>117 feature commits lack <code>docs/qa/&lt;run-id&gt;/</code></td>
+<td>pre-existing debt (116) + 1 this-session HEAD</td>
+<td>PARTLY — <code>[no-qa-evidence]</code> is not retro-applicable;
+needs operator decision</td>
+</tr>
+<tr>
+<td>G8</td>
+<td>§11.4.90 Obsolete-Details</td>
+<td>1 violation: HXC-044 <code>Reason</code> out-of-vocab +
+<code>Triple-check</code> token malformed</td>
+<td>pre-existing (2026-06-09)</td>
+<td>NO — closed-vocab Reason needs operator decision</td>
+</tr>
+<tr>
+<td>G12</td>
+<td>§11.4.12 summary freshness</td>
+<td>2 summaries stale by ONLY the <code>Last regenerated</code> date
+stamp</td>
+<td>pre-existing</td>
+<td>YES — pure regen, no content change</td>
+</tr>
+<tr>
+<td>G13</td>
+<td>§11.4.99 Sources-verified</td>
+<td>22/72 operator docs lack a <code>## Sources verified</code>
+footer</td>
+<td>pre-existing (docs dated 06-14..06-22)</td>
+<td>NO — §11.4.99 requires live WebFetch cross-ref, not a blind
+append</td>
+</tr>
+<tr>
+<td>G14</td>
+<td>§11.4.106 docs_chain</td>
+<td>3 contexts STALE (issues/fixed/governance + new semgrep_status)</td>
+<td>pre-existing + parallel-session</td>
+<td>YES (mostly downstream of G12) —
+<code>docs_chain sync --all</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="g1-governance-cascade-11.9-const-047-confirmed-queued-fleet-cascade">G1
+— Governance cascade (§11.9 + CONST-047) — CONFIRMED queued fleet
+cascade</h2>
+<p><strong>Violation count:</strong> 213 FAIL / 63 PASS
+(<code>/tmp/g1-cascade.out</code>, 317 KB). <strong>Distinct owned
+submodules failing:</strong> 64, plus 6 root carriers
+(<code>root/CLAUDE.md</code> lags by 1 anchor = §11.4.166;
+<code>AGENTS/QWEN/GEMINI</code> lag from §11.4.159;
+<code>CRUSH/CONSTITUTION</code> lag from §11.4.142).</p>
+<p><strong>Root cause:</strong> the constitution submodule was bumped to
+<code>4ff4985</code> (adds §11.4.157 GEMINI-lockstep, §11.4.166
+semgrep). Per CONST-047 the new anchor band §11.4.142→166 must propagate
+(verbatim or by ID) into every owned submodule’s
+CLAUDE/AGENTS/CONSTITUTION trio + the root carriers. None of the 207
+owned carrier files (64 submodules) carry the band yet.</p>
+<p><strong>Pre-existing?</strong> PRE-EXISTING / queued. This is the
+cross-cutting fleet cascade explicitly out-of-scope for this task.
+<strong>NOT re-investigated</strong> per instructions — confirmed it is
+the 62-repo (here: 64-submodule) fleet 142→166 backfill.</p>
+<p><strong>Fix recipe (operator-scoped — do NOT run
+inline):</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cascade the new anchor band into every owned carrier + root mirrors:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/propagate-governance.sh          <span class="co"># root carriers (CLAUDE/AGENTS/QWEN/GEMINI/CRUSH/CONSTITUTION)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/backfill_anchor_cascade.sh       <span class="co"># owned-submodule trio backfill (142→166)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/verify-governance-cascade.sh     <span class="co"># re-verify → expect 0 failures</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># then commit+push EACH owned submodule (no force, §11.4.113) + bump pointers.</span></span></code></pre></div>
+<p><strong>Effort:</strong> LARGE (64 submodules × 3 files, each
+committed+pushed to all upstreams, then pointer-bumped). <strong>Safe to
+auto-fix?</strong> NO — multi-repo, multi-upstream, operator-gated.</p>
+<hr />
+<h2 id="g7-11.4.83-docsqa-end-user-evidence-117-violations">G7 —
+§11.4.83 docs/qa end-user evidence — 117 violations</h2>
+<p><strong>Violation count:</strong> 117 (<code>/tmp/g7-qa.out</code>).
+Scope = <code>ed84f90e..HEAD</code> (baseline 2026-05-28;
+<strong>453</strong> commits in scope). <strong>Sample (newest
+3):</strong> - <code>ab5d2ad2</code> chore(governance): G2 smoke
+false-positive fix … (← THIS session, HEAD) - <code>1771c855</code>
+fix(cli): add Xiaomi MiMo models to –list-models output -
+<code>759e48c8</code> feat(llm): add ASR and TTS endpoint support to
+Xiaomi provider Span: 2026-06-10 (<code>bd3adb7f</code>) → 2026-06-22
+(<code>ab5d2ad2</code>).</p>
+<p><strong>Root cause:</strong> the gate heuristic flags any
+<code>feat(</code>/<code>fix(</code> commit touching shippable code that
+has no matching <code>docs/qa/&lt;run-id&gt;/</code> directory. 116 of
+the 117 are PRE-EXISTING feature commits (Xiaomi provider, §11.4.118
+discovery rounds, HXC-NNN fixes) that landed without a QA transcript
+dir; 1 (<code>ab5d2ad2</code>) is this session’s governance commit that
+tripped the <code>chore(</code>+code heuristic. <code>docs/qa/</code>
+exists with 61 run-id dirs — the tree is real, just not populated for
+these 117 commits.</p>
+<p><strong>Pre-existing?</strong> YES — 116/117 pre-existing debt across
+453 commits.</p>
+<p><strong>Fix recipe (two legitimate paths per the gate’s own
+message):</strong> 1. For genuine feature commits → author the missing
+evidence:
+<code>mkdir -p docs/qa/&lt;run-id&gt;/ &amp;&amp; &lt;add bidirectional transcript + materials&gt;</code>
+(one dir per shipped feature; see <code>docs/qa/README.md</code>). This
+is the §11.4.83-compliant path but is heavy (117 transcripts). 2. For
+non-feature changes that tripped the heuristic
+(e.g. <code>ab5d2ad2</code> governance) → the gate is
+<code>git</code>-history-based and the annotation is
+<code>[no-qa-evidence]</code> in the COMMIT MESSAGE. It is <strong>not
+retro-applicable</strong> to already-pushed commits without history
+rewrite (forbidden, §11.4.113). Realistic remediation: a one-time
+baseline bump — <code>ed84f90e..HEAD</code> → set the gate baseline to a
+recent commit so the pre-baseline debt is exempted (same mechanism the
+gate already uses), OR add a <code>docs/qa/&lt;run-id&gt;/</code> for
+each future feature going forward.</p>
+<p><strong>Effort:</strong> LARGE if authoring 117 transcripts; SMALL if
+operator approves a baseline bump for the pre-existing cohort +
+commit-message discipline forward. <strong>Safe to auto-fix?</strong> NO
+— requires operator decision on baseline-bump vs 117-transcript
+backfill; cannot fabricate transcripts (would itself be a bluff).</p>
+<hr />
+<h2 id="g8-11.4.90-obsolete-details-1-violation-hxc-044">G8 — §11.4.90
+Obsolete-Details — 1 violation (HXC-044)</h2>
+<p><strong>Violation (<code>/tmp/g8-obs.out</code>):</strong></p>
+<pre><code>FAIL §11.4.90 [docs/Fixed.md] ## HXC-044 — internal/cognee: AMD-GPU rocm-smi
+  JSON parser ... — missing/invalid sub-fact(s): Reason(closed-vocab) Triple-check</code></pre>
+<p><strong>Current line (docs/Fixed.md:294):</strong></p>
+<pre><code>**Obsolete-Details:** Since: 2026-06-09; Reason: not-reproducible; Superseding-item: none; Triple-check evidence: docs/qa/HXC-044/evidence.md</code></pre>
+<p><strong>Root cause (TWO defects, both mechanical):</strong> 1.
+<code>Reason: not-reproducible</code> is NOT in the §11.4.90 closed
+vocabulary. The gate
+(<code>scripts/gates/obsolete_details_gate.sh:28,55</code>) accepts
+ONLY:
+<code>superseded-by-design-change | superseded-by-later-mandate | feature-removed |    duplicate-of | unsupported-topology</code>.
+2. The gate regex requires the literal token <code>Triple-check:</code>
+followed by content (<code>/Triple-check:[ ]*[^ ]/</code>, line 57). The
+doc writes <code>Triple-check evidence:</code> — a SPACE not a COLON
+after <code>Triple-check</code>, so it never matches. (Note: there is NO
+closed-vocab value meaning “not reproducible”; the item is conceptually
+a non-reproducible env artefact.)</p>
+<p><strong>Pre-existing?</strong> YES — added 2026-06-09
+(<code>6f1c2ca5</code>), ~13 days old; the gate has flagged it every run
+since.</p>
+<p><strong>Fix recipe:</strong> edit <code>docs/Fixed.md:294</code> (and
+mirror the parallel pipe-row at <code>docs/Fixed.md:13</code>). The
+<code>Triple-check</code> token fix is unambiguous; the Reason needs an
+operator/judgment mapping into the closed vocab. Closest fits: -
+<code>duplicate-of</code> — NO (not a duplicate). -
+<code>unsupported-topology</code> — DEFENSIBLE (the failure was a
+worktree/topology artefact, “10/10 main-tree PASS”; the closure note
+literally says “worktree env artifact”). Proposed compliant line
+(operator to confirm the Reason choice):</p>
+<pre><code>**Obsolete-Details:** Since: 2026-06-09; Reason: unsupported-topology; Superseding-item: none; Triple-check: 10/10 main-tree PASS at HEAD 54ab4e95 — see docs/qa/HXC-044/evidence.md</code></pre>
+<p>ALTERNATIVE (cleaner, but needs constitution change): petition to ADD
+<code>not-reproducible</code> to the §11.4.90 closed vocab (the vocab is
+“open to additions, never contraction” per the anchor) + the gate regex
+— that is a constitution-submodule edit (CONST-049 workflow),
+heavier.</p>
+<p><strong>Effort:</strong> SMALL (one/two-line doc edit) once Reason is
+chosen. <strong>Safe to auto-fix?</strong> NO — the Reason value is a
+judgment call (operator must pick <code>unsupported-topology</code> vs a
+vocab extension). The <code>Triple-check:</code> token fix alone is safe
+but insufficient.</p>
+<hr />
+<h2 id="g12-11.4.12-summary-freshness-2-stale-summaries">G12 — §11.4.12
+summary freshness — 2 stale summaries</h2>
+<p><strong>Violation (<code>/tmp/g12-summary.out</code>):</strong> both
+<code>docs/Issues_Summary.md</code> (last regen 2026-06-16) and
+<code>docs/Fixed_Summary.md</code> (last regen 2026-06-17) are STALE vs
+a fresh regeneration. <strong>Measured diff = exactly 1 line each — ONLY
+the <code>*Last regenerated: &lt;date&gt; …*</code> stamp</strong>
+(2026-06-16/17 → 2026-06-22). Zero content/row changes. (Verified by
+running the generators to a temp + diff; then reverted.)</p>
+<p><strong>Root cause:</strong> the generators stamp the regen date; the
+gate regenerates with TODAY’s date and byte-compares, so any day on
+which a tracker doc was touched without re-running the generators leaves
+the stamp stale. After in-place regen,
+<code>generate_{issues,fixed}_summary.sh --check</code> both report
+<strong>PASS</strong>.</p>
+<p><strong>Pre-existing?</strong> YES — stamps are 5-6 days old; trivial
+drift.</p>
+<p><strong>Fix recipe (CONFIRMED resolves the gate):</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/generate_issues_summary.sh      <span class="co"># in-place write (default mode)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/generate_fixed_summary.sh       <span class="co"># in-place write (default mode)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># verify: both --check report &quot;PASS — summary in sync&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/generate_issues_summary.sh <span class="at">--check</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/generate_fixed_summary.sh <span class="at">--check</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># then also regen exports (G14 depends on this — see below):</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/regenerate-tracker-exports.sh   <span class="co"># or `docs_chain sync --all --root .`</span></span></code></pre></div>
+<p><strong>Effort:</strong> TRIVIAL (2 commands). <strong>Safe to
+auto-fix?</strong> YES — pure mechanical projection, no content change
+beyond the date stamp.</p>
+<hr />
+<h2 id="g13-11.4.99-sources-verified-footers-22-missing">G13 — §11.4.99
+Sources-verified footers — 22 missing</h2>
+<p><strong>Violation (<code>/tmp/g13-sv.out</code>):</strong> 50/72
+operator-facing docs footered (69%); <strong>22</strong> lack a
+<code>## Sources verified &lt;date&gt;: &lt;urls&gt;</code> footer. Gate
+is <code>--enforce</code> (100% required per HXC-030 closure). Sample of
+the 22: <code>docs/CODEGRAPH.md</code>, <code>docs/OPENDESIGN.md</code>,
+all 11 <code>docs/helixtrack/*.md</code> (API_REFERENCE, ARCHITECTURE,
+DATABASE_SCHEMA, DEPLOYMENT_GUIDE, FEATURE_INVENTORY, GAP_ANALYSIS,
+IMPLEMENTATION_PLAN, SECURITY_GUIDE, TEST_STRATEGY, UI_UX_FINDINGS,
+USER_MANUAL), 5 <code>docs/features/inventory/*.md</code>,
+<code>docs/features/xiaomi-status_summary.md</code>,
+<code>docs/features/_status_header.md</code>,
+<code>docs/plans/POWER_FEATURES_PORTING_PLAN.md</code>,
+<code>docs/SESSION_STATUS_2026-06-21.md</code>.</p>
+<p><strong>Footer format (from compliant docs,
+e.g. docs/ARCHITECTURE.md:265):</strong></p>
+<pre><code>## Sources verified 2026-06-04: &lt;url1&gt;, &lt;url2&gt;, &lt;repo cross-refs&gt;</code></pre>
+<p><strong>Root cause:</strong> these 22 operator-facing docs landed
+(06-14..06-22, all TRACKED, all in PRIOR commits) without the §11.4.99
+footer; the enforcing gate flags them. Most are NEW doc subtrees
+(helixtrack/, features/inventory/, CODEGRAPH/OPENDESIGN added 06-22
+11:26 — predate the sweep).</p>
+<p><strong>Pre-existing?</strong> YES — all 22 are committed before this
+session’s sweep run.</p>
+<p><strong>Fix recipe (per §11.4.99 — NOT a blind append):</strong> for
+EACH of the 22: 1. Identify the doc’s authoritative sources (the
+libraries/services/repo state it documents). 2. WebFetch the LATEST
+official docs + cross-reference every instruction. 3. Append:</p>
+<pre><code>## Sources verified 2026-06-22: &lt;fetched-source-urls&gt;, &lt;repo cross-refs&gt;</code></pre>
+<ol start="4" type="1">
+<li>Record negative findings explicitly. 5. Cite the footer in the
+commit. For internal/repo-derived docs (helixtrack
+ARCHITECTURE/DATABASE_SCHEMA, features/inventory) the “sources” are the
+repo files cross-referenced (the ARCHITECTURE.md footer precedent lists
+<code>.gitmodules</code>, <code>go.mod</code>, <code>ls</code>
+outputs).</li>
+</ol>
+<p><strong>Effort:</strong> MEDIUM-LARGE (22 docs × WebFetch-cross-ref).
+Parallelisable by subagent (one per doc cluster: helixtrack, features,
+top-level). <strong>Safe to auto-fix?</strong> NO — §11.4.99 explicitly
+forbids footering from memory; each requires a live source fetch +
+cross-reference. A blind <code>echo &#39;## Sources verified …&#39;</code>
+append would itself be a §11.4.99 bluff.</p>
+<hr />
+<h2 id="g14-11.4.106-docs_chain-verify-3-4-stale-contexts">G14 —
+§11.4.106 docs_chain verify — 3-4 STALE contexts</h2>
+<p><strong>Violation (<code>/tmp/g14-verify.log</code>):</strong></p>
+<pre><code>fixed       STALE: [fixed_summary]
+governance  STALE: [claude_html crush_html]
+issues      STALE: [issues_html issues_pdf issues_summary summary_html summary_pdf]</code></pre>
+<p>(A direct <code>docs_chain verify --all</code> also shows
+<code>semgrep_status STALE: [semgrep_status_html semgrep_status_pdf]</code>
+— from the parallel-session untracked <code>semgrep_status.yaml</code>
+context.)</p>
+<p><strong>Root cause:</strong> content-hash drift across docs_chain
+contexts: - <code>fixed</code>/<code>issues</code> summary nodes =
+DOWNSTREAM of G12 (same stale summaries) + their
+<code>.html</code>/<code>.pdf</code> exports never regenerated after the
+last tracker edit. - <code>governance</code> (<code>claude_html</code>,
+<code>crush_html</code>) = CLAUDE.md/CRUSH.md changed (the §11.4.166
+governance work) without re-exporting their HTML siblings. -
+<code>semgrep_status</code> = new parallel-session context not yet
+synced. Engine is available 3 ways: <code>docs_chain</code> on PATH
+(<code>~/.local/bin/docs_chain</code>), sibling
+<code>../docs_chain/cmd/docs_chain</code>, or
+<code>.docs_chain/bin/</code> (absent).</p>
+<p><strong>Pre-existing?</strong> YES (summary + governance drift) +
+PARTLY parallel-session (semgrep_status context).</p>
+<p><strong>Fix recipe (the gate prints it verbatim):</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docs_chain</span> sync <span class="at">--all</span> <span class="at">--root</span> .     <span class="co"># atomically propagates every context, updates state.json</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docs_chain</span> verify <span class="at">--all</span> <span class="at">--root</span> .   <span class="co"># re-verify → expect all in-sync (exit 0)</span></span></code></pre></div>
+<p>Order note: run G12’s <code>generate_*_summary.sh</code> FIRST (so
+the summary SOURCE is fresh), THEN <code>docs_chain sync --all</code>
+(so the html/pdf exports hash-match). <strong>Effort:</strong> SMALL (2
+commands, after G12). <strong>Safe to auto-fix?</strong> YES for the
+issues/fixed/governance contexts (mechanical export regen). The
+<code>semgrep_status</code> context belongs to the parallel semgrep
+session — coordinate before syncing it (§11.4.84 quiescence).</p>
+<hr />
+<h2 id="quick-wins-vs-operator-gated">Quick-wins vs operator-gated</h2>
+<p><strong>Quick-win (safe to auto-fix now, ~5 min total):</strong> -
+<strong>G12</strong> → <code>generate_issues_summary.sh</code> +
+<code>generate_fixed_summary.sh</code> (in-place). -
+<strong>G14</strong> → <code>docs_chain sync --all --root .</code> (run
+AFTER G12; coordinate semgrep_status with the parallel session).</p>
+<p><strong>Needs operator decision / judgment:</strong> -
+<strong>G8</strong> → choose the closed-vocab Reason for HXC-044
+(<code>unsupported-topology</code> proposed) OR petition to add
+<code>not-reproducible</code> to §11.4.90 vocab; then the one/two-line
+doc edit + <code>Triple-check:</code> token fix. - <strong>G7</strong> →
+baseline-bump (exempt 116 pre-existing) vs author 117 transcripts. -
+<strong>G13</strong> → 22 WebFetch-cross-referenced footers
+(subagent-parallelisable). - <strong>G1</strong> → operator-scoped
+64-submodule fleet cascade (propagate-governance.sh +
+backfill_anchor_cascade.sh + per-repo push), NOT run inline.</p>
+<h2 id="captured-evidence-index">Captured-evidence index</h2>
+<ul>
+<li>Live sweep summary: <code>/tmp/sweep_full.out</code></li>
+<li>Per-gate: <code>/tmp/g1-cascade.out</code>
+<code>/tmp/g7-qa.out</code> <code>/tmp/g8-obs.out</code>
+<code>/tmp/g12-summary.out</code> <code>/tmp/g13-sv.out</code>
+<code>/tmp/g14-verify.log</code></li>
+<li>G12 fix proven: in-place regen → <code>--check</code> PASS on both,
+diff = date-stamp only.</li>
+<li>G14 engine confirmed at <code>~/.local/bin/docs_chain</code> +
+sibling <code>../docs_chain</code>.</li>
+</ul>
+<p><em>§11.4.6: every count/date/sample above is verbatim from captured
+command output; nothing inferred. Read-only — no source/governance file
+edited; the transient G12 regen was reverted
+(<code>git checkout -- docs/{Issues,Fixed}_Summary.md</code>).</em></p>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MCP_OKF_GATEWAY_MEMO</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MCP_OKF_GATEWAY_MEMO</h1>
+</header>
+<h1 id="mcp-okf-gateway-groundwork-gono-go-memo-capabilities-plan-task-p4-t5.1">MCP
++ OKF Gateway Groundwork — Go/No-Go Memo (Capabilities-Plan Task
+P4-T5′.1)</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr>
+<td><strong>Doc type</strong></td>
+<td>Research + design memo (§11.4.150/§11.4.99 deep multi-angle
+research). <strong>NOT an implementation</strong> — no gateway code
+lands from this document.</td>
+</tr>
+<tr>
+<td><strong>Track/branch</strong></td>
+<td><code>(T1/feature/helixllm-full-extension)</code></td>
+</tr>
+<tr>
+<td><strong>Author</strong></td>
+<td>Research subagent (T1/main), dispatched from conductor</td>
+</tr>
+<tr>
+<td><strong>Date / access date</strong></td>
+<td>2026-07-08</td>
+</tr>
+<tr>
+<td><strong>Reads first</strong></td>
+<td><code>docs/research/07.2026/00_master/MASTER_IMPLEMENTATION_PLAN.md</code>
+§6.4;
+<code>docs/research/07.2026/02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code>
+Task P4-T5′ (+ §1.1 “MCP — beta SDKs for the 2026-07-28 RC now exist”);
+<code>docs/research/07.2026/00_master/03_open_clarifications.md</code>
+C2; <code>05_mcp_acp_protocols.md</code> (this directory, 2026-07-06
+research report)</td>
+</tr>
+<tr>
+<td><strong>Does NOT duplicate</strong></td>
+<td><code>05_mcp_acp_protocols.md</code> — that report already resolved
+the “which ACP” (Zed vs IBM vs A2A) and “which OKF” questions and is the
+canonical reference for ACP disambiguation, tool-calling normalization
+(§4), and capability advertisement (§5). This memo narrows to exactly
+two open items that report flagged <strong>UNCONFIRMED</strong>: (1) Go
+SDK Streamable-HTTP <strong>server</strong> transport
+production-readiness, (2) a fresh OKF confirmation, then renders the
+go/no-go this cycle needs.</td>
+</tr>
+<tr>
+<td><strong>Supersedes on the narrow point above</strong></td>
+<td><code>05_mcp_acp_protocols.md</code> §1.3 (“Streamable-HTTP
+transport in the Go SDK… UNCONFIRMED — verify in <code>go-sdk/mcp</code>
+package docs before wiring”) and
+<code>CAPABILITIES_MASTER_PLAN_v2.md</code> §1.1’s framing that the
+answer depends on the 2026-07-28 RC. Both are now
+<strong>resolved</strong> — see §1 below.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="tldr-verdict">0. TL;DR verdict</h2>
+<p><strong>[GO]</strong> — the official Go MCP SDK
+(<code>github.com/modelcontextprotocol/go-sdk</code>) ships a
+production-grade Streamable-HTTP <strong>server</strong> transport
+(<code>mcp.StreamableHTTPHandler</code> /
+<code>mcp.NewStreamableHTTPHandler</code> /
+<code>mcp.StreamableServerTransport</code> /
+<code>mcp.StreamableHTTPOptions</code>) in its current <strong>stable,
+non-prerelease</strong> release <strong>v1.6.1</strong>, targeting the
+current stable MCP spec <strong><code>2025-11-25</code></strong>. This
+is <em>not</em> gated on the <code>2026-07-28</code> release candidate —
+the RC (<code>v1.7.0-pre.1</code>, still a GitHub prerelease as of this
+writing) only <em>extends</em> the same transport to additionally accept
+the new stateless wire protocol; the transport, its stateless option,
+its session handling, its DNS-rebinding/cross-origin protections, and
+its bearer-token auth integration already exist in the current stable
+release. §3 sketches a stateless-first gateway design built on this
+transport.</p>
+<p><strong>OKF conclusion: CONFIRMED, format-not-protocol.</strong>
+Google Cloud’s Open Knowledge Format (OKF, v0.1, 2026-06-12) is a
+vendor-neutral <strong>content packaging format</strong> (a directory of
+Markdown files with YAML frontmatter, linked into a knowledge graph via
+ordinary Markdown links) — it is not a wire protocol, not an LLM API,
+and shares no relationship with MCP.
+<code>03_open_clarifications.md</code> C2 and
+<code>05_mcp_acp_protocols.md</code> §3 already reached this conclusion
+on 2026-07-06; this memo re-verified it against the same primary source
+plus independent secondary coverage on 2026-07-08 and found nothing to
+correct. §2 below gives the concrete integration shape.</p>
+<hr />
+<h2 id="deep-research-go-mcp-sdk-current-state-11.4.15011.4.99">1. Deep
+research: Go MCP SDK current state (§11.4.150/§11.4.99)</h2>
+<h3 id="version-state-as-of-2026-07-08">1.1 Version state as of
+2026-07-08</h3>
+<p>Queried directly against the GitHub API
+(<code>gh api repos/modelcontextprotocol/go-sdk/releases</code>,
+<code>.../tags</code>) — not a blog summary, the actual release/tag
+objects:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tag</th>
+<th><code>prerelease</code></th>
+<th>Published</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>v1.7.0-pre.1</code></td>
+<td><strong>true</strong></td>
+<td>2026-06-24</td>
+<td>RC track — “brings full support for protocol version
+<code>2026-07-28</code>”; body text: <em>“The streamable HTTP transport
+accepts requests at protocol version <code>2026-07-28</code> only when
+<code>StreamableHTTPOptions.Stateless = true</code>.”</em></td>
+</tr>
+<tr>
+<td><strong><code>v1.6.1</code></strong></td>
+<td><strong>false (latest stable)</strong></td>
+<td>2026-05-22</td>
+<td>Current production release</td>
+</tr>
+<tr>
+<td><code>v1.6.0</code></td>
+<td>false</td>
+<td>2026-05-08</td>
+<td>HTTP header standardization, cross-origin protection changes</td>
+</tr>
+<tr>
+<td><code>v1.5.0</code></td>
+<td>false</td>
+<td>2026-04-07</td>
+<td>OAuth + SSE transport enhancements</td>
+</tr>
+<tr>
+<td><code>v1.4.1</code></td>
+<td>false</td>
+<td>2026-03-13</td>
+<td>DNS-rebinding protection added; requires Go 1.25+</td>
+</tr>
+</tbody>
+</table>
+<p>The README’s own version-compatibility table (fetched from the
+<code>main</code> branch, 2026-07-08) confirms:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>SDK Version</th>
+<th>Latest MCP Spec</th>
+<th>All Supported MCP Specs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1.7.0+</td>
+<td><code>2026-07-28</code></td>
+<td><code>2026-07-28</code>, <code>2025-11-25</code>*,
+<code>2025-06-18</code>, <code>2025-03-26</code>,
+<code>2024-11-05</code></td>
+</tr>
+<tr>
+<td><strong>v1.4.0 – v1.6.1</strong></td>
+<td><strong><code>2025-11-25</code>*</strong></td>
+<td><code>2025-11-25</code>*, <code>2025-06-18</code>,
+<code>2025-03-26</code>, <code>2024-11-05</code></td>
+</tr>
+</tbody>
+</table>
+<p>(* client-side OAuth experimental in this range.) <strong>v1.6.1
+already targets the current stable spec <code>2025-11-25</code></strong>
+— it is not an RC-only artifact.</p>
+<h3 id="streamable-http-server-transport-confirmed-present-in-v1.6.1-not-rc-gated">1.2
+Streamable-HTTP server transport: confirmed present in v1.6.1, not
+RC-gated</h3>
+<p>Fetched the actual source file at the <code>v1.6.1</code> git tag
+(not <code>main</code>, not a summary — the exact tagged commit):
+<code>https://raw.githubusercontent.com/modelcontextprotocol/go-sdk/v1.6.1/mcp/streamable.go</code>.
+It is a ~2,300-line file implementing, on the server side:</p>
+<ul>
+<li><code>type StreamableHTTPHandler struct</code> — a full
+<code>http.Handler</code> (<code>ServeHTTP</code>), session-keyed
+(<code>sessions map[string]*sessionInfo</code>), with per-session
+idle-timeout logic (<code>startPOST</code>/
+<code>endPOST</code>/<code>stopTimer</code>).</li>
+<li><code>type StreamableHTTPOptions struct</code> with fields:
+<strong><code>Stateless bool</code></strong> (“A stateless server does
+not validate the <code>Mcp-Session-Id</code> header, and uses a
+temporary session with default initialization parameters” — already
+present in v1.6.1, <em>not</em> new in the RC),
+<code>JSONResponse bool</code> (send <code>application/json</code>
+instead of <code>text/event-stream</code>), <code>Logger</code>,
+<code>EventStore</code> (stream-resumption persistence),
+<code>SessionTimeout</code>, <code>DisableLocalhostProtection</code>,
+<code>CrossOriginProtection</code>.</li>
+<li><code>func NewStreamableHTTPHandler(getServer func(*http.Request) *Server, opts *StreamableHTTPOptions) *StreamableHTTPHandler</code>.</li>
+<li><code>type StreamableServerTransport struct</code> with
+<code>Connect(ctx) (Connection, error)</code> and its own
+<code>ServeHTTP</code>, plus <code>streamableServerConn</code>
+implementing the transport’s <code>Connection</code> interface
+(<code>Read</code>/<code>Write</code>/<code>Close</code>/<code>SessionID</code>),
+per-stream SSE delivery (<code>stream</code> type,
+<code>formatEventID</code>/ <code>parseEventID</code>,
+<code>acquireStream</code>),
+<code>servePOST</code>/<code>serveGET</code> request handling.</li>
+<li>DNS-rebinding protection (auto-enabled for localhost servers, per
+the code’s own comment “added in the 1.4.0 version of the SDK”) and an
+optional <code>http.CrossOriginProtection</code> wrapper.</li>
+<li>A separate <code>auth</code> package
+(<code>github.com/modelcontextprotocol/go-sdk/auth</code>) providing
+<code>TokenVerifier</code> (a caller-supplied
+<code>func(ctx, token, req) (*TokenInfo, error)</code>),
+<code>RequireBearerTokenOptions</code>,
+<code>func RequireBearerToken(verifier TokenVerifier, opts *RequireBearerTokenOptions) func(http.Handler) http.Handler</code>
+(standard Go middleware shape), and
+<code>ProtectedResourceMetadataHandler</code> for OAuth Protected
+Resource Metadata — i.e. bearer-token auth is a drop-in
+<code>http.Handler</code> wrapper, not something HelixLLM has to
+hand-roll.</li>
+</ul>
+<p>This directly resolves <code>05_mcp_acp_protocols.md</code> §1.3’s
+“UNCONFIRMED” flag: the SDK README excerpt that report fetched
+apparently did not enumerate the Streamable-HTTP type names (it only
+named Stdio/Command transports); the actual tagged source shows the
+server transport is real, hardened, and has been production-shipping
+since at least v1.4.0 (DNS-rebinding protection dates the transport’s
+existence to that release, 2026-02-27 per the earlier report’s release
+table).</p>
+<p><strong>Client-side counterpart</strong>
+(<code>StreamableClientTransport</code>,
+<code>streamableClientConn</code>) is in the same file — the SDK ships
+both roles, matching HelixLLM’s dual need (§1.4 of the 2026-07-06
+report: gateway as MCP <em>server</em> exposing Helix tools, and as MCP
+<em>host/client</em> consuming CodeGraph/ OpenDesign).</p>
+<h3 id="current-mcp-specs-server-transport-story-stdio-vs-streamable-http-stateless-mode">1.3
+Current MCP spec’s server-transport story (stdio vs Streamable HTTP,
+stateless mode)</h3>
+<p>Fetched
+<code>https://modelcontextprotocol.io/specification/2025-11-25/basic/transports</code>
+directly (the current stable spec page, not a blog paraphrase).
+Confirmed:</p>
+<ul>
+<li>The spec defines exactly two standard transports:
+<strong>stdio</strong> and <strong>Streamable HTTP</strong> (custom
+transports are permitted but not standard).</li>
+<li><strong>Session management is already optional in the current stable
+spec</strong>, not something the <code>2026-07-28</code> RC introduces:
+<em>“A server using the Streamable HTTP transport <strong>MAY</strong>
+assign a session ID at initialization time… Servers that require a
+session ID <strong>SHOULD</strong> respond to requests without an
+<code>MCP-Session-Id</code> header… with HTTP 400.”</em> A server that
+never assigns a session ID is spec-compliant today, in
+<code>2025-11-25</code>. This means the stateless-first design
+recommendation from <code>05_mcp_acp_protocols.md</code> §1.2/§7 does
+not need to wait for the RC either — it is a legal posture under the
+<em>current</em> spec, and the RC formalizes/hardens it (removes the
+<code>initialize</code> handshake and the session header entirely,
+replaces server-initiated calls with multi-round-trip requests, adds
+<code>server/discover</code>).</li>
+<li>The spec <strong>MUST</strong>-level security requirements for
+Streamable HTTP servers: validate <code>Origin</code> (DNS-rebinding),
+bind to localhost when running locally, and “implement proper
+authentication for all connections” — exactly the three primitives the
+Go SDK ships out of the box (<code>DisableLocalhostProtection</code>
+defaulting to <em>enabled</em>, <code>CrossOriginProtection</code>, the
+<code>auth</code> package’s bearer-token middleware).</li>
+<li>Confirmed the <code>2026-07-28</code> RC is still a release
+candidate, not finalized, as of 2026-07-08 (20 days out from its
+scheduled 2026-07-28 publish date; <code>v1.7.0-pre.1</code> on the SDK
+side is tagged <code>prerelease: true</code>).</li>
+</ul>
+<h3 id="what-this-changes-vs-the-capabilities-plans-framing">1.4 What
+this changes vs the capabilities plan’s framing</h3>
+<p><code>CAPABILITIES_MASTER_PLAN_v2.md</code> §1.1 and Task P4-T5′
+framed the go/no-go as depending on “whether the beta SDK for the
+2026-07-28 RC” ships the transport. That framing is <strong>narrower
+than the actual state</strong>: the transport is not a beta-RC feature
+at all — it is a <strong>stable, already-shipping (since ≥v1.4.0),
+spec-<code>2025-11-25</code>-targeting</strong> feature of the
+<em>current</em> production release, v1.6.1. The RC only adds an
+additional protocol-version acceptance path gated by the same
+<code>StreamableHTTPOptions.Stateless</code> flag that already exists.
+<strong>This makes the GO verdict stronger, not conditional on the RC
+finalizing on schedule.</strong></p>
+<hr />
+<h2 id="okf-re-verification-and-concrete-integration-shape">2. OKF —
+re-verification and concrete integration shape</h2>
+<h3 id="re-verification-2026-07-08">2.1 Re-verification
+(2026-07-08)</h3>
+<p>Refetched Google Cloud’s own announcement
+(<code>cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing/</code>)
+directly and cross-checked against seven independent secondary sources
+surfaced by search (MarkTechPost, SearchEngineJournal, Flowtivity,
+Suganthan, StartupHub.ai, Medium ×2). All converge on the same
+description, none mentions MCP, tool-calling, or any wire/transport
+protocol:</p>
+<blockquote>
+<p>“OKF v0.1 represents knowledge as a directory of markdown files with
+YAML frontmatter, with a small set of agreed-upon conventions that let
+wikis written by different producers be consumed by different agents
+without translation.” — Google Cloud Blog</p>
+</blockquote>
+<ul>
+<li><strong>Requires exactly one thing per concept file:</strong> a
+<code>type</code> field in YAML frontmatter. Everything else (what types
+exist, what other fields, section structure) is producer-defined.</li>
+<li><strong>Concepts link via ordinary Markdown links</strong>, forming
+a knowledge graph richer than filesystem parent/child
+relationships.</li>
+<li><strong>No SDK, no runtime, no service required</strong> — “just
+markdown,” “just files,” “just YAML frontmatter” (direct quotes from the
+announcement). Shippable in git, renderable on GitHub.</li>
+<li>Announced 2026-06-12 as v0.1.</li>
+</ul>
+<p><strong>Conclusion: the prior finding stands, uncorrected.</strong>
+OKF is a knowledge-content packaging format. It is category-mismatched
+against “protocols to integrate” (MCP/ACP/A2A) — there is nothing to
+“implement” as a wire protocol, and no UNCONFIRMED residue on what the
+operator’s “OKF” reference denotes: it demonstrably matches Google
+Cloud’s OKF (confirmed independently by
+<code>03_open_clarifications.md</code> C2’s operator-resolved
+clarification and by this fresh check). No honest-gap flag needed here —
+unlike the Go-SDK transport question, this one has no ambiguity left to
+resolve.</p>
+<h3 id="concrete-integration-shape-as-content-never-as-a-protocol">2.2
+Concrete integration shape (as content, never as a protocol)</h3>
+<ol type="1">
+<li><strong>On-disk store.</strong> HelixLLM/HelixAgent’s
+RAG/memory/Skills knowledge (runbooks, API references, metric
+definitions, capability manifests) is authored as an OKF-conformant
+directory: one Markdown file per concept, YAML frontmatter with (at
+minimum) <code>type</code>, linked via standard Markdown links. This is
+compatible with — and does not replace — the existing
+constitution-mandated Markdown-doc discipline (§11.4.44/§11.4.65 doc
+conventions); an OKF directory is simply a stricter, agent-consumable
+subset convention layered on top.</li>
+<li><strong>Served through MCP, not as a new protocol surface.</strong>
+The gateway (§3) exposes the OKF directory via an MCP
+<strong><code>resources</code></strong> capability
+(<code>resources/list</code>, <code>resources/read</code>) — each OKF
+concept file becomes one MCP resource. This is the existing MCP
+resources primitive; no new transport or schema is invented for
+OKF.</li>
+<li><strong>Read AND write.</strong> Per the Google Cloud framing
+(“agents read and update directly,” distinct from read-only RAG-chunk
+retrieval), the gateway MAY also expose an MCP <strong>tool</strong>
+(not a resource) for structured concept updates —
+e.g. <code>okf_upsert_concept(type, path, frontmatter, body)</code> — so
+an agent can maintain the knowledge graph in place rather than only
+retrieving from it. This is optional groundwork, not required for the
+P4-T5′.1 go/no-go; flag as a follow-up task if HelixMemory/RAG wiring
+(T7′ in the capabilities plan) wants it.</li>
+<li><strong>Not a provider, not a model capability flag.</strong> OKF
+never appears in the CONST-036/040 capability-flag surface
+(<code>/v1/models[].capabilities</code>, MCP
+<code>server/discover</code>, ACP <code>initialize</code>) — those
+advertise MCP/LSP/ACP/Embedding/RAG/Skills/Plugins, and OKF is
+<em>content consumed by</em> the RAG/Skills flags, not a flag
+itself.</li>
+</ol>
+<hr />
+<h2 id="go-stateless-first-mcp-gateway-design-sketch">3. GO —
+stateless-first MCP gateway design sketch</h2>
+<p>This is a design sketch to guide implementation, not implementation.
+Per the go/no-go in §1, the design commits to the official SDK’s
+Streamable-HTTP server transport.</p>
+<h3 id="two-roles-unchanged-from-05_mcp_acp_protocols.md-7-reconfirmed">3.1
+Two roles (unchanged from <code>05_mcp_acp_protocols.md</code> §7,
+reconfirmed)</h3>
+<ol type="1">
+<li><strong>Gateway-as-MCP-server:</strong> HelixLLM/HelixAgent expose
+local capabilities — coder (repomap/tools), vision (VLM
+captioning/analysis), embeddings, translation (NLLB), STT/OCR, RAG/OKF
+resources — as MCP <code>tools</code>/<code>resources</code> over the
+SDK’s <code>mcp.StreamableHTTPHandler</code>, so any MCP client (Claude
+Code, Zed, etc.) can consume them remotely, plus
+<code>mcp.StdioTransport</code> for same-host subprocess clients.</li>
+<li><strong>Gateway-as-MCP-host/client:</strong> the gateway uses
+<code>mcp.StreamableClientTransport</code>/
+<code>mcp.CommandTransport</code> to reach downstream MCP servers
+(CodeGraph, OpenDesign, filesystem) and folds their
+<code>tools/list</code> into the canonical JSON-Schema tool layer
+(<code>05_mcp_acp_protocols.md</code> §4.3) so served local models can
+call them via constrained decoding.</li>
+</ol>
+<h3 id="stateless-first-http-surface">3.2 Stateless-first HTTP
+surface</h3>
+<ul>
+<li>Construct the handler as
+<code>mcp.NewStreamableHTTPHandler(getServer, &amp;mcp.StreamableHTTPOptions{ Stateless: true, DisableLocalhostProtection: false, CrossOriginProtection: http.NewCrossOriginProtection() /* or equivalent explicit policy */, SessionTimeout: 0, Logger: &lt;structured logger&gt; })</code>.</li>
+<li><code>Stateless: true</code> matches both (a) the
+<code>2025-11-25</code> spec’s legal “never assign a session ID” posture
+and (b) forward-compatibility with <code>2026-07-28</code>’s removal of
+<code>initialize</code>/session headers entirely — the same flag gates
+both, per §1.1/§1.3.</li>
+<li>Any cross-tool-call state HelixLLM needs (e.g., a long-running
+vision/video job) is carried as an <strong>explicit application-level
+handle</strong> returned in a tool result and passed as an argument on
+the next call — never as protocol session state. This mirrors the RC’s
+own “explicit handles passed between tool calls” direction
+(<code>05_mcp_acp_protocols.md</code> §1.2) and is achievable today
+because it never depended on the RC — it is an application-layer choice
+available under the current stable spec’s optional session model.</li>
+<li>Keep <code>stdio</code> MCP servers (CodeGraph, OpenDesign)
+local-only, never bound to a network interface; only the Streamable-HTTP
+surface is a network listener.</li>
+</ul>
+<h3 id="port-process-placement">3.3 Port + process placement</h3>
+<p>Following the established HelixLLM port allocation convention
+(<code>:18434</code> coder, <code>:18436</code> translation,
+<code>:18437</code> Whisper, <code>:18438</code> Tesseract,
+<code>:18439</code> vision-VLM, <code>:18440</code> RAG-TEI,
+<code>:18441</code> ACP→A2A, <code>:18442</code> image-gen,
+<code>:18443</code> video-gen — per
+<code>MASTER_IMPLEMENTATION_PLAN.md</code> §1.1): the MCP gateway HTTP
+listener is the next free port in that block (candidate
+<code>:18444</code>; confirm against the live port registry at
+implementation time — this memo does not reserve it). Runs as its own
+process/container (via the <code>containers</code> submodule,
+§11.4.76/§11.4.173), not inside the coder fleet’s container, so an
+MCP-gateway restart never disturbs the live coder.</p>
+<h3 id="auth">3.4 Auth</h3>
+<ul>
+<li>Bind the handler with the SDK’s own
+<code>auth.RequireBearerToken(verifier, opts)</code> middleware wrapper
+— do <strong>not</strong> hand-roll bearer-token parsing.
+<code>verifier</code> is HelixLLM-supplied: validate against the
+existing JWT/OAuth stack config (§CONST-042 — secrets in
+<code>.env</code>, never in <code>.mcp.json</code> or hardcoded).</li>
+<li><code>DisableLocalhostProtection</code> stays <code>false</code>
+(default-on DNS-rebinding protection) unless the gateway is deliberately
+bound to <code>0.0.0.0</code> for LAN-network-provider use (per
+<code>RESUME.md</code> Phase 3’s “Network-provider (LAN/VPN)” landed
+capability) — in that case, add <code>CrossOriginProtection</code> and
+rely on the bearer-token layer as the real authorization boundary, never
+on network topology alone (§11.4.10).</li>
+<li><code>stdio</code>-transport downstream servers (CodeGraph,
+OpenDesign) are never given network exposure and never carry the HTTP
+auth layer at all — they inherit host-process trust only.</li>
+</ul>
+<h3 id="runtime-signature-definition-of-done-for-this-task-once-implemented">3.5
+§11.4.108 runtime signature (definition of done for this task, once
+implemented)</h3>
+<p>A single machine-checkable observable proving the gateway is active
+and working on a clean target: a real MCP client (not a stub) performs
+<code>tools/list</code> against the gateway’s Streamable-HTTP endpoint
+and receives Helix’s actual tool schemas (repomap/vision/embeddings/
+translation — not a hardcoded stub list, sourced live from the
+provider/capability registry per CONST-036/040), followed by one real
+<code>tools/call</code> round-trip that returns a genuine result (e.g.
+an embeddings vector for a fixed probe string) — captured as evidence
+exactly as <code>05_mcp_acp_protocols.md</code> §7’s existing acceptance
+criterion and <code>CAPABILITIES_MASTER_PLAN_v2.md</code> Task P4-T5′’s
+acceptance line already specify. No new criterion is invented here; this
+memo only confirms the SDK choice the criterion depends on is sound.</p>
+<hr />
+<h2 id="danger-zones-11.4.92-multi-pass-regression-cross-feature-security-angles">4.
+Danger zones (§11.4.92 multi-pass — regression / cross-feature /
+security angles)</h2>
+<ol type="1">
+<li><strong>Transport version drift.</strong> The SDK’s own
+version-compatibility table shows a hard cutover: v1.6.1 →
+<code>2025-11-25</code> max; v1.7.0+ → <code>2026-07-28</code> capable.
+Pinning to v1.6.1 now is correct for GO-today, but the RC’s wire-format
+changes (no <code>initialize</code>, <code>server/discover</code>
+instead, multi-round-trip requests replacing server-initiated calls,
+<code>subscriptions/listen</code> replacing notifications,
+roots/sampling/logging deprecated) are a <strong>near-term breaking
+rewrite risk</strong> if the gateway is built assuming
+<code>2025-11-25</code> semantics will persist. Mitigation: build
+strictly to the stateless subset that is valid under <em>both</em> spec
+versions (§3.2) and re-run this memo’s go/no-go check when v1.7.0 leaves
+prerelease, before bumping the pinned SDK version.</li>
+<li><strong>Stateless vs stateful session handling.</strong>
+<code>Stateless: true</code> simplifies the design but forfeits
+server-initiated requests/notifications entirely (per the SDK doc
+comment: “Any server-&gt;client request is rejected immediately as
+there’s no way for the client to respond” in stateless mode). If any
+planned Helix MCP tool needs to push server-initiated progress
+notifications (e.g., a long video-gen job), stateless-only will not
+support it without the explicit-handle/ polling workaround in §3.2 —
+confirm no P4-T5′ tool genuinely requires server-push before committing
+to <code>Stateless: true</code> universally; a mixed mode (stateful for
+specific long-running-job tools, stateless for the rest) may be needed
+and should be a follow-up design decision, not assumed here.</li>
+<li><strong>Auth on an HTTP MCP server (§11.4.10).</strong> Exposing
+Streamable HTTP over the network turns a previously host-local
+capability surface into a network-reachable one. The SDK’s
+<code>RequireBearerToken</code> +
+<code>ProtectedResourceMetadataHandler</code> are available but not
+auto-configured — a misconfigured/omitted verifier, or reliance on
+<code>DisableLocalhostProtection</code> bypass for LAN convenience
+without a real token check, would silently turn the
+coder/vision/embeddings capabilities into an unauthenticated network
+service. This must be gated the same way CONST-042/§11.4.10 gate every
+other credential surface: verifier wired from <code>.env</code>-sourced
+secrets, never a stub/always-true verifier, and covered by a security
+test asserting an unauthenticated <code>tools/call</code> is
+rejected.</li>
+<li><strong>Tool-schema exposure.</strong> <code>tools/list</code> on an
+HTTP-reachable server broadcasts the <em>shape</em> of every internal
+capability (repomap paths, vision model identifiers, embeddings
+dimensions, translation language pairs) to any client that can reach the
+port and pass auth. This is a reconnaissance-surface risk distinct from
+the auth question in #3 — even an authenticated but over-broadly-scoped
+token could enumerate capabilities beyond what that caller should see.
+Mitigation direction (not designed here): scope tool visibility per
+verified token/role rather than exposing the full tool registry to every
+authenticated caller uniformly; track as a follow-up hardening task once
+the base gateway lands.</li>
+<li><strong>Downstream MCP host-role trust boundary.</strong> The
+gateway’s <em>host/client</em> role (§3.1 item 2) launches/connects to
+CodeGraph and OpenDesign as subprocess <code>stdio</code> servers
+running with the gateway process’s own privileges. A compromised or
+malicious downstream MCP server (third- party npm package, per
+§11.4.78’s CodeGraph consumption path) has full access to whatever the
+gateway process can reach. This is not new to the MCP-gateway design
+specifically (CodeGraph is already consumed this way per §11.4.78), but
+consolidating <em>more</em> downstream servers behind one gateway
+process concentrates the blast radius — worth a dedicated review when
+the host role is actually implemented, not assumed safe by analogy.</li>
+<li><strong><code>2026-07-28</code> RC’s SDK-version compatibility
+cliff.</strong> Per §11.4.6, do not guess forward: this memo pins v1.6.1
+as GO-today evidence; it explicitly does NOT recommend pre-adopting
+<code>v1.7.0-pre.1</code> (still <code>prerelease: true</code> on GitHub
+as of 2026-07-08) for production wiring. Re-verify at RC finalization
+(scheduled 2026-07-28) before any version bump.</li>
+</ol>
+<p><strong>Danger zone count: 6.</strong></p>
+<hr />
+<h2 id="sources-verified-2026-07-08">Sources verified 2026-07-08</h2>
+<ul>
+<li>Go MCP SDK releases (GitHub API, primary) —
+https://api.github.com/repos/modelcontextprotocol/go-sdk/releases</li>
+<li>Go MCP SDK tags (GitHub API, primary) —
+https://api.github.com/repos/modelcontextprotocol/go-sdk/tags</li>
+<li>Go MCP SDK <code>v1.6.1</code> <code>mcp/streamable.go</code> source
+(raw, primary) —
+https://raw.githubusercontent.com/modelcontextprotocol/go-sdk/v1.6.1/mcp/streamable.go</li>
+<li>Go MCP SDK <code>v1.6.1</code> <code>auth/auth.go</code> source
+(raw, primary) —
+https://raw.githubusercontent.com/modelcontextprotocol/go-sdk/v1.6.1/auth/auth.go</li>
+<li>Go MCP SDK README / version-compatibility table (raw,
+<code>main</code>) —
+https://raw.githubusercontent.com/modelcontextprotocol/go-sdk/main/README.md</li>
+<li>Go MCP SDK repo (overview) —
+https://github.com/modelcontextprotocol/go-sdk</li>
+<li>Go MCP SDK package docs —
+https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp</li>
+<li>MCP specification <code>2025-11-25</code> — Transports (primary,
+current stable spec) —
+https://modelcontextprotocol.io/specification/2025-11-25/basic/transports</li>
+<li>MCP <code>2026-07-28</code> release-candidate announcement —
+https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/</li>
+<li>Google Cloud — Open Knowledge Format announcement (primary) —
+https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing/</li>
+<li>MarkTechPost — OKF introduction —
+https://www.marktechpost.com/2026/06/16/google-cloud-introduces-open-knowledge-format-okf-a-vendor-neutral-markdown-spec-for-giving-ai-agents-curated-context/</li>
+<li>SearchEngineJournal — Google Cloud announces OKF —
+https://www.searchenginejournal.com/google-cloud-announces-the-open-knowledge-format/579253/</li>
+<li>Flowtivity — Google’s OKF explained —
+https://flowtivity.ai/blog/google-open-knowledge-format/</li>
+<li>Suganthan — OKF blog —
+https://suganthan.com/blog/open-knowledge-format/</li>
+<li>StartupHub.ai — OKF explained 2026 —
+https://www.startuphub.ai/ai-news/insights/2026/google-open-knowledge-format-okf-explained-2026</li>
+<li>Medium (Tahir) — What is OKF — https://medium.com/<span class="citation" data-cites="tahirbalarabe2/what-is-open-knowledge-format-okf-270b20791802">@tahirbalarabe2/what-is-open-knowledge-format-okf-270b20791802</span></li>
+<li>Medium (Marc Bara) — Google’s new format for agent context —
+https://medium.com/<span class="citation" data-cites="marc.bara.iniesta/googles-new-format-for-agent-context-a-standard-or-just-a-folder-82fb21d92041">@marc.bara.iniesta/googles-new-format-for-agent-context-a-standard-or-just-a-folder-82fb21d92041</span></li>
+<li>Prior HelixCode research (context, not re-verified line-by-line,
+cross-checked where cited above) —
+<code>docs/research/07.2026/05_mcp_acp_protocols/05_mcp_acp_protocols.md</code>
+(2026-07-06);
+<code>docs/research/07.2026/00_master/03_open_clarifications.md</code>;
+<code>docs/research/07.2026/02_vision_generative/CAPABILITIES_MASTER_PLAN_v2.md</code>;
+<code>docs/research/07.2026/00_master/MASTER_IMPLEMENTATION_PLAN.md</code></li>
+</ul>
+</body>
+</html>

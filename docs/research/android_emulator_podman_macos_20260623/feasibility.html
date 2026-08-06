@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>feasibility</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">feasibility</h1>
+</header>
+<h1 id="deep-research-android-emulator-under-rootless-podman-on-macos-arm64-hxc-108-android-gap">Deep
+Research — Android emulator under rootless Podman on macOS arm64
+(HXC-108 Android gap)</h1>
+<p><strong>Date:</strong> 2026-06-23 · <strong>Host:</strong> macOS 15.5
+(Darwin 24.5.0), Apple M3 Pro (T6030), arm64 <strong>Mandate:</strong>
+§11.4.150 (mandatory multi-angle deep research before a structural
+verdict), §11.4.8 / §11.4.99 (latest authoritative sources), §11.4.112
+(structural-impossibility classification). <strong>Context:</strong> The
+§6.X guard blocks host-direct <code>emulator</code>/<code>adb</code> as
+gate evidence. The §6.X-sanctioned runner
+<code>helix_code/scripts/run-challenge-matrix.sh</code> does not exist.
+Question: can it drive an Android emulator inside a <strong>rootless
+Podman container on this macOS host</strong> to produce a §11.4.158
+on-device recording?</p>
+<hr />
+<h2 id="verdict-11.4.112-structurally-impossible-on-this-host-accelerated-gate-eligible-path">VERDICT
+— §11.4.112 STRUCTURALLY-IMPOSSIBLE on this host (accelerated,
+gate-eligible path)</h2>
+<p>Running an Android emulator inside a rootless Podman Linux container
+on Apple Silicon macOS, as a hardware-accelerated
+<strong>gate-eligible</strong> runner, is <strong>structurally
+impossible</strong>. Apple’s <code>Hypervisor.framework</code> (HVF) —
+the only macOS acceleration backend — is a
+macOS-<strong>host-only</strong> API. A Podman container on macOS runs
+inside a Linux VM managed by the closed-source
+<code>Virtualization.framework</code>/<code>applehv</code> provider,
+which <strong>does not expose <code>/dev/kvm</code></strong> to the
+guest or its containers. The Android emulator inside that container
+therefore has no accelerator and falls back to unusably-slow software
+emulation (or fails). macOS 15 Sequoia added nested-virt for M3+, but
+that is <strong>not plumbed through podman-machine’s
+<code>applehv</code> path to surface <code>/dev/kvm</code> in
+containers</strong> — relying on it would be a guess, not a finding
+(§11.4.6). This is a closed-platform-API constraint, not missing
+engineering.</p>
+<p><strong>The Containers submodule already encodes this verdict as
+FACT</strong> — see Angle 4.</p>
+<hr />
+<h2 id="evidence-per-angle-fact-unless-marked-unconfirmed">Evidence (per
+angle; FACT unless marked UNCONFIRMED)</h2>
+<p><strong>Angle 1 — Podman <code>applehv</code> on Apple Silicon &amp;
+<code>/dev/kvm</code> (FACT).</strong> On macOS,
+<code>podman machine</code> runs a Linux VM via the native
+<code>applehv</code> (<code>Virtualization.framework</code>) provider,
+which is closed-source and “can’t be extended to implement new emulated
+devices to be exposed to guests” — so exposing <code>/dev/kvm</code> to
+nested containers is a known architectural limitation of the applehv
+path. - https://www.redhat.com/en/blog/podman-mac-machine-architecture -
+https://sinrega.org/2024-03-06-enabling-containers-gpu-macos/</p>
+<p><strong>Angle 2 — Android emulator in Docker/Podman precedents
+(FACT).</strong> Google’s
+<code>android-emulator-container-scripts</code> require
+<code>/dev/kvm</code> (“KVM must be available… bare metal or a (V)M that
+provides nested virtualization”). The only KVM-free
+containerized-Android path is <strong>Redroid</strong>, which runs the
+Android <em>userspace</em> on the <strong>host Linux kernel</strong> via
+binder/ashmem — unavailable on macOS (no Linux host kernel). Every
+containerized-emulator path needs host KVM or a host Linux kernel; macOS
+gives a container neither. -
+https://github.com/google/android-emulator-container-scripts -
+https://github.com/google/android-emulator-container-scripts/issues/21 -
+https://codersera.com/blog/android-emulator-docker-without-kvm/</p>
+<p><strong>Angle 3 — Apple Silicon nested virtualization (FACT + honest
+nuance).</strong> macOS 15 Sequoia added hardware-assisted nested
+virtualization for M3+ (this host IS M3 Pro), theoretically allowing KVM
+inside a Linux VM. <strong>UNCONFIRMED (no authoritative source
+for):</strong> that podman-machine’s <code>applehv</code> plumbs this
+through to expose <code>/dev/kvm</code> inside containers. The
+closed-source device-exposure limit (Angle 1) blocks it. The hardware
+capability exists but is not surfaced through the sanctioned podman
+path. - https://news.ycombinator.com/item?id=40642328 -
+https://forum.parallels.com/threads/macos-15-sequoia-nested-virtualization-for-m3-macs.364397/</p>
+<p><strong>Angle 4 — Containers submodule (FACT, in-repo — strongest
+evidence).</strong>
+<code>submodules/containers/pkg/emulator/accel.go</code> states
+verbatim: <em>“macOS hosts have no <code>/dev/kvm</code>… A Linux
+container running under podman/docker on macOS executes inside a Linux
+VM and cannot reach the host’s HVF interface… on macOS the host-direct
+runner is the only accelerated path AND the gate-eligible runner.”</em>
+<code>pkg/cuttlefish/accel.go</code> independently encodes the same:
+Cuttlefish requires <code>/dev/kvm</code>, absent on macOS →
+<code>RequireKVM()</code> errors → SKIP-with-reason per §11.4.3, never
+PASS. The submodule already provides <code>AccelProfileForOS</code>,
+<code>ResolveRunner(&quot;auto&quot;)</code>, <code>GateEligibleForOS</code>,
+<code>cmd/emulator-matrix</code>, and <code>cmd/emulator-canary</code>.
+The <code>containerized.go</code> <code>--device /dev/kvm</code> path is
+gate-eligible <strong>only on a Linux x86_64 host with KVM</strong>.</p>
+<p><strong>Angle 5 — Community reports (FACT).</strong> No credible
+report of an accelerated Android emulator inside a Podman container on
+macOS Apple Silicon. The documented alternative is host-direct (native
+macOS emulator using HVF).</p>
+<hr />
+<h2 id="containers-submodule-gap">Containers-submodule gap</h2>
+<p><strong>No gap to fill for the macOS-rootless-podman path — it is
+provably non-viable and the submodule already documents it as
+such.</strong> Authoring <code>run-challenge-matrix.sh</code> to drive
+an emulator through a rootless-podman container on macOS would require
+extending the submodule to do the structurally-impossible, which
+§11.4.74 / §11.4.112 forbid. No upstream extension is warranted for this
+path.</p>
+<hr />
+<h2 id="recommendation">Recommendation</h2>
+<p>Classify <em>“Android emulator inside rootless podman on macOS
+arm64”</em> as <strong>§11.4.112
+<code>Won&#39;t-fix: structurally-impossible</code></strong>, cited
+constraint: <em>Apple
+<code>Virtualization.framework</code>/<code>applehv</code> is
+closed-source and does not expose <code>/dev/kvm</code> to guest
+containers; HVF is a host-only API unreachable from a Linux
+container</em> (already FACT-encoded in
+<code>pkg/emulator/accel.go</code> +
+<code>pkg/cuttlefish/accel.go</code>). Do NOT re-attempt without NEW
+evidence the platform changed (§11.4.7 / §11.4.34).</p>
+<p><strong>Honest alternatives for sanctioned §6.X on-device Android
+recording (operator decision per §11.4.66 / §11.4.122 / §11.4.143 /
+§11.4.158):</strong> 1. <strong>Linux x86_64 KVM gate host
+(canonical).</strong>
+<code>run-challenge-matrix.sh --runner containerized</code> on a Linux
+x86_64 box with <code>/dev/kvm</code> IS the gate-eligible accelerated
+container path — needs no new submodule code, just a gate host (local /
+CI / a <code>CONTAINERS_REMOTE_HOST_*</code> enrolment). 2.
+<strong>macOS host-direct, reclassified.</strong>
+<code>host-direct</code> is gate-eligible per the submodule’s accel
+model on macOS, but §6.X blocks it. Requires an operator decision: carve
+a sanctioned macOS host-direct exception, OR treat macOS Android
+recording as <code>operator_attended</code> SKIP (§11.4.52) + migration
+item. 3. <strong>Physical Android device (operator-attended).</strong>
+Real device over USB/ADB, recorded — the §11.4.143 real-journey path,
+honestly operator-attended.</p>
+<p><strong>Net:</strong> route §6.X Android-client gate recording to a
+Linux x86_64 KVM host via the existing
+<code>--runner containerized</code> path. The rootless-podman-on-macOS
+approach is structurally impossible and should be closed, not
+engineered.</p>
+<h2 id="sources-verified-2026-06-23">Sources verified 2026-06-23</h2>
+<ul>
+<li>https://www.redhat.com/en/blog/podman-mac-machine-architecture</li>
+<li>https://sinrega.org/2024-03-06-enabling-containers-gpu-macos/</li>
+<li>https://github.com/google/android-emulator-container-scripts</li>
+<li>https://github.com/google/android-emulator-container-scripts/issues/21</li>
+<li>https://codersera.com/blog/android-emulator-docker-without-kvm/</li>
+<li>https://news.ycombinator.com/item?id=40642328</li>
+<li>https://forum.parallels.com/threads/macos-15-sequoia-nested-virtualization-for-m3-macs.364397/</li>
+<li>in-repo: <code>submodules/containers/pkg/emulator/accel.go</code>,
+<code>pkg/cuttlefish/accel.go</code>, <code>README.md</code></li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="T1/main deep-research subagent" />
+  <meta name="dcterms.date" content="2026-07-06" />
+  <title>07_stt_ocr_whisper_tesseract</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">07_stt_ocr_whisper_tesseract</h1>
+<p class="author">T1/main deep-research subagent</p>
+<p class="date">2026-07-06</p>
+</header>
+<h1 id="local-speech-to-text-whisper-ocr-tesseract-deep-research-integration-design">Local
+Speech-to-Text (Whisper) + OCR (Tesseract) — Deep Research &amp;
+Integration Design</h1>
+<p><strong>Access date for all citations: 2026-07-06.</strong>
+Preference given to 2025–2026 sources. Claims that could not be pinned
+to a primary source are marked <strong>UNCONFIRMED</strong>.</p>
+<blockquote>
+<p>Anti-bluff note (§11.4.6 / §11.4.123): the benchmark numbers below
+are quoted from the cited secondary sources; before any of these engines
+is wired into a shipped HelixQA gate, the numbers MUST be re-measured on
+our own RTX 5090 host with our own fixtures (§11.4.107(13) — thresholds
+calibrated on the project’s own fixtures, never hardcoded from
+literature). This document is a design + selection artefact, not a
+captured-evidence artefact.</p>
+</blockquote>
+<hr />
+<h2 id="executive-recommendation-tldr">0. Executive Recommendation
+(TL;DR)</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Recommended local engine</th>
+<th>Runner-up</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>STT (batch, multilingual, evidence
+transcription)</strong></td>
+<td><strong>faster-whisper (CTranslate2) large-v3 /
+large-v3-turbo</strong></td>
+<td>whisper.cpp (CPU/Mac hosts)</td>
+<td>Same weights = same accuracy as reference Whisper, ~4× faster, less
+VRAM, 99 languages, mature OpenAI-compatible servers exist.</td>
+</tr>
+<tr>
+<td><strong>STT (low-latency / streaming voice input to
+agents)</strong></td>
+<td><strong>NVIDIA Parakeet-TDT-0.6B-v3</strong> (via NeMo) or
+<strong>Moonshine</strong> (edge/CPU)</td>
+<td>faster-whisper large-v3-turbo</td>
+<td>Transducer architecture → no silence hallucination, native
+streaming, ~6–23× faster than large-v3. Trade-off: 25 European langs
+only.</td>
+</tr>
+<tr>
+<td><strong>STT (word-level timestamps for subtitle/caption
+ground-truth)</strong></td>
+<td><strong>WhisperX</strong> (faster-whisper + wav2vec2 forced
+alignment)</td>
+<td>Parakeet TDT native timestamps</td>
+<td>Forced alignment gives the most reliable word timings, needed to
+build the §11.4.137 subtitle ground-truth corpus.</td>
+</tr>
+<tr>
+<td><strong>OCR (fast, offline, per-word confidence + ROI — the HelixQA
+default)</strong></td>
+<td><strong>Tesseract 5.5 (LSTM / OEM 1)</strong> via
+<code>image_to_data</code> / <code>gosseract</code></td>
+<td>RapidOCR</td>
+<td>Native per-word <code>conf</code> + bounding boxes, tiny deps,
+already the planned engine in helix_qa
+<code>OPENCV_INTEGRATION_ARCHITECTURE.md</code>.</td>
+</tr>
+<tr>
+<td><strong>OCR (layout-heavy docs, handwriting, multi-column, weak
+Tesseract confidence)</strong></td>
+<td><strong>PaddleOCR (PP-StructureV3)</strong> or
+<strong>Surya</strong></td>
+<td>docTR</td>
+<td>Higher accuracy on complex/handwritten/multilingual; use as the
+confidence-triggered fallback tier.</td>
+</tr>
+<tr>
+<td><strong>OCR (last-resort / semantic reading of hard
+frames)</strong></td>
+<td><strong>VLM-based OCR</strong> (the stream-02 vision model)</td>
+<td>—</td>
+<td>Only when Tesseract conf &lt; threshold AND ML-OCR still ambiguous;
+token-costly, non-deterministic.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Exposure strategy:</strong> run <strong>one STT HTTP
+service</strong> presenting the OpenAI
+<code>POST /v1/audio/transcriptions</code> +
+<code>/v1/audio/translations</code> schema (drop-in for the OpenAI SDK),
+and <strong>one OCR HTTP service</strong> presenting a small unified
+JSON contract (<code>words[] {text, conf, bbox, line, block}</code>).
+Both run as <strong>rootless podman</strong> containers booted on-demand
+through the <code>vasic-digital/containers</code> submodule (§11.4.76 /
+§11.4.161), with models/langpacks mounted as gitignored volumes carrying
+a §11.4.77 re-obtain script.</p>
+<hr />
+<h2 id="local-whisper-stt">1. Local Whisper / STT</h2>
+<h3 id="runtime-comparison-same-weights-whisper-variants">1.1 Runtime
+comparison (same-weights Whisper variants)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Runtime</th>
+<th>Backend</th>
+<th>Best host</th>
+<th>Rel. speed vs OpenAI ref</th>
+<th>Accuracy</th>
+<th>Word timestamps</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI <code>whisper</code></strong> (reference)</td>
+<td>PyTorch</td>
+<td>any GPU</td>
+<td>1×</td>
+<td>baseline</td>
+<td>approximate</td>
+<td>Slow; reference only.</td>
+</tr>
+<tr>
+<td><strong>faster-whisper</strong></td>
+<td>CTranslate2 (int8/fp16)</td>
+<td><strong>NVIDIA GPU (RTX 5090)</strong></td>
+<td><strong>up to ~4×</strong>, less VRAM</td>
+<td>= reference (same weights)</td>
+<td>via <code>word_timestamps=True</code> (DTW)</td>
+<td>Best all-round GPU choice. [1][6][8]</td>
+</tr>
+<tr>
+<td><strong>whisper.cpp</strong></td>
+<td>GGML/GGUF</td>
+<td><strong>CPU / Apple Silicon (Metal, Core ML)</strong></td>
+<td>fast on CPU/Mac</td>
+<td>= reference</td>
+<td>yes</td>
+<td>C/C++, tiny footprint, official CUDA image
+<code>ghcr.io/ggml-org/whisper.cpp:main-cuda</code>. [1][2][11]</td>
+</tr>
+<tr>
+<td><strong>WhisperX</strong></td>
+<td>faster-whisper + wav2vec2 + pyannote</td>
+<td>GPU</td>
+<td>fast (uses faster-whisper)</td>
+<td>= reference ASR</td>
+<td><strong>best (forced alignment)</strong> + diarization</td>
+<td>A <em>layer</em> on top, not a separate ASR. [1][4]</td>
+</tr>
+<tr>
+<td><strong>Distil-Whisper (distil-large-v3 / v3.5)</strong></td>
+<td>HF / CT2</td>
+<td>GPU</td>
+<td><strong>~6.3× (v3), ~2× (v3.5)</strong></td>
+<td>within ~1% WER of large-v3 (English-centric)</td>
+<td>yes</td>
+<td>756M params, 49% smaller; English-first. [12][13]</td>
+</tr>
+</tbody>
+</table>
+<p>Key finding: <strong>whisper.cpp vs faster-whisper is a
+speed/platform choice, not an accuracy choice — all run identical
+weights</strong> [1]. faster-whisper’s CTranslate2 + int8 is the
+VRAM/speed winner on NVIDIA; whisper.cpp wins on CPU/Mac [1][2].</p>
+<h3 id="newer-20252026-stt-engines-different-architectures">1.2 Newer
+2025–2026 STT engines (different architectures)</h3>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Model</th>
+<th>Arch</th>
+<th>WER (avg, cited)</th>
+<th>Speed</th>
+<th>Languages</th>
+<th>Streaming</th>
+<th>Silence hallucination</th>
+<th>Timestamps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Whisper large-v3</strong></td>
+<td>enc-dec (autoregressive)</td>
+<td>~7.4% [7] / 12.6% multiling [3]</td>
+<td>RTFx ~33× on RTX 5090 [10]</td>
+<td><strong>99</strong></td>
+<td>no (30s window) [9]</td>
+<td><strong>yes</strong> (decoder always emits) [3][7]</td>
+<td>approx / DTW</td>
+</tr>
+<tr>
+<td><strong>Whisper large-v3-turbo</strong></td>
+<td>enc-dec, 4 decoder layers</td>
+<td>within 1–2% of v3</td>
+<td>~6× v3 [—]</td>
+<td>99</td>
+<td>no</td>
+<td>yes</td>
+<td>approx</td>
+</tr>
+<tr>
+<td><strong>NVIDIA Parakeet-TDT-0.6B-v3</strong></td>
+<td>Token-and-Duration Transducer</td>
+<td><strong>6.32%</strong> [7] / 12.0% [3]</td>
+<td>~3,333× real-time; 6–23× &gt; v3 [3][7]</td>
+<td><strong>25 (EU)</strong></td>
+<td><strong>native</strong> [—]</td>
+<td><strong>none</strong> (trained on 36k h silence) [7]</td>
+<td><strong>native, precise</strong> [—]</td>
+</tr>
+<tr>
+<td><strong>NVIDIA Canary-1B-v2</strong></td>
+<td>enc-dec + NFA/CTC</td>
+<td>SOTA multiling (arXiv 2509.14128)</td>
+<td>fast</td>
+<td>25</td>
+<td>—</td>
+<td>low</td>
+<td>segment-level (NFA) [—]</td>
+</tr>
+<tr>
+<td><strong>Moonshine (tiny/base/medium)</strong></td>
+<td>enc-dec, variable-length (no 30s pad)</td>
+<td>beats Whisper large-v3 at 6× fewer params [—]</td>
+<td><strong>~5× Whisper</strong>, sub-200ms on Pi [—]</td>
+<td>English + specialized</td>
+<td><strong>built for streaming</strong> [—]</td>
+<td>low</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recommendation, layered by use case:</strong></p>
+<ol type="1">
+<li><strong>Default / batch / multilingual evidence transcription
+→</strong> <code>faster-whisper</code> <strong>large-v3</strong> (or
+<strong>large-v3-turbo</strong> for throughput). 99-language coverage is
+required because HelixCode is explicitly multilingual (CONST-046).
+[1][6]</li>
+<li><strong>Real-time voice input to agents / low-latency →</strong>
+<strong>Parakeet-TDT-0.6B-v3</strong> (NeMo) when the languages are in
+its 25-EU set; <strong>Moonshine</strong> for CPU/edge or English-only
+wake-word/command paths. Both avoid Whisper’s silence-hallucination and
+30-second-window tax. [3][7][9]</li>
+<li><strong>Word-timestamp ground truth (subtitle/caption oracle)
+→</strong> <strong>WhisperX</strong> forced alignment, or Parakeet TDT’s
+native durations. [1][4]</li>
+</ol>
+<h3 id="api-exposure-one-openai-compatible-stt-endpoint">1.3 API
+exposure — one OpenAI-compatible STT endpoint</h3>
+<p>Expose faster-whisper behind the <strong>OpenAI audio schema</strong>
+so every HelixCode/HelixAgent component that already speaks the OpenAI
+SDK switches with a one-line base-URL change [6]:</p>
+<pre><code>POST /v1/audio/transcriptions   (multipart: file, model, language, response_format=json|verbose_json|srt|vtt, timestamp_granularities[]=word)
+POST /v1/audio/translations</code></pre>
+<p>Mature drop-in servers to reuse (do NOT hand-roll — §11.4.74
+extend-don’t-reimplement): -
+<strong><code>fedirz/faster-whisper-server</code></strong> /
+<strong><code>speaches</code></strong> (successor project) —
+OpenAI-compatible, GPU, model hot-load. [6] -
+<strong><code>hwdsl2/docker-whisper</code></strong> — OpenAI-compatible,
+CUDA, JSON/SRT/VTT, SSE streaming, offline mode, multi-arch. [6] -
+<strong><code>hwdsl2/docker-whisper-live</code></strong> /
+<strong>WhisperLive</strong> — WebSocket streaming + OpenAI REST for the
+live path. [6]</p>
+<p>Recommendation: adopt a
+<code>speaches</code>/<code>faster-whisper-server</code>-class image as
+the base, pin the SHA, mount our own model volume. For the streaming
+voice path, front Parakeet (NeMo) or Moonshine behind the <em>same</em>
+OpenAI schema (add a thin adapter) so callers stay uniform. Register in
+the LLMsVerifier/provider layer as a capability, not a hardcoded model
+list (CONST-036/040).</p>
+<hr />
+<h2 id="tesseract-ocr">2. Tesseract / OCR</h2>
+<h3 id="tesseract-5.5-current-state-best-practice">2.1 Tesseract 5.5 —
+current state &amp; best practice</h3>
+<ul>
+<li><strong>Version:</strong> Tesseract 5 is the current stable major
+line (5.0.0 shipped 2021-11-30; 5.5.x is the current patch series).
+<strong>OEM 1 (LSTM) is the default and most accurate mode.</strong>
+[14][15]</li>
+<li><strong>Per-word confidence + ROI (the load-bearing HelixQA need,
+§11.4.117/§11.4.137):</strong> <code>image_to_data</code> returns, per
+token, <code>text</code>, <code>conf</code>, and
+<code>left/top/width/height</code> bounding boxes → filter on
+<code>conf</code> (e.g. <code>conf &gt; 60</code>) and restrict to a
+region-of-interest rectangle. This is exactly the “per-word confidence
+floor + ROI” the subtitle/UI oracle mandates. [17][19]</li>
+<li><strong>Language packs:</strong> use
+<strong><code>tessdata_best</code></strong> (most-accurate LSTM models)
+for the verification path; <code>tessdata_fast</code> only where speed
+dominates. Load <strong>one dominant language (or a pair)</strong> —
+Tesseract accuracy <em>degrades</em> with 3+ languages loaded at once;
+<code>lang=&#39;eng+deu&#39;</code> is fine, “load everything” is not.
+[16][18]</li>
+<li><strong>Confidence-tiered pipeline (2025 best practice):</strong>
+run Tesseract first, ask for per-word confidence, and <strong>fall back
+to an ML/VLM OCR only when confidence drops below threshold or the page
+returns suspiciously little text.</strong> [14]</li>
+</ul>
+<h3 id="when-to-prefer-an-ml-ocr-over-tesseract">2.2 When to prefer an
+ML OCR over Tesseract</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Engine</th>
+<th>Overall acc (cited)</th>
+<th>Handwriting</th>
+<th>Typed</th>
+<th>Layout/tables</th>
+<th>Speed</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tesseract 5.5</strong></td>
+<td>high on clean typed</td>
+<td>weak</td>
+<td>~97%</td>
+<td>weak (needs EAST/pre-seg)</td>
+<td><strong>fast, tiny deps</strong></td>
+<td>Default; clean UI text, subtitles, per-word conf + ROI.
+[14][17]</td>
+</tr>
+<tr>
+<td><strong>PaddleOCR (PP-StructureV3, v4)</strong></td>
+<td>92.96% overall / 97.23% typed [—]</td>
+<td>52% [—]</td>
+<td>strong</td>
+<td><strong>strong (built-in layout)</strong></td>
+<td><strong>most pages/min</strong> [—]</td>
+<td>Tables, multilingual invoices, high-throughput batch.</td>
+</tr>
+<tr>
+<td><strong>Surya</strong></td>
+<td><strong>97.41% overall / 98.48% typed / 87% handwriting</strong>
+[—]</td>
+<td><strong>strong</strong></td>
+<td><strong>strongest typed</strong></td>
+<td><strong>strong (line/reading order)</strong></td>
+<td>moderate</td>
+<td>Complex multi-column, widest scripts, handwriting.</td>
+</tr>
+<tr>
+<td><strong>docTR</strong></td>
+<td>deep-learning detect+recognize</td>
+<td>moderate</td>
+<td>strong</td>
+<td>good</td>
+<td>moderate</td>
+<td>Scanned docs, mixed formatting (TF/PyTorch).</td>
+</tr>
+<tr>
+<td><strong>RapidOCR</strong></td>
+<td>PaddleOCR-class, lightweight</td>
+<td>moderate</td>
+<td>strong</td>
+<td>good</td>
+<td>fast</td>
+<td>Lightweight PaddleOCR-style stack.</td>
+</tr>
+<tr>
+<td><strong>VLM OCR (stream-02 model)</strong></td>
+<td>highest semantic</td>
+<td>strong</td>
+<td>strong</td>
+<td>strong</td>
+<td>slow, non-deterministic, token-cost</td>
+<td>Last-resort semantic read of hard frames.</td>
+</tr>
+</tbody>
+</table>
+<p>Consensus (2025–2026): <strong>Tesseract for bulk speed + small deps;
+PaddleOCR when accuracy matters; Surya for layout-heavy/handwriting; VLM
+only when confidence dips.</strong> [—]</p>
+<h3 id="recommended-ocr-approach-unified-ocr-api">2.3 Recommended OCR
+approach + unified OCR API</h3>
+<p><strong>Three-tier, confidence-gated OCR:</strong></p>
+<pre><code>Tier 1  Tesseract 5.5 (OEM 1, tessdata_best, ROI, per-word conf)   ← default, deterministic, cheap
+   │  if mean/word conf &lt; floor  OR  expected-pattern miss (§11.4.159(J))
+Tier 2  PaddleOCR / Surya (layout / handwriting / multilingual)     ← ML fallback
+   │  if still ambiguous
+Tier 3  VLM OCR (stream-02)                                         ← semantic last resort (token-costly)</code></pre>
+<p>Expose all three behind <strong>one unified OCR HTTP
+contract</strong> so callers never bind to an engine:</p>
+<pre><code>POST /v1/ocr   { image: &lt;b64|path&gt;, roi?: [x,y,w,h], lang?: &quot;eng+deu&quot;, min_conf?: 60, tier?: &quot;auto|tesseract|ml|vlm&quot; }
+→ { engine, words: [ {text, conf, bbox:[x,y,w,h], line, block} ], full_text, mean_conf }</code></pre>
+<p>This maps 1:1 onto the <strong>self-validated analyzer</strong>
+requirement (§11.4.107(10)): the same golden-good / golden-bad fixture
+pair validates whichever tier answered.</p>
+<hr />
+<h2 id="integration-seams-where-stt-ocr-add-capability">3. Integration
+Seams — where STT + OCR add capability</h2>
+<h3 id="helixqa-vision-testing-highest-value-seam">3.1 HelixQA vision
+testing (highest-value seam)</h3>
+<p>helix_qa <strong>already plans</strong> this:
+<code>OPENCV_INTEGRATION_ARCHITECTURE.md</code> specifies a
+<code>pkg/vision/text_extractor.go</code> with <strong>EAST text
+detection → Tesseract OCR</strong> via
+<code>github.com/otiai10/gosseract/v2</code> (Tesseract cgo bindings),
+tessdata under <code>tessdata/</code>, “10× cheaper than OCR API calls.”
+<strong>This is the wiring target — extend it, don’t reinvent
+it.</strong></p>
+<p>STT + OCR feed the <strong>media-validation pipeline</strong> the
+constitution already mandates:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Constitution anchor</th>
+<th>What it needs</th>
+<th>STT/OCR contribution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>§11.4.117</strong> CV/OCR pixel-oracle fallback for
+non-introspectable UIs</td>
+<td>drive input + read pixels via OCR with per-word conf + ROI</td>
+<td><strong>Tesseract Tier-1</strong> is the exact engine; ROI+conf are
+native.</td>
+</tr>
+<tr>
+<td><strong>§11.4.137</strong> subtitle/caption content-correctness
+oracle</td>
+<td>classify cue as DIALOGUE vs CHROME; position band; cadence ≥2;
+fuzzy-match vs source cue</td>
+<td>OCR reads the on-screen caption; <strong>WhisperX/Parakeet
+timestamps build the source ground-truth cue list</strong> to
+fuzzy-match against.</td>
+</tr>
+<tr>
+<td><strong>§11.4.107</strong> liveness / self-validated analyzer</td>
+<td>OCR analyzer must pass golden-good &amp; FAIL golden-bad</td>
+<td>unified <code>/v1/ocr</code> + fixture pair.</td>
+</tr>
+<tr>
+<td><strong>§11.4.158–160</strong> intensive recording + read-the-screen
+content verification</td>
+<td>“System reads every log line / UI label and verifies genuine
+result”</td>
+<td>OCR reads terminal/UI frames; <strong>STT reads any audio
+track</strong> in the recording.</td>
+</tr>
+<tr>
+<td><strong>§11.4.163</strong> universal media-validation pipeline</td>
+<td>OCR video/screenshots, <strong>transcription for audio</strong>,
+compare vs SPECIFY patterns</td>
+<td>STT is the <em>audio</em> validator leg; OCR the <em>visual</em> leg
+— both emit PASS/FAIL + evidence path.</td>
+</tr>
+<tr>
+<td><strong>§11.4.68/§11.4.69</strong> sink-side positive evidence
+(<code>audio_output</code>)</td>
+<td>prove audio genuinely played</td>
+<td>STT transcript of captured sink audio = positive
+<code>audio_output</code> evidence (transcribe the recording, assert
+expected words).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>New capability unlocked:</strong> today the media-validation
+pipeline reads pixels; adding STT lets it <strong>assert that captured
+audio evidence actually contains the expected speech/words</strong> —
+closing the <code>audio_output</code> sink-side gap for any
+voice/TTS/playback feature, and giving subtitle tests an independent
+audio-vs-caption cross-check.</p>
+<h3 id="helixcode-helixagent-helixllm-agent-capability-seams">3.2
+HelixCode / HelixAgent / HelixLLM agent capability seams</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Seam</th>
+<th>STT</th>
+<th>OCR</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Voice input to agents</strong> (CLI/desktop/mobile)</td>
+<td>streaming Parakeet/Moonshine → intent recognition (§11.4.105)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Transcribe audio evidence / recordings</strong> (§11.4.128
+always-on device recording)</td>
+<td>faster-whisper batch over the raw corpus at release-prep</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Agent vision — read screenshots</strong>
+(<code>vision_engine</code> submodule,
+<code>internal/helixqa</code>)</td>
+<td>—</td>
+<td>unified <code>/v1/ocr</code> for agent “what’s on screen”</td>
+</tr>
+<tr>
+<td><strong>Doc ingestion / RAG</strong> (<code>doc_processor</code>,
+<code>rag</code>, <code>embeddings</code> submodules)</td>
+<td>transcribe audio/video assets into the RAG corpus</td>
+<td>OCR scanned PDFs/images into the RAG corpus</td>
+</tr>
+<tr>
+<td><strong>Repomap / screenshots in issues</strong></td>
+<td>—</td>
+<td>OCR error dialogs/screenshots attached to workable items</td>
+</tr>
+<tr>
+<td><strong>Accessibility / i18n</strong> (CONST-046)</td>
+<td>multilingual transcription</td>
+<td>multilingual OCR (per-locale langpack)</td>
+</tr>
+</tbody>
+</table>
+<p>Wire both as <strong>capabilities behind the provider/LLMsVerifier
+layer</strong> (<code>internal/provider</code>,
+<code>internal/providers</code>, <code>llms_verifier</code> submodule)
+so they are discoverable, not hardcoded (CONST-036/040), and consumed by
+<code>internal/helixqa</code> + the <code>vision_engine</code>
+submodule.</p>
+<h3 id="data-flow-into-the-media-validation-pipeline">3.3 Data flow into
+the media-validation pipeline</h3>
+<pre><code>recording (mp4/wav/png, §11.4.154/155 window-scoped, project-prefixed)
+   ├─ video/frames ─→ /v1/ocr  (Tesseract→ML→VLM)  ─→ words[]+conf+bbox ─┐
+   └─ audio track ──→ /v1/audio/transcriptions (faster-whisper) ─→ text ─┤
+                                                                          ▼
+        §11.4.163 media-validation: compare vs SPECIFY-phase expected patterns
+        self-validated analyzer (§11.4.107(10)) → PASS/FAIL + evidence path (§11.4.69)</code></pre>
+<hr />
+<h2 id="rootless-podman-deployment-11.4.161-11.4.76-11.4.77">4. Rootless
+Podman Deployment (§11.4.161 / §11.4.76 / §11.4.77)</h2>
+<p>Both services run <strong>rootless</strong>, booted on-demand via the
+<code>containers</code> submodule’s
+<code>pkg/boot</code>/<code>pkg/compose</code>/<code>pkg/health</code>
+(never hand-run <code>podman run</code> as a workflow — Rule 4 /
+§11.4.76). GPU access uses <strong>CDI (Container Device
+Interface)</strong> — the officially supported rootless-Podman NVIDIA
+path [—][20].</p>
+<h3 id="rootless-gpu-prerequisites-host-one-time">4.1 Rootless GPU
+prerequisites (host, one-time)</h3>
+<ul>
+<li><code>nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml</code>
+(regenerate on driver change).</li>
+<li>In <code>/etc/nvidia-container-runtime/config.toml</code> set
+<strong><code>no-cgroups = true</code></strong> (required for rootless).
+[20]</li>
+<li>Run with <code>--device nvidia.com/gpu=all</code> (CDI) — no
+<code>--privileged</code>, no root. [—][20]</li>
+<li>Verify with <code>nvidia-smi</code> inside the container. [20]</li>
+</ul>
+<h3 id="stt-container">4.2 STT container</h3>
+<ul>
+<li><strong>Base image:</strong> <code>speaches</code> /
+<code>fedirz/faster-whisper-server</code> (CUDA) — SHA-pinned; or
+<code>ghcr.io/ggml-org/whisper.cpp:main-cuda</code> for the
+CPU/Mac/whisper.cpp path [11]. Multi-arch (amd64/arm64) images exist for
+CPU hosts [6].</li>
+<li><strong>Model volume (gitignored):</strong>
+<code>./models/faster-whisper/</code> mounted read-only;
+<code>HF_HUB_OFFLINE=1</code> for air-gapped/offline runs [6].</li>
+<li><strong>§11.4.77 re-obtain:</strong>
+<code>scripts/fetch_whisper_models.sh</code> downloads
+<code>Systran/faster-whisper-large-v3</code> (+ <code>-turbo</code>, +
+Parakeet/NeMo <code>.nemo</code> if used) from Hugging Face, with a
+<code>.gitignore-meta/*.yaml</code> declaring pattern, source URL, size,
+sha256, requires-network.</li>
+<li><strong>Port:</strong> internal <code>:8000</code>, exposed to the
+pod network only.</li>
+</ul>
+<h3 id="ocr-container">4.3 OCR container</h3>
+<ul>
+<li><strong>Base image:</strong> Debian/Ubuntu slim +
+<code>tesseract-ocr</code> 5.5 + <code>libtesseract-dev</code> (for
+<code>gosseract</code> cgo) + Python (<code>pytesseract</code>) or the
+Go binary; PaddleOCR/Surya as an optional second stage image.</li>
+<li><strong>Langpack volume (gitignored):</strong>
+<code>./tessdata/</code> mounted read-only; ship only the langpacks in
+use (~15–40 MB each) [16].</li>
+<li><strong>§11.4.77 re-obtain:</strong>
+<code>scripts/fetch_tessdata.sh</code> pulls <code>eng</code>,
+<code>deu</code>, <code>srp</code>, … <code>.traineddata</code> from
+<strong><code>tessdata_best</code></strong>, sha256-verified;
+PaddleOCR/Surya model weights fetched by their own SDK cache with a
+pinned version.</li>
+<li><strong>Determinism:</strong> pin engine + model versions;
+thresholds live in config, calibrated on our fixtures
+(§11.4.107(13)).</li>
+</ul>
+<h3 id="compose-sketch-driven-by-the-containers-submodule-not-hand-run">4.4
+Compose sketch (driven by the containers submodule, not hand-run)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># registered as a containers-submodule context, booted on-demand by pkg/boot</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">helix-stt</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> ghcr.io/speaches-ai/speaches:&lt;pinned-sha&gt;-cuda</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">devices</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;nvidia.com/gpu=all&quot;</span><span class="kw">]</span><span class="co">         # CDI, rootless</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> WHISPER__MODEL=Systran/faster-whisper-large-v3</span><span class="kw">,</span><span class="at"> HF_HUB_OFFLINE=</span><span class="dv">1</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&quot;./models/faster-whisper:/models:ro&quot;</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">helix-ocr</span><span class="kw">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> localhost/helix-ocr:&lt;pinned-sha&gt;</span><span class="co">  # tesseract 5.5 + unified /v1/ocr</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">volumes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> </span><span class="st">&quot;./tessdata:/tessdata:ro&quot;</span><span class="at"> </span><span class="kw">]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> TESSDATA_PREFIX=/tessdata </span><span class="kw">]</span></span></code></pre></div>
+<hr />
+<h2 id="top-3-risks">5. Top 3 Risks</h2>
+<ol type="1">
+<li><p><strong>Silence hallucination + wrong-language transcripts
+producing false PASS/FAIL in HelixQA (§11.4 bluff surface).</strong>
+Whisper’s autoregressive decoder invents text on silence/noise [3][7]; a
+media-validation gate that asserts “expected words present” could pass
+on hallucinated audio, or fail a correct clip. <em>Mitigation:</em> use
+Parakeet (no silence hallucination) for the assertion path where its
+25-lang set suffices; for Whisper, add VAD gating +
+confidence/no-speech-prob thresholds; treat the STT analyzer itself as a
+self-validated analyzer with golden-good/golden-bad audio fixtures
+(§11.4.107(10)).</p></li>
+<li><p><strong>OCR reads the wrong thing on secure/blank surfaces
+(§11.4.112/§11.4.137) or with a mis-tuned confidence floor.</strong>
+Tesseract accuracy collapses with too many languages loaded [16] and on
+FLAG_SECURE/DRM frames pixel capture is black (structurally impossible
+per §11.4.112) — a naive OCR pass could accept a chrome/menu label as a
+subtitle (the exact §11.4.137 forensic bluff). <em>Mitigation:</em>
+one/two langpacks max, ROI + per-word conf floor calibrated on our
+fixtures, chrome-label denylist + position-band + cadence checks per
+§11.4.137, honest SKIP + operator-attended migration where pixels are
+black.</p></li>
+<li><p><strong>Rootless-podman GPU + model-supply-chain
+fragility.</strong> CDI + <code>no-cgroups=true</code> +
+<code>--hooks-dir</code> config drifts across driver/kernel updates and
+breaks GPU-in-container silently [20]; large gitignored model/langpack
+volumes make a fresh clone non-runnable without the §11.4.77 re-obtain
+scripts (a §11.4.77 bluff). <em>Mitigation:</em> a
+<code>pkg/health</code> GPU probe (<code>nvidia-smi</code> in-container)
+as a boot gate; SHA-pinned images + sha256-verified model fetch scripts
+wired into <code>setup.sh</code>; CPU/whisper.cpp fallback image so a
+broken GPU path degrades instead of dead-ends.</p></li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ol type="1">
+<li>builderai.tools — <em>whisper.cpp vs faster-whisper: Speed and
+Accuracy Compared</em> —
+https://builderai.tools/blog/whisper-cpp-vs-faster-whisper-speed-and-accuracy
+(accessed 2026-07-06)</li>
+<li>codersera.com — <em>faster-whisper vs whisper.cpp vs OpenAI Whisper
+(2026)</em> —
+https://codersera.com/blog/faster-whisper-vs-whisper-cpp-speech-to-text-2026/
+(accessed 2026-07-06)</li>
+<li>modal.com — <em>The Top Open Source Speech-to-Text (STT) Models in
+2025</em> — https://modal.com/blog/open-source-stt (accessed
+2026-07-06)</li>
+<li>modal.com — <em>Choosing between Whisper variants: faster-whisper,
+insanely-fast-whisper, WhisperX</em> —
+https://modal.com/blog/choosing-whisper-variants (accessed
+2026-07-06)</li>
+<li>whispernotes.app — <em>Parakeet V3 vs Whisper: 10x Faster, Better
+Accuracy (Benchmark)</em> —
+https://whispernotes.app/blog/parakeet-v3-default-mac-model (accessed
+2026-07-06)</li>
+<li>github.com/hwdsl2/docker-whisper — <em>self-hosted faster-whisper,
+OpenAI-compatible /v1/audio/transcriptions, CUDA, SSE, offline,
+multi-arch</em> — https://github.com/hwdsl2/docker-whisper (accessed
+2026-07-06)</li>
+<li>localaimaster.com — <em>NVIDIA Parakeet TDT: Fastest Local
+Speech-to-Text</em> / <em>Parakeet vs Whisper 2026</em> —
+https://localaimaster.com/models/parakeet-tdt ,
+https://localaimaster.com/blog/parakeet-vs-whisper (accessed
+2026-07-06)</li>
+<li>localaimaster.com — <em>Faster-Whisper Setup Guide (2026): 4x Faster
+Local Speech-to-Text</em> —
+https://localaimaster.com/blog/faster-whisper-guide (accessed
+2026-07-06)</li>
+<li>github.com/moonshine-ai/moonshine — <em>Very low latency speech to
+text for voice agents</em> — https://github.com/moonshine-ai/moonshine
+(accessed 2026-07-06)</li>
+<li>gigagpu.com — <em>Whisper Large-v3 GPU transcription benchmarks (RTX
+3090 / 5090 RTFx)</em> —
+https://gigagpu.com/whisper-large-v3-on-rtx-3090-benchmark/ ,
+https://gigagpu.com/deploy-whisper-real-time-transcription/ (accessed
+2026-07-06)</li>
+<li>github.com/ggml-org/whisper.cpp — <em>Port of OpenAI’s Whisper in
+C/C++, CUDA image <code>main-cuda</code></em> —
+https://github.com/ggml-org/whisper.cpp (accessed 2026-07-06)</li>
+<li>github.com/huggingface/distil-whisper — <em>6x faster, 50% smaller,
+within 1% WER</em> — https://github.com/huggingface/distil-whisper
+(accessed 2026-07-06)</li>
+<li>huggingface.co/distil-whisper/distil-large-v3.5 — <em>WER/speed
+metrics</em> — https://huggingface.co/distil-whisper/distil-large-v3.5
+(accessed 2026-07-06)</li>
+<li>dev.to/gabrielanhaia — <em>Vision Models for OCR: When They Beat
+Tesseract and When They Don’t</em> (confidence-tiered fallback best
+practice) —
+https://dev.to/gabrielanhaia/vision-models-for-ocr-when-they-beat-tesseract-and-when-they-dont-54a6
+(accessed 2026-07-06)</li>
+<li>tesseract-ocr.github.io — <em>Tesseract User Manual / Release Notes
+(v5, OEM 1 LSTM default)</em> — https://tesseract-ocr.github.io/tessdoc/
+, https://tesseract-ocr.github.io/tessdoc/ReleaseNotes.html (accessed
+2026-07-06)</li>
+<li>github.com/tesseract-ocr/tessdata_best — <em>Best (most accurate)
+trained LSTM models</em> —
+https://github.com/tesseract-ocr/tessdata_best (accessed
+2026-07-06)</li>
+<li>nanonets.com — <em>Python OCR Tutorial: Tesseract, Pytesseract,
+OpenCV (image_to_data conf + bbox)</em> —
+https://nanonets.com/blog/ocr-with-tesseract/ (accessed 2026-07-06)</li>
+<li>tesseract-ocr.github.io — <em>Languages/Scripts supported in
+different versions</em> —
+https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html
+(accessed 2026-07-06)</li>
+<li>pypi.org/project/pytesseract — <em>pytesseract image_to_data / lang
+param</em> — https://pypi.org/project/pytesseract/ (accessed
+2026-07-06)</li>
+<li>modal.com — <em>8 Top Open-Source OCR Models Compared</em>
+(PaddleOCR/Surya/docTR) —
+https://modal.com/blog/8-top-open-source-ocr-models-compared (accessed
+2026-07-06)</li>
+<li>podman-desktop.io — <em>GPU container access (CDI, rootless)</em> —
+https://podman-desktop.io/docs/podman/gpu (accessed 2026-07-06)</li>
+<li>github.com/Sinop97/Podman—Run-Rootless-GPU-Container — <em>rootless
+Podman GPU without root (no-cgroups, hooks-dir)</em> —
+https://github.com/Sinop97/Podman—Run-Rootless-GPU-Container (accessed
+2026-07-06)</li>
+<li>e2enetworks.com — <em>Benchmarking ASR: Parakeet vs Whisper vs
+Nemotron on NVIDIA L4</em> —
+https://www.e2enetworks.com/blog/benchmarking-asr-models-nvidia-l4-parakeet-whisper-nemotron
+(accessed 2026-07-06)</li>
+<li>arxiv.org/abs/2509.14128 — <em>Canary-1B-v2 &amp;
+Parakeet-TDT-0.6B-v3 (multilingual ASR/AST)</em> —
+https://arxiv.org/abs/2509.14128 (accessed 2026-07-06)</li>
+<li>invoicedataextraction.com — <em>Best Python OCR Library for
+Invoices: 5 Engines Compared (Surya/PaddleOCR accuracy)</em> —
+https://invoicedataextraction.com/blog/python-ocr-library-comparison-invoices
+(accessed 2026-07-06)</li>
+</ol>
+<h3 id="negative-findings-gaps-11.4.99b">Negative findings / gaps
+(§11.4.99(B))</h3>
+<ul>
+<li>Precise <strong>word-level timestamp accuracy</strong> numbers for
+Parakeet TDT vs WhisperX were not found in a primary source; marked
+UNCONFIRMED — verify against NeMo docs before relying on Parakeet
+timestamps for the subtitle oracle.</li>
+<li><strong>RTX 5090</strong> faster-whisper RTFx quoted (~33×) is from
+a secondary benchmark blog, not a primary/reproducible harness;
+re-measure on our host (§11.4.107(13)).</li>
+<li>helix_qa’s <code>OPENCV_INTEGRATION_ARCHITECTURE.md</code> is a
+<strong>plan</strong> (checkbox “[ ] Integrate Tesseract OCR”), not
+confirmed-shipped code — the seam is a wiring target, not existing
+capability.</li>
+</ul>
+</body>
+</html>

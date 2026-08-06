@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="opendesign-integration-audit-11.4.162-findings">OpenDesign
+Integration Audit (§11.4.162) — Findings</h1>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>2026-06-22</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>helix_code consumer + constitution submodule</td>
+</tr>
+<tr>
+<td>Method</td>
+<td>Read-only audit, captured evidence (§11.4.6/§11.4.123)</td>
+</tr>
+<tr>
+<td>Verdict</td>
+<td><strong>WIRED-BUT-DORMANT + NOT CONSUMED BY ANY UI</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="overall-status">Overall status</h2>
+<p>The OpenDesign MCP entry exists but is <code>disabled:true</code>,
+the daemon is down, no enforcement gate is implemented, and every
+HelixCode UI theme is hand-coded hardcoded hex — <strong>zero OpenDesign
+tokens anywhere</strong>.</p>
+<h2 id="captured-evidence-verified-2026-06-22">Captured evidence
+(verified 2026-06-22)</h2>
+<ul>
+<li><code>open-design-mcp</code> v0.16.1 installed (homebrew,
+<code>/opt/homebrew/bin/open-design-mcp</code>).</li>
+<li><code>.mcp.json</code> <code>open-design</code> entry =
+<code>&quot;disabled&quot;: true</code>; env
+<code>OD_DAEMON_URL=http://localhost:7456</code>.</li>
+<li><code>curl localhost:7456</code> → <strong>HTTP 000 (curl exit
+7)</strong> — daemon NOT running.</li>
+<li><code>open-design-mcp</code> binary without env →
+<code>FATAL: invalid core env vars - OD_DAEMON_URL: Required</code>.
+Functionally inert.</li>
+<li><code>internal/theme/builtin.go</code> has light+dark, but as
+<strong>Go-pinned palettes</strong>, not OD-sourced.</li>
+<li><code>applications/desktop/theme.go</code> uses hardcoded brand hex
+constants (<code>hxcPrimary = &quot;#A8DD22&quot;</code> …, “always dark”, no
+light variant) — the ad-hoc pattern §11.4.162 forbids.</li>
+<li>No <code>tokens.json</code> / <code>.css</code> /
+<code>design-tokens</code> artifact exists anywhere.</li>
+<li>§11.4.162 anchor present in all 5 constitution carriers + repo
+<code>CLAUDE.md</code>, but <strong>MISSING</strong> from
+<code>assets/{CLAUDE,AGENTS}.md</code> and
+<code>submodules/helix_agent/{CLAUDE,AGENTS}.md</code>.</li>
+<li><code>find constitution scripts -iname &#39;*opendesign*&#39;</code> →
+<strong>empty</strong>. Neither <code>CM-OPENDESIGN-UI-SYSTEM</code> nor
+<code>CM-COVENANT-114-162-PROPAGATION</code> is implemented as a script;
+both exist only as governance prose.</li>
+<li>No visual-regression test harness wired to any HelixCode UI
+surface.</li>
+<li>Doc drift: <code>docs/OPENSIGN.md</code> (filename typo) references
+nonexistent <code>assets/Logo.jpeg</code> (actual:
+<code>assets/Logo.png</code>).</li>
+</ul>
+<h2 id="per-requirement-compliance-table">Per-requirement compliance
+table</h2>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 36%" />
+<col style="width: 22%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th>Req</th>
+<th>Requirement</th>
+<th>Status</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(a)</td>
+<td>OpenDesign mandatory for every surface, not ad-hoc CSS</td>
+<td><strong>MISSING</strong></td>
+<td>Only <code>.mcp.json</code> refs OD; themes are hardcoded hex; MCP
+disabled+dormant</td>
+</tr>
+<tr>
+<td>(b)</td>
+<td>Installed dep; tokens for color(light+dark), typography, spacing,
+component</td>
+<td><strong>PARTIAL</strong></td>
+<td>Binary installed but disabled; brand colors are Go constants, no
+token file, no typography/spacing tokens</td>
+</tr>
+<tr>
+<td>(c)</td>
+<td>Every component ships light+dark</td>
+<td><strong>PARTIAL</strong></td>
+<td>inner theme has both; desktop Fyne brand = always-dark, no
+light</td>
+</tr>
+<tr>
+<td>(d)</td>
+<td>No overlap/font collision/label overlay</td>
+<td><strong>MISSING (unverified)</strong></td>
+<td>No layout-regression check exists</td>
+</tr>
+<tr>
+<td>(e)</td>
+<td>All UI changes covered incl. visual-regression</td>
+<td><strong>MISSING</strong></td>
+<td>No visual-regression harness for HelixCode UI</td>
+</tr>
+<tr>
+<td>(f)</td>
+<td>Both gates + paired §1.1 mutation</td>
+<td><strong>PARTIAL</strong></td>
+<td>Anchor text in 6 files; NO gate scripts; no mutation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Totals: 0 COMPLIANT / 3 PARTIAL / 3 MISSING.</strong></p>
+<h2 id="remediation-plan">Remediation plan</h2>
+<h3 id="constitution-level-do-first-mandate-is-currently-unenforceable">Constitution
+level (do FIRST — mandate is currently unenforceable)</h3>
+<ul>
+<li>Author <code>CM-OPENDESIGN-UI-SYSTEM</code> gate script (does not
+exist) asserting: OD is a declared dependency, a token artifact exists
+and is consumed (no ad-hoc hex in theme files), light+dark variants
+present, visual-regression tests cover UI.</li>
+<li>Author <code>CM-COVENANT-114-162-PROPAGATION</code> gate (scan fleet
+for literal <code>11.4.162</code>)
+<ul>
+<li>paired §1.1 mutation (strip literal → FAIL; inline-hex-for-token →
+FAIL; light-only component → FAIL). Keep project-agnostic per §11.4.28;
+consumer registers token path + UI globs per §11.4.35.</li>
+</ul></li>
+</ul>
+<h3 id="helix_code-consumer-level">helix_code consumer level</h3>
+<ul>
+<li>Stand up the OD daemon (Docker per OPENDESIGN.md), set
+<code>.mcp.json disabled:false</code>, confirm
+<code>curl localhost:7456</code> healthy.</li>
+<li>Generate a design-token source from <code>assets/Logo.png</code>
+(light+dark palettes, typography, spacing) via OpenDesign → tracked
+token file.</li>
+<li>Refactor <code>applications/desktop/theme.go</code> +
+<code>internal/theme</code> to consume the token file instead of
+hardcoded hex; add a light brand variant for desktop.</li>
+<li>Add per-pixel/perceptual visual-regression tests for
+desktop/TUI/web, wired into the standard suite.</li>
+<li>Propagate §11.4.162 into <code>assets/</code> +
+<code>submodules/helix_agent/</code> governance files.</li>
+<li>Fix doc drift: rename <code>docs/OPENSIGN.md</code> →
+<code>OPENDESIGN.md</code>; correct <code>assets/Logo.jpeg</code> →
+<code>assets/Logo.png</code>.</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p><code>CM-OPENDESIGN-UI-SYSTEM</code> gate MUST be authored; it
+currently has zero implementation. OpenDesign is documented and
+MCP-wired but functionally dormant and consumed by no UI — the §11.4.162
+mandate is presently unenforced and unmet.</p>
+</body>
+</html>

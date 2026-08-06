@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>00_codebase_inventory</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">00_codebase_inventory</h1>
+</header>
+<h1 id="helixcode-llm-serving-stack-grounded-codebase-inventory">HelixCode
+LLM-Serving Stack — Grounded Codebase Inventory</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-06 <strong>Maintainer:</strong> codebase-reconnaissance subagent
+<strong>Scope:</strong> Factual map of the current LLM-serving stack for
+detailed implementation planning. <strong>Method:</strong> Every claim
+below is grounded in a real file path + line read this session. Anything
+not found is marked <strong>ABSENT</strong> with the paths checked
+(§11.4.6 no-guessing).</p>
+<p>Repo root:
+<code>/home/milos/Factory/projects/tools_and_research/helix_code</code></p>
+<hr />
+<h2 id="helixllm">1. HelixLLM</h2>
+<p><strong>LOCATED.</strong> HelixLLM is a <strong>full standalone Go
+submodule</strong>, present at TWO paths (both real, both populated with
+identical content — the flat + grouped layouts per CONST-051(C)):</p>
+<ul>
+<li><code>submodules/helix_llm/</code> (primary working path this
+session)</li>
+<li><code>dependencies/HelixDevelopment/helix_llm/</code> (second
+checkout of the same repo)</li>
+</ul>
+<p>Facts: - <strong>Module id / language:</strong>
+<code>module github.com/HelixDevelopment/HelixLLM</code>,
+<code>go 1.26.1</code> — <code>submodules/helix_llm/go.mod:1-3</code>. -
+<strong>Upstream:</strong>
+<code>git@github.com:HelixDevelopment/HelixLLM.git</code> (not in root
+<code>.gitmodules</code> under that name — the root
+<code>.gitmodules</code> wires
+<code>dependencies/HelixDevelopment/*</code> for
+<code>doc_processor</code>, <code>llm_orchestrator</code>,
+<code>llm_provider</code>, <code>vision_engine</code>,
+<code>llms_verifier</code>, but NOT <code>helix_llm</code>; the
+<code>submodules/helix_llm</code> +
+<code>dependencies/HelixDevelopment/helix_llm</code> checkouts exist on
+disk — see GAPS). - <strong>What it is</strong>
+(<code>submodules/helix_llm/README.md:1-20</code>): “Enterprise-grade
+distributed LLM system built in Go with Gin Gonic. A single binary with
+a mode system.” It provides: - <strong>OpenAI-compatible API</strong>
+(<code>/v1/chat/completions</code>, <code>/v1/completions</code>,
+<code>/v1/models</code>, <code>/v1/embeddings</code>) AND
+<strong>Anthropic-compatible API</strong> (<code>/v1/messages</code>) —
+README API table. - <strong>Local inference via llama.cpp</strong>
+(CUDA/Metal/ROCm). - <strong>Multi-provider fallback chain</strong> —
+auto-discovers free models from 7+ cloud providers (Chutes, OpenRouter,
+HuggingFace, Nvidia, Cerebras, SambaNova, Together), scores via
+LLMsVerifier, routes ranked chain with 429/5xx failover,
+<strong>llama.cpp as guaranteed last resort</strong>. -
+<strong>RAG</strong> pipeline, <strong>ReAct agent</strong> system w/
+tool calling, HTTP/3 server, mode system (<code>full</code>,
+<code>gateway</code>, <code>brain</code>, <code>knowledge</code>,
+<code>agents</code>, <code>control</code>). - <strong>Entry
+point:</strong> <code>submodules/helix_llm/cmd/helixllm/main.go</code>
+(single binary). Internal packages:
+<code>internal/{agents,brain,control,fallback,gateway,knowledge,mode,server,shared,testing}</code>
+(<code>ls internal/</code>). - <strong>The LLM coordination layer is
+<code>internal/brain/</code></strong> — defines <code>Provider</code>
+interface + <code>Router</code> + <code>Brain</code> service
+(<code>internal/brain/provider.go:1-6</code> package doc).</p>
+<h3 id="helixllm-provider-interface-internalbrainprovider.go14-35">1.1
+HelixLLM Provider interface
+(<code>internal/brain/provider.go:14-35</code>)</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Provider <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    Complete<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>types<span class="op">.</span>InternalChatRequest<span class="op">)</span> <span class="op">(*</span>types<span class="op">.</span>InternalChatResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    CompleteStream<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>types<span class="op">.</span>InternalChatRequest<span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> types<span class="op">.</span>StreamChunk<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Models<span class="op">()</span> <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    Available<span class="op">()</span> <span class="dt">bool</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="helixllm-provider-implementations-internalbrain_provider.go-llamacpp.go">1.2
+HelixLLM provider implementations
+(<code>internal/brain/*_provider.go</code> +
+<code>llamacpp.go</code>)</h3>
+<p>Present, one file each: <code>anthropic_provider.go</code>,
+<code>openai_provider.go</code>, <code>openai_compat_provider.go</code>,
+<code>cerebras_provider.go</code>, <code>chutes_provider.go</code>,
+<code>huggingface_provider.go</code>, <code>nvidia_provider.go</code>,
+<code>openrouter_provider.go</code>, <code>sambanova_provider.go</code>,
+<code>together_provider.go</code>, and
+<strong><code>llamacpp.go</code></strong>.</p>
+<h3 id="llama.cpp-provider-internalbrainllamacpp.go">1.3 llama.cpp
+provider (<code>internal/brain/llamacpp.go</code>)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LlamaCppProvider <span class="kw">struct</span> <span class="op">{</span> baseURL <span class="dt">string</span><span class="op">;</span> models <span class="op">[]</span><span class="dt">string</span><span class="op">;</span> client <span class="op">*</span>http<span class="op">.</span>Client<span class="op">;</span> registry <span class="op">*</span>models<span class="op">.</span>Registry <span class="op">}</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewLlamaCppProvider<span class="op">(</span>baseURL <span class="dt">string</span><span class="op">,</span> models <span class="op">[]</span><span class="dt">string</span><span class="op">)</span> <span class="op">*</span>LlamaCppProvider   <span class="co">// :29</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>LlamaCppProvider<span class="op">)</span> Name<span class="op">()</span> <span class="dt">string</span> <span class="op">{</span> <span class="cf">return</span> <span class="st">&quot;llamacpp&quot;</span> <span class="op">}</span>                 <span class="co">// :39</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>LlamaCppProvider<span class="op">)</span> Available<span class="op">()</span> <span class="dt">bool</span>                                    <span class="co">// :49  GET {base}/health</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>LlamaCppProvider<span class="op">)</span> Complete<span class="op">(...)</span>                                       <span class="co">// :67  POST {base}/v1/chat/completions</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>LlamaCppProvider<span class="op">)</span> CompleteStream<span class="op">(...)</span>                                 <span class="co">// :103 SSE</span></span></code></pre></div>
+<p>It talks to llama.cpp’s <strong>OpenAI-compatible server</strong> at
+a configurable base URL (<code>http://host:port</code>). It is a
+<strong>real HTTP client</strong> — no simulation.</p>
+<h3 id="wiring-in-the-binary-cmdhelixllmmain.go">1.4 Wiring in the
+binary (<code>cmd/helixllm/main.go</code>)</h3>
+<ul>
+<li><code>brain.New(brain.Config{ LlamaCppURL: &quot;http://&lt;LocalRPCHost&gt;:&lt;LocalRPCPort&gt;&quot;, LlamaCppModels: []string{cfg.LLM.LocalModel}, OpenAIKey, AnthropicKey, ChutesKey, OpenRouterKey, HuggingFaceKey, NvidiaKey, CerebrasKey, SambaNovaKey, TogetherKey, ... Registry, KVCache })</code>
+— <code>main.go:268-285</code>. Brain <strong>registers whichever
+providers are configured</strong> (<code>brain.go:95-126</code>, one
+<code>if cfg.XxxKey != &quot;&quot;</code> block per cloud provider;
+<code>RegisterProvider</code> at <code>brain.go:159</code>).</li>
+<li><code>brain.NewLlamaServer(brain.LlamaServerConfig{...})</code> —
+<code>main.go:220</code> (spawns/manages the local llama.cpp server
+process).</li>
+<li>Fallback chain:
+<code>fallback.NewScorerBridge{VerifierURL: cfg.LLM.VerifierURL, RefreshInterval}</code>
+→ <code>fallback.NewChain(brainSvc.Providers(), rateLimiter)</code> →
+<code>scorerBridge.StartRefreshLoop(...)</code> —
+<code>main.go:328-345</code>. <strong>“llamacpp always placed last as
+the local safety net”</strong> (<code>main.go:327</code> comment).</li>
+<li>Embeddings:
+<code>knowledge.NewEmbedder(cfg.Knowledge.EmbeddingProvider, ..., 768)</code>
+with providers <code>&quot;llama&quot;</code> / <code>&quot;openai&quot;</code> and a
+hash-embedder fallback — <code>main.go:290-320</code>. Vector store:
+<code>knowledge.NewVectorStore(cfg.Knowledge.VectorDB, &quot;localhost&quot;, 6333)</code>
+(Qdrant, <code>internal/knowledge/qdrant.go</code>).</li>
+</ul>
+<p><strong>GAPS (§1):</strong> - No <strong>vision</strong> or
+<strong>translation</strong> provider/endpoint in HelixLLM
+(<code>grep -rlniE &#39;vision|translat&#39; internal/</code> returns only
+config/i18n/analytics/registry files, no vision serving surface). - No
+<code>.gitmodules</code> entry for <code>helix_llm</code> at the
+meta-repo root → its version is not pinned/tracked the way other own-org
+submodules are (checked root <code>.gitmodules</code>). - llama.cpp base
+URL + model list are <strong>config-driven single values</strong>
+(<code>LocalModel</code>, <code>LocalRPCHost/Port</code>) — no
+multi-model / multi-GGUF registry populated from disk shown in
+<code>main.go</code> (registry exists at
+<code>internal/brain/models/registry.go</code> but wiring to a GGUF
+directory is via <code>brain.NewDownloader(cfg.LLM.ModelsDir)</code> at
+<code>main.go:182</code>; no RTX-5090 / GPU-layer configuration surface
+found). - MCP/ACP capability serving: HelixLLM has
+<code>agents/mcp*.go</code> (tool bridge) but no ACP server found.</p>
+<hr />
+<h2 id="helixagent-submoduleshelix_agent">2. HelixAgent
+(<code>submodules/helix_agent/</code>)</h2>
+<ul>
+<li><strong>Module id:</strong> <code>module dev.helix.agent</code>,
+<code>go 1.26</code> (<code>go.mod:1-3</code>). Upstream
+<code>git@github.com:HelixDevelopment/HelixAgent.git</code> (root
+<code>.gitmodules</code>,
+<code>path = submodules/helix_agent</code>).</li>
+<li>~70 <code>internal/</code> packages (<code>ls internal/</code>),
+including <code>llm/</code>, <code>providers/</code> (via
+<code>llm/providers/</code>), <code>router/</code>,
+<code>services/</code>, <code>handlers/</code>, <code>adapters/</code>,
+<code>verifier/</code>, <code>rag/</code>, <code>mcp/</code>,
+<code>vectordb/</code>, <code>embeddings/</code>.</li>
+</ul>
+<h3 id="provider-abstraction-internalllmprovider.go9-15">2.1 Provider
+abstraction (<code>internal/llm/provider.go:9-15</code>)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LLMProvider <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    Complete<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>models<span class="op">.</span>LLMRequest<span class="op">)</span> <span class="op">(*</span>models<span class="op">.</span>LLMResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    CompleteStream<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>models<span class="op">.</span>LLMRequest<span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> <span class="op">*</span>models<span class="op">.</span>LLMResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    HealthCheck<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    GetCapabilities<span class="op">()</span> <span class="op">*</span>models<span class="op">.</span>ProviderCapabilities</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    ValidateConfig<span class="op">(</span>config <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>NOTE: this is a <strong>different, richer interface</strong> than
+HelixLLM’s <code>brain.Provider</code> (§1.1). HelixAgent is the
+consumer-facing agent platform; HelixLLM is a backend it can call.</p>
+<h3 id="implemented-providers-internalllmprovidersname-45-directories">2.2
+Implemented providers
+(<code>internal/llm/providers/&lt;name&gt;/</code>) — ~45
+directories</h3>
+<p><code>ai21, anthropic, anthropic_cu, azure, cerebras, chutes, claude, cloudflare, codestral, cohere, common, deepseek, fireworks, gemini, generic, githubmodels, groq, helixllm, huggingface, hyperbolic, junie, kilo, kimi, kimicode, lmstudio, mistral, modal, nia, nlpcloud, novita, nvidia, ollama, openai, openrouter, perplexity, publicai, qwen, replicate, sambanova, sarvam, siliconflow, together, upstage, venice, vertex, vulavula</code>
+(<code>ls internal/llm/providers/</code>).</p>
+<ul>
+<li><strong><code>helixllm</code> provider</strong> = the bridge to the
+HelixLLM backend (§1):
+<code>internal/llm/providers/helixllm/provider.go</code>.
+<ul>
+<li><code>defaultEndpoint = &quot;https://localhost:8443&quot;</code>, endpoints
+<code>/v1/chat/completions</code>, <code>/v1/embeddings</code>,
+<code>/v1/models</code>, <code>/internal/health</code>
+(<code>provider.go:23-31</code>).</li>
+<li><code>Config{ Endpoint, APIKey, Model, Timeout, TLSSkipVerify, UseLlamaCpp }</code>;
+<code>UseLlamaCpp</code> toggles HelixLLM’s local llama.cpp backend,
+sourced from <code>HELIX_LLM_USE_LLAMACPP</code> env, communicated via
+<code>X-Helix-LLM-Use-LlamaCpp</code> header
+(<code>provider.go:49-88</code>).</li>
+<li>A second <strong>adapter</strong> exists at
+<code>internal/adapters/helixllm/adapter.go</code> (+
+<code>types.go</code>).</li>
+</ul></li>
+</ul>
+<h3 id="provider-registry-internalservicesprovider_registry.go">2.3
+Provider registry
+(<code>internal/services/provider_registry.go</code>)</h3>
+<ul>
+<li><code>NewProviderRegistry(cfg, memory)</code> →
+<code>registerDefaultProviders(cfg)</code> (<code>:324, :697</code>) +
+<strong>auto-discovery</strong> from env
+(<code>NewProviderDiscovery</code>, <code>:395-441</code>).</li>
+<li><code>createProviderFromConfig</code> switch (<code>:1535+</code>):
+<code>case &quot;claude&quot;</code>, <code>&quot;deepseek&quot;</code>,
+<code>&quot;gemini&quot;</code>, <code>&quot;helixllm&quot;</code> (<code>:1595</code> —
+instantiates <code>helixllm.NewProvider(config)</code>), and more.</li>
+<li><code>InitializeFromStartupVerifier</code> registers providers
+<strong>from LLMsVerifier verified results</strong>
+(<code>:588</code>).</li>
+<li>The verification service is wired to the registered providers for
+real API calls (<code>:473-478</code>).</li>
+</ul>
+<h3 id="openai-anthropic-compatible-rest-server-internalhandlersopenai_compatible.go">2.4
+OpenAI-/Anthropic-compatible REST server
+(<code>internal/handlers/openai_compatible.go</code>)</h3>
+<ul>
+<li>Routes:
+<code>protected.POST(&quot;/chat/completions&quot;, h.ChatCompletions)</code> +
+<code>.../stream</code> (<code>:379-380</code>).</li>
+<li>Exposes <code>GET /v1/models</code> with a canonical model list
+(<code>:531</code>, <code>:2300</code>) including synthetic aliases like
+<code>helixagent-debate</code> / <code>helixagent-llm</code>
+(<code>:574</code>).</li>
+<li>Google-compatible + Anthropic-compatible handlers also present
+(<code>internal/handlers/google_compatible.go</code>,
+<code>completion*</code> handlers). → <strong>HelixAgent DOES expose an
+OpenAI-compatible server that CLI agents can point at.</strong></li>
+</ul>
+<h3 id="helixllm-integration-docs-real">2.5 HelixLLM integration docs
+(real)</h3>
+<p><code>submodules/helix_agent/docs/HELIXLLM_INTEGRATION.md</code>,
+<code>HELIXLLM_USER_MANUAL.md</code>,
+<code>HELIXLLM_TESTING_GUIDE.md</code>;
+<code>docker-compose.helixllm.yml</code> +
+<code>docker-compose.helixllm-infra.yml</code>; dozens of per-CLI-agent
+E2E challenge scripts
+<code>challenges/scripts/cli_agent_*_helixllm_e2e_challenge.sh</code>
+(aider, plandex, gptme, mistral-code, amazon-q, opencode, etc.).</p>
+<p><strong>GAPS (§2):</strong> - No
+<code>vision</code>/<code>translation</code>/<code>embedding</code>-dedicated
+provider directory under <code>internal/llm/providers/</code>
+(embeddings handled via <code>internal/embeddings/</code> + HelixLLM
+<code>/v1/embeddings</code>; no standalone translation surface). - Two
+parallel HelixLLM integration seams
+(<code>internal/llm/providers/helixllm/</code> AND
+<code>internal/adapters/helixllm/</code>) — potential duplication to
+reconcile.</p>
+<hr />
+<h2 id="llmsverifier-submodulesllms_verifier">3. LLMsVerifier
+(<code>submodules/llms_verifier/</code>)</h2>
+<ul>
+<li><strong>Module id:</strong> <code>module llmsverifier</code>,
+<code>go 1.25.3</code> (<code>go.mod</code>). Upstream
+<code>git@github.com:vasic-digital/LLMsVerifier.git</code> (root
+<code>.gitmodules</code>,
+<code>path = submodules/llms_verifier</code>).</li>
+<li>Inner Go module tree lives under <code>llm-verifier/</code>
+(e.g. <code>llm-verifier/llmverifier/</code>,
+<code>llm-verifier/api/</code>, <code>llm-verifier/providers/</code>,
+<code>llm-verifier/sdk/go/</code>).</li>
+<li>Also has ACP docs (<code>ACP_*.md</code>), a Go SDK
+(<code>sdk/go/client.go</code>), k8s/helm, and a challenges bank.</li>
+</ul>
+<h3 id="verificationresult-llm-verifierllmverifiermodels.go10">3.1
+<code>VerificationResult</code>
+(<code>llm-verifier/llmverifier/models.go:10+</code>)</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VerificationResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    CodeCapabilities       CodeCapabilityResult</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    GenerativeCapabilities GenerativeCapabilityResult</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    PerformanceScores      PerformanceScore</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    ScoreDetails           ScoreDetails</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    Capabilities           Capabilities   <span class="co">// (on the model/provider record, models.go:33)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="capabilities-models.go83-93">3.2 <code>Capabilities</code>
+(<code>models.go:83-93</code>)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Capabilities <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Completion<span class="op">,</span> Chat<span class="op">,</span> Embedding<span class="op">,</span> FineTuning<span class="op">,</span> ImageGeneration<span class="op">,</span> CodeGeneration<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ToolUse<span class="op">,</span> Multimodal<span class="op">,</span> FunctionCalling<span class="op">,</span> Voice<span class="op">,</span> Rerank <span class="dt">bool</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Also a <code>FeatureResult</code>-style struct with
+<code>Embeddings</code>, <code>MCPs</code>, etc.
+(<code>models.go:184-189</code>). <code>ContextWindow</code> has a
+custom <code>UnmarshalJSON</code> tolerant of both object and bare-int
+forms (Groq) (<code>models.go:96-120</code>).
+<code>PerformanceScore</code> = OverallScore/CodeCapability/… ;
+<code>CodeCapabilityBreakdown</code> = generation/completion/
+debugging/review/testgen/document/architecture/optimization scores
+(<code>models.go:266-291</code>).</p>
+<h3 id="providers-it-knows-verifies">3.3 Providers it knows /
+verifies</h3>
+<p>Discovered via endpoint-URL matching
+(<code>config_export.go:78-81</code>): <code>api.anthropic.com</code>,
+<code>api.openai.com</code>, <code>api.deepseek.com</code>,
+<code>api.groq.com/openai/v1</code>, <code>gemini</code>. Integration
+tests exercise OpenAI, Anthropic, Groq, Gemini
+(<code>integration_test.go</code>). It performs <strong>real HTTP
+feature detection</strong> (HTTP/3, Brotli, etc. —
+<code>feature_detection_test.go</code>). Config export produces
+per-agent config (crush/opencode verifier sub-packages:
+<code>llm-verifier/pkg/crush/verifier/</code>,
+<code>llm-verifier/pkg/opencode/verifier/</code>).</p>
+<h3 id="integration-point-with-helixllm-helixagent">3.4 Integration
+point with HelixLLM / HelixAgent</h3>
+<ul>
+<li>HelixLLM’s <code>fallback.ScorerBridge</code> polls
+<code>cfg.LLM.VerifierURL</code> and re-orders the fallback chain by
+verifier score
+(<code>helix_llm/cmd/helixllm/main.go:328-345</code>).</li>
+<li>HelixAgent’s provider registry initializes providers from
+<code>StartupVerifier</code> verified results
+(<code>provider_registry.go:588</code>). This is the CONST-036/037
+single-source-of-truth wiring.</li>
+</ul>
+<p><strong>GAPS (§3):</strong> - <code>Capabilities</code> has no
+explicit
+<code>MCP</code>/<code>LSP</code>/<code>ACP</code>/<code>RAG</code>/<code>Skills</code>/<code>Plugins</code>
+boolean at the model level (only <code>MCPs</code> on a separate
+FeatureResult struct at <code>models.go:189</code>); CONST-040 wants
+MCP/LSP/ACP/Embedding/RAG/Skills/Plugins flags sourced from
+<code>VerificationResult</code> — partial today. - No
+<code>llama.cpp</code>/<code>ollama</code> local-provider verification
+path surfaced in <code>config_export.go</code> endpoint matcher (local
+models are not URL-matched to a known cloud provider).</p>
+<hr />
+<h2 id="llama.cpp-gguf-ollama-vllm-usage-across-the-tree">4. llama.cpp /
+GGUF / Ollama / vLLM usage across the tree</h2>
+<ul>
+<li><strong>llama.cpp source</strong> vendored as a submodule:
+<code>dependencies/LLama_CPP/</code> (upstream
+<code>git@github.com:ggml-org/llama.cpp.git</code>, branch
+<code>master</code>; pinned <code>a4107133 (gguf-v0.19.0-827)</code> per
+<code>git submodule status</code>). Full CMake source tree present
+(<code>CMakeLists.txt</code>, <code>CMakePresets.json</code>,
+<code>ci/</code>, <code>cmake/</code>, …).</li>
+<li><strong>Ollama</strong> vendored: <code>dependencies/Ollama/</code>
+(upstream <code>git@github.com:ollama/ollama.git</code>, pinned
+<code>964ea42c v0.13.4-rc2-613</code>).</li>
+<li><strong>HuggingFace Hub</strong> vendored:
+<code>dependencies/HuggingFace_Hub/</code>
+(<code>.gitmodules</code>).</li>
+<li><strong>How llama.cpp is invoked/wired today:</strong>
+<ul>
+<li>HelixLLM <code>internal/brain/llamacpp.go</code> = HTTP client to a
+<strong>running llama.cpp OpenAI-compatible server</strong> (§1.3).</li>
+<li>HelixLLM <code>brain.NewLlamaServer(...)</code>
+(<code>cmd/helixllm/main.go:220</code>) manages a local llama-server
+process; <code>brain.NewDownloader(cfg.LLM.ModelsDir)</code> handles
+GGUF model download (<code>main.go:182</code>).</li>
+<li>There is a dedicated challenge
+<code>helix_agent/challenges/scripts/helixllm_llamacpp_only_challenge.sh</code>.</li>
+</ul></li>
+<li><strong>vLLM:</strong> <strong>ABSENT</strong> — no reference found
+(<code>grep -rln vLLM/vllm</code> not present in read paths; not in
+dependencies, not in helix_llm/helix_agent provider lists).</li>
+</ul>
+<p><strong>GAPS (§4):</strong> - No RTX-5090 / CUDA GPU-layer /
+tensor-split / <code>-ngl</code> configuration surface located in
+HelixLLM’s llama-server launch config (only host/port/model/models-dir
+shown). Needs verification of <code>brain.LlamaServerConfig</code>
+fields (in <code>internal/brain/server.go</code>, not fully read). - The
+vendored <code>dependencies/LLama_CPP</code> source is present but no
+build/target wiring found that compiles it for the host GPU (setup path
+uses a running server, not a local build recipe surfaced this
+session).</p>
+<hr />
+<h2 id="containers-submodule-submodulescontainers">5. containers
+submodule (<code>submodules/containers/</code>)</h2>
+<ul>
+<li><strong>Module id:</strong>
+<code>module digital.vasic.containers</code>, <code>go 1.25.0</code>
+(<code>go.mod</code>). Upstream
+<code>git@github.com:vasic-digital/Containers.git</code> (root
+<code>.gitmodules</code>,
+<code>path = submodules/containers</code>).</li>
+<li><strong>Public <code>pkg/</code> API</strong>
+(<code>ls pkg/</code>):
+<code>boot, compose, health, orchestrator, runtime, lifecycle, discovery, endpoint, serviceregistry, network, volume, metrics, monitor, emulator, vm, remote, remoteexec, distribution, policy, egress, envconfig, event, i18n, lazyservice, logging, scheduler, applesim, genymotion, cuttlefish, crossbuild, ctop, brokertest, cache</code>.</li>
+</ul>
+<h3 id="boot-api-pkgbootmanager.go">5.1 Boot API
+(<code>pkg/boot/manager.go</code>)</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewBootManager<span class="op">(</span>endpoints <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>endpoint<span class="op">.</span>ServiceEndpoint<span class="op">,</span> opts <span class="op">...</span>BootManagerOption<span class="op">)</span> <span class="op">*</span>BootManager  <span class="co">// :41</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bm <span class="op">*</span>BootManager<span class="op">)</span> BootAll<span class="op">(</span>ctx <span class="op">...)</span> <span class="op">...</span>        <span class="co">// :64  discovery → compose up → health checks → summary</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bm <span class="op">*</span>BootManager<span class="op">)</span> HealthCheckAll<span class="op">(...)</span>         <span class="co">// :291</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bm <span class="op">*</span>BootManager<span class="op">)</span> Shutdown<span class="op">(</span>ctx<span class="op">)</span> <span class="dt">error</span>         <span class="co">// :330</span></span></code></pre></div>
+<p>Consumer declares services as a
+<code>map[string]endpoint.ServiceEndpoint</code>, passes options
+(logger, metrics), and calls <code>BootAll</code> — the
+<strong>on-demand-infra invariant</strong> of §11.4.76.</p>
+<h3 id="compose-api-pkgcompose">5.2 Compose API
+(<code>pkg/compose/</code>)</h3>
+<p><code>group.go</code>, <code>orchestrator.go</code>,
+<code>options.go</code>, <code>types.go</code>,
+<strong><code>helix_project.go</code></strong> (a Helix-specific compose
+project helper), <code>podman_compose_test.go</code> (Podman-oriented —
+matches §11.4.161 rootless-Podman mandate).</p>
+<h3 id="health-api-pkghealth">5.3 Health API
+(<code>pkg/health/</code>)</h3>
+<p><code>checker.go</code>, <code>http.go</code>, <code>tcp.go</code>,
+<code>grpc.go</code>, <code>gpu.go</code> (<strong>GPU health check
+present</strong> — relevant to RTX-5090), <code>custom.go</code>,
+<code>retry.go</code>, <strong><code>helix_infra.go</code></strong>
+(Helix infra health helper).</p>
+<p><strong>GAPS (§5):</strong> none blocking — the boot/compose/health
+triad exists and is Podman-aware. To run a llama.cpp server container
+via this submodule, a consumer would register a
+<code>ServiceEndpoint</code> + compose group; no pre-built llama.cpp
+service definition was found in <code>pkg/compose</code> (would be a new
+project-side registration or an upstream extension per §11.4.74).</p>
+<hr />
+<h2 id="helixqa-submoduleshelix_qa">6. HelixQA
+(<code>submodules/helix_qa/</code>)</h2>
+<ul>
+<li>Upstream <code>git@github.com:HelixDevelopment/HelixQA.git</code>
+(root <code>.gitmodules</code>,
+<code>path = submodules/helix_qa</code>). Go module +
+<code>go.work</code>. Has <code>helix-deps.yaml</code> (CONST-054
+manifest).</li>
+<li><strong>Test banks:</strong> <code>banks/*.{json,yaml}</code> —
+e.g. <code>admin-operations</code>, <code>app-navigation</code>,
+<code>all-formats</code>, <code>aichat-bash-tools-comprehensive</code>,
+<code>atmosphere_additions_*</code>. A new capability registers a
+<strong>test bank</strong> as a
+<code>banks/&lt;name&gt;.{yaml,json}</code> pair.</li>
+<li><strong>Binaries / runners:</strong> <code>cmd/</code> has 20+
+tools: <code>helixqa</code> (main), <code>helixqa-bank-session</code>,
+<code>helixqa-concrete-runner</code>, <code>helixqa-bridge</code>,
+<code>helixqa-recvalidate</code> (recording validation),
+<code>helixqa-omniparser</code>, <code>helixqa-uitars</code>,
+<code>helixqa-lpips</code>/<code>helixqa-dreamsim</code> (perceptual
+diff), <code>helixqa-text</code>,
+<code>helixqa-x11grab</code>/<code>helixqa-kmsgrab</code>/<code>helixqa-capture-linux</code>
+(screen capture), <code>recording-analyzer</code>,
+<code>qa-audio-probe</code>, <code>ocu-probe</code>.</li>
+<li>Also <code>banks/</code>, <code>challenges/</code>,
+<code>pkg/</code>, <code>internal/</code>, <code>tests/</code>,
+<code>monitoring/</code>, <code>docker-compose.stack.yml</code>,
+<code>ARCHITECTURE.md</code>, <code>API_REFERENCE.md</code>,
+<code>OPENCV_INTEGRATION_ARCHITECTURE.md</code>.</li>
+<li><strong>Sync-channel / evidence format:</strong> the
+recording/vision toolchain (recording-analyzer, recvalidate, omniparser,
+uitars, lpips/dreamsim) is the §11.4.107/§11.4.117/§11.4.160
+vision-verification bridge. A JSONL event stream + atomic status
+snapshot pattern is mandated by §11.4.116 (the exact HelixQA emitter
+file not read this session — see GAPS).</li>
+</ul>
+<p><strong>GAPS (§6):</strong> the concrete JSONL
+event-stream/status-snapshot file for the conductor↔︎framework sync
+channel (§11.4.116) was not located this session (checked
+<code>cmd/</code> names only, not
+<code>pkg/</code>/<code>internal/</code>).</p>
+<hr />
+<h2 id="claude_toolkit-sibling-project-homemilosfactoryprojectstools_and_researchclaude_toolkit">7.
+claude_toolkit (SIBLING project —
+<code>/home/milos/Factory/projects/tools_and_research/claude_toolkit</code>)</h2>
+<p>Outside the monorepo. It is the <strong>provider-alias generator for
+CLI agents</strong> (Claude Code + OpenCode).</p>
+<ul>
+<li><strong>Provider-alias mechanism</strong> =
+<code>scripts/claude-providers.sh</code>
+(<code>sync|list|show|remove|add</code>): &gt;
+“create/refresh/list/remove Claude Code aliases for non-Anthropic LLM
+providers, fully dynamically. &gt; Pipeline (sync): read the API-key
+VARIABLE NAMES from the keys file, fetch + cache the
+<strong>models.dev</strong> &gt; catalog, resolve each LLM key into a
+concrete provider record (provider id, alias, base URL, transport, &gt;
+strong/fast model) via <code>providers_resolve.py</code>, optionally
+<strong>verify with LLMsVerifier</strong>, then generate &gt; for each
+provider: a non-secret env file, a shell alias
+(<code>cma_run_provider &lt;id&gt;</code>), a config dir &gt;
+(<code>~/.claude-prov-&lt;id&gt;</code>) linking all shared items, and
+the always-on plugin set. Idempotent.” &gt; “Nothing about
+providers/models is hardcoded — everything derives from models.dev +
+editable &gt; <code>providers/key-aliases.json</code> and
+<code>overrides.json</code>.”
+(<code>scripts/claude-providers.sh:1-24</code>)</li>
+<li><strong>Alias generation:</strong>
+<code>scripts/providers_generate.py</code> reads
+<code>verified_models.json</code> (from <code>model_verify.py</code>),
+sorts models by score, pairs 2/alias (strong + fast), names
+<code>provider</code>, <code>provider2</code>, …
+(<code>providers_generate.py:1-70</code>).</li>
+<li><strong>Binary-on-PATH → alias:</strong> the mechanism keys off
+<strong>API-key env-var names present in the environment/keys
+file</strong>, not off detecting a binary on PATH. Provider detection =
+“which key variables are set” → resolve via models.dev +
+<code>providers_resolve.py</code>. (No
+<code>which &lt;binary&gt;</code>-style PATH sniff found in the read
+excerpt; a local-server provider like llama.cpp would need a
+key-alias/override entry.)</li>
+<li><strong>Vendored LLMsVerifier:</strong>
+<code>claude_toolkit/submodules/LLMsVerifier</code> (its
+<code>.gitmodules</code>:
+<code>url = git@github.com:vasic-digital/LLMsVerifier.git</code>, branch
+<code>main</code>) — SAME upstream as the monorepo’s
+<code>submodules/llms_verifier</code>. Also vendors
+<code>submodules/containers</code> and
+<code>submodules/challenges</code>.</li>
+<li>Other scripts: <code>providers_resolve.py</code>,
+<code>providers-verify.sh</code>, <code>model_verify.py</code>,
+<code>claude-verify-providers.sh</code>,
+<code>providers-semantic.sh</code>, <code>opencode_sync.py</code>,
+<code>toon_encode.py</code>, plus
+<code>scripts/providers/{key-aliases.json, overrides.json, evidence/models-dev-mapping.json, rubric/, fixture/}</code>.</li>
+</ul>
+<p><strong>GAPS (§7):</strong> no local-server (llama.cpp/HelixLLM)
+provider entry found in <code>providers/key-aliases.json</code> excerpt
+— to expose a local HelixLLM/llama.cpp endpoint as a Claude-Code alias,
+a new key-alias/override + base-URL record would be needed. PATH-based
+binary auto-detection is NOT the current mechanism (env-key driven).</p>
+<hr />
+<h2 id="codegraph-opendesign-wiring">8. CodeGraph + OpenDesign
+wiring</h2>
+<ul>
+<li><strong>CodeGraph:</strong> wired in root <code>.mcp.json</code> as
+MCP server <code>codegraph</code> →
+<code>command: /Users/milosvasic/.local/bin/codegraph serve --mcp --path /Volumes/T7/Projects/helix_code</code>.
+<strong>NOTE the hardcoded macOS paths</strong>
+(<code>/Users/milosvasic</code>, <code>/Volumes/T7</code>) — this
+<code>.mcp.json</code> targets a macOS host, not the current Linux host
+(<code>/home/milos/...</code>). Root <code>.codegraph/</code> dir
+exists. Own-org submodules should be indexed per §11.4.79.</li>
+<li><strong>OpenDesign:</strong> wired in root <code>.mcp.json</code> as
+MCP server <code>open-design</code> →
+<code>npx -y open-design-mcp</code>,
+<code>OD_DAEMON_URL: http://localhost:7456</code>,
+<strong><code>&quot;disabled&quot;: true</code></strong>. Docs:
+<code>docs/OPENDESIGN.md</code>, audit
+<code>docs/research/opendesign_audit_20260622/findings.md</code>.
+§11.4.162 mandate exists but the MCP is currently disabled.</li>
+<li><strong>media-validator</strong> MCP is also wired (enabled) →
+<code>constitution/skills/media-validator/media-validator.sh</code>
+(§11.4.164).</li>
+</ul>
+<p><strong>GAPS (§8):</strong> <code>.mcp.json</code> contains
+<strong>macOS-absolute paths</strong> that will not resolve on this
+Linux host (CodeGraph binary path + <code>--path</code>); OpenDesign MCP
+is disabled. Both need host-correct wiring before use.</p>
+<hr />
+<h2 id="build-run-path">9. Build / run / PATH</h2>
+<ul>
+<li><strong>HelixLLM</strong>
+(<code>submodules/helix_llm/Makefile</code>): <code>make build</code> (→
+binary), <code>make dev</code> (certs + run),
+<code>make container</code>, <code>test-unit</code>,
+<code>test-integration</code>, <code>test-race</code>,
+<code>test-stress</code>, <code>test-chaos</code>,
+<code>test-security</code>, <code>test-challenges</code>,
+<code>test-automation</code>, <code>deploy</code>, <code>ingest</code>,
+<code>probe</code>, <code>scan-*</code>, <code>lint</code>,
+<code>fmt</code>. Docker facade:
+<code>docker-compose.enterprise.yml</code>.</li>
+<li><strong>HelixAgent</strong> (<code>submodules/helix_agent/</code>):
+many <code>docker-compose.*.yml</code>
+incl. <code>docker-compose.helixllm.yml</code> +
+<code>docker-compose.helixllm-infra.yml</code>; <code>Makefile</code>
+present; per-CLI-agent challenge scripts under
+<code>challenges/scripts/</code>.</li>
+<li><strong>Meta-repo root:</strong> <code>setup.sh</code> (submodule
+init + deps + build), <code>Makefile</code> (governance gates),
+<code>helix</code> facade script,
+<code>compose.helixcode-infra.yml</code>,
+<code>docker-compose.helix.yml</code>. Root <code>go.mod</code> is the
+thin <code>dev.helix.code</code> module.</li>
+<li><strong>Inner Go app</strong> <code>helix_code/</code> (tracked
+subdir, <code>module dev.helix.code</code>):
+<code>cmd/{server,cli,helix-config,...}</code>; CLI reads
+<code>HELIX_LLM_PROVIDER</code> env
+(<code>helix_code/cmd/cli/main.go:192,599,1257</code>).</li>
+<li><strong>How binaries reach PATH:</strong> via each submodule’s
+<code>make build</code> → local <code>bin/</code>; there is no global
+PATH-install recipe surfaced. Container path uses the root
+<code>./helix</code> facade + compose files (§11.4.161 mandates rootless
+Podman via the containers submodule).</li>
+</ul>
+<p><strong>GAPS (§9):</strong> - No single top-level target builds
+“llama.cpp on the host GPU → helix_llm server → helix_agent → CLI
+aliases” end-to-end; today it is three separate submodule builds +
+docker-compose files + the sibling claude_toolkit alias generator. -
+llama.cpp host build (from vendored <code>dependencies/LLama_CPP</code>)
+is not wired into <code>setup.sh</code>/any Makefile target found this
+session.</p>
+<hr />
+<h2 id="gaps-summary-top-integration-gaps-for-the-goal">GAPS SUMMARY —
+top integration gaps for the goal</h2>
+<p><em>(run local models via llama.cpp on RTX 5090 → expose through
+HelixAgent to HelixCode/CLI agents → add
+vision/translation/embeddings/RAG/MCP/ACP)</em></p>
+<ol type="1">
+<li><strong>No GPU/RTX-5090 build+launch wiring for llama.cpp.</strong>
+Vendored source (<code>dependencies/LLama_CPP</code>) is present but no
+host-GPU build recipe or <code>-ngl</code>/tensor-split launch config
+found; HelixLLM’s <code>LlamaServerConfig</code> GPU fields unverified
+(§4, §9).</li>
+<li><strong>No vision or translation serving surface</strong> in either
+HelixLLM or HelixAgent (only embeddings + RAG exist). LLMsVerifier
+<code>Capabilities</code> has
+<code>Multimodal</code>/<code>ImageGeneration</code>/<code>Voice</code>
+booleans but no serving path consumes them (§1, §2, §3).</li>
+<li><strong>HelixLLM is not a pinned own-org submodule at the meta-repo
+root</strong> — no <code>.gitmodules</code> entry for
+<code>helix_llm</code>; two on-disk checkouts
+(<code>submodules/helix_llm</code> +
+<code>dependencies/HelixDevelopment/helix_llm</code>) risk drift
+(§1).</li>
+<li><strong>LLMsVerifier capability flags are incomplete for
+CONST-040</strong> — no model-level MCP/LSP/ACP/RAG/Skills/Plugins
+booleans on <code>VerificationResult</code>; local-provider
+(llama.cpp/ollama) verification not URL-matched (§3).</li>
+<li><strong>Host-wiring rot in <code>.mcp.json</code></strong> —
+CodeGraph points at macOS-absolute paths (<code>/Users/...</code>,
+<code>/Volumes/T7/...</code>), OpenDesign MCP disabled; neither works on
+the current Linux host without re-wiring (§8). Plus: claude_toolkit
+exposes providers by <strong>env-key</strong>, not by detecting a local
+binary/endpoint on PATH — a local HelixLLM/llama.cpp alias needs a new
+key-alias/override + base-URL record (§7).</li>
+</ol>
+</body>
+</html>

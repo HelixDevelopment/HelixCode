@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>10b_code_exact_change_spec</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">10b_code_exact_change_spec</h1>
+</header>
+<h1 id="b-llmsverifier-code-exact-change-spec-buildtest-baseline-t1main">10b
+— LLMsVerifier Code-Exact Change Spec + Build/Test Baseline
+(T1/main)</h1>
+<p><strong>Date:</strong> 2026-07-06 <strong>Scope:</strong> Ground the
+P2-T2/T3 LLMsVerifier extension in the ACTUAL current code of
+<code>submodules/llms_verifier</code> (NOT the vendored
+<code>claude_toolkit</code> copy). Every struct below is pasted verbatim
+from source at the cited <code>file:line</code>; every build/test claim
+carries captured terminal output (§11.4.5 / §11.4.6 — no guessing).
+Complements <code>10_llmsverifier_helixagent.md</code> (which summarized
+these structs; this doc pins exact line numbers + adds the physical
+build/test baseline + precise change sites).</p>
+<p><strong>Evidence dir:</strong>
+<code>docs/research/07.2026/00_master/evidence/llmsverifier_baseline/</code>
+(<code>go_build.txt</code>, <code>go_test.txt</code>).</p>
+<hr />
+<h2 id="repo-module-git-state-fact">0. Repo / module / git state
+(FACT)</h2>
+<table>
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 33%" />
+<col style="width: 38%" />
+</colgroup>
+<thead>
+<tr>
+<th>Fact</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Submodule path</td>
+<td><code>submodules/llms_verifier</code></td>
+<td><code>.gitmodules</code> grouped layout</td>
+</tr>
+<tr>
+<td>Git HEAD</td>
+<td><code>62d68c77 merge: reconcile dangling-reference fix with upstream semantic-code-visibility work</code></td>
+<td><code>git log --oneline -1</code></td>
+</tr>
+<tr>
+<td>Behind/ahead vs <code>origin/main</code></td>
+<td><code>0  0</code> (local tracking ref; NO network fetch
+performed)</td>
+<td><code>git rev-list --left-right --count HEAD...origin/main</code></td>
+</tr>
+<tr>
+<td>Commit <code>0e7d6949</code> (claude_toolkit report’s “1
+behind”)</td>
+<td><strong>NOT present in this submodule’s object store</strong>
+(<code>git cat-file -t 0e7d6949</code> → missing)</td>
+<td>captured</td>
+</tr>
+<tr>
+<td>Recent lineage</td>
+<td><code>62d68c77</code> ←
+<code>3e7018f7 fix: remove dangling reference…</code> ←
+<code>7a3ae9a6 merge: reconcile DB-persistence fix (044768e0)…</code></td>
+<td><code>git log --oneline -3</code></td>
+</tr>
+<tr>
+<td>Root module</td>
+<td><code>module llmsverifier</code> (go 1.25.3) — thin wrapper</td>
+<td><code>go.mod:1</code></td>
+</tr>
+<tr>
+<td><strong>Inner app module</strong></td>
+<td><code>module digital.vasic.llmsverifier</code> (go 1.25.3)</td>
+<td><code>llm-verifier/go.mod:1</code></td>
+</tr>
+<tr>
+<td>Go toolchain used</td>
+<td><code>go1.26.4-X:nodwarf5 linux/amd64</code></td>
+<td><code>go_build.txt</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>UNCONFIRMED (git remote-state):</strong> the <code>0 0</code>
+behind/ahead is against the <em>local</em> <code>origin/main</code>
+tracking ref — NO <code>git fetch</code> was run this session (no
+network), so whether the true remote advanced is unknown per
+§11.4.6/§11.4.37. What IS confirmed: this submodule’s HEAD
+<code>62d68c77</code> and the claude_toolkit-report anchor
+<code>0e7d6949</code> are on <strong>different histories</strong> —
+<code>0e7d6949</code> is not reachable in this checkout. The two copies
+are NOT the same lineage; “1 commit behind 0e7d6949” does not describe
+THIS submodule. A fetch is required before any pull/rebase decision.</p>
+<hr />
+<h2 id="physical-buildtest-baseline-captured-this-session">1. Physical
+build/test baseline (captured this session)</h2>
+<h3 id="go-build-....-compiles-exit-0">1.1 <code>go build ./...</code> —
+COMPILES (exit 0)</h3>
+<p>From <code>go_build.txt</code> (run from the submodule ROOT,
+<code>module llmsverifier</code>):</p>
+<pre><code>=== go build ./... (started 2026-07-05T22:07:49Z) ===
+go: downloading github.com/segmentio/kafka-go v0.4.50
+go: downloading github.com/rabbitmq/amqp091-go v1.10.0
+go: downloading golang.org/x/sys v0.46.0
+... (transitive deps)
+=== go build EXIT=0 (finished 2026-07-05T22:08:05Z) ===</code></pre>
+<p><code>go build ./...</code> from the submodule ROOT
+(<code>module llmsverifier</code>) returns <strong>exit 0</strong>.
+NOTE: this builds ONLY the thin root module’s packages; it does NOT
+descend into the nested inner module <code>llm-verifier/</code>
+(<code>digital.vasic.llmsverifier</code>). The inner build that DOES
+cover the change-site packages is
+<code>cd llm-verifier &amp;&amp; go build ./...</code> = <strong>exit
+0</strong> (§5.3, <code>go_test_inner.txt</code>). Both green today.</p>
+<h3 id="go-test--short-....-baseline">1.2
+<code>go test -short ./...</code> — baseline</h3>
+<p>See §5 (filled from captured <code>go_test.txt</code> after the run
+completes). Command:
+<code>GOMAXPROCS=2 GOFLAGS=-mod=mod nice -n 19 go test -short ./...</code>
+(resource-capped per inner CLAUDE.md rule 9). Evidence:
+<code>go_test.txt</code>.</p>
+<hr />
+<h2 id="current-struct-shapes-pasted-verbatim-fact">2. Current struct
+shapes — pasted verbatim (FACT)</h2>
+<h3 id="message-confirmed-no-toolcalls-field-the-stream-10-finding">2.1
+<code>Message</code> — CONFIRMED <strong>NO <code>ToolCalls</code>
+field</strong> (the stream-10 finding)</h3>
+<p><code>llm-verifier/llmverifier/llm_client.go:91-95</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Message represents a message in the chat completion</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Message <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Role    <span class="dt">string</span> <span class="st">`json:&quot;role&quot;`</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Content <span class="dt">string</span> <span class="st">`json:&quot;content&quot;`</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Two fields only — <code>Role</code>, <code>Content</code>. <strong>No
+<code>ToolCalls</code>.</strong> The sibling request/response types in
+the same file confirm the gap end-to-end:</p>
+<ul>
+<li><code>ChatCompletionRequest</code>
+(<code>llm_client.go:80-89</code>) HAS <code>Tools []Tool</code> +
+<code>ToolChoice interface{}</code> — so the client CAN <em>send</em>
+tools…</li>
+<li>…but <code>ChatCompletionChoice</code>
+(<code>llm_client.go:98-102</code>) embeds <code>Message Message</code>
+— so a tool-call in the <em>response</em> has nowhere to land. The
+model’s <code>tool_calls</code> array is silently dropped at
+unmarshal.</li>
+</ul>
+<h3 id="verificationservice.verify-unwired-returns-errverificationnotwired-fact">2.2
+<code>VerificationService.Verify</code> — UNWIRED, returns
+<code>ErrVerificationNotWired</code> (FACT)</h3>
+<p><code>llm-verifier/verification/verification.go:29-63</code> (body
+abridged to the operative return; full comment block is lines
+42-61):</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>v <span class="op">*</span>Verifier<span class="op">)</span> Verify<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>Request<span class="op">)</span> <span class="op">(*</span>database<span class="op">.</span>VerificationResult<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> req <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;verification request cannot be nil&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> req<span class="op">.</span>ModelID <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;model ID is required&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> req<span class="op">.</span>Prompt <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;prompt is required&quot;</span><span class="op">)</span> <span class="op">}</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... [42-61] previously returned a hardcoded all-caps-true / all-scores-8.5</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">//     VerificationResult regardless of model — a CONST-036/037 PASS-bluff, now removed.</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> ErrVerificationNotWired</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>llm-verifier/verification/verification.go:69</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> ErrVerificationNotWired <span class="op">=</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;verification.VerifyModel: real verifier dispatch is not wired (model resolution + per-feature test + score composition required); the previous hardcoded-all-capabilities-true return was a §11.4 / CONST-036/037 PASS-bluff and is now removed — wire llmverifier.Verifier into VerificationService to restore&quot;</span><span class="op">)</span></span></code></pre></div>
+<p><code>Verifier</code> holds only <code>db *database.Database</code>
+(<code>verification.go:17-19</code>); the real per-feature test engine
+(<code>llmverifier.Verifier</code>,
+<code>llmverifier/verifier.go</code>) is NOT referenced here. Restoring
+verification = wiring <code>llmverifier.Verifier</code> into this
+<code>VerificationService</code>. Guarded by
+<code>verification/verification_test.go:64-101</code> (asserts
+<code>errors.Is(err, ErrVerificationNotWired)</code>).</p>
+<h3 id="tool-calling-counter-honestly-returns-false-0-fact">2.3
+Tool-calling counter — honestly returns <code>(false, 0)</code>
+(FACT)</h3>
+<p><code>llm-verifier/llmverifier/verifier.go:1042</code> (signature)
+and <code>:1093</code> / <code>:1111</code> (returns):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// testParallelToolUse checks for parallel tool use capability</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>v <span class="op">*</span>Verifier<span class="op">)</span> testParallelToolUse<span class="op">(</span>client <span class="op">*</span>LLMClient<span class="op">,</span> modelName <span class="dt">string</span><span class="op">,</span> ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> <span class="dt">int</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    req <span class="op">:=</span> ChatCompletionRequest<span class="op">{</span> Model<span class="op">:</span> modelName<span class="op">,</span> Messages<span class="op">:</span> <span class="op">[]</span>Message<span class="op">{{</span>Role<span class="op">:</span><span class="st">&quot;user&quot;</span><span class="op">,</span> Content<span class="op">:</span><span class="st">&quot;...&quot;</span><span class="op">}},</span> Tools<span class="op">:</span> <span class="op">[]</span>Tool<span class="op">{</span> <span class="co">/* get_weather, get_stock_price */</span> <span class="op">},</span> ToolChoice<span class="op">:</span> <span class="st">&quot;auto&quot;</span> <span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    resp<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>ChatCompletion<span class="op">(</span>ctx<span class="op">,</span> req<span class="op">)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span> <span class="cf">return</span> <span class="ot">false</span><span class="op">,</span> <span class="dv">0</span> <span class="op">}</span>                        <span class="co">// :1093</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// §11.4 / CONST-035 — Counting REAL tool calls requires parsing the</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// OpenAI-shape `tool_calls` array on every Choice.Message, but this</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// codebase&#39;s Message struct (llm_client.go:92) does NOT yet carry a</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ToolCalls field ... Until the schema lands, return the honest</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// sentinel (false, 0).  [Previously hardcoded toolCallCount = 2.]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> resp</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">false</span><span class="op">,</span> <span class="dv">0</span>                                          <span class="co">// :1111</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The in-code comment (<code>verifier.go:1096-1109</code>) itself names
+<code>llm_client.go:92</code> as the blocker and calls the extension a
+“CONST-039 prerequisite.” This is the load-bearing dependency:
+<strong>parallel/tool-use detection cannot function until
+<code>Message.ToolCalls</code> exists.</strong></p>
+<h3 id="capability-model-capabilitiestypes.go-fact">2.4 Capability model
+— <code>capabilities/types.go</code> (FACT)</h3>
+<p><code>ProviderCapabilities</code>
+(<code>capabilities/types.go:82-114</code>) — the rich,
+verification-fillable set; the two CONST-040-relevant members:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProviderCapabilities <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Provider   <span class="dt">string</span>    <span class="st">`json:&quot;provider&quot;`</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    Model      <span class="dt">string</span>    <span class="st">`json:&quot;model,omitempty&quot;`</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    Verified   <span class="dt">bool</span>      <span class="st">`json:&quot;verified&quot;`</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    VerifiedAt time<span class="op">.</span>Time <span class="st">`json:&quot;verified_at,omitempty&quot;`</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    Streaming   StreamingCapability   <span class="st">`json:&quot;streaming&quot;`</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    Network     NetworkCapability     <span class="st">`json:&quot;network&quot;`</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    Compression CompressionCapability <span class="st">`json:&quot;compression&quot;`</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    Caching     CachingCapability     <span class="st">`json:&quot;caching&quot;`</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    Protocols   <span class="op">[]</span>ProtocolType        <span class="st">`json:&quot;protocols&quot;`</span>      <span class="co">// MCP/ACP/LSP/gRPC/OpenAI/... as TAGS</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    Auth        AuthCapability        <span class="st">`json:&quot;auth&quot;`</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    Model_      ModelCapability       <span class="st">`json:&quot;model_capabilities&quot;`</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    Extended    ExtendedCapabilities  <span class="st">`json:&quot;extended&quot;`</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    Custom      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span> <span class="st">`json:&quot;custom,omitempty&quot;`</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>ModelCapability</code>
+(<code>capabilities/types.go:168-184</code>) — verbatim:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ModelCapability <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Vision           <span class="dt">bool</span>   <span class="st">`json:&quot;vision&quot;`</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    ImageInput       <span class="dt">bool</span>   <span class="st">`json:&quot;image_input&quot;`</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ImageOutput      <span class="dt">bool</span>   <span class="st">`json:&quot;image_output&quot;`</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    Audio            <span class="dt">bool</span>   <span class="st">`json:&quot;audio&quot;`</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    Video            <span class="dt">bool</span>   <span class="st">`json:&quot;video&quot;`</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    PDF              <span class="dt">bool</span>   <span class="st">`json:&quot;pdf&quot;`</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    OCR              <span class="dt">bool</span>   <span class="st">`json:&quot;ocr&quot;`</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    FunctionCalling  <span class="dt">bool</span>   <span class="st">`json:&quot;function_calling&quot;`</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    ToolUse          <span class="dt">bool</span>   <span class="st">`json:&quot;tool_use&quot;`</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    Embeddings       <span class="dt">bool</span>   <span class="st">`json:&quot;embeddings&quot;`</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    CodeExecution    <span class="dt">bool</span>   <span class="st">`json:&quot;code_execution&quot;`</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    WebBrowsing      <span class="dt">bool</span>   <span class="st">`json:&quot;web_browsing&quot;`</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    Reasoning        <span class="dt">bool</span>   <span class="st">`json:&quot;reasoning&quot;`</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    MaxContextTokens <span class="dt">int</span>    <span class="st">`json:&quot;max_context_tokens&quot;`</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    MaxOutputTokens  <span class="dt">int</span>    <span class="st">`json:&quot;max_output_tokens&quot;`</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Finding:</strong> MCP/ACP/LSP live only as
+<code>Protocols []ProtocolType</code> tags (not per-model booleans);
+<code>ModelCapability</code> has <strong>NO <code>RAG</code> /
+<code>Skills</code> / <code>Plugins</code> member</strong>, and no
+<code>CapabilityEvidence</code>. CONST-040 requires MCP, LSP, ACP,
+Embedding, RAG, Skills, Plugins — today only Embedding
+(<code>Embeddings</code>) + MCP/LSP/ACP (as tags) exist here.</p>
+<h3 id="registry.go-the-static-protocol-flag-block-const-040-anti-bluff-hazard-fact">2.5
+<code>registry.go</code> — the static protocol-flag block (CONST-040
+anti-bluff hazard, FACT)</h3>
+<p><code>llm-verifier/capabilities/registry.go</code> is a package-level
+<code>var providerCapabilities = map[string]*ProviderCapabilities{...}</code>
+(<code>registry.go:8-427</code>) — <strong>8 hardcoded
+providers</strong> (openai, anthropic, deepseek, gemini, qwen, groq,
+mistral, zen, ollama) plus <code>cliAgentCapabilities</code>
+(<code>registry.go:430-1065</code>). Every <code>Protocols:</code> and
+<code>Model_:</code> value is a STATIC LITERAL, e.g.:</p>
+<ul>
+<li><code>registry.go:38</code> — openai:
+<code>Protocols: []ProtocolType{ProtocolOpenAI}</code></li>
+<li><code>registry.go:90</code> — anthropic:
+<code>Protocols: []ProtocolType{ProtocolAnthropic, ProtocolMCP}</code></li>
+<li><code>registry.go:44-54</code> — openai
+<code>Model_: ModelCapability{Vision:true, FunctionCalling:true, ToolUse:true, Embeddings:true, Reasoning:true, ...}</code></li>
+<li><code>registry.go:102</code> — anthropic
+<code>FunctionCalling: false</code> (hand-authored, never probed)</li>
+</ul>
+<p>Accessors <code>GetProviderBaseCapabilities</code>
+(<code>registry.go:1067</code>), <code>GetAllProviders</code>
+(<code>registry.go:1084</code>), <code>GetProvidersWithCapability</code>
+(<code>registry.go:1101</code>) all read the static map directly —
+<strong>no probe path, no verifier override, no freshness
+check.</strong> This is the CONST-036/037/040 hazard: consumers calling
+these get hand-authored flags presented as authoritative, never verified
+within 24h (CONST-037) nor sourced from a
+<code>VerificationResult</code> (CONST-040).</p>
+<h3 id="per-model-db-record-databasedatabase.go-already-const-040-shaped-fact">2.6
+Per-model DB record — <code>database/database.go</code> (already
+CONST-040-shaped, FACT)</h3>
+<p><code>database.VerificationResult</code>
+(<code>database/database.go:875-940</code>) already carries the
+per-model Supports* booleans + freshness columns:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VerificationResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    ID <span class="dt">int64</span><span class="op">;</span> ModelID <span class="dt">int64</span><span class="op">;</span> VerificationType <span class="dt">string</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    StartedAt time<span class="op">.</span>Time<span class="op">;</span> CompletedAt <span class="op">*</span>time<span class="op">.</span>Time<span class="op">;</span> Status <span class="dt">string</span><span class="op">;</span> ErrorMessage <span class="op">*</span><span class="dt">string</span>   <span class="co">// freshness</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    ModelExists<span class="op">,</span> Responsive<span class="op">,</span> Overloaded <span class="op">*</span><span class="dt">bool</span><span class="op">;</span> LatencyMs <span class="op">*</span><span class="dt">int</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    SupportsToolUse<span class="op">,</span> SupportsFunctionCalling <span class="dt">bool</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    SupportsCodeGeneration<span class="op">,</span> SupportsCodeCompletion<span class="op">,</span> SupportsCodeReview<span class="op">,</span> SupportsCodeExplanation <span class="dt">bool</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    SupportsEmbeddings<span class="op">,</span> SupportsReranking <span class="dt">bool</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    SupportsImageGeneration<span class="op">,</span> SupportsAudioGeneration<span class="op">,</span> SupportsVideoGeneration <span class="dt">bool</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    SupportsMCPs<span class="op">,</span> SupportsLSPs<span class="op">,</span> SupportsACPs <span class="dt">bool</span>          <span class="co">// :898-900 CONST-040 booleans EXIST</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    SupportsMultimodal<span class="op">,</span> SupportsStreaming<span class="op">,</span> SupportsJSONMode<span class="op">,</span> SupportsStructuredOutput <span class="dt">bool</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    SupportsReasoning<span class="op">,</span> SupportsParallelToolUse <span class="dt">bool</span><span class="op">;</span> MaxParallelCalls <span class="dt">int</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    SupportsBatchProcessing<span class="op">,</span> SupportsBrotli <span class="dt">bool</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    CodeLanguageSupport <span class="op">[]</span><span class="dt">string</span><span class="op">;</span> <span class="co">/* ...code/score/latency/raw fields... */</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    RawRequest<span class="op">,</span> RawResponse <span class="op">*</span><span class="dt">string</span><span class="op">;</span> CreatedAt time<span class="op">.</span>Time</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>SQL DDL <code>supports_mcps BOOLEAN DEFAULT 0</code> at
+<code>database/database.go:538</code> (+ sibling
+<code>supports_lsps</code>/<code>supports_acps</code> cols).</li>
+<li>Persistence writes them: <code>database/database.go:1224</code>
+(INSERT column list) + <code>:1261-1263</code> (bind
+<code>SupportsMCPs/LSPs/ACPs</code>); mirror path in
+<code>database/crud.go:620,657-659,722,764-766,836,925-927</code>.</li>
+</ul>
+<p><strong>Finding:</strong> the DB layer already STORES + PERSISTS
+<code>SupportsMCPs/LSPs/ACPs/Embeddings/...</code> and freshness
+(<code>StartedAt</code>/<code>CompletedAt</code>/<code>Status</code>).
+It has <strong>NO <code>supports_rag</code> /
+<code>supports_skills</code> / <code>supports_plugins</code>
+column</strong> and <strong>no <code>RawRequest/RawResponse</code>
+per-capability evidence linkage</strong> beyond the single overall pair.
+Gap = population (the <code>Verify</code> unwiring §2.2) + 3 missing
+columns, not architecture.</p>
+<h3 id="in-memory-verification-result-llmverifiermodels.go10-fact-from-10_-report">2.7
+In-memory verification result — <code>llmverifier/models.go:10</code>
+(FACT, from 10_ report)</h3>
+<p><code>llmverifier.VerificationResult</code>
+(<code>llmverifier/models.go:10</code>) + <code>Capabilities</code>
+(<code>llmverifier/models.go:83</code>) carry
+<code>Completion/Chat/Embedding/ToolUse/Multimodal/ FunctionCalling/...</code>
+— the runtime shape the probe engine fills, distinct from the DB record.
+(Full paste in <code>10_llmsverifier_helixagent.md §1.3</code>.)</p>
+<hr />
+<h2 id="precise-change-spec-every-site-cited-to-real-fileline">3.
+PRECISE change spec (every site cited to real file:line)</h2>
+<h3 id="c1-add-toolcalls-to-message-unblocks-2.12.3">C1 — Add
+<code>ToolCalls</code> to <code>Message</code> (unblocks §2.1/§2.3)</h3>
+<p><strong>Site:</strong>
+<code>llm-verifier/llmverifier/llm_client.go:92-95</code>. Add a
+<code>ToolCalls</code> field + the supporting <code>ToolCall</code>
+types (OpenAI shape):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Message <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    Role      <span class="dt">string</span>     <span class="st">`json:&quot;role&quot;`</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    Content   <span class="dt">string</span>     <span class="st">`json:&quot;content&quot;`</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    ToolCalls <span class="op">[]</span>ToolCall <span class="st">`json:&quot;tool_calls,omitempty&quot;`</span>   <span class="co">// NEW</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">// NEW types (same file):</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ToolCall <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    ID       <span class="dt">string</span>           <span class="st">`json:&quot;id&quot;`</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    Type     <span class="dt">string</span>           <span class="st">`json:&quot;type&quot;`</span>               <span class="co">// &quot;function&quot;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    Function ToolCallFunction <span class="st">`json:&quot;function&quot;`</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ToolCallFunction <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    Name      <span class="dt">string</span> <span class="st">`json:&quot;name&quot;`</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    Arguments <span class="dt">string</span> <span class="st">`json:&quot;arguments&quot;`</span>                   <span class="co">// raw JSON string per OpenAI</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Downstream unblock:</strong> <code>testParallelToolUse</code>
+(<code>verifier.go:1042</code>, currently returns <code>(false,0)</code>
+at <code>:1111</code>) becomes implementable — replace
+<code>_ = resp; return false, 0</code> with a real count of
+<code>resp.Choices[i].Message.ToolCalls</code> (&gt;1 ⇒ parallel).
+<code>testToolUse</code> (<code>verifier.go:698</code>) likewise gains a
+real signal. <strong>Blast radius:</strong> <code>Message</code> is also
+declared in 5 OTHER packages (<code>providers/openai.go:156</code>,
+<code>testsuite/builder.go:140</code>,
+<code>enhanced/adapters/providers.go:16</code>,
+<code>enhanced/context/short_term.go:10</code>,
+<code>enhanced/validation/gates.go:20</code>,
+<code>internal/messaging/broker.go:30</code>) — these are DISTINCT
+types, NOT shared; only the <code>llmverifier</code> one is on the
+tool-use path. Verify no cross-import before/after (per §11.4.92 Pass
+2).</p>
+<h3 id="c2-add-ragskillsplugins-evidence-to-the-capability-model">C2 —
+Add RAG/Skills/Plugins + evidence to the capability model</h3>
+<p><strong>Site A — <code>capabilities/types.go:168-184</code>
+(<code>ModelCapability</code>):</strong> append</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>    SupportsRAG      <span class="dt">bool</span>   <span class="st">`json:&quot;supports_rag&quot;`</span>       <span class="co">// NEW (CONST-040)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    SupportsSkills   <span class="dt">bool</span>   <span class="st">`json:&quot;supports_skills&quot;`</span>    <span class="co">// NEW (CONST-040)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    SupportsPlugins  <span class="dt">bool</span>   <span class="st">`json:&quot;supports_plugins&quot;`</span>   <span class="co">// NEW (CONST-040)</span></span></code></pre></div>
+<p><strong>Site B — <code>capabilities/types.go:82-114</code>
+(<code>ProviderCapabilities</code>):</strong> add a per-capability
+evidence map so every flag traces to a captured probe artefact
+(§11.4.5/§11.4.69):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>    CapabilityEvidence <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>CapabilityEvidenceEntry <span class="st">`json:&quot;capability_evidence,omitempty&quot;`</span> <span class="co">// NEW</span></span></code></pre></div>
+<p>with a NEW type (same file):
+<code>CapabilityEvidenceEntry{ ProbedAt time.Time; Method string; RawRequestPath, RawResponsePath string; Verdict bool }</code>.</p>
+<p><strong>Site C — <code>database/database.go:875-940</code>
+(<code>database.VerificationResult</code>):</strong> add
+<code>SupportsRAG, SupportsSkills, SupportsPlugins bool</code> columns +
+DDL at <code>database/database.go:538</code>-region
+(<code>supports_rag/skills/plugins BOOLEAN DEFAULT 0</code>) +
+INSERT/scan in <code>database/database.go:1224/1261-1263</code> AND
+<code>database/crud.go:620/657-659/ 722/764-766/836/925-927</code> (both
+persistence paths — miss one and reads/writes desync).</p>
+<h3 id="c3-demote-registry.go-static-block-seed-only-probe-overridden-fail-closed">C3
+— Demote <code>registry.go</code> static block: seed-only,
+probe-overridden, fail-closed</h3>
+<p><strong>Site:</strong>
+<code>llm-verifier/capabilities/registry.go:8-427</code>
+(<code>providerCapabilities</code> map) + accessors
+<code>GetProviderBaseCapabilities:1067</code>,
+<code>GetProvidersWithCapability:1101</code>.</p>
+<p><strong>Change:</strong> the static map becomes a <strong>SEED /
+bootstrap default ONLY</strong>, never the authoritative answer to a
+capability query: 1. Rename intent: mark the map
+<code>providerCapabilitySeeds</code> (doc-comment: “hand-authored
+bootstrap defaults; NOT verified — MUST be overridden by a live probe /
+DB <code>VerificationResult</code> before being shown to any user, per
+CONST-036/037/040”). 2. Route every accessor through a resolver that
+prefers a fresh <code>database.VerificationResult</code> (per model,
+within the CONST-037 24h / CONST-038 60s window using
+<code>VerificationResult.StartedAt/CompletedAt</code>); the seed is used
+ONLY when no probe exists. 3. <strong>Fail-closed:</strong> when neither
+a fresh probe nor a seed is available, return
+<code>unknown</code>/<code>unverified</code> (NOT a silent
+<code>false</code>, NOT a stale seed) — a capability the verifier has
+not confirmed is reported as unverified, never as a hand-authored
+literal. 4. Static <code>FunctionCalling:false</code>-style literals
+(e.g. anthropic <code>registry.go:102</code>) are demoted to seeds; the
+live probe (C4) is the source of truth.</p>
+<h3 id="c4-per-capability-probe-list-each-emits-a-captured-wire-artefact">C4
+— Per-capability probe list (each emits a captured wire artefact)</h3>
+<p>The probe engine (<code>llmverifier/verifier.go</code>) already has
+<code>testToolUse:698</code>, <code>testParallelToolUse:1042</code>,
+<code>testBatchProcessing:1115</code>, etc. Add/complete one probe per
+CONST-040 capability, each writing its raw request+response to a
+captured artefact path (feeds C2 Site B <code>CapabilityEvidence</code>
++ DB <code>RawRequest/RawResponse</code>):</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 40%" />
+<col style="width: 41%" />
+</colgroup>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Probe (real wire call)</th>
+<th>Positive-evidence shape</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ToolUse / FunctionCalling</td>
+<td>send <code>tools</code>+<code>tool_choice</code>, assert
+<code>resp.Choices[].Message.ToolCalls</code> non-empty (needs C1)</td>
+<td>captured request+response JSON showing a <code>tool_calls</code>
+entry</td>
+</tr>
+<tr>
+<td>ParallelToolUse</td>
+<td>2-tool prompt, assert <code>len(ToolCalls) &gt; 1</code> (needs
+C1)</td>
+<td>response with ≥2 <code>tool_calls</code></td>
+</tr>
+<tr>
+<td>Embeddings</td>
+<td>POST <code>/v1/embeddings</code>, assert vector len&gt;0</td>
+<td>response with non-empty <code>data[].embedding</code></td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>provider MCP endpoint handshake / capability advertise</td>
+<td>captured handshake showing MCP support</td>
+</tr>
+<tr>
+<td>LSP</td>
+<td>LSP capability probe</td>
+<td>captured advertise</td>
+</tr>
+<tr>
+<td>ACP</td>
+<td>ACP capability probe</td>
+<td>captured advertise</td>
+</tr>
+<tr>
+<td>RAG</td>
+<td>retrieval-augmented call (file/context injection round-trip)</td>
+<td>response citing injected context</td>
+</tr>
+<tr>
+<td>Skills</td>
+<td>skills/agent-tool invocation round-trip</td>
+<td>captured skill invocation</td>
+</tr>
+<tr>
+<td>Plugins</td>
+<td>plugin invocation round-trip</td>
+<td>captured plugin call</td>
+</tr>
+</tbody>
+</table>
+<p>Each probe: real HTTP (no simulation, per §3 of root CLAUDE.md),
+resource-capped, writes <code>RawRequest</code>/<code>RawResponse</code>
+to the DB record + a <code>CapabilityEvidenceEntry</code>, and stamps
+<code>VerifiedAt</code>/<code>StartedAt</code>/<code>CompletedAt</code>
+for the CONST-037/038 freshness window. Missing key ⇒ clean SKIP (per
+inner CLAUDE.md Acceptance demo), never a faked PASS.</p>
+<h3 id="c5-wire-verificationservice.verify-removes-errverificationnotwired">C5
+— Wire <code>VerificationService.Verify</code> (removes
+<code>ErrVerificationNotWired</code>)</h3>
+<p><strong>Site:</strong>
+<code>llm-verifier/verification/verification.go:29-63</code>. Give
+<code>Verifier</code> a handle to <code>llmverifier.Verifier</code> (add
+field at <code>verification.go:17-19</code>), then in
+<code>Verify</code>: (1) resolve <code>req.ModelID</code> → int64 PK via
+the models table; (2) dispatch the C4 probes via
+<code>llmverifier.Verifier</code>; (3) compose a
+<code>database.VerificationResult</code> from real outcomes (incl. the
+new RAG/Skills/Plugins + evidence). Remove the
+<code>return nil, ErrVerificationNotWired</code> (<code>:62</code>) once
+real dispatch lands; UPDATE the guard test
+<code>verification/verification_test.go:64-101</code> in the SAME commit
+(it currently asserts the sentinel) — this is a §11.4.120
+fix-breaks-its-own-gate reconciliation, NOT a delete.</p>
+<hr />
+<h2 id="ordering-dependency-notes-for-the-executor">4. Ordering /
+dependency notes (for the executor)</h2>
+<ol type="1">
+<li><strong>C1 first</strong> — <code>Message.ToolCalls</code> is the
+keystone; C3/C4 tool-use probes and §2.3 depend on it. Landing C1 alone
+flips <code>testParallelToolUse</code> from a hard
+<code>(false,0)</code> stub into an implementable probe.</li>
+<li><strong>C2 before C4</strong> — the evidence/columns must exist
+before probes can persist to them.</li>
+<li><strong>C4 before C3’s fail-closed resolver</strong> and
+<strong>before C5</strong> — probes are the source of truth the resolver
+prefers and the service dispatches.</li>
+<li><strong>C5 + test reconciliation last</strong> — flipping
+<code>Verify</code> on requires the test update in the same commit
+(§11.4.120).</li>
+</ol>
+<p>Every change site is inside the inner module
+<code>digital.vasic.llmsverifier</code> (<code>llm-verifier/…</code>),
+which builds clean today (§1.1) — a green build baseline to regress
+against.</p>
+<hr />
+<h2 id="captured-test-baseline">5. Captured test baseline</h2>
+<h3 id="root-module-llmsverifier-go-test--short-....-green-exit-0">5.1
+ROOT module <code>llmsverifier</code> —
+<code>go test -short ./...</code> = GREEN (exit 0)</h3>
+<p><code>go_test.txt</code> (run from submodule root; NOTE this covers
+ONLY the thin root module’s package tree <code>llmsverifier/…</code>,
+NOT the inner app):</p>
+<pre><code>ok      llmsverifier    0.005s [no tests to run]
+?       llmsverifier/challenges/runner  [no test files]
+ok      llmsverifier/internal/benchmark 12.369s
+ok      llmsverifier/internal/llmops    2.574s
+ok      llmsverifier/internal/messaging 0.131s
+ok      llmsverifier/internal/messaging/factory 0.104s
+ok      llmsverifier/internal/messaging/inmemory    1.380s
+ok      llmsverifier/internal/messaging/kafka   0.009s
+ok      llmsverifier/internal/messaging/rabbitmq    0.005s
+ok      llmsverifier/internal/rag   0.006s
+ok      llmsverifier/internal/selfimprove   0.006s
+ok      llmsverifier/tests/e2e  0.006s
+ok      llmsverifier/tests/integration  0.005s
+ok      llmsverifier/tests/performance  0.004s
+ok      llmsverifier/tests/security 4.027s
+ok      llmsverifier/tests/unit 0.012s
+=== go test EXIT=0 ===</code></pre>
+<p><strong>15 ok, 0 FAIL, 1 no-test, exit 0.</strong> (Only cgo
+<code>-Wdiscarded-qualifiers</code> warnings from vendored
+<code>mattn/go-sqlite3</code> — harmless.)</p>
+<h3 id="critical-scope-finding-the-root-run-does-not-test-the-change-sites">5.2
+CRITICAL SCOPE FINDING — the root run does NOT test the change
+sites</h3>
+<p><code>go build ./...</code> / <code>go test ./...</code> from the
+submodule ROOT operate on <code>module llmsverifier</code>
+(<code>go.mod:1</code>). Every change site in §3 (C1–C5) lives in
+<code>llm-verifier/…</code> which is a <strong>SEPARATE module</strong>
+<code>digital.vasic.llmsverifier</code>
+(<code>llm-verifier/go.mod:1</code>) with its own
+<code>.git</code>-independent module graph. <code>go test ./...</code>
+does NOT descend into a nested module — so the green §5.1 baseline says
+NOTHING about <code>llmverifier/</code>, <code>capabilities/</code>,
+<code>verification/</code>, <code>database/</code>. The inner baseline
+(§5.3, evidence <code>go_test_inner.txt</code>) is the one to regress
+the C1–C5 work against.</p>
+<h3 id="inner-module-digital.vasic.llmsverifier-baseline">5.3 INNER
+module <code>digital.vasic.llmsverifier</code> — baseline</h3>
+<p>Command:
+<code>cd llm-verifier &amp;&amp; GOMAXPROCS=2 GOFLAGS=-mod=mod nice -n 19 go build ./...</code>
+then <code>go test -short ./...</code>. Evidence:
+<code>go_test_inner.txt</code>.</p>
+<ul>
+<li><p><strong><code>go build ./...</code> = exit 0</strong> (inner app
+compiles clean — green baseline to regress C1–C5 against).</p></li>
+<li><p><strong><code>go test -short ./...</code> = exit 1</strong> —
+<strong>58 ok, 3 FAIL</strong>. Breakdown:</p>
+<p>ALL five change-site packages are <strong>GREEN</strong>:</p>
+<pre><code>ok  digital.vasic.llmsverifier/capabilities   0.005s   (registry.go / types.go — C2, C3)
+ok  digital.vasic.llmsverifier/database        0.779s   (VerificationResult — C2 site C)
+ok  digital.vasic.llmsverifier/llmverifier     4.089s   (llm_client.go / verifier.go — C1, C4)
+ok  digital.vasic.llmsverifier/providers       8.991s
+ok  digital.vasic.llmsverifier/verification    0.143s   (Verify / ErrVerificationNotWired — C5)</code></pre>
+<p>The 3 FAILs are <strong>environmental, pre-existing, and NOT on any
+change site</strong> — all in
+<code>digital.vasic.llmsverifier/tests</code>
+(<code>automation_test.go</code>), CLI tests that require a running
+server at <code>https://localhost:8080</code>:</p>
+<pre><code>--- FAIL: TestCommandFlagValidation  (automation_test.go:249)
+--- FAIL: TestOutputFormats          (automation_test.go:285)
+    Output: Failed to fetch models: request failed: Get &quot;https://localhost:8080&quot;:
+    tls: failed to verify certificate: x509: certificate is not valid for any names,
+    but wanted to match localhost
+FAIL  digital.vasic.llmsverifier/tests  4.610s</code></pre>
+<p>These are the anti-bluff “real infrastructure or skip” tests firing
+WITHOUT the server up (should arguably SKIP, not FAIL, per inner
+CLAUDE.md rule 11 — a separate pre-existing hygiene issue, NOT
+introduced by this work).</p></li>
+</ul>
+<p><strong>Baseline verdict for the C1–C5 executor:</strong> inner
+module compiles; the packages you will edit (capabilities, database,
+llmverifier, verification) are all green today; the only red is an
+env-dependent CLI-server test unrelated to the change surface. Regress
+against
+<code>cd llm-verifier &amp;&amp; go test -short ./capabilities/... ./database/... ./llmverifier/... ./verification/...</code>
+(all currently PASS).</p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<ul>
+<li>Code: all <code>file:line</code> above read directly from
+<code>submodules/llms_verifier/llm-verifier/…</code> this session
+(2026-07-06); structs pasted verbatim.</li>
+<li>Build/test:
+<code>docs/research/07.2026/00_master/evidence/llmsverifier_baseline/{go_build.txt,go_test.txt}</code>
+captured this session.</li>
+<li>Git state: <code>git log/rev-list/cat-file</code> captured this
+session.</li>
+</ul>
+</body>
+</html>

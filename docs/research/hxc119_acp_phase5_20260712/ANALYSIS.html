@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ANALYSIS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ANALYSIS</h1>
+</header>
+<h1 id="hxc-119-featurehigh-acp-support-investigation-implementation-report">HXC-119
+(Feature/High) — ACP support investigation + implementation report</h1>
+<h2 id="status-done-phase-1-4-adopted-verified-phase-5-honestly-deferred-operator-design-fork-below">Status:
+DONE (Phase 1-4 adopted + verified; Phase 5 honestly deferred — operator
+design fork below)</h2>
+<h2 id="step-1-investigation-fact">STEP 1 — Investigation (FACT)</h2>
+<ul>
+<li><code>helix_code/internal/acp/</code> did <strong>not</strong> exist
+on this worktree’s branch
+(<code>worktree-agent-a8de61cfd1f82404a</code>, based on outer-repo
+commit <code>6bf1be7a</code>).
+<code>git log --oneline --all -- helix_code/internal/acp</code> however
+showed two commits touching that path — <code>ca76e14b</code> and
+<code>edbd5a49</code> — neither an ancestor of this worktree’s
+HEAD.</li>
+<li>Traced those commits to local branch
+<code>feature/helixllm-full-extension</code> (tip <code>68722674</code>,
+present locally with no network fetch needed —
+<code>origin/feature/helixllm-full-extension</code> also carries them).
+Its merge-base with this worktree’s HEAD is exactly
+<code>6bf1be7a</code> — i.e. this worktree’s HEAD is a strict ancestor
+of that branch. A parallel track had <strong>already implemented HXC-119
+through Phase 4</strong> (real ACP handshake + real streaming
+turn-generation), bundled together with HXC-117 (verifier CONST-040
+capability flags) and HXC-118 (RAG) in the same two commits.
+<code>docs/workable_items.db</code> on that branch carries HXC-119 as
+<code>Queued</code> (Feature/High) — source landed, DB-close
+deliberately deferred (a documented “F-DBTOOL” sync-tooling finding,
+unrelated to ACP itself).</li>
+<li>Per §11.4.74 (extend-don’t-reimplement), §11.4.124
+(investigate-before- duplicating/removing), and §11.4.181 (one feature ⇒
+one canonical branch), reimplementing ACP from scratch here would have
+created a <strong>second, divergent implementation of the same feature
+on a different branch</strong> — exactly the failure class those anchors
+exist to prevent. Instead I adopted the real, already-tested
+implementation.</li>
+</ul>
+<h3 id="established-sibling-capability-pattern-for-const-040-mcplspacp">Established
+sibling-capability pattern (for CONST-040: MCP/LSP/ACP/…)</h3>
+<ul>
+<li>MCP: <code>internal/mcp</code> (client package:
+transport_stdio/http/sse/ws, registry, lifecycle, oauth) +
+<code>cmd/cli/mcp_cmd.go</code> (dedicated cobra subcommand, dispatched
+in <code>main()</code> before <code>flag.Parse()</code>).</li>
+<li>LSP: <code>internal/tools</code> (LSPManager) +
+<code>cmd/cli/lsp_cmd.go</code>, same dispatcher shape, delegating to a
+shared <code>internal/commands.LSPCommand</code> renderer.</li>
+<li>ACP follows the SAME shape: <code>internal/acp</code> (the
+<em>agent</em>-side protocol package) + <code>cmd/cli/acp_cmd.go</code>,
+dispatched in <code>main()</code> identically to
+<code>mcp</code>/<code>lsp</code>. Confirmed correct: HelixCode is
+itself an agentic coding CLI (like Claude Code / Gemini CLI), so the
+correct ACP <em>role</em> for it is <strong>Agent</strong> (the side an
+ACP-aware editor such as Zed/JetBrains spawns as a subprocess and
+drives) — not Client. This matches
+<code>docs/research/07.2026/05_mcp_acp_protocols/</code> and
+<code>docs/research/const040_capability_model_20260712/DESIGN.md</code>
+already present on the feature branch (read for context, not modified —
+docs/ out of scope for this commit).</li>
+</ul>
+<h2 id="step-2-deep-research-11.4.150-2-angles-cited-dated-2026-07-12">STEP
+2 — Deep research (§11.4.150, ≥2 angles, cited, dated 2026-07-12)</h2>
+<ol type="1">
+<li>WebFetch
+<code>https://agentclientprotocol.com/protocol/overview</code> —
+confirmed JSON-RPC 2.0 request/response + notification split, Agent vs
+Client role definitions, core method inventory (<code>initialize</code>,
+<code>session/new</code>, <code>session/prompt</code>,
+<code>session/cancel</code>, <code>session/update</code> notification,
+client-side
+<code>fs/*</code>/<code>terminal/*</code>/<code>session/request_permission</code>).</li>
+<li>WebFetch
+<code>https://agentclientprotocol.com/protocol/initialization</code> —
+confirmed <code>protocolVersion</code> is an integer,
+<code>clientCapabilities</code>/ <code>agentCapabilities</code> shapes
+(fs.readTextFile/writeTextFile, terminal, mcpCapabilities,
+promptCapabilities, loadSession, authMethods).</li>
+<li>WebSearch “agentclientprotocol.com stdio transport newline-delimited
+JSON-RPC stdout stderr” → confirmed newline-delimited JSON-RPC over
+stdin/stdout, stderr reserved for logs, no LSP-style Content-Length
+framing.</li>
+<li>WebFetch
+<code>https://agentclientprotocol.com/protocol/prompt-turn</code> —
+confirmed <code>session/prompt</code> params (sessionId + content
+blocks) / result (<code>stopReason</code> enum:
+end_turn/max_tokens/max_turn_requests/ refusal/cancelled) and
+<code>session/update</code> notification variants (agent_message_chunk,
+tool_call, tool_call_update, plan, usage_update).</li>
+</ol>
+<p>All four confirmed against <code>internal/acp/agent.go</code>’s
+actual implementation (verbatim from the adopted commits) —
+protocolVersion negotiation, content- block flattening
+(<code>Text</code>/<code>ResourceLink</code>), and the exact
+<code>StopReason</code> mapping
+(<code>StopReasonEndTurn</code>/<code>StopReasonMaxTokens</code>/<code>StopReasonRefusal</code>/
+<code>StopReasonCancelled</code>) all match the spec as fetched today.
+No correction needed to the adopted code; confirms it is not a bluff and
+not missing a bigger problem — it is a faithful, minimal-viable ACP
+Agent. The repo’s own prior research
+(<code>docs/research/07.2026/05_mcp_acp_protocols/</code>,
+<code>docs/research/const040_capability_model_20260712/DESIGN.md</code>,
+both present on <code>feature/helixllm-full-extension</code>, read but
+not modified) independently reached the same conclusions.</p>
+<h2 id="step-3-implementation-adopted-scoped-to-hxc-119-only">STEP 3 —
+Implementation (adopted, scoped to HXC-119 only)</h2>
+<p>Extracted ONLY the ACP-scoped hunks from the bundled upstream commits
+(<code>ca76e14b</code>, <code>edbd5a49</code>), explicitly excluding the
+co-mingled HXC-117 (verifier
+<code>VerificationResult.Supports{MCP,LSP,ACP,RAG,Skills,Plugins}</code>
+fields + CLI capability-flag rendering) and HXC-118 (RAG retriever/
+embedder) changes bundled in the same commits — those are out of scope
+for this ticket and depend on verifier/RAG code this worktree does not
+have.</p>
+<p>Files added/changed (verbatim content from the source commits, wiring
+hand-verified line-by-line against this worktree’s actual
+<code>main.go</code>): - <code>helix_code/internal/acp/doc.go</code> —
+package doc, scope boundary, constitutional anchors. -
+<code>helix_code/internal/acp/agent.go</code> — the <code>Agent</code>
+type: <code>Initialize</code>, <code>Authenticate</code> (honest
+<code>MethodNotFound</code>), <code>Logout</code> (honest no-op),
+<code>NewSession</code> (real UUID session tracking),
+<code>Prompt</code> (real <code>provider.GenerateStream</code>
+delegation + real <code>session/update</code> streaming + real
+<code>Cancel</code>-driven <code>context.CancelFunc</code>),
+<code>CloseSession</code>,
+<code>ListSessions</code>/<code>ResumeSession</code>/<code>SetSessionConfigOption</code>/<code>SetSessionMode</code>
+(honest <code>MethodNotFound</code> — not advertised as supported by
+<code>Initialize</code>). -
+<code>helix_code/internal/acp/agent_test.go</code> — 6 tests: real
+handshake, real session+prompt honest-error paths, real
+<code>GenerateStream</code> delegation proof, real truncated-stop-reason
+mapping, real in-flight cancellation. -
+<code>helix_code/cmd/cli/acp_cmd.go</code> — <code>helixcode acp</code>
+cobra command; wires <code>os.Stdin</code>/<code>os.Stdout</code> (or
+test doubles) to a real <code>acpsdk.NewAgentSideConnection</code>,
+resolves a real LLM provider via the pre-existing
+<code>buildSubagentLLMProvider</code>. -
+<code>helix_code/cmd/cli/acp_cmd_test.go</code> — 1 test: real
+<code>acpsdk.ClientSideConnection</code> ↔︎
+<code>acpsdk.NewAgentSideConnection</code> handshake over a real
+<code>io.Pipe</code>, driven through the cobra <code>RunE</code>. -
+<code>helix_code/cmd/cli/main.go</code> — ONLY the
+<code>os.Args[1] == &quot;acp&quot;</code> dispatcher block (mirrors the existing
+<code>&quot;mcp&quot;</code> dispatcher immediately above it); none of the HXC-117
+<code>formatCapabilityFlags</code>/RAG hunks from the same upstream diff
+were brought in. -
+<code>helix_code/cmd/cli/i18n/bundles/active.en.yaml</code> — ONLY the 3
+ACP keys (<code>cli_acp_root_short</code>,
+<code>cli_acp_root_long</code>, <code>cli_acp_listening</code>); the
+HXC-117 capability-flag i18n keys from the same upstream diff were
+excluded. - <code>helix_code/go.mod</code> / <code>go.sum</code> — ONLY
+the <code>github.com/coder/acp-go-sdk v0.13.5</code> require + its two
+go.sum entries; the <code>digital.vasic.rag</code> (HXC-118) require was
+excluded.</p>
+<h3 id="the-gap-and-how-it-was-closed">The gap and how it was
+closed</h3>
+<p>Gap: no ACP package, no <code>helixcode acp</code> entrypoint,
+CONST-040’s ACP capability had zero implementation anywhere reachable
+from this worktree. Closed by adopting the real, tested Phase 1-4
+implementation described above: real JSON-RPC 2.0 handshake, real
+session tracking, real turn generation via the existing
+<code>llm.Provider.GenerateStream</code> (BLUFF-001-clean: no simulated
+text), real cancellation.</p>
+<h3 id="genuine-operator-design-fork-not-guessed-at-explicitly-deferred">Genuine
+operator-design fork (NOT guessed at, explicitly deferred)</h3>
+<p><strong>ACP permission-request mapping is HXC-119 Phase 5</strong> —
+mapping ACP’s <code>session/request_permission</code> client-callback
+onto HelixCode’s existing <code>internal/approval</code> /
+<code>internal/tools/permissions</code> subsystems. This is explicitly
+flagged in the adopted <code>doc.go</code> as “medium-high risk,
+requires its own security-focused review pass” and was deliberately NOT
+implemented by the original author either. <code>Prompt</code> currently
+only streams model text (no tool-call/file-write action taken on the
+client’s behalf), so it never needs to request permission in this phase
+— every ACP method that WOULD need permission-mapping returns an honest
+<code>acp.NewMethodNotFound</code> / <code>acp.NewInternalError</code>
+rather than a fabricated success.</p>
+<p><strong>The exact operator question for Phase 5</strong> (2-4
+concrete options — not guessed, not implemented without a decision): 1.
+<strong>(A) Map 1:1 onto <code>internal/approval</code>’s existing
+rule/decision model</strong> — reuses today’s approval policy engine
+verbatim; ACP’s <code>PermissionOption</code> choices become
+approval-rule outcomes. Fastest, but ACP’s per-tool-call granularity may
+not fit <code>internal/approval</code>’s existing shape without
+extension. 2. <strong>(B) Map onto
+<code>internal/tools/permissions</code>’s tool-execution gate</strong>
+instead — closer semantic fit (ACP permission requests gate a specific
+tool call, same as this subsystem), but requires wiring
+<code>Agent.Prompt</code> to actually dispatch HelixCode’s own
+tool-execution path when the remote editor requests a file write/command
+run via ACP — a materially larger change than (A). 3. <strong>(C) New
+minimal ACP-specific permission adapter</strong> that neither reuses nor
+extends either subsystem — smallest, most isolated diff, but duplicates
+policy logic that (A)/(B) would have reused, and is the option
+<code>§11.4.74</code> (extend-don’t-reimplement) discourages by default.
+4. <strong>(D) Defer Phase 5 to a dedicated future ticket with its own
+security-focused review pass</strong>, as already recorded on the
+feature branch — the item stays honestly <code>Queued</code>/partial for
+ACP’s tool-execution surface until that review lands. <em>(Recommended,
+matching the existing design’s own stated plan and this subagent’s
+time-box — Phase 5 genuinely requires its own security review, not a
+scoped subagent’s unilateral call.)</em></p>
+<h2 id="verify-all-captured-this-session-this-worktree">Verify (all
+captured, this session, this worktree)</h2>
+<pre><code>$ go build -tags=nogui ./cmd/... ./internal/...        # exit 0, no output
+$ go vet   -tags=nogui ./cmd/... ./internal/...        # exit 0, no output
+$ go test  -tags=nogui -v -count=1 ./internal/acp/...
+--- PASS: TestNewAgentSideConnection_WiresWithoutPanic (0.00s)
+--- PASS: TestAgent_RealHandshake (0.00s)
+--- PASS: TestAgent_NewSessionThenPromptHonestErrors (0.00s)
+--- PASS: TestAgent_PromptDelegatesToRealGenerateStream (0.00s)
+--- PASS: TestAgent_PromptTruncatedStopReason (0.00s)
+--- PASS: TestAgent_CancelStopsRealInFlightGeneration (0.05s)
+ok      dev.helix.code/internal/acp 0.090s
+$ go test  -tags=nogui -v -count=1 -run ACP ./cmd/cli/...
+--- PASS: TestNewACPCommand_RealHandshakeOverStdioTransport (0.00s)
+ok      dev.helix.code/cmd/cli  0.082s
+$ go test  -tags=nogui -count=1 ./cmd/cli/...           # full package, zero regressions
+ok      dev.helix.code/cmd/cli  9.872s
+ok      dev.helix.code/cmd/cli/i18n 0.002s
+$ grep -rniE &quot;\bsimulated\b|\bfor now\b|TODO implement|in production this would&quot; \
+    internal/acp cmd/cli/acp_cmd.go cmd/cli/acp_cmd_test.go | ...   # clean</code></pre>
+<p>Note: this worktree’s <code>submodules/*</code> (dag_orchestrator,
+helix_agent, helix_qa, etc — 38 replace-target modules referenced from
+<code>go.mod</code>) were NOT initialized when this task began
+(pre-existing environment gap unrelated to HXC-119 — the initial
+<code>go build ./cmd/... ./internal/...</code> failed with
+<code>reading .../go.mod: no such file or directory</code> for unrelated
+packages before I touched anything, confirmed by stashing my
+<code>main.go</code> edit and re-running the same failing build). I
+initialized them locally via
+<code>git submodule update --init --reference &lt;main-checkout-path&gt; &lt;path&gt;</code>
+— no network fetch, objects were already present in the main checkout’s
+<code>.git/modules/*</code> — so the build/vet/test evidence above is
+real and complete, not degraded by that gap.</p>
+<h2 id="test-tally">Test tally</h2>
+<ul>
+<li><code>internal/acp</code>: 6/6 PASS (real handshake, real
+session+prompt honest errors, real GenerateStream delegation, real
+truncated-stop-reason mapping, real in-flight cancellation).</li>
+<li><code>cmd/cli</code> ACP-scoped: 1/1 PASS (real stdio transport
+handshake through the cobra command).</li>
+<li><code>cmd/cli</code> full package: PASS, zero regressions from this
+change.</li>
+<li>Anti-bluff smoke: clean.</li>
+</ul>
+<h2 id="worktree-commit">Worktree / commit</h2>
+<ul>
+<li>Branch: <code>worktree-agent-a8de61cfd1f82404a</code> (isolated
+worktree; NOT pushed, per instructions).</li>
+<li>Commit: <code>2f7daa14</code> — “feat(HXC-119): implement ACP (Agent
+Client Protocol) agent — adopted from feature/helixllm-full-extension
+Phase 1-4”.</li>
+<li><code>git status --porcelain</code> (tracked scope) after commit:
+clean — only the 9 intended files
+(<code>internal/acp/{doc,agent,agent_test}.go</code>,
+<code>cmd/cli/acp_cmd{,_test}.go</code>, <code>cmd/cli/main.go</code>,
+<code>cmd/cli/i18n/bundles/active.en.yaml</code>, <code>go.mod</code>,
+<code>go.sum</code>) were staged and committed. <code>docs/</code> and
+<code>docs/workable_items.db</code> were NOT touched, as
+instructed.</li>
+</ul>
+</body>
+</html>

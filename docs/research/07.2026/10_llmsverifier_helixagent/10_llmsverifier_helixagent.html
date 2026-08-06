@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>10_llmsverifier_helixagent</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">10_llmsverifier_helixagent</h1>
+</header>
+<h1 id="llmsverifier-helixllm-helixagent-verification-extension-design-t1">LLMsVerifier
+× HelixLLM / HelixAgent — Verification Extension Design (T1)</h1>
+<p><strong>Date:</strong> 2026-07-06 <strong>Scope:</strong> Extend
+LLMsVerifier to verify local (HelixLLM / llama.cpp) + new cloud
+providers flawlessly, source CONST-040 capability flags from REAL probes
+(never static literals), and meet the CONST-037 24h / CONST-038 60s
+freshness contracts. <strong>Method:</strong> Read of actual code under
+<code>submodules/llms_verifier/llm-verifier</code> and
+<code>submodules/helix_agent/internal</code> (structs pasted verbatim,
+no guessing per §11.4.6) + cited web research on llama.cpp / Ollama /
+OpenAI-compatible verification best practice.</p>
+<hr />
+<h2 id="current-state-actual-structures-pasted-from-source">1. Current
+State — ACTUAL structures (pasted from source)</h2>
+<h3 id="capability-model-capabilitiestypes.go">1.1 Capability model —
+<code>capabilities/types.go</code></h3>
+<p><code>ProviderCapabilities</code> carries a rich,
+verification-fillable capability set. The two CONST-040-relevant
+members:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// capabilities/types.go</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProviderCapabilities <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Provider   <span class="dt">string</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Model      <span class="dt">string</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Verified   <span class="dt">bool</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    VerifiedAt time<span class="op">.</span>Time</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Protocols  <span class="op">[]</span>ProtocolType     <span class="co">// MCP / ACP / LSP / gRPC / OpenAI / Anthropic / Ollama</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    Model_     ModelCapability    <span class="st">`json:&quot;model_capabilities&quot;`</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    Extended   ExtendedCapabilities</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    Custom     <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ModelCapability <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    Vision<span class="op">,</span> ImageInput<span class="op">,</span> ImageOutput<span class="op">,</span> Audio<span class="op">,</span> Video<span class="op">,</span> PDF<span class="op">,</span> OCR <span class="dt">bool</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    FunctionCalling<span class="op">,</span> ToolUse<span class="op">,</span> Embeddings<span class="op">,</span> CodeExecution<span class="op">,</span> WebBrowsing<span class="op">,</span> Reasoning <span class="dt">bool</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    MaxContextTokens<span class="op">,</span> MaxOutputTokens <span class="dt">int</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span> <span class="co">// ProtocolType</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    ProtocolMCP  <span class="op">=</span> <span class="st">&quot;mcp&quot;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    ProtocolACP  <span class="op">=</span> <span class="st">&quot;acp&quot;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    ProtocolLSP  <span class="op">=</span> <span class="st">&quot;lsp&quot;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    ProtocolOllama <span class="op">=</span> <span class="st">&quot;ollama&quot;</span>  <span class="co">// etc.</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<p><strong>Finding:</strong> MCP/ACP/LSP are modelled as
+<code>Protocols []ProtocolType</code>, NOT as dedicated per-model
+booleans, and there is <strong>no <code>RAG</code> / <code>Skills</code>
+/ <code>Plugins</code> member at all</strong>. CONST-040 requires MCP,
+LSP, ACP, Embedding, RAG, Skills, Plugins — only Embedding
+(<code>ModelCapability.Embeddings</code>) and MCP/LSP/ACP (as protocol
+tags) exist today.</p>
+<h3 id="per-model-db-record-databasedatabase.go-already-const-040-shaped">1.2
+Per-model DB record — <code>database/database.go</code> (already
+CONST-040-shaped)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// database/database.go</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VerificationResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">,</span> ModelID <span class="dt">int64</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    VerificationType <span class="dt">string</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    StartedAt time<span class="op">.</span>Time<span class="op">;</span> CompletedAt <span class="op">*</span>time<span class="op">.</span>Time</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Status <span class="dt">string</span><span class="op">;</span> ErrorMessage <span class="op">*</span><span class="dt">string</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    ModelExists<span class="op">,</span> Responsive<span class="op">,</span> Overloaded <span class="op">*</span><span class="dt">bool</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    LatencyMs <span class="op">*</span><span class="dt">int</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    SupportsToolUse<span class="op">,</span> SupportsFunctionCalling <span class="dt">bool</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    SupportsCodeGeneration<span class="op">,</span> SupportsCodeCompletion<span class="op">,</span> SupportsCodeReview <span class="dt">bool</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    SupportsEmbeddings<span class="op">,</span> SupportsReranking <span class="dt">bool</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    SupportsImageGeneration<span class="op">,</span> SupportsAudioGeneration<span class="op">,</span> SupportsVideoGeneration <span class="dt">bool</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    SupportsMCPs<span class="op">,</span> SupportsLSPs<span class="op">,</span> SupportsACPs <span class="dt">bool</span>          <span class="co">// &lt;-- CONST-040 booleans EXIST here</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    SupportsMultimodal<span class="op">,</span> SupportsStreaming<span class="op">,</span> SupportsJSONMode<span class="op">,</span> SupportsStructuredOutput <span class="dt">bool</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    SupportsReasoning<span class="op">,</span> SupportsParallelToolUse <span class="dt">bool</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... CodeLanguageSupport []string, CodeDebugging, TestGeneration, etc.</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Finding:</strong> The DB layer already stores per-model
+<code>SupportsMCPs/LSPs/ACPs/Embeddings/...</code> booleans + freshness
+columns (<code>StartedAt</code>, <code>CompletedAt</code>,
+<code>Status</code>). It has <strong>no RAG / Skills / Plugins
+column</strong>. This struct is the natural home for CONST-040 flags —
+the gap is population + a few missing columns, not architecture.</p>
+<h3 id="in-memory-verification-result-llmverifiermodels.go">1.3
+In-memory verification result — <code>llmverifier/models.go</code></h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> VerificationResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    ModelInfo ModelInfo<span class="op">;</span> Availability AvailabilityResult<span class="op">;</span> ResponseTime ResponseTimeResult</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    FeatureDetection FeatureDetectionResult<span class="op">;</span> CodeCapabilities CodeCapabilityResult</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    GenerativeCapabilities GenerativeCapabilityResult<span class="op">;</span> PerformanceScores PerformanceScore</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Timestamp time<span class="op">.</span>Time<span class="op">;</span> Error <span class="dt">string</span><span class="op">;</span> ScoreDetails ScoreDetails</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Capabilities <span class="kw">struct</span> <span class="op">{</span> <span class="co">// ModelInfo.Capabilities</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Completion<span class="op">,</span> Chat<span class="op">,</span> Embedding<span class="op">,</span> FineTuning<span class="op">,</span> ImageGeneration<span class="op">,</span> CodeGeneration<span class="op">,</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    ToolUse<span class="op">,</span> Multimodal<span class="op">,</span> FunctionCalling<span class="op">,</span> Voice<span class="op">,</span> Rerank <span class="dt">bool</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="verification-probe-flow-what-is-real-vs-static-today">1.4
+Verification / probe flow (what is REAL vs static today)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>File</th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Detector.DetectProviderCapabilities</code></td>
+<td><code>capabilities/detector.go</code></td>
+<td>Starts from <strong>static</strong>
+<code>GetProviderBaseCapabilities(provider)</code> (registry), then runs
+REAL <code>detectStreaming</code> (SSE content-type probe) +
+<code>detectModels</code> (GET <code>/v1/models</code>). Sets
+<code>Verified=true</code>, <code>VerifiedAt=now</code>, <strong>15-min
+TTL cache</strong>. Endpoint maps are <strong>cloud-only</strong>
+(openai/anthropic/deepseek/gemini/qwen/groq/mistral).
+<strong>MCP/LSP/ACP are NOT probed</strong> — they come from the static
+registry.</td>
+</tr>
+<tr>
+<td><code>capabilities/registry.go</code></td>
+<td>—</td>
+<td>25+ providers with <strong>hardcoded</strong>
+<code>Protocols: []ProtocolType{...ProtocolMCP/ACP/LSP}</code>. This is
+the CONST-040 anti-bluff hazard: a capability flag set from a literal,
+not a probe.</td>
+</tr>
+<tr>
+<td><code>llmverifier/verifier.go</code> <code>Verify()</code></td>
+<td>—</td>
+<td>The REAL engine. <code>detectFeatures</code>,
+<code>testEmbeddings</code> (real POST <code>/v1/embeddings</code>),
+<code>testMultimodal</code>, <code>TestACPs</code>, per-language coding
+probes — all via <code>LLMClient(endpoint, apiKey, headers)</code>.</td>
+</tr>
+<tr>
+<td><code>llmverifier/llm_client.go</code>
+<code>NewLLMClient(endpoint, apiKey, headers)</code></td>
+<td>—</td>
+<td>Plain endpoint string → <strong>a local
+<code>http://host:port/v1</code> works out-of-the-box</strong> for every
+OpenAI-shaped probe.</td>
+</tr>
+<tr>
+<td><code>verification/verification.go</code> <code>Verify()</code>
+(VerificationService)</td>
+<td>—</td>
+<td>Returns honest sentinel <code>ErrVerificationNotWired</code> (a
+prior all-caps-true bluff was removed) — <strong>NOT wired to
+<code>llmverifier.Verifier</code></strong>.</td>
+</tr>
+<tr>
+<td>parallel-tool-use probe</td>
+<td><code>verifier.go</code></td>
+<td>Returns honest <code>(false, 0)</code> — <code>Message</code> struct
+has <strong>no <code>ToolCalls</code> field</strong>, so real tool-call
+counting is impossible today.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Net current-state verdict:</strong> the <em>real-probe engine
+exists and is endpoint-agnostic</em>; the <em>DB schema for capability
+booleans exists</em>. The gaps are (a) MCP/LSP/RAG/Skills/Plugins are
+not probed (static or absent), (b) local providers are absent from the
+endpoint/registry maps, (c) tool-calling verification is blocked by a
+missing <code>ToolCalls</code> field, (d)
+<code>VerificationService.Verify</code> is unwired, (e) no 24h/60s
+freshness policy.</p>
+<h3 id="helixagent-consumption-side">1.5 HelixAgent consumption
+side</h3>
+<ul>
+<li><code>internal/llm/provider.go</code> — <code>LLMProvider</code>
+interface exposes
+<code>GetCapabilities() *models.ProviderCapabilities</code>.</li>
+<li><code>internal/models/types.go</code>
+<code>ProviderCapabilities</code> — has
+<code>SupportsStreaming/FunctionCalling/Vision/Tools/Search/Reasoning/CodeCompletion/CodeAnalysis/Refactoring</code>
+but <strong>NO MCP/LSP/ACP/RAG/Skills/Plugins booleans</strong> →
+CONST-040 gap on the consumer struct.</li>
+<li><code>internal/llm/providers/helixllm/provider.go</code> —
+<strong>ALREADY EXISTS.</strong> Endpoints: chat
+<code>/v1/chat/completions</code>, embeddings
+<code>/v1/embeddings</code>, models <code>/v1/models</code>, health
+<code>/internal/health</code>, default
+<code>https://localhost:8443</code>. Implements
+<code>HealthCheck</code>, <code>Complete</code>,
+<code>GetCapabilities</code>. (Sibling <code>lmstudio</code>,
+<code>ollama</code> providers also present.)</li>
+<li><code>internal/verifier/</code> (discovery.go, service.go,
+scoring.go, health.go, startup.go, subscription_detector.go, adapters/)
+— the consumption package.</li>
+<li><code>internal/services/provider_discovery.go</code> — defines
+<code>LLMsVerifierScoreProvider</code> interface
+(<code>GetProviderScore</code>, <code>GetModelScore</code>,
+<code>RefreshScores</code>), <code>useDynamicScoring=true</code>
+default, and
+<code>ProviderDiscovery{Verified bool; VerifiedAt time.Time; Capabilities *models.ProviderCapabilities}</code>.
+<strong>The freshness plumbing (VerifiedAt + RefreshScores) already
+exists</strong> — it needs a 24h/60s policy bound to it.</li>
+</ul>
+<hr />
+<h2 id="extension-design">2. Extension Design</h2>
+<h3 id="const-040-capability-model-add-the-missing-dimensions-types-db">2.1
+CONST-040 capability model — add the missing dimensions (types +
+DB)</h3>
+<p><strong>A. <code>capabilities/types.go</code> — extend
+<code>ModelCapability</code></strong> with the CONST-040 dimensions
+currently missing, each a probe-set boolean (never a literal):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ModelCapability <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ...existing...</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// CONST-040 capability integration (all set by real probes, §2.4)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    MCP     <span class="dt">bool</span> <span class="st">`json:&quot;mcp&quot;`</span>      <span class="co">// tool-calling over MCP-shaped tool spec</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    LSP     <span class="dt">bool</span> <span class="st">`json:&quot;lsp&quot;`</span>      <span class="co">// code-intelligence contract</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    ACP     <span class="dt">bool</span> <span class="st">`json:&quot;acp&quot;`</span>      <span class="co">// agent-communication protocol</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    RAG     <span class="dt">bool</span> <span class="st">`json:&quot;rag&quot;`</span>      <span class="co">// retrieval-augmented / long-context grounding</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    Skills  <span class="dt">bool</span> <span class="st">`json:&quot;skills&quot;`</span>   <span class="co">// skill/plugin dispatch</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    Plugins <span class="dt">bool</span> <span class="st">`json:&quot;plugins&quot;`</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// provenance — anti-bluff §11.4.69</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    Evidence <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>CapabilityEvidence <span class="st">`json:&quot;evidence,omitempty&quot;`</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CapabilityEvidence <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    Probe      <span class="dt">string</span>    <span class="st">`json:&quot;probe&quot;`</span>        <span class="co">// e.g. &quot;tool_calls_array_present&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    Endpoint   <span class="dt">string</span>    <span class="st">`json:&quot;endpoint&quot;`</span>     <span class="co">// real URL hit</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    Observed   <span class="dt">string</span>    <span class="st">`json:&quot;observed&quot;`</span>     <span class="co">// captured wire snippet (redacted)</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    ArtifactPath <span class="dt">string</span>  <span class="st">`json:&quot;artifact_path&quot;`</span><span class="co">// §11.4.69 evidence file</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    At         time<span class="op">.</span>Time <span class="st">`json:&quot;at&quot;`</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    OK         <span class="dt">bool</span>      <span class="st">`json:&quot;ok&quot;`</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>B. <code>database/database.go</code>
+<code>VerificationResult</code></strong> — add
+<code>SupportsRAG bool</code>, <code>SupportsSkills bool</code>,
+<code>SupportsPlugins bool</code> columns (+ migration) so the DB
+single-source-of-truth carries all seven CONST-040 flags.
+<code>SupportsMCPs/LSPs/ACPs/Embeddings</code> already exist.</p>
+<p><strong>C. Retire registry-static protocol flags as
+<em>authoritative</em>.</strong>
+<code>GetProviderBaseCapabilities</code> stays as a
+<em>default/seed</em> only; after a live verification run the
+probe-derived
+<code>ModelCapability.{MCP,LSP,ACP,RAG,Skills,Plugins}</code> +
+<code>Evidence</code> <strong>override</strong> it, and only
+probe-derived values are exported to HelixAgent. A capability with no
+<code>CapabilityEvidence</code> MUST serialise as <code>false</code>
+(fail-closed) — this is the mechanical anti-bluff guarantee (CONST-040 /
+§11.4.69).</p>
+<h3 id="local-helixllm-llama.cpp-verification-path">2.2 Local HelixLLM /
+llama.cpp verification path</h3>
+<p>HelixLLM speaks the OpenAI-compatible surface (llama.cpp
+<code>llama-server</code>: <code>/health</code>, <code>/props</code>,
+<code>/v1/models</code>, <code>/v1/chat/completions</code>,
+<code>/v1/embeddings</code>, <code>/slots</code>, <code>/metrics</code>
+[1][2]). Because <code>LLMClient</code> already takes a raw endpoint,
+verification reduces to <strong>registration + probe
+orchestration</strong>, not new transport code.</p>
+<p><strong>New local provider descriptor</strong> (config-driven, no
+hardcoded host — §CONST-045-style): register a
+<code>local</code>/<code>helixllm</code> provider whose
+<code>endpoint</code> = HelixLLM base URL
+(e.g. <code>http://127.0.0.1:PORT</code>), <code>apiKey</code> optional.
+Add it to <code>capabilities/detector.go</code>
+<code>getProviderModelsEndpoint</code> /
+<code>getProviderStreamEndpoint</code> maps <strong>derived from
+config</strong>, not literals.</p>
+<p><strong>Verification sequence for a local endpoint:</strong></p>
+<ol type="1">
+<li><strong>Health</strong> — GET <code>/health</code>; ready iff
+<code>200 {&quot;status&quot;:&quot;ok&quot;}</code> (llama.cpp returns 503 while the model
+loads [1][2]). For HelixLLM’s own <code>/internal/health</code> use that
+path. Sets <code>Responsive</code>, <code>LatencyMs</code>.</li>
+<li><strong>Model list</strong> — GET <code>/v1/models</code>; each
+<code>data[].id</code> → a <code>models</code> row.
+<code>ModelExists=true</code>. (llama.cpp returns the single loaded
+model; HelixLLM may return several.)</li>
+<li><strong>Server props (local-only enrichment)</strong> — GET
+<code>/props</code>; parse <code>modalities.vision</code> (→ vision
+candidate) and embedding/pooling config; llama.cpp tool-calling requires
+the server started with <code>--jinja</code> [2] — capture that as a
+precondition, but still <em>probe</em> it (do not trust props
+alone).</li>
+<li><strong>Real completion probe</strong> — POST
+<code>/v1/chat/completions</code> minimal prompt; non-empty
+<code>choices[0].message.content</code> ⇒
+<code>Chat/Completion=true</code>, records latency.</li>
+<li><strong>Tool-calling probe</strong> — §2.4.</li>
+<li><strong>Embedding probe</strong> — §2.4.</li>
+<li><strong>Vision probe</strong> — §2.4.</li>
+<li>Compose <code>VerificationResult</code>, persist, set
+<code>CompletedAt</code>, <code>Status=completed</code>.</li>
+</ol>
+<h3 id="new-provider-registration-stream-06-providers-local">2.3
+New-provider registration (stream-06 providers + local)</h3>
+<p>A provider becomes verifiable by supplying a
+<strong><code>ProviderDescriptor</code></strong> (config/registry row),
+not code:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProviderDescriptor <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    ID            <span class="dt">string</span>            <span class="co">// &quot;helixllm&quot;, &quot;local&quot;, &quot;&lt;new-cloud&gt;&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    BaseURL       <span class="dt">string</span>            <span class="co">// from config/.env — never a literal (§CONST-045)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    AuthType      AuthType          <span class="co">// api_key | bearer | none</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    APIKeyEnv     <span class="dt">string</span>            <span class="co">// e.g. HELIXLLM_API_KEY (never the key itself, §11.4.10)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    Wire          <span class="dt">string</span>            <span class="co">// &quot;openai&quot; | &quot;anthropic&quot; | &quot;ollama&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    HealthPath    <span class="dt">string</span>            <span class="co">// &quot;/health&quot; | &quot;/internal/health&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    ModelsPath    <span class="dt">string</span>            <span class="co">// &quot;/v1/models&quot; | &quot;/api/tags&quot;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    ProbeMatrix   <span class="op">[]</span>CapabilityProbe <span class="co">// which §2.4 probes to run</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Registration = append a descriptor (from config) →
+<code>Detector</code>/<code>llmverifier.Verifier</code> pick it up.
+<code>Wire=&quot;ollama&quot;</code> selects the <code>/api/tags</code> +
+<code>/api/show</code> discovery path (Ollama now exposes a
+<code>capabilities</code> array:
+<code>completion, tools, insert, vision, embedding, thinking</code>
+[3][4]) — but capabilities are still confirmed by live probes, never
+trusted from the metadata field.</p>
+<h3 id="anti-bluff-capability-probes-each-flag-one-real-probe-captured-evidence">2.4
+Anti-bluff capability probes (each flag = one real probe + captured
+evidence)</h3>
+<p>Every CONST-040 flag is set by exactly one probe that hits a real
+endpoint and captures a wire artefact to
+<code>docs/qa/&lt;run-id&gt;/</code> (§11.4.69). No probe hit ⇒ flag
+stays <code>false</code>.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Probe</th>
+<th>Real request</th>
+<th>PASS condition (captured)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Embeddings</code></td>
+<td>embedding probe</td>
+<td>POST <code>/v1/embeddings</code>
+<code>{input:&quot;probe&quot;,model}</code></td>
+<td>HTTP 200 + <code>data[0].embedding</code> is a non-empty float
+vector of len ≥ 1 (llama.cpp needs pooling ≠ none [2])</td>
+</tr>
+<tr>
+<td><code>FunctionCalling</code>/<code>ToolUse</code>/<code>MCP</code></td>
+<td>tool-call probe</td>
+<td>POST <code>/v1/chat/completions</code> with a
+<code>tools:[{type:function,...get_weather}]</code> + a prompt that
+forces a call (<code>tool_choice:&quot;required&quot;</code> where supported)</td>
+<td>response has a <strong>native
+<code>message.tool_calls[]</code></strong> with
+<code>function.name</code>+valid-JSON <code>arguments</code> — NOT
+pseudo-text [5][6]. (Requires the new <code>ToolCalls</code> field on
+<code>Message</code> — §1.4 blocker; llama.cpp needs
+<code>--jinja</code> [2].)</td>
+</tr>
+<tr>
+<td><code>Reasoning</code></td>
+<td>reasoning probe</td>
+<td>chat request with a reasoning prompt /
+<code>reasoning_effort</code></td>
+<td>non-empty reasoning/thinking channel OR correct multi-step
+answer</td>
+</tr>
+<tr>
+<td><code>Vision</code></td>
+<td>vision probe</td>
+<td>POST <code>/v1/chat/completions</code> with an
+<code>image_url</code>/base64 content part (a tiny known fixture
+image)</td>
+<td>correct description of the fixture (metamorphic: 2 distinct fixtures
+→ 2 distinct correct answers, per §11.4.107);
+<code>/props modalities.vision</code> is a <em>precondition</em>, not
+the proof</td>
+</tr>
+<tr>
+<td><code>RAG</code></td>
+<td>long-context grounding probe</td>
+<td>inject a unique fact in a long context, ask for it back</td>
+<td>verbatim recall of the injected fact (guards against hallucinated
+PASS)</td>
+</tr>
+<tr>
+<td><code>ACP</code></td>
+<td><code>TestACPs</code> (exists)</td>
+<td>agent-protocol handshake probe</td>
+<td>protocol-conformant response</td>
+</tr>
+<tr>
+<td><code>LSP</code></td>
+<td>code-intelligence probe</td>
+<td>code-completion/analysis request</td>
+<td>structurally-valid completion/diagnostic</td>
+</tr>
+<tr>
+<td><code>Skills</code>/<code>Plugins</code></td>
+<td>skill-dispatch probe</td>
+<td>request naming a registered skill/plugin</td>
+<td>model routes to / names the correct skill</td>
+</tr>
+<tr>
+<td><code>Streaming</code></td>
+<td><code>detectStreaming</code> (exists)</td>
+<td>streaming request</td>
+<td><code>Content-Type: text/event-stream</code> + ≥1 real chunk</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Prerequisite fix (blocker):</strong> add
+<code>ToolCalls []ToolCall</code> to <code>llm_client.go</code>
+<code>Message</code> so the tool-call/MCP probe can count real calls
+(removes the honest <code>(false,0)</code> sentinel). This is the single
+highest-leverage code change.</p>
+<p><strong>Analyzer self-validation (§11.4.107(10)):</strong> each
+probe’s classifier is paired with a golden-good and golden-bad fixture
+in unit tests — a probe that PASSes its golden-bad recording is itself a
+bluff gate and fails meta-test.</p>
+<h3 id="freshness-const-037-24h-const-038-60s">2.5 Freshness — CONST-037
+(24h) + CONST-038 (60s)</h3>
+<p>The plumbing exists (<code>VerifiedAt</code> on both the verifier
+<code>ProviderCapabilities</code> and HelixAgent
+<code>ProviderDiscovery</code>; <code>RefreshScores</code>). Bind a
+policy:</p>
+<ul>
+<li><strong>Producer (LLMsVerifier):</strong> replace the flat 15-min
+detector cache with a <strong>staleness policy</strong>: a
+<code>VerificationResult</code> older than <strong>24h</strong>
+(<code>now - CompletedAt &gt; 24h</code>) is marked <code>stale</code>
+and re-queued for a background re-verification run. This is the
+CONST-037 “verified within 24h” guarantee at the source.</li>
+<li><strong>Consumer (HelixAgent):</strong>
+<code>ProviderDiscovery</code> must <strong>hide/annotate</strong> any
+model whose backing <code>VerificationResult.CompletedAt</code> is &gt;
+24h old (CONST-037: display only models verified within 24h).</li>
+<li><strong>Status propagation ≤ 60s (CONST-038):</strong> expose a
+lightweight status delta — either (a) a push channel (the
+<code>internal/messaging/event_stream.go</code> seam already imports the
+verifier) or (b) a <strong>poll of the verifier status endpoint at ≤
+60s</strong> in <code>provider_discovery</code>’s refresh loop, updating
+<code>VerifiedAt</code>/<code>Status</code>. Whichever is available, the
+interval MUST be ≤ 60s so a model going unhealthy/unverified reflects in
+HelixAgent within a minute.</li>
+<li><strong>Anti-bluff:</strong> freshness timestamps come from real
+<code>CompletedAt</code> of a real probe run — never
+<code>time.Now()</code> stamped without a run (that would be the classic
+metadata-only bluff, §11.4/§11.4.5).</li>
+</ul>
+<h3 id="wiring-verificationservice.verify">2.6 Wiring
+<code>VerificationService.Verify</code></h3>
+<p>Resolve <code>req.ModelID</code> → <code>models</code> PK → dispatch
+<code>llmverifier.Verifier</code> probes (§2.4) against the model’s
+provider endpoint → compose + persist a
+<code>database.VerificationResult</code> with all seven CONST-040 flags
++ <code>CapabilityEvidence</code>. This removes
+<code>ErrVerificationNotWired</code> and makes the
+single-source-of-truth entrypoint real.</p>
+<hr />
+<h2 id="top-risks">3. Top risks</h2>
+<ol type="1">
+<li><strong>Tool-calling verification is blocked</strong> until
+<code>Message.ToolCalls</code> is added; without it MCP/FunctionCalling
+flags cannot be truthfully set (they must stay <code>false</code> —
+CONST-040 fail-closed). Highest-priority code change.</li>
+<li><strong>Static-registry protocol flags</strong>
+(<code>registry.go</code>) are a live CONST-040 anti-bluff hazard: any
+consumer reading <code>Protocols</code> today gets literal-sourced
+MCP/ACP/LSP, not probed. Must be demoted to seed-only and overridden by
+evidence-backed probes, or the “single source of truth” is lying.</li>
+<li><strong>Consumer struct gap:</strong> HelixAgent
+<code>models.ProviderCapabilities</code> has no
+MCP/LSP/ACP/RAG/Skills/Plugins fields, so even a correct verifier cannot
+deliver CONST-040 flags end-to-end until the consumer struct +
+<code>provider_discovery</code> mapping are extended and the ≤60s/24h
+policy is enforced.</li>
+</ol>
+<hr />
+<h2 id="sources-verified-2026-07-06">Sources verified 2026-07-06</h2>
+<ul>
+<li>[1] llama.cpp server endpoints
+(health/models/props/embeddings/slots/metrics), DeepWiki:
+https://deepwiki.com/ggml-org/llama.cpp/6.2-llama-server-http-api</li>
+<li>[2] llama.cpp <code>tools/server/README.md</code> —
+<code>/health</code> 503-until-ready, <code>/props</code>
+<code>modalities.vision</code>, tool calling requires
+<code>--jinja</code>, <code>/v1/embeddings</code> pooling≠none,
+<code>mmproj</code> for vision:
+https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md</li>
+<li>[3] Ollama capabilities via <code>/api/tags</code> +
+<code>/api/show</code>
+(completion/tools/insert/vision/embedding/thinking), Issue #5794:
+https://github.com/ollama/ollama/issues/5794</li>
+<li>[4] Ollama <code>/api/tags</code> docs + capability enhancement PR
+#10174: https://docs.ollama.com/api/tags ,
+https://github.com/ollama/ollama/pull/10174</li>
+<li>[5] LM Studio tool-use verification over
+<code>/v1/chat/completions</code> + <code>/v1/models</code> check:
+https://lmstudio.ai/docs/developer/openai-compat/tools</li>
+<li>[6] Native <code>message.tool_calls</code> vs pseudo-text
+(OpenAI-compatible tool_choice=required), lmstudio-bug-tracker #2115:
+https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/2115</li>
+<li>[7] LLM tool-calling accuracy tester
+(precision/recall/param-accuracy) — probe design precedent:
+https://github.com/adamwlarson/LLMToolCallingTester</li>
+<li>[8] vLLM tool-calling feature reference:
+https://docs.vllm.ai/en/latest/features/tool_calling/</li>
+</ul>
+<p><strong>Code read (facts, no guessing — §11.4.6):</strong>
+<code>submodules/llms_verifier/llm-verifier/{capabilities/types.go, capabilities/detector.go, capabilities/registry.go, database/database.go, llmverifier/models.go, llmverifier/verifier.go, llmverifier/llm_client.go, verification/verification.go}</code>;
+<code>submodules/helix_agent/internal/{llm/provider.go, llm/providers/helixllm/provider.go, models/types.go, services/provider_discovery.go, verifier/*}</code>.</p>
+</body>
+</html>

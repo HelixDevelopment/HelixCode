@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>IMPLEMENTATION_PLAN_v2</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">IMPLEMENTATION_PLAN_v2</h1>
+</header>
+<h1 id="helixllm-local-serving-full-extension-implementation-plan-v2">HelixLLM
+Local-Serving Full-Extension — Implementation Plan v2</h1>
+<h2 id="multi-instance-multi-agent-concurrency-on-rtx-5090-32-gb-blackwell-sm_120">Multi-Instance
+/ Multi-Agent Concurrency on RTX 5090 (32 GB, Blackwell sm_120)</h2>
+<p><strong>Scope:</strong> extends
+<code>01_local_models_serving.md</code> (2026-07-06) with the operator’s
+2026-07-08 guidance for heavy multi-instance / multi-agent CLI work (2–3
+OpenCode instances × 3–4 sub-agents = 6–12 concurrent sequences),
+reconciled against the model/serving research already landed AND the
+already-running production server. This document does
+<strong>not</strong> repeat content from
+<code>01_local_models_serving.md</code> that remains valid — it is
+cited, not copied. Where the operator’s 2026-07-08 guidance is
+superseded by newer/better-verified information, that is called out
+explicitly (§11.4.150 deep-research discipline).</p>
+<p><strong>Author note (§11.4.6):</strong> every claim below is either
+(a) drawn from <code>01_local_models_serving.md</code> §8’s
+already-cited sources, (b) drawn from
+<code>docs/research/07.2026/00_master/RESUME.md</code>’s live,
+operator-testable state, or (c) a NEW citation from this session’s
+research, listed in the Sources footer. Anything not directly evidenced
+is marked <code>UNCONFIRMED</code>.</p>
+<p><strong>Revision note (2026-07-08, post-independent-review, §11.4.134
+iterate-to-GO):</strong> an independent review
+(<code>scratchpad/review_serving_plan_v2.md</code>) found 3 Important +
+1 Minor finding against the first draft of this document — a factual
+over-claim about DeepSeek-Coder-V2-Lite’s 2026 discourse presence, an
+under-researched dismissal of Mistral-Nemo-12B, an unreconciled VRAM/KV
+budget (theoretical ceiling vs. an unverified “observed ~8 GiB free”
+figure that predated the vision-serving container’s teardown), and a
+reused-not-re-derived MoE/dense KV-ratio imprecision. All four are
+corrected in place below (§0’s reconciliation table, §1(c)’s Lane-B
+candidate list and Headroom bullet, §1(f) new subsection, and Task 2.1’s
+acceptance criteria), each citing fresh 2026-07-08 sources plus a live
+read-only <code>nvidia-smi</code> check. See those sections for the
+corrected content; this note exists so the revision history is visible
+at the top of the document rather than only in the diff.</p>
+<hr />
+<h2 id="reconciliation-whats-already-decided-vs.-what-changes">0.
+Reconciliation — what’s already decided vs. what changes</h2>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Already decided (RESUME.md / 01_local_models_serving.md)</th>
+<th>Operator’s 2026-07-08 guidance</th>
+<th>Reconciliation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary coder model</td>
+<td><strong>Qwen3-Coder-30B-A3B-Instruct</strong>, Q4_K_XL GGUF,
+<strong>LIVE AND PROVEN</strong> at
+<code>http://localhost:18434/v1</code> (container
+<code>helixllm-coder</code>), 8 parallel slots, 24k ctx, q8_0 KV, ~19.4
+GiB VRAM resident. Measured: ~220 tok/s single-stream, 8 concurrent
+agents @ 85–96 tok/s each, real coding output validated
+(<code>docs/qa/phase2_e2e_20260706/</code>).</td>
+<td>Qwen2.5-Coder-32B-Instruct Q4_K_M/Q5_K_M (~20–24 GB) “for
+coding”</td>
+<td><strong>KEEP the running Qwen3-Coder-30B-A3B as primary.</strong> It
+is MoE (3.3B active) vs. Qwen2.5-Coder-32B dense — direct
+<code>config.json</code>-derived computation this session
+(Qwen2.5-Coder-32B: 64 layers × 8 KV heads × head_dim 128 → 128
+KiB/token at q8_0; Qwen3-Coder-30B-A3B: 48 layers × 4 KV heads ×
+head_dim 128 → 48 KiB/token at q8_0) gives a ratio of 48/128 =
+<strong>0.375 (~⅜)</strong>, not ~⅓ (0.33) as an earlier draft of this
+reconciliation stated — corrected per the independent review
+(2026-07-08); directionally unchanged (MoE is meaningfully smaller —
+fewer KV heads, fewer layers), which is still the deciding factor for
+6–12 concurrent sequences. Qwen2.5-Coder-32B remains the documented
+low-parallelism “raw quality” fallback (§5B dense launch command already
+exists). No re-download/re-serve needed for the primary model — this is
+a <strong>config-tuning + multi-instance</strong> task, not a model-swap
+task.</td>
+</tr>
+<tr>
+<td>Agent/reasoning model</td>
+<td>Qwen2.5-32B-Instruct “for agents”</td>
+<td>—</td>
+<td>Qwen3-32B (already ranked #4 in the existing table, BFCL v3 75.7%)
+is the <strong>verified, current</strong> dense agent/tool-use model on
+this hardware; Qwen2.5-32B-Instruct is its predecessor and is
+superseded. Recommend Qwen3-32B if a dense low-parallelism agent lane is
+wanted; keep MoE Qwen3-Coder-30B-A3B as the default agent+coder model
+since HelixCode’s agent loop and coder loop are currently unified on one
+endpoint.</td>
+</tr>
+<tr>
+<td>Structured tool-call model</td>
+<td>DeepSeek-Coder-V2-Lite (MoE), Mistral-Nemo-12B, Hermes-2-Pro-8B</td>
+<td>Second/auxiliary instance for structured output</td>
+<td><strong>Corrected 2026-07-08 per independent review — the “all three
+are 2024-superseded, do not implement” verdict was WRONG for two of the
+three.</strong> Hermes-2-Pro (Mistral-7B-based) genuinely reads as
+superseded — no 2026 “best local LLM” coverage found for it in this or
+the prior session’s research (Hermes 4 is the actively-promoted
+successor); this part of the verdict stands.
+<strong>DeepSeek-Coder-V2-Lite and Mistral-Nemo-12B are RETRACTED from
+the “superseded, do not implement” bucket</strong> — both appear in
+current, dated 2026 discourse and are genuine Lane-B candidates on the
+merits (VRAM footprint + concurrency fit); see §1(c)/§1(d) below for the
+re-evaluation and §2’s reconciliation of the VRAM budget these
+candidates must fit. <strong>Do not implement Hermes-2-Pro as-is;
+DeepSeek-Coder-V2-Lite and Mistral-Nemo-12B are live Lane-B candidates
+pending Task 2.1’s benchmarking spike.</strong></td>
+</tr>
+<tr>
+<td>VRAM/concurrency math</td>
+<td>§4 of <code>01_local_models_serving.md</code> — full
+KV-cache-per-token formula + tables for both dense-32B and
+Qwen3-Coder-30B-A3B (MoE).</td>
+<td>“VRAM/KV-cache budget math for concurrency”</td>
+<td>Formula and tables already exist and are <strong>correct and
+current</strong>; this plan reuses them verbatim and extends with the
+<strong>currently-running config’s actual numbers</strong> (24k ctx, 8
+slots, q8_0 KV, 19.4 GiB resident) as the concrete baseline to scale
+from.</td>
+</tr>
+<tr>
+<td>Serving stack</td>
+<td>vLLM (source build, sm_120) PRIMARY per the existing doc; llama.cpp
+FALLBACK, chosen for ease-of-Blackwell-build. HelixLLM’s actual
+production choice: <strong>llama.cpp</strong> (llama-server via
+containers submodule, §11.4.76/§11.4.161), consistent with the operator
+directive here (“Serving stack = llama.cpp in a container via our
+containers submodule”).</td>
+<td>llama-server flags</td>
+<td>Reconciled: the <strong>operational reality is llama.cpp</strong>,
+not vLLM — HelixLLM has never built/run vLLM. This plan is scoped
+entirely to llama.cpp/llama-server. vLLM remains a documented but
+UNADOPTED alternative in <code>01_local_models_serving.md §3</code>; no
+work item in this plan touches vLLM.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="deep-multi-angle-web-research-2026-07-08-new-findings-that-extend-01">1.
+Deep multi-angle web research (2026-07-08) — new findings that extend
+§01</h2>
+<h3 id="a-best-codingagentic-gguf-models-for-612-concurrent-sequences-on-32-gb-confirmed-one-addition">(a)
+Best coding+agentic GGUF models for 6–12 concurrent sequences on 32 GB —
+confirmed + one addition</h3>
+<p>No change to the top-2 ranking (Qwen3-Coder-30B-A3B primary,
+Qwen2.5-Coder-32B quality-fallback, Devstral-Small-2507
+agent-specialist) — all three remain current per
+<code>01_local_models_serving.md</code> §2/§8, re-confirmed this session
+via Unsloth’s docs and the QwenLM/Qwen3-Coder GitHub repo (both accessed
+2026-07-08).</p>
+<p><strong>Tool-calling reliability update (NEW, this session):</strong>
+an OpenCode GitHub issue (#1809, <code>anomalyco/opencode</code>)
+reports Qwen3-Coder-30B-A3B tool-call argument type-validation failures
+(arrays passed as strings) on OpenCode 0.4.12. Unsloth’s documentation
+states this class of tool-calling bug was <strong>fixed</strong> in
+their GGUF re-uploads (“tool-calling for Qwen3-Coder was fixed, allowing
+seamless tool-calling in llama.cpp, Ollama, LMStudio, Open WebUI, and
+Jan” — Unsloth docs, accessed 2026-07-08). HelixLLM’s running container
+already sources the Unsloth GGUF (<code>RESUME.md</code> / prior
+<code>01_local_models_serving.md</code> §5B:
+<code>-hf unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF</code>).
+<strong>Action item (Phase 1, task 1.1):</strong> verify the exact GGUF
+file/revision in the running container matches or postdates Unsloth’s
+fix commit; if not, re-pull. This is a genuine new risk surface for the
+6–12-concurrent-agent goal: a tool-call type-validation failure under
+load is exactly the failure mode that would make “12 concurrent OpenCode
+subagents” flaky.</p>
+<p><strong>New candidate model — GLM-4.7-Flash (30B-A3B MoE)</strong>
+(NEW, this session, NOT in the prior doc’s confirmed table — the prior
+doc only saw “GLM-4.7” as an UNCONFIRMED aggregator claim). Primary
+sources this session (Unsloth’s dedicated
+<code>docs/models/glm-4.7-flash</code> page + the
+<code>unsloth/GLM-4.7-Flash-GGUF</code> Hugging Face repo, both accessed
+2026-07-08) confirm this is a <strong>real, documented</strong> model:
+30B total / 3B active MoE (same class as Qwen3-Coder-30B-A3B), 128K
+native context (200K claimed in some docs — UNCONFIRMED exact number,
+treat 128K as the citable floor), 4-bit quant ≈ 17–18 GB weights. This
+is architecturally the closest available alternative to the running
+primary and is worth a <strong>benchmarking spike</strong> (Phase 2) as
+either (i) a coder-lane alternative if Qwen3-Coder tool-calling issues
+recur under the 6–12-agent load, or (ii) the second/auxiliary instance
+model (its MoE profile gives it a small KV footprint, good for a
+lightly-loaded second lane). Distinguish explicitly from “GLM-5” and
+“GLM-4.7” (non-Flash, full-size) which remain UNCONFIRMED /
+do-not-fit-32GB per the prior doc.</p>
+<h3 id="b-llama-server-multi-sequence-config-exact-flags-kv-budget-math-per-concurrency-level">(b)
+llama-server multi-sequence config — exact flags + KV budget math per
+concurrency level</h3>
+<p>Confirmed from <code>01_local_models_serving.md</code> §4/§5B:
+<code>--parallel</code>, <code>--cont-batching</code>,
+<code>--cache-type-k/v q8_0</code>, <code>-fa on</code>,
+<code>--ctx-size</code> = <strong>total</strong> KV budget shared across
+<code>--parallel</code> slots. New details this session (llama.cpp
+server README + GitHub Discussion #22658 + #18308 + #4130, all accessed
+2026-07-08):</p>
+<ul>
+<li><strong><code>--kv-unified</code> / <code>-kvu</code> vs
+<code>--no-kv-unified</code> / <code>-no-kvu</code></strong> (this flag
+is either new or was not previously documented in the existing research;
+UNCONFIRMED whether it existed at the time of the 2026-07-06 doc).
+Default appears to be <strong>enabled</strong> when slot count is
+<code>auto</code>.
+<ul>
+<li><code>--kv-unified</code> (default): a single shared KV buffer
+covers the full <code>--ctx-size</code>; slots borrow from the pool
+dynamically. Better for <strong>heterogeneous request lengths</strong> —
+e.g. one subagent doing a short tool-call round-trip next to another
+doing a long context-stuffed review — because a short request doesn’t
+waste a full static slice.</li>
+<li><code>--no-kv-unified</code>: <code>--ctx-size</code> is
+<strong>statically split</strong> across <code>--parallel</code> slots
+(<code>--ctx-size 100000 --parallel 4</code> → each slot gets a fixed
+25k). Predictable per-slot ceiling, but a burst of short requests can’t
+borrow a starved slot’s spare capacity.</li>
+<li><strong>Recommendation for the 6–12-agent goal:</strong> use
+<code>--kv-unified</code> (the default) rather than the
+currently-configured implicit static-split behavior, because CLI-agent
+workloads are inherently heterogeneous (short tool round-trips
+interleaved with long context turns). <strong>Action item (Phase 1, task
+1.2):</strong> confirm which mode the running
+<code>helixllm-coder</code> container is actually in (explicit flag not
+currently visible in <code>RESUME.md</code>’s recorded launch command —
+the original launch predates this flag’s discovery) and switch to
+<code>--kv-unified</code> explicitly if not already default, with a
+measured before/after comparison.</li>
+</ul></li>
+<li><strong>Prefill vs. decode slot starvation</strong> (llama.cpp
+Discussion #4130, <code>markaicode.com</code> architecture writeups,
+accessed 2026-07-08): the 3.8× continuous-batching throughput gain over
+sequential decode holds <strong>only when prompts are short</strong>
+(&lt;256 tok cited for one benchmark); long prompts monopolize the
+prefill phase and can starve decode slots serving other agents. This is
+a concrete, previously-undocumented <strong>danger zone</strong> for a
+system-prompt-heavy multi-agent CLI workload (agent framework system
+prompts + tool schemas commonly run several hundred to several thousand
+tokens). Mitigated by prefix caching (already noted in the existing doc
+for vLLM; llama.cpp’s analogous mechanism is <strong>prompt-slot-reuse /
+KV-cache-reuse</strong>, GitHub Discussion #13606, accessed 2026-07-08)
+— a request whose prefix matches a cached slot’s prior prompt skips
+re-prefilling that prefix.</li>
+<li><strong><code>--batch-size</code> /
+<code>--ubatch-size</code>:</strong> increasing <code>--parallel</code>
+without increasing prefill-tokens-per-pass via
+<code>--batch-size</code>/<code>--ubatch-size</code> “spreads the same
+throughput across more queues — latency goes up, aggregate tokens/sec
+does not” (markaicode.com, accessed 2026-07-08). <strong>Action item
+(Phase 1, task 1.3):</strong> the currently-running 8-slot config’s
+<code>--batch-size</code>/<code>--ubatch-size</code> values are not
+recorded in <code>RESUME.md</code>; capture them and tune upward if
+raising <code>--parallel</code> toward 12–16 slots (Phase 2) without a
+matching batch-size increase would be a false optimization.</li>
+<li><strong><code>/metrics</code> endpoint</strong> (llama.cpp server
+README, re-confirmed): exposes tokens/sec, KV cache usage, and queue
+depth — this is the concrete mechanism for Phase 3’s runtime-signature
+dashboards (§11.4.108).</li>
+</ul>
+<h3 id="c-single--vs.-multi-instance-vram-partitioning">(c) Single-
+vs. multi-instance VRAM partitioning</h3>
+<p>Confirmed general practice (aimadetools.com, sitepoint.com “Multiple
+Local Models” — accessed 2026-07-08): run <strong>independent
+llama-server processes</strong>, each bound to a distinct port, with
+per-model <code>-ngl</code>/<code>--ctx-size</code> chosen to partition
+VRAM deliberately; monitor with
+<code>nvidia-smi</code>/<code>nvtop</code> to catch silent CPU fallback
+(a model whose weights partially spill to system RAM because VRAM ran
+out — this degrades silently rather than erroring, a genuine danger
+zone, see §3 below). No native “shared-process, two-model” mode exists
+in llama.cpp comparable to vLLM’s multi-model serving — <strong>each
+model is its own container + process</strong>, consistent with
+HelixLLM’s existing per-class container pattern
+(<code>helixllm-coder</code>, <code>imagegen-boot</code>,
+<code>visiongen-boot</code>, <code>videogen-boot</code> in
+<code>cmd/</code>).</p>
+<p><strong>Recommended partition for the 32 GB card</strong> (building
+on the reconciled model choices in §0 and the measured 19.4 GiB resident
+baseline): - <strong>Lane A (resident, always-on):</strong>
+Qwen3-Coder-30B-A3B, ~19.4 GiB — unchanged, <code>ClassCoder</code>
+(broker.go: <code>IsResident() == true</code>, never evicted, never
+counted against admission). - <strong>Lane B (warm,
+admission-gated):</strong> a second small instance for
+structured/tool-heavy or overflow agentic work, <code>ClassVLM</code> or
+a new warm class (see §4 broker integration below). <strong>Candidate
+list corrected 2026-07-08 per independent review</strong> — two
+candidates dismissed in an earlier draft as “2024-superseded” are
+RETRACTED from that dismissal and reinstated below with real VRAM
+footprints, cross-checked against the corrected budget in the Headroom
+bullet immediately following this list: - <strong>(1)
+Mistral-Nemo-12B</strong> at Q4 (Q4_K_M ≈ 7.0 GB decimal ≈ 6.52 GiB
+weights — willitrunai.com, mljourney.com, localaimaster.com, all
+accessed 2026-07-08) — genuinely current 2026 discourse, not
+2024-superseded as an earlier draft claimed: ranked
+<strong>#4/15</strong> on pocketllm.app’s 2026 “best local LLM models”
+listicle (88/100, “the best ‘if you have a gaming laptop’ model”, 128K
+context, “quantization-aware design that actually works at Q4” —
+accessed 2026-07-08), and explicitly still recommended in 2026 sources
+for VRAM-constrained deployment where Mistral Small 3.1 cannot fit.
+Against this plan’s corrected ~10.39 GiB Lane-B budget (see Headroom
+bullet below), 6.52 GiB weights leaves <strong>~3.87 GiB for KV cache +
+activation buffers</strong> — a genuinely healthy margin for a
+lightly-loaded second lane. <strong>Promoted to top priority</strong> on
+VRAM-fit merits (largest KV headroom of any candidate here), pending
+Task 2.1’s tool-calling-correctness benchmark (function-calling support
+must still be verified against this plan’s actual tool-schema, not
+merely cited from third-party listicles). - <strong>(2)
+GLM-4.7-Flash</strong> at its smallest available quant (UD-IQ2_XXS,
+~10.5 GB decimal ≈ 9.78 GiB weights — confirmed against the Unsloth
+quant table) IF the coder lane’s tool-calling under load proves
+unreliable and GLM-4.7-Flash benchmarks better on that axis
+specifically. <strong>Explicit go/no-go, corrected 2026-07-08 (see
+Headroom bullet):</strong> at this quant, 9.78 GiB weights against the
+~10.39 GiB budget leaves only <strong>~0.61 GiB for KV cache +
+activation buffers</strong> — this does NOT support the “lightly-loaded
+second lane serving multiple concurrent sequences” rationale as
+originally stated; realistically it supports only a single low-context
+slot (<code>--parallel 1</code>, small <code>--ctx-size</code>), not
+concurrent serving. Do not select this candidate for the “light
+concurrent second lane” role at this quant without re-running the
+go/no-go math against whatever quant is actually benchmarked. -
+<strong>(3) DeepSeek-Coder-V2-Lite</strong> (MoE, 16B total / 2.4B
+active) at Q4_K_M (10.36 GB decimal ≈ 9.65 GiB weights,
+bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF HF page, accessed
+2026-07-08) — <strong>RETRACTED from “does not appear in current 2026
+discourse”</strong> (an earlier draft’s claim was checked this session
+and found false): ranked <strong>#7/15</strong> on pocketllm.app’s “best
+local LLM models 2026” listicle (85/100) and <strong>#2/8</strong> on
+the same site’s dedicated “best local LLM for coding 2026” listicle
+(91/100, “the best local coding model that fits on a consumer laptop”,
+“mid-80s HumanEval”, both accessed 2026-07-08), consistently described
+as “a mixture-of-experts model where only 2.4B parameters are active per
+token, so it runs at roughly 3B speeds while holding 16B quality.”
+Against the ~10.39 GiB Lane-B budget, 9.65 GiB weights leaves
+<strong>~0.74 GiB for KV cache</strong> — the same squeeze class as
+GLM-4.7-Flash’s smallest quant (2). A genuine Lane-B candidate on
+model-quality/architecture merits, but under the current VRAM budget it
+likewise supports only a single-slot, small-context deployment, not a
+multi-sequence “light concurrent lane,” unless a smaller quant (Q3/Q2)
+is benchmarked — sizes for those quants were not located this session
+and are <strong>UNCONFIRMED</strong>, flagged as a Task-2.1 follow-up
+rather than guessed. - <strong>(4) a second Qwen3-Coder-30B-A3B
+replica</strong> at a lower quant/ctx (MoE weight-sharing across the two
+processes is NOT possible in llama.cpp per the vLLM-comparison research
+above — each process loads its own copy — so a second full replica costs
+roughly another ~18 GB, which does <strong>not</strong> fit the
+corrected ~10.39 GiB budget below without a much more aggressive
+quant/ctx reduction than previously stated; demoted from its earlier
+“tight but survivable” framing now that the real free-VRAM figure is in
+hand — see Headroom bullet). - <strong>(5) Hermes-2-Pro-8B’s
+structured-output role remains unfilled</strong> — this session’s
+research did NOT find a citable, current, small (≤8B) model that clearly
+supersedes Hermes-2-Pro for pure JSON/structured-output work
+specifically (as opposed to general coding/agentic use, which candidates
+(1)–(3) above now cover). <strong>Reconciliation with candidates
+(1)/(3):</strong> Mistral-Nemo-12B and DeepSeek-Coder-V2-Lite are NOT
+being proposed as Hermes-2-Pro replacements for pure structured-output —
+they are proposed as general Lane-B coding/agentic-overflow candidates,
+a different role. The ≤8B-structured-output gap remains genuinely
+<strong>UNCONFIRMED / requires a dedicated follow-up research
+pass</strong> (do not guess per §11.4.6) — this is a narrower,
+still-open gap than an earlier draft implied by dismissing all three
+original candidates together. - <strong>Headroom — corrected 2026-07-08
+against a live <code>nvidia-smi</code> read (read-only, this session, no
+coder disturbance):</strong>
+<code>nvidia-smi --query-gpu=memory.total,memory.used,memory.free</code>
+reports <strong>32607 MiB total (≈31.84 GiB), 19436 MiB used (≈18.98 GiB
+— matches Lane A’s measured ~19.4 GiB resident alone, confirming the
+separately-designed vision-serving container has since been torn down),
+12685 MiB free (≈12.39 GiB)</strong>. broker.go’s
+<code>HeadroomBytes = 2 GiB</code> is a hard floor already coded and
+tested (<code>admit()</code> fails closed). Lane B’s real, current
+budget is therefore <strong>12.39 GiB − 2 GiB headroom ≈ 10.39
+GiB</strong> — this is now the authoritative figure for this plan
+(superseding both the ~8 GiB figure recorded earlier while the vision
+container was still resident, which is stale and no longer
+representative, AND the ~10.6 GiB purely-theoretical static-arithmetic
+ceiling, which this live reading now confirms independently to within
+~0.2 GiB). This ~10.39 GiB figure rules out any dense ≥13B model at
+4-bit and (4)’s second-replica option above, and is the exact number
+every candidate’s go/no-go check in (1)–(3) is computed against.
+<strong>Re-check before Task 2.1 executes</strong> — this is a
+point-in-time reading (2026-07-08) and VRAM state can change if any
+other lane boots between now and the benchmarking spike.</p>
+<h3 id="d-latest-2026-models-the-operator-didnt-mention">(d) Latest 2026
+models the operator didn’t mention</h3>
+<ul>
+<li><strong>GLM-4.7-Flash</strong> — see §1(a)/(c) above; the one
+credible NEW addition this session.</li>
+<li><strong>DeepSeek-V4</strong> (mentioned by remoteopenclaw.com’s
+“Hermes Agent” blog posts, March 2026, 81% SWE-bench Verified, 1M ctx) —
+<strong>does not fit 32 GB</strong> at any usable quant (it is a
+frontier-scale model in the same tier as DeepSeek-V3, which the existing
+doc already excludes for VRAM reasons). Not actionable for this
+hardware; noted for completeness only.</li>
+<li><strong>Qwen3.5 / Qwen3.6 / GLM-4.7 (non-Flash) / GLM-5</strong> —
+remain <strong>UNCONFIRMED</strong> this session, same as the prior
+doc’s finding; no primary model card located. Do not plan around
+these.</li>
+<li>Aider-leaderboard-class verification of Qwen3-Coder-30B-A3B
+specifically (vs. its 480B sibling) remains <strong>UNCONFIRMED exact
+number</strong> — unchanged from the prior doc’s honesty note.</li>
+</ul>
+<h3 id="e-vram-broker-gating-for-multi-instance-admission">(e) VRAM
+broker gating for multi-instance admission</h3>
+<p>Read <code>submodules/helix_llm/internal/vrambroker/broker.go</code>
++ <code>budget.go</code> this session (not new web research — direct
+source read, §11.4.78 CodeGraph-equivalent). Findings directly relevant
+to this plan:</p>
+<ul>
+<li>The broker already models exactly the Lane A/Lane B split needed:
+<code>ClassCoder</code> is <code>IsResident()</code> (always granted,
+pinned, uncounted) — this <strong>already matches</strong> the running
+coder container’s actual behavior (it’s never admission-gated, it just
+runs). <code>ClassVLM</code> and <code>ClassTranslate</code> are “warm
+tier” — admission-gated on <strong>measured</strong> free VRAM via
+<code>nvidia-smi</code> (<code>budget.go: readNvidiaSMI</code>),
+fail-closed (<code>admit()</code>:
+<code>free &gt;= needBytes + headroom</code>).
+<code>ClassImage</code>/<code>ClassVideo</code> are burst, single-owner
+(§11.4.119), mutually exclusive.</li>
+<li><strong>Gap for this plan’s Lane B:</strong> there is currently no
+broker <code>Class</code> for “second coder/agent instance.” The
+broker’s <code>Class</code> enum
+(<code>ClassCoder|ClassVLM|ClassImage|ClassVideo| ClassTranslate|ClassEmbed</code>)
+has no slot for a second LLM-serving lane distinct from the
+vision-language-model (<code>ClassVLM</code>) use. <strong>Design
+decision needed (Phase 1, task 1.4):</strong> either (i) reuse
+<code>ClassVLM</code> semantically for “any warm-tier auxiliary LLM
+instance” (cheapest, no broker code change, but semantically confusing —
+<code>ClassVLM</code> literally means vision-language-model per the
+existing <code>docs/research/07.2026/01_local_models_serving/</code>
+vision-serving design), or (ii) add a new <code>ClassAgent</code> (warm
+tier, admission-gated like
+<code>ClassVLM</code>/<code>ClassTranslate</code>) to
+<code>broker.go</code>’s enum +
+<code>IsBurst()</code>/<code>IsResident()</code> methods. This plan
+recommends <strong>(ii)</strong> — see Phase 1 task 1.4 for the concrete
+diff scope.</li>
+<li>The broker’s admission math is VRAM-only; it does not currently
+model <strong>KV-cache growth under concurrent load</strong> (a lane
+that was admitted at boot with N GB of static weights can still be
+starved of KV cache at runtime if
+<code>--ctx-size</code>/<code>--parallel</code> are set too aggressively
+for the admitted budget). This is captured as Danger Zone D3 below — the
+broker’s job is admission (does the lane fit at all), not runtime KV
+headroom (does the configured concurrency level fit within what was
+admitted). These are two different correctness properties and must not
+be conflated.</li>
+</ul>
+<h3 id="f-mapping-23-opencode-instances-34-sub-agents-onto-serving-endpointslanes">(f)
+Mapping “2–3 OpenCode instances × 3–4 sub-agents” onto serving
+endpoints/lanes</h3>
+<p><strong>(NEW subsection, added 2026-07-08 — completeness gap
+identified by independent review, §5 of the review: the prior draft
+never stated explicitly whether multiple OpenCode instances share one
+endpoint or need distinct ones.)</strong></p>
+<p><strong>Explicit assumption (stated here for the first time in this
+plan):</strong> ALL 2–3 OpenCode instances point at the <strong>same
+Lane A endpoint</strong> (<code>http://localhost:18434/v1</code>, the
+resident <code>helixllm-coder</code> container) and <strong>share its
+single <code>--parallel</code> slot pool</strong> — this plan does NOT
+propose giving each OpenCode instance its own dedicated llama-server
+process/port. This follows directly from Lane A being llama.cpp’s only
+per-model process (§1(c): “no native shared-process, two-model mode…
+each model is its own container + process”) — since all instances want
+the <em>same</em> coding model, they are, by construction, clients of
+the <em>same</em> process, not separate lanes. Lane B (§1(c)/§4) is
+scoped as a small structured/overflow auxiliary lane for the whole
+system, NOT a second per-instance dedicated coding endpoint — it does
+not change this picture.</p>
+<p><strong>Concurrency math under this assumption:</strong> the
+operator’s stated target is 2–3 instances × 3–4 sub-agents =
+<strong>6–12 concurrent sequences</strong>, all as concurrent HTTP
+requests against Lane A’s one <code>--parallel</code> slot pool. This is
+exactly what Task 1.3’s
+<code>--batch-size</code>/<code>--ubatch-size</code> tuning memo and the
+Phase 4 <code>--kv-unified</code> + batch-size + <code>--parallel</code>
+(8→12–16) changes are sized for — Task 1.3’s “12-agent target” sizing
+memo already targets the upper end of this exact range. If the live
+<code>--parallel</code> value is below the actual concurrent-sequence
+count at any moment (e.g. still at 8 slots pre-Phase-4 while 12
+sequences are active), llama.cpp’s continuous batching
+<strong>queues</strong> the excess requests rather than erroring
+(confirmed general behavior per §1(b)’s cited llama.cpp architecture
+sources) — this is graceful degradation (added latency), not a hard
+failure, but it does mean the “6–12 concurrent” goal is not fully met
+until Phase 4’s <code>--parallel</code> increase actually lands (which
+is operator-gated, D8).</p>
+<p><strong>Action item (folds into existing Task 1.3, no new task
+needed):</strong> Task 1.3’s sizing memo MUST explicitly confirm/deny
+this shared-single-endpoint assumption is what the operator intends
+before the Phase-4 batched coder-pause window is requested — if instead
+the intent is for one OpenCode instance to be routed to Lane A and
+others to a distinct lane (which would require a second full
+coding-capable instance, i.e. candidate (4) in §1(c), demoted for
+VRAM-fit reasons under the corrected budget in §1(c)’s Headroom bullet),
+that is a materially different, more VRAM-constrained topology and must
+be confirmed explicitly rather than assumed.</p>
+<hr />
+<h2 id="multi-pass-danger-zone-analysis-11.4.92-pass-23-11.4.85-stresschaos-framing">2.
+Multi-pass danger-zone analysis (§11.4.92 Pass 2/3, §11.4.85
+stress/chaos framing)</h2>
+<p>Eight danger zones enumerated, each with a concrete, testable
+mitigation. (Count: <strong>8</strong>.)</p>
+<h3 id="d1-vram-oom-under-concurrency-burst-lane-a-lane-b-simultaneous-peak">D1
+— VRAM OOM under concurrency burst (Lane A + Lane B simultaneous
+peak)</h3>
+<p><strong>Mechanism:</strong> Lane A (coder, resident) and Lane B
+(auxiliary, warm) are independently admitted, but nvidia-smi’s
+<code>memory.free</code> read in <code>budget.go</code> is a
+<strong>snapshot at admission time</strong>; a burst where both lanes
+simultaneously ramp KV-cache usage to their configured ceilings (Lane
+A’s 8–16 slots all filling their <code>--ctx-size</code> share, Lane B
+doing the same) can exceed what was true at admission if either lane’s
+static KV-cache ceiling was configured larger than what was actually
+free when it was measured. <strong>Mitigation:</strong> (i) Lane A and
+Lane B’s <code>--ctx-size</code> values MUST be sized so their
+<strong>worst-case static KV ceiling</strong> (not just weights) sums to
+≤ card total − headroom, computed via the §4 KV-cache-per-token formula
+— this is a <strong>config-time</strong>, not admission-time, guarantee
+and must be checked mechanically (Phase 1 task 1.5: a pre-boot config
+validator). (ii) Runtime guard: a lightweight sidecar polls
+<code>/metrics</code> on both lanes + <code>nvidia-smi</code> every N
+seconds and alerts/throttles-new-connections if combined VRAM crosses a
+soft ceiling below hard OOM (Phase 3). (iii) Chaos test: intentionally
+launch Lane B while Lane A is saturated at 8/8 slots and assert the
+broker refuses admission (<code>ErrBudgetExceeded</code>) rather than
+the OS OOM- killing a container.</p>
+<h3 id="d2-kv-cache-exhaustion-under-long-context-agent-turns">D2 —
+KV-cache exhaustion under long-context agent turns</h3>
+<p><strong>Mechanism:</strong> per §1(b), a <code>--no-kv-unified</code>
+static split starves a slot handling an unusually long turn (e.g. a
+subagent doing a large diff review) once that slot’s fixed share is
+consumed — subsequent requests to that slot either truncate context or
+error, independent of whether other slots are idle.
+<strong>Mitigation:</strong> switch to <code>--kv-unified</code> (§1(b)
+recommendation) so idle slots’ capacity is available to a long-running
+one; add a <code>/metrics</code>-derived per-lane “KV utilization %”
+runtime signature (§11.4.108) with an alert threshold (e.g. &gt;90%
+sustained for &gt;30s); stress test (§11.4.85): 12 concurrent synthetic
+agents, one deliberately sending a near-ctx-limit prompt, assert no
+other agent’s request is refused/degraded.</p>
+<h3 id="d3-slot-starvation-from-prefill-heavy-system-prompts-1b">D3 —
+Slot starvation from prefill-heavy system prompts (§1(b))</h3>
+<p><strong>Mechanism:</strong> CLI-agent frameworks (OpenCode et al.)
+resend a large system prompt + tool schema on every turn; if prefix
+caching / KV-cache-reuse is not actually active (misconfigured or the
+framework varies the prompt slightly turn-to-turn, invalidating the
+cache), every turn re-prefills the full system prompt, monopolizing
+prefill and starving decode for other agents’ slots — measured effect
+per §1(b) is up to <sub>3.8×→</sub>1× throughput collapse if prefill
+dominates. <strong>Mitigation:</strong> (i) verify via
+<code>/metrics</code> (or llama.cpp’s cache-reuse debug logging) that
+the system-prompt prefix is actually being reused turn-to-turn for a
+real OpenCode session — this is a <strong>runtime-signature</strong>
+check (§11.4.108), not assumable from config alone. (ii) If the calling
+framework varies the prompt (timestamps, session IDs injected into the
+system prompt), this is a <strong>client-side</strong> fix (stabilize
+the prefix, move variable content to the end of the prompt) — flag as a
+HelixAgent/OpenCode-integration task, not a llama-server task. (iii)
+Stress test: replay a captured real multi-turn OpenCode session at 8–12x
+concurrency and measure prefill-vs-decode time split from
+<code>/metrics</code>.</p>
+<h3 id="d4-model-swap-thrash-if-lane-b-is-not-truly-independent-from-lane-a">D4
+— Model-swap thrash if Lane B is not truly independent from Lane A</h3>
+<p><strong>Mechanism:</strong> if a future change accidentally makes
+Lane B share the same llama-server process/port as Lane A (e.g. via a
+naive “just point OpenCode’s second config at coder too” shortcut), the
+two workloads contend for the SAME slot pool rather than being
+independently admission-gated — this silently reduces effective coder
+concurrency without any error. <strong>Mitigation:</strong> Lane B MUST
+be its own container + port (per §1(c) — this is the only supported
+llama.cpp topology); a pre-boot config validator (shared with D1’s task
+1.5) asserts distinct ports/container names for every admitted lane; a
+Challenge test boots both lanes and asserts two distinct
+<code>podman ps</code> entries with two distinct listening ports.</p>
+<h3 id="d5-coder-vs-new-instance-vram-contention-at-broker-level-the-classvlm-reuse-gap-1e">D5
+— Coder-vs-new-instance VRAM contention at broker level (the
+<code>ClassVLM</code> reuse gap, §1e)</h3>
+<p><strong>Mechanism:</strong> if Lane B is implemented by reusing
+<code>ClassVLM</code> (§1(e) option (i)) rather than a new
+<code>ClassAgent</code>, a future genuine vision-serving workload (the
+separately-designed
+<code>scratchpad/design_vision_local_serving.md</code> Qwen2.5-VL-7B
+work already in <code>RESUME.md</code>’s next-actions) would collide
+with Lane B for the same broker class, and the single-owner-style
+semantics the broker doesn’t currently enforce for <code>ClassVLM</code>
+(it’s warm-tier, not burst/ single-owner) would let both be admitted
+simultaneously even if the card can’t actually hold both plus the
+resident coder. <strong>Mitigation:</strong> implement the new
+<code>ClassAgent</code> (§1(e) option (ii)) rather than reusing
+<code>ClassVLM</code> — this is the concrete reason Phase 1 task 1.4
+recommends option (ii). Regression test: admit <code>ClassAgent</code> +
+<code>ClassVLM</code> simultaneously at a combined size that exceeds
+free VRAM and assert the broker’s fail-closed <code>admit()</code>
+refuses the second one (this already works generically in
+<code>broker.go</code>’s warm-tier path — the test only needs the new
+class wired through).</p>
+<h3 id="d6-tool-calling-type-validation-failures-under-load-1a-the-opencode-1809-issue">D6
+— Tool-calling type-validation failures under load (§1(a), the OpenCode
+#1809 issue)</h3>
+<p><strong>Mechanism:</strong> a tool-call argument type mismatch
+(array-as-string) that manifests intermittently is exactly the kind of
+defect that “looks fine” in a single manual test but recurs under the
+operator’s target load (6–12 concurrent agentic sequences, each issuing
+many tool calls) — this is precisely the class of defect
+§11.4.107/§11.4.146 exist to catch. <strong>Mitigation:</strong> (i)
+confirm the running GGUF is Unsloth’s fixed revision (§1(a) action
+item); (ii) author a reproduce-first test (§11.4.115/§11.4.146) that
+drives N concurrent tool-calling turns against the live
+<code>helixllm-coder</code> endpoint with array-typed tool arguments and
+asserts zero type-validation failures across all N; (iii) register this
+as a permanent regression guard (§11.4.135) in HelixLLM’s test suite,
+not a one-off manual check.</p>
+<h3 id="d7-silent-vram-to-ram-spillover-cpu-fallback-under-multi-instance-misconfiguration">D7
+— Silent VRAM-to-RAM spillover (CPU fallback) under multi-instance
+misconfiguration</h3>
+<p><strong>Mechanism:</strong> per §1(c), if Lane B’s <code>-ngl</code>
+(GPU layer count) or ctx-size is set larger than what actually fits
+after Lane A is resident, llama.cpp can silently offload some layers to
+CPU RAM rather than failing outright — this produces a
+working-but-catastrophically-slow Lane B (not a crash, not an error —
+just an unexplained throughput cliff that would be very confusing to
+debug without the right signal). <strong>Mitigation:</strong> the
+pre-boot config validator (D1/D4’s task 1.5) MUST also assert
+<code>-ngl 99</code> (all layers on GPU) is achievable given the
+broker’s granted lease size for that lane — i.e. reject a Lane B config
+whose declared VRAM need doesn’t actually cover full-GPU-residency at
+the configured ctx/quant, rather than letting llama.cpp silently
+degrade. Runtime signature: compare <code>nvidia-smi</code> VRAM delta
+after Lane B boot against the model’s expected weights+KV size — a
+mismatch (VRAM grew less than expected) is the CPU-fallback tell.</p>
+<h3 id="d8-coder-container-never-restart-constraint-vs.-lane-b-iteration">D8
+— Coder container never-restart constraint vs. Lane B iteration</h3>
+<p><strong>Mechanism:</strong> per <code>RESUME.md</code>, the running
+<code>helixllm-coder</code> container is explicitly “never restart”
+(operator-authorized coder-pause required, §11.4.122) — this is a hard
+constraint on THIS plan’s implementation work: any change to Lane A’s
+launch flags (e.g. the <code>--kv-unified</code> switch recommended in
+§1(b), task 1.2) requires a container restart, which is an
+operator-gated action, NOT autonomously takeable. Lane B, being a NEW
+container, has no such constraint and can be iterated on freely.
+<strong>Mitigation:</strong> sequence the plan (see Phase ordering
+below) so that ALL Lane-A-affecting changes (kv-unified flag, batch-size
+tuning, GGUF-revision re-pull) are batched into a SINGLE
+operator-authorized coder-pause window rather than several, and
+everything else (Lane B build-out, broker <code>ClassAgent</code>
+addition, config validator, regression tests, dashboards) is done first
+and independently, since none of it requires touching the live coder
+container.</p>
+<hr />
+<h2 id="phased-implementation-plan">3. Phased implementation plan</h2>
+<p>Every phase’s acceptance evidence follows §11.4.108 (one
+machine-checkable runtime signature per task, verified on a
+clean/current target) + §11.4.5 (captured proof, not metadata-only).
+Every task is independently reviewable (§11.4.125/§11.4.142) and
+subagent-dispatchable (§11.4.70) — phases are NOT required to run
+strictly serially; Phase 1 tasks 1.1/1.3/1.4/1.5 and Phase 2’s
+benchmarking spike are independently startable in parallel per
+§11.4.103.</p>
+<h3 id="phase-0-baseline-capture-prerequisite-for-everything-else-no-coder-container-touch">Phase
+0 — Baseline capture (prerequisite for everything else; no
+coder-container touch)</h3>
+<p><strong>Task 0.1 — Capture the exact current
+<code>helixllm-coder</code> launch config.</strong> - Action:
+<code>podman inspect helixllm-coder</code> (or equivalent
+container-introspection via the <code>containers</code> submodule’s
+<code>pkg/health</code>/<code>pkg/compose</code> primitives,
+§11.4.76/§11.4.161 — never a raw ad-hoc <code>docker inspect</code>) to
+extract the exact <code>llama-server</code> argv currently running:
+confirm/deny presence of
+<code>--kv-unified</code>/<code>--no-kv-unified</code>,
+<code>--batch-size</code>, <code>--ubatch-size</code>, the exact GGUF
+filename+quant, and the exact
+<code>--ctx-size</code>/<code>--parallel</code> pair. - Acceptance
+(§11.4.108 runtime signature): a captured text file
+<code>docs/qa/helixllm_phase0_baseline_&lt;ts&gt;/container_inspect.txt</code>
+containing the full argv, committed under <code>docs/qa/</code> per
+§11.4.83. - Why first: every subsequent task (1.1, 1.2, 1.3, D1–D8
+mitigations) references “the running config” — this task turns that into
+a cited fact instead of an assumption (§11.4.6).</p>
+<p><strong>Task 0.2 — Capture current per-agent-count throughput
+baseline (read-only, no config change).</strong> - Action: replay (or
+re-run, if the original harness/log is available per
+<code>RESUME.md</code>’s <code>coder_live_e2e log</code>) the 1-agent
+and 8-agent throughput measurements against the live endpoint; if the
+harness exists at <code>docs/qa/phase2_e2e_20260706/</code>, re-run it
+rather than writing a new one (§11.4.74 reuse-before-reimplement). -
+Acceptance: <code>/metrics</code> snapshot + per-agent tok/s log
+captured to
+<code>docs/qa/helixllm_phase0_baseline_&lt;ts&gt;/throughput_baseline.log</code>.
+This is the “before” half of every subsequent before/after comparison in
+Phase 1.</p>
+<h3 id="phase-1-non-coder-container-touching-work-parallel-safe-no-operator-gate">Phase
+1 — Non-coder-container-touching work (parallel-safe, no operator
+gate)</h3>
+<p><strong>Task 1.1 — GGUF-revision verification (§1a, D6).</strong> -
+Action: compare the GGUF file’s SHA/commit metadata in the running
+container (from Task 0.1) against Unsloth’s
+<code>unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF</code> HF repo’s
+fix-commit date (Unsloth docs, accessed 2026-07-08 — cite exact commit
+once identified, currently UNCONFIRMED exact SHA in this session’s
+research, needs a direct HF API/WebFetch check as a sub-task). -
+Acceptance: a verification report stating either “current revision
+postdates the fix” (cite both dates) or “current revision predates the
+fix — re-pull required” (tracked as a Phase-1.5 action gated behind the
+coder-pause window, D8).</p>
+<p><strong>Task 1.2 — <code>--kv-unified</code> config validator +
+recommendation memo (no container change yet).</strong> - Action: since
+Lane A cannot be touched without a coder-pause (D8), this task ONLY
+produces the config diff + rationale memo + a Lane-B-testable
+proof-of-concept (boot a throwaway small model, e.g. an
+already-available small GGUF, with <code>--kv-unified</code> vs
+<code>--no-kv-unified</code> and measure heterogeneous-load behavior
+difference) — the actual Lane A flag flip is deferred to the batched
+coder-pause window (D8 mitigation). - Acceptance:
+<code>docs/qa/helixllm_phase1_kvunified_&lt;ts&gt;/</code> with the
+PoC’s before/after <code>/metrics</code> comparison on the throwaway
+model + the exact diff to apply to Lane A’s launch command.</p>
+<p><strong>Task 1.3 —
+<code>--batch-size</code>/<code>--ubatch-size</code> tuning
+memo.</strong> - Action: using Task 0.1’s captured current values,
+compute (via the §4 KV formula + the markaicode.com prefill-throughput
+guidance, §1b) whether raising <code>--parallel</code> from 8 toward
+12–16 (the operator’s “6–12” upper bound plus headroom) requires a
+batch-size increase to avoid the “spread same throughput across more
+queues” failure mode. - Acceptance: a sizing memo with the recommended
+<code>--batch-size</code>/<code>--ubatch-size</code>/<code>--parallel</code>
+triple for a 12-agent target, to be applied in the same batched
+coder-pause window as 1.2.</p>
+<p><strong>Task 1.4 — Broker <code>ClassAgent</code> addition (D5
+mitigation).</strong> - File:line scope:
+<code>submodules/helix_llm/internal/vrambroker/broker.go</code> — add
+<code>ClassAgent   Class = &quot;agent&quot;</code> to the <code>Class</code>
+const block (after <code>ClassCoder</code>, line ~20); it is a warm-tier
+class (falls through to the existing warm-tier <code>Acquire</code> path
+at <code>broker.go:151-171</code>, no
+<code>IsBurst()</code>/<code>IsResident()</code> change needed since the
+zero-value behavior for a new class not matching either predicate
+already routes it through the warm-tier admission path correctly —
+confirm this by reading <code>IsBurst()</code>/<code>IsResident()</code>
+again against the new constant before writing the change, since
+<code>broker_test.go</code>/<code>mutation_test.go</code> already exist
+and must be extended, not replaced). - Acceptance (§11.4.108 runtime
+signature): new unit test in <code>broker_test.go</code> asserting
+<code>ClassAgent.IsResident() == false</code>,
+<code>ClassAgent.IsBurst() == false</code>, and an
+<code>Acquire(ctx, ClassAgent, N)</code> call is admission-gated by
+measured free VRAM identically to <code>ClassVLM</code> (reuse the
+existing <code>newWithReader</code> test seam, §11.4.27(A)
+mocks-in-unit-tests- only). Paired §1.1 mutation: temporarily make
+<code>ClassAgent.IsResident()</code> return <code>true</code> and assert
+the new test FAILs (proves the test actually distinguishes resident from
+warm).</p>
+<p><strong>Task 1.5 — Pre-boot config validator (D1/D4/D7
+mitigation).</strong> - Scope: a new small Go tool/script (location:
+<code>submodules/helix_llm/cmd/</code> per the existing
+<code>cmd/videogen-boot</code>, <code>cmd/imagegen-boot</code> pattern —
+reuse that pattern per §11.4.74) that, given a proposed lane’s launch
+flags (<code>--ctx-size</code>, <code>--parallel</code>,
+<code>-ngl</code>, quant, model size), computes: (i) worst-case static
+KV ceiling via the §4 formula, (ii) whether <code>-ngl 99</code>
+full-GPU-residency is achievable given the broker’s grantable lease size
+for that class, and (iii) whether the port/container-name is distinct
+from every other currently-registered lane. Refuses (non-zero exit) if
+any check fails. - Acceptance: a Challenge test (§11.4.6 project rule)
+that feeds the validator a deliberately over-budget Lane B config and
+asserts non-zero exit + a specific error message identifying which of
+(i)/(ii)/(iii) failed; a second Challenge feeds a valid config and
+asserts zero exit.</p>
+<h3 id="phase-2-lane-b-build-out-parallel-safe-no-operator-gate-depends-on-task-1.41.5">Phase
+2 — Lane B build-out (parallel-safe, no operator gate; depends on Task
+1.4/1.5)</h3>
+<p><strong>Task 2.1 — Lane B model benchmarking spike.</strong> -
+<strong>Candidate list + priority corrected 2026-07-08</strong> (§1(c),
+independent-review remediation): candidates are now, in priority order,
+(1) Mistral-Nemo-12B, (2) GLM-4.7-Flash, (3) DeepSeek-Coder-V2-Lite, (4)
+a second Qwen3-Coder-30B-A3B replica (demoted — does not fit the
+corrected budget below without an aggressive quant/ctx cut), (5)
+Hermes-2-Pro’s structured-output role remains unfilled/UNCONFIRMED.
+Renumbers the earlier draft’s list; see §1(c) for full VRAM-footprint
+citations per candidate. - <strong>Mandatory pre-boot go/no-go check
+(new, §11.4.108/§11.4.110 — do NOT skip):</strong> before booting ANY
+candidate, re-run
+<code>nvidia-smi --query-gpu=memory.total,memory.used,memory.free   --format=csv</code>
+(read-only) and recompute <code>free − 2 GiB headroom</code> = the live
+Lane-B budget; compare the candidate’s actual weight size at the quant
+to be tested against that budget and require <strong>≥ 2 GiB</strong>
+remaining for KV cache + activation buffers before proceeding — if the
+remainder is below that floor (as §1(c) found for GLM-4.7-Flash’s
+smallest quant, ~0.61 GiB, and for DeepSeek-Coder-V2-Lite’s Q4_K_M,
+~0.74 GiB, against the 2026-07-08 reading of ~10.39 GiB), the benchmark
+MUST run with <code>--parallel 1</code> and a small
+<code>--ctx-size</code> (single-slot mode) and the report MUST say so
+explicitly rather than silently degrading to fewer slots than the
+“lightly-loaded second lane” goal implies. This check itself is the
+D1/D7 mitigation applied at benchmark time, not just at Task 1.5’s
+config-validator time. - Action: boot Mistral-Nemo-12B (candidate 1,
+§1c) at Q4 (~6.52 GiB weights) in its OWN container (D4-compliant:
+distinct port, e.g. 18445) via the <code>containers</code> submodule,
+gated through the new <code>ClassAgent</code> broker admission (Task
+1.4) + the Task 1.5 validator. Benchmark tok/s and tool-calling
+correctness against a small fixed prompt set (reuse or extend the D6
+regression test’s prompt set); its function-calling support must be
+verified directly against this plan’s actual tool-schema, not assumed
+from third-party listicles per §11.4.6. - Acceptance (§11.4.108): a
+benchmark report
+(<code>docs/qa/helixllm_phase2_laneb_&lt;ts&gt;/</code>) comparing
+Mistral-Nemo-12B vs. GLM-4.7-Flash (candidate 2)
+vs. DeepSeek-Coder-V2-Lite (candidate 3) on tok/s, VRAM resident size,
+KV-headroom-at-benchmarked-quant (cite the go/no-go arithmetic above per
+candidate), and tool-call correctness rate, with a GO/NO-GO
+recommendation for which becomes the production Lane B model. A second
+Qwen3-Coder-30B-A3B replica (candidate 4) is deprioritized per §1(c)’s
+corrected budget and need only be benchmarked if all three
+higher-priority candidates fail on tool-calling correctness. Candidate 5
+(Hermes-2-Pro’s ≤8B structured-output-specific role) remains explicitly
+marked UNCONFIRMED/deferred per §1(c) — do not implement without a
+dedicated follow-up research pass identifying a real, current, ≤8B,
+verified-tool-calling model for that narrower role (§11.4.6: guessing a
+replacement for Hermes-2-Pro is forbidden without evidence).</p>
+<p><strong>Task 2.2 — Lane B production container + broker
+wiring.</strong> - Action: once Task 2.1’s GO model is chosen, wire its
+container into HelixLLM’s existing boot/health pattern (mirroring
+<code>cmd/videogen-boot/main.go</code>’s structure per §11.4.74),
+calling <code>vrambroker.Acquire(ctx, ClassAgent, needBytes)</code>
+before starting the llama-server process, and <code>Release()</code> on
+shutdown. - Acceptance: integration test (real broker + real container
+boot, no mocks per §11.4.50(A)) asserting: Lane B fails to boot when
+Lane A + a synthetic over-budget request would exceed free VRAM
+(ErrBudgetExceeded surfaces cleanly, no silent degrade); Lane B boots
+successfully and serves a real completion when budget is available;
+<code>Release()</code> frees the lease and a subsequent
+<code>Budget()</code> call reflects it.</p>
+<h3 id="phase-3-runtime-observability-regression-coverage-parallel-safe">Phase
+3 — Runtime observability + regression coverage (parallel-safe)</h3>
+<p><strong>Task 3.1 — <code>/metrics</code>-based dashboard/alerting for
+D1/D2/D3.</strong> - Action: a lightweight sidecar (or extension of an
+existing HelixLLM monitoring component — check
+<code>submodules/helix_llm</code> for an existing metrics-scrape pattern
+before writing new, §11.4.74) polling both lanes’ <code>/metrics</code>
++ <code>nvidia-smi</code> on an interval, logging KV-utilization %,
+tok/s, and combined VRAM to a rolling log; alert threshold configurable.
+- Acceptance: a chaos test (§11.4.85) that saturates Lane A to 8/8 slots
+and asserts the dashboard’s KV-utilization metric crosses the alert
+threshold within N seconds, captured as evidence.</p>
+<p><strong>Task 3.2 — D6 tool-calling-under-load regression guard
+(permanent, §11.4.135).</strong> - Action: implement the reproduce-first
+test described in D6’s mitigation as a permanent registered regression
+guard, not a one-off. - Acceptance:
+RED-on-(hypothetically-reverted-GGUF) / GREEN-on-current polarity test
+per §11.4.115, registered into HelixLLM’s standing regression suite.</p>
+<p><strong>Task 3.3 — D4/D7 config-drift Challenge (permanent).</strong>
+- Action: a Challenge script that periodically (or on-demand) re-runs
+Task 1.5’s validator against the CURRENTLY running lanes’ actual launch
+configs (via Task 0.1’s inspect mechanism), catching drift if a future
+change bypasses the validator. - Acceptance: Challenge asserts zero
+drift on a known-good state; paired mutation deliberately misconfigures
+a lane and asserts the Challenge catches it.</p>
+<h3 id="phase-4-operator-gated-lane-a-changes-single-batched-coder-pause-window-d8">Phase
+4 — Operator-gated Lane A changes (SINGLE batched coder-pause window,
+D8)</h3>
+<p><strong>Task 4.1 — Apply <code>--kv-unified</code> (Task 1.2) + tuned
+<code>--batch-size</code>/<code>--parallel</code> (Task 1.3) + GGUF
+re-pull if needed (Task 1.1) to the live <code>helixllm-coder</code>
+container, in one window.</strong> - Precondition: operator-authorized
+coder-pause (§11.4.122) — this is an OPERATOR-BLOCKED item per
+<code>RESUME.md</code>’s existing convention for coder-container
+changes, NOT autonomously takeable; enumerate the unblock choice per
+§11.4.148(D3): “[A] operator authorizes a single coder-pause window now
+to apply all three batched changes · [B] defer until the next scheduled
+maintenance window · [C] apply only the GGUF re-pull (if Task 1.1 found
+it necessary) and defer the flag changes.” - Acceptance
+(§11.4.108/§11.4.130): re-run Task 0.2’s throughput baseline harness
+against the restarted container and assert (i) no regression vs. the
+Phase-0 baseline at 1-agent and 8-agent load, (ii) a measured
+improvement at 12-agent load specifically attributable to
+<code>--kv-unified</code> + batch-size tuning (the whole point of this
+phase), (iii) the D6 regression guard (Task 3.2) still passes
+post-restart on the new artifact (§11.4.139 clean-artifact runtime
+signature).</p>
+<hr />
+<h2 id="sources-verified-2026-07-08">Sources verified 2026-07-08</h2>
+<ul>
+<li>llama.cpp Architecture / production inference writeup (continuous
+batching, slot pool) —
+https://markaicode.com/architecture/llamacpp-architecture/</li>
+<li>llama.cpp System Design (1,000 concurrent users architecture) —
+https://markaicode.com/architecture/llamacpp-system-design-architecture-1158/</li>
+<li>Tuning llama-server on Apple Silicon (parallel/batch-size guidance,
+cross-referenced for the general parallel-vs-batch-size tradeoff) —
+https://medium.com/<span class="citation" data-cites="michael.hannecke/tuning-llama-server-on-apple-silicon-9b3e778ab100">@michael.hannecke/tuning-llama-server-on-apple-silicon-9b3e778ab100</span></li>
+<li>llama.cpp Parallelization/Batching Explanation, GitHub Discussion
+#4130 — https://github.com/ggml-org/llama.cpp/discussions/4130</li>
+<li>Optimal parameters for parallel inference using llama-server, GitHub
+Discussion #18308 —
+https://github.com/ggml-org/llama.cpp/discussions/18308</li>
+<li>llama.cpp tools/server README (canonical flag reference) —
+https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md</li>
+<li>llama-server(1) Debian manpage —
+https://manpages.debian.org/unstable/llama.cpp-tools/llama-server.1.en.html</li>
+<li>Host-Memory Prompt Caching in llama-server, GitHub Discussion #20574
+— https://github.com/ggml-org/llama.cpp/discussions/20574</li>
+<li>Why Your Local LLM Is Slow — llama.cpp Config Guide —
+https://omniforge.online/blog/your-local-llm-is-slow-because-of-five-config-flags</li>
+<li>Set max context length per request independently of unified kv cache
+total size, GitHub Discussion #22658 —
+https://github.com/ggml-org/llama.cpp/discussions/22658</li>
+<li>Llama Server Context Length Behavior Explained —
+https://ventusserver.com/context-length-behavior-explained/</li>
+<li>KV cache reuse with llama-server, GitHub Discussion #13606 —
+https://github.com/ggml-org/llama.cpp/discussions/13606</li>
+<li>Llama server Context Size, memory and parallelism —
+https://alejandro.criadoperez.com/blog/Llama_server_memory</li>
+<li>unsloth/GLM-4.7-Flash-GGUF HF discussion — new
+<code>kv-unified</code> flag + RTX 4090D 48GB perf report —
+https://huggingface.co/unsloth/GLM-4.7-Flash-GGUF/discussions/18</li>
+<li>Qwen3-Coder run-locally tutorial (tool-calling fix confirmation) —
+https://unsloth.ai/docs/models/tutorials/qwen3-coder-how-to-run-locally</li>
+<li>Qwen/Qwen3-Coder-30B-A3B-Instruct model card —
+https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct</li>
+<li>unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF —
+https://huggingface.co/unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF</li>
+<li>QwenLM/Qwen3-Coder GitHub repo —
+https://github.com/QwenLM/Qwen3-Coder</li>
+<li>qwen3-coder-30B-A3B tool-calling failure report, anomalyco/opencode
+issue #1809 — https://github.com/anomalyco/opencode/issues/1809</li>
+<li>GLM-4.7-Flash: How To Run Locally, Unsloth docs —
+https://unsloth.ai/docs/models/glm-4.7-flash</li>
+<li>unsloth/GLM-4.7-Flash-GGUF HF repo —
+https://huggingface.co/unsloth/GLM-4.7-Flash-GGUF</li>
+<li>unsloth/GLM-4.7-GGUF (non-Flash, for size/scale contrast) —
+https://huggingface.co/unsloth/GLM-4.7-GGUF</li>
+<li>GLM-4.7-Flash Complete Guide 2026 —
+https://aicybr.com/blog/glm-4-7-flash-complete-guide</li>
+<li>Best DeepSeek Models for Hermes Agent (DeepSeek-V4 2026 context) —
+https://www.remoteopenclaw.com/blog/best-deepseek-models-for-hermes</li>
+<li>Best Open-Source Models for Hermes Agent (Hermes-2-Pro
+superseded-status context) —
+https://www.remoteopenclaw.com/blog/best-opensource-models-for-hermes</li>
+<li>Hermes 2 Pro Mistral 7B model card —
+https://telnyx.com/llm-library/hermes-2-pro-mistral-7b</li>
+<li>Running Multiple Local Models: Memory Management Strategies —
+https://www.sitepoint.com/multiple-local-models-memory-management/</li>
+<li>How to Run Multiple Models on One GPU —
+https://www.aimadetools.com/blog/run-multiple-models-one-gpu/</li>
+<li>llama-server Shared Alias for multiple instances of the same model
+in Router Mode, GitHub Discussion #22823 —
+https://github.com/ggml-org/llama.cpp/discussions/22823</li>
+<li>Prior session’s own research (cited, not re-verified this session —
+see that doc’s own §8 for its sources):
+<code>docs/research/07.2026/01_local_models_serving/01_local_models_serving.md</code></li>
+<li>Live production state (direct source, not web):
+<code>docs/research/07.2026/00_master/RESUME.md</code></li>
+<li>Direct source reads (not web):
+<code>submodules/helix_llm/internal/vrambroker/broker.go</code>,
+<code>budget.go</code>,
+<code>submodules/helix_llm/internal/control/scheduler.go</code></li>
+</ul>
+<h3 id="sources-added-2026-07-08-this-fix-session-independent-review-remediation">Sources
+added 2026-07-08 (this fix session — independent-review
+remediation)</h3>
+<ul>
+<li>15 Best Local LLM Models to Run in 2026, PocketLLM (Mistral-Nemo-12B
+#4/15, DeepSeek-Coder-V2-Lite #7/15, ranked scores + VRAM figures) —
+https://pocketllm.app/blog/best-local-llm-models-2026/</li>
+<li>8 Best Local LLMs for Coding in 2026, PocketLLM
+(DeepSeek-Coder-V2-Lite #2/8, HumanEval + VRAM detail) —
+https://pocketllm.app/blog/best-local-llm-for-coding-2026/</li>
+<li>bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF quant-size table
+(Q4_K_M = 10.36 GB) — cited via search result, HF repo
+<code>bartowski/DeepSeek-Coder-V2-Lite-Instruct-GGUF</code></li>
+<li>Mistral VRAM Requirements (2026) — Will Your GPU Run 7B, Nemo 12B,
+Codestral 22B or Small 24B? —
+https://willitrunai.com/blog/mistral-models-gpu-requirements</li>
+<li>Mistral Nemo 12B: What It Is and When to Use It —
+https://mljourney.com/mistral-nemo-12b-what-it-is-and-when-to-use-it/</li>
+<li>Mistral Nemo 12B: 8GB VRAM, 128K Context, Ollama Setup 2026 —
+https://localaimaster.com/models/mistral-nemo-12b</li>
+<li><code>nvidia-smi --query-gpu=memory.total,memory.used,memory.free --format=csv</code>
+— direct read-only host command, not web, run this session (2026-07-08)
+to obtain the current authoritative free-VRAM figure (32607/19436/12685
+MiB total/used/free) used throughout §1(c)/§1(f)/Task 2.1’s corrected
+VRAM math.</li>
+<li>Independent review (this fix session’s input, not web):
+<code>scratchpad/review_serving_plan_v2.md</code> — source of the four
+findings corrected in this revision.</li>
+</ul>
+<p><strong>UNCONFIRMED (excluded from firm recommendations):</strong>
+exact GGUF commit/revision date for the Qwen3-Coder-30B-A3B tool-calling
+fix vs. the currently-running container’s revision (Task 1.1 needs a
+direct HF-API check to resolve); GLM-4.7-Flash’s exact context-window
+ceiling (128K vs. 200K claims conflict across sources); any concrete ≤8B
+model to replace Hermes-2-Pro’s <strong>pure
+structured-output-specific</strong> role (narrower framing per this
+revision’s §1(c) item (5) — explicitly deferred, not guessed, per
+§11.4.6; Mistral-Nemo-12B and DeepSeek-Coder-V2-Lite are NOT proposed
+for this narrower role, only for the general Lane-B
+coding/agentic-overflow role); DeepSeek-Coder-V2-Lite’s Q3/Q2 quant
+sizes (not located this session — needed to determine whether a smaller
+quant relieves the ~0.74 GiB KV-headroom squeeze found at Q4_K_M);
+Qwen3.5/Qwen3.6/GLM-4.7(non-Flash)/GLM-5/DeepSeek-V4-fits-32GB claims
+(all unconfirmed, none actionable here). <strong>Retracted this session
+(no longer unconfirmed/asserted-false):</strong> the earlier draft’s
+claim that DeepSeek-Coder-V2-Lite “does not appear in current 2026
+discourse” (directly contradicted by evidence, see §0/§1(c)) and that
+Mistral-Nemo-12B is blanket “2024-superseded” (partially contradicted —
+it retains a real, currently-recommended VRAM-constrained niche, see
+§0/§1(c)).</p>
+</body>
+</html>

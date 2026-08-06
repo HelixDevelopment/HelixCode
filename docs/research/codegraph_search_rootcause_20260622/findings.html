@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="codegraph-codegraph_search-vs-codegraph_explore-root-cause-findings">CodeGraph
+codegraph_search vs codegraph_explore — Root-Cause Findings</h1>
+<p>Date: 2026-06-22 | Author: systematic-debugging subagent (HelixCode)
+Scope: Why codegraph_search returns “No results found” for “provider
+Generate LLM” while codegraph_explore resolves the same intent. Iron Law
+applied (§11.4.6/§11.4.102/§11.4.123).</p>
+<p>Environment (FACT): codegraph v1.0.1
+(/Users/milosvasic/.local/bin/codegraph -&gt;
+/opt/homebrew/bin/codegraph, npm <span class="citation" data-cites="colbymchenry/codegraph">@colbymchenry/codegraph</span>,
+native <span class="citation" data-cites="colbymchenry/codegraph-darwin-arm64">@colbymchenry/codegraph-darwin-arm64</span>).
+Index .codegraph/codegraph.db ~4.3GB. codegraph_validate.sh = 18/18
+PASS. MCP wired in .mcp.json.</p>
+<h2 id="tool-contract-verbatim-from-live-mcp-schema">1. Tool contract
+(verbatim from live MCP schema)</h2>
+<p>codegraph_search: “Quick symbol search by name. Returns locations
+only (no code). Use codegraph_explore instead to get the actual source /
+understand an area in one call.” query = “Symbol name or partial name
+(e.g., &quot;auth&quot;, &quot;signIn&quot;, &quot;UserService&quot;)”. codegraph_explore: “PRIMARY
+TOOL … Query can be a natural-language question OR a bag of symbol/file
+names.” CLI: <code>query &lt;search&gt;</code> = “Search for symbols”;
+<code>explore &lt;query...&gt;</code> = area/source+call-paths. Reading:
+search = symbol-NAME/partial lookup (examples are all single tokens);
+explore = NL or symbol bag.</p>
+<h2 id="query-matrix-verbatim-codegraph_search-mcp-results">2. Query
+matrix (verbatim codegraph_search MCP results)</h2>
+<p>a1 “OllamaProvider” -&gt; 10 results WORKS (single exact symbol) a2
+“NewOllamaProvider” -&gt; 10 results WORKS a3 “CrushGenerator” -&gt; 6
+results WORKS b1 “Ollama” -&gt; 10 results WORKS (single substring
+token) b2 “Generate” (limit 3) -&gt; 3 results WORKS d1
+“ollama_provider.go” -&gt; 3 results WORKS (file fragment) c1 “provider
+Generate LLM” -&gt; No results found FAILS (the reported case) c2 “list
+models from providers”-&gt; No results found FAILS (NL phrase) c3
+“provider Generate” -&gt; No results found FAILS (2 tokens, no
+co-occurring symbol) c4 “Provider Generate” k=method-&gt; No results
+found FAILS e1 “Ollama provider” -&gt; 10 results (top OllamaProvider)
+WORKS (tokens co-occur in one symbol) e2 “OllamaProvider Generate” -&gt;
+10 results WORKS e3 “Generate LLM” -&gt; 10 results (top generateLLM @
+helix_code/internal/server/llm_generate.go:179) WORKS</p>
+<p>Boundary is NOT “single vs multi-word”. Multi-word WORKS when all
+tokens co-occur within ONE indexed symbol’s FTS columns (e1
+OllamaProvider has Ollama+provider; e3 generateLLM has Generate+LLM). It
+FAILS when no single symbol contains ALL tokens (c1/c3).</p>
+<h2 id="index-mechanism-fact-sqlite3-.codegraphcodegraph.db-schema">3.
+Index mechanism (FACT: sqlite3 .codegraph/codegraph.db schema)</h2>
+<p>CREATE VIRTUAL TABLE nodes_fts USING fts5(id, name, qualified_name,
+docstring, signature, content=‘nodes’, content_rowid=‘rowid’) – plus
+nodes_ai/_ad/_au sync triggers. =&gt; codegraph_search is a SQLite FTS5
+virtual table over 5 columns. FTS5 default operator between bare terms
+is AND: MATCH ‘provider Generate LLM’ needs ONE row (symbol) whose
+columns contain all 3 tokens. None does -&gt; zero rows -&gt; “No
+results found”. Exactly reproduces the matrix (c1/c3 = cross-symbol AND
+impossible in one row; e1/e3 = both tokens in one symbol name). (Host
+android-platform-tools sqlite3 lacks fts5 module -&gt; direct MATCH
+probe errored “no such module: fts5”; codegraph ships its own
+fts5-enabled sqlite, which is why the MCP tool works. The §2 matrix is
+the proof; §3 schema is the mechanism.)</p>
+<h2 id="web-research-2-angles-access-date-2026-06-22">4. Web research
+(&gt;=2 angles, access date 2026-06-22)</h2>
+<ul>
+<li>github.com/colbymchenry/codegraph +
+colbymchenry.github.io/codegraph/getting-started/introduction/:
+tree-sitter -&gt; SQLite with FTS5 full-text search; explore is PRIMARY
+(NL question OR symbol bag); search is the symbol full-text surface;
+docs do NOT describe search as semantic/NL.</li>
+<li>tosea.ai/blog/codegraph-claude-code-cursor-guide-2026:
+“codegraph_explore … bag of symbol names spanning the flow” — positions
+explore (not search) as the area/NL tool.</li>
+<li>npmjs.com/package/<span class="citation" data-cites="colbymchenry/codegraph">@colbymchenry/codegraph</span>:
+version 1.0.1 (confirmed via codegraph –version; page 403 on automated
+fetch).</li>
+<li>Issue #850 (cited in daemon log “Main thread unresponsive ~60s —
+killing wedged process”) = GitHub issue #850 “codegraph cause 100% CPU”,
+closed completed 2026-06-13 — a CPU/watchdog concern, UNRELATED to
+search.</li>
+<li>Negative finding: no upstream issue documents multi-word-empty
+search; no doc warns “search is implicit-AND”.</li>
+</ul>
+<h2 id="fact-verdict">5. FACT VERDICT</h2>
+<p>WORKING-AS-DESIGNED with a documentation/affordance gap — NOT a code
+bug, NOT an index defect. codegraph_search is an FTS5 symbol-name lookup
+over {name,qualified_name,docstring,signature} with FTS5 default
+implicit-AND. “provider Generate LLM” returns nothing because no single
+symbol contains all 3 tokens — the correct result for an AND full-text
+query. The tool contract says “symbol name or partial name” and shows
+only single-token examples; codegraph_explore is the documented
+NL/multi-concept surface (it returned 205 symbols/157 files for the same
+intent this session). The only real defect is missing AGENT GUIDANCE on
+when to use search vs explore. Not a §11.4 false-success; index is
+healthy (18/18 PASS; single-symbol search perfect).</p>
+<h2 id="widest-level-remediation-recommendation-only-no-files-edited">6.
+WIDEST-LEVEL REMEDIATION (recommendation only — no files edited)</h2>
+<p>6.1 PRIMARY (constitution §11.4.78): add a “search vs explore” rule
+to constitution/docs/codegraph/* (e.g. Status.md or new
+TOOL_SELECTION.md, inherited by reference per §11.4.80). Proposed text:
+“codegraph_search is a SQLite FTS5 symbol-name lookup (name,
+qualified_name, docstring, signature) with implicit-AND between terms —
+it matches ONE symbol whose indexed fields contain ALL your tokens. Use
+it ONLY when you can name a specific/partial symbol (OllamaProvider,
+NewOllamaProvider, Ollama). A multi-word natural-language phrase
+(provider Generate LLM, list models from providers) will correctly
+return ‘No results found’ because no single symbol contains every token
+— expected FTS5 behavior, NOT a broken index. For any NL question / area
+survey / multi-concept query use codegraph_explore (PRIMARY; accepts NL
+or symbol bag; returns source + call paths in one call). Rule of thumb:
+name a symbol -&gt; codegraph_search; ask a question -&gt;
+codegraph_explore. An empty codegraph_search is a signal to re-issue via
+codegraph_explore, never that the index is broken (confirm health with
+codegraph_validate.sh).” Mirror into AGENT_GUARDRAILS preamble
+(§11.4.109) so every dispatched subagent gets it; cascade the §11.4.78
+note to CLAUDE.md/AGENTS.md/QWEN.md/GEMINI.md per §11.4.157 lockstep.
+6.2 SECONDARY (optional, upstream §11.4.74): file upstream issue/PR on
+colbymchenry/codegraph so that when codegraph_search gets 0 AND-rows for
+a multi-token query it either retries with OR / per-term prefix term*
+(labeled), or returns a hint “0 exact-AND matches for N tokens — try one
+symbol name or codegraph_explore”. Extend the catalogue tool upstream
+rather than fork. OPTIONAL — 6.1 fully fixes the agent-facing problem.
+6.3 Do NOT: re-index (healthy), or treat #850 (100% CPU) as related.</p>
+<h2 id="evidence-index">7. Evidence index</h2>
+<p>§1 live MCP ToolSearch load of
+codegraph_{search,explore,node,callers}; §2 13 live codegraph_search
+calls (verbatim); §3 sqlite3 master dump of nodes_fts (fts5) + triggers;
+§4 4 cited sources + issues page (2026-06-22); version codegraph
+–version=1.0.1.</p>
+</body>
+</html>

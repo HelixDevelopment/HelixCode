@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>findings</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">findings</h1>
+</header>
+<h1 id="governance-anchor-propagation-audit-findings">Governance Anchor
+Propagation Audit — Findings</h1>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Date</td>
+<td>2026-06-22</td>
+</tr>
+<tr>
+<td>Scope</td>
+<td>All owned <code>vasic-digital</code>/<code>HelixDevelopment</code>
+carriers + <code>constitution/</code> + <code>helix_code/</code> +
+<code>assets/</code></td>
+</tr>
+<tr>
+<td>Method</td>
+<td>Read-only <code>grep -l</code> literal-anchor presence test
+(§11.4.6/§11.4.123)</td>
+</tr>
+<tr>
+<td>Constitution ceiling</td>
+<td><code>11.4.165</code> (root <code>CLAUDE.md</code> in sync)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="headline">Headline</h2>
+<p>The <strong>entire owned-submodule fleet is frozen at
+<code>11.4.141</code></strong> — the
+<code>11.4.142</code>→<code>11.4.165</code> band (24 anchors,
+incl. §11.4.162 OpenDesign, §11.4.157 GEMINI-lockstep,
+§11.4.163/164/165) <strong>never propagated</strong>. CodeGraph anchors
+78/79/80 ARE present fleet-wide, so the last successful cascade predates
+141.</p>
+<h2 id="worst-lagging-carrier-sets-ceiling-165">Worst-lagging carrier
+sets (ceiling = 165)</h2>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 53%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Carrier</th>
+<th>Highest anchor</th>
+<th>Lag</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>submodules/claude-toolkit</code></td>
+<td>none (0 anchors; only CLAUDE.md exists)</td>
+<td><strong>165</strong></td>
+</tr>
+<tr>
+<td><code>submodules/pipeline_runtime</code></td>
+<td>11.4.5</td>
+<td>160</td>
+</tr>
+<tr>
+<td><code>submodules/dag_orchestrator</code></td>
+<td>11.4.28</td>
+<td>137</td>
+</tr>
+<tr>
+<td><code>helix_code/</code> (inner app)</td>
+<td>11.4.74</td>
+<td>91</td>
+</tr>
+<tr>
+<td><code>submodules/doc_processor</code></td>
+<td>11.4.97</td>
+<td>68</td>
+</tr>
+<tr>
+<td><code>assets/</code></td>
+<td>11.4.102</td>
+<td>63</td>
+</tr>
+<tr>
+<td><strong>62 other owned submodules</strong></td>
+<td>11.4.141</td>
+<td><strong>24</strong></td>
+</tr>
+<tr>
+<td><code>docs_chain</code></td>
+<td>11.4.141 (also missing 11.4.80)</td>
+<td>24 +</td>
+</tr>
+</tbody>
+</table>
+<h2 id="opendesign-gaps-confirmed">§11.4.162 (OpenDesign) gaps —
+CONFIRMED</h2>
+<p>Missing from: <code>assets/CLAUDE.md</code>,
+<code>assets/AGENTS.md</code>, <code>assets/CONSTITUTION.md</code>,
+<code>submodules/helix_agent/CLAUDE.md</code>,
+<code>submodules/helix_agent/AGENTS.md</code>. Fleet-wide,
+<code>11.4.162</code> is absent from every owned submodule’s CLAUDE.md
+except <code>constitution/</code>.</p>
+<h2 id="gemini.md-lockstep-systemic-violation">§11.4.157 (GEMINI.md
+lockstep) — systemic violation</h2>
+<ul>
+<li>GEMINI.md exists in <strong>only 1 of 69</strong> carrier sets
+(<code>constitution/</code> alone). All 68 submodules with a CLAUDE.md
+lack their GEMINI.md sibling.</li>
+<li>Even <code>constitution/GEMINI.md</code> (otherwise at 165) is
+<strong>missing the literal <code>11.4.80</code></strong> while its
+CLAUDE.md carries it 6× → internal lockstep gap failing
+<code>CM-COVENANT-114-80-PROPAGATION</code> on GEMINI specifically.</li>
+<li>QWEN.md is also absent from ~48 submodules.</li>
+</ul>
+<h2 id="structural-finding">Structural finding</h2>
+<p><code>assets/</code> is listed as a wired submodule in root
+<code>CLAUDE.md</code> §3.2 but is NOT in the current
+<code>.gitmodules</code> — a wiring gap to confirm with the
+operator.</p>
+<h2 id="prioritized-back-fill-plan">Prioritized back-fill plan</h2>
+<ul>
+<li><strong>P0 (quick):</strong> add <code>11.4.80</code> to
+<code>constitution/GEMINI.md</code>.</li>
+<li><strong>P1:</strong> cascade
+<code>11.4.142</code>→<code>11.4.165</code> across all 62+ submodules’
+CLAUDE/AGENTS/QWEN via <code>scripts/propagate-governance.sh</code> +
+<code>scripts/verify-governance-cascade.sh</code> (covers
+162/157/163/164/165); plus <code>11.4.80</code> for
+<code>docs_chain</code>.</li>
+<li><strong>P2:</strong> create GEMINI.md (and missing QWEN.md)
+fleet-wide per §11.4.157.</li>
+<li><strong>P3:</strong> full cascade-from-scratch for
+<code>claude-toolkit</code>, <code>pipeline_runtime</code>,
+<code>dag_orchestrator</code>, <code>doc_processor</code>,
+<code>assets</code>, <code>helix_code</code>; explicitly add
+<code>11.4.162</code> to <code>assets/</code> +
+<code>helix_agent/</code> carriers.</li>
+<li><strong>Structural:</strong> confirm whether <code>assets/</code>
+should be <code>.gitmodules</code>-wired.</li>
+</ul>
+<h2 id="honest-boundary-11.4.6">Honest boundary (§11.4.6)</h2>
+<p>This audit proves anchor PRESENCE/ABSENCE, not that the cascaded text
+is byte-correct — the P1/P2/P3 back-fill must run
+<code>verify-governance-cascade.sh</code> afterward to confirm each
+anchor landed correctly fleet-wide.</p>
+</body>
+</html>
