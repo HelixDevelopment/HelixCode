@@ -1,0 +1,26 @@
+### Tree-wide sweep: unbracketed host:port authority composition in Go source
+### scope: helix_code/ (inner app) + submodules/containers/, non-test files only
+### cmd: grep -rnE 'Sprintf\("[^"]*%s:%s' --include=*.go | grep -v _test.go
+
+helix_code/cmd/security_scan/main.go:91:// colons, so `fmt.Sprintf("http://%s:%s", host, port)` produced an authority
+helix_code/tests/testinfra/testinfra.go:138:	return fmt.Sprintf("postgresql://%s:%s@%s/%s?sslmode=disable",
+helix_code/internal/tools/lsp_client.go:260:			ID: fmt.Sprintf("%s:%s:%d", c.serverName, filePath, id),
+helix_code/internal/worker/isolation.go:146:	chownCmd := fmt.Sprintf("sudo chown -R %s:%s %s", username, username, sandboxDir)
+helix_code/internal/workflow/snapshots/comparison.go:302:	cmd := exec.CommandContext(ctx, "git", "show", fmt.Sprintf("%s:%s", snapshot.StashRef, filePath))
+helix_code/internal/cognee/service.go:846:	return fmt.Sprintf("%s:%s:%d:%s", req.Query, req.DatasetName, req.Limit, req.SearchType)
+helix_code/internal/memory/providers/character_ai_provider.go:1748:	key := fmt.Sprintf("%s:%s", characterID, userID)
+helix_code/internal/memory/providers/character_ai_provider.go:1773:	key := fmt.Sprintf("%s:%s", characterID, userID)
+helix_code/internal/llm/integrated_model_manager.go:336:		key := fmt.Sprintf("%s:%s", model.ModelID, model.Provider)
+helix_code/internal/llm/integrated_model_manager.go:351:			key := fmt.Sprintf("%s:%s", model.ID, provider)
+helix_code/internal/llm/cross_provider_registry.go:228:	key := fmt.Sprintf("%s:%s:%s", model.Provider, model.ModelID, model.Format)
+helix_code/internal/llm/model_download_manager.go:300:	progressKey := fmt.Sprintf("%s:%s", req.ModelID, req.Format)
+submodules/containers/pkg/brokertest/postgres.go:158:	dsn = fmt.Sprintf("postgres://%s:%s@127.0.0.1:%s/%s?sslmode=disable",
+submodules/containers/pkg/emulator/containerized.go:467:	cpSrc := fmt.Sprintf("%s:%s", c.containerName, containerADBKeyPath)
+submodules/containers/pkg/remote/ssh_executor.go:237:			fmt.Sprintf("%s@%s:%s", host.User, host.Address, remoteParent),
+submodules/containers/pkg/remote/ssh_executor.go:265:			fmt.Sprintf("%s@%s:%s", host.User, host.Address, remoteDir),
+submodules/containers/pkg/remote/runtime.go:42:	return fmt.Sprintf("remote:%s:%s",
+submodules/containers/pkg/network/tunnel.go:222:		fwdArg = fmt.Sprintf("-R %s:%s:%s",
+submodules/containers/pkg/network/tunnel.go:226:		fwdArg = fmt.Sprintf("-L %s:%s:%s",
+submodules/containers/internal/netaddr/netaddr.go:5:// fmt.Sprintf("%s:%s", host, port) yields an authority that the Go resolver
+submodules/containers/internal/netaddr/netaddr.go:84:// yields "host:", matching what fmt.Sprintf("%s:%s", host, port) produced.
+

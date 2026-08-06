@@ -1,0 +1,59 @@
+### §11.4.102 forensic probe — is url.Parse lenient on unbracketed IPv6?
+### go version: go version go1.26.4-X:nodwarf5 linux/amd64
+### source: scratchpad probe (verbatim below)
+
+package main
+
+import (
+	"fmt"
+	"net"
+	"net/url"
+)
+
+func main() {
+	fmt.Println("=== url.Parse behaviour on unbracketed IPv6 authorities ===")
+	for _, s := range []string{
+		"http://::1:8080",
+		"http://::1:8080/api/health",
+		"http://2001:db8::1:9000",
+		"http://2001:db8::1:9000/api/health",
+		"http://fe80::abcd/api/health",
+		"http://[::1]:8080/api/health",
+		"http://127.0.0.1:8080/api/health",
+	} {
+		u, err := url.Parse(s)
+		if err != nil {
+			fmt.Printf("%-38s -> PARSE ERROR: %v\n", s, err)
+			continue
+		}
+		fmt.Printf("%-38s -> Host=%-22q Hostname=%-16q Port=%q\n",
+			s, u.Host, u.Hostname(), u.Port())
+	}
+
+	fmt.Println("\n=== net.Dial/ResolveTCPAddr on unbracketed IPv6 host:port ===")
+	for _, s := range []string{"::1:8080", "[::1]:8080", "2001:db8::1:9000", "127.0.0.1:8080"} {
+		_, err := net.ResolveTCPAddr("tcp", s)
+		if err != nil {
+			fmt.Printf("%-22s -> RESOLVE ERROR: %v\n", s, err)
+			continue
+		}
+		fmt.Printf("%-22s -> resolves OK\n", s)
+	}
+}
+
+### OUTPUT:
+=== url.Parse behaviour on unbracketed IPv6 authorities ===
+http://::1:8080                        -> Host="::1:8080"             Hostname="::1"            Port="8080"
+http://::1:8080/api/health             -> Host="::1:8080"             Hostname="::1"            Port="8080"
+http://2001:db8::1:9000                -> Host="2001:db8::1:9000"     Hostname="2001:db8::1"    Port="9000"
+http://2001:db8::1:9000/api/health     -> Host="2001:db8::1:9000"     Hostname="2001:db8::1"    Port="9000"
+http://fe80::abcd/api/health           -> PARSE ERROR: parse "http://fe80::abcd/api/health": invalid port ":abcd" after host
+http://[::1]:8080/api/health           -> Host="[::1]:8080"           Hostname="::1"            Port="8080"
+http://127.0.0.1:8080/api/health       -> Host="127.0.0.1:8080"       Hostname="127.0.0.1"      Port="8080"
+
+=== net.Dial/ResolveTCPAddr on unbracketed IPv6 host:port ===
+::1:8080               -> RESOLVE ERROR: address ::1:8080: too many colons in address
+[::1]:8080             -> resolves OK
+2001:db8::1:9000       -> RESOLVE ERROR: address 2001:db8::1:9000: too many colons in address
+127.0.0.1:8080         -> resolves OK
+PROBE_EXIT=0
