@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README_DOCKER</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README_DOCKER</h1>
+</header>
+<h1 id="helixcode-docker-setup">HelixCode Docker Setup</h1>
+<p>Complete containerized environment for HelixCode with network access,
+distributed processing, and easy management.</p>
+<h2 id="quick-start">🚀 Quick Start</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Make the facade script executable</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x helix</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Setup environment</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .env.example .env</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit .env with your preferences</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Start everything (or let commands auto-start)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> start</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Access services</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> status  <span class="co"># View connection info</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> tui     <span class="co"># Open Terminal UI (auto-starts if needed)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--help</span>  <span class="co"># Use CLI (auto-starts if needed)</span></span></code></pre></div>
+<h2 id="prerequisites">📋 Prerequisites</h2>
+<ul>
+<li>Docker and Docker Compose</li>
+<li>4GB+ RAM recommended</li>
+<li>Git (for repository access)</li>
+</ul>
+<h2 id="architecture">🏗️ Architecture</h2>
+<h3 id="container-stack">Container Stack</h3>
+<ul>
+<li><strong>helixcode</strong>: Main application with REST API, CLI, and
+Terminal UI</li>
+<li><strong>postgres</strong>: PostgreSQL database for persistent
+storage</li>
+<li><strong>redis</strong>: Redis cache for sessions and queues</li>
+<li><strong>worker-1/worker-2</strong>: Distributed worker nodes</li>
+</ul>
+<h3 id="network-configuration">Network Configuration</h3>
+<ul>
+<li><strong>Internal Network</strong>: <code>helixcode-network</code>
+(172.20.0.0/16)</li>
+<li><strong>Port Mapping</strong>: Configurable via environment
+variables</li>
+<li><strong>Service Discovery</strong>: Automatic in distributed
+mode</li>
+</ul>
+<h2 id="configuration">🔧 Configuration</h2>
+<h3 id="environment-variables-.env">Environment Variables (.env)</h3>
+<p>Run <code>./setup.sh</code> to have these generated for you: it
+writes <code>.env</code> at mode 0600 with a unique random secret per
+install, and never overwrites a value you have already set. The compose
+files and the server hold no credential of their own (CONST-042) — they
+read these variables and refuse to start if one is missing.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Security (REQUIRED) — generated by ./setup.sh, or set a unique random value</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># per install by hand (e.g. `openssl rand -hex 24`). Never reuse a published value.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_PASSWORD</span><span class="op">=</span>your-secure-password</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTH_JWT_SECRET</span><span class="op">=</span>your-jwt-secret</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_PASSWORD</span><span class="op">=</span>your-redis-password</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Port Configuration</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_API_PORT</span><span class="op">=</span>8080      <span class="co"># REST API port</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_SSH_PORT</span><span class="op">=</span>2222      <span class="co"># Worker SSH port</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_WEB_PORT</span><span class="op">=</span>3000      <span class="co"># Web interface port</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Network Mode</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_NETWORK_MODE</span><span class="op">=</span>standalone  <span class="co"># standalone or distributed</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTO_PORT</span><span class="op">=</span>true           <span class="co"># Auto-adjust if ports occupied (recommended)</span></span></code></pre></div>
+<h2 id="directory-structure">📁 Directory Structure</h2>
+<pre><code>helix_code/
+├── helix                    # Main facade script
+├── Dockerfile               # Main application image
+├── docker-compose.helix.yml # Complete stack definition
+├── docker-entrypoint.sh     # Container entrypoint
+├── .env.example            # Environment template
+├── DOCKER_SETUP.md         # Detailed documentation
+├── test-docker-setup.sh    # Comprehensive test suite
+└── README_DOCKER.md        # This file</code></pre>
+<h2 id="usage">🎯 Usage</h2>
+<h3 id="using-the-facade-script">Using the Facade Script</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Start services (or let commands auto-start)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> start</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check status and connection info</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> status</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run CLI commands (AUTO-STARTS if needed)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--list-workers</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--health</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--prompt</span> <span class="st">&quot;Hello world&quot;</span> <span class="at">--model</span> llama-3-8b</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Open Terminal UI (AUTO-STARTS if needed)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> tui</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># View logs</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> logs</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> logs helixcode</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Stop services</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> stop</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Restart</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> restart</span></code></pre></div>
+<h3 id="auto-start-feature">🚀 Auto-Start Feature</h3>
+<p>Commands like <code>cli</code>, <code>tui</code>, and
+<code>server</code> automatically start the container if it’s not
+running:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># No need to run &#39;start&#39; first - it happens automatically!</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--help</span>          <span class="co"># Auto-starts container</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> tui                 <span class="co"># Auto-starts container  </span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--list-models</span>   <span class="co"># Auto-starts container</span></span></code></pre></div>
+<h3 id="direct-container-access">Direct Container Access</h3>
+<p>You can also access the container directly:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Execute commands in container</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> exec <span class="at">-it</span> helixcode helix cli <span class="at">--help</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Access shell</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> exec <span class="at">-it</span> helixcode /bin/bash</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># View running processes</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> exec helixcode ps aux</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: Use ./helix commands for auto-start convenience</span></span></code></pre></div>
+<h2 id="network-access">🌐 Network Access</h2>
+<h3 id="service-urls-after-startup">Service URLs (After Startup)</h3>
+<pre><code>📊 Available Services:
+   • REST API:       http://localhost:8080
+   • SSH Workers:    localhost:2222
+   • Web Interface:  http://localhost:3000
+
+📁 Accessible Directories:
+   • Workspace:      ./workspace
+   • Projects:       ./projects
+   • Shared:         ./shared</code></pre>
+<h3 id="network-modes">Network Modes</h3>
+<h4 id="standalone-mode-default">Standalone Mode (Default)</h4>
+<ul>
+<li>Single container with all services</li>
+<li>Simple setup, ideal for development</li>
+</ul>
+<h4 id="distributed-mode">Distributed Mode</h4>
+<ul>
+<li>Multiple containers can connect</li>
+<li>Automatic service discovery</li>
+<li>Enable with: <code>HELIX_NETWORK_MODE=distributed</code></li>
+</ul>
+<h2 id="testing">🧪 Testing</h2>
+<h3 id="run-complete-test-suite">Run Complete Test Suite</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./test-docker-setup.sh</span></span></code></pre></div>
+<h3 id="manual-testing">Manual Testing</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test auto-start feature</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--health</span>        <span class="co"># Should auto-start container</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> tui                 <span class="co"># Should auto-start container</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Test service connectivity</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8080/health</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Test CLI functionality</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--list-workers</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> cli <span class="at">--list-models</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Test worker connectivity</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> exec helixcode-worker-1 echo <span class="st">&quot;test&quot;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleanup</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> stop</span></code></pre></div>
+<h2 id="troubleshooting">🔍 Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<p><strong>Port Conflicts</strong>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check what&#39;s using ports</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">netstat</span> <span class="at">-tulpn</span> <span class="kw">|</span> <span class="fu">grep</span> :8080</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use auto-port adjustment (enabled by default)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTO_PORT</span><span class="op">=</span>true <span class="ex">./helix</span> start</span></code></pre></div>
+<p><strong>Container Not Starting</strong>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check logs</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> logs</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check Docker daemon</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> info</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check resources</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> system df</span></code></pre></div>
+<p><strong>Worker Connection Issues</strong>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check SSH setup</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> helix_code/test/ssh-keys/</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test worker connectivity</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> exec helixcode ssh worker-1 echo <span class="st">&quot;test&quot;</span></span></code></pre></div>
+<h3 id="resource-requirements">Resource Requirements</h3>
+<ul>
+<li><strong>Minimum</strong>: 2GB RAM, 2 CPU cores</li>
+<li><strong>Recommended</strong>: 4GB RAM, 4 CPU cores</li>
+<li><strong>Production</strong>: 8GB+ RAM, 8+ CPU cores</li>
+</ul>
+<h2 id="security">🔒 Security</h2>
+<h3 id="best-practices">Best Practices</h3>
+<ol type="1">
+<li><strong>Change default passwords</strong> in <code>.env</code></li>
+<li><strong>Use HTTPS</strong> in production</li>
+<li><strong>Restrict network access</strong> to necessary ports</li>
+<li><strong>Regular updates</strong> of container images</li>
+<li><strong>Resource limits</strong> for containers</li>
+</ol>
+<h3 id="environment-security">Environment Security</h3>
+<ul>
+<li><code>.env</code> file is gitignored</li>
+<li>Sensitive tokens stored securely</li>
+<li>Database passwords encrypted</li>
+<li>JWT secrets randomized</li>
+</ul>
+<h2 id="production-deployment">🚀 Production Deployment</h2>
+<h3 id="optimized-configuration">Optimized Configuration</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Increase resources in docker-compose.helix.yml</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">deploy:</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">resources:</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">limits:</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>      <span class="ex">cpus:</span> <span class="st">&#39;4.0&#39;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>      <span class="ex">memory:</span> 8G</span></code></pre></div>
+<h3 id="external-services">External Services</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use external databases</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_URL</span><span class="op">=</span>postgres://user:pass@host:port/db</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_URL</span><span class="op">=</span>redis://user:pass@host:port/db</span></code></pre></div>
+<h3 id="monitoring">Monitoring</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Container stats</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> stats</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Log monitoring</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> logs <span class="at">-f</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Health checks</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8080/health</span></code></pre></div>
+<h2 id="documentation">📚 Documentation</h2>
+<ul>
+<li><a href="DOCKER_SETUP.md">DOCKER_SETUP.md</a> - Detailed setup
+guide</li>
+<li><a href="../helix_code/README.md">HelixCode README</a> - Main
+project documentation</li>
+<li><a href="../helix_code/docs/api/">API Documentation</a> - REST API
+reference</li>
+</ul>
+<h2 id="support">🆘 Support</h2>
+<p>For issues: 1. Check <code>./helix logs</code> 2. Verify
+<code>./helix status</code> 3. Run <code>./test-docker-setup.sh</code>
+4. Review troubleshooting section</p>
+<h2 id="license">📄 License</h2>
+<p>Part of the HelixCode project. See main project LICENSE for
+details.</p>
+</body>
+</html>

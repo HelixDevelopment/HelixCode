@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PHASE_3_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PHASE_3_PLAN</h1>
+</header>
+<h1 id="phase-3-multi-agent-system---implementation-plan">Phase 3:
+Multi-Agent System - Implementation Plan</h1>
+<p><strong>Phase:</strong> Phase 3 (Weeks 15-21) <strong>Date:</strong>
+November 6, 2025 <strong>Status:</strong> 📋 PLANNING</p>
+<hr />
+<h2 id="objectives">🎯 Objectives</h2>
+<p>Build a sophisticated multi-agent system that enables: 1.
+<strong>Intelligent task decomposition</strong> - Breaking complex tasks
+into subtasks 2. <strong>Specialized agent roles</strong> - Different
+agents for planning, coding, testing, debugging 3. <strong>Agent
+coordination</strong> - Orchestrating multiple agents working together
+4. <strong>Communication protocols</strong> - Agents sharing context and
+results 5. <strong>Conflict resolution</strong> - Handling disagreements
+between agents 6. <strong>Result aggregation</strong> - Combining
+outputs from multiple agents</p>
+<hr />
+<h2 id="architecture">🏗️ Architecture</h2>
+<h3 id="core-components">Core Components</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Agent Coordinator                         │
+│  - Task delegation                                          │
+│  - Agent lifecycle management                               │
+│  - Result aggregation                                       │
+│  - Conflict resolution                                      │
+└────────────┬────────────────────────────────────────────────┘
+             │
+             ├─────────────┬─────────────┬─────────────┐
+             ▼             ▼             ▼             ▼
+      ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+      │ Planning │  │  Coding  │  │ Testing  │  │Debugging │
+      │  Agent   │  │  Agent   │  │  Agent   │  │  Agent   │
+      └──────────┘  └──────────┘  └──────────┘  └──────────┘
+             │             │             │             │
+             └─────────────┴─────────────┴─────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │   Shared    │
+                    │   Context   │
+                    └─────────────┘</code></pre>
+<h3 id="agent-types">Agent Types</h3>
+<ol type="1">
+<li><strong>Coordinator Agent</strong>
+<ul>
+<li>Receives user request</li>
+<li>Analyzes complexity</li>
+<li>Decomposes into subtasks</li>
+<li>Delegates to specialized agents</li>
+<li>Aggregates results</li>
+</ul></li>
+<li><strong>Planning Agent</strong>
+<ul>
+<li>Analyzes requirements</li>
+<li>Creates technical specifications</li>
+<li>Breaks down into tasks</li>
+<li>Estimates effort</li>
+<li>Identifies dependencies</li>
+</ul></li>
+<li><strong>Coding Agent</strong>
+<ul>
+<li>Implements features</li>
+<li>Follows best practices</li>
+<li>Uses RepoMap for context</li>
+<li>Selects appropriate edit format</li>
+<li>Writes clean, maintainable code</li>
+</ul></li>
+<li><strong>Testing Agent</strong>
+<ul>
+<li>Generates test cases</li>
+<li>Writes unit tests</li>
+<li>Writes integration tests</li>
+<li>Executes tests</li>
+<li>Reports coverage</li>
+</ul></li>
+<li><strong>Debugging Agent</strong>
+<ul>
+<li>Analyzes errors</li>
+<li>Identifies root causes</li>
+<li>Proposes fixes</li>
+<li>Validates fixes</li>
+<li>Prevents regression</li>
+</ul></li>
+<li><strong>Review Agent</strong>
+<ul>
+<li>Code quality review</li>
+<li>Security audit</li>
+<li>Performance analysis</li>
+<li>Best practices compliance</li>
+<li>Documentation review</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="implementation-modules">📦 Implementation Modules</h2>
+<h3 id="agent-framework-internalagent">1. Agent Framework
+(<code>internal/agent/</code>)</h3>
+<p><strong>Files to Create:</strong> - <code>agent.go</code> - Base
+agent interface and types - <code>coordinator.go</code> - Agent
+coordination logic - <code>context.go</code> - Shared context management
+- <code>communication.go</code> - Inter-agent messaging -
+<code>lifecycle.go</code> - Agent lifecycle (create, run, stop)</p>
+<p><strong>Key Types:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Agent <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Type<span class="op">()</span> AgentType</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Capabilities<span class="op">()</span> <span class="op">[]</span>Capability</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>Task<span class="op">)</span> <span class="op">(*</span>Result<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Collaborate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> agents <span class="op">[]</span>Agent<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AgentType <span class="dt">string</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    AgentTypePlanning  AgentType <span class="op">=</span> <span class="st">&quot;planning&quot;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    AgentTypeCoding    AgentType <span class="op">=</span> <span class="st">&quot;coding&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    AgentTypeTesting   AgentType <span class="op">=</span> <span class="st">&quot;testing&quot;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    AgentTypeDebugging AgentType <span class="op">=</span> <span class="st">&quot;debugging&quot;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    AgentTypeReview    AgentType <span class="op">=</span> <span class="st">&quot;review&quot;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Coordinator <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    agents       <span class="kw">map</span><span class="op">[</span>AgentType<span class="op">][]</span>Agent</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    context      <span class="op">*</span>SharedContext</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    taskQueue    <span class="op">*</span>TaskQueue</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    resultCache  <span class="op">*</span>ResultCache</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="specialized-agents-internalagenttypes">2. Specialized Agents
+(<code>internal/agent/types/</code>)</h3>
+<p><strong>Files to Create:</strong> - <code>planning_agent.go</code> -
+Planning agent implementation - <code>coding_agent.go</code> - Coding
+agent implementation - <code>testing_agent.go</code> - Testing agent
+implementation - <code>debugging_agent.go</code> - Debugging agent
+implementation - <code>review_agent.go</code> - Review agent
+implementation</p>
+<p><strong>Each Agent Implements:</strong> - Task analysis - LLM
+interaction (using ProviderManager) - Tool usage (using Tool Registry) -
+Result formatting - Error handling</p>
+<h3 id="task-management-internalagenttask">3. Task Management
+(<code>internal/agent/task/</code>)</h3>
+<p><strong>Files to Create:</strong> - <code>task.go</code> - Task
+definitions and types - <code>queue.go</code> - Task queue
+implementation - <code>dependency.go</code> - Task dependency resolution
+- <code>priority.go</code> - Task prioritization</p>
+<p><strong>Key Features:</strong> - Task DAG (Directed Acyclic Graph) -
+Priority queue - Dependency resolution - Parallel execution where
+possible - Progress tracking</p>
+<h3 id="communication-internalagentcomm">4. Communication
+(<code>internal/agent/comm/</code>)</h3>
+<p><strong>Files to Create:</strong> - <code>message.go</code> - Message
+types - <code>protocol.go</code> - Communication protocol -
+<code>pubsub.go</code> - Pub/sub for agent collaboration -
+<code>state.go</code> - State synchronization</p>
+<p><strong>Communication Patterns:</strong> - Request/Response - Agent
+asks another agent for help - Broadcast - Agent announces result to all
+- Pub/Sub - Agents subscribe to topics - Direct Message - One-to-one
+communication</p>
+<h3 id="shared-context-internalagentcontext">5. Shared Context
+(<code>internal/agent/context/</code>)</h3>
+<p><strong>Files to Create:</strong> - <code>shared_context.go</code> -
+Shared memory between agents - <code>workspace.go</code> - Workspace
+management - <code>artifacts.go</code> - Code artifacts tracking -
+<code>history.go</code> - Execution history</p>
+<p><strong>Context Contains:</strong> - Project metadata - Current state
+- Execution history - Artifacts (code, tests, docs) - Decisions made -
+Errors encountered</p>
+<hr />
+<h2 id="execution-flow">🔄 Execution Flow</h2>
+<h3 id="example-implement-user-authentication">Example: “Implement user
+authentication”</h3>
+<ol type="1">
+<li><p><strong>User Request</strong> → Coordinator</p>
+<pre><code>User: &quot;Implement user authentication with JWT&quot;</code></pre></li>
+<li><p><strong>Coordinator</strong> → Planning Agent</p>
+<pre><code>Task: Analyze authentication requirements
+Output: Technical specification</code></pre></li>
+<li><p><strong>Planning Agent</strong> → Coordinator</p>
+<pre><code>Subtasks:
+- Create user model (Coding)
+- Implement JWT generation (Coding)
+- Create login endpoint (Coding)
+- Write tests (Testing)
+- Security audit (Review)</code></pre></li>
+<li><p><strong>Coordinator</strong> → Coding Agents (parallel)</p>
+<pre><code>Agent 1: Create user model
+Agent 2: Implement JWT generation
+Agent 3: Create login endpoint</code></pre></li>
+<li><p><strong>Coding Agents</strong> → Coordinator</p>
+<pre><code>Results: Code artifacts</code></pre></li>
+<li><p><strong>Coordinator</strong> → Testing Agent</p>
+<pre><code>Task: Write tests for auth system
+Input: Code from coding agents</code></pre></li>
+<li><p><strong>Testing Agent</strong> → Coordinator</p>
+<pre><code>Results: Test suite + coverage report</code></pre></li>
+<li><p><strong>Coordinator</strong> → Review Agent</p>
+<pre><code>Task: Security audit
+Input: Auth code + tests</code></pre></li>
+<li><p><strong>Review Agent</strong> → Coordinator</p>
+<pre><code>Results: Security assessment + recommendations</code></pre></li>
+<li><p><strong>Coordinator</strong> → User</p>
+<pre><code>Summary: Authentication implemented
+- User model created
+- JWT generation working
+- Login endpoint functional
+- 95% test coverage
+- Security audit passed</code></pre></li>
+</ol>
+<hr />
+<h2 id="testing-strategy">🧪 Testing Strategy</h2>
+<h3 id="unit-tests">Unit Tests</h3>
+<ul>
+<li>Test each agent independently</li>
+<li>Mock dependencies</li>
+<li>Test error handling</li>
+<li>Test edge cases</li>
+</ul>
+<h3 id="integration-tests">Integration Tests</h3>
+<ul>
+<li>Test agent communication</li>
+<li>Test coordinator delegation</li>
+<li>Test result aggregation</li>
+<li>Test conflict resolution</li>
+</ul>
+<h3 id="end-to-end-tests">End-to-End Tests</h3>
+<ul>
+<li>Full workflow tests with real LLMs</li>
+<li>Complex multi-step scenarios</li>
+<li>Performance testing</li>
+<li>Stress testing (many agents)</li>
+</ul>
+<h3 id="test-coverage-goals">Test Coverage Goals</h3>
+<ul>
+<li>Agent framework: 90%+</li>
+<li>Specialized agents: 85%+</li>
+<li>Task management: 90%+</li>
+<li>Communication: 90%+</li>
+<li>Overall: 85%+</li>
+</ul>
+<hr />
+<h2 id="advanced-features">🎨 Advanced Features</h2>
+<h3 id="agent-collaboration">1. Agent Collaboration</h3>
+<p>Agents can request help from other agents:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CollaborationRequest <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    From       Agent</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    To         Agent</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    Question   <span class="dt">string</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    Context    <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    Priority   Priority</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="conflict-resolution">2. Conflict Resolution</h3>
+<p>When agents disagree:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Conflict <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    Agents      <span class="op">[]</span>Agent</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    Proposals   <span class="op">[]</span>Proposal</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    Resolution  <span class="op">*</span>Resolution</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    ResolvedBy  Agent</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="learning-improvement">3. Learning &amp; Improvement</h3>
+<p>Agents learn from successes and failures:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LearningRecord <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    Task        <span class="op">*</span>Task</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    Success     <span class="dt">bool</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    Duration    time<span class="op">.</span>Duration</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    Decisions   <span class="op">[]</span>Decision</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    Outcome     <span class="op">*</span>Result</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    Lessons     <span class="op">[]</span>Lesson</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="adaptive-delegation">4. Adaptive Delegation</h3>
+<p>Coordinator learns which agents are best for which tasks:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AgentPerformance <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    Agent          Agent</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    SuccessRate    <span class="dt">float64</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    AverageTime    time<span class="op">.</span>Duration</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    Specialties    <span class="op">[]</span>TaskType</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    PreferredBy    <span class="op">[]</span>Agent</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="success-metrics">📊 Success Metrics</h2>
+<h3 id="performance-metrics">Performance Metrics</h3>
+<ul>
+<li>Task completion rate: &gt;95%</li>
+<li>Average task time: &lt;2x single-agent</li>
+<li>Agent utilization: &gt;70%</li>
+<li>Collaboration success: &gt;90%</li>
+</ul>
+<h3 id="quality-metrics">Quality Metrics</h3>
+<ul>
+<li>Code quality score: &gt;8/10</li>
+<li>Test coverage: &gt;90%</li>
+<li>Bug rate: &lt;5 per 1000 LOC</li>
+<li>Security issues: 0 critical</li>
+</ul>
+<h3 id="user-experience-metrics">User Experience Metrics</h3>
+<ul>
+<li>User satisfaction: &gt;4.5/5</li>
+<li>Task clarity: &gt;90%</li>
+<li>Result accuracy: &gt;95%</li>
+<li>Response time: &lt;30s for simple tasks</li>
+</ul>
+<hr />
+<h2 id="implementation-timeline">🚀 Implementation Timeline</h2>
+<h3 id="week-15-16-foundation">Week 15-16: Foundation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Agent framework (agent.go,
+coordinator.go)</label></li>
+<li><label><input type="checkbox"></input>Task management (task.go,
+queue.go)</label></li>
+<li><label><input type="checkbox"></input>Shared context
+(shared_context.go)</label></li>
+<li><label><input type="checkbox"></input>Basic communication (message.go,
+protocol.go)</label></li>
+</ul>
+<h3 id="week-17-18-specialized-agents">Week 17-18: Specialized
+Agents</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Planning agent
+implementation</label></li>
+<li><label><input type="checkbox"></input>Coding agent
+implementation</label></li>
+<li><label><input type="checkbox"></input>Testing agent
+implementation</label></li>
+<li><label><input type="checkbox"></input>Debugging agent
+implementation</label></li>
+<li><label><input type="checkbox"></input>Review agent
+implementation</label></li>
+</ul>
+<h3 id="week-19-integration">Week 19: Integration</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Agent coordination
+logic</label></li>
+<li><label><input type="checkbox"></input>Workflow execution</label></li>
+<li><label><input type="checkbox"></input>Result aggregation</label></li>
+<li><label><input type="checkbox"></input>Error handling</label></li>
+</ul>
+<h3 id="week-20-testing">Week 20: Testing</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Unit tests (200+ tests)</label></li>
+<li><label><input type="checkbox"></input>Integration tests (50+
+tests)</label></li>
+<li><label><input type="checkbox"></input>E2E tests (10+
+scenarios)</label></li>
+<li><label><input type="checkbox"></input>Performance tests</label></li>
+</ul>
+<h3 id="week-21-documentation-polish">Week 21: Documentation &amp;
+Polish</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>API documentation</label></li>
+<li><label><input type="checkbox"></input>Usage examples</label></li>
+<li><label><input type="checkbox"></input>Architecture diagrams</label></li>
+<li><label><input type="checkbox"></input>Performance tuning</label></li>
+</ul>
+<hr />
+<h2 id="integration-with-phase-1-2">🔗 Integration with Phase 1 &amp;
+2</h2>
+<h3 id="llm-integration-phase-1">LLM Integration (Phase 1)</h3>
+<ul>
+<li>Agents use ProviderManager for LLM calls</li>
+<li>Reasoning models for complex planning</li>
+<li>Prompt caching for repeated queries</li>
+<li>Token budgets per agent</li>
+</ul>
+<h3 id="tools-integration-phase-2">Tools Integration (Phase 2)</h3>
+<ul>
+<li>Agents use Tool Registry</li>
+<li>Coding agent: FSWrite, FSEdit, MultiEdit</li>
+<li>Testing agent: Shell, FSRead</li>
+<li>All agents: CodebaseMap, FileDefinitions</li>
+</ul>
+<h3 id="context-integration-phase-2">Context Integration (Phase 2)</h3>
+<ul>
+<li>RepoMap for intelligent file selection</li>
+<li>Multi-format editing for agent preferences</li>
+<li>Context compaction for long conversations</li>
+</ul>
+<hr />
+<h2 id="key-innovations">💡 Key Innovations</h2>
+<ol type="1">
+<li><strong>Hierarchical Agent System</strong>
+<ul>
+<li>Coordinator delegates to specialized agents</li>
+<li>Agents can spawn sub-agents if needed</li>
+<li>Dynamic agent creation based on task</li>
+</ul></li>
+<li><strong>Intelligent Task Decomposition</strong>
+<ul>
+<li>Uses LLM reasoning to break down tasks</li>
+<li>Considers dependencies automatically</li>
+<li>Optimizes for parallel execution</li>
+</ul></li>
+<li><strong>Collaborative Problem Solving</strong>
+<ul>
+<li>Agents can ask each other for help</li>
+<li>Shared context enables collaboration</li>
+<li>Conflict resolution when disagreements occur</li>
+</ul></li>
+<li><strong>Adaptive Learning</strong>
+<ul>
+<li>System learns from successes and failures</li>
+<li>Improves delegation over time</li>
+<li>Optimizes agent selection</li>
+</ul></li>
+<li><strong>Scalable Architecture</strong>
+<ul>
+<li>Supports 100+ concurrent agents</li>
+<li>Efficient communication (pub/sub)</li>
+<li>Resource pooling (LLM provider reuse)</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="phase-3-deliverables">🎯 Phase 3 Deliverables</h2>
+<ol type="1">
+<li><strong>Code</strong>
+<ul>
+<li>Agent framework (5 files, ~2,000 LOC)</li>
+<li>5 specialized agents (~3,000 LOC)</li>
+<li>Task management (~1,500 LOC)</li>
+<li>Communication layer (~1,000 LOC)</li>
+<li>Shared context (~1,000 LOC)</li>
+<li><strong>Total: ~8,500 LOC production code</strong></li>
+</ul></li>
+<li><strong>Tests</strong>
+<ul>
+<li>200+ unit tests</li>
+<li>50+ integration tests</li>
+<li>10+ E2E tests</li>
+<li><strong>Total: 260+ tests, 85%+ coverage</strong></li>
+</ul></li>
+<li><strong>Documentation</strong>
+<ul>
+<li>PHASE_3_IMPLEMENTATION_SUMMARY.md</li>
+<li>PHASE_3_TEST_REPORT.md</li>
+<li>docs/AGENTS.md (comprehensive agent guide)</li>
+<li>Architecture diagrams</li>
+</ul></li>
+<li><strong>Examples</strong>
+<ul>
+<li>Simple task (single agent)</li>
+<li>Complex task (multi-agent collaboration)</li>
+<li>Error handling scenarios</li>
+<li>Performance benchmarks</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="risk-assessment">🔍 Risk Assessment</h2>
+<h3 id="technical-risks">Technical Risks</h3>
+<ul>
+<li><strong>Agent coordination complexity</strong>: Mitigated by clear
+protocols</li>
+<li><strong>Performance overhead</strong>: Mitigated by parallel
+execution</li>
+<li><strong>LLM cost</strong>: Mitigated by intelligent caching and
+cheap models</li>
+<li><strong>Debugging difficulty</strong>: Mitigated by comprehensive
+logging</li>
+</ul>
+<h3 id="architectural-risks">Architectural Risks</h3>
+<ul>
+<li><strong>Circular dependencies</strong>: Careful module design</li>
+<li><strong>State synchronization</strong>: Use atomic operations</li>
+<li><strong>Deadlocks</strong>: Timeout all operations</li>
+<li><strong>Memory leaks</strong>: Proper cleanup and monitoring</li>
+</ul>
+<hr />
+<h2 id="notes">📝 Notes</h2>
+<ul>
+<li>Phase 3 builds heavily on Phase 1 (LLM) and Phase 2 (Tools,
+Context)</li>
+<li>Agent system should be extensible for future agent types</li>
+<li>Consider using actor model pattern (Akka-style)</li>
+<li>Implement circuit breakers for agent failures</li>
+<li>Add telemetry and monitoring</li>
+</ul>
+<hr />
+<p><strong>Plan Created:</strong> November 6, 2025 <strong>Estimated
+Duration:</strong> 7 weeks <strong>Complexity:</strong> High
+<strong>Dependencies:</strong> Phase 1 ✅, Phase 2 ✅</p>
+<p><strong>Ready to begin implementation!</strong> 🚀</p>
+</body>
+</html>

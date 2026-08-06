@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TEAM_DEVELOPMENT_BREAKDOWN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">TEAM_DEVELOPMENT_BREAKDOWN</h1>
+</header>
+<h1 id="team-development-breakdown">Team Development Breakdown</h1>
+<h2 id="helixcode-feature-implementation-plan">HelixCode Feature
+Implementation Plan</h2>
+<p><strong>Document Version:</strong> 1.0 <strong>Date:</strong>
+November 7, 2025 <strong>Status:</strong> Implementation Planning</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This document provides a detailed breakdown of how to divide the
+remaining HelixCode feature implementation across a development team.
+Based on the AIDER_CLINE_IMPLEMENTATION_ROADMAP.md analysis, we have
+<strong>16 remaining features</strong> across <strong>4 phases</strong>
+to implement.</p>
+<p><strong>Current Status:</strong> - ✅ Phase 1 - Critical Features:
+<strong>2/3 complete</strong> (@ Mentions ✅, Slash Commands ✅, Model
+Aliases ⏳) - ⏳ Phase 2 - High Priority: <strong>0/4 complete</strong>
+- ⏳ Phase 3 - Medium Priority: <strong>0/5 complete</strong> - ⏳ Phase
+4 - Low Priority: <strong>0/4 complete</strong></p>
+<p><strong>Estimated Timeline:</strong> 16-20 weeks with a team of 4-6
+developers</p>
+<hr />
+<h2 id="team-structure-recommendation">Team Structure
+Recommendation</h2>
+<h3 id="proposed-team-composition">Proposed Team Composition</h3>
+<p><strong>Team Size:</strong> 6 developers + 1 tech lead</p>
+<p><strong>Roles:</strong> 1. <strong>Tech Lead</strong> (1) -
+Architecture, code review, integration oversight 2. <strong>Senior
+Backend Engineers</strong> (2) - Core features, LLM integration,
+workflow engine 3. <strong>Mid-Level Backend Engineers</strong> (2) -
+Supporting features, testing, documentation 4. <strong>UI/UX
+Developer</strong> (1) - TUI enhancements, CLI improvements 5.
+<strong>QA/Test Engineer</strong> (1) - Test automation, coverage,
+integration testing</p>
+<hr />
+<h2 id="phase-based-team-assignment">Phase-Based Team Assignment</h2>
+<h3 id="phase-1-critical-features-weeks-1-4">Phase 1: Critical Features
+(Weeks 1-4)</h3>
+<h4 id="feature-1.3-model-aliases-system">Feature 1.3: Model Aliases
+System ⏳</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #1
+<strong>Timeline:</strong> Week 1-2 (2 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong> 1. <strong>Week 1:</strong> - Design alias
+configuration schema (YAML/TOML) - Implement alias parser and validator
+- Create alias resolution engine - Write unit tests for alias
+matching</p>
+<ol start="2" type="1">
+<li><strong>Week 2:</strong>
+<ul>
+<li>Integrate with existing LLM provider system</li>
+<li>Add alias autocomplete support</li>
+<li>Create migration tool for existing configs</li>
+<li>Integration tests with all 13 providers</li>
+</ul></li>
+</ol>
+<p><strong>Dependencies:</strong> - internal/llm/* (existing provider
+system) - internal/config/* (configuration management)</p>
+<p><strong>Deliverables:</strong> - internal/llm/aliases.go -
+internal/llm/aliases_test.go - config/model-aliases.example.yaml -
+Documentation: MODEL_ALIASES.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ All 13 providers support
+aliasing - ✅ Fuzzy matching with threshold configuration - ✅ 100% test
+coverage - ✅ Backwards compatible with existing configs</p>
+<hr />
+<h3 id="phase-2-high-priority-features-weeks-3-10">Phase 2: High
+Priority Features (Weeks 3-10)</h3>
+<h4 id="feature-2.1-edit-formats-8-formats">Feature 2.1: Edit Formats (8
+formats)</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #2 + Mid-Level
+Engineer #1 <strong>Timeline:</strong> Week 3-6 (4 weeks)
+<strong>Complexity:</strong> High</p>
+<p><strong>Work Division:</strong></p>
+<p><strong>Senior Engineer #2 (Weeks 3-5):</strong> - <strong>Week
+3:</strong> - Design format abstraction interface - Implement whole-file
+format (simplest) - Implement diff format with unified diff parser -
+Unit tests for whole + diff</p>
+<ul>
+<li><strong>Week 4:</strong>
+<ul>
+<li>Implement udiff format (git-style)</li>
+<li>Implement search/replace format with regex support</li>
+<li>Unit tests for udiff + search/replace</li>
+</ul></li>
+<li><strong>Week 5:</strong>
+<ul>
+<li>Code review and refinement</li>
+<li>Integration with LLM prompt templates</li>
+<li>Performance optimization for large files</li>
+</ul></li>
+</ul>
+<p><strong>Mid-Level Engineer #1 (Weeks 4-6):</strong> - <strong>Week
+4:</strong> - Implement editor format (line-based) - Implement architect
+mode format - Unit tests for editor + architect</p>
+<ul>
+<li><strong>Week 5:</strong>
+<ul>
+<li>Implement ask mode format</li>
+<li>Implement line-number format</li>
+<li>Unit tests for ask + line-number</li>
+</ul></li>
+<li><strong>Week 6:</strong>
+<ul>
+<li>Integration testing all 8 formats</li>
+<li>Format auto-detection logic</li>
+<li>Documentation and examples</li>
+</ul></li>
+</ul>
+<p><strong>Deliverables:</strong> - internal/editor/formats/*.go (8
+format implementations) - internal/editor/formats/format_test.go -
+Documentation: EDIT_FORMATS.md with examples</p>
+<p><strong>Dependencies:</strong> - internal/editor/* (existing edit
+infrastructure) - internal/llm/* (for prompt generation)</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ All 8 formats implemented
+- ✅ Auto-detection based on file size/type - ✅ Provider-specific
+format preferences - ✅ Diff validation and error recovery - ✅ 95%+
+test coverage</p>
+<hr />
+<h4 id="feature-2.2-cline-rules-system">Feature 2.2: Cline Rules
+System</h4>
+<p><strong>Assigned To:</strong> Mid-Level Engineer #2
+<strong>Timeline:</strong> Week 5-7 (3 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 5:</strong> - Design rules file format (.clinerules,
+YAML) - Implement rules parser with validation - Create rule matching
+engine (glob patterns, regex) - Unit tests for parser and matcher</p>
+<p><strong>Week 6:</strong> - Integrate with project context system -
+Implement rule priority/override logic - Add rules to LLM system prompts
+- Create .clinerules templates for common scenarios</p>
+<p><strong>Week 7:</strong> - Rules inheritance (workspace → project →
+file) - Rules editor/validator CLI tool - Integration tests -
+Documentation with examples</p>
+<p><strong>Deliverables:</strong> - internal/project/rules.go -
+internal/project/rules_test.go - .clinerules.example - cmd/cli/rules.go
+(rules management commands)</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Support project, folder,
+and file-level rules - ✅ Pattern matching (glob + regex) - ✅ Rule
+inheritance and override - ✅ Integration with @ Mentions and Slash
+Commands - ✅ 90%+ test coverage</p>
+<hr />
+<h4 id="feature-2.3-focus-chain-system">Feature 2.3: Focus Chain
+System</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #1
+<strong>Timeline:</strong> Week 7-9 (3 weeks)
+<strong>Complexity:</strong> High</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 7:</strong> - Design focus state machine (states:
+planning → building → testing → deploying) - Implement focus context
+manager - Create state transition logic - Unit tests for state
+management</p>
+<p><strong>Week 8:</strong> - Integrate with workflow engine - Implement
+context preservation across focus changes - Add focus-aware prompt
+templates - Create focus switch commands</p>
+<p><strong>Week 9:</strong> - Focus chain visualization (ASCII diagrams)
+- Focus history tracking and replay - Integration tests with workflows -
+Documentation</p>
+<p><strong>Deliverables:</strong> - internal/workflow/focus.go -
+internal/workflow/focus_test.go - internal/workflow/focus_chain.go -
+Documentation: FOCUS_CHAIN.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Smooth transitions between
+focus modes - ✅ Context preservation (no information loss) - ✅
+Integration with existing workflows - ✅ Visual feedback in TUI - ✅
+95%+ test coverage</p>
+<hr />
+<h4 id="feature-2.4-hooks-system">Feature 2.4: Hooks System</h4>
+<p><strong>Assigned To:</strong> Mid-Level Engineer #2
+<strong>Timeline:</strong> Week 8-10 (3 weeks)
+<strong>Complexity:</strong> Medium-High</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 8:</strong> - Design hooks architecture (pre/post event
+hooks) - Implement hook registry and executor - Create hook context with
+event data - Unit tests for hook execution</p>
+<p><strong>Week 9:</strong> - Implement built-in hook events: -
+pre-commit, post-commit - pre-edit, post-edit - pre-llm-call,
+post-llm-call - pre-workflow, post-workflow - Add hook configuration
+(YAML) - Error handling and timeout management</p>
+<p><strong>Week 10:</strong> - Create example hooks (linting,
+formatting, notifications) - Security sandboxing for user hooks -
+Integration tests - Documentation with hook cookbook</p>
+<p><strong>Deliverables:</strong> - internal/event/hooks.go -
+internal/event/hooks_test.go - config/hooks.example.yaml -
+examples/hooks/* (example hooks)</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Support for 10+ hook
+events - ✅ Async hook execution with timeouts - ✅ Hook chaining and
+dependencies - ✅ Security sandboxing - ✅ 90%+ test coverage</p>
+<hr />
+<h3 id="phase-3-medium-priority-features-weeks-11-18">Phase 3: Medium
+Priority Features (Weeks 11-18)</h3>
+<h4 id="team-assignment-for-phase-3">Team Assignment for Phase 3:</h4>
+<p><strong>Parallel Development Strategy:</strong></p>
+<p><strong>Track A - Senior Engineer #1 + UI Developer:</strong> -
+Feature 3.1: TUI Improvements (Weeks 11-13) - Feature 3.2: Keyboard
+Shortcuts (Weeks 14-15)</p>
+<p><strong>Track B - Senior Engineer #2 + Mid-Level #1:</strong> -
+Feature 3.3: Provider Settings Management (Weeks 11-13) - Feature 3.4:
+Session Management (Weeks 14-16)</p>
+<p><strong>Track C - Mid-Level #2:</strong> - Feature 3.5: File Watcher
+(Weeks 11-14)</p>
+<hr />
+<h4 id="feature-3.1-tui-improvements">Feature 3.1: TUI Improvements</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #1 (backend) +
+UI Developer (frontend) <strong>Timeline:</strong> Week 11-13 (3 weeks)
+<strong>Complexity:</strong> Medium-High</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 11 (UI Developer):</strong> - Design TUI mockups (split
+panes, color schemes) - Implement chat panel with syntax highlighting -
+Create file tree navigator component - Implement scrolling and keyboard
+navigation</p>
+<p><strong>Week 11 (Senior Engineer #1):</strong> - Refactor TUI
+architecture (bubble tea framework) - Implement model-view-update
+pattern - Create component registry - Unit tests for UI logic</p>
+<p><strong>Week 12 (Both):</strong> - Integrate chat panel with backend
+- Implement split-pane layouts (vertical/horizontal) - Add terminal
+output viewer - Create command palette</p>
+<p><strong>Week 13 (Both):</strong> - Styling and theming system - Color
+scheme configuration - Responsive layout (terminal resize) - Integration
+tests</p>
+<p><strong>Deliverables:</strong> - cmd/tui/components/<em>.go -
+cmd/tui/layouts/</em>.go - config/tui-themes.yaml - Documentation:
+TUI_GUIDE.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Split panes (chat, files,
+terminal, problems) - ✅ Syntax highlighting for code - ✅ Customizable
+themes - ✅ Responsive to terminal resize - ✅ Keyboard-driven
+navigation</p>
+<hr />
+<h4 id="feature-3.2-keyboard-shortcuts">Feature 3.2: Keyboard
+Shortcuts</h4>
+<p><strong>Assigned To:</strong> UI Developer <strong>Timeline:</strong>
+Week 14-15 (2 weeks) <strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 14:</strong> - Design keyboard shortcut schema -
+Implement key binding system - Create default keymaps (vim, emacs,
+default) - Add shortcut configuration (YAML)</p>
+<p><strong>Week 15:</strong> - Implement chord support (multi-key
+sequences) - Add shortcut overlay/help screen - Create keymap editor in
+TUI - Documentation</p>
+<p><strong>Deliverables:</strong> - cmd/tui/keybindings.go -
+config/keybindings.example.yaml - Documentation:
+KEYBOARD_SHORTCUTS.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Support for 50+ default
+shortcuts - ✅ Customizable keymaps - ✅ Vim/Emacs modes - ✅ Chord
+support - ✅ Help overlay (? key)</p>
+<hr />
+<h4 id="feature-3.3-provider-settings-management">Feature 3.3: Provider
+Settings Management</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #2 + Mid-Level
+Engineer #1 <strong>Timeline:</strong> Week 11-13 (3 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 11 (Senior #2):</strong> - Design provider settings
+schema - Implement settings storage (encrypted) - Create settings
+validator - Unit tests</p>
+<p><strong>Week 11 (Mid-Level #1):</strong> - Implement CLI commands for
+settings management - Create settings import/export - Add settings
+templates for common providers</p>
+<p><strong>Week 12 (Both):</strong> - Integrate settings with LLM
+providers - Implement runtime settings updates - Add settings
+inheritance (global → workspace → project)</p>
+<p><strong>Week 13 (Both):</strong> - Settings migration tool - API key
+rotation support - Integration tests - Documentation</p>
+<p><strong>Deliverables:</strong> - internal/config/provider_settings.go
+- cmd/cli/settings.go - Documentation: PROVIDER_SETTINGS.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Per-provider settings
+configuration - ✅ Encrypted API key storage - ✅ Settings validation -
+✅ Runtime updates (no restart) - ✅ 90%+ test coverage</p>
+<hr />
+<h4 id="feature-3.4-session-management">Feature 3.4: Session
+Management</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #2 + Mid-Level
+Engineer #1 <strong>Timeline:</strong> Week 14-16 (3 weeks)
+<strong>Complexity:</strong> Medium-High</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 14 (Both):</strong> - Design session state schema -
+Implement session storage (SQLite/PostgreSQL) - Create session lifecycle
+manager - Unit tests</p>
+<p><strong>Week 15 (Senior #2):</strong> - Implement session
+save/restore - Add session search and filtering - Create session
+branching (fork sessions)</p>
+<p><strong>Week 15 (Mid-Level #1):</strong> - Implement session export
+(JSON, markdown) - Create session templates - Add session metadata
+(tags, descriptions)</p>
+<p><strong>Week 16 (Both):</strong> - Session compression for long
+conversations - Session cleanup/archival - Integration tests -
+Documentation</p>
+<p><strong>Deliverables:</strong> - internal/session/manager.go -
+internal/session/storage.go - cmd/cli/session.go - Documentation:
+SESSION_MANAGEMENT.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Save/restore sessions - ✅
+Session search and filtering - ✅ Session branching/forking - ✅ Export
+to multiple formats - ✅ 90%+ test coverage</p>
+<hr />
+<h4 id="feature-3.5-file-watcher">Feature 3.5: File Watcher</h4>
+<p><strong>Assigned To:</strong> Mid-Level Engineer #2
+<strong>Timeline:</strong> Week 11-14 (4 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 11:</strong> - Research file watcher libraries
+(fsnotify) - Design watcher architecture - Implement basic file watching
+- Unit tests for watcher core</p>
+<p><strong>Week 12:</strong> - Add debouncing and batching - Implement
+ignore patterns (.gitignore integration) - Create event filtering -
+Handle symlinks and mounts</p>
+<p><strong>Week 13:</strong> - Integrate with @ Mentions (auto-refresh)
+- Add watcher triggers for workflows - Implement watcher CLI
+commands</p>
+<p><strong>Week 14:</strong> - Platform-specific optimizations -
+Resource usage monitoring - Integration tests - Documentation</p>
+<p><strong>Deliverables:</strong> - internal/watcher/watcher.go -
+internal/watcher/watcher_test.go - Documentation: FILE_WATCHER.md</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Real-time file change
+detection - ✅ .gitignore pattern support - ✅ Event debouncing (avoid
+duplicates) - ✅ Low resource usage - ✅ 85%+ test coverage</p>
+<hr />
+<h3 id="phase-4-low-priority-features-weeks-17-20">Phase 4: Low Priority
+Features (Weeks 17-20)</h3>
+<h4 id="team-assignment-for-phase-4">Team Assignment for Phase 4:</h4>
+<p><strong>All Features Parallel:</strong> - Feature 4.1: Advanced Diff
+(Senior #1 - Weeks 17-18) - Feature 4.2: Streaming Output (Senior #2 -
+Weeks 17-18) - Feature 4.3: Cost Tracking (Mid-Level #1 - Weeks 17-19) -
+Feature 4.4: Retry Logic (Mid-Level #2 - Weeks 17-19)</p>
+<p><strong>Week 20:</strong> Integration testing, bug fixes,
+documentation cleanup (All hands)</p>
+<hr />
+<h4 id="feature-4.1-advanced-diff-rendering">Feature 4.1: Advanced Diff
+Rendering</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #1
+<strong>Timeline:</strong> Week 17-18 (2 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 17:</strong> - Research advanced diff algorithms (Myers,
+Patience) - Implement syntax-aware diff - Add inline diff highlighting -
+Unit tests</p>
+<p><strong>Week 18:</strong> - Integrate with edit formats - Add diff
+visualization options - Create diff export (HTML, ANSI) -
+Documentation</p>
+<p><strong>Deliverables:</strong> - internal/editor/diff/advanced.go -
+internal/editor/diff/renderer.go</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Syntax-aware diffing - ✅
+Multiple diff algorithms - ✅ Beautiful visual output - ✅ Export to
+multiple formats</p>
+<hr />
+<h4 id="feature-4.2-streaming-output">Feature 4.2: Streaming Output</h4>
+<p><strong>Assigned To:</strong> Senior Backend Engineer #2
+<strong>Timeline:</strong> Week 17-18 (2 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 17:</strong> - Implement SSE (Server-Sent Events) for
+streaming - Add WebSocket support - Create streaming response handler -
+Unit tests</p>
+<p><strong>Week 18:</strong> - Integrate with all LLM providers - Add
+streaming progress indicators - Create cancellation support -
+Documentation</p>
+<p><strong>Deliverables:</strong> - internal/llm/streaming.go -
+internal/server/sse.go</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Token-by-token streaming -
+✅ Progress indicators - ✅ Cancellation support - ✅ Works with all
+providers</p>
+<hr />
+<h4 id="feature-4.3-cost-tracking">Feature 4.3: Cost Tracking</h4>
+<p><strong>Assigned To:</strong> Mid-Level Engineer #1
+<strong>Timeline:</strong> Week 17-19 (3 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 17:</strong> - Design cost tracking schema - Implement
+token counter - Create cost calculator (per-provider pricing) - Unit
+tests</p>
+<p><strong>Week 18:</strong> - Add usage dashboard - Implement budget
+alerts - Create cost reports (daily, weekly, monthly)</p>
+<p><strong>Week 19:</strong> - Cost optimization suggestions -
+Integration with all providers - Documentation</p>
+<p><strong>Deliverables:</strong> - internal/llm/cost_tracker.go -
+internal/llm/pricing.yaml</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Accurate token counting -
+✅ Per-provider cost tracking - ✅ Budget alerts - ✅ Usage reports</p>
+<hr />
+<h4 id="feature-4.4-retry-logic-with-backoff">Feature 4.4: Retry Logic
+with Backoff</h4>
+<p><strong>Assigned To:</strong> Mid-Level Engineer #2
+<strong>Timeline:</strong> Week 17-19 (3 weeks)
+<strong>Complexity:</strong> Medium</p>
+<p><strong>Subtasks:</strong></p>
+<p><strong>Week 17:</strong> - Design retry strategy (exponential
+backoff) - Implement retry middleware - Add circuit breaker pattern -
+Unit tests</p>
+<p><strong>Week 18:</strong> - Integrate with LLM provider calls - Add
+configurable retry policies - Implement jitter to prevent thundering
+herd</p>
+<p><strong>Week 19:</strong> - Retry observability (metrics, logs) -
+Integration tests - Documentation</p>
+<p><strong>Deliverables:</strong> - internal/llm/retry.go -
+internal/llm/circuit_breaker.go</p>
+<p><strong>Acceptance Criteria:</strong> - ✅ Exponential backoff - ✅
+Circuit breaker for failing providers - ✅ Configurable retry policies -
+✅ Observability</p>
+<hr />
+<h2 id="testing-strategy">Testing Strategy</h2>
+<h3 id="test-coverage-requirements">Test Coverage Requirements</h3>
+<p><strong>Phase 1 (Critical):</strong> 95-100% coverage <strong>Phase 2
+(High):</strong> 90-95% coverage <strong>Phase 3 (Medium):</strong>
+85-90% coverage <strong>Phase 4 (Low):</strong> 80-85% coverage</p>
+<h3 id="test-types-by-team-member">Test Types by Team Member</h3>
+<p><strong>QA/Test Engineer (Full-Time):</strong> - Integration test
+suite development - End-to-end test scenarios - Performance/load testing
+- Test automation (CI/CD integration) - Manual exploratory testing -
+Regression test maintenance</p>
+<p><strong>All Developers:</strong> - Unit tests for all new code -
+Table-driven tests for complex logic - Mock/stub creation for external
+dependencies - Code coverage reporting</p>
+<hr />
+<h2 id="code-review-process">Code Review Process</h2>
+<p><strong>Review Requirements:</strong> 1. All PRs must be reviewed by
+Tech Lead + 1 peer 2. Critical features (Phase 1-2) require 2 peer
+reviews 3. Test coverage must meet phase requirements 4. Documentation
+must be updated 5. Integration tests must pass</p>
+<p><strong>Review Timeline:</strong> - Small PRs (&lt;200 lines): 24
+hours - Medium PRs (200-500 lines): 48 hours - Large PRs (&gt;500
+lines): 72 hours (should be split if possible)</p>
+<hr />
+<h2 id="documentation-requirements">Documentation Requirements</h2>
+<h3 id="per-feature">Per Feature:</h3>
+<ol type="1">
+<li><strong>Technical Design Doc</strong> (before implementation)</li>
+<li><strong>API Documentation</strong> (godoc comments)</li>
+<li><strong>User Guide</strong> (markdown in docs/)</li>
+<li><strong>Integration Guide</strong> (for complex features)</li>
+<li><strong>Test Plan</strong> (test scenarios and coverage)</li>
+</ol>
+<h3 id="team-documentation">Team Documentation:</h3>
+<ul>
+<li><strong>Tech Lead:</strong> Architecture Decision Records
+(ADRs)</li>
+<li><strong>All Developers:</strong> Code comments, README updates</li>
+<li><strong>QA:</strong> Test plans, test case documentation</li>
+</ul>
+<hr />
+<h2 id="communication-coordination">Communication &amp;
+Coordination</h2>
+<h3 id="daily-standups-15-min">Daily Standups (15 min)</h3>
+<ul>
+<li>What did you complete yesterday?</li>
+<li>What are you working on today?</li>
+<li>Any blockers or dependencies?</li>
+</ul>
+<h3 id="weekly-planning-1-hour">Weekly Planning (1 hour)</h3>
+<ul>
+<li>Review completed work</li>
+<li>Plan next week’s tasks</li>
+<li>Address technical debt</li>
+<li>Update timeline estimates</li>
+</ul>
+<h3 id="bi-weekly-architecture-review-2-hours">Bi-Weekly Architecture
+Review (2 hours)</h3>
+<ul>
+<li>Review ADRs</li>
+<li>Discuss integration challenges</li>
+<li>Plan cross-feature coordination</li>
+<li>Tech debt prioritization</li>
+</ul>
+<hr />
+<h2 id="risk-management">Risk Management</h2>
+<h3 id="technical-risks">Technical Risks</h3>
+<p><strong>Risk 1: LLM Provider Changes</strong> -
+<strong>Mitigation:</strong> Provider abstraction layer, versioned APIs
+- <strong>Owner:</strong> Senior Engineer #2</p>
+<p><strong>Risk 2: Performance Issues (File Watcher)</strong> -
+<strong>Mitigation:</strong> Early performance testing, resource limits
+- <strong>Owner:</strong> Mid-Level Engineer #2</p>
+<p><strong>Risk 3: Integration Complexity (Edit Formats ×
+Providers)</strong> - <strong>Mitigation:</strong> Comprehensive
+integration test matrix - <strong>Owner:</strong> Senior Engineer #2, QA
+Engineer</p>
+<p><strong>Risk 4: TUI Framework Limitations</strong> -
+<strong>Mitigation:</strong> POC in Week 1, fallback to simpler UI -
+<strong>Owner:</strong> UI Developer</p>
+<h3 id="schedule-risks">Schedule Risks</h3>
+<p><strong>Risk 1: Underestimated Complexity</strong> -
+<strong>Mitigation:</strong> 20% buffer time built into estimates -
+<strong>Owner:</strong> Tech Lead</p>
+<p><strong>Risk 2: Key Person Dependency</strong> -
+<strong>Mitigation:</strong> Knowledge sharing sessions, pair
+programming - <strong>Owner:</strong> Tech Lead</p>
+<hr />
+<h2 id="success-metrics">Success Metrics</h2>
+<h3 id="per-phase">Per Phase:</h3>
+<ol type="1">
+<li><strong>Code Quality:</strong>
+<ul>
+<li>Test coverage ≥ phase requirement</li>
+<li>Zero critical bugs</li>
+<li>Code review approval rate &gt; 95%</li>
+</ul></li>
+<li><strong>Timeline:</strong>
+<ul>
+<li>≤ 10% variance from estimated timeline</li>
+<li>No blocking dependencies</li>
+</ul></li>
+<li><strong>Integration:</strong>
+<ul>
+<li>Seamless integration with existing features</li>
+<li>No breaking changes to public APIs</li>
+<li>Backwards compatibility maintained</li>
+</ul></li>
+</ol>
+<h3 id="overall-project">Overall Project:</h3>
+<ul>
+<li><strong>Completion:</strong> All 16 features implemented</li>
+<li><strong>Quality:</strong> Average test coverage ≥ 90%</li>
+<li><strong>Performance:</strong> No regression in existing
+features</li>
+<li><strong>Documentation:</strong> 100% feature documentation
+coverage</li>
+</ul>
+<hr />
+<h2 id="handoff-maintenance">Handoff &amp; Maintenance</h2>
+<h3 id="post-implementation-week-21">Post-Implementation (Week
+21+):</h3>
+<p><strong>Tech Lead:</strong> - Architecture documentation finalization
+- Technical debt backlog - Performance optimization plan</p>
+<p><strong>Senior Engineers:</strong> - Knowledge transfer sessions -
+Advanced feature troubleshooting guide - Performance profiling</p>
+<p><strong>Mid-Level Engineers:</strong> - User guide finalization -
+Tutorial videos/walkthroughs - FAQ documentation</p>
+<p><strong>QA Engineer:</strong> - Regression test suite handoff - Bug
+tracking and triage process - Performance benchmarks</p>
+<p><strong>UI Developer:</strong> - Style guide and component library -
+UI customization guide - Accessibility documentation</p>
+<hr />
+<h2 id="appendix">Appendix</h2>
+<h3 id="technology-stack">Technology Stack</h3>
+<p><strong>Core:</strong> - Language: Go 1.24+ - Database: PostgreSQL
+14+ (sessions, state) - Cache: Redis 7+ (optional)</p>
+<p><strong>TUI:</strong> - Framework: bubble tea - Terminal: tcell</p>
+<p><strong>Testing:</strong> - Unit: testify, gomock - Integration:
+dockertest - E2E: expect (terminal automation)</p>
+<p><strong>CI/CD:</strong> - GitHub Actions - Coverage: codecov -
+Linting: golangci-lint</p>
+<h3 id="file-structure">File Structure</h3>
+<pre><code>helix_code/
+├── internal/
+│   ├── context/
+│   │   └── mentions/        # @ Mentions (✅ Complete)
+│   ├── commands/
+│   │   ├── builtin/         # Slash Commands (✅ Complete)
+│   │   └── custom/          # Custom commands
+│   ├── editor/
+│   │   ├── formats/         # Edit Formats (⏳ Phase 2)
+│   │   └── diff/            # Advanced Diff (⏳ Phase 4)
+│   ├── llm/
+│   │   ├── aliases.go       # Model Aliases (⏳ Phase 1)
+│   │   ├── cost_tracker.go  # Cost Tracking (⏳ Phase 4)
+│   │   ├── retry.go         # Retry Logic (⏳ Phase 4)
+│   │   └── streaming.go     # Streaming (⏳ Phase 4)
+│   ├── project/
+│   │   └── rules.go         # Cline Rules (⏳ Phase 2)
+│   ├── workflow/
+│   │   ├── focus.go         # Focus Chain (⏳ Phase 2)
+│   │   └── focus_chain.go
+│   ├── event/
+│   │   └── hooks.go         # Hooks System (⏳ Phase 2)
+│   ├── session/
+│   │   ├── manager.go       # Session Mgmt (⏳ Phase 3)
+│   │   └── storage.go
+│   ├── watcher/
+│   │   └── watcher.go       # File Watcher (⏳ Phase 3)
+│   └── config/
+│       └── provider_settings.go  # Provider Settings (⏳ Phase 3)
+├── cmd/
+│   ├── tui/
+│   │   ├── components/      # TUI Improvements (⏳ Phase 3)
+│   │   ├── layouts/
+│   │   └── keybindings.go   # Keyboard Shortcuts (⏳ Phase 3)
+│   └── cli/
+│       ├── settings.go      # Settings CLI
+│       └── session.go       # Session CLI
+└── docs/
+    ├── MODEL_ALIASES.md
+    ├── EDIT_FORMATS.md
+    ├── FOCUS_CHAIN.md
+    └── ... (feature docs)</code></pre>
+<h3 id="contact-escalation">Contact &amp; Escalation</h3>
+<p><strong>Tech Lead:</strong> Final authority on architecture decisions
+<strong>Escalation Path:</strong> Tech Lead → Engineering Manager →
+CTO</p>
+<p><strong>Office Hours:</strong> - Tech Lead: Daily 2-3 PM for
+questions - Senior Engineers: On-demand pair programming - QA: Weekly
+test review sessions (Fridays)</p>
+<hr />
+<p><strong>End of Document</strong></p>
+<p>Generated by Claude Code (HelixCode) on November 7, 2025</p>
+</body>
+</html>

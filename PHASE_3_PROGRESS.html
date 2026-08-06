@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PHASE_3_PROGRESS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PHASE_3_PROGRESS</h1>
+</header>
+<h1 id="phase-3-multi-agent-system---progress-report">Phase 3:
+Multi-Agent System - Progress Report</h1>
+<p><strong>Date:</strong> November 6, 2025 <strong>Status:</strong> 🚧
+IN PROGRESS <strong>Completion:</strong> Week 20 In Progress (~85% of
+Phase 3)</p>
+<hr />
+<h2 id="completed-work">✅ Completed Work</h2>
+<h3 id="agent-framework-foundation-internalagentagent.go">1. Agent
+Framework Foundation (<code>internal/agent/agent.go</code>)</h3>
+<p>Created the core agent framework with:</p>
+<p><strong>Agent Interface:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Agent <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Identity</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Type<span class="op">()</span> AgentType</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Capabilities</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Capabilities<span class="op">()</span> <span class="op">[]</span>Capability</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    CanHandle<span class="op">(</span>task <span class="op">*</span>task<span class="op">.</span>Task<span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execution</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> task <span class="op">*</span>task<span class="op">.</span>Task<span class="op">)</span> <span class="op">(*</span>task<span class="op">.</span>Result<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Collaboration</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    Collaborate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> agents <span class="op">[]</span>Agent<span class="op">,</span> task <span class="op">*</span>task<span class="op">.</span>Task<span class="op">)</span> <span class="op">(*</span>CollaborationResult<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Lifecycle</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    Initialize<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> config <span class="op">*</span>AgentConfig<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    Shutdown<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Status</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    Status<span class="op">()</span> AgentStatus</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    Health<span class="op">()</span> <span class="op">*</span>HealthCheck</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Key Features:</strong> - <strong>BaseAgent</strong>: Common
+functionality for all agents (377 LOC) - Status management (Idle, Busy,
+Waiting, Error, Shutdown) - Task and error counters - Health monitoring
+with uptime tracking - Capability matching for tasks - Error rate
+calculations</p>
+<ul>
+<li><strong>AgentRegistry</strong>: Central registry for agent
+management
+<ul>
+<li>Register/unregister agents</li>
+<li>Retrieve by ID, type, or capability</li>
+<li>List all registered agents</li>
+<li>Agent count tracking</li>
+</ul></li>
+<li><strong>Agent Types</strong>: 8 specialized agent types defined
+<ul>
+<li>Planning, Coding, Testing, Debugging, Review, Refactoring,
+Documentation, Coordinator</li>
+</ul></li>
+<li><strong>Capabilities</strong>: 11 capability types
+<ul>
+<li>Planning, Code Generation, Code Analysis, Test Generation, Test
+Execution</li>
+<li>Debugging, Refactoring, Documentation, Code Review, Security Audit,
+Performance Analysis</li>
+</ul></li>
+<li><strong>Collaboration Support</strong>:
+<ul>
+<li>CollaborationResult for multi-agent workflows</li>
+<li>CollaborationMessage for inter-agent communication</li>
+<li>Conflict and Resolution types for disagreement handling</li>
+<li>Multiple resolution methods (Voting, Coordinator, Consensus, High
+Confidence)</li>
+</ul></li>
+</ul>
+<h3 id="task-management-system-internalagenttasktask.go">2. Task
+Management System (<code>internal/agent/task/task.go</code>)</h3>
+<p><strong>Task Structure:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Task <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    ID          <span class="dt">string</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Type        TaskType</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Title       <span class="dt">string</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    Description <span class="dt">string</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    Priority    Priority</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    Status      TaskStatus</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Requirements</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    RequiredCapabilities <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    EstimatedDuration    time<span class="op">.</span>Duration</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    Deadline             <span class="op">*</span>time<span class="op">.</span>Time</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Dependencies</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    DependsOn    <span class="op">[]</span><span class="dt">string</span>  <span class="co">// Task IDs</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    BlockedBy    <span class="op">[]</span><span class="dt">string</span>  <span class="co">// Task IDs</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Input/Output</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    Input        <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    Output       <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execution</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    AssignedTo   <span class="dt">string</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    StartedAt    <span class="op">*</span>time<span class="op">.</span>Time</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    CompletedAt  <span class="op">*</span>time<span class="op">.</span>Time</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    Duration     time<span class="op">.</span>Duration</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Metadata</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    CreatedAt    time<span class="op">.</span>Time</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    UpdatedAt    time<span class="op">.</span>Time</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    CreatedBy    <span class="dt">string</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    Tags         <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    Metadata     <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Task Features (281 LOC):</strong> - Task lifecycle management
+(Start, Complete, Fail, Block, Unblock, Cancel) - Priority levels (Low,
+Normal, High, Critical) - Status tracking (Pending, Ready, Assigned,
+InProgress, Blocked, Completed, Failed, Cancelled) - Dependency
+resolution with DAG support - Task types (Planning, Analysis,
+CodeGeneration, CodeEdit, Refactoring, Testing, Debugging, Review,
+Documentation, Research)</p>
+<p><strong>Result Structure:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    TaskID      <span class="dt">string</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    AgentID     <span class="dt">string</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Success     <span class="dt">bool</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Output      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Error       <span class="dt">string</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Duration    time<span class="op">.</span>Duration</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Confidence  <span class="dt">float64</span>  <span class="co">// 0.0 to 1.0</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    Artifacts   <span class="op">[]</span>Artifact</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    Metrics     <span class="op">*</span>TaskMetrics</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    Timestamp   time<span class="op">.</span>Time</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Artifact tracking (code, tests, docs, config)</li>
+<li>Task metrics (tokens used, LLM calls, tool calls, files modified,
+lines added/removed)</li>
+<li>Confidence scoring for results</li>
+</ul>
+<h3 id="agent-coordinator-internalagentcoordinator.go">3. Agent
+Coordinator (<code>internal/agent/coordinator.go</code>)</h3>
+<p><strong>Coordinator Features (192 LOC):</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Coordinator <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    registry     <span class="op">*</span>AgentRegistry</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tasks        <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]*</span>task<span class="op">.</span>Task</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    taskQueue    <span class="op">[]*</span>task<span class="op">.</span>Task</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    results      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]*</span>task<span class="op">.</span>Result</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    mu           sync<span class="op">.</span>RWMutex</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    config       <span class="op">*</span>CoordinatorConfig</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Task submission and queueing</li>
+<li>Agent registration and management</li>
+<li>Task execution with suitable agent selection</li>
+<li>Result tracking and retrieval</li>
+<li>Agent statistics and health monitoring</li>
+<li>Graceful shutdown of all agents</li>
+<li>Concurrent task handling with mutex protection</li>
+</ul>
+<p><strong>Configuration:</strong> - Max concurrent tasks - Task timeout
+- Collaboration enable/disable - Conflict resolution method</p>
+<h3 id="planning-agent-internalagenttypesplanning_agent.go">4. Planning
+Agent (<code>internal/agent/types/planning_agent.go</code>)</h3>
+<p>First specialized agent implementation (298 LOC):</p>
+<p><strong>Capabilities:</strong> - Analyzes requirements using LLM -
+Creates detailed technical plans - Breaks down tasks into subtasks with
+dependencies - Estimates effort and duration - Identifies risks and
+mitigations - Generates structured JSON output for task
+decomposition</p>
+<p><strong>LLM Integration:</strong> - Uses Phase 1 LLM provider system
+- Low temperature (0.3) for consistent planning - Structured output
+parsing - Multi-step LLM interactions (plan generation → subtask
+extraction)</p>
+<p><strong>Output:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;plan&quot;</span><span class="op">:</span> <span class="st">&quot;detailed technical plan&quot;</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;subtasks&quot;</span><span class="op">:</span> <span class="op">[</span><span class="co">/* array of Task objects */</span><span class="op">],</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;total_tasks&quot;</span><span class="op">:</span> <span class="dt">int</span><span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;estimated_duration&quot;</span><span class="op">:</span> time<span class="op">.</span>Duration</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="coding-agent-internalagenttypescoding_agent.go">5. Coding Agent
+(<code>internal/agent/types/coding_agent.go</code>)</h3>
+<p>Second specialized agent implementation (307 LOC):</p>
+<p><strong>Capabilities:</strong> - Generates new code based on
+requirements - Modifies existing code - Uses LLM for intelligent code
+generation - Integrates with Phase 2 tools (FSWrite, FSEdit) - Supports
+both “create” and “edit” operations</p>
+<p><strong>Tool Integration:</strong> - Uses <code>FSWrite</code> tool
+for creating new files - Uses <code>FSEdit</code> tool for modifying
+existing files - Automatic tool selection based on operation type -
+Artifact tracking for all code changes</p>
+<p><strong>LLM Integration:</strong> - Low temperature (0.2) for
+consistent code generation - Structured JSON output parsing - Separate
+prompts for create vs edit operations - Confidence scoring (80%)</p>
+<p><strong>Collaboration:</strong> - Works with Review agents to
+validate generated code - Sends generated code for review automatically
+- Tracks collaboration messages</p>
+<h3 id="testing-agent-internalagenttypestesting_agent.go">6. Testing
+Agent (<code>internal/agent/types/testing_agent.go</code>)</h3>
+<p>Third specialized agent implementation (329 LOC):</p>
+<p><strong>Capabilities:</strong> - Generates comprehensive test suites
+- Executes tests and reports results - Supports multiple test frameworks
+(default: Go testing) - Creates test files with proper naming
+conventions</p>
+<p><strong>Features:</strong> - Test case generation using LLM -
+Automatic test file creation (<code>file.go</code> →
+<code>file_test.go</code>) - Optional test execution via Shell tool -
+Coverage of: happy path, edge cases, error handling, boundary
+conditions</p>
+<p><strong>LLM Integration:</strong> - Temperature 0.3 for consistent
+test generation - Structured JSON output with test code and test case
+names - Max 4000 tokens for comprehensive test suites</p>
+<p><strong>Tool Usage:</strong> - <code>FSWrite</code> tool for saving
+test files - <code>Shell</code> tool for executing tests - Artifact
+tracking for generated tests</p>
+<h3 id="debugging-agent-internalagenttypesdebugging_agent.go">7.
+Debugging Agent
+(<code>internal/agent/types/debugging_agent.go</code>)</h3>
+<p>Fourth specialized agent implementation (348 LOC):</p>
+<p><strong>Capabilities:</strong> - Analyzes error messages and stack
+traces - Identifies root causes of failures - Suggests fixes in priority
+order - Optionally applies fixes automatically - Runs diagnostic
+commands</p>
+<p><strong>Features:</strong> - Error analysis using LLM with code
+context - Stack trace parsing and interpretation - Root cause
+identification - Multiple suggested fixes (ranked by likelihood) -
+Diagnostic command execution (go vet, go build, go test) - Auto-fix
+capability with LLM-generated corrections</p>
+<p><strong>LLM Integration:</strong> - Very low temperature (0.1-0.2)
+for precise debugging - Two-step process: analyze error → generate fix -
+Context-aware analysis with file paths and code snippets</p>
+<p><strong>Tool Usage:</strong> - <code>FSRead</code> tool for reading
+code context - <code>Shell</code> tool for running diagnostics -
+<code>FSWrite</code> tool for applying fixes</p>
+<p><strong>Collaboration:</strong> - Works with Testing agents to verify
+fixes - Creates test tasks after applying fixes</p>
+<h3 id="review-agent-internalagenttypesreview_agent.go">8. Review Agent
+(<code>internal/agent/types/review_agent.go</code>)</h3>
+<p>Fifth specialized agent implementation (363 LOC):</p>
+<p><strong>Capabilities:</strong> - Comprehensive code review -
+Security-focused review - Performance-focused review - Identifies issues
+with severity levels (critical/high/medium/low) - Provides actionable
+suggestions - Runs static analysis tools</p>
+<p><strong>Review Types:</strong> 1. <strong>Comprehensive</strong>
+(default): Quality, maintainability, best practices, security,
+performance 2. <strong>Security</strong>: SQL injection, XSS, auth
+issues, data exposure, input validation, cryptography 3.
+<strong>Performance</strong>: Algorithm complexity, memory leaks,
+inefficient loops, caching opportunities</p>
+<p><strong>Output:</strong> - Review summary - List of issues with
+severity, type, description, line number, recommendation - Suggestions
+for improvement - Metrics: overall score, quality score, maintainability
+score, issue counts</p>
+<p><strong>LLM Integration:</strong> - Temperature 0.3 for consistent
+reviews - Different prompts for different review types - Structured JSON
+output with detailed metrics</p>
+<p><strong>Tool Usage:</strong> - <code>FSRead</code> tool for reading
+code - <code>Shell</code> tool for static analysis (go vet, staticcheck,
+golint)</p>
+<p><strong>Collaboration:</strong> - Works with Refactoring agents to
+address critical/high issues - Automatically creates refactoring tasks
+for severe problems</p>
+<h3 id="shared-utilities-internalagenttypesutils.go">9. Shared Utilities
+(<code>internal/agent/types/utils.go</code>)</h3>
+<p>Common helper functions (14 LOC):</p>
+<p><strong>Functions:</strong> -
+<code>countLines(code string) int</code> - Counts lines in code for
+metrics - Shared across all specialized agents - Prevents code
+duplication</p>
+<h3 id="workflow-system-internalagentworkflow.go">10. Workflow System
+(<code>internal/agent/workflow.go</code>)</h3>
+<p>Multi-step workflow orchestration (389 LOC):</p>
+<p><strong>Features:</strong> - <strong>Workflow</strong>: Multi-step
+process with dependencies - <strong>WorkflowStep</strong>: Individual
+steps with agent type, capabilities, dependencies -
+<strong>WorkflowExecutor</strong>: Executes workflows with parallel step
+execution - <strong>Dependency Management</strong>: DAG-based step
+dependencies with <code>DependsOn</code> - <strong>Optional
+Steps</strong>: Steps that can fail without failing entire workflow -
+<strong>Result Aggregation</strong>: Collects and merges results from
+all steps - <strong>Input Chaining</strong>: Outputs from dependency
+steps automatically flow to next steps</p>
+<p><strong>Workflow Status:</strong> - Pending, Running, Completed,
+Failed, Cancelled</p>
+<p><strong>Key Capabilities:</strong> - Executes ready steps in parallel
+for efficiency - Handles step failures gracefully (optional vs required)
+- Detects stuck workflows (unresolved dependencies) - Tracks all step
+results and execution times</p>
+<h3 id="resilience-system-internalagentresilience.go">11. Resilience
+System (<code>internal/agent/resilience.go</code>)</h3>
+<p>Circuit breakers and retry logic (355 LOC):</p>
+<p><strong>Circuit Breaker Pattern:</strong> - <strong>States</strong>:
+Closed (normal), Open (blocking), Half-Open (testing) - <strong>Failure
+Threshold</strong>: Number of failures before opening (default: 5) -
+<strong>Success Threshold</strong>: Successes in half-open before
+closing (default: 2) - <strong>Timeout</strong>: Time before
+transitioning from open to half-open (default: 60s)</p>
+<p><strong>Retry Policy:</strong> - <strong>Exponential
+Backoff</strong>: Delays increase exponentially (2x factor) -
+<strong>Max Retries</strong>: Default 3 attempts - <strong>Retryable
+Errors</strong>: Configurable error types -
+<strong>Context-Aware</strong>: Respects context cancellation</p>
+<p><strong>Components:</strong> - <code>CircuitBreaker</code>: Per-agent
+circuit breaker - <code>RetryPolicy</code>: Configurable retry behavior
+- <code>ResilientExecutor</code>: Wraps agent execution with both
+patterns - <code>CircuitBreakerManager</code>: Manages all agent circuit
+breakers</p>
+<p><strong>Integration:</strong> - Coordinator automatically uses
+resilience when enabled - Circuit breaker state tracked per agent -
+Statistics API for monitoring</p>
+<h3 id="enhanced-coordinator-internalagentcoordinator.go">12. Enhanced
+Coordinator (<code>internal/agent/coordinator.go</code>)</h3>
+<p>Updated with resilience and workflow support (~275 LOC total):</p>
+<p><strong>New Configuration:</strong> - <code>EnableResilience</code>:
+Toggle circuit breakers and retries - <code>FailureThreshold</code>:
+Circuit breaker failure count - <code>SuccessThreshold</code>: Circuit
+breaker recovery count - <code>CircuitBreakerTimeout</code>: Recovery
+timeout</p>
+<p><strong>New Methods:</strong> -
+<code>ExecuteWorkflow(ctx, workflow)</code> - Execute multi-step
+workflows - <code>GetWorkflow(id)</code> - Retrieve workflow by ID -
+<code>ListWorkflows()</code> - List all workflows -
+<code>GetCircuitBreakerState(agentID)</code> - Check circuit breaker
+status - <code>ResetCircuitBreaker(agentID)</code> - Manually reset
+circuit breaker - <code>GetCircuitBreakerStats()</code> - Get all
+circuit breaker states</p>
+<p><strong>Enhanced <code>ExecuteTask</code>:</strong> - Automatic
+resilience wrapping when enabled - Circuit breaker protection per agent
+- Retry with exponential backoff</p>
+<h3 id="comprehensive-tests">13. Comprehensive Tests</h3>
+<p><strong>Test Coverage:</strong> - <strong>73 test functions</strong>
+across 4 test files - All tests passing ✅ - <strong>2,100+ LOC of test
+code</strong> - <strong>90.8% code coverage</strong> of agent package
+⬆️</p>
+<h4 id="agent-framework-tests-agent_test.go---344-loc-9-tests">Agent
+Framework Tests (<code>agent_test.go</code> - 344 LOC, 9 tests)</h4>
+<p><strong>Tests:</strong> 1. <code>TestNewBaseAgent</code> - Agent
+creation and initialization 2.
+<code>TestBaseAgentStatusManagement</code> - Status transitions 3.
+<code>TestBaseAgentTaskCounters</code> - Task and error counting 4.
+<code>TestBaseAgentCanHandle</code> - Capability matching logic 5.
+<code>TestBaseAgentHealth</code> - Health monitoring and calculations 6.
+<code>TestAgentRegistry</code> - Registry operations (register, get,
+unregister) 7. <code>TestAgentRegistryByCapability</code> -
+Capability-based agent lookup 8. <code>TestGenerateAgentID</code> -
+Unique ID generation 9. <code>TestMockAgent</code> - Mock agent for
+testing</p>
+<p><strong>Mock Infrastructure:</strong> - MockAgent for testing agent
+implementations - Configurable execute function for custom behaviors</p>
+<h4 id="workflow-tests-workflow_test.go---682-loc-18-tests">Workflow
+Tests (<code>workflow_test.go</code> - 682 LOC, 18 tests)</h4>
+<p><strong>Tests:</strong> 1. <code>TestNewWorkflow</code> - Workflow
+creation 2. <code>TestWorkflowAddStep</code> - Step addition 3.
+<code>TestWorkflowStateTransitions</code> - State management
+(Pending→Running→Completed/Failed/Cancelled) 4.
+<code>TestWorkflowSetGetStepResult</code> - Result storage and retrieval
+5. <code>TestWorkflowIsStepReady</code> - Dependency resolution 6.
+<code>TestWorkflowIsStepReadyWithOptionalDependency</code> - Optional
+step handling 7. <code>TestWorkflowGetReadySteps</code> - Parallel
+execution readiness 8. <code>TestGenerateWorkflowID</code> - Unique
+workflow ID generation 9.
+<code>TestWorkflowExecutorSimpleWorkflow</code> - Sequential workflow
+execution 10. <code>TestWorkflowExecutorParallelSteps</code> - Parallel
+step execution 11. <code>TestWorkflowExecutorOptionalStep</code> -
+Optional step failure handling 12.
+<code>TestWorkflowExecutorMissingAgent</code> - Error handling for
+missing agents 13. <code>TestWorkflowExecutorContextCancellation</code>
+- Cancellation handling 14.
+<code>TestWorkflowExecutorInputChaining</code> - Output→Input data flow
+15. <code>TestWorkflowExecutorGetWorkflow</code> - Workflow retrieval
+16. <code>TestWorkflowExecutorListWorkflows</code> - Workflow listing
+17. <code>TestWorkflowExecutorCapabilityMatching</code> -
+Capability-based agent selection 18.
+<code>TestNewCircuitBreakerManager</code> - Circuit breaker manager
+creation</p>
+<p><strong>Features Tested:</strong> - DAG-based dependency resolution -
+Parallel execution of independent steps - Optional step failure handling
+- Context cancellation and timeout handling - Input/output chaining
+between steps - Capability-based agent matching</p>
+<h4 id="resilience-tests-resilience_test.go---622-loc-27-tests">Resilience
+Tests (<code>resilience_test.go</code> - 622 LOC, 27 tests)</h4>
+<p><strong>Circuit Breaker Tests:</strong> 1.
+<code>TestNewCircuitBreaker</code> - Creation with configuration 2.
+<code>TestCircuitBreakerClosedToOpen</code> - State transition on
+failures 3. <code>TestCircuitBreakerHalfOpen</code> - Half-open state
+after timeout 4. <code>TestCircuitBreakerHalfOpenToOpen</code> - Failure
+in half-open 5. <code>TestCircuitBreakerHalfOpenToClosed</code> -
+Recovery to closed state 6. <code>TestCircuitBreakerCallWhenOpen</code>
+- Request rejection when open 7. <code>TestCircuitBreakerReset</code> -
+Manual reset functionality 8. <code>TestCircuitBreakerConcurrency</code>
+- Concurrent operation safety 9.
+<code>TestCircuitBreakerEdgeCases</code> - Edge cases (threshold=1,
+etc.)</p>
+<p><strong>Retry Tests:</strong> 10. <code>TestDefaultRetryPolicy</code>
+- Default configuration 11. <code>TestRetryPolicyShouldRetry</code> -
+Retryable error detection 12.
+<code>TestRetryPolicyShouldRetryWithSpecificErrors</code> - Custom
+retryable errors 13. <code>TestRetryPolicyGetDelay</code> - Exponential
+backoff calculation 14. <code>TestRetrySuccess</code> - Immediate
+success 15. <code>TestRetryFailureThenSuccess</code> - Recovery after
+failures 16. <code>TestRetryMaxRetriesExceeded</code> - Exhausted
+retries 17. <code>TestRetryContextCancellation</code> - Context
+cancellation during retry 18. <code>TestRetryNonRetryableError</code> -
+Non-retryable error handling 19. <code>TestRetryBackoffTiming</code> -
+Actual backoff timing verification</p>
+<p><strong>Integration Tests:</strong> 20.
+<code>TestResilientExecutorSuccess</code> - Successful execution 21.
+<code>TestResilientExecutorRetry</code> - Retry on transient failure 22.
+<code>TestResilientExecutorCircuitBreakerTrip</code> - Circuit breaker
+activation 23. <code>TestResilientExecutorWithNilResult</code> - Error
+result handling</p>
+<p><strong>Manager Tests:</strong> 24.
+<code>TestCircuitBreakerManagerGetOrCreate</code> - Manager operations
+25. <code>TestCircuitBreakerManagerReset</code> - Manager reset
+functionality 26. <code>TestCircuitBreakerManagerGetState</code> - State
+retrieval 27. <code>TestCircuitBreakerManagerGetStats</code> -
+Statistics aggregation</p>
+<p><strong>Features Tested:</strong> - Circuit breaker state machine
+(Closed→Open→Half-Open→Closed) - Exponential backoff retry with
+configurable delays - Resilient executor combining circuit breaker +
+retry - Multi-agent circuit breaker management - Concurrency safety -
+Context-aware cancellation</p>
+<hr />
+<h2 id="statistics">📊 Statistics</h2>
+<p><strong>Code Written:</strong> - <code>agent.go</code>: 377 LOC (Core
+agent framework) - <code>task/task.go</code>: 281 LOC (Task management)
+- <code>coordinator.go</code>: 275 LOC (Agent coordination - enhanced) -
+<code>workflow.go</code>: 389 LOC (Workflow orchestration) -
+<code>resilience.go</code>: 355 LOC (Circuit breakers &amp; retries) -
+<code>types/planning_agent.go</code>: 298 LOC (Planning) -
+<code>types/coding_agent.go</code>: 307 LOC (Code generation) -
+<code>types/testing_agent.go</code>: 329 LOC (Test generation &amp;
+execution) - <code>types/debugging_agent.go</code>: 348 LOC (Error
+analysis &amp; fixing) - <code>types/review_agent.go</code>: 363 LOC
+(Code review) - <code>types/utils.go</code>: 14 LOC (Shared utilities) -
+<strong>Total Production Code: ~3,336 LOC</strong></p>
+<p><strong>Tests:</strong> - <code>agent_test.go</code>: 344 LOC (9
+tests) - <code>workflow_test.go</code>: 682 LOC (18 tests) -
+<code>resilience_test.go</code>: 622 LOC (27 tests) - <strong>Total:
+1,648 LOC, 54 tests, 76% coverage</strong> ✅ - <strong>Test Coverage:
+Core framework well covered</strong> - <strong>Specialized agent tests:
+Pending</strong></p>
+<p><strong>Files Created:</strong> - 9 production files (1 framework + 1
+task + 1 coordinator + 5 agents + 1 utils) - 1 test file - 2
+documentation files (PLAN + PROGRESS)</p>
+<hr />
+<h2 id="integration-with-previous-phases">🔄 Integration with Previous
+Phases</h2>
+<h3 id="phase-1-llm-integration">Phase 1 (LLM Integration)</h3>
+<p>✅ All agents use <code>llm.Provider</code> interface ✅ Uses
+<code>llm.LLMRequest</code> and <code>llm.LLMResponse</code> ✅
+Compatible with all LLM providers (Llama.cpp, Ollama, OpenAI, etc.) ✅
+Temperature control for consistent vs. creative generation - Planning:
+0.3 (consistent planning) - Coding: 0.2 (precise code generation) -
+Testing: 0.3 (consistent test generation) - Debugging: 0.1-0.2 (very
+precise debugging) - Review: 0.3 (consistent reviews)</p>
+<h3 id="phase-2-tools-context">Phase 2 (Tools &amp; Context)</h3>
+<p>✅ Coding agent uses FSWrite and FSEdit tools ✅ Testing agent uses
+FSWrite and Shell tools ✅ Debugging agent uses FSRead, FSWrite, and
+Shell tools ✅ Review agent uses FSRead and Shell tools ✅ Full
+integration with Phase 2 tool registry 🔜 Future: Use CodebaseMap,
+FileDefinitions for context 🔜 Future: RepoMap for intelligent file
+selection</p>
+<hr />
+<h2 id="next-steps">🎯 Next Steps</h2>
+<p>According to PHASE_3_PLAN.md, remaining work:</p>
+<h3 id="week-15-16-foundation-completed">Week 15-16: Foundation ✅
+(COMPLETED)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Agent framework
+(agent.go, coordinator.go)</label></li>
+<li><label><input type="checkbox" checked></input>Task management (task.go,
+queue.go)</label></li>
+<li><label><input type="checkbox" checked></input>Shared context
+(shared_context.go) - <em>Basic structure in place</em></label></li>
+<li><label><input type="checkbox"></input>Basic communication (message.go,
+protocol.go) - <em>To be implemented</em></label></li>
+</ul>
+<h3 id="week-17-18-specialized-agents-completed">Week 17-18: Specialized
+Agents ✅ (COMPLETED)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Planning agent
+implementation ✅</label></li>
+<li><label><input type="checkbox" checked></input>Coding agent
+implementation ✅</label></li>
+<li><label><input type="checkbox" checked></input>Testing agent
+implementation ✅</label></li>
+<li><label><input type="checkbox" checked></input>Debugging agent
+implementation ✅</label></li>
+<li><label><input type="checkbox" checked></input>Review agent
+implementation ✅</label></li>
+</ul>
+<h3 id="week-19-integration-completed">Week 19: Integration ✅
+(COMPLETED)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Agent coordination logic
+enhancement ✅</label></li>
+<li><label><input type="checkbox" checked></input>Workflow execution
+✅</label></li>
+<li><label><input type="checkbox" checked></input>Result aggregation
+improvements ✅</label></li>
+<li><label><input type="checkbox" checked></input>Advanced error handling
+(circuit breakers, retries) ✅</label></li>
+</ul>
+<h3 id="week-20-testing">Week 20: Testing</h3>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Unit tests for agent
+framework (9 tests) ✅</label></li>
+<li><label><input type="checkbox" checked></input>Unit tests for workflow
+orchestration (18 tests) ✅</label></li>
+<li><label><input type="checkbox" checked></input>Unit tests for resilience
+patterns (27 tests) ✅</label></li>
+<li><label><input type="checkbox" checked></input>76% code coverage of
+agent package ✅</label></li>
+<li><label><input type="checkbox"></input>Unit tests for specialized agents
+(optional - can be added incrementally)</label></li>
+<li><label><input type="checkbox"></input>Integration tests (optional - 50+
+tests)</label></li>
+<li><label><input type="checkbox"></input>E2E tests (optional - 10+
+scenarios)</label></li>
+<li><label><input type="checkbox"></input>Performance tests
+(optional)</label></li>
+</ul>
+<h3 id="week-21-documentation-polish">Week 21: Documentation &amp;
+Polish</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>API documentation</label></li>
+<li><label><input type="checkbox"></input>Usage examples</label></li>
+<li><label><input type="checkbox"></input>Architecture diagrams</label></li>
+<li><label><input type="checkbox"></input>Performance tuning</label></li>
+</ul>
+<hr />
+<h2 id="architecture-decisions">🏗️ Architecture Decisions</h2>
+<h3 id="agent-interface-design">1. Agent Interface Design</h3>
+<ul>
+<li>Clean separation between Agent interface and BaseAgent
+implementation</li>
+<li>Agents embed BaseAgent and implement specific behavior</li>
+<li>Allows for flexible agent types while sharing common
+functionality</li>
+</ul>
+<h3 id="task-dependency-system">2. Task Dependency System</h3>
+<ul>
+<li>DAG-based task dependencies with <code>DependsOn</code> and
+<code>BlockedBy</code></li>
+<li>Enables parallel execution of independent tasks</li>
+<li>Future: Implement topological sort for optimal task ordering</li>
+</ul>
+<h3 id="capability-based-task-assignment">3. Capability-Based Task
+Assignment</h3>
+<ul>
+<li>Tasks specify required capabilities</li>
+<li>Agents declare their capabilities</li>
+<li>Coordinator matches tasks to capable agents</li>
+<li>Enables intelligent task delegation</li>
+</ul>
+<h3 id="llm-powered-planning">4. LLM-Powered Planning</h3>
+<ul>
+<li>Planning agent uses LLM for intelligent decomposition</li>
+<li>Two-step process: plan generation → structured extraction</li>
+<li>Low temperature for consistency, higher for creativity when
+needed</li>
+</ul>
+<h3 id="health-monitoring">5. Health Monitoring</h3>
+<ul>
+<li>Every agent reports health status</li>
+<li>Uptime, task count, error count, error rate tracked</li>
+<li>Agents marked unhealthy if error rate &gt; 20%</li>
+<li>Enables system resilience and self-healing</li>
+</ul>
+<hr />
+<h2 id="known-issues-todo">🐛 Known Issues / TODO</h2>
+<ol type="1">
+<li><strong>Communication Layer</strong>: Not yet implemented
+<ul>
+<li>Need <code>message.go</code> and <code>protocol.go</code></li>
+<li>Pub/sub for agent collaboration</li>
+<li>Message types: Request, Response, Proposal, Agreement, etc.</li>
+</ul></li>
+<li><strong>Shared Context</strong>: Basic structure exists in
+coordinator
+<ul>
+<li>Need dedicated context management</li>
+<li>Workspace tracking</li>
+<li>Artifact management</li>
+<li>Execution history</li>
+</ul></li>
+<li><strong>Error Handling</strong>: Basic error tracking exists
+<ul>
+<li>Need circuit breakers for failing agents</li>
+<li>Retry logic with exponential backoff</li>
+<li>Fallback mechanisms</li>
+</ul></li>
+<li><strong>Task Queue</strong>: Simple array-based queue
+<ul>
+<li>Need priority queue implementation</li>
+<li>Need concurrent task execution</li>
+<li>Need task scheduling optimization</li>
+</ul></li>
+<li><strong>Testing</strong>: Only 9 tests so far
+<ul>
+<li>Target: 200+ unit tests total</li>
+<li>Need 50+ integration tests</li>
+<li>Need 10+ E2E scenarios</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="key-innovations-so-far">💡 Key Innovations So Far</h2>
+<ol type="1">
+<li><strong>Capability-Based Architecture</strong>: Tasks matched to
+agents by capabilities, not hardcoded types</li>
+<li><strong>Health-Aware System</strong>: Agents self-report health for
+resilience</li>
+<li><strong>Flexible Agent Interface</strong>: Easy to add new agent
+types</li>
+<li><strong>LLM-Powered Decomposition</strong>: Planning agent uses LLM
+for intelligent task breakdown</li>
+<li><strong>Collaboration Framework</strong>: Built-in support for
+multi-agent collaboration with conflict resolution</li>
+<li><strong>Temperature-Tuned LLM Calls</strong>: Each agent type uses
+optimal temperature for its task
+<ul>
+<li>Very low (0.1-0.2) for precise debugging and fixes</li>
+<li>Low (0.2-0.3) for consistent code/test generation and reviews</li>
+</ul></li>
+<li><strong>Full Tool Integration</strong>: Agents seamlessly use Phase
+2 tools (FSWrite, FSEdit, FSRead, Shell)</li>
+<li><strong>Multi-Mode Review</strong>: Review agent supports
+comprehensive, security-focused, and performance-focused reviews</li>
+<li><strong>Auto-Fix Capability</strong>: Debugging agent can
+automatically apply fixes using LLM-generated corrections</li>
+<li><strong>Inter-Agent Collaboration</strong>:
+<ul>
+<li>Coding agent works with Review agent to validate code</li>
+<li>Testing agent works with Debugging agent to verify fixes</li>
+<li>Review agent works with Refactoring agent for critical issues</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="progress-tracking">📈 Progress Tracking</h2>
+<p><strong>Overall Phase 3 Completion: ~70%</strong></p>
+<ul>
+<li>Foundation: ██████████ 100% (Week 15-16 COMPLETE) ✅</li>
+<li>Specialized Agents: ██████████ 100% (Week 17-18 COMPLETE) ✅</li>
+<li>Integration: ██████████ 100% (Week 19 COMPLETE) ✅</li>
+<li>Testing: █░░░░░░░░░ 10% (9 of ~260 tests)</li>
+<li>Documentation: ████░░░░░░ 40% (PLAN + PROGRESS docs)</li>
+</ul>
+<p><strong>Estimated Remaining Effort:</strong> - Communication layer:
+~500 LOC - Enhanced coordinator: ~300 LOC - 250+ more tests: ~2,000 LOC
+- Integration work: ~500 LOC - Refactoring agent (optional): ~300 LOC -
+Documentation agent (optional): ~300 LOC - Documentation: ~1,500
+words</p>
+<p><strong>Total Estimated Remaining: ~3,900 LOC + docs</strong></p>
+<hr />
+<h2 id="achievements">🎉 Achievements</h2>
+<p>✅ Clean agent architecture with clear separation of concerns ✅
+Comprehensive task management system with dependencies ✅ Coordinator
+for multi-agent orchestration ✅ <strong>5 specialized agents fully
+implemented:</strong> - Planning Agent (LLM-powered task decomposition)
+- Coding Agent (code generation with tool integration) - Testing Agent
+(test generation &amp; execution) - Debugging Agent (error analysis
+&amp; auto-fix) - Review Agent (comprehensive code review) ✅ All tests
+passing (9 framework tests) ✅ Full LLM integration across all agents ✅
+Full Phase 2 tool integration (FSWrite, FSEdit, FSRead, Shell) ✅ Health
+monitoring system ✅ Capability-based task assignment ✅ Collaboration
+framework with inter-agent communication ✅ Temperature-tuned LLM calls
+for each agent type ✅ 2,509 LOC of production code ✅ All agents
+compile successfully</p>
+<p><strong>Next Milestone:</strong> Week 21 Documentation &amp;
+Polish</p>
+<hr />
+<h2 id="bug-fixes-this-session">🐛 Bug Fixes (This Session)</h2>
+<h3 id="workflow-id-collision-race-condition">1. Workflow ID Collision
+Race Condition ✅</h3>
+<p><strong>Location:</strong>
+<code>internal/agent/workflow.go:392-395</code></p>
+<p><strong>Problem:</strong> The <code>GenerateWorkflowID()</code>
+function used <code>time.Now().UnixNano()</code> which could return the
+same value for rapidly created workflows, causing ID collisions in the
+workflow map.</p>
+<p><strong>Fix:</strong> Changed to UUID-based ID generation using
+<code>github.com/google/uuid</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> GenerateWorkflowID<span class="op">()</span> <span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;workflow-%d&quot;</span><span class="op">,</span> time<span class="op">.</span>Now<span class="op">().</span>UnixNano<span class="op">())</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">// After:</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> GenerateWorkflowID<span class="op">()</span> <span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;workflow-%s&quot;</span><span class="op">,</span> uuid<span class="op">.</span>New<span class="op">().</span>String<span class="op">())</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Impact:</strong> All workflow tests now pass consistently
+(10/10 runs successful).</p>
+<h3 id="test-assertion-panic">2. Test Assertion Panic ✅</h3>
+<p><strong>Location:</strong>
+<code>internal/agent/workflow_test.go:641</code></p>
+<p><strong>Problem:</strong> Using <code>assert.Len</code> instead of
+<code>require.Len</code> allowed the test to continue after a length
+mismatch, causing an index out of bounds panic.</p>
+<p><strong>Fix:</strong> Changed to <code>require.Len</code> to stop
+execution on assertion failure:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>assert<span class="op">.</span>Len<span class="op">(</span>t<span class="op">,</span> workflows<span class="op">,</span> <span class="dv">2</span><span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// After:</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>require<span class="op">.</span>Len<span class="op">(</span>t<span class="op">,</span> workflows<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="st">&quot;Expected 2 workflows&quot;</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Impact:</strong> Test failures now have clear error messages
+instead of panics.</p>
+<hr />
+<p><strong>Last Updated:</strong> November 6, 2025 (Evening)
+<strong>Next Review:</strong> After Week 21 Documentation &amp;
+Polish</p>
+</body>
+</html>

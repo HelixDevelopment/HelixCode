@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MASTER_IMPLEMENTATION_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MASTER_IMPLEMENTATION_PLAN</h1>
+</header>
+<h1 id="master-implementation-plan-path-to-100-completion">Master
+Implementation Plan: Path to 100% Completion</h1>
+<p><strong>Project:</strong> HelixCode <strong>Target Date:</strong>
+February 2026 (10-Week Plan) <strong>Goal:</strong> 100% Feature
+Completion, Test Coverage, and Documentation.</p>
+<h2 id="phase-1-foundation-critical-providers-weeks-1-2">Phase 1:
+Foundation &amp; Critical Providers (Weeks 1-2)</h2>
+<p><strong>Focus:</strong> Closing critical gaps in LLM support and
+stabilizing core modules.</p>
+<h3 id="critical-llm-providers">1.1. Critical LLM Providers</h3>
+<ul>
+<li><strong>Task 1.1.1</strong>: Implement
+<code>AnthropicProvider</code>
+(<code>internal/llm/anthropic_provider.go</code>).
+<ul>
+<li>Support Claude 3.5 Sonnet, 3.7 Sonnet, Opus.</li>
+<li>Implement <code>Generate</code> and
+<code>GenerateStream</code>.</li>
+</ul></li>
+<li><strong>Task 1.1.2</strong>: Implement <code>GeminiProvider</code>
+(<code>internal/llm/gemini_provider.go</code>).
+<ul>
+<li>Support Gemini 2.0 Flash, 1.5 Pro.</li>
+<li>Implement Native Multimodal support.</li>
+</ul></li>
+<li><strong>Task 1.1.3</strong>: Update <code>ProviderFactory</code> to
+register new providers.</li>
+</ul>
+<h3 id="core-test-coverage-the-safety-net">1.2. Core Test Coverage (The
+“Safety Net”)</h3>
+<ul>
+<li><strong>Task 1.2.1</strong>: <code>internal/task</code> Module.
+<ul>
+<li>Create <code>task_test.go</code> with
+<code>testify/mock</code>.</li>
+<li>Cover <code>CreateTask</code>, <code>UpdateTask</code>,
+<code>GetTask</code>, <code>DeleteTask</code>.</li>
+<li><strong>Goal</strong>: &gt;80% Coverage.</li>
+</ul></li>
+<li><strong>Task 1.2.2</strong>: <code>internal/auth</code> Module.
+<ul>
+<li>Add integration tests for JWT flow.</li>
+<li>Test session expiry and renewal.</li>
+<li><strong>Goal</strong>: &gt;80% Coverage.</li>
+</ul></li>
+</ul>
+<h3 id="configuration-api-fixes">1.3. Configuration API Fixes</h3>
+<ul>
+<li><strong>Task 1.3.1</strong>: Implement <code>RestoreConfig</code>
+and <code>ReloadConfig</code> in
+<code>internal/config/config_api.go</code>.</li>
+<li><strong>Task 1.3.2</strong>: Implement WebSocket handlers for live
+config updates.</li>
+</ul>
+<h2 id="phase-2-core-feature-completion-weeks-3-4">Phase 2: Core Feature
+Completion (Weeks 3-4)</h2>
+<p><strong>Focus:</strong> Enterprise readiness and completing the
+Memory system.</p>
+<h3 id="enterprise-providers">2.1. Enterprise Providers</h3>
+<ul>
+<li><strong>Task 2.1.1</strong>: Implement <code>BedrockProvider</code>
+(AWS).</li>
+<li><strong>Task 2.1.2</strong>: Implement <code>AzureProvider</code>
+(Microsoft).</li>
+<li><strong>Task 2.1.3</strong>: Add authentication strategies (IAM,
+Entra ID).</li>
+</ul>
+<h3 id="memory-system-completion">2.2. Memory System Completion</h3>
+<ul>
+<li><strong>Task 2.2.1</strong>: Complete <code>WeaviateProvider</code>.
+<ul>
+<li>Implement <code>Store</code>, <code>Retrieve</code>,
+<code>Search</code> methods (currently stubs).</li>
+</ul></li>
+<li><strong>Task 2.2.2</strong>: Implement <code>Mem0Provider</code> and
+<code>BaseAIProvider</code>.</li>
+</ul>
+<h3 id="tool-system-expansion">2.3. Tool System Expansion</h3>
+<ul>
+<li><strong>Task 2.3.1</strong>: Implement <code>FileSystemTool</code>
+(Read, Write, Search, Diff).</li>
+<li><strong>Task 2.3.2</strong>: Implement <code>ShellTool</code> with
+sandbox/timeout.</li>
+</ul>
+<h2 id="phase-3-advanced-capabilities-weeks-5-6">Phase 3: Advanced
+Capabilities (Weeks 5-6)</h2>
+<p><strong>Focus:</strong> Differentiating features and UI polish.</p>
+<h3 id="advanced-llm-features">3.1. Advanced LLM Features</h3>
+<ul>
+<li><strong>Task 3.1.1</strong>: Implement <strong>Extended
+Thinking</strong> (Claude).
+<ul>
+<li>Add <code>reasoning_effort</code> param.</li>
+</ul></li>
+<li><strong>Task 3.1.2</strong>: Implement <strong>Prompt
+Caching</strong> (Anthropic/DeepSeek).
+<ul>
+<li>Add cache control headers and logic.</li>
+</ul></li>
+</ul>
+<h3 id="web-editing-tools">3.2. Web &amp; Editing Tools</h3>
+<ul>
+<li><strong>Task 3.2.1</strong>: Implement <code>WebSearchTool</code>
+and <code>WebFetchTool</code>.</li>
+<li><strong>Task 3.2.2</strong>: Implement
+<code>MultiFileEditTool</code> (Atomic transactions).</li>
+</ul>
+<h3 id="ui-enhancements">3.3. UI Enhancements</h3>
+<ul>
+<li><strong>Task 3.3.1</strong>: Update Terminal UI
+(<code>applications/terminal_ui</code>).
+<ul>
+<li>Add “New Task” form.</li>
+<li>Add Cognee toggle.</li>
+</ul></li>
+</ul>
+<h2 id="phase-4-enterprise-security-weeks-7-8">Phase 4: Enterprise &amp;
+Security (Weeks 7-8)</h2>
+<p><strong>Focus:</strong> Security, Performance, and remaining
+providers.</p>
+<h3 id="remaining-providers">4.1. Remaining Providers</h3>
+<ul>
+<li><strong>Task 4.1.1</strong>: Implement <code>VertexAIProvider</code>
+and <code>GroqProvider</code>.</li>
+<li><strong>Task 4.1.2</strong>: Implement
+<code>MistralProvider</code>.</li>
+</ul>
+<h3 id="security-performance">4.2. Security &amp; Performance</h3>
+<ul>
+<li><strong>Task 4.2.1</strong>: Conduct Security Audit (OWASP).</li>
+<li><strong>Task 4.2.2</strong>: Run Performance Benchmarks with new
+providers.</li>
+<li><strong>Task 4.2.3</strong>: Implement Rate Limiting and Cost
+Tracking.</li>
+</ul>
+<h2 id="phase-5-documentation-education-launch-weeks-9-10">Phase 5:
+Documentation, Education &amp; Launch (Weeks 9-10)</h2>
+<p><strong>Focus:</strong> User experience and educational
+resources.</p>
+<h3 id="website-content">5.1. Website Content</h3>
+<ul>
+<li><strong>Task 5.1.1</strong>: Create Landing Page (Features, Hero,
+CTA).</li>
+<li><strong>Task 5.1.2</strong>: Create Documentation Portal
+(Hugo/Jekyll structure).</li>
+<li><strong>Task 5.1.3</strong>: Create Blog/Updates section.</li>
+</ul>
+<h3 id="video-courses">5.2. Video Courses</h3>
+<ul>
+<li><strong>Task 5.2.1</strong>: Develop scripts for “HelixCode
+Fundamentals”.</li>
+<li><strong>Task 5.2.2</strong>: Develop scripts for “Advanced Agentic
+Workflows”.</li>
+<li><strong>Task 5.2.3</strong>: Develop scripts for “Enterprise
+Integration”.</li>
+</ul>
+<h3 id="final-polish">5.3. Final Polish</h3>
+<ul>
+<li><strong>Task 5.3.1</strong>: 100% Test Coverage Verification.</li>
+<li><strong>Task 5.3.2</strong>: Final “Gold Master” Release Build.</li>
+</ul>
+<hr />
+<p><strong>Execution Strategy:</strong> 1. <strong>No Broken
+Windows</strong>: Every commit must pass CI. 2.
+<strong>Test-First</strong>: Write tests for new providers before
+implementation. 3. <strong>Documentation-Driven</strong>: Update docs as
+features are added.</p>
+</body>
+</html>

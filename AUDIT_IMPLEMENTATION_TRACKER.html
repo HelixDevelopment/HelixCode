@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT_IMPLEMENTATION_TRACKER</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AUDIT_IMPLEMENTATION_TRACKER</h1>
+</header>
+<h1 id="helixcode-audit-implementation-tracker">HelixCode Audit
+Implementation Tracker</h1>
+<p><strong>Purpose:</strong> Track progress on fixing all issues
+identified in the Comprehensive Project Audit 2026
+<strong>Created:</strong> 2026-01-10 <strong>Status:</strong> Active</p>
+<hr />
+<h2 id="quick-navigation">Quick Navigation</h2>
+<ul>
+<li><a href="#critical-issues-12-items">Critical Issues</a></li>
+<li><a href="#test-coverage-tasks">Test Coverage Tasks</a></li>
+<li><a href="#api-implementation-tasks">API Implementation
+Tasks</a></li>
+<li><a href="#feature-completion-tasks">Feature Completion
+Tasks</a></li>
+<li><a href="#documentation-tasks">Documentation Tasks</a></li>
+</ul>
+<hr />
+<h2 id="critical-issues-12-items">Critical Issues (12 Items)</h2>
+<h3 id="c1-failing-test---testextractpythonsymbols">C1: Failing Test -
+TestExtractPythonSymbols</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/repomap/repomap_test.go</code></li>
+<li><strong>Issue:</strong> TempDir RemoveAll cleanup failure</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+<li><strong>Verified By:</strong> <em>Pending</em></li>
+</ul>
+<h3 id="c2-stub-compression-methods-11-methods">C2: Stub Compression
+Methods (11 methods)</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/cognee/performance_optimizer.go:1187-1256</code></li>
+<li><strong>Methods:</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>NeuralSymbolicCompression.Compress()</label></li>
+<li><label><input type="checkbox"></input>NeuralSymbolicCompression.Decompress()</label></li>
+<li><label><input type="checkbox"></input>AdaptiveHuffmanCompression.Compress()</label></li>
+<li><label><input type="checkbox"></input>AdaptiveHuffmanCompression.Decompress()</label></li>
+<li><label><input type="checkbox"></input>NeuralEmbeddingCompression.Compress()</label></li>
+<li><label><input type="checkbox"></input>NeuralEmbeddingCompression.Decompress()</label></li>
+<li><label><input type="checkbox"></input>ParallelNeuralSymbolicTraversal.Traverse()</label></li>
+<li><label><input type="checkbox"></input>GPUAcceleratedTraversal.Traverse()</label></li>
+<li><label><input type="checkbox"></input>MemoryOptimizedTraversal.Traverse()</label></li>
+<li><label><input type="checkbox"></input>AdaptiveMemoryAwarePartitioning.Partition()</label></li>
+<li><label><input type="checkbox"></input>NeuralBasedPartitioning.Partition()</label></li>
+</ul></li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c3-config-stub-methods">C3: Config Stub Methods</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong> <code>internal/config/config.go</code></li>
+<li><strong>Methods:</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>UpdateConfigFromMap() (lines
+566-568)</label></li>
+<li><label><input type="checkbox"></input>SaveTemplate() (lines
+1464-1465)</label></li>
+<li><label><input type="checkbox"></input>LoadTemplate() (lines
+1482-1483)</label></li>
+</ul></li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c4-hardcoded-model-alternatives">C4: Hardcoded Model
+Alternatives</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/llm/model_discovery.go:1136-1149</code></li>
+<li><strong>Issue:</strong> Returns hardcoded list instead of querying
+APIs</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c5-hardcoded-usage-analytics">C5: Hardcoded Usage Analytics</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/llm/usage_analytics.go:566,581,583</code></li>
+<li><strong>Issue:</strong> Hardcoded placeholder metrics</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c6-host-optimizer-stub">C6: Host Optimizer Stub</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/cognee/host_optimizer.go:7-18</code></li>
+<li><strong>Issue:</strong> Complete stub returning unchanged
+config</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c7-tree-sitter-placeholder">C7: Tree-sitter Placeholder</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/tools/mapping/treesitter.go:61-62,267-269</code></li>
+<li><strong>Issue:</strong> Placeholder parser implementation</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c8-silent-hardware-detection-failures">C8: Silent Hardware
+Detection Failures</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/hardware/detector.go:44-61</code></li>
+<li><strong>Issue:</strong> Returns success despite all detection
+failures</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c9-cache-error-hiding">C9: Cache Error Hiding</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/task/manager.go:257,263,302,307,337,343</code></li>
+<li><strong>Issue:</strong> Returns nil,nil hiding cache errors</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c10-transaction-verification-incomplete">C10: Transaction
+Verification Incomplete</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/tools/multiedit/transaction.go:354-369</code></li>
+<li><strong>Issue:</strong> Incomplete conflict verification</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c11-zep-provider-query-format">C11: Zep Provider Query
+Format</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/memory/providers/zep_provider.go:478</code></li>
+<li><strong>Issue:</strong> Placeholder query format</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="c12-anima-provider-stub">C12: Anima Provider Stub</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>File:</strong>
+<code>internal/memory/providers/anima_provider.go:33-34</code></li>
+<li><strong>Issue:</strong> Stub AnimaClient</li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<hr />
+<h2 id="test-coverage-tasks">Test Coverage Tasks</h2>
+<h3 id="priority-1-below-50-coverage">Priority 1: Below 50%
+Coverage</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Current</th>
+<th>Target</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/llm</td>
+<td>44.9%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/memory/providers</td>
+<td>46.1%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/workflow/planmode</td>
+<td>39.7%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>shared/mobile-core</td>
+<td>42.6%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>tests/e2e/challenges</td>
+<td>49.0%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="priority-2-50-70-coverage">Priority 2: 50-70% Coverage</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Current</th>
+<th>Target</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/providers</td>
+<td>51.7%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/mapping</td>
+<td>53.8%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/server</td>
+<td>55.1%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools</td>
+<td>55.5%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/browser</td>
+<td>55.1%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/cognee</td>
+<td>59.9%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/voice</td>
+<td>60.2%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/mcp</td>
+<td>61.3%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/focus</td>
+<td>61.3%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/web</td>
+<td>62.3%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/editor/formats</td>
+<td>62.6%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/workflow</td>
+<td>64.7%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/workflow/autonomy</td>
+<td>65.0%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/confirmation</td>
+<td>65.0%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/filesystem</td>
+<td>66.8%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/rules</td>
+<td>66.8%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/hardware</td>
+<td>67.5%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/memory</td>
+<td>67.8%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/shell</td>
+<td>68.2%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/llm/vision</td>
+<td>68.3%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/tools/multiedit</td>
+<td>68.6%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/agent/types</td>
+<td>68.6%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/redis</td>
+<td>69.6%</td>
+<td>80%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="priority-3-applications-very-low">Priority 3: Applications (Very
+Low)</h3>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Current</th>
+<th>Target</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aurora-os</td>
+<td>4.9%</td>
+<td>50%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>harmony-os</td>
+<td>8.5%</td>
+<td>50%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>desktop</td>
+<td>9.1%</td>
+<td>50%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>terminal-ui</td>
+<td>9.6%</td>
+<td>50%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>cmd/cli</td>
+<td>11.9%</td>
+<td>50%</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="priority-4-untested-llm-providers">Priority 4: Untested LLM
+Providers</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>File</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Copilot</td>
+<td>copilot_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>KoboldAI</td>
+<td>koboldai_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>Llama.cpp</td>
+<td>llamacpp_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>ollama_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>openai_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>OpenAI Compatible</td>
+<td>openai_compatible_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>openrouter_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>Tool Provider</td>
+<td>tool_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>xAI</td>
+<td>xai_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>Local Provider</td>
+<td>local_provider.go</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="api-implementation-tasks">API Implementation Tasks</h2>
+<h3 id="mcp-server-management-endpoints">MCP Server Management
+Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/v1/mcp/servers</td>
+<td>GET</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/mcp/servers</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/mcp/servers/:id</td>
+<td>PUT</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/mcp/servers/:id</td>
+<td>DELETE</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/mcp/servers/:id/tools</td>
+<td>GET</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/mcp/servers/:id/tools/:name/execute</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="workflow-statehistory-endpoints">Workflow State/History
+Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/v1/workflows/:id/history</td>
+<td>GET</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/workflows/:id/state</td>
+<td>GET</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/workflows/:id/pause</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/workflows/:id/resume</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/workflows/:id/rollback</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="notification-management-endpoints">Notification Management
+Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Method</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/api/v1/notifications</td>
+<td>GET</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/notifications/rules</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/notifications/channels</td>
+<td>GET</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/notifications/test/:channel</td>
+<td>POST</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>/api/v1/notifications/templates/:id</td>
+<td>PUT</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="feature-completion-tasks">Feature Completion Tasks</h2>
+<h3 id="advanced-reasoning-api">Advanced Reasoning API</h3>
+<ul>
+<li><strong>Status:</strong> [ ] Not Started</li>
+<li><strong>Documentation:</strong> CLI_Specs_5.md, Section 2, lines
+71-82</li>
+<li><strong>Required:</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>GenerateWithReasoning()
+interface</label></li>
+<li><label><input type="checkbox"></input>ReasoningRequest type</label></li>
+<li><label><input type="checkbox"></input>ReasoningResponse type</label></li>
+<li><label><input type="checkbox"></input>Chain-of-thought
+strategy</label></li>
+<li><label><input type="checkbox"></input>Tree-of-thoughts
+strategy</label></li>
+<li><label><input type="checkbox"></input>Provider implementations (Anthropic,
+OpenAI, Azure)</label></li>
+</ul></li>
+<li><strong>Owner:</strong> <em>Unassigned</em></li>
+</ul>
+<h3 id="cli-commands">CLI Commands</h3>
+<table>
+<thead>
+<tr>
+<th>Command Group</th>
+<th>Status</th>
+<th>Subcommands</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>helix worker</td>
+<td>[ ]</td>
+<td>register, list, health, capabilities</td>
+<td></td>
+</tr>
+<tr>
+<td>helix workflow</td>
+<td>[ ]</td>
+<td>history, pause, resume, rollback</td>
+<td></td>
+</tr>
+<tr>
+<td>helix notify</td>
+<td>[ ]</td>
+<td>send, rules, channels, test</td>
+<td></td>
+</tr>
+<tr>
+<td>helix session</td>
+<td>[ ]</td>
+<td>create, list, pause, resume, complete</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="configuration-additions">Configuration Additions</h3>
+<table>
+<thead>
+<tr>
+<th>Config Section</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>reasoning:</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>mcp.servers:</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>notifications: (centralized)</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="documentation-tasks">Documentation Tasks</h2>
+<h3 id="missing-package-readmes">Missing Package READMEs</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/agent</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/workflow</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/session</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/llm/vision</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>internal/project</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="documentation-updates">Documentation Updates</h3>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Task</th>
+<th>Status</th>
+<th>Owner</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLAUDE.md</td>
+<td>Sync with implemented CLI commands</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>API_REFERENCE.md</td>
+<td>Add missing endpoints</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>USER_MANUAL.md</td>
+<td>Update configuration options</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>Video Courses</td>
+<td>Create per VIDEO_COURSE_CURRICULUM.md</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+<tr>
+<td>Website</td>
+<td>Update per documentation</td>
+<td>[ ]</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="progress-tracking">Progress Tracking</h2>
+<h3 id="daily-standup-format">Daily Standup Format</h3>
+<pre><code>Date: YYYY-MM-DD
+Completed:
+- [item]
+
+In Progress:
+- [item]
+
+Blocked:
+- [item] - reason
+
+Next:
+- [item]</code></pre>
+<h3 id="weekly-summary-format">Weekly Summary Format</h3>
+<pre><code>Week: [number]
+Critical Issues Fixed: X/12
+Test Coverage Delta: +X.X%
+API Endpoints Added: X/16
+Tests Added: X
+Documentation Pages Updated: X</code></pre>
+<hr />
+<h2 id="verification-commands">Verification Commands</h2>
+<h3 id="run-all-tests">Run All Tests</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="ex">go</span> test ./...</span></code></pre></div>
+<h3 id="check-coverage">Check Coverage</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="ex">go</span> test <span class="at">-cover</span> ./...</span></code></pre></div>
+<h3 id="check-specific-package">Check Specific Package</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="ex">go</span> test <span class="at">-cover</span> <span class="at">-v</span> ./internal/llm/...</span></code></pre></div>
+<h3 id="generate-coverage-report">Generate Coverage Report</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="ex">go</span> test <span class="at">-coverprofile</span><span class="op">=</span>coverage.out ./...</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="ex">go</span> tool cover <span class="at">-html</span><span class="op">=</span>coverage.out <span class="at">-o</span> coverage.html</span></code></pre></div>
+<h3 id="verify-build">Verify Build</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="fu">make</span> build</span></code></pre></div>
+<h3 id="run-linter">Run Linter</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode <span class="kw">&amp;&amp;</span> <span class="fu">make</span> lint</span></code></pre></div>
+<hr />
+<h2 id="notes">Notes</h2>
+<h3 id="session-resume-instructions">Session Resume Instructions</h3>
+<ol type="1">
+<li>Read this file to understand current state</li>
+<li>Check last “Daily Standup” entry</li>
+<li>Continue from last “In Progress” items</li>
+<li>Update tracker after completing items</li>
+</ol>
+<h3 id="quality-verification">Quality Verification</h3>
+<p>Each completed item must be verified: 1. Tests pass locally 2.
+Coverage improved (if applicable) 3. No new linter warnings 4.
+Documentation updated (if applicable) 5. Second review by team
+member</p>
+<hr />
+<p><strong>Tracker Version:</strong> 1.0 <strong>Last Updated:</strong>
+2026-01-10</p>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PLANDEX_QUICK_REFERENCE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PLANDEX_QUICK_REFERENCE</h1>
+</header>
+<h1 id="plandex-quick-reference-for-helixcode-porting">Plandex Quick
+Reference for HelixCode Porting</h1>
+<h2 id="architecture-at-a-glance">Architecture at a Glance</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Plandex Architecture                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  CLI (Go/TypeScript)                                         │
+│  ├─ REPL with fuzzy autocomplete                            │
+│  ├─ Streaming response handling                             │
+│  └─ File system operations                                  │
+│                           │                                  │
+│                           ▼                                  │
+│  REST API (Go - Gorilla Mux)                                │
+│  ├─ Port 8099                                               │
+│  ├─ WebSocket support                                       │
+│  └─ Streaming response endpoints                            │
+│                           │                                  │
+│        ┌──────────────────┼──────────────────┐              │
+│        ▼                  ▼                  ▼               │
+│   Database         LiteLLM Proxy      Git Integration       │
+│   PostgreSQL       (Python)            (Go)                 │
+│   (8000+ lines     Port 4000           Auto-commit          │
+│    schema)         OAuth Support       Commit msgs          │
+│                    Streaming           Revert support       │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h2 id="provider-fallback-chain">Provider Fallback Chain</h2>
+<pre><code>Requested Model
+     │
+     ▼
+┌─────────────────────┐
+│  Direct Provider    │  OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.
+│  (OpenAI, etc)      │  ✓ Preferred if set
+└─────────────────────┘
+     │ (if unavailable or fails)
+     ▼
+┌─────────────────────┐
+│   OpenRouter        │  OPENROUTER_API_KEY
+│   (Aggregator)      │  ✓ Fallback option
+└─────────────────────┘
+     │ (if unavailable)
+     ▼
+┌─────────────────────┐
+│  Error/Manual       │  User intervention required
+└─────────────────────┘</code></pre>
+<h2 id="core-features-matrix">Core Features Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Implementation</th>
+<th>Key Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Plans</strong></td>
+<td>Conv.-like tasks</td>
+<td><code>server/db/plan_helpers.go</code></td>
+</tr>
+<tr>
+<td><strong>Context</strong></td>
+<td>Files + URLs + Images</td>
+<td><code>server/syntax/file_map/</code></td>
+</tr>
+<tr>
+<td><strong>Diffs</strong></td>
+<td>Git-based review</td>
+<td><code>server/diff/diff.go</code></td>
+</tr>
+<tr>
+<td><strong>Roles</strong></td>
+<td>Specialized models</td>
+<td><code>shared/ai_models_roles.go</code></td>
+</tr>
+<tr>
+<td><strong>Autonomy</strong></td>
+<td>5 levels + flags</td>
+<td><code>shared/plan_config.go</code></td>
+</tr>
+<tr>
+<td><strong>Versioning</strong></td>
+<td>Full history</td>
+<td><code>server/db/</code> (50+ migrations)</td>
+</tr>
+<tr>
+<td><strong>Execution</strong></td>
+<td>Build/test/deploy</td>
+<td><code>server/model/plan/build_*.go</code></td>
+</tr>
+<tr>
+<td><strong>Debugging</strong></td>
+<td>Browser + Terminal</td>
+<td>Auto-screenshot capture</td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-model-roles">Key Model Roles</h2>
+<pre><code>User Prompt
+    │
+    ▼ (Planning Phase)
+┌───────────────────────────┐
+│  Planner/Architect Role   │  Large context, good reasoning
+│  + Load Context           │  Selects relevant files
+└───────────────────────────┘
+    │
+    ▼ (Implementation Phase)
+┌───────────────────────────┐
+│  Coder/Builder Roles      │  Instruction following, precise
+│  Smart Context Filtering  │  Only loads files for this step
+└───────────────────────────┘
+    │
+    ▼ (File Application)
+┌───────────────────────────┐
+│  Whole-File-Builder       │  Fallback if targeted edits fail
+│  (Optional)               │
+└───────────────────────────┘</code></pre>
+<h2 id="autonomy-levels">Autonomy Levels</h2>
+<pre><code>None         Manual everything (pure sandbox)
+    │
+    ├─► Basic     Auto-continue + auto-build
+    │
+    ├─► Plus      Smart context + manual exec + auto-commit
+    │
+    ├─► Semi      Auto-load context + manual apply (DEFAULT)
+    │
+    └─► Full      Complete automation with rollback</code></pre>
+<p>Each level overridable with individual flags: -
+<code>auto-continue</code> (manual → auto plan continuation) -
+<code>auto-build</code> (manual → auto file diff building) -
+<code>auto-apply</code> (manual → auto change application) -
+<code>auto-exec</code> (manual → auto command execution) -
+<code>auto-debug</code> (manual → auto error debugging) -
+<code>auto-commit</code> (manual → auto git commits)</p>
+<h2 id="supported-providers-summary">Supported Providers Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Type</th>
+<th>Auth</th>
+<th>Key Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td>Direct</td>
+<td>API Key</td>
+<td>JSON, strict schemas, latest models</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>Direct</td>
+<td>API Key</td>
+<td>Claude Max subscription support</td>
+</tr>
+<tr>
+<td>Google AI Studio</td>
+<td>Direct</td>
+<td>API Key</td>
+<td>Gemini, free tier available</td>
+</tr>
+<tr>
+<td>Google Vertex</td>
+<td>Enterprise</td>
+<td>Service Account</td>
+<td>Bedrock, high volume</td>
+</tr>
+<tr>
+<td>Azure OpenAI</td>
+<td>Cloud</td>
+<td>API Key + URL</td>
+<td>Enterprise deployment</td>
+</tr>
+<tr>
+<td>AWS Bedrock</td>
+<td>Cloud</td>
+<td>IAM/Env</td>
+<td>Anthropic via AWS</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>Aggregator</td>
+<td>API Key</td>
+<td>100+ models, failover</td>
+</tr>
+<tr>
+<td>DeepSeek</td>
+<td>Direct</td>
+<td>API Key</td>
+<td>R1 reasoning models</td>
+</tr>
+<tr>
+<td>Perplexity</td>
+<td>Direct</td>
+<td>API Key</td>
+<td>Web-aware reasoning</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>Local</td>
+<td>None</td>
+<td>Local inference, free</td>
+</tr>
+<tr>
+<td>Custom</td>
+<td>Self-hosted</td>
+<td>Config</td>
+<td>OpenAI-compatible endpoints</td>
+</tr>
+</tbody>
+</table>
+<h2 id="database-schema-essentials">Database Schema (Essentials)</h2>
+<pre><code>Plans                    Contexts
+├─ id                    ├─ id
+├─ name                  ├─ path (file/url/image)
+├─ status                ├─ type
+├─ autonomy_config       ├─ content
+├─ model_settings        └─ versions
+└─ versions
+    │
+    ├─ Messages         Pending Changes
+    │ ├─ role          ├─ file_path
+    │ ├─ content       ├─ replacements
+    │ └─ streaming_data└─ status
+
+Branches &amp; Git
+├─ plan branches
+├─ git commits
+└─ rewind tracking</code></pre>
+<h2 id="file-edit-fallback-chain">File Edit Fallback Chain</h2>
+<pre><code>Proposed Edit
+    │
+    ▼
+Tree-sitter Structured Edit (Targeted)
+    │
+    ├─ Success → Apply
+    │
+    └─ Fail
+        │
+        ▼
+    Syntax Validation &amp; Fix
+        │
+        ├─ Success → Apply
+        │
+        └─ Fail
+            │
+            ▼
+        Whole-File Builder Role Rewrite
+            │
+            ├─ Success → Apply
+            │
+            └─ Fail
+                │
+                ▼
+            Alternative Builder Approach
+                │
+                ├─ Success → Apply
+                │
+                └─ Fail → Manual User Fix</code></pre>
+<h2 id="context-management-pipeline">Context Management Pipeline</h2>
+<pre><code>1. Discovery
+   └─ Tree-sitter project map generation
+      (30+ languages, 20M+ token support)
+
+2. Selection
+   └─ Architect role selects relevant files
+      using project map + prompt
+
+3. Filtering (Smart Context)
+   └─ Load only files relevant to current step
+      (slides context window up/down)
+
+4. Caching (Optional)
+   └─ Apply prompt cache directives for
+      Anthropic, OpenAI, Google</code></pre>
+<h2 id="configuration-hierarchy">Configuration Hierarchy</h2>
+<pre><code>Preset Autonomy Level
+├─ none, basic, plus, semi, full
+├─ Each has standard flags preset
+└─ Individual flags override:
+    ├─ auto-continue (true/false)
+    ├─ auto-build (true/false)
+    ├─ auto-apply (true/false)
+    ├─ auto-exec (true/false)
+    ├─ auto-debug (true/false)
+    ├─ auto-commit (true/false)
+    ├─ auto-load-context (true/false)
+    ├─ smart-context (true/false)
+    └─ auto-update-context (true/false)</code></pre>
+<h2 id="model-pack-overview-16-built-in">Model Pack Overview (16
+Built-in)</h2>
+<p><strong>General Purpose:</strong> - DailyDriver (default) - balanced
+- Strong - maximum capability - Cheap - cost optimized - OSS - open
+source only</p>
+<p><strong>Provider Specific:</strong> - AnthropicOnly, OpenAIOnly,
+GoogleOnly - OpusPlanner, O3Planner, R1Planner - GeminiPlanner,
+PerplexityPlanner</p>
+<p><strong>Local/Experimental:</strong> - OllamaExperimental -
+OllamaAdaptiveOSS - OllamaAdaptiveDaily (hybrid)</p>
+<p><strong>Specialized:</strong> - Reasoning (o3-mini based)</p>
+<h2 id="critical-implementation-files">Critical Implementation
+Files</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Files</th>
+<th>LOC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB Schema</td>
+<td><code>server/db/*.go</code></td>
+<td>8,351</td>
+</tr>
+<tr>
+<td>Models Config</td>
+<td><code>shared/ai_models_*.go</code></td>
+<td>120K+</td>
+</tr>
+<tr>
+<td>Plan Execution</td>
+<td><code>server/model/plan/</code></td>
+<td>~2K</td>
+</tr>
+<tr>
+<td>Handlers</td>
+<td><code>server/handlers/</code></td>
+<td>~10K</td>
+</tr>
+<tr>
+<td>Syntax/Edits</td>
+<td><code>server/syntax/</code></td>
+<td>~80K</td>
+</tr>
+<tr>
+<td>CLI Commands</td>
+<td><code>cli/cmd/</code></td>
+<td>~15K</td>
+</tr>
+</tbody>
+</table>
+<h2 id="credential-discovery-environment-first">Credential Discovery
+(Environment First)</h2>
+<pre><code>For each provider:
+1. Check specific env var (OPENAI_API_KEY, etc)
+2. For AWS: Check PLANDEX_AWS_PROFILE first
+3. For AWS: Fall back to AWS credential chain
+4. For Google: Check service account file/JSON string/base64
+5. For Anthropic: Support OAuth tokens (sk-ant-oat*)
+6. For Azure: Require both API_KEY and API_BASE</code></pre>
+<h2 id="key-differences-from-standard-chatgptclaude">Key Differences
+from Standard ChatGPT/Claude</h2>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 34%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Plandex</th>
+<th>ChatGPT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Context</td>
+<td>Project-aware + file loading</td>
+<td>Conversation only</td>
+</tr>
+<tr>
+<td>Changes</td>
+<td>Sandboxed diffs with approval</td>
+<td>Direct file writing</td>
+</tr>
+<tr>
+<td>Versioning</td>
+<td>Full plan history + branching</td>
+<td>Conversation history only</td>
+</tr>
+<tr>
+<td>Execution</td>
+<td>Auto build/test/deploy with rollback</td>
+<td>No command execution</td>
+</tr>
+<tr>
+<td>Models</td>
+<td>Role-based routing</td>
+<td>Single model per session</td>
+</tr>
+<tr>
+<td>Autonomy</td>
+<td>5 configurable levels</td>
+<td>None/Full only</td>
+</tr>
+<tr>
+<td>Context Size</td>
+<td>2M tokens effective</td>
+<td>Limited per request</td>
+</tr>
+<tr>
+<td>Debugging</td>
+<td>Browser + terminal snapshots</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quick-start-for-helixcode-integration">Quick Start for HelixCode
+Integration</h2>
+<h3 id="phase-1-foundation-weeks-1-3">Phase 1: Foundation (Weeks
+1-3)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Implement LiteLLM proxy
+abstraction</label></li>
+<li><label><input type="checkbox"></input>Set up provider fallback
+chain</label></li>
+<li><label><input type="checkbox"></input>Create role-based model
+routing</label></li>
+<li><label><input type="checkbox"></input>Store model configs in
+database</label></li>
+</ul>
+<h3 id="phase-2-context-storage-weeks-4-6">Phase 2: Context &amp;
+Storage (Weeks 4-6)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Build context management
+pipeline</label></li>
+<li><label><input type="checkbox"></input>Implement project map
+generation</label></li>
+<li><label><input type="checkbox"></input>Create plan version storage
+schema</label></li>
+<li><label><input type="checkbox"></input>Build smart context
+filtering</label></li>
+</ul>
+<h3 id="phase-3-execution-review-weeks-7-9">Phase 3: Execution &amp;
+Review (Weeks 7-9)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Implement diff generation and
+review</label></li>
+<li><label><input type="checkbox"></input>Build change application
+logic</label></li>
+<li><label><input type="checkbox"></input>Create autonomy level
+system</label></li>
+<li><label><input type="checkbox"></input>Add execution tracking</label></li>
+</ul>
+<h3 id="phase-4-polish-integration-weeks-10-12">Phase 4: Polish &amp;
+Integration (Weeks 10-12)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Browser debugging
+integration</label></li>
+<li><label><input type="checkbox"></input>Git auto-commit
+functionality</label></li>
+<li><label><input type="checkbox"></input>Plan branching and
+rewind</label></li>
+<li><label><input type="checkbox"></input>Full CLI integration</label></li>
+</ul>
+<h2 id="environment-variables-quick-reference">Environment Variables
+Quick Reference</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Providers</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span>sk-...</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_ORG_ID</span><span class="op">=</span>org-... <span class="kw">(</span><span class="ex">optional</span><span class="kw">)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span>sk-ant-...</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="va">GEMINI_API_KEY</span><span class="op">=</span>...</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="va">AZURE_OPENAI_API_KEY</span><span class="op">=</span>...</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="va">AZURE_API_BASE</span><span class="op">=</span>...</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="va">AZURE_API_VERSION</span><span class="op">=</span>2025-04-01-preview <span class="kw">(</span><span class="ex">optional</span><span class="kw">)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="va">AWS_ACCESS_KEY_ID</span><span class="op">=</span>...</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="va">AWS_SECRET_ACCESS_KEY</span><span class="op">=</span>...</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="va">AWS_REGION</span><span class="op">=</span>...</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="va">PLANDEX_AWS_PROFILE</span><span class="op">=</span>... <span class="kw">(</span><span class="cf">for</span> credential <span class="fu">file</span><span class="kw">)</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="va">DEEPSEEK_API_KEY</span><span class="op">=</span>...</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="va">PERPLEXITY_API_KEY</span><span class="op">=</span>...</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="va">OPENROUTER_API_KEY</span><span class="op">=</span>...</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Google Vertex</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="va">GOOGLE_APPLICATION_CREDENTIALS</span><span class="op">=</span>/path/or/json/or/base64</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="va">VERTEXAI_PROJECT</span><span class="op">=</span>...</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="va">VERTEXAI_LOCATION</span><span class="op">=</span>...</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Local</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="va">OLLAMA_BASE_URL</span><span class="op">=</span>http://localhost:11434</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Database</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="va">DATABASE_URL</span><span class="op">=</span>postgres://user:pass@host:5432/db</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Server</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="va">GOENV</span><span class="op">=</span>development<span class="kw">|</span><span class="ex">production</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="va">LOCAL_MODE</span><span class="op">=</span>1 <span class="kw">(</span><span class="cf">for</span> self<span class="ex">-hosting</span><span class="kw">)</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="va">PLANDEX_BASE_DIR</span><span class="op">=</span>/path/to/data</span></code></pre></div>
+</body>
+</html>

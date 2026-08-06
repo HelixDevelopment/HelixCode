@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HELIXCODE_ARCHITECTURE_CONSISTENCY_REPORT</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HELIXCODE_ARCHITECTURE_CONSISTENCY_REPORT</h1>
+</header>
+<h1 id="helixcode-architecture-consistency-report">HelixCode
+Architecture Consistency Report</h1>
+<p><strong>Generated:</strong> 2025-01-06 <strong>Analyzed
+Providers:</strong> Anthropic, OpenAI, Gemini, Bedrock, Ollama, XAI,
+Qwen, Groq, Azure, VertexAI, OpenRouter, Copilot</p>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This report analyzes the consistency of LLM provider implementations
+across HelixCode’s architecture. Overall, the codebase demonstrates
+<strong>strong architectural consistency</strong> with a unified
+Provider interface, consistent request/response structures, and
+standardized feature support patterns. However, several areas could
+benefit from improvements in feature availability documentation, error
+handling standardization, and testing coverage.</p>
+<p><strong>Overall Score: 8.5/10</strong> - Well-architected with minor
+inconsistencies</p>
+<hr />
+<h2 id="provider-interface-consistency">1. Provider Interface
+Consistency</h2>
+<h3 id="status-excellent">✅ <strong>Status: EXCELLENT</strong></h3>
+<p>All providers correctly implement the <code>Provider</code> interface
+defined in
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/provider.go</code>
+(lines 117-132).</p>
+<h3 id="interface-methods">Interface Methods</h3>
+<p><strong>Required Methods:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>GetType<span class="op">()</span> ProviderType</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>GetName<span class="op">()</span> <span class="dt">string</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>GetModels<span class="op">()</span> <span class="op">[]</span>ModelInfo</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>GetCapabilities<span class="op">()</span> <span class="op">[]</span>ModelCapability</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>Generate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> request <span class="op">*</span>LLMRequest<span class="op">)</span> <span class="op">(*</span>LLMResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>GenerateStream<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> request <span class="op">*</span>LLMRequest<span class="op">,</span> ch <span class="kw">chan</span><span class="op">&lt;-</span> LLMResponse<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>IsAvailable<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>GetHealth<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(*</span>ProviderHealth<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>Close<span class="op">()</span> <span class="dt">error</span></span></code></pre></div>
+<p><strong>Implementation Status:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Interface Complete</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic</td>
+<td>✅</td>
+<td>Full implementation</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>✅</td>
+<td>Full implementation</td>
+</tr>
+<tr>
+<td>Gemini</td>
+<td>✅</td>
+<td>Full implementation</td>
+</tr>
+<tr>
+<td>Bedrock</td>
+<td>✅</td>
+<td>Full implementation with multi-model support</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>✅</td>
+<td>Full implementation</td>
+</tr>
+<tr>
+<td>XAI</td>
+<td>✅</td>
+<td>Full implementation</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td>✅</td>
+<td>Full implementation + OAuth2</td>
+</tr>
+<tr>
+<td>Groq</td>
+<td>✅</td>
+<td>Full implementation + latency metrics</td>
+</tr>
+<tr>
+<td>Azure</td>
+<td>✅</td>
+<td>Full implementation + Entra ID auth</td>
+</tr>
+<tr>
+<td>VertexAI</td>
+<td>✅</td>
+<td>Full implementation + dual model support</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>✅</td>
+<td>Full implementation</td>
+</tr>
+<tr>
+<td>Copilot</td>
+<td>✅</td>
+<td>Full implementation + token exchange</td>
+</tr>
+</tbody>
+</table>
+<h3 id="method-signature-consistency">Method Signature Consistency</h3>
+<p><strong>✅ All providers use identical method signatures</strong> -
+no variations detected.</p>
+<p><strong>Finding:</strong> The interface contract is strictly enforced
+across all providers.</p>
+<hr />
+<h2 id="feature-availability-matrix">2. Feature Availability Matrix</h2>
+<h3 id="supported-features-by-provider">Supported Features by
+Provider</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 10%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 8%" />
+<col style="width: 7%" />
+<col style="width: 4%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 6%" />
+<col style="width: 9%" />
+<col style="width: 11%" />
+<col style="width: 8%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Anthropic</th>
+<th>OpenAI</th>
+<th>Gemini</th>
+<th>Bedrock</th>
+<th>Ollama</th>
+<th>XAI</th>
+<th>Qwen</th>
+<th>Groq</th>
+<th>Azure</th>
+<th>VertexAI</th>
+<th>OpenRouter</th>
+<th>Copilot</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prompt Caching</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>Reasoning Support</strong></td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>⚠️</td>
+</tr>
+<tr>
+<td><strong>Token Budgets</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>Vision Support</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>Tool Calling</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>Streaming</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Legend:</strong> - ✅ Fully implemented - ⚠️ Partial or
+model-dependent support - ❌ Not supported</p>
+<h3 id="detailed-feature-analysis">Detailed Feature Analysis</h3>
+<h4 id="prompt-caching">2.1 Prompt Caching</h4>
+<p><strong>✅ Anthropic</strong> (Lines 48-66 in
+<code>anthropic_provider.go</code>)</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> anthropicContentBlock <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    CacheControl <span class="op">*</span>anthropicCacheControl <span class="st">`json:&quot;cache_control,omitempty&quot;`</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Implements full ephemeral caching</li>
+<li>Caches system messages, last user message, and tools</li>
+<li>Lines 413-449: Automatic cache control application</li>
+</ul>
+<p><strong>⚠️ Gemini</strong> (Line 133 in
+<code>gemini_provider.go</code>)</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>CachedContentTokenCount <span class="dt">int</span> <span class="st">`json:&quot;cachedContentTokenCount,omitempty&quot;`</span></span></code></pre></div>
+<ul>
+<li>Tracks cached tokens in usage metadata</li>
+<li>No explicit cache control mechanism</li>
+<li>Implicit caching handled by Google</li>
+</ul>
+<p><strong>⚠️ Qwen</strong> (Line 429 in
+<code>qwen_provider.go</code>)</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>req<span class="op">.</span>Header<span class="op">.</span>Set<span class="op">(</span><span class="st">&quot;X-DashScope-CacheControl&quot;</span><span class="op">,</span> <span class="st">&quot;enable&quot;</span><span class="op">)</span></span></code></pre></div>
+<ul>
+<li>Header-based cache control</li>
+<li>Limited documentation</li>
+</ul>
+<p><strong>❌ Other Providers:</strong> No caching support</p>
+<p><strong>Recommendation:</strong> Document which providers support
+caching and create a unified caching interface.</p>
+<h4 id="reasoning-support">2.2 Reasoning Support</h4>
+<p><strong>Reasoning Models Detected:</strong> - OpenAI: o1, o3, o4
+series (via <code>reasoning.go</code> lines 39-42) - Anthropic: Claude
+with extended thinking (lines 113-117) - DeepSeek: R1/Reasoner models
+(lines 49-50) - QwQ: 32B model (line 53)</p>
+<p><strong>Implementation in <code>reasoning.go</code>:</strong> - Lines
+10-33: <code>ReasoningConfig</code> structure - Lines 135-172:
+<code>ExtractReasoningTrace</code> function - Lines 256-308:
+<code>FormatReasoningPrompt</code> function</p>
+<p><strong>Issue:</strong> Reasoning support is defined in shared code
+but not consistently referenced in provider implementations.</p>
+<p><strong>File:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/reasoning.go</code></p>
+<p><strong>Recommendation:</strong> Add explicit reasoning model
+detection to each provider’s model list.</p>
+<h4 id="token-budgets">2.3 Token Budgets</h4>
+<p><strong>✅ Universal Support</strong> - Token budgets are implemented
+at the manager level.</p>
+<p><strong>File:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/token_budget.go</code>
+- Lines 13-31: <code>TokenBudget</code> structure - Lines 45-84:
+<code>TokenTracker</code> implementation - Lines 86-138:
+<code>CheckBudget</code> enforcement</p>
+<p><strong>All providers</strong> correctly report usage via
+<code>LLMResponse.Usage</code> structure (lines 110-114 in
+<code>provider.go</code>).</p>
+<h4 id="vision-support">2.4 Vision Support</h4>
+<p><strong>Providers with Vision:</strong> - Anthropic: Claude 4/3.x
+models (Sonnet/Opus) - OpenAI: GPT-4o, GPT-4 Turbo Vision - Gemini: All
+2.x/1.5 models - Bedrock: Claude models via Bedrock - Qwen: VL models -
+Azure: GPT-4o variants - VertexAI: Gemini + Claude via Model Garden</p>
+<p><strong>Implementation:</strong> Vision capability tracked via
+<code>ModelInfo.SupportsVision</code> boolean (line 142 in
+<code>provider.go</code>).</p>
+<h4 id="tool-calling">2.5 Tool Calling</h4>
+<p><strong>Providers with Tools:</strong> - Anthropic: Full function
+calling (lines 79-84 in <code>anthropic_provider.go</code>) - OpenAI:
+Native support - Gemini: Function declarations (lines 76-83 in
+<code>gemini_provider.go</code>) - Bedrock: Model-dependent (Claude,
+Cohere Command) - XAI: OpenAI-compatible - Qwen: Coder models - Groq:
+Llama 3.x models - Azure: GPT-4 variants - VertexAI: Gemini models -
+Copilot: GPT-4o/Claude models</p>
+<p><strong>Consistency:</strong> Tool format unified across all
+providers using <code>Tool</code> structure (lines 71-81 in
+<code>provider.go</code>).</p>
+<hr />
+<h2 id="requestresponse-consistency">3. Request/Response
+Consistency</h2>
+<h3 id="status-excellent-1">✅ <strong>Status: EXCELLENT</strong></h3>
+<h3 id="llmrequest-structure">3.1 LLMRequest Structure</h3>
+<p><strong>Definition:</strong> Lines 48-61 in
+<code>provider.go</code></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LLMRequest <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    ID           uuid<span class="op">.</span>UUID</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ProviderType ProviderType</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    Model        <span class="dt">string</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Messages     <span class="op">[]</span>Message</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    MaxTokens    <span class="dt">int</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    Temperature  <span class="dt">float64</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    TopP         <span class="dt">float64</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    Stream       <span class="dt">bool</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    Tools        <span class="op">[]</span>Tool</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    ToolChoice   <span class="dt">string</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    Capabilities <span class="op">[]</span>ModelCapability</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    CreatedAt    time<span class="op">.</span>Time</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Usage Consistency:</strong> All providers correctly consume
+this structure in their <code>Generate</code> and
+<code>GenerateStream</code> methods.</p>
+<h3 id="llmresponse-structure">3.2 LLMResponse Structure</h3>
+<p><strong>Definition:</strong> Lines 84-94 in
+<code>provider.go</code></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LLMResponse <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    ID               uuid<span class="op">.</span>UUID</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    RequestID        uuid<span class="op">.</span>UUID</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    Content          <span class="dt">string</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    ToolCalls        <span class="op">[]</span>ToolCall</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    FinishReason     <span class="dt">string</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    Usage            Usage</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ProviderMetadata <span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    ProcessingTime   time<span class="op">.</span>Duration</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    CreatedAt        time<span class="op">.</span>Time</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Consistency:</strong> All providers return this exact
+structure.</p>
+<h3 id="message-format">3.3 Message Format</h3>
+<p><strong>Definition:</strong> Lines 64-68 in
+<code>provider.go</code></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Message <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Role    <span class="dt">string</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    Content <span class="dt">string</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    Name    <span class="dt">string</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Conversion Patterns:</strong></p>
+<p><strong>Anthropic</strong> (Lines 488-505):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>ap <span class="op">*</span>AnthropicProvider<span class="op">)</span> convertMessages<span class="op">(</span>messages <span class="op">[]</span>Message<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="op">[]</span>anthropicMessage<span class="op">)</span></span></code></pre></div>
+<ul>
+<li>Separates system messages</li>
+<li>Converts to Anthropic format</li>
+</ul>
+<p><strong>Gemini</strong> (Lines 476-502):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gp <span class="op">*</span>GeminiProvider<span class="op">)</span> convertMessages<span class="op">(</span>messages <span class="op">[]</span>Message<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="op">[]</span>geminiContent<span class="op">)</span></span></code></pre></div>
+<ul>
+<li>Separates system messages</li>
+<li>Converts “assistant” → “model”</li>
+</ul>
+<p><strong>Consistency:</strong> ✅ All providers use consistent
+conversion patterns.</p>
+<h3 id="tool-format">3.4 Tool Format</h3>
+<p><strong>Definition:</strong> Lines 71-81 in
+<code>provider.go</code></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Tool <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    Type     <span class="dt">string</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    Function FunctionDefinition</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> FunctionDefinition <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    Name        <span class="dt">string</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    Description <span class="dt">string</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    Parameters  <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Conversion Examples:</strong></p>
+<p><strong>Anthropic</strong> (Lines 508-520):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>ap <span class="op">*</span>AnthropicProvider<span class="op">)</span> convertTools<span class="op">(</span>tools <span class="op">[]</span>Tool<span class="op">)</span> <span class="op">[]</span>anthropicTool</span></code></pre></div>
+<p><strong>Gemini</strong> (Lines 505-519):</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gp <span class="op">*</span>GeminiProvider<span class="op">)</span> convertTools<span class="op">(</span>tools <span class="op">[]</span>Tool<span class="op">)</span> <span class="op">[]</span>geminiTool</span></code></pre></div>
+<p><strong>Consistency:</strong> ✅ All providers correctly map tools to
+their native formats.</p>
+<hr />
+<h2 id="configuration-consistency">4. Configuration Consistency</h2>
+<h3 id="config-structure">4.1 Config Structure</h3>
+<p><strong>ProviderConfigEntry</strong> (Lines 169-177 in
+<code>provider.go</code>):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProviderConfigEntry <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    Type       ProviderType</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    Endpoint   <span class="dt">string</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    APIKey     <span class="dt">string</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    Models     <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    Enabled    <span class="dt">bool</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    Parameters <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="provider-specific-configuration">4.2 Provider-Specific
+Configuration</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Config Location</th>
+<th>Special Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic</td>
+<td>Lines 134-160</td>
+<td>API key from env</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>Lines 27-54</td>
+<td>Endpoint override</td>
+</tr>
+<tr>
+<td>Gemini</td>
+<td>Lines 144-174</td>
+<td>API key alternatives</td>
+</tr>
+<tr>
+<td>Bedrock</td>
+<td>Lines 205-262</td>
+<td>AWS credentials, region, cross-region</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>Lines 24-30</td>
+<td>Base URL, timeout, keep-alive</td>
+</tr>
+<tr>
+<td>XAI</td>
+<td>Lines 27-54</td>
+<td>Endpoint override</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td>Lines 28-59</td>
+<td>OAuth2 + API key</td>
+</tr>
+<tr>
+<td>Groq</td>
+<td>Lines 134-177</td>
+<td>Optimized HTTP client</td>
+</tr>
+<tr>
+<td>Azure</td>
+<td>Lines 191-288</td>
+<td>Entra ID, deployment map</td>
+</tr>
+<tr>
+<td>VertexAI</td>
+<td>Lines 206-303</td>
+<td>Project ID, location, credentials</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>Lines 27-54</td>
+<td>HTTP referer headers</td>
+</tr>
+<tr>
+<td>Copilot</td>
+<td>Lines 36-63</td>
+<td>GitHub token exchange</td>
+</tr>
+</tbody>
+</table>
+<h3 id="issues-found">⚠️ Issues Found:</h3>
+<ol type="1">
+<li><strong>Inconsistent Default Timeouts:</strong>
+<ul>
+<li>Anthropic: 120s (line 154)</li>
+<li>OpenAI: 60s (line 43)</li>
+<li>Gemini: 120s (line 169)</li>
+<li>Groq: 60s (line 152)</li>
+<li>Azure: 120s (line 222)</li>
+<li>VertexAI: 120s (line 296)</li>
+</ul></li>
+<li><strong>Environment Variable Naming:</strong>
+<ul>
+<li>Anthropic: <code>ANTHROPIC_API_KEY</code> (line 137)</li>
+<li>OpenAI: Uses config only</li>
+<li>Gemini: <code>GEMINI_API_KEY</code> or <code>GOOGLE_API_KEY</code>
+(lines 148-153)</li>
+<li>Qwen: <code>QWEN_API_KEY</code> (implied)</li>
+<li>Groq: <code>GROQ_API_KEY</code> (line 138)</li>
+<li>Azure: <code>AZURE_OPENAI_API_KEY</code> (line 278)</li>
+<li>VertexAI: <code>GOOGLE_APPLICATION_CREDENTIALS</code> (line
+235)</li>
+</ul></li>
+</ol>
+<p><strong>Recommendation:</strong> Standardize timeout defaults and
+document all environment variables.</p>
+<hr />
+<h2 id="error-handling-consistency">5. Error Handling Consistency</h2>
+<h3 id="common-errors">5.1 Common Errors</h3>
+<p><strong>Defined in <code>provider.go</code> (Lines
+331-337):</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    ErrProviderUnavailable <span class="op">=</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;provider unavailable&quot;</span><span class="op">)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    ErrModelNotFound       <span class="op">=</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;model not found&quot;</span><span class="op">)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    ErrInvalidRequest      <span class="op">=</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;invalid request&quot;</span><span class="op">)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    ErrRateLimited         <span class="op">=</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;rate limited&quot;</span><span class="op">)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    ErrContextTooLong      <span class="op">=</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;context too long&quot;</span><span class="op">)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="error-handling-patterns">5.2 Error Handling Patterns</h3>
+<p><strong>✅ Consistent Providers:</strong></p>
+<p><strong>Groq</strong> (Lines 592-630): - Comprehensive HTTP status
+mapping - Provider-specific error parsing - Returns standard errors</p>
+<p><strong>Azure</strong> (Lines 812-850): - Azure-specific error code
+mapping - Falls back to HTTP status codes - Content filtering errors</p>
+<p><strong>Bedrock</strong> (Lines 1052-1083): - AWS SDK error handling
+- Maps to standard errors - Throttling detection</p>
+<p><strong>⚠️ Inconsistent Providers:</strong></p>
+<p><strong>OpenAI</strong> (Lines 278-309): - Basic error handling - No
+specific error parsing - Generic error messages</p>
+<p><strong>Ollama</strong> (Lines 137-174): - Minimal error handling -
+No specific error types</p>
+<p><strong>Recommendation:</strong> Standardize error handling with: 1.
+Structured error parsing 2. Consistent error wrapping 3. Retry-able
+error identification</p>
+<hr />
+<h2 id="testing-consistency">6. Testing Consistency</h2>
+<h3 id="test-file-coverage">6.1 Test File Coverage</h3>
+<p><strong>Test Files Found:</strong> -
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/integration_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/anthropic_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/gemini_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/bedrock_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/groq_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/azure_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/vertexai_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/qwen_provider_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/reasoning_test.go</code>
+-
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/cache_control_test.go</code></p>
+<h3 id="missing-tests">⚠️ Missing Tests:</h3>
+<ul>
+<li>OpenAI provider</li>
+<li>Ollama provider</li>
+<li>XAI provider</li>
+<li>OpenRouter provider</li>
+<li>Copilot provider</li>
+</ul>
+<p><strong>Test Coverage:</strong> ~58% (7/12 providers have dedicated
+tests)</p>
+<h3 id="test-pattern-analysis">6.2 Test Pattern Analysis</h3>
+<p><strong>Common Test Patterns (from existing tests):</strong> 1.
+Provider initialization tests 2. Model listing tests 3. Health check
+tests 4. Request/response conversion tests 5. Error handling tests</p>
+<p><strong>Recommendation:</strong> Add missing provider tests following
+established patterns.</p>
+<hr />
+<h2 id="recommendations">7. Recommendations</h2>
+<h3 id="critical-issues">7.1 Critical Issues</h3>
+<h4 id="issue-1-missing-reasoning-support-integration">Issue 1: Missing
+Reasoning Support Integration</h4>
+<p><strong>Severity:</strong> Medium <strong>Location:</strong> Provider
+implementations <strong>Issue:</strong> <code>reasoning.go</code>
+defines comprehensive reasoning support, but providers don’t explicitly
+integrate it.</p>
+<p><strong>Action Items:</strong> 1. Add reasoning model detection to
+provider model lists 2. Update <code>LLMRequest</code> to include
+reasoning configuration 3. Integrate <code>ExtractReasoningTrace</code>
+in response parsing</p>
+<p><strong>Affected Files:</strong> - All <code>*_provider.go</code>
+files - <code>provider.go</code> (add ReasoningConfig field to
+LLMRequest)</p>
+<h4 id="issue-2-inconsistent-error-handling">Issue 2: Inconsistent Error
+Handling</h4>
+<p><strong>Severity:</strong> Medium <strong>Location:</strong> OpenAI,
+Ollama, XAI, OpenRouter providers <strong>Issue:</strong> Some providers
+lack structured error parsing.</p>
+<p><strong>Action Items:</strong> 1. Implement error parsing for OpenAI
+(reference: Groq implementation) 2. Add retry-able error identification
+3. Create error handling test suite</p>
+<p><strong>Example Implementation (from Groq, lines
+592-630):</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> handleProviderError<span class="op">(</span>statusCode <span class="dt">int</span><span class="op">,</span> body <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> providerErr ProviderError</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> json<span class="op">.</span>Unmarshal<span class="op">(</span>body<span class="op">,</span> <span class="op">&amp;</span>providerErr<span class="op">);</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">switch</span> statusCode <span class="op">{</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> http<span class="op">.</span>StatusBadRequest<span class="op">:</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> strings<span class="op">.</span>Contains<span class="op">(</span>providerErr<span class="op">.</span>Message<span class="op">,</span> <span class="st">&quot;context_length&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> ErrContextTooLong</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> ErrInvalidRequest</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> http<span class="op">.</span>StatusUnauthorized<span class="op">:</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;unauthorized: invalid API key&quot;</span><span class="op">)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> http<span class="op">.</span>StatusTooManyRequests<span class="op">:</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> ErrRateLimited</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ...</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;provider error (%d): %s&quot;</span><span class="op">,</span> statusCode<span class="op">,</span> <span class="dt">string</span><span class="op">(</span>body<span class="op">))</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="issue-3-test-coverage-gaps">Issue 3: Test Coverage Gaps</h4>
+<p><strong>Severity:</strong> Medium <strong>Location:</strong> 5
+providers without tests <strong>Issue:</strong> OpenAI, Ollama, XAI,
+OpenRouter, Copilot lack dedicated test files.</p>
+<p><strong>Action Items:</strong> 1. Create test files for missing
+providers 2. Add integration tests 3. Establish minimum test coverage
+requirement (80%+)</p>
+<h3 id="enhancement-opportunities">7.2 Enhancement Opportunities</h3>
+<h4 id="enhancement-1-unified-caching-interface">Enhancement 1: Unified
+Caching Interface</h4>
+<p><strong>Priority:</strong> Medium</p>
+<p>Create abstract caching interface that works across providers:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CacheStrategy <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    ShouldCache<span class="op">(</span>message Message<span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    ApplyCaching<span class="op">(</span>request <span class="op">*</span>LLMRequest<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    GetCacheMetrics<span class="op">()</span> <span class="op">*</span>CacheMetrics</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Benefits:</strong> - Consistent caching behavior -
+Provider-specific optimizations - Unified metrics</p>
+<h4 id="enhancement-2-provider-feature-registry">Enhancement 2: Provider
+Feature Registry</h4>
+<p><strong>Priority:</strong> Low</p>
+<p>Create feature detection system:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProviderFeatures <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    PromptCaching  <span class="dt">bool</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    Reasoning      <span class="dt">bool</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    Vision         <span class="dt">bool</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    ToolCalling    <span class="dt">bool</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    Streaming      <span class="dt">bool</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    TokenBudgets   <span class="dt">bool</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>Provider<span class="op">)</span> GetFeatures<span class="op">()</span> ProviderFeatures</span></code></pre></div>
+<p><strong>Benefits:</strong> - Runtime feature detection - Better error
+messages - Automatic capability routing</p>
+<h4 id="enhancement-3-configuration-validation">Enhancement 3:
+Configuration Validation</h4>
+<p><strong>Priority:</strong> Medium</p>
+<p>Add configuration validation:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>config ProviderConfigEntry<span class="op">)</span> Validate<span class="op">()</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> config<span class="op">.</span>Endpoint <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">&amp;&amp;</span> config<span class="op">.</span>Type <span class="op">!=</span> ProviderTypeLocal <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;endpoint required for %s&quot;</span><span class="op">,</span> config<span class="op">.</span>Type<span class="op">)</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> config<span class="op">.</span>APIKey <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">&amp;&amp;</span> requiresAPIKey<span class="op">(</span>config<span class="op">.</span>Type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;API key required for %s&quot;</span><span class="op">,</span> config<span class="op">.</span>Type<span class="op">)</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Location:</strong> <code>provider.go</code> lines 169-177</p>
+<h3 id="documentation-improvements">7.3 Documentation Improvements</h3>
+<ol type="1">
+<li><strong>Feature Matrix Documentation:</strong>
+<ul>
+<li>Create <code>PROVIDERS.md</code> with comprehensive feature
+matrix</li>
+<li>Document model-specific capabilities</li>
+<li>Add migration guides between providers</li>
+</ul></li>
+<li><strong>Configuration Guide:</strong>
+<ul>
+<li>Document all environment variables</li>
+<li>Provide example configurations</li>
+<li>Add troubleshooting section</li>
+</ul></li>
+<li><strong>Error Handling Guide:</strong>
+<ul>
+<li>Document all error types</li>
+<li>Provide retry strategies</li>
+<li>Add error code reference</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="inconsistencies-found">8. Inconsistencies Found</h2>
+<h3 id="method-implementation-differences">8.1 Method Implementation
+Differences</h3>
+<h4 id="health-check-implementations">Health Check Implementations</h4>
+<p><strong>Variation 1: API Endpoint Test (Anthropic, Gemini,
+Qwen)</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 681-711 in anthropic_provider.go</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>testReq <span class="op">:=</span> <span class="op">&amp;</span>LLMRequest<span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    Model<span class="op">:</span>    <span class="st">&quot;claude-3-5-haiku-latest&quot;</span><span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    Messages<span class="op">:</span> <span class="op">[]</span>Message<span class="op">{{</span>Role<span class="op">:</span> <span class="st">&quot;user&quot;</span><span class="op">,</span> Content<span class="op">:</span> <span class="st">&quot;Hi&quot;</span><span class="op">}},</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    MaxTokens<span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">:=</span> ap<span class="op">.</span>Generate<span class="op">(</span>ctx<span class="op">,</span> testReq<span class="op">)</span></span></code></pre></div>
+<p><strong>Variation 2: Simple Availability Check (Ollama)</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 199-212 in ollama_provider.go</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>resp<span class="op">,</span> err <span class="op">:=</span> p<span class="op">.</span>apiClient<span class="op">.</span>Get<span class="op">(</span>p<span class="op">.</span>getAPIURL<span class="op">(</span><span class="st">&quot;/api/tags&quot;</span><span class="op">))</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> resp<span class="op">.</span>StatusCode <span class="op">==</span> http<span class="op">.</span>StatusOK</span></code></pre></div>
+<p><strong>Variation 3: Models Endpoint Check (OpenAI, XAI)</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 132-173 in openai_provider.go</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>req<span class="op">,</span> _ <span class="op">:=</span> http<span class="op">.</span>NewRequestWithContext<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;GET&quot;</span><span class="op">,</span> <span class="st">&quot;/models&quot;</span><span class="op">,</span> <span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>resp<span class="op">,</span> err <span class="op">:=</span> op<span class="op">.</span>httpClient<span class="op">.</span>Do<span class="op">(</span>req<span class="op">)</span></span></code></pre></div>
+<p><strong>Recommendation:</strong> Standardize on one approach
+(preferably minimal test request).</p>
+<h4 id="model-initialization">Model Initialization</h4>
+<p><strong>Variation 1: Static Model List (Most Providers)</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 164-291 in anthropic_provider.go</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> getAnthropicModels<span class="op">()</span> <span class="op">[]</span>ModelInfo <span class="op">{</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">[]</span>ModelInfo<span class="op">{</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;claude-4-sonnet&quot;</span><span class="op">,</span> <span class="op">...},</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ...</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Variation 2: Dynamic Discovery (Ollama)</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 258-279 in ollama_provider.go</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>OllamaProvider<span class="op">)</span> discoverModels<span class="op">()</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    resp<span class="op">,</span> _ <span class="op">:=</span> p<span class="op">.</span>apiClient<span class="op">.</span>Get<span class="op">(</span><span class="st">&quot;/api/tags&quot;</span><span class="op">)</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Parse and populate models</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Recommendation:</strong> Support both patterns with clear
+documentation.</p>
+<h3 id="streaming-implementation-differences">8.2 Streaming
+Implementation Differences</h3>
+<p><strong>SSE Parsing Variation:</strong></p>
+<p><strong>Method 1: Bufio Scanner (Groq, Azure, VertexAI)</strong></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 501-586 in groq_provider.go</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>scanner <span class="op">:=</span> bufio<span class="op">.</span>NewScanner<span class="op">(</span>reader<span class="op">)</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> scanner<span class="op">.</span>Scan<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    line <span class="op">:=</span> scanner<span class="op">.</span>Text<span class="op">()</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> strings<span class="op">.</span>HasPrefix<span class="op">(</span>line<span class="op">,</span> <span class="st">&quot;data: &quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Parse JSON</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Method 2: JSON Decoder (OpenAI, XAI, Qwen, OpenRouter,
+Copilot)</strong></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lines 311-368 in openai_provider.go</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>decoder <span class="op">:=</span> json<span class="op">.</span>NewDecoder<span class="op">(</span>resp<span class="op">.</span>Body<span class="op">)</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> decoder<span class="op">.</span>More<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> streamResp OpenAIStreamResponse</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    decoder<span class="op">.</span>Decode<span class="op">(&amp;</span>streamResp<span class="op">)</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Issue:</strong> SSE format requires line-by-line parsing;
+JSON decoder approach may fail with proper SSE streams.</p>
+<p><strong>Recommendation:</strong> Standardize on bufio.Scanner for SSE
+parsing.</p>
+<h3 id="authentication-patterns">8.3 Authentication Patterns</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Auth Method</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic</td>
+<td>API Key (header: <code>x-api-key</code>)</td>
+<td>Line 538</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>Bearer Token</td>
+<td>Line 371</td>
+</tr>
+<tr>
+<td>Gemini</td>
+<td>API Key (URL param)</td>
+<td>Line 524</td>
+</tr>
+<tr>
+<td>Bedrock</td>
+<td>AWS Signature V4</td>
+<td>AWS SDK</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>None</td>
+<td>Local</td>
+</tr>
+<tr>
+<td>XAI</td>
+<td>Bearer Token</td>
+<td>Line 374</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td>Bearer Token + OAuth2</td>
+<td>Lines 427, 62-98</td>
+</tr>
+<tr>
+<td>Groq</td>
+<td>Bearer Token</td>
+<td>Line 589</td>
+</tr>
+<tr>
+<td>Azure</td>
+<td>API Key or Entra ID</td>
+<td>Lines 526-535, 569-573</td>
+</tr>
+<tr>
+<td>VertexAI</td>
+<td>OAuth2 (Google)</td>
+<td>Lines 178-204</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>Bearer Token</td>
+<td>Line 397</td>
+</tr>
+<tr>
+<td>Copilot</td>
+<td>Bearer Token (GitHub exchange)</td>
+<td>Lines 135-162, 521</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency:</strong> ✅ Well-documented variety, each
+appropriate for the provider.</p>
+<hr />
+<h2 id="action-items">9. Action Items</h2>
+<h3 id="immediate-high-priority">Immediate (High Priority)</h3>
+<ol type="1">
+<li><strong>Add Missing Tests</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create
+<code>openai_provider_test.go</code></label></li>
+<li><label><input type="checkbox"></input>Create
+<code>ollama_provider_test.go</code></label></li>
+<li><label><input type="checkbox"></input>Create
+<code>xai_provider_test.go</code></label></li>
+<li><label><input type="checkbox"></input>Create
+<code>openrouter_provider_test.go</code></label></li>
+<li><label><input type="checkbox"></input>Create
+<code>copilot_provider_test.go</code></label></li>
+</ul></li>
+<li><strong>Standardize Error Handling</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Add structured error parsing to
+OpenAI provider</label></li>
+<li><label><input type="checkbox"></input>Add structured error parsing to
+Ollama provider</label></li>
+<li><label><input type="checkbox"></input>Create error handling
+documentation</label></li>
+<li><label><input type="checkbox"></input>Add retry-able error
+identification</label></li>
+</ul></li>
+<li><strong>Fix SSE Streaming</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Update OpenAI provider to use
+bufio.Scanner</label></li>
+<li><label><input type="checkbox"></input>Update XAI provider to use
+bufio.Scanner</label></li>
+<li><label><input type="checkbox"></input>Update Qwen provider to use
+bufio.Scanner</label></li>
+<li><label><input type="checkbox"></input>Update OpenRouter provider to use
+bufio.Scanner</label></li>
+<li><label><input type="checkbox"></input>Update Copilot provider to use
+bufio.Scanner</label></li>
+</ul></li>
+</ol>
+<h3 id="short-term-medium-priority">Short-term (Medium Priority)</h3>
+<ol start="4" type="1">
+<li><strong>Integrate Reasoning Support</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Add ReasoningConfig to
+LLMRequest</label></li>
+<li><label><input type="checkbox"></input>Update provider implementations to
+support reasoning</label></li>
+<li><label><input type="checkbox"></input>Add reasoning model
+detection</label></li>
+<li><label><input type="checkbox"></input>Create reasoning
+documentation</label></li>
+</ul></li>
+<li><strong>Standardize Configuration</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Document all environment
+variables</label></li>
+<li><label><input type="checkbox"></input>Standardize timeout
+defaults</label></li>
+<li><label><input type="checkbox"></input>Add configuration
+validation</label></li>
+<li><label><input type="checkbox"></input>Create configuration
+examples</label></li>
+</ul></li>
+<li><strong>Improve Documentation</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create <code>PROVIDERS.md</code>
+with feature matrix</label></li>
+<li><label><input type="checkbox"></input>Document model
+capabilities</label></li>
+<li><label><input type="checkbox"></input>Add migration guides</label></li>
+<li><label><input type="checkbox"></input>Create troubleshooting
+guide</label></li>
+</ul></li>
+</ol>
+<h3 id="long-term-low-priority">Long-term (Low Priority)</h3>
+<ol start="7" type="1">
+<li><strong>Unified Caching Interface</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Design caching
+abstraction</label></li>
+<li><label><input type="checkbox"></input>Implement for Anthropic</label></li>
+<li><label><input type="checkbox"></input>Add to other compatible
+providers</label></li>
+<li><label><input type="checkbox"></input>Create caching
+documentation</label></li>
+</ul></li>
+<li><strong>Provider Feature Registry</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Design feature detection
+system</label></li>
+<li><label><input type="checkbox"></input>Implement runtime capability
+checking</label></li>
+<li><label><input type="checkbox"></input>Add to provider
+interface</label></li>
+<li><label><input type="checkbox"></input>Update routing logic</label></li>
+</ul></li>
+<li><strong>Performance Optimization</strong>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Add connection pooling
+benchmarks</label></li>
+<li><label><input type="checkbox"></input>Optimize request
+serialization</label></li>
+<li><label><input type="checkbox"></input>Implement request batching where
+supported</label></li>
+<li><label><input type="checkbox"></input>Add performance
+monitoring</label></li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="conclusion">10. Conclusion</h2>
+<p>HelixCode’s LLM provider architecture demonstrates <strong>excellent
+consistency</strong> in core areas:</p>
+<p><strong>Strengths:</strong> - ✅ Unified Provider interface
+implementation - ✅ Consistent request/response structures - ✅
+Standardized message and tool formats - ✅ Comprehensive model
+information - ✅ Good configuration flexibility</p>
+<p><strong>Areas for Improvement:</strong> - ⚠️ Test coverage gaps (5
+providers without tests) - ⚠️ Inconsistent error handling patterns - ⚠️
+Streaming implementation variations - ⚠️ Missing reasoning support
+integration - ⚠️ Configuration validation missing</p>
+<p><strong>Overall Assessment:</strong></p>
+<p>The architecture is <strong>production-ready</strong> with minor
+improvements needed. The codebase follows solid engineering principles
+with a clean separation of concerns and consistent patterns. The
+identified issues are primarily related to completeness rather than
+fundamental design flaws.</p>
+<p><strong>Priority Recommendations:</strong> 1. Complete test coverage
+for all providers 2. Standardize SSE streaming implementation 3. Add
+structured error handling to all providers 4. Document all features and
+capabilities 5. Integrate reasoning support throughout</p>
+<p>With these improvements, HelixCode will have a <strong>world-class
+LLM provider abstraction layer</strong> suitable for enterprise
+deployment.</p>
+<hr />
+<h2 id="appendix-a-file-locations-reference">Appendix A: File Locations
+Reference</h2>
+<h3 id="core-files">Core Files</h3>
+<ul>
+<li><strong>Provider Interface:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/provider.go</code></li>
+<li><strong>Cache Control:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/cache_control.go</code></li>
+<li><strong>Reasoning:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/reasoning.go</code></li>
+<li><strong>Token Budget:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/token_budget.go</code></li>
+</ul>
+<h3 id="provider-implementations">Provider Implementations</h3>
+<ul>
+<li><strong>Anthropic:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/anthropic_provider.go</code></li>
+<li><strong>OpenAI:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/openai_provider.go</code></li>
+<li><strong>Gemini:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/gemini_provider.go</code></li>
+<li><strong>Bedrock:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/bedrock_provider.go</code></li>
+<li><strong>Ollama:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/ollama_provider.go</code></li>
+<li><strong>XAI:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/xai_provider.go</code></li>
+<li><strong>Qwen:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/qwen_provider.go</code></li>
+<li><strong>Groq:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/groq_provider.go</code></li>
+<li><strong>Azure:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/azure_provider.go</code></li>
+<li><strong>VertexAI:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/vertexai_provider.go</code></li>
+<li><strong>OpenRouter:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/openrouter_provider.go</code></li>
+<li><strong>Copilot:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/copilot_provider.go</code></li>
+</ul>
+<h3 id="test-files">Test Files</h3>
+<ul>
+<li><strong>Integration Tests:</strong>
+<code>/Users/milosvasic/Projects/helix_code/helix_code/internal/llm/integration_test.go</code></li>
+<li><strong>Provider Tests:</strong> <code>*_provider_test.go</code> (7
+out of 12 providers)</li>
+<li><strong>Feature Tests:</strong> <code>reasoning_test.go</code>,
+<code>cache_control_test.go</code></li>
+</ul>
+<hr />
+<p><strong>Report End</strong></p>
+</body>
+</html>

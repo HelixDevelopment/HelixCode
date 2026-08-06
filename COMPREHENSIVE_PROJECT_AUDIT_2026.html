@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>COMPREHENSIVE_PROJECT_AUDIT_2026</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">COMPREHENSIVE_PROJECT_AUDIT_2026</h1>
+</header>
+<h1 id="helixcode-comprehensive-project-audit-report-2026">HelixCode
+Comprehensive Project Audit Report 2026</h1>
+<p><strong>Generated:</strong> 2026-01-10 <strong>Audit Scope:</strong>
+Full codebase analysis comparing documentation vs implementation
+<strong>Status:</strong> In Progress - Phase 7 of 8</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This audit analyzed <strong>4,013 markdown files</strong>, <strong>73
+SQL definitions</strong>, <strong>203 test files</strong>, <strong>42
+internal packages</strong>, and <strong>514 Go source files</strong> to
+identify gaps between documentation and implementation.</p>
+<h3 id="key-metrics">Key Metrics</h3>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 29%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Category</th>
+<th>Status</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Overall Completion</strong></td>
+<td>~85%</td>
+<td>Core features implemented</td>
+</tr>
+<tr>
+<td><strong>Test Coverage Average</strong></td>
+<td>68.7%</td>
+<td>Requires improvement to 100%</td>
+</tr>
+<tr>
+<td><strong>Documentation Quality</strong></td>
+<td>95%</td>
+<td>All packages have READMEs</td>
+</tr>
+<tr>
+<td><strong>Dependency Health</strong></td>
+<td>Excellent</td>
+<td>All dependencies properly integrated</td>
+</tr>
+<tr>
+<td><strong>Critical Issues</strong></td>
+<td>12</td>
+<td>Blocking production deployment</td>
+</tr>
+<tr>
+<td><strong>High Priority Issues</strong></td>
+<td>28</td>
+<td>Should be fixed before release</td>
+</tr>
+<tr>
+<td><strong>Medium Priority Issues</strong></td>
+<td>45</td>
+<td>Quality improvements</td>
+</tr>
+<tr>
+<td><strong>Low Priority Issues</strong></td>
+<td>30</td>
+<td>Polish and completeness</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-1-critical-issues-showstoppers">SECTION 1: CRITICAL
+ISSUES (SHOWSTOPPERS)</h2>
+<h3 id="failing-tests">1.1 Failing Tests</h3>
+<p><strong>Status:</strong> BLOCKING</p>
+<h4 id="unit-test-failure">Unit Test Failure</h4>
+<table>
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 31%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test</th>
+<th>File</th>
+<th>Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TestExtractPythonSymbols</td>
+<td>internal/repomap/repomap_test.go</td>
+<td>TempDir RemoveAll cleanup failure</td>
+</tr>
+</tbody>
+</table>
+<h4 id="integration-tests-failing-require-running-server">Integration
+Tests Failing (Require Running Server)</h4>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 32%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test Suite</th>
+<th>Package</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TestBasicIntegration</td>
+<td>tests/e2e/phase2</td>
+<td>Server not running on :8080</td>
+</tr>
+<tr>
+<td>TestServerCapabilities</td>
+<td>tests/e2e/phase2</td>
+<td>Server not running on :8080</td>
+</tr>
+<tr>
+<td>TestEnvironmentValidation</td>
+<td>tests/e2e/phase2</td>
+<td>Connection refused</td>
+</tr>
+<tr>
+<td>TestRealServerIntegration</td>
+<td>tests/e2e/phase2</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestMemorySystemIntegration</td>
+<td>tests/e2e/phase3</td>
+<td>Server not running</td>
+</tr>
+<tr>
+<td>TestConversationMemory</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestMemorySearchAndRetrieval</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestMemoryPersistence</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestMemoryAnalytics</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestMemoryPrivacyAndSecurity</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestConcurrentProjectOperations</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestMemoryOptimization</td>
+<td>tests/e2e/phase3</td>
+<td>Timeout</td>
+</tr>
+<tr>
+<td>TestResourceCleanup</td>
+<td>tests/e2e/phase3</td>
+<td>Test timed out (10m)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> E2E/Integration tests require a running
+server. These are expected to fail in isolated test runs.</p>
+<p><strong>Impact:</strong> Unit test failure blocks CI/CD; Integration
+tests need server infrastructure</p>
+<h3 id="placeholder-implementations-returning-to-users">1.2 Placeholder
+Implementations Returning to Users</h3>
+<p><strong>Status:</strong> CRITICAL</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 35%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/cognee/performance_optimizer.go</code></td>
+<td>1187-1256</td>
+<td>11 compression/traversal methods return nil</td>
+</tr>
+<tr>
+<td><code>internal/config/config.go</code></td>
+<td>566-568, 1464-1483</td>
+<td>UpdateConfigFromMap, SaveTemplate, LoadTemplate are stubs</td>
+</tr>
+<tr>
+<td><code>internal/llm/model_discovery.go</code></td>
+<td>1136-1149</td>
+<td>Hardcoded model alternatives instead of API queries</td>
+</tr>
+<tr>
+<td><code>internal/llm/usage_analytics.go</code></td>
+<td>566, 581, 583</td>
+<td>Hardcoded placeholder metrics</td>
+</tr>
+<tr>
+<td><code>internal/cognee/host_optimizer.go</code></td>
+<td>7-18</td>
+<td>Complete stub returning unchanged config</td>
+</tr>
+<tr>
+<td><code>internal/tools/mapping/treesitter.go</code></td>
+<td>61-62, 267-269</td>
+<td>Placeholder parser implementation</td>
+</tr>
+</tbody>
+</table>
+<h3 id="missing-api-endpoints-documented-but-not-implemented">1.3
+Missing API Endpoints (Documented but Not Implemented)</h3>
+<p><strong>Status:</strong> CRITICAL - Feature gap</p>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 20%" />
+<col style="width: 23%" />
+</colgroup>
+<thead>
+<tr>
+<th>Endpoint Category</th>
+<th>Count</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MCP Server Management</td>
+<td>6 endpoints</td>
+<td>MCP not REST-accessible</td>
+</tr>
+<tr>
+<td>Workflow State/History</td>
+<td>5 endpoints</td>
+<td>No workflow control via API</td>
+</tr>
+<tr>
+<td>Notification Management</td>
+<td>5 endpoints</td>
+<td>Notifications not user-configurable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="low-test-coverage-packages-below-50">1.4 Low Test Coverage
+Packages (Below 50%)</h3>
+<p><strong>Status:</strong> CRITICAL - Quality issue</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/llm</code></td>
+<td>44.9%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/memory/providers</code></td>
+<td>46.1%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/workflow/planmode</code></td>
+<td>39.7%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>shared/mobile-core</code></td>
+<td>42.6%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/tools/mapping</code></td>
+<td>53.8%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/providers</code></td>
+<td>51.7%</td>
+<td>100%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-2-high-priority-issues">SECTION 2: HIGH PRIORITY
+ISSUES</h2>
+<h3 id="missing-feature-implementations">2.1 Missing Feature
+Implementations</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Documentation</th>
+<th>Implementation Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Advanced Reasoning API</td>
+<td>CLI_Specs_5.md</td>
+<td>NOT IMPLEMENTED</td>
+</tr>
+<tr>
+<td>GenerateWithReasoning</td>
+<td>Section 2, lines 71-82</td>
+<td>No code exists</td>
+</tr>
+<tr>
+<td>Chain-of-Thought</td>
+<td>Specified</td>
+<td>Not found</td>
+</tr>
+<tr>
+<td>Tree-of-Thoughts</td>
+<td>Specified</td>
+<td>Not found</td>
+</tr>
+</tbody>
+</table>
+<h3 id="documentation-vs-code-inconsistencies">2.2 Documentation vs Code
+Inconsistencies</h3>
+<h4 id="missing-cli-commands-documented-in-claude.md">Missing CLI
+Commands (Documented in CLAUDE.md)</h4>
+<ul>
+<li><code>helix worker</code> command group (worker management)</li>
+<li><code>helix workflow</code> command group (workflow control)</li>
+<li><code>helix notify</code> command group (notification
+management)</li>
+<li><code>helix session</code> command group (session management)</li>
+</ul>
+<h4 id="missing-configuration-sections">Missing Configuration
+Sections</h4>
+<ul>
+<li><code>reasoning:</code> configuration block</li>
+<li><code>mcp.servers:</code> registration mechanism</li>
+<li>Centralized <code>notifications:</code> configuration</li>
+</ul>
+<h3 id="silent-error-handling-issues">2.3 Silent Error Handling
+Issues</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 35%" />
+<col style="width: 35%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Lines</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/hardware/detector.go</code></td>
+<td>44-61</td>
+<td>Returns success despite all detection failures</td>
+</tr>
+<tr>
+<td><code>internal/task/manager.go</code></td>
+<td>257, 263, 302, 307</td>
+<td>Returns nil, nil hiding cache errors</td>
+</tr>
+<tr>
+<td><code>internal/tools/multiedit/transaction.go</code></td>
+<td>354-369</td>
+<td>Incomplete conflict verification</td>
+</tr>
+</tbody>
+</table>
+<h3 id="applications-low-coverage">2.4 Applications Low Coverage</h3>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Coverage</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aurora-os</td>
+<td>4.9%</td>
+<td>80%+</td>
+</tr>
+<tr>
+<td>harmony-os</td>
+<td>8.5%</td>
+<td>80%+</td>
+</tr>
+<tr>
+<td>desktop</td>
+<td>9.1%</td>
+<td>80%+</td>
+</tr>
+<tr>
+<td>terminal-ui</td>
+<td>9.6%</td>
+<td>80%+</td>
+</tr>
+<tr>
+<td>cmd/cli</td>
+<td>11.9%</td>
+<td>80%+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-3-medium-priority-issues">SECTION 3: MEDIUM PRIORITY
+ISSUES</h2>
+<h3 id="test-coverage-gaps-50-70">3.1 Test Coverage Gaps (50-70%)</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Current</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>internal/cognee</code></td>
+<td>59.9%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/focus</code></td>
+<td>61.3%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/mcp</code></td>
+<td>61.3%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/editor/formats</code></td>
+<td>62.6%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/tools/web</code></td>
+<td>62.3%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/workflow</code></td>
+<td>64.7%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/workflow/autonomy</code></td>
+<td>65.0%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/tools/confirmation</code></td>
+<td>65.0%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/tools/filesystem</code></td>
+<td>66.8%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/rules</code></td>
+<td>66.8%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/hardware</code></td>
+<td>67.5%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/memory</code></td>
+<td>67.8%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/llm/vision</code></td>
+<td>68.3%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/tools/shell</code></td>
+<td>68.2%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/tools/multiedit</code></td>
+<td>68.6%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/agent/types</code></td>
+<td>68.6%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td><code>internal/redis</code></td>
+<td>69.6%</td>
+<td>100%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="llm-providers-without-dedicated-tests">3.2 LLM Providers Without
+Dedicated Tests</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>File</th>
+<th>Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Copilot</td>
+<td>copilot_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>KoboldAI</td>
+<td>koboldai_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>Llama.cpp</td>
+<td>llamacpp_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>ollama_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td>openai_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>OpenAI Compatible</td>
+<td>openai_compatible_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>openrouter_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>Tool Provider</td>
+<td>tool_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>xAI</td>
+<td>xai_provider.go</td>
+<td>NONE</td>
+</tr>
+<tr>
+<td>Local Provider</td>
+<td>local_provider.go</td>
+<td>NONE</td>
+</tr>
+</tbody>
+</table>
+<h3 id="workflow-templates-with-todo-comments">3.3 Workflow Templates
+With TODO Comments</h3>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>File</th>
+<th>Lines</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Go</td>
+<td>executor.go</td>
+<td>661-667</td>
+<td>Generates TODO comment</td>
+</tr>
+<tr>
+<td>Node.js</td>
+<td>executor.go</td>
+<td>696-700</td>
+<td>Generates TODO comment</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>executor.go</td>
+<td>742-747</td>
+<td>Generates TODO comment</td>
+</tr>
+<tr>
+<td>Rust</td>
+<td>executor.go</td>
+<td>785-789</td>
+<td>Generates TODO comment</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-4-low-priority-issues">SECTION 4: LOW PRIORITY
+ISSUES</h2>
+<h3 id="minor-version-conflicts">4.1 Minor Version Conflicts</h3>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Direct</th>
+<th>Indirect</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JWT</td>
+<td>v4.5.2</td>
+<td>v5.2.1</td>
+<td>Dual version (functional)</td>
+</tr>
+<tr>
+<td>Tree-sitter</td>
+<td>0.0.0-2024…</td>
+<td>-</td>
+<td>Pre-release version</td>
+</tr>
+</tbody>
+</table>
+<h3 id="packages-with-0-coverage-utilityscripts">4.2 Packages with 0%
+Coverage (Utility/Scripts)</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cmd/config_test</td>
+<td>Utility tool</td>
+</tr>
+<tr>
+<td>cmd/helix_config</td>
+<td>Management tool</td>
+</tr>
+<tr>
+<td>cmd/performance_optimization</td>
+<td>Optimization tool</td>
+</tr>
+<tr>
+<td>cmd/security_fix</td>
+<td>Security tool</td>
+</tr>
+<tr>
+<td>examples/*</td>
+<td>Example code</td>
+</tr>
+<tr>
+<td>scripts/*</td>
+<td>Build scripts</td>
+</tr>
+<tr>
+<td>internal/mocks</td>
+<td>Test infrastructure</td>
+</tr>
+<tr>
+<td>internal/testutil</td>
+<td>Test infrastructure</td>
+</tr>
+</tbody>
+</table>
+<h3 id="documentation-improvements-needed">4.3 Documentation
+Improvements Needed</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/agent</td>
+<td>No detailed README</td>
+<td>Create documentation</td>
+</tr>
+<tr>
+<td>internal/workflow</td>
+<td>Basic README</td>
+<td>Expand documentation</td>
+</tr>
+<tr>
+<td>internal/session</td>
+<td>Basic README</td>
+<td>Expand documentation</td>
+</tr>
+<tr>
+<td>internal/llm/vision</td>
+<td>No README</td>
+<td>Create documentation</td>
+</tr>
+<tr>
+<td>internal/project</td>
+<td>Basic README</td>
+<td>Expand documentation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-5-test-coverage-summary">SECTION 5: TEST COVERAGE
+SUMMARY</h2>
+<h3 id="complete-coverage-data-from-go-test--cover-....">Complete
+Coverage Data (from <code>go test -cover ./...</code>)</h3>
+<h4 id="packages-at-100-coverage-target-achieved">Packages at 100%
+Coverage (Target Achieved)</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/llm/compressioniface</td>
+<td>100.0%</td>
+</tr>
+<tr>
+<td>internal/notification/testutil</td>
+<td>100.0%</td>
+</tr>
+<tr>
+<td>internal/provider</td>
+<td>100.0%</td>
+</tr>
+<tr>
+<td>internal/security</td>
+<td>100.0%</td>
+</tr>
+<tr>
+<td>internal/version</td>
+<td>100.0%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="packages-at-90-coverage-excellent">Packages at 90%+ Coverage
+(Excellent)</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/monitoring</td>
+<td>97.1%</td>
+</tr>
+<tr>
+<td>internal/agent/task</td>
+<td>96.6%</td>
+</tr>
+<tr>
+<td>internal/session</td>
+<td>95.0%</td>
+</tr>
+<tr>
+<td>internal/hooks</td>
+<td>93.4%</td>
+</tr>
+<tr>
+<td>internal/logo</td>
+<td>92.6%</td>
+</tr>
+<tr>
+<td>internal/template</td>
+<td>92.1%</td>
+</tr>
+<tr>
+<td>internal/context/mentions</td>
+<td>91.4%</td>
+</tr>
+<tr>
+<td>internal/fix</td>
+<td>91.0%</td>
+</tr>
+<tr>
+<td>internal/context/builder</td>
+<td>90.0%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="packages-at-80-coverage-good">Packages at 80%+ Coverage
+(Good)</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/performance</td>
+<td>89.4%</td>
+</tr>
+<tr>
+<td>internal/commands/builtin</td>
+<td>88.9%</td>
+</tr>
+<tr>
+<td>internal/discovery</td>
+<td>88.4%</td>
+</tr>
+<tr>
+<td>internal/editor</td>
+<td>87.9%</td>
+</tr>
+<tr>
+<td>internal/event</td>
+<td>84.5%</td>
+</tr>
+<tr>
+<td>internal/deployment</td>
+<td>83.8%</td>
+</tr>
+<tr>
+<td>internal/context</td>
+<td>83.8%</td>
+</tr>
+<tr>
+<td>internal/logging</td>
+<td>83.3%</td>
+</tr>
+<tr>
+<td>internal/auth</td>
+<td>81.4%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="packages-at-70-80-coverage-acceptable">Packages at 70-80%
+Coverage (Acceptable)</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/notification</td>
+<td>79.4%</td>
+</tr>
+<tr>
+<td>internal/commands</td>
+<td>78.1%</td>
+</tr>
+<tr>
+<td>internal/persistence</td>
+<td>77.7%</td>
+</tr>
+<tr>
+<td>internal/project</td>
+<td>77.0%</td>
+</tr>
+<tr>
+<td>internal/llm/compression</td>
+<td>75.2%</td>
+</tr>
+<tr>
+<td>internal/database</td>
+<td>73.8%</td>
+</tr>
+<tr>
+<td>internal/worker</td>
+<td>73.7%</td>
+</tr>
+<tr>
+<td>internal/task</td>
+<td>73.5%</td>
+</tr>
+<tr>
+<td>internal/config</td>
+<td>72.4%</td>
+</tr>
+<tr>
+<td>internal/agent</td>
+<td>72.2%</td>
+</tr>
+<tr>
+<td>internal/repomap</td>
+<td>71.2%</td>
+</tr>
+<tr>
+<td>internal/workflow/snapshots</td>
+<td>70.5%</td>
+</tr>
+<tr>
+<td>internal/tools/git</td>
+<td>70.5%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="packages-at-60-70-coverage-needs-improvement">Packages at 60-70%
+Coverage (Needs Improvement)</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/redis</td>
+<td>69.6%</td>
+</tr>
+<tr>
+<td>internal/tools/multiedit</td>
+<td>68.6%</td>
+</tr>
+<tr>
+<td>internal/agent/types</td>
+<td>68.6%</td>
+</tr>
+<tr>
+<td>internal/llm/vision</td>
+<td>68.3%</td>
+</tr>
+<tr>
+<td>internal/tools/shell</td>
+<td>68.2%</td>
+</tr>
+<tr>
+<td>internal/memory</td>
+<td>67.8%</td>
+</tr>
+<tr>
+<td>internal/hardware</td>
+<td>67.5%</td>
+</tr>
+<tr>
+<td>internal/tools/filesystem</td>
+<td>66.8%</td>
+</tr>
+<tr>
+<td>internal/rules</td>
+<td>66.8%</td>
+</tr>
+<tr>
+<td>internal/tools/confirmation</td>
+<td>65.0%</td>
+</tr>
+<tr>
+<td>internal/workflow/autonomy</td>
+<td>65.0%</td>
+</tr>
+<tr>
+<td>internal/workflow</td>
+<td>64.7%</td>
+</tr>
+<tr>
+<td>internal/editor/formats</td>
+<td>62.6%</td>
+</tr>
+<tr>
+<td>internal/tools/web</td>
+<td>62.3%</td>
+</tr>
+<tr>
+<td>internal/mcp</td>
+<td>61.3%</td>
+</tr>
+<tr>
+<td>internal/focus</td>
+<td>61.3%</td>
+</tr>
+<tr>
+<td>internal/tools/voice</td>
+<td>60.2%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="critical-packages-below-60-coverage">Critical: Packages Below
+60% Coverage</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/cognee</td>
+<td>59.9%</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/server</td>
+<td>55.1%</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/tools</td>
+<td>55.5%</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/tools/browser</td>
+<td>55.1%</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>internal/tools/mapping</td>
+<td>53.8%</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/providers</td>
+<td>51.7%</td>
+<td>High</td>
+</tr>
+<tr>
+<td>tests/e2e/challenges</td>
+<td>49.0%</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>internal/memory/providers</td>
+<td>46.1%</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>internal/llm</td>
+<td>44.9%</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>shared/mobile-core</td>
+<td>42.6%</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>internal/workflow/planmode</td>
+<td>39.7%</td>
+<td>Critical</td>
+</tr>
+</tbody>
+</table>
+<h4 id="applications-very-low---needs-major-work">Applications (Very Low
+- Needs Major Work)</h4>
+<table>
+<thead>
+<tr>
+<th>Application</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>applications/aurora_os</td>
+<td>4.9%</td>
+</tr>
+<tr>
+<td>applications/harmony_os</td>
+<td>8.5%</td>
+</tr>
+<tr>
+<td>applications/desktop</td>
+<td>9.1%</td>
+</tr>
+<tr>
+<td>applications/terminal_ui</td>
+<td>9.6%</td>
+</tr>
+<tr>
+<td>cmd/cli</td>
+<td>11.9%</td>
+</tr>
+<tr>
+<td>tests/e2e/phase3</td>
+<td>16.2%</td>
+</tr>
+</tbody>
+</table>
+<h4 id="packages-with-0-coverage-intentionalutility">Packages with 0%
+Coverage (Intentional/Utility)</h4>
+<ul>
+<li>cmd/<em>, examples/</em>, scripts/* - Entry points and
+utilities</li>
+<li>internal/mocks, internal/testutil - Test infrastructure</li>
+</ul>
+<hr />
+<h2 id="section-6-remediation-plan">SECTION 6: REMEDIATION PLAN</h2>
+<h3 id="phase-1-critical-fixes-week-1-2">Phase 1: Critical Fixes (Week
+1-2)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Fix TestExtractPythonSymbols failing
+test</label></li>
+<li><label><input type="checkbox"></input>Implement compression/traversal
+methods (cognee)</label></li>
+<li><label><input type="checkbox"></input>Complete config watcher
+implementation</label></li>
+<li><label><input type="checkbox"></input>Replace hardcoded model alternatives
+with API calls</label></li>
+<li><label><input type="checkbox"></input>Fix silent error handling in
+hardware detector</label></li>
+</ul>
+<h3 id="phase-2-test-coverage-improvement-week-3-6">Phase 2: Test
+Coverage Improvement (Week 3-6)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Increase internal/llm coverage to
+80%+</label></li>
+<li><label><input type="checkbox"></input>Increase internal/memory/providers
+coverage to 80%+</label></li>
+<li><label><input type="checkbox"></input>Increase internal/workflow/planmode
+coverage to 80%+</label></li>
+<li><label><input type="checkbox"></input>Add tests for all 10 untested LLM
+providers</label></li>
+<li><label><input type="checkbox"></input>Increase application test coverage
+to 50%+</label></li>
+</ul>
+<h3 id="phase-3-api-completion-week-7-10">Phase 3: API Completion (Week
+7-10)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Implement MCP server management
+endpoints</label></li>
+<li><label><input type="checkbox"></input>Implement workflow state/history
+endpoints</label></li>
+<li><label><input type="checkbox"></input>Implement notification management
+endpoints</label></li>
+<li><label><input type="checkbox"></input>Add CLI commands for worker,
+workflow, notify, session</label></li>
+</ul>
+<h3 id="phase-4-feature-completion-week-11-14">Phase 4: Feature
+Completion (Week 11-14)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Implement Advanced Reasoning
+API</label></li>
+<li><label><input type="checkbox"></input>Complete tree-sitter parser
+implementation</label></li>
+<li><label><input type="checkbox"></input>Finish Zep provider query
+format</label></li>
+<li><label><input type="checkbox"></input>Complete transaction
+verification</label></li>
+</ul>
+<h3 id="phase-5-documentation-polish-week-15-16">Phase 5: Documentation
+&amp; Polish (Week 15-16)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create missing package
+READMEs</label></li>
+<li><label><input type="checkbox"></input>Update configuration
+documentation</label></li>
+<li><label><input type="checkbox"></input>Sync CLI documentation with
+commands</label></li>
+<li><label><input type="checkbox"></input>Create video course
+content</label></li>
+<li><label><input type="checkbox"></input>Update website
+documentation</label></li>
+</ul>
+<hr />
+<h2 id="section-7-dependency-analysis">SECTION 7: DEPENDENCY
+ANALYSIS</h2>
+<h3 id="integration-quality-summary">Integration Quality Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Dependency</th>
+<th>Version</th>
+<th>Integration</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gin</td>
+<td>v1.11.0</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Viper</td>
+<td>v1.21.0</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>PGX</td>
+<td>v5.7.6</td>
+<td>Very Good</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>v9.17.2</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>JWT</td>
+<td>v4.5.2</td>
+<td>Good</td>
+<td>Minor version conflict</td>
+</tr>
+<tr>
+<td>WebSocket</td>
+<td>v1.5.3</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Chromedp</td>
+<td>v0.14.2</td>
+<td>Very Good</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Testify</td>
+<td>v1.11.1</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Cobra</td>
+<td>v1.8.0</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Fyne</td>
+<td>v2.7.0</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Tview</td>
+<td>v0.42.0</td>
+<td>Excellent</td>
+<td>Production Ready</td>
+</tr>
+<tr>
+<td>Tree-sitter</td>
+<td>0.0.0-…</td>
+<td>Good</td>
+<td>Pre-release version</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="section-8-tracking-checkpoints">SECTION 8: TRACKING
+CHECKPOINTS</h2>
+<h3 id="checkpoint-system">Checkpoint System</h3>
+<p>This audit supports stop/resume capability. Each section can be
+verified independently.</p>
+<h3 id="verification-checklist">Verification Checklist</h3>
+<h4 id="critical-issues-verification">Critical Issues Verification</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Run
+<code>go test ./internal/repomap/...</code> - must pass</label></li>
+<li><label><input type="checkbox"></input>Review
+cognee/performance_optimizer.go implementations</label></li>
+<li><label><input type="checkbox"></input>Verify config methods are
+functional</label></li>
+<li><label><input type="checkbox"></input>Confirm no hardcoded data in LLM
+responses</label></li>
+</ul>
+<h4 id="coverage-verification">Coverage Verification</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Run
+<code>go test -cover ./...</code> - all packages 80%+</label></li>
+<li><label><input type="checkbox"></input>Run
+<code>go test -cover ./internal/llm/...</code> - must be
+80%+</label></li>
+<li><label><input type="checkbox"></input>Run
+<code>go test -cover ./applications/...</code> - must be
+50%+</label></li>
+</ul>
+<h4 id="api-verification">API Verification</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Test all MCP endpoints
+exist</label></li>
+<li><label><input type="checkbox"></input>Test all workflow endpoints
+exist</label></li>
+<li><label><input type="checkbox"></input>Test all notification endpoints
+exist</label></li>
+</ul>
+<h4 id="documentation-verification">Documentation Verification</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>All packages have
+README.md</label></li>
+<li><label><input type="checkbox"></input>CLAUDE.md matches implemented
+features</label></li>
+<li><label><input type="checkbox"></input>API documentation matches
+handlers</label></li>
+</ul>
+<hr />
+<h2 id="section-9-statistics">SECTION 9: STATISTICS</h2>
+<h3 id="codebase-size">Codebase Size</h3>
+<ul>
+<li><strong>Total Go Files:</strong> 514</li>
+<li><strong>Total Test Files:</strong> 203</li>
+<li><strong>Total Lines of Code:</strong> ~150,000+</li>
+<li><strong>Internal Packages:</strong> 42</li>
+<li><strong>Applications:</strong> 6 (server, cli, terminal-ui, desktop,
+aurora-os, harmony-os)</li>
+</ul>
+<h3 id="documentation-size">Documentation Size</h3>
+<ul>
+<li><strong>Markdown Files:</strong> 4,013</li>
+<li><strong>SQL Definitions:</strong> 73</li>
+<li><strong>Configuration Files:</strong> 50+</li>
+<li><strong>Diagram Files:</strong> 30+ (embedded mermaid)</li>
+</ul>
+<h3 id="test-distribution">Test Distribution</h3>
+<ul>
+<li><strong>Unit Tests:</strong> 157 files</li>
+<li><strong>Integration Tests:</strong> 8 files</li>
+<li><strong>E2E Tests:</strong> 17 files</li>
+<li><strong>Challenge Tests:</strong> 8 files</li>
+<li><strong>Security Tests:</strong> 5 files</li>
+<li><strong>Regression Tests:</strong> 2 files</li>
+</ul>
+<hr />
+<h2 id="section-10-next-actions">SECTION 10: NEXT ACTIONS</h2>
+<h3 id="immediate-today">Immediate (Today)</h3>
+<ol type="1">
+<li>Review this audit report</li>
+<li>Prioritize critical issues</li>
+<li>Assign owners to each section</li>
+<li>Set up tracking in project management tool</li>
+</ol>
+<h3 id="this-week">This Week</h3>
+<ol type="1">
+<li>Fix failing test (TestExtractPythonSymbols)</li>
+<li>Begin test coverage improvement sprint</li>
+<li>Review all placeholder implementations</li>
+<li>Create tickets for missing API endpoints</li>
+</ol>
+<h3 id="this-month">This Month</h3>
+<ol type="1">
+<li>Achieve 70% average test coverage</li>
+<li>Implement missing API endpoints</li>
+<li>Complete CLI command additions</li>
+<li>Fix all silent error handling issues</li>
+</ol>
+<hr />
+<p><strong>Report Version:</strong> 1.0 <strong>Last Updated:</strong>
+2026-01-10 <strong>Next Review:</strong> Weekly during remediation</p>
+</body>
+</html>

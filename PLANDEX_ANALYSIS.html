@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PLANDEX_ANALYSIS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PLANDEX_ANALYSIS</h1>
+</header>
+<h1 id="plandex---comprehensive-analysis-for-helixcode-porting">Plandex
+- Comprehensive Analysis for HelixCode Porting</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Plandex is a sophisticated AI coding agent designed for large-scale
+development tasks. It’s built in Go (server) and TypeScript/Go (CLI)
+with a terminal-first interface. The system combines intelligent context
+management, multi-provider LLM integration, file diff review, git
+integration, and progressive autonomy levels.</p>
+<hr />
+<h2 id="core-features-and-capabilities">1. Core Features and
+Capabilities</h2>
+<h3 id="plans-workflow-management">1.1 Plans &amp; Workflow
+Management</h3>
+<ul>
+<li><strong>Plans</strong>: Conversation-like containers for tasks
+(similar to ChatGPT sessions)
+<ul>
+<li>Can contain single prompts or complex multi-step workflows</li>
+<li>Support for context (files, directories, URLs, images, notes, piped
+data)</li>
+<li>Each plan maintains independent conversation history and pending
+changes</li>
+<li>Plans are project-directory scoped with support for
+subdirectories</li>
+<li>Plans can be named, archived, or deleted</li>
+</ul></li>
+</ul>
+<h3 id="conversation-system">1.2 Conversation System</h3>
+<ul>
+<li><strong>Chat Mode</strong> (default): Flex out ideas before
+implementation</li>
+<li><strong>Tell Mode</strong>: Detailed planning and code
+generation</li>
+<li>Conversation history with version-controlled entries</li>
+<li>Automatic conversation summarization via “summarizer” role</li>
+<li>Git diff format viewing of conversation changes</li>
+<li>Full conversation export via <code>convo</code> command</li>
+</ul>
+<h3 id="context-management">1.3 Context Management</h3>
+<ul>
+<li><strong>Dual approach</strong>: Manual + Automatic context
+loading</li>
+<li><strong>Project Maps</strong>: Tree-sitter based syntax trees for
+30+ languages (~100k tokens per file)</li>
+<li><strong>File loading</strong>: Load specific files or entire
+directories</li>
+<li><strong>Smart Context Window</strong>:
+<ul>
+<li>Dynamically loads only relevant files per task step</li>
+<li>Reduces context bloat in large projects</li>
+<li>Works with both automatic and manual loading</li>
+</ul></li>
+<li><strong>Auto-context fallback</strong>: Falls back to simpler models
+when context exceeds limits</li>
+<li><strong>Context Versioning</strong>: All context changes tracked in
+plan history</li>
+</ul>
+<h3 id="change-management-diff-review">1.4 Change Management &amp; Diff
+Review</h3>
+<ul>
+<li><strong>Sandbox model</strong>: Changes kept separate from project
+until approved</li>
+<li><strong>Cumulative diff sandbox</strong>: All changes accumulate
+until explicitly applied</li>
+<li><strong>Diff viewing</strong>:
+<ul>
+<li>Terminal: <code>git diff</code> format</li>
+<li>UI: Browser-based diff viewer with side-by-side and line-by-line
+views</li>
+<li>Can reject individual files without affecting others</li>
+</ul></li>
+<li><strong>Change staging</strong>: Changes can be applied
+selectively</li>
+<li><strong>Git integration</strong>: Auto-commit with AI-generated
+commit messages</li>
+</ul>
+<h3 id="autonomy-system-5-levels">1.5 Autonomy System (5 Levels)</h3>
+<p>Progressive automation from manual to full: - <strong>None</strong>:
+Complete manual control - <strong>Basic</strong>: Auto-continue plans +
+auto-build (v1 equivalent) - <strong>Plus</strong>: Smart context +
+manual execution + auto-commit - <strong>Semi</strong> (default):
+Auto-load context + manual apply - <strong>Full</strong>: Complete
+automation with auto-debug and rollback</p>
+<p>Each level configurable individually via <code>set-config</code>
+commands.</p>
+<h3 id="execution-debugging">1.6 Execution &amp; Debugging</h3>
+<ul>
+<li><strong>Command execution</strong>: Run build/test/deployment
+commands</li>
+<li><strong>Auto-debugging</strong>: Terminal and browser-based
+debugging</li>
+<li><strong>Chrome integration</strong>: Auto-debug for browser
+applications</li>
+<li><strong>Rollback</strong>: Failed executions automatically rollback
+changes</li>
+<li><strong>Execution status tracking</strong>: AI determines if plan
+should continue based on results</li>
+</ul>
+<h3 id="version-control-system">1.7 Version Control System</h3>
+<ul>
+<li><strong>Plan versioning</strong>: Every action creates a version
+<ul>
+<li>Context changes, prompts, responses, builds, applications</li>
+</ul></li>
+<li><strong>Branching</strong>: Create branches for exploring
+alternatives</li>
+<li><strong>Rewind capability</strong>: Revert to earlier plan
+states</li>
+<li><strong>Git hooks</strong>: Integration with project git for
+commit/push automation</li>
+<li><strong>History viewing</strong>: Full <code>plandex log</code> with
+optional revert</li>
+</ul>
+<h3 id="role-based-model-system">1.8 Role-Based Model System</h3>
+<p>Specialized roles for different tasks: - <strong>planner</strong>:
+Main role, replies to prompts and makes plans -
+<strong>architect</strong>: High-level planning + context selection
+(optional, falls back to planner) - <strong>coder</strong>: Code
+implementation with strict formatting rules (optional) -
+<strong>builder</strong>: Builds plans into file diffs -
+<strong>whole-file-builder</strong>: File rewrite fallback when targeted
+edits fail - <strong>summarizer</strong>: Conversation summarization -
+<strong>auto-continue</strong>: Determines plan completion -
+<strong>names</strong>: Auto-naming for plans and context -
+<strong>commit-messages</strong>: Generates git commit messages</p>
+<hr />
+<h2 id="supported-llm-providers-and-apis">2. Supported LLM Providers and
+APIs</h2>
+<h3 id="built-in-providers-12-total">2.1 Built-in Providers (12
+total)</h3>
+<ol type="1">
+<li><strong>OpenAI</strong> (<code>ModelProviderOpenAI</code>)
+<ul>
+<li>Direct API access</li>
+<li>Environment: <code>OPENAI_API_KEY</code>, <code>OPENAI_ORG_ID</code>
+(optional)</li>
+<li>Base URL: <code>https://api.openai.com/v1</code></li>
+</ul></li>
+<li><strong>Anthropic</strong> (<code>ModelProviderAnthropic</code>)
+<ul>
+<li>Direct Claude API</li>
+<li>Environment: <code>ANTHROPIC_API_KEY</code></li>
+<li>Special: Claude Max subscription support (OAuth tokens)</li>
+<li>Beta header: <code>anthropic-beta: oauth-2025-04-20</code></li>
+</ul></li>
+<li><strong>Anthropic Claude Max</strong>
+(<code>ModelProviderAnthropicClaudeMax</code>)
+<ul>
+<li>Enhanced Claude Max with extended context</li>
+<li>Environment: Separate Pro/Max credentials</li>
+</ul></li>
+<li><strong>Google AI Studio</strong>
+(<code>ModelProviderGoogleAIStudio</code>)
+<ul>
+<li>Gemini models (free tier)</li>
+<li>Environment: <code>GEMINI_API_KEY</code></li>
+</ul></li>
+<li><strong>Google Vertex AI</strong>
+(<code>ModelProviderGoogleVertex</code>)
+<ul>
+<li>Enterprise Gemini/Anthropic models</li>
+<li>Environment: <code>GOOGLE_APPLICATION_CREDENTIALS</code>,
+<code>VERTEXAI_PROJECT</code>, <code>VERTEXAI_LOCATION</code></li>
+</ul></li>
+<li><strong>Azure OpenAI</strong>
+(<code>ModelProviderAzureOpenAI</code>)
+<ul>
+<li>OpenAI models via Azure infrastructure</li>
+<li>Environment: <code>AZURE_OPENAI_API_KEY</code>,
+<code>AZURE_API_BASE</code>, <code>AZURE_API_VERSION</code></li>
+<li>Optional: <code>AZURE_DEPLOYMENTS_MAP</code> for custom deployment
+names</li>
+</ul></li>
+<li><strong>AWS Bedrock</strong>
+(<code>ModelProviderAmazonBedrock</code>)
+<ul>
+<li>Anthropic models via AWS</li>
+<li>Environment: <code>AWS_ACCESS_KEY_ID</code>,
+<code>AWS_SECRET_ACCESS_KEY</code>, <code>AWS_REGION</code></li>
+<li>Optional: <code>AWS_SESSION_TOKEN</code>,
+<code>AWS_INFERENCE_PROFILE_ARN</code></li>
+<li>Also supports: <code>PLANDEX_AWS_PROFILE</code> for credential
+file</li>
+</ul></li>
+<li><strong>OpenRouter</strong> (<code>ModelProviderOpenRouter</code>)
+<ul>
+<li>Aggregator supporting 100+ models</li>
+<li>Environment: <code>OPENROUTER_API_KEY</code></li>
+<li>Base URL: <code>https://openrouter.ai/api/v1</code></li>
+<li><strong>Special Role</strong>: Automatic failover for other
+providers</li>
+</ul></li>
+<li><strong>DeepSeek</strong> (<code>ModelProviderDeepSeek</code>)
+<ul>
+<li>Chinese reasoning models</li>
+<li>Environment: <code>DEEPSEEK_API_KEY</code></li>
+</ul></li>
+<li><strong>Perplexity</strong> (<code>ModelProviderPerplexity</code>)
+<ul>
+<li>Web-aware reasoning models</li>
+<li>Environment: <code>PERPLEXITY_API_KEY</code></li>
+</ul></li>
+<li><strong>Ollama</strong> (<code>ModelProviderOllama</code>)
+<ul>
+<li>Local models</li>
+<li>No authentication required</li>
+<li>Local only</li>
+<li>Environment: <code>OLLAMA_BASE_URL</code></li>
+</ul></li>
+<li><strong>Custom</strong> (<code>ModelProviderCustom</code>)
+<ul>
+<li>OpenAI-compatible endpoints</li>
+<li>Self-hosted LLM servers</li>
+<li>Configurable via JSON config file</li>
+</ul></li>
+</ol>
+<h3 id="provider-selection-logic">2.2 Provider Selection Logic</h3>
+<ul>
+<li><strong>Priority order</strong>: Direct provider &gt; Aggregator
+(OpenRouter) &gt; Fallback</li>
+<li><strong>Environment variable detection</strong>: Checks which
+credentials are set at runtime</li>
+<li><strong>Direct provider preference</strong>: If both direct and
+OpenRouter are available, uses direct</li>
+<li><strong>OpenRouter failover</strong>: Falls back to OpenRouter if
+primary provider fails</li>
+<li><strong>LiteLLM proxy integration</strong>: Python layer handles
+provider routing
+<ul>
+<li>Special OAuth handling for Anthropic</li>
+<li>Supports 4+ AWS credential patterns</li>
+</ul></li>
+</ul>
+<h3 id="custom-provider-support">2.3 Custom Provider Support</h3>
+<ul>
+<li>OpenAI-compatible API requirement</li>
+<li>JSON configuration: <code>/models custom</code> REPL command</li>
+<li>Self-hosting compatible</li>
+<li>Not available on Plandex Cloud (Integrated Models mode)</li>
+</ul>
+<hr />
+<h2 id="supported-models">3. Supported Models</h2>
+<h3 id="model-metadata-structure">3.1 Model Metadata Structure</h3>
+<p>Each model has: - <strong>ModelTag</strong>: Unique identifier (e.g.,
+“openai/gpt-4.1”) - <strong>ModelId</strong>: Internal ID for
+disambiguation - <strong>Publisher</strong>: OpenAI, Anthropic, Google,
+DeepSeek, Perplexity, Qwen, Mistral - <strong>MaxTokens</strong>:
+Absolute input limit (200k, 400k, 1M+) -
+<strong>MaxOutputTokens</strong>: Output capacity (8k-100k) -
+<strong>ReservedOutputTokens</strong>: Context window reservation
+(8k-40k) - <strong>DefaultMaxConvoTokens</strong>: Before summarization
+triggers - <strong>PreferredOutputFormat</strong>: Either JSON (OpenAI)
+or XML (others) - <strong>SystemPromptDisabled</strong>: For early
+OpenAI releases - <strong>RoleParamsDisabled</strong>: When model
+doesn’t support temperature, top_p, etc. -
+<strong>SupportsCacheControl</strong>: For prompt caching (Anthropic,
+OpenAI, Google)</p>
+<h3 id="current-model-portfolio-25-models-across-7-publishers">3.2
+Current Model Portfolio (25+ models across 7 publishers)</h3>
+<p><strong>OpenAI Models:</strong> - o3, o4-mini (reasoning models with
+variants: high/medium/low) - gpt-4.1 (1M+ context window) - gpt-4o,
+gpt-4o-mini - gpt-4-turbo</p>
+<p><strong>Anthropic Models:</strong> - Claude 3.5 Sonnet (3.5 Sonnet, 3
+Opus variants) - Claude 3 Haiku - Extended context versions (200k
+tokens)</p>
+<p><strong>Google Models:</strong> - Gemini 2.0 Flash (1M token context)
+- Gemini 1.5 Pro/Flash - Gemini 1.5 Flash Exp</p>
+<p><strong>DeepSeek:</strong> - DeepSeek R1 (reasoning model) - DeepSeek
+V3</p>
+<p><strong>Perplexity:</strong> - Sonar (web-aware reasoning)</p>
+<p><strong>Local/Open Source:</strong> - Mistral variants - Qwen models
+- Llama models (via Ollama)</p>
+<h3 id="model-variants">3.3 Model Variants</h3>
+<p>Some models have multiple variants with different parameter tuning: -
+<strong>Reasoning models</strong> (o3, o4-mini, R1): high/medium/low
+reasoning effort variants - Variants override base model settings
+(reserved tokens, reasoning budget) - <strong>Large context
+fallbacks</strong>: Alternative model when context exceeds limits</p>
+<h3 id="built-in-model-packs-16-total">3.4 Built-in Model Packs (16
+total)</h3>
+<p>Pre-configured combinations for different use cases:</p>
+<ol type="1">
+<li><strong>DailyDriver</strong> (Default): Balanced cost/performance
+<ul>
+<li>Multi-provider mix (Anthropic, OpenAI, Google)</li>
+</ul></li>
+<li><strong>Reasoning</strong>: Best for complex logic
+<ul>
+<li>o3-mini planner + specialized models</li>
+</ul></li>
+<li><strong>Strong</strong>: Maximum capability
+<ul>
+<li>High-end models across all roles</li>
+</ul></li>
+<li><strong>Cheap</strong>: Cost-optimized
+<ul>
+<li>Budget-friendly models</li>
+</ul></li>
+<li><strong>OSS</strong> (Open Source): Local models via Ollama</li>
+<li><strong>AnthropicOnly</strong>: Exclusive Anthropic usage</li>
+<li><strong>OpenAIOnly</strong>: Exclusive OpenAI usage</li>
+<li><strong>GoogleOnly</strong>: Exclusive Google usage</li>
+<li><strong>GeminiPlanner</strong>: Gemini-focused planning</li>
+<li><strong>OpusPlanner</strong>: Anthropic Opus planning</li>
+<li><strong>O3Planner</strong>: OpenAI o3 planning</li>
+<li><strong>R1Planner</strong>: DeepSeek R1 planning</li>
+<li><strong>PerplexityPlanner</strong>: Perplexity-focused</li>
+<li><strong>OllamaExperimental</strong>: Experimental local models</li>
+<li><strong>OllamaAdaptiveOSS</strong>: Auto-selecting local models</li>
+<li><strong>OllamaAdaptiveDaily</strong>: Hybrid cloud+local</li>
+</ol>
+<hr />
+<h2 id="key-technical-implementations">4. Key Technical
+Implementations</h2>
+<h3 id="architecture-overview">4.1 Architecture Overview</h3>
+<p><strong>Server</strong>: Go (Gorilla Mux HTTP framework) - Port: 8099
+(default), 4000 (LiteLLM proxy) - Database: PostgreSQL (8000+ lines of
+schema) - Language support: 30+ via tree-sitter</p>
+<p><strong>CLI</strong>: Go + TypeScript - Terminal UI with fuzzy
+autocomplete - REPL mode with stateful context - Streaming response
+handling</p>
+<p><strong>LLM Integration</strong>: Python LiteLLM proxy - Abstraction
+layer for all providers - OAuth header handling for Anthropic -
+Streaming response support - Error handling and retries</p>
+<h3 id="database-schema-8351-lines-of-go-code">4.2 Database Schema (8351
+lines of Go code)</h3>
+<p>Major entities: - <code>plans</code>: Core plan data with status,
+config, autonomy settings - <code>plan_versions</code>: Complete history
+of all changes - <code>contexts</code>: File/directory/URL/image context
+entries - <code>context_versions</code>: Versioned context changes -
+<code>messages</code>: Conversation messages with streaming data -
+<code>pending_changes</code>: Staged file modifications (replacements) -
+<code>branches</code>: Plan branches for exploration -
+<code>git_history</code>: Commit integration tracking</p>
+<p>Helpers for: - Context management (load, update, remove, map) - Plan
+operations (CRUD, execution, branching) - Result handling (replacements,
+pending summary) - Queue management (background tasks) - RBAC
+(role-based access control)</p>
+<h3 id="file-editing-system">4.3 File Editing System</h3>
+<p><strong>Structured Edits</strong> (Primary approach): - Tree-sitter
+based AST-aware edits - Language-specific parsing for 30+ languages -
+Section-based editing (functions, classes, etc.) - Generic fallback
+patterns - Validation and retry with whole-file fallback</p>
+<p><strong>File Management</strong>: - Diff generation via
+<code>git diff</code> (no-index mode) - Replacement tracking with UUIDs
+- Syntax validation before applying - Multi-file transaction support</p>
+<p><strong>Fallback Chain</strong>: 1. Structured edits (targeted
+changes) 2. Validate &amp; fix (syntax correction) 3. Whole-file builder
+role (complete rewrite) 4. Builder role with different approach</p>
+<h3 id="context-management-1">4.4 Context Management</h3>
+<p><strong>Project Mapping</strong>: - Tree-sitter based syntax tree
+generation - File map supports 30+ languages - CLI-based
+(<code>cli/fs</code>, <code>cli/lib</code>) file discovery - Caching of
+project structure - Support for 20M+ token projects</p>
+<p><strong>Context Loading Strategy</strong>: - Architect role selects
+relevant files from project map - Smart window filtering loads only
+files for current step - Cache control directives for prompt caching -
+Separate pipelines for auto vs. manual loading</p>
+<p><strong>Context Caching</strong>: - Anthropic, OpenAI, Google support
+<code>SupportsCacheControl</code> - Cache savings tracked in response
+metadata - Per-path caching flags (<code>CachedByPath</code>) - Cost
+optimization via caching</p>
+<h3 id="streaming-real-time-updates">4.5 Streaming &amp; Real-time
+Updates</h3>
+<p><strong>Response Streaming</strong>: - Server-side streaming with
+chunked responses - Plan execution streaming (tell_stream_*) - Error
+streaming with auto-recovery - Status/progress updates during
+execution</p>
+<p><strong>WebSocket Integration</strong>: - Real-time plan updates -
+Connection pooling - Message queueing</p>
+<h3 id="error-handling-resilience">4.6 Error Handling &amp;
+Resilience</h3>
+<p><strong>Multi-level Recovery</strong>: 1. Provider-specific error
+handling 2. Automatic fallback to alternative provider 3. Syntax
+validation and correction 4. Whole-file rebuild as last resort 5. Manual
+user intervention options</p>
+<p><strong>Execution Rollback</strong>: - Command execution failures
+trigger file rollback - Git state preservation for manual recovery -
+Conflict detection when rewinding</p>
+<h3 id="git-integration">4.7 Git Integration</h3>
+<p><strong>Features</strong>: - Automatic git status checking - Commit
+message generation via AI - Optional auto-commit on successful apply -
+Revert capability matching plan versions - Branch-aware operations</p>
+<p><strong>Files</strong>: <code>db/git.go</code>,
+plan/commit_msg.go</p>
+<hr />
+<h2 id="unique-features">5. Unique Features</h2>
+<h3 id="cumulative-diff-review-sandbox">5.1 Cumulative Diff Review
+Sandbox</h3>
+<ul>
+<li><strong>Distinctive</strong>: Most similar tools apply changes
+immediately</li>
+<li><strong>Plandex approach</strong>: All changes accumulate in
+version-controlled sandbox</li>
+<li><strong>Benefits</strong>:
+<ul>
+<li>Review entire feature before applying</li>
+<li>Selective file rejection</li>
+<li>Complete rollback capability</li>
+<li>Browser-based UI for complex diffs</li>
+</ul></li>
+</ul>
+<h3 id="progressive-autonomy-with-fallbacks">5.2 Progressive Autonomy
+with Fallbacks</h3>
+<ul>
+<li><strong>Level-based preset config</strong>: From manual to full
+automation</li>
+<li><strong>Fallback chain</strong>: Large context → Error → Use
+stronger model</li>
+<li><strong>Runtime reconfigurable</strong>: Change during plan
+execution</li>
+<li><strong>Safety features</strong>: Config warnings for full auto
+mode</li>
+</ul>
+<h3 id="multi-role-model-system">5.3 Multi-role Model System</h3>
+<ul>
+<li><strong>Specialization</strong>: Different models for planning,
+coding, building</li>
+<li><strong>Fallback support</strong>: Each role has optional
+fallback</li>
+<li><strong>Role-specific tuning</strong>:
+<ul>
+<li>Planner: Large context, good reasoning</li>
+<li>Coder: Strong instruction following</li>
+<li>Builder: Precise formatting required</li>
+<li>Auto-continue: Classification task optimization</li>
+</ul></li>
+</ul>
+<h3 id="smart-context-window-management">5.4 Smart Context Window
+Management</h3>
+<ul>
+<li><strong>Dynamic sizing</strong>: Grows/shrinks per task step</li>
+<li><strong>Relevance filtering</strong>: Only loads files for current
+step</li>
+<li><strong>Works with both</strong>: Automatic and manual context
+loading</li>
+<li><strong>Solves n-file problem</strong>: Doesn’t reload all 10 files
+when editing 1</li>
+</ul>
+<h3 id="tree-sitter-based-code-editing">5.5 Tree-sitter Based Code
+Editing</h3>
+<ul>
+<li><strong>Language support</strong>: 30+ languages out of the box</li>
+<li><strong>Syntax-aware edits</strong>: Understands structure, not just
+text</li>
+<li><strong>AST precision</strong>: Targets specific
+functions/classes/blocks</li>
+<li><strong>Fallback robustness</strong>: Reverts to whole-file if
+targeted edits fail</li>
+</ul>
+<h3 id="full-plan-versioning">5.6 Full Plan Versioning</h3>
+<ul>
+<li><strong>Granular history</strong>: Every action versioned</li>
+<li><strong>Reversible operations</strong>: Rewind with conflict
+detection</li>
+<li><strong>Branch capability</strong>: Explore alternatives without
+losing history</li>
+<li><strong>Conversation preservation</strong>: Full message history
+accessible</li>
+</ul>
+<h3 id="context-caching-for-costspeed">5.7 Context Caching for
+Cost/Speed</h3>
+<ul>
+<li><strong>Provider-native support</strong>: Leverages built-in
+caching</li>
+<li><strong>Automatic optimization</strong>: Detects cacheable
+patterns</li>
+<li><strong>Cost tracking</strong>: Reports cache savings</li>
+<li><strong>Works across</strong>: Anthropic, OpenAI, Google</li>
+</ul>
+<h3 id="browser-based-debugging">5.8 Browser-based Debugging</h3>
+<ul>
+<li><strong>Visual inspection</strong>: Watch the code execute</li>
+<li><strong>Screenshot capture</strong>: Auto-captures browser state on
+failure</li>
+<li><strong>Auto-detect issues</strong>: Finds visual errors beyond test
+failures</li>
+<li><strong>Integrated debugging</strong>: Feeds screenshots back to
+model</li>
+</ul>
+<h3 id="integrated-version-control">5.9 Integrated Version Control</h3>
+<ul>
+<li><strong>No separate git needed</strong>: Works without git repo</li>
+<li><strong>Optional git integration</strong>: Auto-commits if repo
+exists</li>
+<li><strong>Message generation</strong>: AI writes commit messages</li>
+<li><strong>Branch support</strong>: Git branches for alternative
+approaches</li>
+</ul>
+<hr />
+<h2 id="key-technical-patterns-for-porting-to-helixcode">6. Key
+Technical Patterns for Porting to HelixCode</h2>
+<h3 id="llm-integration-pattern">6.1 LLM Integration Pattern</h3>
+<pre><code>Provider Selection → LiteLLM Proxy → Direct API
+                  ↓
+           Fallback Chain
+           ↓
+    Auto-retry with another provider</code></pre>
+<p><strong>Actionable</strong>: HelixCode should maintain a provider
+fallback chain and support multiple simultaneous providers.</p>
+<h3 id="role-based-model-routing">6.2 Role-based Model Routing</h3>
+<ul>
+<li>Each workflow step specifies required role</li>
+<li>System resolves role → model → provider at runtime</li>
+<li>Supports fallback to parent role if specific role not
+configured</li>
+<li>Enables mixing models without explicit chain</li>
+</ul>
+<p><strong>Actionable</strong>: Implement task-role mapping separate
+from model selection.</p>
+<h3 id="context-management-stages">6.3 Context Management Stages</h3>
+<ol type="1">
+<li>Discovery (project map generation)</li>
+<li>Selection (architect role picks relevant files)</li>
+<li>Filtering (smart context loads only current step)</li>
+<li>Caching (prompt cache directives applied)</li>
+</ol>
+<p><strong>Actionable</strong>: Design context pipeline as composable
+stages.</p>
+<h3 id="multi-model-output-formats">6.4 Multi-model Output Formats</h3>
+<ul>
+<li>OpenAI models prefer JSON (strict schema support)</li>
+<li>Other providers work better with XML</li>
+<li>Dynamically set <code>PreferredOutputFormat</code> per model</li>
+<li>Parser handles both transparently</li>
+</ul>
+<p><strong>Actionable</strong>: Detect model capabilities and adapt
+output format parsing.</p>
+<h3 id="streaming-response-architecture">6.5 Streaming Response
+Architecture</h3>
+<ul>
+<li>Chunk-based streaming with type prefixes</li>
+<li>Separate goroutines for streaming and storage</li>
+<li>Error recovery during stream</li>
+<li>Progress indicators between chunks</li>
+</ul>
+<p><strong>Actionable</strong>: Use typed message framing for stream
+disambiguation.</p>
+<h3 id="file-edit-validation">6.6 File Edit Validation</h3>
+<pre><code>Proposed Edit
+    ↓
+Try Structured Edit (tree-sitter)
+    ↓ (if fails)
+Syntax Validation &amp; Fix
+    ↓ (if fails)
+Try Whole-File Builder
+    ↓ (if fails)
+Try Alternative Approach
+    ↓
+Manual User Fix</code></pre>
+<p><strong>Actionable</strong>: Build edit validation with pluggable
+fallback strategies.</p>
+<h3 id="autonomy-configuration">6.7 Autonomy Configuration</h3>
+<ul>
+<li>Preset levels (none, basic, plus, semi, full)</li>
+<li>Individual flags can override level</li>
+<li>Runtime reconfigurable</li>
+<li>Each feature checks autonomy before proceeding</li>
+</ul>
+<p><strong>Actionable</strong>: Use hierarchical config with preset
+templates but individual flag overrides.</p>
+<h3 id="plan-version-control">6.8 Plan Version Control</h3>
+<ul>
+<li>Minimal version metadata (action, timestamp, delta summary)</li>
+<li>Full content in separate tables</li>
+<li>Rewind creates new branch implicitly</li>
+<li>Conflict detection on revert</li>
+</ul>
+<p><strong>Actionable</strong>: Store plan metadata separately from
+deltas for efficient history.</p>
+<h3 id="diff-generation">6.9 Diff Generation</h3>
+<ul>
+<li>Git-based: Works on any file, no language-specific knowledge
+needed</li>
+<li>Hunk parsing: Structured parsing of unified diff format</li>
+<li>Replacement tracking: UUIDs for matching proposed↔︎actual</li>
+<li>Selective application: Individual file acceptance/rejection</li>
+</ul>
+<p><strong>Actionable</strong>: Use git diff as lingua franca for all
+file comparisons.</p>
+<h3 id="provider-credential-management">6.10 Provider Credential
+Management</h3>
+<ul>
+<li>Environment variables per provider (not config files)</li>
+<li>Lazy credential loading (only when provider used)</li>
+<li>OAuth token support (Anthropic example)</li>
+<li>AWS credential chain support (profile + env vars)</li>
+</ul>
+<p><strong>Actionable</strong>: Implement env-var-first credential
+discovery with profile fallback.</p>
+<hr />
+<h2 id="database-infrastructure">7. Database &amp; Infrastructure</h2>
+<h3 id="postgresql-schema">7.1 PostgreSQL Schema</h3>
+<ul>
+<li>50+ migration files (fully versioned)</li>
+<li>RBAC support built-in</li>
+<li>Org-based multi-tenancy ready</li>
+<li>Message streaming columns for real-time updates</li>
+</ul>
+<h3 id="containerization">7.2 Containerization</h3>
+<ul>
+<li>Single Dockerfile with Python+Go (for LiteLLM proxy)</li>
+<li>Docker Compose for local development</li>
+<li>Volume mounts for persistent data</li>
+<li>Network isolation between services</li>
+</ul>
+<h3 id="configuration">7.3 Configuration</h3>
+<ul>
+<li>Environment variable driven</li>
+<li>Runtime database connection</li>
+<li>Org/user settings in database</li>
+<li>No local config files in production</li>
+</ul>
+<hr />
+<h2 id="porting-recommendations-for-helixcode">8. Porting
+Recommendations for HelixCode</h2>
+<h3 id="must-have-features">Must-Have Features</h3>
+<ol type="1">
+<li><strong>Multi-provider LLM integration</strong> with fallback
+chain</li>
+<li><strong>Context management</strong> with smart filtering</li>
+<li><strong>File diff review</strong> before applying changes</li>
+<li><strong>Role-based model routing</strong> for specialized tasks</li>
+<li><strong>Progressive autonomy levels</strong> with individual flag
+overrides</li>
+<li><strong>Plan version control</strong> with branching and rewind</li>
+</ol>
+<h3 id="nice-to-have-features">Nice-to-Have Features</h3>
+<ol type="1">
+<li>Tree-sitter based AST-aware editing</li>
+<li>Browser debugging integration</li>
+<li>Project map generation for large codebases</li>
+<li>Conversation summarization</li>
+<li>Git integration with auto-commits</li>
+<li>Web-based diff UI</li>
+</ol>
+<h3 id="architectural-patterns-to-adopt">Architectural Patterns to
+Adopt</h3>
+<ol type="1">
+<li>LiteLLM proxy pattern for provider abstraction</li>
+<li>Role-based model configuration</li>
+<li>Staged context management pipeline</li>
+<li>Fallback chain error handling</li>
+<li>Minimal plan metadata with separate deltas</li>
+<li>Environment variable credential discovery</li>
+<li>Stream-based response handling with type framing</li>
+</ol>
+<h3 id="porting-effort-estimate">Porting Effort Estimate</h3>
+<ul>
+<li><strong>Provider integration</strong>: 2-3 weeks (framework setup
+already exists in HelixCode)</li>
+<li><strong>Context management</strong>: 2-3 weeks (new system,
+complex)</li>
+<li><strong>Diff review + versioning</strong>: 1-2 weeks (database
+ready, UI exists)</li>
+<li><strong>Role-based routing</strong>: 1 week (model abstraction
+exists)</li>
+<li><strong>Autonomy system</strong>: 1-2 weeks (feature flag system
+needed)</li>
+<li><strong>Total</strong>: ~8-12 weeks for MVP with core features</li>
+</ul>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>Plandex GitHub: https://github.com/plandex-ai/plandex</li>
+<li>Documentation: https://docs.plandex.ai/</li>
+<li>Local Mode Quickstart:
+https://docs.plandex.ai/hosting/self-hosting/local-mode-quickstart</li>
+<li>v2.0.0 Release: Autonomy levels and context management overhaul</li>
+</ul>
+</body>
+</html>

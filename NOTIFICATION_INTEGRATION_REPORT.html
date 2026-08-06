@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>NOTIFICATION_INTEGRATION_REPORT</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">NOTIFICATION_INTEGRATION_REPORT</h1>
+</header>
+<h1 id="helixcode-notification-hook-integration---comprehensive-analysis-implementation-plan">HelixCode
+Notification &amp; Hook Integration - Comprehensive Analysis &amp;
+Implementation Plan</h1>
+<p><strong>Generated:</strong> 2025-11-04 <strong>Status:</strong>
+Complete Assessment with Implementation Roadmap</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This report provides a comprehensive analysis of the HelixCode
+notification and hook integration system, including current
+implementation status, test coverage analysis, setup guides for existing
+integrations, research on potential new integrations, and a detailed
+implementation plan with full testing strategy.</p>
+<h3 id="key-findings">Key Findings</h3>
+<p><strong>Current State:</strong> - ✅ Notification engine framework is
+well-designed with good abstractions - ⚠️ Slack integration: Partially
+implemented (webhook only, <strong>0% test coverage</strong>) - ❌
+Telegram integration: <strong>NOT IMPLEMENTED</strong> (mentioned in
+docs only) - ⚠️ Email integration: Partially implemented (basic SMTP,
+<strong>0% test coverage</strong>) - ⚠️ Discord integration: Partially
+implemented (webhook only, <strong>0% test coverage</strong>) - ❌
+Event-driven hook system: <strong>NOT IMPLEMENTED</strong> - ❌
+Configuration management: <strong>Minimal</strong> (no notification
+section in config.yaml) - ❌ Setup guides: <strong>NOT
+AVAILABLE</strong></p>
+<p><strong>Critical Gaps:</strong> - No automated event triggering for
+hooks - Zero test coverage for notification channels - Missing Telegram
+integration entirely - No setup documentation for integrations - No
+webhook retry/failure handling - No rate limiting or backoff
+mechanisms</p>
+<hr />
+<h2 id="current-integration-analysis">1. Current Integration
+Analysis</h2>
+<h3 id="slack-integration">1.1 Slack Integration</h3>
+<p><strong>Implementation Location:</strong>
+<code>/helix_code/internal/notification/engine.go:315-393</code></p>
+<p><strong>Current Features:</strong> - ✅ Webhook-based integration -
+✅ Channel targeting - ✅ Custom username support - ✅ Icon emoji based
+on notification type - ✅ Basic text formatting (markdown-style with
+asterisks)</p>
+<p><strong>Implementation Details:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SlackChannel <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    name     <span class="dt">string</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    enabled  <span class="dt">bool</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    webhook  <span class="dt">string</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    channel  <span class="dt">string</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    username <span class="dt">string</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Gaps &amp; Limitations:</strong> - ❌ No Slack Bot API
+support (only webhooks) - ❌ No rich message formatting (blocks,
+attachments) - ❌ No interactive components (buttons, menus) - ❌ No
+thread support for conversations - ❌ No direct message capability - ❌
+No file/image attachments - ❌ <strong>0% test coverage</strong> - ❌ No
+error retry mechanism - ❌ No rate limiting (Slack has 1 message/second
+limit)</p>
+<p><strong>Configuration:</strong> - Environment variable:
+<code>HELIX_SLACK_WEBHOOK_URL</code> - No config.yaml integration -
+Hardcoded channel name in constructor</p>
+<p><strong>Status:</strong> ⚠️ <strong>Partially Functional - Needs
+Enhancement &amp; Testing</strong></p>
+<hr />
+<h3 id="telegram-integration">1.2 Telegram Integration</h3>
+<p><strong>Implementation Location:</strong> <strong>NONE</strong></p>
+<p><strong>Status:</strong> ❌ <strong>NOT IMPLEMENTED</strong></p>
+<p><strong>Mentioned In:</strong> - Architecture docs
+(<code>ARCHITECTURE.md:75</code>) - Listed as planned feature:
+“Telegram: Bot API with media support”</p>
+<p><strong>Required Implementation:</strong> - Telegram Bot API
+integration - Message formatting (Telegram markdown/HTML) - Media
+support (photos, documents, stickers) - Inline keyboards for interactive
+notifications - Chat ID management - Bot token configuration</p>
+<p><strong>Status:</strong> ❌ <strong>MISSING - High
+Priority</strong></p>
+<hr />
+<h3 id="email-integration">1.3 Email Integration</h3>
+<p><strong>Implementation Location:</strong>
+<code>/helix_code/internal/notification/engine.go:395-459</code></p>
+<p><strong>Current Features:</strong> - ✅ SMTP-based email sending - ✅
+Basic authentication (username/password) - ✅ Plain text emails</p>
+<p><strong>Implementation Details:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EmailChannel <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    name       <span class="dt">string</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    enabled    <span class="dt">bool</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    smtpServer <span class="dt">string</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    port       <span class="dt">int</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    username   <span class="dt">string</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    password   <span class="dt">string</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    from       <span class="dt">string</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Critical Bug Found:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Line 426 in engine.go</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>to <span class="op">:=</span> <span class="st">&quot;&quot;</span> <span class="co">// Would come from notification metadata</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> to <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;no recipient specified&quot;</span><span class="op">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>This will ALWAYS fail</strong> - recipient is never extracted
+from metadata!</p>
+<p><strong>Gaps &amp; Limitations:</strong> - ❌ <strong>CRITICAL
+BUG:</strong> Recipient not extracted from metadata (line 426) - ❌ No
+HTML email templates - ❌ No attachment support - ❌ No TLS/SSL
+configuration options - ❌ No OAuth2 support (Gmail, Office365) - ❌ No
+email queue/batching - ❌ <strong>0% test coverage</strong> - ❌ No
+bounce handling - ❌ No unsubscribe management</p>
+<p><strong>Configuration:</strong> - No environment variables defined -
+No config.yaml integration - All parameters passed via constructor</p>
+<p><strong>Status:</strong> ❌ <strong>BROKEN - Critical Bug + Missing
+Features</strong></p>
+<hr />
+<h3 id="discord-integration">1.4 Discord Integration</h3>
+<p><strong>Implementation Location:</strong>
+<code>/helix_code/internal/notification/engine.go:461-515</code></p>
+<p><strong>Current Features:</strong> - ✅ Webhook-based integration -
+✅ Basic markdown formatting - ✅ Message content support</p>
+<p><strong>Gaps &amp; Limitations:</strong> - ❌ No Discord Bot API
+support - ❌ No embeds (rich formatting) - ❌ No components (buttons,
+select menus) - ❌ No file attachments - ❌ No thread support - ❌
+<strong>0% test coverage</strong> - ❌ No rate limiting (Discord has 30
+requests/minute limit)</p>
+<p><strong>Configuration:</strong> - Environment variable:
+<code>HELIX_DISCORD_WEBHOOK_URL</code> - No config.yaml integration</p>
+<p><strong>Status:</strong> ⚠️ <strong>Partially Functional - Needs
+Enhancement &amp; Testing</strong></p>
+<hr />
+<h2 id="test-coverage-analysis">2. Test Coverage Analysis</h2>
+<h3 id="current-test-coverage">2.1 Current Test Coverage</h3>
+<p><strong>Overall Project Coverage:</strong> ~35% (per
+PROJECT_SUMMARY.md)</p>
+<p><strong>Notification System Coverage:</strong></p>
+<p><strong>Unit Tests</strong>
+(<code>internal/notification/engine_test.go</code>): - ✅
+NewNotificationEngine - ✅ RegisterChannel (with mock) - ✅ AddRule - ✅
+LoadTemplate - ✅ SendDirect (with mock channel) - ❌ <strong>NO
+Slack-specific tests</strong> - ❌ <strong>NO Email-specific
+tests</strong> - ❌ <strong>NO Discord-specific tests</strong> - ❌
+<strong>NO failure scenario tests</strong> - ❌ <strong>NO retry logic
+tests</strong></p>
+<p><strong>Integration Tests</strong>
+(<code>test/integration/integration_test.go</code>): - ✅ Basic
+notification engine integration - ✅ TestNotificationChannelIntegration
+(lines 98-133) - ❌ <strong>NO actual webhook integration tests</strong>
+- ❌ <strong>NO SMTP integration tests</strong> - ❌ <strong>NO mock
+server tests</strong></p>
+<p><strong>Test Coverage Estimate:</strong> <strong>~5% for notification
+channels</strong></p>
+<h3 id="missing-test-scenarios">2.2 Missing Test Scenarios</h3>
+<p><strong>Unit Test Gaps:</strong> 1. Slack webhook payload formatting
+2. Slack error handling (401, 404, 500) 3. Email recipient extraction
+from metadata 4. Email SMTP authentication failures 5. Discord webhook
+rate limiting 6. Channel enable/disable logic 7. Priority-based
+notification routing 8. Template rendering with various data types 9.
+Concurrent notification sending 10. Notification rule condition
+matching</p>
+<p><strong>Integration Test Gaps:</strong> 1. Mock Slack webhook server
+2. Mock Discord webhook server 3. Mock SMTP server for email testing 4.
+Webhook retry on failure 5. Network timeout scenarios 6. Malformed
+webhook responses 7. Rate limiting behavior 8. Large notification
+payloads 9. Concurrent channel sending 10. End-to-end notification
+workflows</p>
+<p><strong>E2E Test Gaps:</strong> 1. Task failure → notification
+triggered 2. Worker disconnect → alert sent 3. Workflow completion →
+summary sent 4. Multiple channels for single event 5. Rule-based routing
+verification</p>
+<hr />
+<h2 id="event-hook-system-analysis">3. Event &amp; Hook System
+Analysis</h2>
+<h3 id="current-state-no-event-driven-system">3.1 Current State: NO
+EVENT-DRIVEN SYSTEM</h3>
+<p><strong>Critical Finding:</strong> The notification system has
+<strong>NO automated event triggering</strong>.</p>
+<p><strong>How Notifications Currently Work:</strong> 1. Manual
+invocation only via: - <code>SendNotification(ctx, notification)</code>
+- <code>SendDirect(ctx, notification, channels)</code> 2. No integration
+with task lifecycle events 3. No integration with workflow events 4. No
+integration with worker events</p>
+<h3 id="available-events-not-connected">3.2 Available Events (Not
+Connected)</h3>
+<p><strong>Task Lifecycle Events</strong>
+(<code>internal/task/manager.go</code>): -
+<code>TaskStatusPending</code> - Task created -
+<code>TaskStatusAssigned</code> - Task assigned to worker -
+<code>TaskStatusRunning</code> - Task execution started -
+<code>TaskStatusCompleted</code> - Task finished successfully -
+<code>TaskStatusFailed</code> - Task failed -
+<code>TaskStatusPaused</code> - Task paused</p>
+<p><strong>Workflow Events</strong>
+(<code>internal/workflow/executor.go</code>): -
+<code>WorkflowStatusRunning</code> - Workflow started -
+<code>WorkflowStatusCompleted</code> - Workflow completed -
+<code>WorkflowStatusFailed</code> - Workflow failed - Step-level events
+(not currently defined)</p>
+<p><strong>Worker Events</strong>
+(<code>internal/worker/pool.go</code>): - Worker connected - Worker
+disconnected - Worker health degraded - Heartbeat missed - Resource
+threshold exceeded</p>
+<p><strong>API Events</strong> (<code>internal/api/handlers/</code>): -
+User registration - User login - Project created/deleted -
+Authentication failures - API errors</p>
+<h3 id="required-event-system-architecture">3.3 Required Event System
+Architecture</h3>
+<p><strong>Recommended Pattern:</strong> Observer/Event Bus</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Event bus architecture</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventBus <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Subscribe<span class="op">(</span>eventType <span class="dt">string</span><span class="op">,</span> handler EventHandler<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Publish<span class="op">(</span>event Event<span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Unsubscribe<span class="op">(</span>eventType <span class="dt">string</span><span class="op">,</span> handler EventHandler<span class="op">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Event <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    Type      <span class="dt">string</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    Timestamp time<span class="op">.</span>Time</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    Source    <span class="dt">string</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    Data      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    Severity  EventSeverity</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EventHandler <span class="kw">func</span><span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> event Event<span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<p><strong>Integration Points:</strong> 1. Task Manager: Emit events on
+status changes 2. Workflow Executor: Emit events on workflow/step
+changes 3. Worker Pool: Emit events on worker state changes 4. API
+Handlers: Emit events on critical operations 5. Notification Engine:
+Subscribe to relevant events</p>
+<hr />
+<h2 id="configuration-management-analysis">4. Configuration Management
+Analysis</h2>
+<h3 id="current-configuration">4.1 Current Configuration</h3>
+<p><strong>Environment Variables</strong>
+(<code>.env.example</code>):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_SLACK_WEBHOOK_URL</span><span class="op">=</span>https://hooks.slack.com/services/...</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DISCORD_WEBHOOK_URL</span><span class="op">=</span>https://discord.com/api/webhooks/...</span></code></pre></div>
+<p><strong>Config File</strong> (<code>config/config.yaml</code>): - ❌
+NO notification section - ❌ NO channel configurations - ❌ NO
+notification rules - ❌ NO retry/timeout settings</p>
+<h3 id="recommended-configuration-structure">4.2 Recommended
+Configuration Structure</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">  # Notification rules - map events to channels</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Critical Task Failures&quot;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;event.type == task_failed AND event.data.priority == critical&quot;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;email&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;telegram&quot;</span><span class="kw">]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> urgent</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">template</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;task_failure&quot;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Worker Health Alerts&quot;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;event.type == worker_health_degraded&quot;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;telegram&quot;</span><span class="kw">]</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> high</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Workflow Completions&quot;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;event.type == workflow_completed&quot;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">]</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> medium</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">  # Channel configurations</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">slack</span><span class="kw">:</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${HELIX_SLACK_WEBHOOK_URL}</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#helix-notifications&quot;</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">username</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixCode Bot&quot;</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_attempts</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">initial_delay</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_delay</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">backoff_multiplier</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">rate_limit</span><span class="kw">:</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_per_second</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">telegram</span><span class="kw">:</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">bot_token</span><span class="kw">:</span><span class="at"> ${HELIX_TELEGRAM_BOT_TOKEN}</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chat_id</span><span class="kw">:</span><span class="at"> ${HELIX_TELEGRAM_CHAT_ID}</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_attempts</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">initial_delay</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_delay</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">backoff_multiplier</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp</span><span class="kw">:</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">server</span><span class="kw">:</span><span class="at"> smtp.gmail.com</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">587</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">username</span><span class="kw">:</span><span class="at"> ${HELIX_EMAIL_USERNAME}</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">password</span><span class="kw">:</span><span class="at"> ${HELIX_EMAIL_PASSWORD}</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">from</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixCode &lt;${HELIX_EMAIL_FROM}&gt;&quot;</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tls</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">auth_method</span><span class="kw">:</span><span class="at"> plain</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">recipients</span><span class="kw">:</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">]</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">critical</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;oncall@example.com&quot;</span><span class="kw">]</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">templates</span><span class="kw">:</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">html</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_attempts</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">initial_delay</span><span class="kw">:</span><span class="at"> 2s</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_delay</span><span class="kw">:</span><span class="at"> 60s</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">backoff_multiplier</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${HELIX_DISCORD_WEBHOOK_URL}</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_attempts</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">initial_delay</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_delay</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">backoff_multiplier</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">rate_limit</span><span class="kw">:</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_per_minute</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a><span class="co">  # Template configurations</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">templates</span><span class="kw">:</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="fu">    task_failure</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>      Task Failed: {{.Title}}</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>      Details: {{.Message}}</span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>      Task ID: {{.Metadata.task_id}}</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>      Worker: {{.Metadata.worker_id}}</span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>      Time: {{.Metadata.timestamp}}</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a><span class="fu">    workflow_completed</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>      Workflow Completed: {{.Title}}</span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>      Duration: {{.Metadata.duration}}</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>      Steps: {{.Metadata.step_count}}</span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>      Status: {{.Metadata.status}}</span></code></pre></div>
+<hr />
+<h2 id="research-potential-new-integrations">5. Research: Potential New
+Integrations</h2>
+<h3 id="communication-platforms">5.1 Communication Platforms</h3>
+<h4 id="microsoft-teams-priority-high">5.1.1 Microsoft Teams (Priority:
+HIGH)</h4>
+<p><strong>Status:</strong> Recommended</p>
+<p><strong>Rationale:</strong> - Widely used in enterprises - Rich
+notification capabilities via Workflows - <strong>IMPORTANT:</strong>
+Old webhook connectors deprecating Dec 2025 - Must use new Workflows
+API</p>
+<p><strong>Implementation Requirements:</strong> - Workflows API
+integration (not old webhook connectors) - Adaptive Cards for rich
+formatting - Action buttons support - File attachments - Thread
+support</p>
+<p><strong>API Endpoint:</strong> - New: Power Automate Workflows -
+Complexity: Medium - Documentation:
+https://learn.microsoft.com/en-us/microsoftteams/platform/</p>
+<p><strong>Use Cases:</strong> - Enterprise deployments - Team
+collaboration notifications - CI/CD pipeline alerts</p>
+<h4 id="mattermost-priority-medium">5.1.2 Mattermost (Priority:
+MEDIUM)</h4>
+<p><strong>Status:</strong> Consider for self-hosted deployments</p>
+<p><strong>Rationale:</strong> - Open-source Slack alternative - Popular
+in security-conscious organizations - Self-hosted option</p>
+<p><strong>Implementation Requirements:</strong> - Webhook support
+(similar to Slack) - Bot API support - Markdown formatting</p>
+<p><strong>Use Cases:</strong> - On-premise deployments -
+Privacy-focused organizations - Government/defense contractors</p>
+<h4 id="rocket.chat-priority-low">5.1.3 Rocket.Chat (Priority: LOW)</h4>
+<p><strong>Status:</strong> Optional</p>
+<p><strong>Rationale:</strong> - Another open-source alternative -
+Smaller user base - Similar to Mattermost</p>
+<h3 id="incident-management">5.2 Incident Management</h3>
+<h4 id="pagerduty-priority-high">5.2.1 PagerDuty (Priority: HIGH)</h4>
+<p><strong>Status:</strong> Strongly Recommended</p>
+<p><strong>Rationale:</strong> - Industry standard for on-call
+management - Critical incident routing - Escalation policies -
+Integration with monitoring tools</p>
+<p><strong>Implementation Requirements:</strong> - Events API v2 -
+Incident creation/update - Severity mapping - Alert deduplication</p>
+<p><strong>API Endpoint:</strong> - https://api.pagerduty.com/ -
+Complexity: Medium - Authentication: API key</p>
+<p><strong>Use Cases:</strong> - Critical system failures - Production
+incidents - On-call engineer alerts - 24/7 monitoring</p>
+<h4 id="opsgenie-priority-medium">5.2.2 Opsgenie (Priority: MEDIUM)</h4>
+<p><strong>Status:</strong> Alternative to PagerDuty</p>
+<p><strong>Rationale:</strong> - Atlassian product (good Jira
+integration) - Similar features to PagerDuty - Growing market share</p>
+<h3 id="project-management">5.3 Project Management</h3>
+<h4 id="jira-priority-high">5.3.1 Jira (Priority: HIGH)</h4>
+<p><strong>Status:</strong> Strongly Recommended</p>
+<p><strong>Rationale:</strong> - Most popular project management tool -
+Issue creation from failures - Automatic ticket assignment - Sprint/Epic
+tracking</p>
+<p><strong>Implementation Requirements:</strong> - Jira REST API v3 -
+Issue creation/update - Comment addition - Attachment support - Custom
+field mapping</p>
+<p><strong>API Endpoint:</strong> -
+https://developer.atlassian.com/cloud/jira/platform/ - Complexity: High
+- Authentication: OAuth 2.0 or API token</p>
+<p><strong>Use Cases:</strong> - Auto-create tickets for failures - Link
+tasks to Jira issues - Update issue status on completion - Add execution
+logs as comments</p>
+<h4 id="linear-priority-medium">5.3.2 Linear (Priority: MEDIUM)</h4>
+<p><strong>Status:</strong> Consider for modern teams</p>
+<p><strong>Rationale:</strong> - Modern, fast alternative to Jira -
+Great API and developer experience - Growing adoption in startups</p>
+<h4 id="github-issues-priority-high">5.3.3 GitHub Issues (Priority:
+HIGH)</h4>
+<p><strong>Status:</strong> Recommended</p>
+<p><strong>Rationale:</strong> - Native integration with code
+repositories - Widely used in open-source - Simple API</p>
+<p><strong>Implementation Requirements:</strong> - GitHub REST API -
+Issue creation/labeling - Comment addition - Repository webhooks
+(bidirectional)</p>
+<p><strong>Use Cases:</strong> - CI/CD failure tracking - Bug report
+automation - Release notifications</p>
+<h3 id="generic-custom">5.4 Generic &amp; Custom</h3>
+<h4 id="generic-webhooks-priority-high">5.4.1 Generic Webhooks
+(Priority: HIGH)</h4>
+<p><strong>Status:</strong> <strong>MUST HAVE</strong></p>
+<p><strong>Rationale:</strong> - Maximum flexibility - Support any
+custom integration - Easy to implement - No vendor lock-in</p>
+<p><strong>Implementation Requirements:</strong> - Configurable HTTP
+method (POST, PUT, PATCH) - Custom headers - Payload template
+customization - Authentication (Bearer, Basic, API Key) - SSL/TLS
+verification options - Retry logic</p>
+<p><strong>Use Cases:</strong> - Custom internal systems - Third-party
+SaaS tools - Legacy system integration - Zapier/IFTTT integration</p>
+<h4 id="websockets-priority-medium">5.4.2 WebSockets (Priority:
+MEDIUM)</h4>
+<p><strong>Status:</strong> Consider for real-time needs</p>
+<p><strong>Rationale:</strong> - Real-time push to connected clients -
+Dashboard updates - Live monitoring</p>
+<h3 id="messaging-sms">5.5 Messaging &amp; SMS</h3>
+<h4 id="twilio-sms-priority-medium">5.5.1 Twilio SMS (Priority:
+MEDIUM)</h4>
+<p><strong>Status:</strong> Consider for critical alerts</p>
+<p><strong>Rationale:</strong> - Critical incident notifications -
+On-call engineer alerts - 2FA and security alerts</p>
+<p><strong>Implementation Requirements:</strong> - Twilio REST API -
+Phone number management - SMS templating - Cost management (SMS costs
+money)</p>
+<p><strong>Use Cases:</strong> - Production outages - Security incidents
+- Critical failure alerts</p>
+<h4 id="whatsapp-business-api-priority-low">5.5.2 WhatsApp Business API
+(Priority: LOW)</h4>
+<p><strong>Status:</strong> Optional</p>
+<p><strong>Rationale:</strong> - Popular globally - Rich media support -
+Requires business verification</p>
+<h3 id="push-notifications">5.6 Push Notifications</h3>
+<h4 id="firebase-cloud-messaging-priority-medium">5.6.1 Firebase Cloud
+Messaging (Priority: MEDIUM)</h4>
+<p><strong>Status:</strong> Recommended for mobile apps</p>
+<p><strong>Rationale:</strong> - Native mobile notifications - iOS and
+Android support - Part of HelixCode mobile strategy</p>
+<p><strong>Implementation Requirements:</strong> - FCM API - Device
+token management - Platform-specific formatting</p>
+<p><strong>Use Cases:</strong> - Mobile app notifications - Real-time
+alerts to mobile users</p>
+<h4 id="onesignal-priority-low">5.6.2 OneSignal (Priority: LOW)</h4>
+<p><strong>Status:</strong> Alternative to FCM</p>
+<p><strong>Rationale:</strong> - Multi-platform support - Easier setup
+than FCM - Free tier available</p>
+<h3 id="summary-recommended-integration-priorities">5.7 Summary:
+Recommended Integration Priorities</h3>
+<p><strong>Tier 1 (MUST HAVE):</strong> 1. ✅ Slack (enhance existing)
+2. ✅ Email (fix existing) 3. ⭐ Telegram (implement new) 4. ⭐ Generic
+Webhooks (implement new) 5. ⭐ Microsoft Teams (implement new)</p>
+<p><strong>Tier 2 (HIGH VALUE):</strong> 6. PagerDuty (incident
+management) 7. Jira (issue tracking) 8. GitHub Issues (repository
+integration)</p>
+<p><strong>Tier 3 (NICE TO HAVE):</strong> 9. Discord (enhance existing)
+10. Firebase Cloud Messaging (mobile apps) 11. Twilio SMS (critical
+alerts) 12. Mattermost (self-hosted)</p>
+<hr />
+<h2 id="testing-strategy">6. Testing Strategy</h2>
+<h3 id="testing-philosophy">6.1 Testing Philosophy</h3>
+<p><strong>Goal:</strong> Achieve <strong>100% test coverage</strong>
+for all notification channels with: - Unit tests for individual channel
+logic - Integration tests with mock servers - E2E tests with real event
+flows - Performance tests for high-volume scenarios - Failure scenario
+tests</p>
+<h3 id="unit-testing-strategy">6.2 Unit Testing Strategy</h3>
+<p><strong>Framework:</strong> Go’s built-in <code>testing</code>
+package + <code>testify</code> assertions</p>
+<p><strong>Coverage Areas:</strong></p>
+<ol type="1">
+<li><strong>Channel Initialization</strong>
+<ul>
+<li>Valid configuration</li>
+<li>Invalid configuration</li>
+<li>Missing required fields</li>
+<li>Enable/disable logic</li>
+</ul></li>
+<li><strong>Message Formatting</strong>
+<ul>
+<li>Different notification types</li>
+<li>Priority levels</li>
+<li>Template rendering</li>
+<li>Special characters/escaping</li>
+<li>Unicode support</li>
+</ul></li>
+<li><strong>Payload Construction</strong>
+<ul>
+<li>Slack webhook payload</li>
+<li>Telegram Bot API payload</li>
+<li>Discord webhook payload</li>
+<li>Email MIME formatting</li>
+</ul></li>
+<li><strong>Error Handling</strong>
+<ul>
+<li>Network errors</li>
+<li>Authentication failures</li>
+<li>Invalid webhook URLs</li>
+<li>Malformed payloads</li>
+<li>Timeout scenarios</li>
+</ul></li>
+<li><strong>Configuration</strong>
+<ul>
+<li>Loading from config.yaml</li>
+<li>Environment variable substitution</li>
+<li>Default values</li>
+<li>Validation logic</li>
+</ul></li>
+</ol>
+<p><strong>Example Test Structure:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSlackChannel_Send<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    tests <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        name        <span class="dt">string</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        notification <span class="op">*</span>Notification</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        wantErr     <span class="dt">bool</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        errContains <span class="dt">string</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span> <span class="st">&quot;success - info notification&quot;</span><span class="op">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>            notification<span class="op">:</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                Title<span class="op">:</span>   <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                Message<span class="op">:</span> <span class="st">&quot;Test message&quot;</span><span class="op">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                Type<span class="op">:</span>    NotificationTypeInfo<span class="op">,</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            wantErr<span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span> <span class="st">&quot;error - channel disabled&quot;</span><span class="op">,</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>            notification<span class="op">:</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                Title<span class="op">:</span> <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>            wantErr<span class="op">:</span>     <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            errContains<span class="op">:</span> <span class="st">&quot;disabled&quot;</span><span class="op">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        <span class="co">// ... more test cases</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> tt <span class="op">:=</span> <span class="kw">range</span> tests <span class="op">{</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Run<span class="op">(</span>tt<span class="op">.</span>name<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Test implementation</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-testing-strategy">6.3 Integration Testing
+Strategy</h3>
+<p><strong>Framework:</strong> <code>httptest</code> for mock servers +
+integration test suite</p>
+<p><strong>Mock Server Requirements:</strong></p>
+<ol type="1">
+<li><p><strong>Mock Slack Webhook Server</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> mockSlackServer<span class="op">()</span> <span class="op">*</span>httptest<span class="op">.</span>Server <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> httptest<span class="op">.</span>NewServer<span class="op">(</span>http<span class="op">.</span>HandlerFunc<span class="op">(</span><span class="kw">func</span><span class="op">(</span>w http<span class="op">.</span>ResponseWriter<span class="op">,</span> r <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify payload structure</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate various responses (200, 401, 500)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test rate limiting</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}))</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></li>
+<li><p><strong>Mock SMTP Server</strong></p>
+<ul>
+<li>Use <code>MailHog</code> or similar SMTP mock</li>
+<li>Verify email headers, body, attachments</li>
+<li>Test authentication mechanisms</li>
+</ul></li>
+<li><p><strong>Mock Telegram Bot API Server</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> mockTelegramServer<span class="op">()</span> <span class="op">*</span>httptest<span class="op">.</span>Server <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implement sendMessage endpoint mock</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test message formatting</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test media uploads</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></li>
+</ol>
+<p><strong>Test Scenarios:</strong></p>
+<ol type="1">
+<li><strong>Success Paths</strong>
+<ul>
+<li>Message successfully sent</li>
+<li>Correct payload format</li>
+<li>Proper authentication</li>
+</ul></li>
+<li><strong>Failure Paths</strong>
+<ul>
+<li>Network timeouts</li>
+<li>HTTP 4xx errors (auth, rate limit)</li>
+<li>HTTP 5xx errors (server errors)</li>
+<li>Invalid SSL certificates</li>
+<li>Connection refused</li>
+</ul></li>
+<li><strong>Retry Logic</strong>
+<ul>
+<li>Verify retry on transient failures</li>
+<li>Exponential backoff validation</li>
+<li>Max retry limit enforcement</li>
+</ul></li>
+<li><strong>Rate Limiting</strong>
+<ul>
+<li>Slack: 1 message/second</li>
+<li>Discord: 30 messages/minute</li>
+<li>Respect rate limits</li>
+<li>Queue management</li>
+</ul></li>
+</ol>
+<h3 id="e2e-testing-strategy">6.4 E2E Testing Strategy</h3>
+<p><strong>Framework:</strong> Full integration test suite</p>
+<p><strong>Test Flows:</strong></p>
+<ol type="1">
+<li><p><strong>Task Failure Flow</strong></p>
+<pre><code>Task fails → Event emitted → Notification rule matches →
+Channels selected → Messages sent → Delivery confirmed</code></pre></li>
+<li><p><strong>Worker Health Alert Flow</strong></p>
+<pre><code>Worker health degrades → Event emitted → High-priority notification →
+Multiple channels (Slack + Email + Telegram) → Delivery confirmed</code></pre></li>
+<li><p><strong>Workflow Completion Flow</strong></p>
+<pre><code>Workflow completes → Event emitted → Template applied →
+Notification sent → Success logged</code></pre></li>
+<li><p><strong>Multi-Channel Notification</strong></p>
+<ul>
+<li>Send to Slack, Email, Telegram simultaneously</li>
+<li>Verify all channels receive notification</li>
+<li>Verify channel-specific formatting</li>
+</ul></li>
+<li><p><strong>Rule-Based Routing</strong></p>
+<ul>
+<li>Different events trigger different rules</li>
+<li>Priority escalation</li>
+<li>Channel selection based on conditions</li>
+</ul></li>
+</ol>
+<h3 id="performance-testing-strategy">6.5 Performance Testing
+Strategy</h3>
+<p><strong>Goals:</strong> - Handle 1000 notifications/minute -
+&lt;100ms notification dispatch latency - Graceful degradation under
+load</p>
+<p><strong>Test Scenarios:</strong></p>
+<ol type="1">
+<li><strong>High Volume</strong>
+<ul>
+<li>Send 1000 notifications concurrently</li>
+<li>Measure throughput</li>
+<li>Monitor resource usage</li>
+</ul></li>
+<li><strong>Rate Limiting</strong>
+<ul>
+<li>Verify queuing under rate limits</li>
+<li>No dropped notifications</li>
+<li>Fair queue management</li>
+</ul></li>
+<li><strong>Concurrent Channels</strong>
+<ul>
+<li>Send to 5 channels simultaneously</li>
+<li>Measure parallel processing</li>
+<li>Identify bottlenecks</li>
+</ul></li>
+</ol>
+<p><strong>Tools:</strong> - Go’s <code>testing/quick</code> for
+property-based testing - Custom benchmarks with
+<code>go test -bench</code> - Load testing with vegeta or similar</p>
+<h3 id="test-coverage-goals">6.6 Test Coverage Goals</h3>
+<p><strong>Coverage Targets:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Current Coverage</th>
+<th>Target Coverage</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Notification Engine Core</td>
+<td>~30%</td>
+<td>95%</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>Slack Channel</td>
+<td>0%</td>
+<td>100%</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>Telegram Channel</td>
+<td>N/A</td>
+<td>100%</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>Email Channel</td>
+<td>0%</td>
+<td>100%</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>Discord Channel</td>
+<td>0%</td>
+<td>90%</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>Event Bus</td>
+<td>0%</td>
+<td>95%</td>
+<td>HIGH</td>
+</tr>
+<tr>
+<td>Configuration</td>
+<td>~20%</td>
+<td>90%</td>
+<td>MEDIUM</td>
+</tr>
+<tr>
+<td>Integration Tests</td>
+<td>~10%</td>
+<td>80%</td>
+<td>HIGH</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Overall Target:</strong> <strong>95% coverage</strong> for
+notification system</p>
+<hr />
+<h2 id="setup-guides-for-integrations">7. Setup Guides for
+Integrations</h2>
+<h3 id="slack-integration-setup-guide">7.1 Slack Integration Setup
+Guide</h3>
+<h4 id="prerequisites">Prerequisites</h4>
+<ul>
+<li>Slack workspace admin access</li>
+<li>Ability to create incoming webhooks</li>
+</ul>
+<h4 id="step-1-create-slack-app">Step 1: Create Slack App</h4>
+<ol type="1">
+<li>Go to https://api.slack.com/apps</li>
+<li>Click “Create New App”</li>
+<li>Select “From scratch”</li>
+<li>Enter app name: “HelixCode Notifications”</li>
+<li>Select your workspace</li>
+</ol>
+<h4 id="step-2-enable-incoming-webhooks">Step 2: Enable Incoming
+Webhooks</h4>
+<ol type="1">
+<li>In your app settings, go to “Incoming Webhooks”</li>
+<li>Toggle “Activate Incoming Webhooks” to <strong>On</strong></li>
+<li>Click “Add New Webhook to Workspace”</li>
+<li>Select the channel (e.g., #helix-notifications)</li>
+<li>Click “Allow”</li>
+</ol>
+<h4 id="step-3-copy-webhook-url">Step 3: Copy Webhook URL</h4>
+<ol type="1">
+<li>Copy the Webhook URL (looks like:
+<code>https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXX</code>)</li>
+</ol>
+<h4 id="step-4-configure-helixcode">Step 4: Configure HelixCode</h4>
+<ol type="1">
+<li><p>Add to <code>.env</code> file:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_SLACK_WEBHOOK_URL</span><span class="op">=</span>https://hooks.slack.com/services/YOUR/WEBHOOK/URL</span></code></pre></div></li>
+<li><p>Or add to <code>config.yaml</code>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">slack</span><span class="kw">:</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${HELIX_SLACK_WEBHOOK_URL}</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#helix-notifications&quot;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">username</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixCode Bot&quot;</span></span></code></pre></div></li>
+</ol>
+<h4 id="step-5-test-integration">Step 5: Test Integration</h4>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using HelixCode CLI</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> notify test <span class="at">--channel</span> slack <span class="at">--message</span> <span class="st">&quot;Test notification&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or via API</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:8080/api/v1/notifications/test <span class="dt">\</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;channel&quot;: &quot;slack&quot;,</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;title&quot;: &quot;Test&quot;,</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;message&quot;: &quot;Testing Slack integration&quot;,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;type&quot;: &quot;info&quot;</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span></code></pre></div>
+<h4 id="step-6-configure-notification-rules">Step 6: Configure
+Notification Rules</h4>
+<p>Edit <code>config.yaml</code> to define when to send Slack
+notifications:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Critical Failures to Slack&quot;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;event.type == task_failed AND event.data.priority == critical&quot;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">]</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> urgent</span></span></code></pre></div>
+<h4 id="troubleshooting">Troubleshooting</h4>
+<ul>
+<li><strong>Error: “invalid_token”</strong> → Check webhook URL is
+correct</li>
+<li><strong>Error: “channel_not_found”</strong> → Verify channel exists
+and bot has access</li>
+<li><strong>No notifications</strong> → Check <code>enabled: true</code>
+in config</li>
+<li><strong>Rate limited</strong> → Slack allows 1 message/second; check
+rate limit config</li>
+</ul>
+<h4 id="advanced-slack-block-kit-future-enhancement">Advanced: Slack
+Block Kit (Future Enhancement)</h4>
+<p>For rich formatting with blocks: 1. Use Block Kit Builder:
+https://api.slack.com/block-kit 2. Configure in HelixCode (when
+implemented):
+<code>yaml    slack:      use_blocks: true      templates:        task_failure: &quot;path/to/block-template.json&quot;</code></p>
+<hr />
+<h3 id="telegram-integration-setup-guide">7.2 Telegram Integration Setup
+Guide</h3>
+<h4 id="prerequisites-1">Prerequisites</h4>
+<ul>
+<li>Telegram account</li>
+<li>Ability to create a bot via BotFather</li>
+</ul>
+<h4 id="step-1-create-telegram-bot">Step 1: Create Telegram Bot</h4>
+<ol type="1">
+<li>Open Telegram and search for <code>@BotFather</code></li>
+<li>Start a chat and send <code>/newbot</code></li>
+<li>Follow prompts:
+<ul>
+<li>Bot name: <code>HelixCode Notifications</code></li>
+<li>Username: <code>helixcode_bot</code> (must end in _bot)</li>
+</ul></li>
+<li><strong>Save the bot token</strong> (looks like:
+<code>123456789:ABCdefGHIjklMNOpqrsTUVwxyz</code>)</li>
+</ol>
+<h4 id="step-2-get-your-chat-id">Step 2: Get Your Chat ID</h4>
+<p><strong>Option A: Using userinfobot</strong> 1. Search for
+<code>@userinfobot</code> in Telegram 2. Start a chat 3. Copy your chat
+ID (e.g., <code>123456789</code>)</p>
+<p><strong>Option B: Manual method</strong> 1. Send a message to your
+bot 2. Visit:
+<code>https://api.telegram.org/bot&lt;YOUR_BOT_TOKEN&gt;/getUpdates</code>
+3. Find <code>&quot;chat&quot;:{&quot;id&quot;:123456789}</code> in JSON response</p>
+<p><strong>For group notifications:</strong> 1. Add bot to group 2. Send
+a message in group 3. Use getUpdates to find group chat ID (starts with
+<code>-</code>)</p>
+<h4 id="step-3-configure-helixcode">Step 3: Configure HelixCode</h4>
+<ol type="1">
+<li><p>Add to <code>.env</code> file:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_TELEGRAM_BOT_TOKEN</span><span class="op">=</span>123456789:ABCdefGHIjklMNOpqrsTUVwxyz</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_TELEGRAM_CHAT_ID</span><span class="op">=</span>123456789</span></code></pre></div></li>
+<li><p>Or add to <code>config.yaml</code>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">telegram</span><span class="kw">:</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">bot_token</span><span class="kw">:</span><span class="at"> ${HELIX_TELEGRAM_BOT_TOKEN}</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chat_id</span><span class="kw">:</span><span class="at"> ${HELIX_TELEGRAM_CHAT_ID}</span></span></code></pre></div></li>
+</ol>
+<h4 id="step-4-test-integration">Step 4: Test Integration</h4>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using HelixCode CLI</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> notify test <span class="at">--channel</span> telegram <span class="at">--message</span> <span class="st">&quot;Test notification&quot;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or via API</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:8080/api/v1/notifications/test <span class="dt">\</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;channel&quot;: &quot;telegram&quot;,</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;title&quot;: &quot;Test&quot;,</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;message&quot;: &quot;Testing Telegram integration&quot;,</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;type&quot;: &quot;info&quot;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span></code></pre></div>
+<h4 id="step-5-configure-notification-rules">Step 5: Configure
+Notification Rules</h4>
+<div class="sourceCode" id="cb20"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;All failures to Telegram&quot;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;event.type == task_failed&quot;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;telegram&quot;</span><span class="kw">]</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> high</span></span></code></pre></div>
+<h4 id="troubleshooting-1">Troubleshooting</h4>
+<ul>
+<li><strong>Error: “Unauthorized”</strong> → Check bot token is
+correct</li>
+<li><strong>Error: “Chat not found”</strong> → Verify chat ID and that
+you’ve messaged the bot first</li>
+<li><strong>Error: “Bot was blocked by the user”</strong> → Unblock the
+bot in Telegram</li>
+<li><strong>No notifications</strong> → Ensure
+<code>enabled: true</code> in config</li>
+</ul>
+<h4 id="advanced-features">Advanced Features</h4>
+<p><strong>Formatting:</strong> - Telegram supports HTML and Markdown -
+Configure in <code>config.yaml</code>:
+<code>yaml   telegram:     parse_mode: &quot;HTML&quot;  # or &quot;Markdown&quot;</code></p>
+<p><strong>Inline Keyboards (Future):</strong> - Add action buttons to
+notifications - Example: “Retry Task”, “View Logs”, “Dismiss”</p>
+<p><strong>Media Support (Future):</strong> - Send images, documents
+with notifications - Useful for charts, logs, screenshots</p>
+<hr />
+<h3 id="email-smtp-integration-setup-guide">7.3 Email (SMTP) Integration
+Setup Guide</h3>
+<h4 id="prerequisites-2">Prerequisites</h4>
+<ul>
+<li>SMTP server access (Gmail, Office365, custom server)</li>
+<li>Email account credentials or app password</li>
+</ul>
+<h4 id="step-1-choose-email-provider">Step 1: Choose Email Provider</h4>
+<p><strong>Option A: Gmail</strong> 1. Enable 2-factor authentication 2.
+Generate app password: - Go to Google Account → Security - Select “App
+passwords” - Generate password for “Mail” - Save the 16-character
+password</p>
+<p><strong>Option B: Office 365</strong> 1. Use your Office 365
+credentials 2. Ensure SMTP is enabled for your account</p>
+<p><strong>Option C: Custom SMTP Server</strong> 1. Get SMTP server
+address and port 2. Obtain authentication credentials</p>
+<h4 id="step-2-configure-helixcode">Step 2: Configure HelixCode</h4>
+<p><strong>For Gmail:</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env file</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.gmail.com</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>your-email@gmail.com</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-app-password-here</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_FROM</span><span class="op">=</span>your-email@gmail.com</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_RECIPIENTS</span><span class="op">=</span>admin@example.com,team@example.com</span></code></pre></div>
+<p><strong>For Office 365:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env file</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.office365.com</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>your-email@company.com</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-password</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_FROM</span><span class="op">=</span>your-email@company.com</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_RECIPIENTS</span><span class="op">=</span>admin@company.com</span></code></pre></div>
+<p><strong>Config.yaml:</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp</span><span class="kw">:</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">server</span><span class="kw">:</span><span class="at"> ${HELIX_EMAIL_SMTP_SERVER}</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">587</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">username</span><span class="kw">:</span><span class="at"> ${HELIX_EMAIL_USERNAME}</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">password</span><span class="kw">:</span><span class="at"> ${HELIX_EMAIL_PASSWORD}</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">from</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixCode &lt;${HELIX_EMAIL_FROM}&gt;&quot;</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tls</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">auth_method</span><span class="kw">:</span><span class="at"> plain</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">recipients</span><span class="kw">:</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">]</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">critical</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;oncall@example.com&quot;</span><span class="kw">]</span></span></code></pre></div>
+<h4 id="step-3-test-integration">Step 3: Test Integration</h4>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using HelixCode CLI</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> notify test <span class="at">--channel</span> email <span class="at">--message</span> <span class="st">&quot;Test email notification&quot;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or via API</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:8080/api/v1/notifications/test <span class="dt">\</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;channel&quot;: &quot;email&quot;,</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;title&quot;: &quot;Test Email&quot;,</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;message&quot;: &quot;Testing email integration from HelixCode&quot;,</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;type&quot;: &quot;info&quot;,</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;metadata&quot;: {</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;recipients&quot;: [&quot;admin@example.com&quot;]</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span></code></pre></div>
+<h4 id="step-4-configure-email-templates-future-feature">Step 4:
+Configure Email Templates (Future Feature)</h4>
+<div class="sourceCode" id="cb25"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">templates</span><span class="kw">:</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">html</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/etc/helixcode/email-templates&quot;</span></span></code></pre></div>
+<h4 id="troubleshooting-2">Troubleshooting</h4>
+<ul>
+<li><strong>Error: “Authentication failed”</strong> → Check
+username/password, ensure app password for Gmail</li>
+<li><strong>Error: “Connection refused”</strong> → Verify SMTP server
+and port</li>
+<li><strong>Error: “TLS handshake failed”</strong> → Check TLS settings,
+try port 465 (SSL) instead of 587 (TLS)</li>
+<li><strong>Error: “Recipient not specified”</strong> → <strong>Known
+bug, fix pending</strong> - ensure <code>metadata.recipients</code> is
+set</li>
+<li><strong>Emails in spam</strong> → Configure SPF/DKIM records for
+your domain</li>
+</ul>
+<h4 id="common-smtp-ports">Common SMTP Ports</h4>
+<ul>
+<li><strong>587</strong> - TLS (recommended)</li>
+<li><strong>465</strong> - SSL (legacy)</li>
+<li><strong>25</strong> - Unencrypted (not recommended)</li>
+</ul>
+<h4 id="rate-limiting">Rate Limiting</h4>
+<p>Most providers have rate limits: - Gmail: 500 emails/day (free),
+2000/day (workspace) - Office 365: Varies by plan - Custom servers:
+Check with your admin</p>
+<p>Configure rate limits:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rate_limit</span><span class="kw">:</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_per_hour</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span></span></code></pre></div>
+<hr />
+<h3 id="discord-integration-setup-guide">7.4 Discord Integration Setup
+Guide</h3>
+<h4 id="prerequisites-3">Prerequisites</h4>
+<ul>
+<li>Discord server admin access</li>
+<li>Ability to manage webhooks</li>
+</ul>
+<h4 id="step-1-create-webhook">Step 1: Create Webhook</h4>
+<ol type="1">
+<li>Open Discord and go to your server</li>
+<li>Right-click the channel for notifications (e.g., #helix-alerts)</li>
+<li>Select “Edit Channel”</li>
+<li>Go to “Integrations” → “Webhooks”</li>
+<li>Click “New Webhook”</li>
+<li>Configure:
+<ul>
+<li>Name: <code>HelixCode</code></li>
+<li>Avatar: Upload HelixCode logo (optional)</li>
+</ul></li>
+<li>Click “Copy Webhook URL”</li>
+</ol>
+<h4 id="step-2-configure-helixcode-1">Step 2: Configure HelixCode</h4>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># .env file</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DISCORD_WEBHOOK_URL</span><span class="op">=</span>https://discord.com/api/webhooks/123456789/abcdefghijklmnop</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># config.yaml</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${HELIX_DISCORD_WEBHOOK_URL}</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_attempts</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">rate_limit</span><span class="kw">:</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_per_minute</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span></code></pre></div>
+<h4 id="step-3-test-integration-1">Step 3: Test Integration</h4>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> notify test <span class="at">--channel</span> discord <span class="at">--message</span> <span class="st">&quot;Test Discord notification&quot;</span></span></code></pre></div>
+<h4 id="troubleshooting-3">Troubleshooting</h4>
+<ul>
+<li><strong>Error: 401 Unauthorized</strong> → Check webhook URL is
+correct</li>
+<li><strong>Error: 404 Not Found</strong> → Webhook may have been
+deleted</li>
+<li><strong>Rate limited</strong> → Discord allows 30 requests/minute
+per webhook</li>
+<li><strong>Messages not appearing</strong> → Check channel
+permissions</li>
+</ul>
+<h4 id="advanced-discord-embeds-future">Advanced: Discord Embeds
+(Future)</h4>
+<p>Rich embeds with colors, fields, thumbnails:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">use_embeds</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">embed_color</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#FF6B00&quot;</span><span class="co">  # HelixCode brand color</span></span></code></pre></div>
+<hr />
+<h2 id="implementation-plan">8. Implementation Plan</h2>
+<h3 id="phase-1-fix-critical-issues-testing-infrastructure">8.1 Phase 1:
+Fix Critical Issues &amp; Testing Infrastructure</h3>
+<p><strong>Duration:</strong> 1 week <strong>Priority:</strong>
+CRITICAL</p>
+<p><strong>Tasks:</strong> 1. <strong>Fix Email Channel Bug</strong>
+(BLOCKER) - Fix recipient extraction from metadata (line 426) - Add
+proper recipient handling - Support multiple recipients - Test case:
+Send email with recipient in metadata</p>
+<ol start="2" type="1">
+<li><strong>Create Mock Server Infrastructure</strong>
+<ul>
+<li>Implement mock Slack webhook server</li>
+<li>Implement mock Discord webhook server</li>
+<li>Implement mock SMTP server (or use MailHog)</li>
+<li>Create helper functions for integration tests</li>
+</ul></li>
+<li><strong>Add Basic Unit Tests</strong>
+<ul>
+<li>Slack channel tests (100% coverage target)</li>
+<li>Email channel tests (100% coverage target)</li>
+<li>Discord channel tests (100% coverage target)</li>
+<li>Engine core tests (enhance existing)</li>
+</ul></li>
+</ol>
+<p><strong>Deliverables:</strong> - ✅ Email channel working correctly -
+✅ Mock server infrastructure ready - ✅ Unit test suite with 80%+
+coverage - ✅ CI/CD integration for tests</p>
+<p><strong>Success Metrics:</strong> - All existing channels tested and
+functional - Zero critical bugs - Test coverage &gt;80% for notification
+module</p>
+<hr />
+<h3 id="phase-2-telegram-integration-configuration">8.2 Phase 2:
+Telegram Integration &amp; Configuration</h3>
+<p><strong>Duration:</strong> 1 week <strong>Priority:</strong> HIGH</p>
+<p><strong>Tasks:</strong> 1. <strong>Implement Telegram
+Channel</strong> ```go type TelegramChannel struct { name string enabled
+bool botToken string chatID string }</p>
+<p>func (c <em>TelegramChannel) Send(ctx context.Context, notification
+</em>Notification) error { // Implement Telegram Bot API sendMessage //
+Support HTML/Markdown formatting // Handle media attachments (future) }
+```</p>
+<ol start="2" type="1">
+<li><strong>Add Telegram Unit Tests</strong>
+<ul>
+<li>Send message success</li>
+<li>Authentication failures</li>
+<li>Invalid chat ID</li>
+<li>Rate limiting</li>
+<li>Message formatting (HTML/Markdown)</li>
+</ul></li>
+<li><strong>Add Telegram Integration Tests</strong>
+<ul>
+<li>Mock Telegram Bot API server</li>
+<li>Test full request/response cycle</li>
+<li>Test error scenarios</li>
+</ul></li>
+<li><strong>Update Configuration System</strong>
+<ul>
+<li>Add notification section to config.yaml</li>
+<li>Add environment variable support</li>
+<li>Add configuration validation</li>
+<li>Add config hot-reload (future)</li>
+</ul></li>
+<li><strong>Enhance Slack Integration</strong>
+<ul>
+<li>Add Slack Block Kit support</li>
+<li>Add rich formatting</li>
+<li>Add attachment support</li>
+<li>Test new features</li>
+</ul></li>
+</ol>
+<p><strong>Deliverables:</strong> - ✅ Telegram integration fully
+functional - ✅ Telegram test coverage 100% - ✅ Configuration
+management enhanced - ✅ Slack enhanced with rich formatting</p>
+<p><strong>Success Metrics:</strong> - Telegram notifications working
+end-to-end - Configuration loaded from config.yaml - Enhanced Slack
+notifications with blocks</p>
+<hr />
+<h3 id="phase-3-event-driven-hook-system">8.3 Phase 3: Event-Driven Hook
+System</h3>
+<p><strong>Duration:</strong> 2 weeks <strong>Priority:</strong>
+HIGH</p>
+<p><strong>Tasks:</strong> 1. <strong>Design Event Bus
+Architecture</strong> ```go type EventBus struct { subscribers
+map[string][]EventHandler mutex sync.RWMutex }</p>
+<p>func (bus <em>EventBus) Subscribe(eventType string, handler
+EventHandler) func (bus </em>EventBus) Publish(event Event) ```</p>
+<ol start="2" type="1">
+<li><strong>Implement Event Bus</strong>
+<ul>
+<li>Subscriber management</li>
+<li>Event publishing</li>
+<li>Async event handling</li>
+<li>Error handling</li>
+<li>Event filtering</li>
+</ul></li>
+<li><strong>Integrate Event Bus with Components</strong>
+<ul>
+<li>Task Manager: Emit events on task status changes</li>
+<li>Workflow Executor: Emit workflow events</li>
+<li>Worker Pool: Emit worker events</li>
+<li>API Handlers: Emit API events</li>
+</ul></li>
+<li><strong>Connect Notification Engine to Event Bus</strong>
+<ul>
+<li>Subscribe to relevant events</li>
+<li>Map events to notification rules</li>
+<li>Apply rule conditions</li>
+<li>Trigger notifications</li>
+</ul></li>
+<li><strong>Implement Notification Rules Engine</strong>
+<ul>
+<li>Parse rule conditions</li>
+<li>Evaluate conditions against events</li>
+<li>Select channels based on rules</li>
+<li>Apply priority escalation</li>
+<li>Template application</li>
+</ul></li>
+<li><strong>Add Rule Configuration</strong>
+<ul>
+<li>Load rules from config.yaml</li>
+<li>Validate rule syntax</li>
+<li>Dynamic rule updates</li>
+<li>Rule testing utility</li>
+</ul></li>
+<li><strong>Testing</strong>
+<ul>
+<li>Event bus unit tests</li>
+<li>Integration tests: event → notification</li>
+<li>E2E tests: task failure → Slack notification</li>
+<li>Performance tests: 1000 events/second</li>
+</ul></li>
+</ol>
+<p><strong>Deliverables:</strong> - ✅ Event bus implemented and tested
+- ✅ All components emitting events - ✅ Notifications triggered
+automatically - ✅ Rule engine functional</p>
+<p><strong>Success Metrics:</strong> - Task failures automatically send
+notifications - Worker issues trigger alerts - Workflow completions
+notify users - Zero manual notification invocations</p>
+<hr />
+<h3 id="phase-4-retry-logic-reliability">8.4 Phase 4: Retry Logic &amp;
+Reliability</h3>
+<p><strong>Duration:</strong> 1 week <strong>Priority:</strong>
+MEDIUM</p>
+<p><strong>Tasks:</strong> 1. <strong>Implement Retry Mechanism</strong>
+```go type RetryConfig struct { MaxAttempts int InitialDelay
+time.Duration MaxDelay time.Duration BackoffMultiplier float64 }</p>
+<p>func (c <em>SlackChannel) SendWithRetry(ctx context.Context,
+notification </em>Notification) error { // Exponential backoff retry
+logic } ```</p>
+<ol start="2" type="1">
+<li><strong>Add Rate Limiting</strong>
+<ul>
+<li>Token bucket algorithm</li>
+<li>Per-channel rate limits</li>
+<li>Queue management</li>
+<li>Backpressure handling</li>
+</ul></li>
+<li><strong>Implement Notification Queue</strong>
+<ul>
+<li>Persistent queue (Redis-backed)</li>
+<li>Delivery guarantees</li>
+<li>Failed notification handling</li>
+<li>Dead letter queue</li>
+</ul></li>
+<li><strong>Add Observability</strong>
+<ul>
+<li>Metrics: notifications sent/failed</li>
+<li>Logging: structured logs</li>
+<li>Tracing: distributed tracing</li>
+<li>Dashboards: Grafana integration</li>
+</ul></li>
+<li><strong>Testing</strong>
+<ul>
+<li>Retry logic tests</li>
+<li>Rate limiting tests</li>
+<li>Queue persistence tests</li>
+<li>Failure scenario tests</li>
+</ul></li>
+</ol>
+<p><strong>Deliverables:</strong> - ✅ Retry mechanism implemented - ✅
+Rate limiting enforced - ✅ Notification queue operational - ✅
+Observability added</p>
+<p><strong>Success Metrics:</strong> - 99.9% notification delivery rate
+- No lost notifications - Graceful degradation under load - Clear
+visibility into notification status</p>
+<hr />
+<h3 id="phase-5-additional-integrations">8.5 Phase 5: Additional
+Integrations</h3>
+<p><strong>Duration:</strong> 2 weeks <strong>Priority:</strong>
+MEDIUM</p>
+<p><strong>Tier 1 Integrations:</strong> 1. <strong>Generic
+Webhooks</strong> - Configurable HTTP method - Custom headers - Payload
+templates - Authentication options</p>
+<ol start="2" type="1">
+<li><strong>Microsoft Teams</strong>
+<ul>
+<li>Workflows API integration</li>
+<li>Adaptive Cards support</li>
+<li>Action buttons</li>
+</ul></li>
+</ol>
+<p><strong>Tier 2 Integrations:</strong> 3. <strong>PagerDuty</strong> -
+Events API v2 - Incident creation - Alert deduplication</p>
+<ol start="4" type="1">
+<li><strong>GitHub Issues</strong>
+<ul>
+<li>Issue creation from failures</li>
+<li>Comment addition</li>
+<li>Label management</li>
+</ul></li>
+</ol>
+<p><strong>Testing:</strong> - Unit tests for each integration -
+Integration tests with mocks - E2E tests with real APIs (optional)</p>
+<p><strong>Deliverables:</strong> - ✅ Generic webhooks functional - ✅
+Microsoft Teams integration - ✅ PagerDuty integration (optional) - ✅
+GitHub integration (optional)</p>
+<hr />
+<h3 id="phase-6-documentation-website">8.6 Phase 6: Documentation &amp;
+Website</h3>
+<p><strong>Duration:</strong> 1 week <strong>Priority:</strong>
+MEDIUM</p>
+<p><strong>Tasks:</strong> 1. <strong>Create Setup Guides</strong> - ✅
+Slack setup guide (see Section 7.1) - ✅ Telegram setup guide (see
+Section 7.2) - ✅ Email setup guide (see Section 7.3) - ✅ Discord setup
+guide (see Section 7.4) - Generic webhook setup guide - Microsoft Teams
+setup guide</p>
+<ol start="2" type="1">
+<li><p><strong>Update Website (Github-Pages-Website)</strong></p>
+<ul>
+<li>Add “Integrations” section to homepage</li>
+<li>Create integrations showcase</li>
+<li>Add visual integration logos</li>
+<li>Link to setup guides</li>
+</ul>
+<p><strong>Additions to index.html:</strong></p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode html"><code class="sourceCode html"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- New Integrations Section --&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">section</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;integrations&quot;</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;integrations&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;container&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;section-header&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&lt;</span><span class="kw">h2</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;section-title&quot;</span><span class="dt">&gt;</span>Powerful Integrations<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&lt;</span><span class="kw">p</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;section-subtitle&quot;</span><span class="dt">&gt;</span>Connect HelixCode with your favorite tools<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;integrations-grid&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;integration-card&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;integration-logo&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">&lt;</span><span class="kw">img</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;assets/slack-logo.png&quot;</span><span class="ot"> alt</span><span class="op">=</span><span class="st">&quot;Slack&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&lt;</span><span class="kw">h3</span><span class="dt">&gt;</span>Slack<span class="dt">&lt;/</span><span class="kw">h3</span><span class="dt">&gt;</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>Real-time notifications with rich formatting<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>                <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;docs/integrations/slack.html&quot;</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;btn btn-sm&quot;</span><span class="dt">&gt;</span>Setup Guide<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>            <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>            <span class="co">&lt;!-- More integration cards... --&gt;</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">section</span><span class="dt">&gt;</span></span></code></pre></div></li>
+<li><p><strong>API Documentation</strong></p>
+<ul>
+<li>REST API for notifications</li>
+<li>Webhook payload formats</li>
+<li>Authentication</li>
+<li>Rate limits</li>
+</ul></li>
+<li><p><strong>Configuration Reference</strong></p>
+<ul>
+<li>Complete config.yaml reference</li>
+<li>Environment variables</li>
+<li>Rule syntax guide</li>
+<li>Template guide</li>
+</ul></li>
+</ol>
+<p><strong>Deliverables:</strong> - ✅ All setup guides complete - ✅
+Website updated with integrations - ✅ API documentation published - ✅
+Configuration reference available</p>
+<hr />
+<h3 id="phase-7-performance-scale-testing">8.7 Phase 7: Performance
+&amp; Scale Testing</h3>
+<p><strong>Duration:</strong> 1 week <strong>Priority:</strong> LOW</p>
+<p><strong>Tasks:</strong> 1. <strong>Load Testing</strong> - 1000
+notifications/minute - Concurrent channel sending - Memory/CPU
+profiling</p>
+<ol start="2" type="1">
+<li><strong>Optimization</strong>
+<ul>
+<li>Connection pooling</li>
+<li>Batch sending (where applicable)</li>
+<li>Caching</li>
+</ul></li>
+<li><strong>Benchmarking</strong>
+<ul>
+<li>Establish performance baselines</li>
+<li>Regression testing</li>
+</ul></li>
+</ol>
+<p><strong>Deliverables:</strong> - ✅ Load tests passing - ✅
+Performance optimizations - ✅ Benchmark suite</p>
+<hr />
+<h2 id="testing-implementation-details">9. Testing Implementation
+Details</h2>
+<h3 id="test-file-structure">9.1 Test File Structure</h3>
+<pre><code>helix_code/
+├── internal/
+│   └── notification/
+│       ├── engine.go
+│       ├── engine_test.go (existing - enhance)
+│       ├── slack_test.go (NEW)
+│       ├── telegram_test.go (NEW)
+│       ├── email_test.go (NEW)
+│       ├── discord_test.go (NEW)
+│       ├── webhooks_test.go (NEW)
+│       └── testutil/
+│           ├── mock_servers.go (NEW)
+│           ├── test_helpers.go (NEW)
+│           └── fixtures.go (NEW)
+├── test/
+│   ├── integration/
+│   │   ├── notification_integration_test.go (enhance existing)
+│   │   ├── slack_integration_test.go (NEW)
+│   │   ├── telegram_integration_test.go (NEW)
+│   │   └── email_integration_test.go (NEW)
+│   └── e2e/
+│       └── notification_e2e_test.go (NEW)</code></pre>
+<h3 id="sample-test-slack-channel">9.2 Sample Test: Slack Channel</h3>
+<p><strong>File:</strong>
+<code>internal/notification/slack_test.go</code></p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> notification</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;encoding/json&quot;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;io&quot;</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/http&quot;</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/http/httptest&quot;</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;testing&quot;</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/stretchr/testify/assert&quot;</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/stretchr/testify/require&quot;</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSlackChannel_New<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>    tests <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>        name     <span class="dt">string</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>        webhook  <span class="dt">string</span></span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>        channel  <span class="dt">string</span></span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>        username <span class="dt">string</span></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>        wantEnabled <span class="dt">bool</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}{</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span>     <span class="st">&quot;valid configuration&quot;</span><span class="op">,</span></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>            webhook<span class="op">:</span>  <span class="st">&quot;https://hooks.slack.com/services/T/B/X&quot;</span><span class="op">,</span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>            channel<span class="op">:</span>  <span class="st">&quot;#helix&quot;</span><span class="op">,</span></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>            username<span class="op">:</span> <span class="st">&quot;bot&quot;</span><span class="op">,</span></span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>            wantEnabled<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span>     <span class="st">&quot;empty webhook&quot;</span><span class="op">,</span></span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>            webhook<span class="op">:</span>  <span class="st">&quot;&quot;</span><span class="op">,</span></span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>            channel<span class="op">:</span>  <span class="st">&quot;#helix&quot;</span><span class="op">,</span></span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>            username<span class="op">:</span> <span class="st">&quot;bot&quot;</span><span class="op">,</span></span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>            wantEnabled<span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> tt <span class="op">:=</span> <span class="kw">range</span> tests <span class="op">{</span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Run<span class="op">(</span>tt<span class="op">.</span>name<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>            channel <span class="op">:=</span> NewSlackChannel<span class="op">(</span>tt<span class="op">.</span>webhook<span class="op">,</span> tt<span class="op">.</span>channel<span class="op">,</span> tt<span class="op">.</span>username<span class="op">)</span></span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>            assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> tt<span class="op">.</span>wantEnabled<span class="op">,</span> channel<span class="op">.</span>IsEnabled<span class="op">())</span></span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>            assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;slack&quot;</span><span class="op">,</span> channel<span class="op">.</span>GetName<span class="op">())</span></span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb33-44"><a href="#cb33-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-45"><a href="#cb33-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb33-46"><a href="#cb33-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-47"><a href="#cb33-47" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSlackChannel_Send<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-48"><a href="#cb33-48" aria-hidden="true" tabindex="-1"></a>    tests <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb33-49"><a href="#cb33-49" aria-hidden="true" tabindex="-1"></a>        name         <span class="dt">string</span></span>
+<span id="cb33-50"><a href="#cb33-50" aria-hidden="true" tabindex="-1"></a>        notification <span class="op">*</span>Notification</span>
+<span id="cb33-51"><a href="#cb33-51" aria-hidden="true" tabindex="-1"></a>        serverStatus <span class="dt">int</span></span>
+<span id="cb33-52"><a href="#cb33-52" aria-hidden="true" tabindex="-1"></a>        serverCheck  <span class="kw">func</span><span class="op">(*</span>testing<span class="op">.</span>T<span class="op">,</span> <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span></span>
+<span id="cb33-53"><a href="#cb33-53" aria-hidden="true" tabindex="-1"></a>        wantErr      <span class="dt">bool</span></span>
+<span id="cb33-54"><a href="#cb33-54" aria-hidden="true" tabindex="-1"></a>        errContains  <span class="dt">string</span></span>
+<span id="cb33-55"><a href="#cb33-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}{</span></span>
+<span id="cb33-56"><a href="#cb33-56" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb33-57"><a href="#cb33-57" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span> <span class="st">&quot;success - info notification&quot;</span><span class="op">,</span></span>
+<span id="cb33-58"><a href="#cb33-58" aria-hidden="true" tabindex="-1"></a>            notification<span class="op">:</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb33-59"><a href="#cb33-59" aria-hidden="true" tabindex="-1"></a>                Title<span class="op">:</span>   <span class="st">&quot;Test Title&quot;</span><span class="op">,</span></span>
+<span id="cb33-60"><a href="#cb33-60" aria-hidden="true" tabindex="-1"></a>                Message<span class="op">:</span> <span class="st">&quot;Test Message&quot;</span><span class="op">,</span></span>
+<span id="cb33-61"><a href="#cb33-61" aria-hidden="true" tabindex="-1"></a>                Type<span class="op">:</span>    NotificationTypeInfo<span class="op">,</span></span>
+<span id="cb33-62"><a href="#cb33-62" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb33-63"><a href="#cb33-63" aria-hidden="true" tabindex="-1"></a>            serverStatus<span class="op">:</span> http<span class="op">.</span>StatusOK<span class="op">,</span></span>
+<span id="cb33-64"><a href="#cb33-64" aria-hidden="true" tabindex="-1"></a>            serverCheck<span class="op">:</span> <span class="kw">func</span><span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">,</span> r <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-65"><a href="#cb33-65" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Verify payload</span></span>
+<span id="cb33-66"><a href="#cb33-66" aria-hidden="true" tabindex="-1"></a>                <span class="kw">var</span> payload <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}</span></span>
+<span id="cb33-67"><a href="#cb33-67" aria-hidden="true" tabindex="-1"></a>                body<span class="op">,</span> _ <span class="op">:=</span> io<span class="op">.</span>ReadAll<span class="op">(</span>r<span class="op">.</span>Body<span class="op">)</span></span>
+<span id="cb33-68"><a href="#cb33-68" aria-hidden="true" tabindex="-1"></a>                err <span class="op">:=</span> json<span class="op">.</span>Unmarshal<span class="op">(</span>body<span class="op">,</span> <span class="op">&amp;</span>payload<span class="op">)</span></span>
+<span id="cb33-69"><a href="#cb33-69" aria-hidden="true" tabindex="-1"></a>                require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb33-70"><a href="#cb33-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-71"><a href="#cb33-71" aria-hidden="true" tabindex="-1"></a>                assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;#helix&quot;</span><span class="op">,</span> payload<span class="op">[</span><span class="st">&quot;channel&quot;</span><span class="op">])</span></span>
+<span id="cb33-72"><a href="#cb33-72" aria-hidden="true" tabindex="-1"></a>                assert<span class="op">.</span>Contains<span class="op">(</span>t<span class="op">,</span> payload<span class="op">[</span><span class="st">&quot;text&quot;</span><span class="op">],</span> <span class="st">&quot;Test Title&quot;</span><span class="op">)</span></span>
+<span id="cb33-73"><a href="#cb33-73" aria-hidden="true" tabindex="-1"></a>                assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="st">&quot;:information_source:&quot;</span><span class="op">,</span> payload<span class="op">[</span><span class="st">&quot;icon_emoji&quot;</span><span class="op">])</span></span>
+<span id="cb33-74"><a href="#cb33-74" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb33-75"><a href="#cb33-75" aria-hidden="true" tabindex="-1"></a>            wantErr<span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb33-76"><a href="#cb33-76" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb33-77"><a href="#cb33-77" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb33-78"><a href="#cb33-78" aria-hidden="true" tabindex="-1"></a>            name<span class="op">:</span> <span class="st">&quot;error - server error&quot;</span><span class="op">,</span></span>
+<span id="cb33-79"><a href="#cb33-79" aria-hidden="true" tabindex="-1"></a>            notification<span class="op">:</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb33-80"><a href="#cb33-80" aria-hidden="true" tabindex="-1"></a>                Title<span class="op">:</span> <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb33-81"><a href="#cb33-81" aria-hidden="true" tabindex="-1"></a>                Message<span class="op">:</span> <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb33-82"><a href="#cb33-82" aria-hidden="true" tabindex="-1"></a>                Type<span class="op">:</span> NotificationTypeError<span class="op">,</span></span>
+<span id="cb33-83"><a href="#cb33-83" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb33-84"><a href="#cb33-84" aria-hidden="true" tabindex="-1"></a>            serverStatus<span class="op">:</span> http<span class="op">.</span>StatusInternalServerError<span class="op">,</span></span>
+<span id="cb33-85"><a href="#cb33-85" aria-hidden="true" tabindex="-1"></a>            wantErr<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb33-86"><a href="#cb33-86" aria-hidden="true" tabindex="-1"></a>            errContains<span class="op">:</span> <span class="st">&quot;status 500&quot;</span><span class="op">,</span></span>
+<span id="cb33-87"><a href="#cb33-87" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb33-88"><a href="#cb33-88" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-89"><a href="#cb33-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-90"><a href="#cb33-90" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> tt <span class="op">:=</span> <span class="kw">range</span> tests <span class="op">{</span></span>
+<span id="cb33-91"><a href="#cb33-91" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Run<span class="op">(</span>tt<span class="op">.</span>name<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-92"><a href="#cb33-92" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Setup mock server</span></span>
+<span id="cb33-93"><a href="#cb33-93" aria-hidden="true" tabindex="-1"></a>            server <span class="op">:=</span> httptest<span class="op">.</span>NewServer<span class="op">(</span>http<span class="op">.</span>HandlerFunc<span class="op">(</span><span class="kw">func</span><span class="op">(</span>w http<span class="op">.</span>ResponseWriter<span class="op">,</span> r <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-94"><a href="#cb33-94" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> tt<span class="op">.</span>serverCheck <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb33-95"><a href="#cb33-95" aria-hidden="true" tabindex="-1"></a>                    tt<span class="op">.</span>serverCheck<span class="op">(</span>t<span class="op">,</span> r<span class="op">)</span></span>
+<span id="cb33-96"><a href="#cb33-96" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb33-97"><a href="#cb33-97" aria-hidden="true" tabindex="-1"></a>                w<span class="op">.</span>WriteHeader<span class="op">(</span>tt<span class="op">.</span>serverStatus<span class="op">)</span></span>
+<span id="cb33-98"><a href="#cb33-98" aria-hidden="true" tabindex="-1"></a>            <span class="op">}))</span></span>
+<span id="cb33-99"><a href="#cb33-99" aria-hidden="true" tabindex="-1"></a>            <span class="cf">defer</span> server<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb33-100"><a href="#cb33-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-101"><a href="#cb33-101" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Create channel with mock server URL</span></span>
+<span id="cb33-102"><a href="#cb33-102" aria-hidden="true" tabindex="-1"></a>            channel <span class="op">:=</span> NewSlackChannel<span class="op">(</span>server<span class="op">.</span>URL<span class="op">,</span> <span class="st">&quot;#helix&quot;</span><span class="op">,</span> <span class="st">&quot;bot&quot;</span><span class="op">)</span></span>
+<span id="cb33-103"><a href="#cb33-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-104"><a href="#cb33-104" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Send notification</span></span>
+<span id="cb33-105"><a href="#cb33-105" aria-hidden="true" tabindex="-1"></a>            err <span class="op">:=</span> channel<span class="op">.</span>Send<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> tt<span class="op">.</span>notification<span class="op">)</span></span>
+<span id="cb33-106"><a href="#cb33-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-107"><a href="#cb33-107" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> tt<span class="op">.</span>wantErr <span class="op">{</span></span>
+<span id="cb33-108"><a href="#cb33-108" aria-hidden="true" tabindex="-1"></a>                require<span class="op">.</span>Error<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb33-109"><a href="#cb33-109" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> tt<span class="op">.</span>errContains <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb33-110"><a href="#cb33-110" aria-hidden="true" tabindex="-1"></a>                    assert<span class="op">.</span>Contains<span class="op">(</span>t<span class="op">,</span> err<span class="op">.</span>Error<span class="op">(),</span> tt<span class="op">.</span>errContains<span class="op">)</span></span>
+<span id="cb33-111"><a href="#cb33-111" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb33-112"><a href="#cb33-112" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb33-113"><a href="#cb33-113" aria-hidden="true" tabindex="-1"></a>                require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb33-114"><a href="#cb33-114" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb33-115"><a href="#cb33-115" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb33-116"><a href="#cb33-116" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-117"><a href="#cb33-117" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb33-118"><a href="#cb33-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-119"><a href="#cb33-119" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSlackChannel_IconForType<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-120"><a href="#cb33-120" aria-hidden="true" tabindex="-1"></a>    channel <span class="op">:=</span> <span class="op">&amp;</span>SlackChannel<span class="op">{}</span></span>
+<span id="cb33-121"><a href="#cb33-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-122"><a href="#cb33-122" aria-hidden="true" tabindex="-1"></a>    tests <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb33-123"><a href="#cb33-123" aria-hidden="true" tabindex="-1"></a>        notifType NotificationType</span>
+<span id="cb33-124"><a href="#cb33-124" aria-hidden="true" tabindex="-1"></a>        wantIcon  <span class="dt">string</span></span>
+<span id="cb33-125"><a href="#cb33-125" aria-hidden="true" tabindex="-1"></a>    <span class="op">}{</span></span>
+<span id="cb33-126"><a href="#cb33-126" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>NotificationTypeSuccess<span class="op">,</span> <span class="st">&quot;:white_check_mark:&quot;</span><span class="op">},</span></span>
+<span id="cb33-127"><a href="#cb33-127" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>NotificationTypeWarning<span class="op">,</span> <span class="st">&quot;:warning:&quot;</span><span class="op">},</span></span>
+<span id="cb33-128"><a href="#cb33-128" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>NotificationTypeError<span class="op">,</span> <span class="st">&quot;:x:&quot;</span><span class="op">},</span></span>
+<span id="cb33-129"><a href="#cb33-129" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>NotificationTypeAlert<span class="op">,</span> <span class="st">&quot;:rotating_light:&quot;</span><span class="op">},</span></span>
+<span id="cb33-130"><a href="#cb33-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>NotificationTypeInfo<span class="op">,</span> <span class="st">&quot;:information_source:&quot;</span><span class="op">},</span></span>
+<span id="cb33-131"><a href="#cb33-131" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-132"><a href="#cb33-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-133"><a href="#cb33-133" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> tt <span class="op">:=</span> <span class="kw">range</span> tests <span class="op">{</span></span>
+<span id="cb33-134"><a href="#cb33-134" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Run<span class="op">(</span><span class="dt">string</span><span class="op">(</span>tt<span class="op">.</span>notifType<span class="op">),</span> <span class="kw">func</span><span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-135"><a href="#cb33-135" aria-hidden="true" tabindex="-1"></a>            icon <span class="op">:=</span> channel<span class="op">.</span>getIconForType<span class="op">(</span>tt<span class="op">.</span>notifType<span class="op">)</span></span>
+<span id="cb33-136"><a href="#cb33-136" aria-hidden="true" tabindex="-1"></a>            assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> tt<span class="op">.</span>wantIcon<span class="op">,</span> icon<span class="op">)</span></span>
+<span id="cb33-137"><a href="#cb33-137" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb33-138"><a href="#cb33-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-139"><a href="#cb33-139" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb33-140"><a href="#cb33-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-141"><a href="#cb33-141" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSlackChannel_RateLimit<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-142"><a href="#cb33-142" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test that rate limiting is respected</span></span>
+<span id="cb33-143"><a href="#cb33-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Slack allows 1 message/second</span></span>
+<span id="cb33-144"><a href="#cb33-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-145"><a href="#cb33-145" aria-hidden="true" tabindex="-1"></a>    requestCount <span class="op">:=</span> <span class="dv">0</span></span>
+<span id="cb33-146"><a href="#cb33-146" aria-hidden="true" tabindex="-1"></a>    server <span class="op">:=</span> httptest<span class="op">.</span>NewServer<span class="op">(</span>http<span class="op">.</span>HandlerFunc<span class="op">(</span><span class="kw">func</span><span class="op">(</span>w http<span class="op">.</span>ResponseWriter<span class="op">,</span> r <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb33-147"><a href="#cb33-147" aria-hidden="true" tabindex="-1"></a>        requestCount<span class="op">++</span></span>
+<span id="cb33-148"><a href="#cb33-148" aria-hidden="true" tabindex="-1"></a>        w<span class="op">.</span>WriteHeader<span class="op">(</span>http<span class="op">.</span>StatusOK<span class="op">)</span></span>
+<span id="cb33-149"><a href="#cb33-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">}))</span></span>
+<span id="cb33-150"><a href="#cb33-150" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> server<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb33-151"><a href="#cb33-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-152"><a href="#cb33-152" aria-hidden="true" tabindex="-1"></a>    channel <span class="op">:=</span> NewSlackChannel<span class="op">(</span>server<span class="op">.</span>URL<span class="op">,</span> <span class="st">&quot;#test&quot;</span><span class="op">,</span> <span class="st">&quot;bot&quot;</span><span class="op">)</span></span>
+<span id="cb33-153"><a href="#cb33-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-154"><a href="#cb33-154" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Send 5 notifications quickly</span></span>
+<span id="cb33-155"><a href="#cb33-155" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="op">:=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">5</span><span class="op">;</span> i<span class="op">++</span> <span class="op">{</span></span>
+<span id="cb33-156"><a href="#cb33-156" aria-hidden="true" tabindex="-1"></a>        notif <span class="op">:=</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb33-157"><a href="#cb33-157" aria-hidden="true" tabindex="-1"></a>            Title<span class="op">:</span> <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb33-158"><a href="#cb33-158" aria-hidden="true" tabindex="-1"></a>            Message<span class="op">:</span> <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb33-159"><a href="#cb33-159" aria-hidden="true" tabindex="-1"></a>            Type<span class="op">:</span> NotificationTypeInfo<span class="op">,</span></span>
+<span id="cb33-160"><a href="#cb33-160" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb33-161"><a href="#cb33-161" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=</span> channel<span class="op">.</span>Send<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> notif<span class="op">)</span></span>
+<span id="cb33-162"><a href="#cb33-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb33-163"><a href="#cb33-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-164"><a href="#cb33-164" aria-hidden="true" tabindex="-1"></a>    <span class="co">// With rate limiting, this should take ~4 seconds</span></span>
+<span id="cb33-165"><a href="#cb33-165" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Without rate limiting, all would be sent immediately</span></span>
+<span id="cb33-166"><a href="#cb33-166" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: Implement rate limiting first, then this test will validate it</span></span>
+<span id="cb33-167"><a href="#cb33-167" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="sample-test-email-channel">9.3 Sample Test: Email Channel</h3>
+<p><strong>File:</strong>
+<code>internal/notification/email_test.go</code></p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> notification</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;testing&quot;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/stretchr/testify/assert&quot;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/stretchr/testify/require&quot;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmailChannel_RecipientExtraction<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test for the bug fix in line 426</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    channel <span class="op">:=</span> NewEmailChannel<span class="op">(</span><span class="st">&quot;smtp.example.com&quot;</span><span class="op">,</span> <span class="dv">587</span><span class="op">,</span> <span class="st">&quot;user&quot;</span><span class="op">,</span> <span class="st">&quot;pass&quot;</span><span class="op">,</span> <span class="st">&quot;from@example.com&quot;</span><span class="op">)</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>    notification <span class="op">:=</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>        Title<span class="op">:</span> <span class="st">&quot;Test&quot;</span><span class="op">,</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>        Message<span class="op">:</span> <span class="st">&quot;Test message&quot;</span><span class="op">,</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>        Type<span class="op">:</span> NotificationTypeInfo<span class="op">,</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>        Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;recipients&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;admin@example.com&quot;</span><span class="op">,</span> <span class="st">&quot;team@example.com&quot;</span><span class="op">},</span></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// This should NOT return &quot;no recipient specified&quot; error</span></span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: Implement fix first</span></span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// err := channel.Send(context.Background(), notification)</span></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// assert.NoError(t, err)</span></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmailChannel_MultipleRecipients<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test sending to multiple recipients</span></span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: Implement with mock SMTP server</span></span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmailChannel_HTMLFormatting<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test HTML email formatting (future feature)</span></span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: Implement HTML support first</span></span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-test-mock-servers">9.4 Integration Test: Mock
+Servers</h3>
+<p><strong>File:</strong>
+<code>internal/notification/testutil/mock_servers.go</code></p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> testutil</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;encoding/json&quot;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;io&quot;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/http&quot;</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;net/http/httptest&quot;</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;sync&quot;</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MockSlackServer <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>httptest<span class="op">.</span>Server</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>    Requests <span class="op">[]</span>SlackRequest</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    mutex    sync<span class="op">.</span>Mutex</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SlackRequest <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>    Channel   <span class="dt">string</span></span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>    Username  <span class="dt">string</span></span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>    Text      <span class="dt">string</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>    IconEmoji <span class="dt">string</span></span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewMockSlackServer<span class="op">()</span> <span class="op">*</span>MockSlackServer <span class="op">{</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a>    mock <span class="op">:=</span> <span class="op">&amp;</span>MockSlackServer<span class="op">{</span></span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a>        Requests<span class="op">:</span> <span class="bu">make</span><span class="op">([]</span>SlackRequest<span class="op">,</span> <span class="dv">0</span><span class="op">),</span></span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a>    mock<span class="op">.</span>Server <span class="op">=</span> httptest<span class="op">.</span>NewServer<span class="op">(</span>http<span class="op">.</span>HandlerFunc<span class="op">(</span><span class="kw">func</span><span class="op">(</span>w http<span class="op">.</span>ResponseWriter<span class="op">,</span> r <span class="op">*</span>http<span class="op">.</span>Request<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true" tabindex="-1"></a>        mock<span class="op">.</span>mutex<span class="op">.</span>Lock<span class="op">()</span></span>
+<span id="cb35-31"><a href="#cb35-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">defer</span> mock<span class="op">.</span>mutex<span class="op">.</span>Unlock<span class="op">()</span></span>
+<span id="cb35-32"><a href="#cb35-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-33"><a href="#cb35-33" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Parse request</span></span>
+<span id="cb35-34"><a href="#cb35-34" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> req SlackRequest</span>
+<span id="cb35-35"><a href="#cb35-35" aria-hidden="true" tabindex="-1"></a>        body<span class="op">,</span> _ <span class="op">:=</span> io<span class="op">.</span>ReadAll<span class="op">(</span>r<span class="op">.</span>Body<span class="op">)</span></span>
+<span id="cb35-36"><a href="#cb35-36" aria-hidden="true" tabindex="-1"></a>        json<span class="op">.</span>Unmarshal<span class="op">(</span>body<span class="op">,</span> <span class="op">&amp;</span>req<span class="op">)</span></span>
+<span id="cb35-37"><a href="#cb35-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-38"><a href="#cb35-38" aria-hidden="true" tabindex="-1"></a>        mock<span class="op">.</span>Requests <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>mock<span class="op">.</span>Requests<span class="op">,</span> req<span class="op">)</span></span>
+<span id="cb35-39"><a href="#cb35-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-40"><a href="#cb35-40" aria-hidden="true" tabindex="-1"></a>        w<span class="op">.</span>WriteHeader<span class="op">(</span>http<span class="op">.</span>StatusOK<span class="op">)</span></span>
+<span id="cb35-41"><a href="#cb35-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}))</span></span>
+<span id="cb35-42"><a href="#cb35-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-43"><a href="#cb35-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mock</span>
+<span id="cb35-44"><a href="#cb35-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb35-45"><a href="#cb35-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-46"><a href="#cb35-46" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>MockSlackServer<span class="op">)</span> GetRequests<span class="op">()</span> <span class="op">[]</span>SlackRequest <span class="op">{</span></span>
+<span id="cb35-47"><a href="#cb35-47" aria-hidden="true" tabindex="-1"></a>    m<span class="op">.</span>mutex<span class="op">.</span>Lock<span class="op">()</span></span>
+<span id="cb35-48"><a href="#cb35-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> m<span class="op">.</span>mutex<span class="op">.</span>Unlock<span class="op">()</span></span>
+<span id="cb35-49"><a href="#cb35-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> m<span class="op">.</span>Requests</span>
+<span id="cb35-50"><a href="#cb35-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb35-51"><a href="#cb35-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-52"><a href="#cb35-52" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>MockSlackServer<span class="op">)</span> Reset<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb35-53"><a href="#cb35-53" aria-hidden="true" tabindex="-1"></a>    m<span class="op">.</span>mutex<span class="op">.</span>Lock<span class="op">()</span></span>
+<span id="cb35-54"><a href="#cb35-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> m<span class="op">.</span>mutex<span class="op">.</span>Unlock<span class="op">()</span></span>
+<span id="cb35-55"><a href="#cb35-55" aria-hidden="true" tabindex="-1"></a>    m<span class="op">.</span>Requests <span class="op">=</span> <span class="bu">make</span><span class="op">([]</span>SlackRequest<span class="op">,</span> <span class="dv">0</span><span class="op">)</span></span>
+<span id="cb35-56"><a href="#cb35-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="final-recommendations">10. Final Recommendations</h2>
+<h3 id="critical-priorities-do-first">10.1 Critical Priorities (Do
+First)</h3>
+<ol type="1">
+<li><strong>Fix Email Bug</strong> - Blocker for production use</li>
+<li><strong>Add Tests</strong> - Critical for reliability</li>
+<li><strong>Implement Telegram</strong> - High user demand</li>
+<li><strong>Event System</strong> - Core functionality for hooks</li>
+</ol>
+<h3 id="implementation-order">10.2 Implementation Order</h3>
+<pre><code>Week 1-2:  Phase 1 (Fix bugs + Testing infrastructure)
+Week 3-4:  Phase 2 (Telegram + Config + Enhance Slack)
+Week 5-6:  Phase 3 (Event-driven system)
+Week 7:    Phase 4 (Retry + Reliability)
+Week 8-9:  Phase 5 (Additional integrations)
+Week 10:   Phase 6 (Documentation + Website)
+Week 11:   Phase 7 (Performance testing)</code></pre>
+<p><strong>Total Duration:</strong> ~11 weeks for complete
+implementation</p>
+<h3 id="resource-requirements">10.3 Resource Requirements</h3>
+<p><strong>Developer Time:</strong> - 1 senior Go developer (full-time)
+- 1 QA engineer (part-time for testing strategy) - 1 technical writer
+(part-time for documentation)</p>
+<p><strong>Infrastructure:</strong> - Test SMTP server (MailHog or
+similar) - Test Telegram bot - Test Slack workspace - CI/CD pipeline
+updates</p>
+<h3 id="success-metrics">10.4 Success Metrics</h3>
+<p><strong>Code Quality:</strong> - ✅ 95%+ test coverage for
+notification system - ✅ Zero critical bugs - ✅ All linters passing</p>
+<p><strong>Functionality:</strong> - ✅ 100% automated event triggering
+- ✅ Slack, Telegram, Email, Discord fully functional - ✅ Generic
+webhooks working - ✅ Rule-based routing operational</p>
+<p><strong>Performance:</strong> - ✅ Handle 1000 notifications/minute -
+✅ &lt;100ms notification dispatch - ✅ 99.9% delivery rate</p>
+<p><strong>Documentation:</strong> - ✅ Setup guides for all
+integrations - ✅ API documentation complete - ✅ Configuration
+reference available - ✅ Website updated</p>
+<hr />
+<h2 id="conclusion">11. Conclusion</h2>
+<p>The HelixCode notification and hook integration system has a solid
+foundation with good architectural patterns, but requires significant
+implementation work to reach production readiness.</p>
+<p><strong>Current State:</strong> - Partial implementations of Slack,
+Email, Discord - Good engine framework - <strong>Critical gaps:</strong>
+Telegram missing, email broken, zero tests, no event system</p>
+<p><strong>Recommended Actions:</strong> 1. Immediate: Fix email bug 2.
+Short-term: Add comprehensive tests 3. Medium-term: Implement Telegram +
+event system 4. Long-term: Additional integrations + performance
+optimization</p>
+<p><strong>Expected Outcome:</strong> After full implementation,
+HelixCode will have a world-class notification system with: - Automated
+event-driven notifications - 100% test coverage - Multiple integration
+options - Enterprise-grade reliability - Comprehensive documentation</p>
+<p>This will significantly enhance HelixCode’s value proposition and
+user experience.</p>
+<hr />
+<p><strong>Report End</strong></p>
+</body>
+</html>

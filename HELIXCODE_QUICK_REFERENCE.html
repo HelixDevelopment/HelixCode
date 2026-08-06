@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HELIXCODE_QUICK_REFERENCE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HELIXCODE_QUICK_REFERENCE</h1>
+</header>
+<h1 id="helixcode-quick-reference-guide">HelixCode Quick Reference
+Guide</h1>
+<h2 id="provider-file-locations">Provider File Locations</h2>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 25%" />
+<col style="width: 31%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>File Path</th>
+<th>API Endpoint</th>
+<th>Context</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic Claude</td>
+<td><code>/internal/llm/anthropic_provider.go</code></td>
+<td><code>https://api.anthropic.com/v1</code></td>
+<td>200K tokens</td>
+</tr>
+<tr>
+<td>Google Gemini</td>
+<td><code>/internal/llm/gemini_provider.go</code></td>
+<td><code>https://generativelanguage.googleapis.com</code></td>
+<td>2M tokens</td>
+</tr>
+<tr>
+<td>OpenAI</td>
+<td><code>/internal/llm/openai_provider.go</code></td>
+<td><code>https://api.openai.com/v1</code></td>
+<td>1M+ tokens</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td><code>/internal/llm/qwen_provider.go</code></td>
+<td><code>https://dashscope.aliyuncs.com</code></td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>xAI (Grok)</td>
+<td><code>/internal/llm/xai_provider.go</code></td>
+<td><code>https://api.x.ai/v1</code></td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td><code>/internal/llm/openrouter_provider.go</code></td>
+<td><code>https://openrouter.ai/api/v1</code></td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>GitHub Copilot</td>
+<td><code>/internal/llm/copilot_provider.go</code></td>
+<td><code>https://api.githubcopilot.com</code></td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>Local (Llama.cpp)</td>
+<td><code>/internal/llm/local_provider.go</code></td>
+<td><code>http://localhost:11434</code></td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td><code>/internal/llm/ollama_provider.go</code></td>
+<td><code>http://localhost:11434</code></td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>Llama.cpp</td>
+<td><code>/internal/llm/llamacpp_provider.go</code></td>
+<td>Configurable</td>
+<td>Variable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="core-features-location-map">Core Features Location Map</h2>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 28%" />
+<col style="width: 48%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>File Path</th>
+<th>Key Type/Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Provider Interface</strong></td>
+<td><code>/internal/llm/provider.go</code></td>
+<td><code>type Provider interface</code> (line 112)</td>
+</tr>
+<tr>
+<td><strong>Provider Manager</strong></td>
+<td><code>/internal/llm/provider.go</code></td>
+<td><code>type ProviderManager struct</code> (line 151)</td>
+</tr>
+<tr>
+<td><strong>Model Manager</strong></td>
+<td><code>/internal/llm/model_manager.go</code></td>
+<td><code>type ModelManager struct</code> (line 16)</td>
+</tr>
+<tr>
+<td><strong>Tool Calling</strong></td>
+<td><code>/internal/llm/tool_provider.go</code></td>
+<td><code>type EnhancedLLMProvider interface</code> (line 46)</td>
+</tr>
+<tr>
+<td><strong>Reasoning Engine</strong></td>
+<td><code>/internal/llm/reasoning.go</code></td>
+<td><code>type ReasoningEngine struct</code> (line 73)</td>
+</tr>
+<tr>
+<td><strong>MCP Protocol</strong></td>
+<td><code>/internal/mcp/server.go</code></td>
+<td><code>type MCPServer struct</code> (line 17)</td>
+</tr>
+<tr>
+<td><strong>Task Manager</strong></td>
+<td><code>/internal/task/manager.go</code></td>
+<td><code>type TaskManager struct</code> (line 98)</td>
+</tr>
+<tr>
+<td><strong>Worker Pool</strong></td>
+<td><code>/internal/worker/ssh_pool.go</code></td>
+<td><code>type SSHWorkerPool struct</code> (line 17)</td>
+</tr>
+<tr>
+<td><strong>Workflow Engine</strong></td>
+<td><code>/internal/workflow/executor.go</code></td>
+<td>Workflow execution logic</td>
+</tr>
+<tr>
+<td><strong>Configuration</strong></td>
+<td><code>/config/config.yaml</code></td>
+<td>YAML configuration file</td>
+</tr>
+</tbody>
+</table>
+<h2 id="environment-variables">Environment Variables</h2>
+<h3 id="essential">Essential</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTH_JWT_SECRET</span><span class="op">=</span>your-jwt-secret</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_PASSWORD</span><span class="op">=</span>your-db-password</span></code></pre></div>
+<h3 id="api-keys">API Keys</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span>sk-ant-xxx</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span>sk-xxx</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">GEMINI_API_KEY</span><span class="op">=</span>your-key</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="va">GITHUB_TOKEN</span><span class="op">=</span>ghp_xxx</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="va">QWEN_API_KEY</span><span class="op">=</span>your-key</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="va">XAI_API_KEY</span><span class="op">=</span>xai-xxx</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="va">OPENROUTER_API_KEY</span><span class="op">=</span>sk-or-xxx</span></code></pre></div>
+<h3 id="optional">Optional</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_PASSWORD</span><span class="op">=</span>your-redis-password</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_SLACK_WEBHOOK_URL</span><span class="op">=</span>https://hooks.slack.com/...</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_TELEGRAM_BOT_TOKEN</span><span class="op">=</span>xxx</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_TELEGRAM_CHAT_ID</span><span class="op">=</span>xxx</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DISCORD_WEBHOOK_URL</span><span class="op">=</span>https://discord.com/api/...</span></code></pre></div>
+<h2 id="key-architectural-patterns">Key Architectural Patterns</h2>
+<h3 id="provider-pattern">1. Provider Pattern</h3>
+<p>All LLM providers implement the <code>Provider</code> interface at
+<code>provider.go:112</code></p>
+<pre><code>Concrete Provider (e.g., AnthropicProvider)
+        ↓
+    Provider Interface (Generate, GenerateStream, GetHealth, etc.)
+        ↓
+    ProviderManager (manages multiple providers)</code></pre>
+<h3 id="factory-pattern">2. Factory Pattern</h3>
+<p>Create providers dynamically with
+<code>ProviderFactory.CreateProvider()</code> at
+<code>provider.go:339</code></p>
+<h3 id="model-selection-pattern">3. Model Selection Pattern</h3>
+<p><code>ModelManager.SelectOptimalModel()</code> at
+<code>model_manager.go:75</code> scores models based on: - Required
+capabilities - Context window - Hardware compatibility - Task type
+suitability - Quality preferences</p>
+<h3 id="task-distribution-pattern">4. Task Distribution Pattern</h3>
+<p>Tasks flow through: Queue → Priority Selection → Worker Assignment →
+Execution → Checkpoint</p>
+<h3 id="mcp-protocol-pattern">5. MCP Protocol Pattern</h3>
+<p>WebSocket → Session Management → Tool Execution → Broadcasting</p>
+<h2 id="advanced-features-matrix">Advanced Features Matrix</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 22%" />
+<col style="width: 38%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Provider</th>
+<th>Implementation</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Extended Thinking</td>
+<td>Anthropic</td>
+<td><code>anthropic_provider.go:86</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Prompt Caching</td>
+<td>Anthropic</td>
+<td><code>anthropic_provider.go:48</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Vision Support</td>
+<td>Claude, Gemini, OpenAI</td>
+<td><code>anthropicImageSource</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Streaming</td>
+<td>All</td>
+<td><code>GenerateStream()</code> in <code>provider.go:122</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Function Calling</td>
+<td>All</td>
+<td><code>tool_provider.go:46</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Reasoning</td>
+<td>All</td>
+<td><code>reasoning.go:73</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>MCP Protocol</td>
+<td>Server-side</td>
+<td><code>mcp/server.go:17</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Task Checkpointing</td>
+<td>Core</td>
+<td><code>task/checkpoint.go</code></td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Worker Auto-Install</td>
+<td>SSH Workers</td>
+<td><code>ssh_pool.go:77</code></td>
+<td>Complete</td>
+</tr>
+</tbody>
+</table>
+<h2 id="testing-files">Testing Files</h2>
+<table>
+<thead>
+<tr>
+<th>Test Category</th>
+<th>Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit Tests</td>
+<td><code>*_test.go</code> alongside source files</td>
+</tr>
+<tr>
+<td>Integration Tests</td>
+<td><code>/test/integration/</code></td>
+</tr>
+<tr>
+<td>E2E Tests</td>
+<td><code>/test/e2e/</code></td>
+</tr>
+<tr>
+<td>Automation Tests</td>
+<td><code>/test/automation/</code></td>
+</tr>
+<tr>
+<td>Load Tests</td>
+<td><code>/test/load/</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="provider-tests">Provider Tests</h3>
+<ul>
+<li><code>anthropic_provider_test.go</code></li>
+<li><code>gemini_provider_test.go</code></li>
+<li><code>qwen_provider_test.go</code></li>
+<li><code>reasoning_test.go</code></li>
+<li><code>integration_test.go</code></li>
+</ul>
+<h2 id="build-commands-quick-reference">Build Commands Quick
+Reference</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Development</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build              <span class="co"># Single binary</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> dev               <span class="co"># Build and run with dev config</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test              <span class="co"># Run all tests</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> fmt               <span class="co"># Format code</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> lint              <span class="co"># Lint code</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Production</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> prod              <span class="co"># Cross-platform binaries</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> clean             <span class="co"># Clean artifacts</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Platform-specific</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> mobile-ios        <span class="co"># Build iOS framework</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> mobile-android    <span class="co"># Build Android AAR</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> aurora-os         <span class="co"># Aurora OS client</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> symphony-os       <span class="co"># Symphony OS client</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Utilities</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> logo-assets       <span class="co"># Generate logo assets</span></span></code></pre></div>
+<h2 id="api-endpoints">API Endpoints</h2>
+<pre><code>POST   /api/auth/register          - Register user
+POST   /api/auth/login             - Login
+POST   /api/auth/logout            - Logout
+GET    /api/auth/me                - Current user
+POST   /api/auth/refresh           - Refresh token
+
+GET    /api/tasks                  - List tasks
+POST   /api/tasks                  - Create task
+GET    /api/tasks/{id}             - Get task details
+PUT    /api/tasks/{id}             - Update task
+DELETE /api/tasks/{id}             - Delete task
+
+GET    /api/workers                - List workers
+POST   /api/workers                - Register worker
+GET    /api/workers/{id}           - Worker details
+DELETE /api/workers/{id}           - Remove worker
+
+GET    /health                     - Health check
+WS     /ws/mcp                     - MCP protocol (WebSocket)</code></pre>
+<h2 id="important-type-definitions">Important Type Definitions</h2>
+<h3 id="requestresponse-types">Request/Response Types</h3>
+<ul>
+<li><code>LLMRequest</code> (provider.go:44): Unified LLM request
+format</li>
+<li><code>LLMResponse</code> (provider.go:79): Unified LLM response
+format</li>
+<li><code>Tool</code> (provider.go:66): Function definition</li>
+<li><code>ToolCall</code> (provider.go:92): Function call execution</li>
+<li><code>Usage</code> (provider.go:105): Token usage tracking</li>
+</ul>
+<h3 id="provider-specific-types">Provider-Specific Types</h3>
+<ul>
+<li><code>anthropicRequest</code>, <code>anthropicResponse</code>
+(anthropic_provider.go)</li>
+<li><code>geminiRequest</code>, <code>geminiResponse</code>
+(gemini_provider.go)</li>
+<li><code>openaiRequest</code> (openai_provider.go)</li>
+<li>Custom types for each provider API</li>
+</ul>
+<h3 id="task-types">Task Types</h3>
+<ul>
+<li><code>Task</code> (task/manager.go:74): Distributed task</li>
+<li><code>TaskType</code>: planning, building, testing, refactoring,
+debugging, design, diagram, deployment, porting</li>
+<li><code>TaskPriority</code>: Low(1), Normal(5), High(10),
+Critical(20)</li>
+<li><code>TaskStatus</code>: pending, assigned, running, completed,
+failed, paused</li>
+</ul>
+<h3 id="workflow-types">Workflow Types</h3>
+<ul>
+<li><code>Workflow</code> (workflow/workflow.go:7): Workflow
+definition</li>
+<li><code>Step</code> (workflow/workflow.go:19): Workflow step</li>
+<li><code>StepType</code>: analysis, generation, execution,
+validation</li>
+<li><code>StepAction</code>: analyze_code, generate_code, run_tests,
+lint_code, build_project</li>
+</ul>
+<h3 id="worker-types">Worker Types</h3>
+<ul>
+<li><code>SSHWorker</code> (worker/ssh_pool.go:24): SSH-accessible
+worker</li>
+<li><code>SSHWorkerPool</code> (worker/ssh_pool.go:17): Worker pool
+manager</li>
+<li><code>WorkerConfig</code> (worker/types.go:12): Worker
+configuration</li>
+</ul>
+<h2 id="model-capabilities">Model Capabilities</h2>
+<p>Available for <code>SelectOptimalModel()</code> criteria: -
+<code>CapabilityTextGeneration</code>: Text output -
+<code>CapabilityCodeGeneration</code>: Code synthesis -
+<code>CapabilityCodeAnalysis</code>: Code review -
+<code>CapabilityPlanning</code>: Requirement analysis -
+<code>CapabilityDebugging</code>: Error diagnosis -
+<code>CapabilityRefactoring</code>: Code optimization -
+<code>CapabilityTesting</code>: Test generation -
+<code>CapabilityVision</code>: Image understanding</p>
+<h2 id="common-configuration-values">Common Configuration Values</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Server defaults</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">address</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.0.0.0&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8080</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">read_timeout</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">write_timeout</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Database</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;localhost&quot;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">5432</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="fu">dbname</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixcode&quot;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Workers</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">health_check_interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">max_concurrent_tasks</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Tasks</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="fu">checkpoint_interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">300</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co"># LLM</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">max_tokens</span><span class="kw">:</span><span class="at"> </span><span class="dv">4096</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="fu">temperature</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.7</span></span></code></pre></div>
+<h2 id="debugging-tips">Debugging Tips</h2>
+<ol type="1">
+<li><strong>Check provider availability</strong>:
+<code>provider.IsAvailable(ctx)</code></li>
+<li><strong>Monitor health</strong>:
+<code>ProviderManager.GetProviderHealth(ctx)</code></li>
+<li><strong>View active sessions</strong>:
+<code>MCPServer.GetSessionCount()</code></li>
+<li><strong>Track tasks</strong>: Query task status from
+<code>TaskManager</code></li>
+<li><strong>Worker status</strong>: Check <code>SSHWorkerPool</code>
+health checks</li>
+<li><strong>Token usage</strong>: Monitor <code>Usage</code> struct in
+responses</li>
+</ol>
+<h2 id="performance-considerations">Performance Considerations</h2>
+<ol type="1">
+<li><strong>Prompt Caching</strong>: Enabled by default for Anthropic
+(70-90% savings)</li>
+<li><strong>Streaming</strong>: Use <code>GenerateStream()</code> for
+real-time responses</li>
+<li><strong>Model Selection</strong>: Auto-selects optimal model for
+task type</li>
+<li><strong>Worker Pool</strong>: SSH connections reused for
+efficiency</li>
+<li><strong>Task Checkpointing</strong>: Automatic every 300
+seconds</li>
+</ol>
+<h2 id="security-notes">Security Notes</h2>
+<ul>
+<li>JWT tokens expire after 86400 seconds (24 hours)</li>
+<li>API keys stored in environment variables, never in config</li>
+<li>SSH connections use key-based authentication</li>
+<li>MCP tool execution respects permission lists</li>
+<li>Database passwords via env vars (HELIX_DATABASE_PASSWORD)</li>
+</ul>
+</body>
+</html>

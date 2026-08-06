@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TESTING_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">TESTING_PLAN</h1>
+</header>
+<h1 id="helixcode-comprehensive-testing-plan">HelixCode Comprehensive
+Testing Plan</h1>
+<h2 id="coverage-strategy-for-ported-features">100% Coverage Strategy
+for Ported Features</h2>
+<p><strong>Generated</strong>: 2025-11-07 <strong>Version</strong>: 1.0
+<strong>Target</strong>: 100% test coverage with all tests passing</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#current-test-status">Current Test Status</a></li>
+<li><a href="#test-types-and-coverage-requirements">Test Types and
+Coverage Requirements</a></li>
+<li><a href="#provider-compatibility-testing">Provider Compatibility
+Testing</a></li>
+<li><a href="#edit-format-testing">Edit Format Testing</a></li>
+<li><a href="#multi-agent-testing">Multi-Agent Testing</a></li>
+<li><a href="#workflow-testing">Workflow Testing</a></li>
+<li><a href="#integration-testing">Integration Testing</a></li>
+<li><a href="#end-to-end-testing">End-to-End Testing</a></li>
+<li><a href="#performance-testing">Performance Testing</a></li>
+<li><a href="#test-execution-plan">Test Execution Plan</a></li>
+<li><a href="#coverage-metrics">Coverage Metrics</a></li>
+</ol>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<h3 id="current-status">Current Status</h3>
+<ul>
+<li><strong>Total Test Files</strong>: 83+</li>
+<li><strong>Test Categories</strong>: Unit, Integration, E2E,
+Automation, Load</li>
+<li><strong>Existing Coverage</strong>: ~70% (estimated)</li>
+<li><strong>Target Coverage</strong>: 100%</li>
+</ul>
+<h3 id="testing-goals">Testing Goals</h3>
+<ol type="1">
+<li>✅ 100% code coverage for all ported features</li>
+<li>✅ 100% test success rate across all providers</li>
+<li>✅ Cross-provider compatibility verification</li>
+<li>✅ Performance benchmarks for all critical paths</li>
+<li>✅ Integration tests for multi-component workflows</li>
+<li>✅ E2E tests for complete user scenarios</li>
+</ol>
+<h3 id="test-philosophy">Test Philosophy</h3>
+<ul>
+<li><strong>Test Early</strong>: Write tests during implementation</li>
+<li><strong>Test Often</strong>: Automated CI/CD pipeline</li>
+<li><strong>Test Thoroughly</strong>: Cover happy paths, edge cases, and
+error scenarios</li>
+<li><strong>Test Realistically</strong>: Use realistic data and
+scenarios</li>
+<li><strong>Test Performance</strong>: Benchmark critical
+operations</li>
+</ul>
+<hr />
+<h2 id="current-test-status">Current Test Status</h2>
+<h3 id="existing-test-infrastructure">Existing Test Infrastructure</h3>
+<h4 id="unit-tests">Unit Tests</h4>
+<p><strong>Location</strong>: <code>/internal/*/</code>
+<strong>Status</strong>: ✅ Good Coverage</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Coverage</th>
+<th>Test Files</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/internal/editor/</code></td>
+<td>~95%</td>
+<td>8 files</td>
+<td>✅ Excellent</td>
+</tr>
+<tr>
+<td><code>/internal/llm/</code></td>
+<td>~85%</td>
+<td>15+ files</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td><code>/internal/tools/</code></td>
+<td>~80%</td>
+<td>8 files</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td><code>/internal/agent/</code></td>
+<td>~60%</td>
+<td>5 files</td>
+<td>⚠️ Needs improvement</td>
+</tr>
+<tr>
+<td><code>/internal/workflow/</code></td>
+<td>~70%</td>
+<td>6 files</td>
+<td>⚠️ Needs improvement</td>
+</tr>
+<tr>
+<td><code>/internal/mcp/</code></td>
+<td>~50%</td>
+<td>2 files</td>
+<td>⚠️ Needs improvement</td>
+</tr>
+<tr>
+<td><code>/internal/worker/</code></td>
+<td>~65%</td>
+<td>3 files</td>
+<td>⚠️ Needs improvement</td>
+</tr>
+<tr>
+<td><code>/internal/auth/</code></td>
+<td>~75%</td>
+<td>4 files</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td><code>/internal/notification/</code></td>
+<td>~70%</td>
+<td>5 files</td>
+<td>⚠️ Needs improvement</td>
+</tr>
+<tr>
+<td><code>/internal/repomap/</code></td>
+<td>~80%</td>
+<td>4 files</td>
+<td>✅ Good</td>
+</tr>
+</tbody>
+</table>
+<h4 id="integration-tests">Integration Tests</h4>
+<p><strong>Location</strong>: <code>/test/integration/</code>
+<strong>Status</strong>: ⚠️ Limited Coverage</p>
+<table>
+<thead>
+<tr>
+<th>Test Suite</th>
+<th>Coverage</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Database Integration</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Slack Integration</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Discord Integration</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Telegram Integration</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Multi-Agent Coordination</td>
+<td>❌</td>
+<td>Missing</td>
+</tr>
+<tr>
+<td>Workflow Integration</td>
+<td>❌</td>
+<td>Missing</td>
+</tr>
+<tr>
+<td>MCP Protocol</td>
+<td>❌</td>
+<td>Missing</td>
+</tr>
+</tbody>
+</table>
+<h4 id="e2e-tests">E2E Tests</h4>
+<p><strong>Location</strong>: <code>/test/e2e/</code> and
+<code>/tests/e2e/</code> <strong>Status</strong>: ⚠️ Needs Expansion</p>
+<table>
+<thead>
+<tr>
+<th>Test Suite</th>
+<th>Coverage</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Basic E2E</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Anthropic E2E</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Gemini E2E</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Qwen E2E</td>
+<td>✅</td>
+<td>Good</td>
+</tr>
+<tr>
+<td>Multi-provider Workflows</td>
+<td>❌</td>
+<td>Missing</td>
+</tr>
+<tr>
+<td>Complete Development Cycles</td>
+<td>❌</td>
+<td>Missing</td>
+</tr>
+</tbody>
+</table>
+<h4 id="automation-tests">Automation Tests</h4>
+<p><strong>Location</strong>: <code>/test/automation/</code>
+<strong>Status</strong>: ✅ Good Coverage</p>
+<table>
+<thead>
+<tr>
+<th>Test Suite</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic Automation</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Gemini Automation</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>XAI Automation</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Qwen Automation</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>OpenRouter Automation</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Free Providers Automation</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h4 id="load-tests">Load Tests</h4>
+<p><strong>Location</strong>: <code>/test/load/</code>
+<strong>Status</strong>: ⚠️ Limited</p>
+<table>
+<thead>
+<tr>
+<th>Test Suite</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Notification Load Test</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Worker Pool Load Test</td>
+<td>❌ Missing</td>
+</tr>
+<tr>
+<td>LLM Provider Load Test</td>
+<td>❌ Missing</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="test-types-and-coverage-requirements">Test Types and Coverage
+Requirements</h2>
+<h3 id="unit-tests-1">1. Unit Tests</h3>
+<p><strong>Target</strong>: 100% code coverage per function</p>
+<h4 id="requirements">Requirements</h4>
+<ul>
+<li>Test all public functions</li>
+<li>Test all error paths</li>
+<li>Test boundary conditions</li>
+<li>Test concurrent access where applicable</li>
+<li>Mock external dependencies</li>
+</ul>
+<h4 id="unit-test-structure">Unit Test Structure</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestFeatureName<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    tests <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        name    <span class="dt">string</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        input   InputType</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        want    OutputType</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        wantErr <span class="dt">bool</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;happy path&quot;</span><span class="op">,</span> validInput<span class="op">,</span> expectedOutput<span class="op">,</span> <span class="ot">false</span><span class="op">},</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;edge case&quot;</span><span class="op">,</span> edgeInput<span class="op">,</span> edgeOutput<span class="op">,</span> <span class="ot">false</span><span class="op">},</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="st">&quot;error case&quot;</span><span class="op">,</span> invalidInput<span class="op">,</span> <span class="ot">nil</span><span class="op">,</span> <span class="ot">true</span><span class="op">},</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> tt <span class="op">:=</span> <span class="kw">range</span> tests <span class="op">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Run<span class="op">(</span>tt<span class="op">.</span>name<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            got<span class="op">,</span> err <span class="op">:=</span> Feature<span class="op">(</span>tt<span class="op">.</span>input<span class="op">)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>err <span class="op">!=</span> <span class="ot">nil</span><span class="op">)</span> <span class="op">!=</span> tt<span class="op">.</span>wantErr <span class="op">{</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                t<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;Feature() error = %v, wantErr %v&quot;</span><span class="op">,</span> err<span class="op">,</span> tt<span class="op">.</span>wantErr<span class="op">)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">!</span>reflect<span class="op">.</span>DeepEqual<span class="op">(</span>got<span class="op">,</span> tt<span class="op">.</span>want<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>                t<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;Feature() = %v, want %v&quot;</span><span class="op">,</span> got<span class="op">,</span> tt<span class="op">.</span>want<span class="op">)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">})</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-tests-1">2. Integration Tests</h3>
+<p><strong>Target</strong>: All component interactions</p>
+<h4 id="requirements-1">Requirements</h4>
+<ul>
+<li>Test component boundaries</li>
+<li>Test data flow between components</li>
+<li>Test error propagation</li>
+<li>Test transaction boundaries</li>
+<li>Use test databases and mock services</li>
+</ul>
+<h3 id="end-to-end-tests">3. End-to-End Tests</h3>
+<p><strong>Target</strong>: Complete user workflows</p>
+<h4 id="requirements-2">Requirements</h4>
+<ul>
+<li>Test realistic user scenarios</li>
+<li>Test multi-step workflows</li>
+<li>Test error recovery</li>
+<li>Test state persistence</li>
+<li>Use staging environment</li>
+</ul>
+<h3 id="performance-tests">4. Performance Tests</h3>
+<p><strong>Target</strong>: All critical operations</p>
+<h4 id="requirements-3">Requirements</h4>
+<ul>
+<li>Benchmark key operations</li>
+<li>Set performance thresholds</li>
+<li>Test under load</li>
+<li>Test resource consumption</li>
+<li>Profile for bottlenecks</li>
+</ul>
+<hr />
+<h2 id="provider-compatibility-testing">Provider Compatibility
+Testing</h2>
+<h3 id="test-matrix-all-providers-all-features">Test Matrix: All
+Providers × All Features</h3>
+<table>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 17%" />
+<col style="width: 10%" />
+<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 14%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Generation</th>
+<th>Tools</th>
+<th>Vision</th>
+<th>Reasoning</th>
+<th>Caching</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Gemini</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>AWS Bedrock</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>Needs reasoning test</td>
+</tr>
+<tr>
+<td>Azure OpenAI</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>Needs caching test</td>
+</tr>
+<tr>
+<td>Vertex AI</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>Partial</td>
+</tr>
+<tr>
+<td>Llama.cpp</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>Basic only</td>
+</tr>
+<tr>
+<td>Groq</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>Basic only</td>
+</tr>
+<tr>
+<td>XAI</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>Copilot</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>Partial</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Legend</strong>: - ✅ Fully tested and working - ⚠️ Partially
+tested or needs improvement - ❌ Not supported or not tested</p>
+<h3 id="provider-test-template">Provider Test Template</h3>
+<p><strong>Location</strong>:
+<code>/internal/llm/providers/*_test.go</code></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderBasicGeneration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test basic text generation</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderToolCalling<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test function/tool calling if supported</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderVision<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test image analysis if supported</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderReasoning<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test extended thinking/reasoning if supported</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderCaching<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test prompt caching if supported</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderStreaming<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test streaming responses</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderErrorHandling<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test error scenarios (rate limits, auth failures, etc.)</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderFallback<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test fallback to alternative models</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="cross-provider-compatibility-tests">Cross-Provider Compatibility
+Tests</h3>
+<p><strong>Location</strong>:
+<code>/test/integration/cross_provider_test.go</code></p>
+<p>Tests to verify: 1. Consistent API across all providers 2. Correct
+capability detection 3. Automatic fallback behavior 4. Model selection
+logic 5. Cost estimation accuracy</p>
+<hr />
+<h2 id="edit-format-testing">Edit Format Testing</h2>
+<h3 id="test-matrix-all-formats-all-scenarios">Test Matrix: All Formats
+× All Scenarios</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 17%" />
+<col style="width: 15%" />
+<col style="width: 13%" />
+<col style="width: 13%" />
+<col style="width: 19%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>Format</th>
+<th>Simple Edit</th>
+<th>Multi-line</th>
+<th>Conflict</th>
+<th>Rollback</th>
+<th>All Languages</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Diff</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Whole</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Search/Replace</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Lines</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Udiff</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Diff-fenced</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Editblock</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Editblock-fenced</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Editblock-func</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Editor-diff</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Editor-whole</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="edit-format-test-template">Edit Format Test Template</h3>
+<p><strong>Location</strong>:
+<code>/internal/editor/*_editor_test.go</code></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorSimpleEdit<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test single-line edit</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorMultiLineEdit<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test multi-line edit</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorConflictHandling<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test conflict detection and resolution</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorRollback<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test rollback on error</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorLanguageSupport<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test with Go, Python, JS, TS, Java, C, C++, Rust, Ruby</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorLargeFiles<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test with files &gt; 100KB</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorConcurrentEdits<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test concurrent edit safety</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEditorBackupCreation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test automatic backup creation</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="model-format-compatibility-tests">Model-Format Compatibility
+Tests</h3>
+<p><strong>Location</strong>:
+<code>/internal/editor/model_formats_test.go</code></p>
+<p>Tests to verify: 1. Correct format selection per model 2. Format
+capability checking 3. Automatic format fallback 4. Format complexity
+scoring 5. Format recommendation accuracy</p>
+<p><strong>Current Status</strong>: ✅ Comprehensive tests exist</p>
+<hr />
+<h2 id="multi-agent-testing">Multi-Agent Testing</h2>
+<h3 id="test-matrix-agent-coordination">Test Matrix: Agent
+Coordination</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 14%" />
+<col style="width: 11%" />
+<col style="width: 13%" />
+<col style="width: 15%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr>
+<th>Test Scenario</th>
+<th>Planning</th>
+<th>Coding</th>
+<th>Testing</th>
+<th>Debugging</th>
+<th>Review</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single Agent</td>
+<td>✅</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Partial</td>
+</tr>
+<tr>
+<td>Two Agents</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>All Agents</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Task Delegation</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Result Aggregation</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Conflict Resolution</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td><strong>MISSING</strong></td>
+</tr>
+<tr>
+<td>Error Recovery</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Partial</td>
+</tr>
+</tbody>
+</table>
+<h3 id="required-tests">Required Tests</h3>
+<p><strong>Location</strong>: <code>/internal/agent/*_test.go</code></p>
+<h4 id="planning-agent-tests">Planning Agent Tests</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPlanningAgent_CreatePlan<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPlanningAgent_BreakdownTasks<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPlanningAgent_DependencyResolution<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPlanningAgent_TechnicalSpec<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="coding-agent-tests">Coding Agent Tests</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCodingAgent_Generate<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCodingAgent_MultiFile<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCodingAgent_DependencyManagement<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCodingAgent_BestPractices<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="testing-agent-tests">Testing Agent Tests</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestTestingAgent_GenerateTests<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestTestingAgent_ExecuteTests<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestTestingAgent_CoverageAnalysis<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestTestingAgent_IntegrationTests<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="debugging-agent-tests">Debugging Agent Tests</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDebuggingAgent_AnalyzeError<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDebuggingAgent_RootCause<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDebuggingAgent_GenerateFix<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDebuggingAgent_RegressionPrevention<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="review-agent-tests">Review Agent Tests</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReviewAgent_CodeQuality<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReviewAgent_SecurityAudit<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReviewAgent_PerformanceAnalysis<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReviewAgent_BestPractices<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="agent-coordination-tests">Agent Coordination Tests</h4>
+<p><strong>Location</strong>:
+<code>/internal/agent/coordinator_test.go</code></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCoordinator_TaskDelegation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCoordinator_ResultAggregation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCoordinator_ConflictResolution<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCoordinator_ErrorPropagation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCoordinator_MultiAgentWorkflow<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="workflow-testing">Workflow Testing</h2>
+<h3 id="test-matrix-autonomy-modes">Test Matrix: Autonomy Modes</h3>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 17%" />
+<col style="width: 16%" />
+<col style="width: 10%" />
+<col style="width: 17%" />
+<col style="width: 20%" />
+<col style="width: 10%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Single Task</th>
+<th>Multi-Task</th>
+<th>Errors</th>
+<th>Permissions</th>
+<th>Safety Limits</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>Basic</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>✅</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>Basic+</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>Semi-Auto</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+<tr>
+<td>Full Auto</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>Needs tests</td>
+</tr>
+</tbody>
+</table>
+<h3 id="required-tests-1">Required Tests</h3>
+<p><strong>Location</strong>:
+<code>/internal/workflow/autonomy/*_test.go</code></p>
+<h4 id="mode-tests">Mode Tests</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestModeNone<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// User controls everything</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestModeBasic<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Single iteration, no auto-actions</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestModeBasicPlus<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5 iterations, no auto-actions</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestModeSemiAuto<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 10 iterations, auto context gathering</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestModeFullAuto<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Unlimited iterations, full automation</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="permission-tests">Permission Tests</h4>
+<p><strong>Location</strong>:
+<code>/internal/workflow/autonomy/permissions_test.go</code></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPermissionEscalation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPermissionDenial<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPermissionTracking<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPermissionReset<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="safety-tests">Safety Tests</h4>
+<p><strong>Location</strong>:
+<code>/internal/workflow/autonomy/safety_test.go</code></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMaxIterations<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMaxRetries<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestContextSizeLimit<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestResourceLimits<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h3 id="plan-mode-tests">Plan Mode Tests</h3>
+<p><strong>Location</strong>:
+<code>/internal/workflow/planmode/*_test.go</code></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPlanCreation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestOptionGeneration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestUserSelection<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProgressTracking<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestModeController<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h3 id="snapshot-tests">Snapshot Tests</h3>
+<p><strong>Location</strong>:
+<code>/internal/workflow/snapshots/*_test.go</code></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSnapshotCapture<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSnapshotRestore<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSnapshotComparison<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSnapshotMetadata<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestIncrementalChanges<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="integration-testing">Integration Testing</h2>
+<h3 id="required-integration-tests">Required Integration Tests</h3>
+<h4 id="database-integration">1. Database Integration</h4>
+<p><strong>Location</strong>:
+<code>/internal/database/integration_test.go</code>
+<strong>Status</strong>: ✅ Complete</p>
+<h4 id="multi-agent-coordination">2. Multi-Agent Coordination</h4>
+<p><strong>Location</strong>:
+<code>/test/integration/multi_agent_test.go</code>
+<strong>Status</strong>: ❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMultiAgentWorkflow<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Plan → Code → Test → Review workflow</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestAgentCommunication<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Inter-agent message passing</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestAgentStateSync<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// State synchronization across agents</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="workflow-integration">3. Workflow Integration</h4>
+<p><strong>Location</strong>:
+<code>/test/integration/workflow_test.go</code> <strong>Status</strong>:
+❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPlanToExecution<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Plan mode → Act mode transition</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCheckpointRestore<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Checkpoint creation and restoration</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSnapshotWorkflow<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Snapshot capture and rollback</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="mcp-protocol-integration">4. MCP Protocol Integration</h4>
+<p><strong>Location</strong>: <code>/test/integration/mcp_test.go</code>
+<strong>Status</strong>: ❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMCPToolCalling<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Tool registration and execution</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMCPResourceAccess<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Resource listing and access</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMCPSession<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Session lifecycle</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMCPWebSocket<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// WebSocket transport</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="worker-pool-integration">5. Worker Pool Integration</h4>
+<p><strong>Location</strong>:
+<code>/test/integration/worker_pool_test.go</code>
+<strong>Status</strong>: ⚠️ Partial</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSSHConnection<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestAutoInstallation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestHealthMonitoring<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestTaskDistribution<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestWorkerFailover<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h4 id="notification-integration">6. Notification Integration</h4>
+<p><strong>Location</strong>:
+<code>/test/integration/*_integration_test.go</code>
+<strong>Status</strong>: ✅ Good (Slack, Discord, Telegram)</p>
+<p>Need to add:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEmailIntegration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPagerDutyIntegration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestJiraIntegration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestMultiChannelBroadcast<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="end-to-end-testing">End-to-End Testing</h2>
+<h3 id="required-e2e-test-scenarios">Required E2E Test Scenarios</h3>
+<h4 id="complete-development-cycle">1. Complete Development Cycle</h4>
+<p><strong>Location</strong>:
+<code>/test/e2e/development_cycle_test.go</code>
+<strong>Status</strong>: ❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCompleteDevelopmentCycle<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Planning phase</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Code generation</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Test generation</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Test execution</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Debugging failures</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 6. Code review</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 7. Deployment</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="multi-provider-workflow">2. Multi-Provider Workflow</h4>
+<p><strong>Location</strong>:
+<code>/test/e2e/multi_provider_test.go</code> <strong>Status</strong>:
+❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderFallback<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test automatic fallback when provider fails</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProviderSwitching<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test manual provider switching mid-workflow</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCostOptimization<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test intelligent provider selection for cost</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="distributed-workflow">3. Distributed Workflow</h4>
+<p><strong>Location</strong>: <code>/test/e2e/distributed_test.go</code>
+<strong>Status</strong>: ❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDistributedTaskExecution<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Tasks distributed across multiple workers</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestWorkerFailureRecovery<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Worker failure and task redistribution</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestLoadBalancing<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Task load balancing across workers</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="real-world-project-scenarios">4. Real-World Project
+Scenarios</h4>
+<p><strong>Location</strong>: <code>/test/e2e/real_world_test.go</code>
+<strong>Status</strong>: ❌ <strong>MISSING</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestNewFeatureImplementation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implement a new feature from scratch</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestBugFixWorkflow<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Identify and fix a bug</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestRefactoringWorkflow<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Refactor existing code</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCodeMigration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Migrate code between frameworks</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="performance-testing">Performance Testing</h2>
+<h3 id="benchmarks-required">Benchmarks Required</h3>
+<h4 id="llm-provider-benchmarks">1. LLM Provider Benchmarks</h4>
+<p><strong>Location</strong>:
+<code>/internal/llm/benchmark_test.go</code></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkProviderGeneration<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Benchmark text generation across all providers</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkProviderToolCalling<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Benchmark tool calling performance</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkProviderCaching<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Benchmark cache hit/miss performance</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="edit-format-benchmarks">2. Edit Format Benchmarks</h4>
+<p><strong>Location</strong>:
+<code>/internal/editor/benchmark_test.go</code></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkDiffEditor<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkWholeEditor<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkSearchReplaceEditor<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkLineEditor<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span></code></pre></div>
+<h4 id="repository-mapping-benchmarks">3. Repository Mapping
+Benchmarks</h4>
+<p><strong>Location</strong>:
+<code>/internal/repomap/benchmark_test.go</code></p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkTreeSitterParsing<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkFileRanking<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkCacheLookup<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkSymbolExtraction<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span></code></pre></div>
+<h4 id="multi-agent-benchmarks">4. Multi-Agent Benchmarks</h4>
+<p><strong>Location</strong>:
+<code>/internal/agent/benchmark_test.go</code></p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkAgentCoordination<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkTaskDelegation<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkResultAggregation<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span></code></pre></div>
+<h3 id="performance-thresholds">Performance Thresholds</h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Target</th>
+<th>Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Basic Generation</td>
+<td>&lt; 2s</td>
+<td>&lt; 5s</td>
+</tr>
+<tr>
+<td>Tool Calling</td>
+<td>&lt; 3s</td>
+<td>&lt; 7s</td>
+</tr>
+<tr>
+<td>File Editing (small)</td>
+<td>&lt; 100ms</td>
+<td>&lt; 500ms</td>
+</tr>
+<tr>
+<td>File Editing (large)</td>
+<td>&lt; 1s</td>
+<td>&lt; 3s</td>
+</tr>
+<tr>
+<td>Repository Mapping</td>
+<td>&lt; 5s</td>
+<td>&lt; 15s</td>
+</tr>
+<tr>
+<td>Tree-sitter Parsing</td>
+<td>&lt; 100ms/file</td>
+<td>&lt; 500ms/file</td>
+</tr>
+<tr>
+<td>Agent Coordination</td>
+<td>&lt; 500ms</td>
+<td>&lt; 2s</td>
+</tr>
+<tr>
+<td>Task Distribution</td>
+<td>&lt; 200ms</td>
+<td>&lt; 1s</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="test-execution-plan">Test Execution Plan</h2>
+<h3 id="phase-1-complete-missing-unit-tests-week-1-2">Phase 1: Complete
+Missing Unit Tests (Week 1-2)</h3>
+<p><strong>Priority</strong>: CRITICAL</p>
+<ol type="1">
+<li><strong>Agent Tests</strong> (3 days)
+<ul>
+<li>Complete testing agent tests</li>
+<li>Complete debugging agent tests</li>
+<li>Complete review agent tests</li>
+<li>Add coordinator tests</li>
+</ul></li>
+<li><strong>Workflow Tests</strong> (2 days)
+<ul>
+<li>Complete autonomy mode tests</li>
+<li>Add permission tests</li>
+<li>Add safety limit tests</li>
+</ul></li>
+<li><strong>MCP Tests</strong> (2 days)
+<ul>
+<li>Complete protocol tests</li>
+<li>Add transport tests</li>
+<li>Add session tests</li>
+</ul></li>
+<li><strong>Worker Pool Tests</strong> (2 days)
+<ul>
+<li>Complete SSH tests</li>
+<li>Add auto-install tests</li>
+<li>Add failover tests</li>
+</ul></li>
+</ol>
+<h3 id="phase-2-integration-tests-week-3-4">Phase 2: Integration Tests
+(Week 3-4)</h3>
+<p><strong>Priority</strong>: HIGH</p>
+<ol type="1">
+<li><strong>Multi-Agent Integration</strong> (3 days)
+<ul>
+<li>Agent coordination</li>
+<li>Task delegation</li>
+<li>Result aggregation</li>
+</ul></li>
+<li><strong>Workflow Integration</strong> (2 days)
+<ul>
+<li>Plan to execution</li>
+<li>Checkpoint/restore</li>
+<li>Snapshot workflows</li>
+</ul></li>
+<li><strong>MCP Integration</strong> (2 days)
+<ul>
+<li>Tool calling</li>
+<li>Resource access</li>
+<li>WebSocket transport</li>
+</ul></li>
+<li><strong>Notification Integration</strong> (2 days)
+<ul>
+<li>Email integration</li>
+<li>PagerDuty integration</li>
+<li>Jira integration</li>
+<li>Multi-channel broadcast</li>
+</ul></li>
+</ol>
+<h3 id="phase-3-e2e-tests-week-5-6">Phase 3: E2E Tests (Week 5-6)</h3>
+<p><strong>Priority</strong>: HIGH</p>
+<ol type="1">
+<li><strong>Development Cycles</strong> (3 days)
+<ul>
+<li>Complete workflow</li>
+<li>Multi-provider</li>
+<li>Distributed execution</li>
+</ul></li>
+<li><strong>Real-World Scenarios</strong> (3 days)
+<ul>
+<li>New feature implementation</li>
+<li>Bug fix workflow</li>
+<li>Refactoring workflow</li>
+<li>Code migration</li>
+</ul></li>
+</ol>
+<h3 id="phase-4-performance-tests-week-7">Phase 4: Performance Tests
+(Week 7)</h3>
+<p><strong>Priority</strong>: MEDIUM</p>
+<ol type="1">
+<li><strong>Benchmarks</strong> (3 days)
+<ul>
+<li>LLM provider benchmarks</li>
+<li>Edit format benchmarks</li>
+<li>Repository mapping benchmarks</li>
+<li>Multi-agent benchmarks</li>
+</ul></li>
+<li><strong>Load Tests</strong> (2 days)
+<ul>
+<li>Worker pool load</li>
+<li>LLM provider load</li>
+<li>Concurrent user load</li>
+</ul></li>
+</ol>
+<h3 id="phase-5-cross-provider-compatibility-week-8">Phase 5:
+Cross-Provider Compatibility (Week 8)</h3>
+<p><strong>Priority</strong>: HIGH</p>
+<ol type="1">
+<li><strong>Provider Matrix</strong> (5 days)
+<ul>
+<li>Test all 13 providers</li>
+<li>Test all features per provider</li>
+<li>Document compatibility matrix</li>
+<li>Create provider-specific guides</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="coverage-metrics">Coverage Metrics</h2>
+<h3 id="coverage-goals">Coverage Goals</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Current</th>
+<th>Target</th>
+<th>Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Overall</strong></td>
+<td>~70%</td>
+<td>100%</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>Unit Tests</td>
+<td>~80%</td>
+<td>100%</td>
+<td>20%</td>
+</tr>
+<tr>
+<td>Integration Tests</td>
+<td>~50%</td>
+<td>100%</td>
+<td>50%</td>
+</tr>
+<tr>
+<td>E2E Tests</td>
+<td>~40%</td>
+<td>100%</td>
+<td>60%</td>
+</tr>
+</tbody>
+</table>
+<h3 id="coverage-by-package">Coverage by Package</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Current</th>
+<th>Target</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/internal/editor/</code></td>
+<td>95%</td>
+<td>100%</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><code>/internal/llm/</code></td>
+<td>85%</td>
+<td>100%</td>
+<td>High</td>
+</tr>
+<tr>
+<td><code>/internal/agent/</code></td>
+<td>60%</td>
+<td>100%</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><code>/internal/workflow/</code></td>
+<td>70%</td>
+<td>100%</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td><code>/internal/mcp/</code></td>
+<td>50%</td>
+<td>100%</td>
+<td>High</td>
+</tr>
+<tr>
+<td><code>/internal/worker/</code></td>
+<td>65%</td>
+<td>100%</td>
+<td>High</td>
+</tr>
+<tr>
+<td><code>/internal/auth/</code></td>
+<td>75%</td>
+<td>100%</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><code>/internal/notification/</code></td>
+<td>70%</td>
+<td>100%</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><code>/internal/repomap/</code></td>
+<td>80%</td>
+<td>100%</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><code>/internal/tools/</code></td>
+<td>80%</td>
+<td>100%</td>
+<td>Medium</td>
+</tr>
+</tbody>
+</table>
+<h3 id="coverage-commands">Coverage Commands</h3>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run tests with coverage</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test-coverage</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate coverage report</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-coverprofile</span><span class="op">=</span>coverage.out ./...</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="co"># View coverage in browser</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool cover <span class="at">-html</span><span class="op">=</span>coverage.out</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Coverage by package</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-cover</span> ./internal/...</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Detailed coverage</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-coverprofile</span><span class="op">=</span>coverage.out <span class="at">-covermode</span><span class="op">=</span>atomic ./...</span></code></pre></div>
+<hr />
+<h2 id="test-infrastructure">Test Infrastructure</h2>
+<h3 id="required-tools">Required Tools</h3>
+<ol type="1">
+<li><strong>Testing Framework</strong>: Go testing stdlib + testify</li>
+<li><strong>Mocking</strong>: mockery or testify/mock</li>
+<li><strong>Coverage</strong>: go tool cover</li>
+<li><strong>Benchmarking</strong>: go test -bench</li>
+<li><strong>E2E</strong>: Custom test orchestrator (exists at
+<code>/tests/e2e/orchestrator/</code>)</li>
+<li><strong>Load Testing</strong>: k6 or vegeta</li>
+<li><strong>CI/CD</strong>: GitHub Actions or GitLab CI</li>
+</ol>
+<h3 id="test-data-management">Test Data Management</h3>
+<p><strong>Location</strong>: <code>/test/testdata/</code></p>
+<p>Required test data: - Sample code files (all supported languages) -
+Sample LLM responses - Sample git repositories - Sample configuration
+files - Sample images (for vision tests) - Sample audio (for voice
+tests)</p>
+<h3 id="mock-services">Mock Services</h3>
+<p><strong>Location</strong>: <code>/tests/e2e/mocks/</code></p>
+<p>Existing mocks: - ✅ LLM Provider mock - ✅ Slack mock</p>
+<p>Need to add: - ❌ Discord mock - ❌ Email mock - ❌ PagerDuty mock -
+❌ Jira mock - ❌ SSH server mock - ❌ Database mock</p>
+<hr />
+<h2 id="test-execution">Test Execution</h2>
+<h3 id="local-testing">Local Testing</h3>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all tests</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific package tests</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> ./internal/llm/...</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with coverage</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-cover</span> ./...</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Run benchmarks</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-bench</span><span class="op">=</span>. ./...</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Run integration tests</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> ./test/integration/...</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Run E2E tests</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> ./test/e2e/...</span></code></pre></div>
+<h3 id="cicd-pipeline">CI/CD Pipeline</h3>
+<p><strong>GitHub Actions Workflow</strong>
+(<code>.github/workflows/test.yml</code>):</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Test Suite</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">push</span><span class="kw">,</span><span class="at"> pull_request</span><span class="kw">]</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">unit-tests</span><span class="kw">:</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v2</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-go@v2</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">go-version</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.24</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> make test</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">integration-tests</span><span class="kw">:</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> unit-tests</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v2</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-go@v2</span></span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> go test -v ./test/integration/...</span></span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">e2e-tests</span><span class="kw">:</span></span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">needs</span><span class="kw">:</span><span class="at"> integration-tests</span></span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v2</span></span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-go@v2</span></span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> go test -v ./test/e2e/...</span></span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">coverage</span><span class="kw">:</span></span>
+<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v2</span></span>
+<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-go@v2</span></span>
+<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">run</span><span class="kw">:</span><span class="at"> go test -coverprofile=coverage.out ./...</span></span>
+<span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> codecov/codecov-action@v2</span></span>
+<span id="cb30-38"><a href="#cb30-38" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb30-39"><a href="#cb30-39" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">files</span><span class="kw">:</span><span class="at"> ./coverage.out</span></span></code></pre></div>
+<hr />
+<h2 id="success-criteria">Success Criteria</h2>
+<h3 id="testing-complete-when">Testing Complete When:</h3>
+<ol type="1">
+<li>✅ All unit tests passing (100% of implemented features)</li>
+<li>✅ Integration tests covering all component interactions</li>
+<li>✅ E2E tests covering major user workflows</li>
+<li>✅ 100% code coverage for ported features</li>
+<li>✅ All 13 providers tested with all supported features</li>
+<li>✅ Performance benchmarks within thresholds</li>
+<li>✅ Load tests passing under expected load</li>
+<li>✅ CI/CD pipeline green</li>
+<li>✅ Test documentation complete</li>
+<li>✅ No flaky tests</li>
+</ol>
+<h3 id="deliverables">Deliverables</h3>
+<ol type="1">
+<li>✅ Test suite with 100% coverage</li>
+<li>✅ Provider compatibility matrix</li>
+<li>✅ Performance benchmark report</li>
+<li>✅ Test documentation</li>
+<li>✅ CI/CD pipeline configuration</li>
+<li>✅ Test data repository</li>
+<li>✅ Mock service implementations</li>
+</ol>
+<hr />
+<h2 id="next-steps">Next Steps</h2>
+<h3 id="immediate-actions-week-1">Immediate Actions (Week 1)</h3>
+<ol type="1">
+<li><strong>Complete agent tests</strong> (3 days)
+<ul>
+<li>Testing agent:
+<code>/internal/agent/types/testing_agent_test.go</code></li>
+<li>Debugging agent:
+<code>/internal/agent/types/debugging_agent_test.go</code></li>
+<li>Review agent:
+<code>/internal/agent/types/review_agent_test.go</code></li>
+<li>Coordinator: <code>/internal/agent/coordinator_test.go</code></li>
+</ul></li>
+<li><strong>Add workflow tests</strong> (2 days)
+<ul>
+<li>Autonomy modes:
+<code>/internal/workflow/autonomy/*_test.go</code></li>
+<li>Permissions:
+<code>/internal/workflow/autonomy/permissions_test.go</code></li>
+<li>Safety limits:
+<code>/internal/workflow/autonomy/safety_test.go</code></li>
+</ul></li>
+<li><strong>Run current test suite</strong> (1 day)
+<ul>
+<li>Execute full test suite</li>
+<li>Generate coverage report</li>
+<li>Identify gaps</li>
+<li>Document failures</li>
+</ul></li>
+</ol>
+<h3 id="medium-term-actions-weeks-2-4">Medium-term Actions (Weeks
+2-4)</h3>
+<ol type="1">
+<li>Complete integration tests</li>
+<li>Add E2E test scenarios</li>
+<li>Implement missing mocks</li>
+<li>Set up CI/CD pipeline</li>
+</ol>
+<h3 id="long-term-actions-weeks-5-8">Long-term Actions (Weeks 5-8)</h3>
+<ol type="1">
+<li>Performance benchmarking</li>
+<li>Load testing</li>
+<li>Cross-provider compatibility verification</li>
+<li>Documentation completion</li>
+</ol>
+<hr />
+<p><strong>Document Status</strong>: ✅ COMPLETE <strong>Last
+Updated</strong>: 2025-11-07 <strong>Next Review</strong>: After Phase 1
+completion</p>
+</body>
+</html>

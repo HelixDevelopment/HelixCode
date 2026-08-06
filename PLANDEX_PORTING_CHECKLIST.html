@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PLANDEX_PORTING_CHECKLIST</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PLANDEX_PORTING_CHECKLIST</h1>
+</header>
+<h1 id="plandex-porting-checklist-for-helixcode">Plandex Porting
+Checklist for HelixCode</h1>
+<h2 id="phase-1-llm-provider-integration-2-3-weeks">Phase 1: LLM
+Provider Integration (2-3 weeks)</h2>
+<h3 id="provider-framework-setup">1.1 Provider Framework Setup</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create
+<code>internal/llm/provider/</code> package structure</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>interface.go</code>: Unified
+Provider interface</label></li>
+<li><label><input type="checkbox"></input><code>openai.go</code>: OpenAI
+direct API</label></li>
+<li><label><input type="checkbox"></input><code>anthropic.go</code>: Anthropic
+direct API</label></li>
+<li><label><input type="checkbox"></input><code>google.go</code>: Google AI
+Studio + Vertex</label></li>
+<li><label><input type="checkbox"></input><code>azure.go</code>: Azure
+OpenAI</label></li>
+<li><label><input type="checkbox"></input><code>aws.go</code>: AWS
+Bedrock</label></li>
+<li><label><input type="checkbox"></input><code>openrouter.go</code>:
+OpenRouter aggregator</label></li>
+<li><label><input type="checkbox"></input><code>deepseek.go</code>:
+DeepSeek</label></li>
+<li><label><input type="checkbox"></input><code>perplexity.go</code>:
+Perplexity</label></li>
+<li><label><input type="checkbox"></input><code>ollama.go</code>: Ollama
+local</label></li>
+<li><label><input type="checkbox"></input><code>custom.go</code>: Custom
+OpenAI-compatible</label></li>
+</ul></li>
+</ul>
+<h3 id="credential-management">1.2 Credential Management</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Environment variable discovery
+system</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>credentials/env_loader.go</code></label></li>
+<li><label><input type="checkbox"></input>Support for:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Simple API keys (OpenAI, Anthropic,
+etc.)</label></li>
+<li><label><input type="checkbox"></input>OAuth tokens (Anthropic Claude
+Max)</label></li>
+<li><label><input type="checkbox"></input>AWS credential chain +
+profile</label></li>
+<li><label><input type="checkbox"></input>Google service account
+(file/JSON/base64)</label></li>
+<li><label><input type="checkbox"></input>Azure (API key + base
+URL)</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Lazy loading (credentials loaded
+only when provider used)</label></li>
+<li><label><input type="checkbox"></input>Validation and error messages for
+missing credentials</label></li>
+</ul></li>
+</ul>
+<h3 id="provider-fallback-chain">1.3 Provider Fallback Chain</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/llm/router/fallback.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Fallback configuration (priority
+order)</label></li>
+<li><label><input type="checkbox"></input>Automatic retry with next provider
+on error</label></li>
+<li><label><input type="checkbox"></input>Provider availability
+checking</label></li>
+<li><label><input type="checkbox"></input>Cost/speed preference
+tuning</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Error categorization (retryable
+vs. fatal)</label></li>
+<li><label><input type="checkbox"></input>Circuit breaker pattern for failing
+providers</label></li>
+</ul>
+<h3 id="litellm-proxy-setup-optional-but-recommended">1.4 LiteLLM Proxy
+Setup (Optional but Recommended)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Python FastAPI proxy server</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Port 4000 (standard)</label></li>
+<li><label><input type="checkbox"></input>Health check endpoint
+<code>/health</code></label></li>
+<li><label><input type="checkbox"></input><code>/v1/chat/completions</code>
+passthrough</label></li>
+<li><label><input type="checkbox"></input>OAuth header handling for
+Anthropic</label></li>
+<li><label><input type="checkbox"></input>Streaming response
+support</label></li>
+<li><label><input type="checkbox"></input>Error handling and
+logging</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Docker integration</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Python + Go base image</label></li>
+<li><label><input type="checkbox"></input>Environment variable
+passing</label></li>
+<li><label><input type="checkbox"></input>Port exposure</label></li>
+</ul></li>
+</ul>
+<h3 id="testing">1.5 Testing</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Unit tests for each
+provider</label></li>
+<li><label><input type="checkbox"></input>Mock provider for
+testing</label></li>
+<li><label><input type="checkbox"></input>Integration tests with fallback
+chain</label></li>
+<li><label><input type="checkbox"></input>Credential loading tests (with env
+var fixtures)</label></li>
+</ul>
+<hr />
+<h2 id="phase-2-model-configuration-role-system-2-3-weeks">Phase 2:
+Model Configuration &amp; Role System (2-3 weeks)</h2>
+<h3 id="model-metadata-schema">2.1 Model Metadata Schema</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Database migrations for model
+tables</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>models</code> table (model
+definitions)</label></li>
+<li><label><input type="checkbox"></input><code>model_variants</code> table
+(variants with overrides)</label></li>
+<li><label><input type="checkbox"></input><code>model_providers</code> table
+(provider associations)</label></li>
+<li><label><input type="checkbox"></input><code>model_packs</code> table
+(role→model mappings)</label></li>
+<li><label><input type="checkbox"></input><code>model_pack_configs</code>
+table (pack role configs)</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Data types:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>ModelTag, ModelId, ModelName,
+VariantTag</label></li>
+<li><label><input type="checkbox"></input>MaxTokens, MaxOutputTokens,
+ReservedOutputTokens</label></li>
+<li><label><input type="checkbox"></input>DefaultMaxConvoTokens</label></li>
+<li><label><input type="checkbox"></input>PreferredOutputFormat (JSON vs
+XML)</label></li>
+<li><label><input type="checkbox"></input>ModelCompatibility flags (image
+support, etc.)</label></li>
+<li><label><input type="checkbox"></input>SupportsCacheControl</label></li>
+<li><label><input type="checkbox"></input>SystemPromptDisabled,
+RoleParamsDisabled, StopDisabled</label></li>
+</ul></li>
+</ul>
+<h3 id="model-roles-system">2.2 Model Roles System</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Define 9 roles in code:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>planner</code>: Main planning
++ prompt replies</label></li>
+<li><label><input type="checkbox"></input><code>architect</code>: High-level
+planning + context selection (optional)</label></li>
+<li><label><input type="checkbox"></input><code>coder</code>: Code
+implementation with strict formatting (optional)</label></li>
+<li><label><input type="checkbox"></input><code>builder</code>: Convert plans
+to file diffs</label></li>
+<li><label><input type="checkbox"></input><code>whole-file-builder</code>:
+File rewrite fallback (optional)</label></li>
+<li><label><input type="checkbox"></input><code>summarizer</code>:
+Conversation summarization</label></li>
+<li><label><input type="checkbox"></input><code>auto-continue</code>:
+Determine plan completion</label></li>
+<li><label><input type="checkbox"></input><code>names</code>: Auto-name plans
+and context</label></li>
+<li><label><input type="checkbox"></input><code>commit-messages</code>:
+Generate git commit messages</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Role descriptions and
+configuration</label></li>
+<li><label><input type="checkbox"></input>Role fallback chain (coder → builder
+→ planner, etc.)</label></li>
+</ul>
+<h3 id="built-in-model-definitions">2.3 Built-in Model Definitions</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create model definitions file with
+25+ models:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>OpenAI: o3, o4-mini, gpt-4.1,
+gpt-4o, gpt-4o-mini, gpt-4-turbo</label></li>
+<li><label><input type="checkbox"></input>Anthropic: Claude 3.5 Sonnet, 3
+Opus, 3 Haiku, Extended context</label></li>
+<li><label><input type="checkbox"></input>Google: Gemini 2.0 Flash, 1.5
+Pro/Flash/Exp</label></li>
+<li><label><input type="checkbox"></input>DeepSeek: R1, V3</label></li>
+<li><label><input type="checkbox"></input>Perplexity: Sonar</label></li>
+<li><label><input type="checkbox"></input>Local/OSS: Mistral, Qwen,
+Llama</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Variants for reasoning models
+(high/medium/low effort)</label></li>
+<li><label><input type="checkbox"></input>Large context fallbacks
+configuration</label></li>
+</ul>
+<h3 id="built-in-model-packs-16-total">2.4 Built-in Model Packs (16
+total)</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create model pack
+definitions:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>General: DailyDriver (default),
+Strong, Cheap, OSS, Reasoning</label></li>
+<li><label><input type="checkbox"></input>Provider-specific: AnthropicOnly,
+OpenAIOnly, GoogleOnly</label></li>
+<li><label><input type="checkbox"></input>Planner-specific: OpusPlanner,
+O3Planner, R1Planner, GeminiPlanner, PerplexityPlanner</label></li>
+<li><label><input type="checkbox"></input>Local: OllamaExperimental,
+OllamaAdaptiveOSS, OllamaAdaptiveDaily</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Pack role assignments for
+each</label></li>
+<li><label><input type="checkbox"></input>Default fallbacks for unassigned
+roles</label></li>
+</ul>
+<h3 id="model-resolution-engine">2.5 Model Resolution Engine</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/llm/resolver/</code>
+package</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>resolve_model.go</code>: Plan
++ role → Model</label></li>
+<li><label><input type="checkbox"></input><code>get_provider.go</code>: Model
+→ Provider instance</label></li>
+<li><label><input type="checkbox"></input><code>validate_availability.go</code>: Check provider
+credentials</label></li>
+<li><label><input type="checkbox"></input><code>fallback.go</code>: Use
+alternative if unavailable</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Runtime checking of:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Model support for required
+capabilities (image, JSON, etc.)</label></li>
+<li><label><input type="checkbox"></input>Provider authentication
+availability</label></li>
+<li><label><input type="checkbox"></input>Context size constraints
+(MaxTokens)</label></li>
+</ul></li>
+</ul>
+<h3 id="handlers">2.6 Handlers</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/server/handlers/models.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>GET <code>/api/v1/models</code> -
+List available models</label></li>
+<li><label><input type="checkbox"></input>GET <code>/api/v1/models/:id</code>
+- Get model details</label></li>
+<li><label><input type="checkbox"></input>GET <code>/api/v1/model-packs</code>
+- List packs</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/model-packs/:name</code> - Get pack details</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/models/custom</code> - Save custom models</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/models/set-model</code> - Set plan model</label></li>
+<li><label><input type="checkbox"></input>GET <code>/api/v1/providers</code> -
+List providers</label></li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="phase-3-context-management-system-2-3-weeks">Phase 3: Context
+Management System (2-3 weeks)</h2>
+<h3 id="database-schema-for-context">3.1 Database Schema for
+Context</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Migrations for context
+tables:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>contexts</code> (files, URLs,
+images, notes)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, plan_id, type, path, content,
+size</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input><code>context_versions</code>
+(history)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, context_id, version, action,
+change_summary</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input><code>project_maps</code>
+(tree-sitter output)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, project_id, language, content,
+generated_at</label></li>
+</ul></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Context types enum: File, Directory,
+URL, Image, Note, Piped</label></li>
+</ul>
+<h3 id="project-map-generation">3.2 Project Map Generation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/project/map/</code>
+package</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>generator.go</code>: Main
+generation logic</label></li>
+<li><label><input type="checkbox"></input><code>tree_sitter.go</code>:
+Tree-sitter integration for 30+ languages</label></li>
+<li><label><input type="checkbox"></input><code>cache.go</code>: Cache
+generated maps</label></li>
+<li><label><input type="checkbox"></input><code>language_support.go</code>:
+Language detection + parser loading</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Features:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Support 30+ languages (use existing
+tree-sitter bindings)</label></li>
+<li><label><input type="checkbox"></input>Generate syntax trees with
+function/class/type definitions</label></li>
+<li><label><input type="checkbox"></input>Estimate token counts per
+file</label></li>
+<li><label><input type="checkbox"></input>Support projects up to 20M+
+tokens</label></li>
+<li><label><input type="checkbox"></input>Incremental updates on file
+changes</label></li>
+</ul></li>
+</ul>
+<h3 id="context-loading-pipeline">3.3 Context Loading Pipeline</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Stage 1: Discovery</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>discovery.go</code>: Generate
+or load project map</label></li>
+<li><label><input type="checkbox"></input>Cache invalidation on file
+changes</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Stage 2: Selection (Architect
+Phase)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>architect.go</code>: Call
+architect model to select relevant files</label></li>
+<li><label><input type="checkbox"></input>Input: project map + user
+prompt</label></li>
+<li><label><input type="checkbox"></input>Output: list of relevant file
+paths</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Stage 3: Filtering (Smart
+Context)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>smart_filter.go</code>: Filter
+context by task step</label></li>
+<li><label><input type="checkbox"></input>Track which files are needed for
+implementation step</label></li>
+<li><label><input type="checkbox"></input>Only load those files into
+context</label></li>
+<li><label><input type="checkbox"></input>Dynamically adjust window
+size</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Stage 4: Caching (Prompt
+Cache)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>caching.go</code>: Apply cache
+control directives</label></li>
+<li><label><input type="checkbox"></input>Mark cacheable sections (especially
+project map)</label></li>
+<li><label><input type="checkbox"></input>Track cache
+hits/savings</label></li>
+<li><label><input type="checkbox"></input>Only for providers with
+SupportsCacheControl</label></li>
+</ul></li>
+</ul>
+<h3 id="context-management-api">3.4 Context Management API</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/server/handlers/context.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/context</code> - Add context</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/context</code> - Get context</label></li>
+<li><label><input type="checkbox"></input>DELETE
+<code>/api/v1/plans/:id/context/:contextId</code> - Remove
+context</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/project-map</code> - Generate map</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/project-map</code> - Get map</label></li>
+</ul></li>
+</ul>
+<h3 id="auto-context-management">3.5 Auto-Context Management</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Detect file changes outside
+Plandex</label></li>
+<li><label><input type="checkbox"></input>Auto-update context when
+configured</label></li>
+<li><label><input type="checkbox"></input>Conversation summarization when
+needed</label></li>
+<li><label><input type="checkbox"></input>Config flag:
+<code>auto-update-context</code> (bool)</label></li>
+</ul>
+<hr />
+<h2 id="phase-4-file-editing-diff-system-1-2-weeks">Phase 4: File
+Editing &amp; Diff System (1-2 weeks)</h2>
+<h3 id="diff-generation">4.1 Diff Generation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/diff/</code>
+package</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>generate.go</code>: Create
+diffs via <code>git diff</code></label></li>
+<li><label><input type="checkbox"></input><code>parse.go</code>: Parse unified
+diff format into hunks</label></li>
+<li><label><input type="checkbox"></input><code>model.go</code>: Data
+structures for diffs</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Replacement tracking:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>UUID per replacement for matching
+proposed↔︎actual</label></li>
+<li><label><input type="checkbox"></input>Old text + new text + line
+number</label></li>
+</ul></li>
+</ul>
+<h3 id="structured-edit-system">4.2 Structured Edit System</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/syntax/</code>
+(expand existing)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Tree-sitter based AST-aware
+edits</label></li>
+<li><label><input type="checkbox"></input>Language-specific
+handlers</label></li>
+<li><label><input type="checkbox"></input>Generic fallback
+patterns</label></li>
+<li><label><input type="checkbox"></input>Validation + syntax
+checking</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Fallback chain:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>1. Try structured edit</label></li>
+<li><label><input type="checkbox"></input>2. Syntax validation &amp;
+fix</label></li>
+<li><label><input type="checkbox"></input>3. Whole-file builder
+role</label></li>
+<li><label><input type="checkbox"></input>4. Alternative builder
+approach</label></li>
+<li><label><input type="checkbox"></input>5. Manual user fix</label></li>
+</ul></li>
+</ul>
+<h3 id="change-application">4.3 Change Application</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/changes/</code>
+package</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>apply.go</code>: Apply changes
+to files</label></li>
+<li><label><input type="checkbox"></input><code>validate.go</code>: Syntax
+validation before apply</label></li>
+<li><label><input type="checkbox"></input><code>rollback.go</code>: Revert
+changes on error</label></li>
+<li><label><input type="checkbox"></input><code>staging.go</code>: Selective
+file application</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input>Transactional support:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Atomic application of related
+changes</label></li>
+<li><label><input type="checkbox"></input>Rollback on partial
+failure</label></li>
+</ul></li>
+</ul>
+<h3 id="diff-review-handlers">4.4 Diff Review Handlers</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/server/handlers/changes.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/diff</code> - Get pending diff</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/apply</code> - Apply changes</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/reject</code> - Reject files</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/changes</code> - List pending</label></li>
+</ul></li>
+</ul>
+<h3 id="browser-diff-ui-integration">4.5 Browser Diff UI
+Integration</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Export diff data to JSON
+format</label></li>
+<li><label><input type="checkbox"></input>Side-by-side and line-by-line
+views</label></li>
+<li><label><input type="checkbox"></input>File selection UI</label></li>
+<li><label><input type="checkbox"></input>Integration with existing
+UI</label></li>
+</ul>
+<hr />
+<h2 id="phase-5-plan-management-versioning-1-2-weeks">Phase 5: Plan
+Management &amp; Versioning (1-2 weeks)</h2>
+<h3 id="plan-data-model">5.1 Plan Data Model</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Database migrations:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>plans</code> table</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, name, status, autonomy_config,
+model_settings</label></li>
+<li><label><input type="checkbox"></input>created_at, updated_at,
+active_branch</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input><code>plan_versions</code> table
+(complete history)</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, plan_id, version_num, action,
+created_at</label></li>
+<li><label><input type="checkbox"></input>delta_summary, metadata</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input><code>plan_branches</code>
+table</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, plan_id, name,
+base_version_id</label></li>
+</ul></li>
+<li><label><input type="checkbox"></input><code>pending_changes</code>
+table</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>id, plan_id, file_path, replacements
+(JSON)</label></li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="plan-crud-operations">5.2 Plan CRUD Operations</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/task/plan/crud.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create plan</label></li>
+<li><label><input type="checkbox"></input>Get plan</label></li>
+<li><label><input type="checkbox"></input>List plans (current directory +
+subdirs)</label></li>
+<li><label><input type="checkbox"></input>Update plan config</label></li>
+<li><label><input type="checkbox"></input>Delete plan</label></li>
+<li><label><input type="checkbox"></input>Archive/unarchive plan</label></li>
+</ul></li>
+</ul>
+<h3 id="plan-versioning">5.3 Plan Versioning</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/task/plan/versioning.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create version on every
+action</label></li>
+<li><label><input type="checkbox"></input>Store minimal metadata (action,
+timestamp, summary)</label></li>
+<li><label><input type="checkbox"></input>Full content in separate
+tables</label></li>
+<li><label><input type="checkbox"></input>View history:
+<code>plandex log</code></label></li>
+<li><label><input type="checkbox"></input>Rewind to previous
+version</label></li>
+</ul></li>
+</ul>
+<h3 id="plan-branching">5.4 Plan Branching</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/task/plan/branching.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Create branch from any
+version</label></li>
+<li><label><input type="checkbox"></input>Switch between branches</label></li>
+<li><label><input type="checkbox"></input>Merge branch back to
+main</label></li>
+<li><label><input type="checkbox"></input>Conflict detection on
+rewind</label></li>
+</ul></li>
+</ul>
+<h3 id="conversation-management">5.5 Conversation Management</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/task/plan/conversation.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Store messages with streaming
+data</label></li>
+<li><label><input type="checkbox"></input>Auto-summarization when max tokens
+exceeded</label></li>
+<li><label><input type="checkbox"></input>Export full
+conversation</label></li>
+<li><label><input type="checkbox"></input>View conversation
+history</label></li>
+</ul></li>
+</ul>
+<h3 id="plan-handlers">5.6 Plan Handlers</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/server/handlers/plans.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>POST <code>/api/v1/plans</code> -
+Create</label></li>
+<li><label><input type="checkbox"></input>GET <code>/api/v1/plans/:id</code> -
+Get</label></li>
+<li><label><input type="checkbox"></input>GET <code>/api/v1/plans</code> -
+List</label></li>
+<li><label><input type="checkbox"></input>PUT <code>/api/v1/plans/:id</code> -
+Update</label></li>
+<li><label><input type="checkbox"></input>DELETE
+<code>/api/v1/plans/:id</code> - Delete</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/archive</code> - Archive</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/versions</code> - History</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/rewind</code> - Rewind</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/branches</code> - List branches</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/branch</code> - Create branch</label></li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="phase-6-autonomy-system-1-2-weeks">Phase 6: Autonomy System (1-2
+weeks)</h2>
+<h3 id="autonomy-config-model">6.1 Autonomy Config Model</h3>
+<ul class="task-list">
+<li><p><label><input type="checkbox"></input>Data structure with 5 presets +
+individual flags</label></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AutonomyLevel <span class="dt">string</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  AutonomyNone   <span class="op">=</span> <span class="st">&quot;none&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  AutonomyBasic  <span class="op">=</span> <span class="st">&quot;basic&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  AutonomyPlus   <span class="op">=</span> <span class="st">&quot;plus&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  AutonomySemi   <span class="op">=</span> <span class="st">&quot;semi&quot;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  AutonomyFull   <span class="op">=</span> <span class="st">&quot;full&quot;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AutonomyConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  Level         AutonomyLevel</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  AutoContinue  <span class="dt">bool</span> <span class="co">// plan continuation</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  AutoBuild     <span class="dt">bool</span> <span class="co">// file diff building</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  AutoApply     <span class="dt">bool</span> <span class="co">// change application</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  AutoExec      <span class="dt">bool</span> <span class="co">// command execution</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>  AutoDebug     <span class="dt">bool</span> <span class="co">// error debugging</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  AutoCommit    <span class="dt">bool</span> <span class="co">// git commits</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  AutoLoadCtx   <span class="dt">bool</span> <span class="co">// context loading</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  SmartContext  <span class="dt">bool</span> <span class="co">// per-step filtering</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  AutoUpdateCtx <span class="dt">bool</span> <span class="co">// detect file changes</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></li>
+</ul>
+<h3 id="preset-configurations">6.2 Preset Configurations</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Implement 5 preset levels in
+code</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>none</code>: All
+false</label></li>
+<li><label><input type="checkbox"></input><code>basic</code>: AutoContinue,
+AutoBuild true</label></li>
+<li><label><input type="checkbox"></input><code>plus</code>: ^ + SmartContext,
+AutoCommit, AutoUpdateCtx</label></li>
+<li><label><input type="checkbox"></input><code>semi</code>: ^ + AutoLoadCtx
+(default)</label></li>
+<li><label><input type="checkbox"></input><code>full</code>: All
+true</label></li>
+</ul></li>
+</ul>
+<h3 id="runtime-autonomy-checks">6.3 Runtime Autonomy Checks</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Feature guards throughout
+codebase:</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Before auto-continuing: Check
+AutoContinue</label></li>
+<li><label><input type="checkbox"></input>Before auto-building: Check
+AutoBuild</label></li>
+<li><label><input type="checkbox"></input>Before auto-applying: Check
+AutoApply</label></li>
+<li><label><input type="checkbox"></input>Before auto-executing: Check
+AutoExec</label></li>
+<li><label><input type="checkbox"></input>Before auto-debugging: Check
+AutoDebug</label></li>
+<li><label><input type="checkbox"></input>Before auto-committing: Check
+AutoCommit</label></li>
+</ul></li>
+</ul>
+<h3 id="handlers-1">6.4 Handlers</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/server/handlers/autonomy.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/autonomy</code> - Current config</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/autonomy</code> - Set level</label></li>
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/autonomy-flag</code> - Set individual
+flag</label></li>
+</ul></li>
+</ul>
+<h3 id="safety-features">6.5 Safety Features</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Warn when setting full auto
+mode</label></li>
+<li><label><input type="checkbox"></input>Require manual confirmation for
+destructive operations</label></li>
+<li><label><input type="checkbox"></input>Suggest checking git status before
+full auto</label></li>
+<li><label><input type="checkbox"></input>Document safety
+considerations</label></li>
+</ul>
+<hr />
+<h2 id="phase-7-execution-debugging-1-2-weeks">Phase 7: Execution &amp;
+Debugging (1-2 weeks)</h2>
+<h3 id="command-execution">7.1 Command Execution</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/task/execution/runner.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Execute shell commands</label></li>
+<li><label><input type="checkbox"></input>Capture stdout/stderr</label></li>
+<li><label><input type="checkbox"></input>Timeout handling</label></li>
+<li><label><input type="checkbox"></input>Return exit codes</label></li>
+</ul></li>
+</ul>
+<h3 id="auto-debugging">7.2 Auto-Debugging</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/task/debugging/</code> package</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>terminal.go</code>: Parse
+terminal output for errors</label></li>
+<li><label><input type="checkbox"></input><code>browser.go</code>: Screenshot
+on web app errors</label></li>
+<li><label><input type="checkbox"></input><code>analyzer.go</code>: Feed
+errors back to model</label></li>
+</ul></li>
+</ul>
+<h3 id="execution-handlers">7.3 Execution Handlers</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/server/handlers/execution.go</code></label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>POST
+<code>/api/v1/plans/:id/exec</code> - Run command</label></li>
+<li><label><input type="checkbox"></input>GET
+<code>/api/v1/plans/:id/exec-status</code> - Status</label></li>
+</ul></li>
+</ul>
+<h3 id="rollback-on-failure">7.4 Rollback on Failure</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Track execution
+success/failure</label></li>
+<li><label><input type="checkbox"></input>Auto-rollback changes if commands
+fail</label></li>
+<li><label><input type="checkbox"></input>Preserve git state for manual
+recovery</label></li>
+</ul>
+<hr />
+<h2 id="phase-8-git-integration-1-week">Phase 8: Git Integration (1
+week)</h2>
+<h3 id="git-operations">8.1 Git Operations</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>internal/git/</code>
+package</label>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>status.go</code>: Check git
+status</label></li>
+<li><label><input type="checkbox"></input><code>commit.go</code>: Auto-commit
+with AI-generated messages</label></li>
+<li><label><input type="checkbox"></input><code>revert.go</code>: Revert
+commits on rewind</label></li>
+<li><label><input type="checkbox"></input><code>branch.go</code>:
+Create/checkout branches</label></li>
+</ul></li>
+</ul>
+<h3 id="commit-message-generation">8.2 Commit Message Generation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Call LLM to generate commit
+messages</label></li>
+<li><label><input type="checkbox"></input>Use <code>commit-messages</code>
+role</label></li>
+<li><label><input type="checkbox"></input>Summarize changes from pending
+updates</label></li>
+</ul>
+<h3 id="config">8.3 Config</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><code>auto-commit</code> flag in
+autonomy</label></li>
+<li><label><input type="checkbox"></input>Optional git integration (works
+without repo)</label></li>
+</ul>
+<hr />
+<h2 id="phase-9-testing-validation-throughout-2-3-weeks">Phase 9:
+Testing &amp; Validation (Throughout, 2-3 weeks)</h2>
+<h3 id="unit-tests">9.1 Unit Tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Provider integration
+tests</label></li>
+<li><label><input type="checkbox"></input>Model resolution tests</label></li>
+<li><label><input type="checkbox"></input>Context management
+tests</label></li>
+<li><label><input type="checkbox"></input>Diff generation tests</label></li>
+<li><label><input type="checkbox"></input>Plan CRUD tests</label></li>
+<li><label><input type="checkbox"></input>Autonomy config tests</label></li>
+</ul>
+<h3 id="integration-tests">9.2 Integration Tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Full workflow: Create plan → Load
+context → Generate → Review → Apply</label></li>
+<li><label><input type="checkbox"></input>Fallback chain tests</label></li>
+<li><label><input type="checkbox"></input>Error recovery tests</label></li>
+<li><label><input type="checkbox"></input>Rollback tests</label></li>
+</ul>
+<h3 id="e2e-tests">9.3 E2E Tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>CLI workflow tests</label></li>
+<li><label><input type="checkbox"></input>API endpoint tests</label></li>
+<li><label><input type="checkbox"></input>Database migration
+tests</label></li>
+</ul>
+<h3 id="loadperformance-tests">9.4 Load/Performance Tests</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Context size scaling (up to 20M
+tokens)</label></li>
+<li><label><input type="checkbox"></input>Large project map
+generation</label></li>
+<li><label><input type="checkbox"></input>Multiple concurrent
+plans</label></li>
+</ul>
+<hr />
+<h2 id="phase-10-documentation-finalization-throughout-1-week">Phase 10:
+Documentation &amp; Finalization (Throughout, 1 week)</h2>
+<h3 id="code-documentation">10.1 Code Documentation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Godoc comments for all public
+functions</label></li>
+<li><label><input type="checkbox"></input>Architecture docs for each
+package</label></li>
+<li><label><input type="checkbox"></input>Provider-specific implementation
+notes</label></li>
+</ul>
+<h3 id="user-documentation">10.2 User Documentation</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Model configuration
+guide</label></li>
+<li><label><input type="checkbox"></input>Context management
+guide</label></li>
+<li><label><input type="checkbox"></input>Autonomy levels
+explanation</label></li>
+<li><label><input type="checkbox"></input>Troubleshooting guide</label></li>
+</ul>
+<h3 id="developer-guide">10.3 Developer Guide</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Adding new providers</label></li>
+<li><label><input type="checkbox"></input>Adding new models</label></li>
+<li><label><input type="checkbox"></input>Extending context
+system</label></li>
+<li><label><input type="checkbox"></input>Custom autonomy configs</label></li>
+</ul>
+<h3 id="migration-guide">10.4 Migration Guide</h3>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>From HelixCode v1
+features</label></li>
+<li><label><input type="checkbox"></input>Backward compatibility
+notes</label></li>
+</ul>
+<hr />
+<h2 id="implementation-notes">Implementation Notes</h2>
+<h3 id="critical-decisions">Critical Decisions</h3>
+<ol type="1">
+<li><strong>LiteLLM vs Direct</strong>: LiteLLM recommended for
+abstraction but optional</li>
+<li><strong>Database</strong>: PostgreSQL with 50+ migration files
+(extensive)</li>
+<li><strong>Language Support</strong>: Start with top 10 languages,
+expand later</li>
+<li><strong>Fallback Strategy</strong>: Always have graceful degradation
+path</li>
+<li><strong>Context Caching</strong>: Optimize for token usage, track
+savings</li>
+</ol>
+<h3 id="reusable-components-from-helixcode">Reusable Components from
+HelixCode</h3>
+<ul>
+<li>Database layer (PostgreSQL ready)</li>
+<li>REST API framework (Gin)</li>
+<li>Authentication system (JWT)</li>
+<li>Worker pool management (if applicable)</li>
+<li>CLI framework</li>
+</ul>
+<h3 id="external-dependencies-to-add">External Dependencies to Add</h3>
+<ul>
+<li><code>smacker/go-tree-sitter</code> (code analysis)</li>
+<li><code>go-openai</code> (for direct OpenAI if not using LiteLLM)</li>
+<li><code>aws-sdk-go</code> (for Bedrock support)</li>
+<li><code>google-cloud-aiplatform</code> (for Vertex)</li>
+</ul>
+<h3 id="timeline-overview">Timeline Overview</h3>
+<ul>
+<li><strong>Week 1-3</strong>: LLM providers + model config</li>
+<li><strong>Week 4-6</strong>: Context management + storage</li>
+<li><strong>Week 7-9</strong>: Execution + versioning</li>
+<li><strong>Week 10-12</strong>: Polish + integration + tests</li>
+</ul>
+<p><strong>Estimated MVP</strong>: 8-12 weeks of focused development</p>
+<hr />
+<h2 id="success-criteria">Success Criteria</h2>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>All 12 providers working with
+fallback</label></li>
+<li><label><input type="checkbox"></input>25+ built-in models
+configured</label></li>
+<li><label><input type="checkbox"></input>16 model packs
+available</label></li>
+<li><label><input type="checkbox"></input>Context system handles 20M+ token
+projects</label></li>
+<li><label><input type="checkbox"></input>5 autonomy levels
+configurable</label></li>
+<li><label><input type="checkbox"></input>Full plan versioning with
+rewind</label></li>
+<li><label><input type="checkbox"></input>Diff review sandbox
+working</label></li>
+<li><label><input type="checkbox"></input>Git integration
+functional</label></li>
+<li><label><input type="checkbox"></input>80%+ code coverage</label></li>
+<li><label><input type="checkbox"></input>Documentation complete</label></li>
+<li><label><input type="checkbox"></input>E2E tests passing</label></li>
+</ul>
+</body>
+</html>

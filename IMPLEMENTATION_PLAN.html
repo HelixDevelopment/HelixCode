@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>IMPLEMENTATION_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">IMPLEMENTATION_PLAN</h1>
+</header>
+<h1 id="helixcode-feature-implementation-plan">HelixCode Feature
+Implementation Plan</h1>
+<p><strong>Version</strong>: 1.0 <strong>Date</strong>: 2025-11-05
+<strong>Timeline</strong>: 10 weeks (parallelized)</p>
+<hr />
+<h2 id="implementation-strategy">Implementation Strategy</h2>
+<p>This plan implements all identified features from the comprehensive
+analysis in a structured, parallelized approach. Each feature will
+include: - ✅ Production code - ✅ Comprehensive tests (unit +
+integration) - ✅ Documentation - ✅ User manual entries - ✅ API
+documentation</p>
+<hr />
+<h2 id="phase-1-critical-tools-infrastructure-weeks-1-2">Phase 1:
+Critical Tools &amp; Infrastructure (Weeks 1-2)</h2>
+<h3 id="file-system-tools-package">1.1 File System Tools Package</h3>
+<p><strong>Location</strong>: <code>internal/tools/filesystem/</code>
+<strong>Files to Create</strong>: - <code>reader.go</code> - File
+reading with glob patterns - <code>writer.go</code> - File writing with
+atomic operations - <code>editor.go</code> - In-place file editing with
+diff support - <code>searcher.go</code> - File content search
+(grep-like) - <code>filesystem_test.go</code> - Comprehensive tests</p>
+<p><strong>Features</strong>: - Read single/multiple files - Write with
+backup/rollback - Edit with search/replace - Recursive directory
+operations - Git-aware file filtering - Permission checks - Symlink
+handling</p>
+<p><strong>Tests</strong>: 20+ test cases covering all operations</p>
+<p><strong>Documentation</strong>: -
+<code>docs/tools/filesystem.md</code> - Complete API reference -
+Examples for each operation - Security considerations</p>
+<h3 id="shell-execution-package">1.2 Shell Execution Package</h3>
+<p><strong>Location</strong>: <code>internal/tools/shell/</code>
+<strong>Files to Create</strong>: - <code>executor.go</code> - Command
+execution with safety checks - <code>sandbox.go</code> - Sandboxed
+execution environment - <code>output.go</code> - Output streaming and
+capture - <code>shell_test.go</code> - Tests including security
+scenarios</p>
+<p><strong>Features</strong>: - Safe command execution with
+allowlist/blocklist - Real-time output streaming - Timeout management -
+Environment variable isolation - Working directory control - Signal
+handling (SIGINT, SIGTERM) - Command history logging - Dry-run mode</p>
+<p><strong>Tests</strong>: 15+ test cases including security tests</p>
+<p><strong>Documentation</strong>: - <code>docs/tools/shell.md</code> -
+Usage guide - Security best practices - Configuration options</p>
+<h3 id="browser-control-package">1.3 Browser Control Package</h3>
+<p><strong>Location</strong>: <code>internal/tools/browser/</code>
+<strong>Files to Create</strong>: - <code>controller.go</code> -
+Puppeteer/chromedp integration - <code>actions.go</code> - Browser
+actions (click, type, scroll, screenshot) - <code>discovery.go</code> -
+Chrome/Chromium detection - <code>browser_test.go</code> - Headless
+browser tests</p>
+<p><strong>Features</strong>: - Launch/attach to Chrome/Chromium -
+Actions: launch, click, type, scroll, screenshot, close - Screenshot
+with coordinate annotation - Console log capture - Page navigation -
+Element selection - Headless/headed modes - Connection management</p>
+<p><strong>Tests</strong>: 12+ test cases with mock browser</p>
+<p><strong>Documentation</strong>: - <code>docs/tools/browser.md</code>
+- Complete guide - Computer Use integration - Troubleshooting guide</p>
+<h3 id="codebase-mapping-package">1.4 Codebase Mapping Package</h3>
+<p><strong>Location</strong>: <code>internal/tools/mapping/</code>
+<strong>Files to Create</strong>: - <code>mapper.go</code> - Main
+mapping engine - <code>treesitter.go</code> - Tree-sitter integration -
+<code>cache.go</code> - Disk cache for parsed results -
+<code>languages.go</code> - Language-specific queries -
+<code>mapping_test.go</code> - Parser tests</p>
+<p><strong>Features</strong>: - Tree-sitter based AST parsing - Support
+for 30+ languages (Go, TypeScript, Python, Rust, Java, C++, etc.) - Disk
+cache (<code>.helix.cache/</code>) - Token-based context sizing -
+Relative indentation for fuzzy matching - Function/class/method
+extraction - Import/dependency analysis</p>
+<p><strong>Tests</strong>: 25+ test cases with sample code in multiple
+languages</p>
+<p><strong>Documentation</strong>: -
+<code>docs/tools/codebase-mapping.md</code> - Architecture guide -
+Supported languages - Cache management</p>
+<h3 id="multi-file-editing-package">1.5 Multi-File Editing Package</h3>
+<p><strong>Location</strong>: <code>internal/tools/multiedit/</code>
+<strong>Files to Create</strong>: - <code>editor.go</code> - Multi-file
+atomic editing - <code>transaction.go</code> - Transaction-based edits -
+<code>diff.go</code> - Diff generation and application -
+<code>multiedit_test.go</code> - Atomic operation tests</p>
+<p><strong>Features</strong>: - Atomic multi-file edits (all or nothing)
+- Transaction-based with rollback - Unified diff generation - Conflict
+detection - Backup before edit - Git integration - Preview mode</p>
+<p><strong>Tests</strong>: 18+ test cases including rollback
+scenarios</p>
+<p><strong>Documentation</strong>: -
+<code>docs/tools/multi-file-editing.md</code> - Usage guide -
+Transaction management - Error recovery</p>
+<hr />
+<h2 id="phase-2-workflow-enhancements-weeks-2-3">Phase 2: Workflow
+Enhancements (Weeks 2-3)</h2>
+<h3 id="plan-mode-implementation">2.1 Plan Mode Implementation</h3>
+<p><strong>Location</strong>: <code>internal/workflow/planmode/</code>
+<strong>Files to Create</strong>: - <code>planner.go</code> - Two-phase
+planning system - <code>options.go</code> - Option presentation and
+selection - <code>executor.go</code> - Plan execution -
+<code>planmode_test.go</code> - Workflow tests</p>
+<p><strong>Features</strong>: - Two-phase workflow (Plan → Act) -
+Structured option presentation - User selection interface - YOLO
+auto-execution mode - Progress tracking - Mode switching - Task
+breakdown</p>
+<p><strong>Tests</strong>: 15+ test cases covering full workflow</p>
+<p><strong>Documentation</strong>: -
+<code>docs/workflows/plan-mode.md</code> - Complete guide - Best
+practices - Example workflows</p>
+<h3 id="auto-commit-system">2.2 Auto-Commit System</h3>
+<p><strong>Location</strong>: <code>internal/tools/git/</code>
+<strong>Files to Create</strong>: - <code>autocommit.go</code> -
+Intelligent commit system - <code>message_generator.go</code> -
+LLM-powered commit messages - <code>attribution.go</code> - Co-author
+attribution - <code>git_test.go</code> - Git operation tests</p>
+<p><strong>Features</strong>: - LLM-generated commit messages - Diff
+analysis for semantic commits - Co-author attribution - Multi-language
+commit messages - Conventional commits support - Amend detection -
+Pre-commit hook integration</p>
+<p><strong>Tests</strong>: 12+ test cases with mock git repo</p>
+<p><strong>Documentation</strong>: -
+<code>docs/tools/auto-commit.md</code> - Usage guide - Commit message
+generation - Attribution options</p>
+<h3 id="context-compression">2.3 Context Compression</h3>
+<p><strong>Location</strong>: <code>internal/llm/compression/</code>
+<strong>Files to Create</strong>: - <code>compressor.go</code> -
+Conversation summarization - <code>strategies.go</code> - Compression
+strategies - <code>retention.go</code> - Message retention policies -
+<code>compression_test.go</code> - Compression tests</p>
+<p><strong>Features</strong>: - Automatic history summarization -
+Token-based thresholds - Sliding window retention - Semantic
+preservation - <code>/compress</code> command - Configurable
+policies</p>
+<p><strong>Tests</strong>: 10+ test cases with mock conversations</p>
+<p><strong>Documentation</strong>: -
+<code>docs/features/context-compression.md</code> - Guide - Compression
+strategies - Configuration</p>
+<hr />
+<h2 id="phase-3-advanced-providers-weeks-3-4">Phase 3: Advanced
+Providers (Weeks 3-4)</h2>
+<h3 id="aws-bedrock-provider">3.1 AWS Bedrock Provider</h3>
+<p><strong>Location</strong>:
+<code>internal/llm/bedrock_provider.go</code> <strong>Tests</strong>:
+<code>internal/llm/bedrock_provider_test.go</code></p>
+<p><strong>Models</strong>: - Claude 4 Sonnet/Opus (via Bedrock) -
+Claude 3.5/3.7 Sonnet - Titan, Jurassic, Command models</p>
+<p><strong>Features</strong>: - AWS SDK v2 integration - IAM
+authentication - Cross-region inference - Streaming support - Model
+invocation via Bedrock runtime</p>
+<p><strong>Tests</strong>: 15+ test cases with mock AWS API</p>
+<p><strong>Documentation</strong>: -
+<code>docs/providers/bedrock.md</code> - Setup guide - IAM configuration
+- Model availability by region</p>
+<h3 id="azure-openai-provider">3.2 Azure OpenAI Provider</h3>
+<p><strong>Location</strong>:
+<code>internal/llm/azure_provider.go</code> <strong>Tests</strong>:
+<code>internal/llm/azure_provider_test.go</code></p>
+<p><strong>Models</strong>: - All OpenAI models via Azure - Multiple
+deployment support - Region-specific endpoints</p>
+<p><strong>Features</strong>: - Microsoft Entra ID authentication - API
+key authentication - Deployment-based routing - API version management -
+Streaming support</p>
+<p><strong>Tests</strong>: 15+ test cases with mock Azure API</p>
+<p><strong>Documentation</strong>: -
+<code>docs/providers/azure.md</code> - Setup guide - Authentication
+methods - Deployment configuration</p>
+<h3 id="vertexai-provider">3.3 VertexAI Provider</h3>
+<p><strong>Location</strong>:
+<code>internal/llm/vertexai_provider.go</code> <strong>Tests</strong>:
+<code>internal/llm/vertexai_provider_test.go</code></p>
+<p><strong>Models</strong>: - Gemini models via VertexAI - Claude via
+VertexAI (Model Garden) - PaLM 2 models</p>
+<p><strong>Features</strong>: - Google Cloud authentication - Service
+account support - Project/location-based routing - Streaming support</p>
+<p><strong>Tests</strong>: 15+ test cases with mock GCP API</p>
+<p><strong>Documentation</strong>: -
+<code>docs/providers/vertexai.md</code> - Setup guide - GCP
+authentication - Project configuration</p>
+<h3 id="groq-provider">3.4 Groq Provider</h3>
+<p><strong>Location</strong>: <code>internal/llm/groq_provider.go</code>
+<strong>Tests</strong>:
+<code>internal/llm/groq_provider_test.go</code></p>
+<p><strong>Models</strong>: - Llama 3.3 70B - Mixtral 8x7B - Ultra-fast
+inference</p>
+<p><strong>Features</strong>: - Simple API key authentication -
+Extremely low latency - High throughput - OpenAI-compatible API</p>
+<p><strong>Tests</strong>: 12+ test cases</p>
+<p><strong>Documentation</strong>: - <code>docs/providers/groq.md</code>
+- Quick start - Performance characteristics</p>
+<hr />
+<h2 id="phase-4-enhanced-tools-weeks-4-5">Phase 4: Enhanced Tools (Weeks
+4-5)</h2>
+<h3 id="web-tools-package">4.1 Web Tools Package</h3>
+<p><strong>Location</strong>: <code>internal/tools/web/</code>
+<strong>Files to Create</strong>: - <code>search.go</code> - Web search
+integration (Google, Bing, DuckDuckGo) - <code>fetch.go</code> - HTTP
+fetching with caching - <code>parser.go</code> - HTML/markdown
+conversion - <code>web_test.go</code> - HTTP mock tests</p>
+<p><strong>Features</strong>: - Web search with multiple engines - URL
+fetching with proxy support - HTML to markdown conversion - Caching
+(15-minute TTL) - Rate limiting - User-agent rotation</p>
+<p><strong>Tests</strong>: 15+ test cases with mock HTTP</p>
+<p><strong>Documentation</strong>: - <code>docs/tools/web.md</code> -
+Usage guide - Search engines - Caching policy</p>
+<h3 id="tool-confirmation-system">4.2 Tool Confirmation System</h3>
+<p><strong>Location</strong>: <code>internal/tools/confirmation/</code>
+<strong>Files to Create</strong>: - <code>confirmer.go</code> -
+Interactive confirmation - <code>policies.go</code> - Approval policies
+- <code>audit.go</code> - Audit logging -
+<code>confirmation_test.go</code> - Policy tests</p>
+<p><strong>Features</strong>: - Interactive yes/no/always/never prompts
+- Dangerous operation detection - Policy-based auto-approval - Audit
+logging - Confirmation levels (info, warning, danger) - Batch approval
+mode</p>
+<p><strong>Tests</strong>: 10+ test cases</p>
+<p><strong>Documentation</strong>: -
+<code>docs/tools/confirmation.md</code> - Configuration - Policy system
+- Audit logs</p>
+<h3 id="voice-to-code">4.3 Voice-to-Code</h3>
+<p><strong>Location</strong>: <code>internal/tools/voice/</code>
+<strong>Files to Create</strong>: - <code>recorder.go</code> - Audio
+recording - <code>transcriber.go</code> - Whisper API integration -
+<code>device.go</code> - Audio device management -
+<code>voice_test.go</code> - Mock audio tests</p>
+<p><strong>Features</strong>: - Audio recording from microphone - Device
+selection - Whisper transcription - Language support - Volume level
+detection - WAV/MP3 format</p>
+<p><strong>Tests</strong>: 8+ test cases with mock audio</p>
+<p><strong>Documentation</strong>: - <code>docs/tools/voice.md</code> -
+Setup guide - Device configuration - Language support</p>
+<hr />
+<h2 id="phase-5-advanced-features-weeks-5-6">Phase 5: Advanced Features
+(Weeks 5-6)</h2>
+<h3 id="checkpoint-snapshots">5.1 Checkpoint Snapshots</h3>
+<p><strong>Location</strong>: <code>internal/workflow/snapshots/</code>
+<strong>Files to Create</strong>: - <code>snapshot.go</code> - Workspace
+snapshots - <code>comparison.go</code> - Diff between snapshots -
+<code>restore.go</code> - Rollback to snapshot -
+<code>snapshots_test.go</code> - Snapshot tests</p>
+<p><strong>Features</strong>: - Git-based workspace snapshots - Compare
+any two snapshots - Restore to specific snapshot - Automatic snapshot on
+task steps - Snapshot metadata (timestamp, task, status)</p>
+<p><strong>Tests</strong>: 12+ test cases</p>
+<p><strong>Documentation</strong>: -
+<code>docs/features/snapshots.md</code> - Usage guide - Snapshot
+management - Restore procedures</p>
+<h3 id="autonomy-modes">5.2 Autonomy Modes</h3>
+<p><strong>Location</strong>: <code>internal/workflow/autonomy/</code>
+<strong>Files to Create</strong>: - <code>modes.go</code> - 5 autonomy
+levels - <code>controller.go</code> - Mode switching -
+<code>config.go</code> - Per-mode configuration -
+<code>autonomy_test.go</code> - Mode tests</p>
+<p><strong>Modes</strong>: 1. <strong>Full Auto</strong>: Complete
+automation 2. <strong>Semi Auto</strong>: Balanced (auto context, manual
+apply) 3. <strong>Basic Plus</strong>: Smart semi-automation 4.
+<strong>Basic</strong>: Manual workflow 5. <strong>None</strong>:
+Step-by-step control</p>
+<p><strong>Tests</strong>: 10+ test cases</p>
+<p><strong>Documentation</strong>: -
+<code>docs/features/autonomy-modes.md</code> - Mode guide -
+Configuration - Best practices</p>
+<h3 id="vision-auto-switching">5.3 Vision Auto-Switching</h3>
+<p><strong>Location</strong>: <code>internal/llm/vision/</code>
+<strong>Files to Create</strong>: - <code>detector.go</code> - Image
+detection - <code>switcher.go</code> - Auto model switching -
+<code>config.go</code> - Switch modes (once, session, persist) -
+<code>vision_test.go</code> - Detection tests</p>
+<p><strong>Features</strong>: - Detect images in input - Auto-switch to
+vision models - User confirmation - Switch modes: once (one-time),
+session (this session), persist (always) - Model capability checking</p>
+<p><strong>Tests</strong>: 8+ test cases</p>
+<p><strong>Documentation</strong>: -
+<code>docs/features/vision-auto-switch.md</code> - Guide - Configuration
+- Supported models</p>
+<hr />
+<h2 id="phase-6-documentation-polish-weeks-6-7">Phase 6: Documentation
+&amp; Polish (Weeks 6-7)</h2>
+<h3 id="comprehensive-user-manual">6.1 Comprehensive User Manual</h3>
+<p><strong>Location</strong>: <code>docs/USER_MANUAL.md</code></p>
+<p><strong>Sections</strong>: 1. Getting Started 2. Configuration 3. LLM
+Providers (all 14+) 4. Tools Reference (all tools) 5. Workflows (Plan
+Mode, etc.) 6. Advanced Features 7. Troubleshooting 8. FAQ</p>
+<h3 id="api-documentation">6.2 API Documentation</h3>
+<p><strong>Location</strong>: <code>docs/API_REFERENCE.md</code></p>
+<p><strong>Sections</strong>: 1. REST API Endpoints 2. WebSocket
+Protocol 3. MCP Protocol 4. Authentication 5. Request/Response Formats
+6. Error Handling 7. Rate Limiting 8. Examples (curl, Go, Python,
+JavaScript)</p>
+<h3 id="feature-documentation">6.3 Feature Documentation</h3>
+<p><strong>Location</strong>: <code>docs/features/</code></p>
+<p><strong>Files</strong> (one per feature): -
+<code>extended-thinking.md</code> - <code>prompt-caching.md</code> -
+<code>plan-mode.md</code> - <code>browser-control.md</code> -
+<code>codebase-mapping.md</code> - <code>auto-commit.md</code> -
+<code>context-compression.md</code> - <code>voice-to-code.md</code> -
+<code>snapshots.md</code> - <code>autonomy-modes.md</code> -
+<code>vision-auto-switch.md</code></p>
+<hr />
+<h2 id="testing-strategy">Testing Strategy</h2>
+<h3 id="unit-tests">Unit Tests</h3>
+<ul>
+<li>Each package has <code>*_test.go</code> with 10-25 test cases</li>
+<li>Mock external dependencies (HTTP, file system, git, etc.)</li>
+<li>Test error conditions</li>
+<li>Test edge cases</li>
+<li>Target: 90%+ coverage</li>
+</ul>
+<h3 id="integration-tests">Integration Tests</h3>
+<p><strong>Location</strong>: <code>test/integration/</code></p>
+<p><strong>Test Suites</strong>: - <code>providers_test.go</code> - All
+LLM providers - <code>tools_test.go</code> - All tools end-to-end -
+<code>workflows_test.go</code> - Plan Mode, autonomy -
+<code>features_test.go</code> - Advanced features</p>
+<h3 id="performance-tests">Performance Tests</h3>
+<p><strong>Location</strong>: <code>test/performance/</code></p>
+<p><strong>Test Suites</strong>: -
+<code>codebase_mapping_bench_test.go</code> - Benchmark tree-sitter -
+<code>compression_bench_test.go</code> - Benchmark compression -
+<code>cache_bench_test.go</code> - Benchmark caching</p>
+<h3 id="end-to-end-tests">End-to-End Tests</h3>
+<p><strong>Location</strong>: <code>test/e2e/</code></p>
+<p><strong>Scenarios</strong>: - Complete development workflow -
+Multi-provider failover - Large codebase handling - Browser automation -
+Voice input</p>
+<hr />
+<h2 id="documentation-standards">Documentation Standards</h2>
+<h3 id="code-comments">Code Comments</h3>
+<ul>
+<li>Godoc for all exported functions</li>
+<li>Package-level documentation</li>
+<li>Example code in comments</li>
+</ul>
+<h3 id="markdown-documentation">Markdown Documentation</h3>
+<ul>
+<li>Clear structure with TOC</li>
+<li>Code examples for all features</li>
+<li>Screenshots/diagrams where helpful</li>
+<li>Links to related docs</li>
+<li>Version compatibility notes</li>
+</ul>
+<h3 id="readme-updates">README Updates</h3>
+<p><strong>Sections to Add</strong>: - New provider list (14+ providers)
+- New tools list - Plan Mode section - Browser control section -
+Codebase mapping section - Link to comprehensive docs</p>
+<hr />
+<h2 id="quality-gates">Quality Gates</h2>
+<h3 id="before-merging-each-feature">Before Merging Each Feature:</h3>
+<ul>
+<li>✅ All tests passing</li>
+<li>✅ Coverage &gt; 85%</li>
+<li>✅ Documentation complete</li>
+<li>✅ Examples working</li>
+<li>✅ No linter errors</li>
+<li>✅ Performance acceptable</li>
+<li>✅ Security review passed</li>
+</ul>
+<h3 id="before-release">Before Release:</h3>
+<ul>
+<li>✅ All integration tests passing</li>
+<li>✅ E2E tests passing</li>
+<li>✅ User manual complete</li>
+<li>✅ API docs complete</li>
+<li>✅ Migration guide (if breaking changes)</li>
+<li>✅ Changelog updated</li>
+<li>✅ Version bumped</li>
+</ul>
+<hr />
+<h2 id="parallelization-strategy">Parallelization Strategy</h2>
+<h3 id="week-1-2-4-parallel-tracks">Week 1-2 (4 parallel tracks):</h3>
+<ul>
+<li><strong>Track 1</strong>: File system tools + Multi-file
+editing</li>
+<li><strong>Track 2</strong>: Shell execution + Browser control</li>
+<li><strong>Track 3</strong>: Codebase mapping</li>
+<li><strong>Track 4</strong>: Plan Mode</li>
+</ul>
+<h3 id="week-3-4-4-parallel-tracks">Week 3-4 (4 parallel tracks):</h3>
+<ul>
+<li><strong>Track 1</strong>: Bedrock + Azure providers</li>
+<li><strong>Track 2</strong>: VertexAI + Groq providers</li>
+<li><strong>Track 3</strong>: Auto-commit + Context compression</li>
+<li><strong>Track 4</strong>: Web tools + Tool confirmation</li>
+</ul>
+<h3 id="week-5-6-3-parallel-tracks">Week 5-6 (3 parallel tracks):</h3>
+<ul>
+<li><strong>Track 1</strong>: Voice-to-Code + Vision auto-switch</li>
+<li><strong>Track 2</strong>: Checkpoint snapshots + Autonomy modes</li>
+<li><strong>Track 3</strong>: Documentation + Testing</li>
+</ul>
+<hr />
+<h2 id="risk-mitigation">Risk Mitigation</h2>
+<h3 id="technical-risks">Technical Risks:</h3>
+<ol type="1">
+<li><strong>Tree-sitter complexity</strong>: Use existing Aider
+patterns</li>
+<li><strong>Browser control fragility</strong>: Extensive error
+handling</li>
+<li><strong>LLM API changes</strong>: Version locking + adapters</li>
+<li><strong>Performance issues</strong>: Benchmarking +
+optimization</li>
+</ol>
+<h3 id="project-risks">Project Risks:</h3>
+<ol type="1">
+<li><strong>Scope creep</strong>: Stick to defined features</li>
+<li><strong>Testing bottlenecks</strong>: Parallelize test writing</li>
+<li><strong>Documentation debt</strong>: Write docs alongside code</li>
+<li><strong>Integration issues</strong>: Continuous integration
+testing</li>
+</ol>
+<hr />
+<h2 id="success-metrics">Success Metrics</h2>
+<h3 id="week-2-checkpoint">Week 2 Checkpoint:</h3>
+<ul>
+<li>✅ 6 core tools implemented (file, shell, browser, mapping, edit,
+plan)</li>
+<li>✅ 60+ unit tests passing</li>
+<li>✅ Basic documentation complete</li>
+</ul>
+<h3 id="week-4-checkpoint">Week 4 Checkpoint:</h3>
+<ul>
+<li>✅ 4 new providers (Bedrock, Azure, VertexAI, Groq)</li>
+<li>✅ 8 enhancement features (auto-commit, compression, web,
+confirmation)</li>
+<li>✅ 100+ unit tests passing</li>
+<li>✅ Integration tests passing</li>
+</ul>
+<h3 id="week-6-checkpoint">Week 6 Checkpoint:</h3>
+<ul>
+<li>✅ All advanced features (voice, snapshots, autonomy, vision)</li>
+<li>✅ 150+ unit tests passing</li>
+<li>✅ E2E tests passing</li>
+<li>✅ Comprehensive documentation complete</li>
+</ul>
+<h3 id="week-7-final">Week 7 Final:</h3>
+<ul>
+<li>✅ All quality gates passed</li>
+<li>✅ User manual complete</li>
+<li>✅ API docs complete</li>
+<li>✅ Ready for release</li>
+</ul>
+<hr />
+<h2 id="timeline-summary">Timeline Summary</h2>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 25%" />
+<col style="width: 51%" />
+</colgroup>
+<thead>
+<tr>
+<th>Week</th>
+<th>Focus</th>
+<th>Deliverables</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-2</td>
+<td>Core Tools</td>
+<td>File, Shell, Browser, Mapping, Edit, Plan Mode</td>
+</tr>
+<tr>
+<td>3-4</td>
+<td>Providers &amp; Enhancements</td>
+<td>4 providers, Auto-commit, Compression, Web, Confirmation</td>
+</tr>
+<tr>
+<td>5-6</td>
+<td>Advanced Features</td>
+<td>Voice, Snapshots, Autonomy, Vision</td>
+</tr>
+<tr>
+<td>6-7</td>
+<td>Documentation &amp; Polish</td>
+<td>Manual, API docs, E2E tests</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total</strong>: 7 weeks to full feature implementation</p>
+<hr />
+<p><strong>END OF IMPLEMENTATION PLAN</strong></p>
+</body>
+</html>
