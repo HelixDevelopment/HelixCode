@@ -904,29 +904,6 @@ submodule copies are re-cascaded, submodule pointers are bumped, and the
 cascade verifier plus CM-SUPERSEDED-GENERATOR-NAMING both pass with
 scope widened to the fleet.</p>
 <h2
-id="hxc-186-evidence-files-can-accidentally-satisfy-the-evidence-requirement-for-an-unrelated-change">HXC-186
-— Evidence files can accidentally satisfy the evidence requirement for
-an unrelated change</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> Medium <strong>Created-By:</strong>
-Claude</p>
-<p>Every shipped change must carry recorded proof that it works, and a
-check enforces that by looking for the change’s identifier inside the
-evidence files. The evidence files also automatically stamp in whatever
-the project’s current position was at the moment they were recorded.
-That stamp is an identifier of exactly the kind the check looks for, so
-an evidence file written while the project happened to be sitting at
-some change can, purely by coincidence, be accepted as that change’s
-proof even though it demonstrates something completely unrelated. This
-has not yet happened, because every recording so far was made while the
-project sat at a position that requires no evidence, but the coincidence
-is available to every recording the shared tooling produces. The fix is
-to make the check accept only identifiers deliberately declared as what
-the evidence is for, ignoring the incidental position stamp. This needs
-care because tightening the rule may withdraw acceptance from evidence
-already recorded, so it is a deliberate decision rather than a quiet
-correction.</p>
-<h2
 id="hxc-188-the-project-handbook-describes-a-folder-layout-the-project-no-longer-has">HXC-188
 — The project handbook describes a folder layout the project no longer
 has</h2>
@@ -1094,28 +1071,6 @@ route would slip past. Widening it to recognise both descriptions is a
 small change and restores the guard to covering the whole defect rather
 than half of it.</p>
 <h2
-id="hxc-202-the-network-address-fix-reached-the-server-but-not-the-app-that-connects-to-it">HXC-202
-— The network address fix reached the server but not the app that
-connects to it</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> Medium <strong>Created-By:</strong>
-Claude</p>
-<p>A recent change taught the product to correctly format modern
-internet addresses when combining them with a port number. It was
-applied where the server decides what address to listen on, but not in
-the desktop application for one platform that builds the address it
-connects to from the very same two configuration settings. So with such
-an address configured, the server starts up correctly while that
-application constructs an unusable address and cannot reach it — a
-failure that looks like the server is down when it is running perfectly.
-A second instance exists in a maintenance tool that contacts a
-code-analysis service. Neither is newly broken; both were simply outside
-the list of places the original change examined, so nothing was made
-worse. This is the seventh time in one working cycle that a correct
-change was applied in one place and not to a sibling doing the same
-thing nearby, which is worth treating as a review habit rather than
-seven separate oversights.</p>
-<h2
 id="hxc-204-two-more-endurance-tests-report-failure-whenever-the-machine-is-busy">HXC-204
 — Two more endurance tests report failure whenever the machine is
 busy</h2>
@@ -1221,5 +1176,333 @@ work is to review the thirty-five, keep what genuinely substantiates a
 closed item, trim or summarise the two very large ones rather than
 storing them whole, and record explicitly which ones are being let go
 and why, so the gap is visible rather than silent.</p>
+<h2
+id="hxc-217-fifteen-closure-records-describe-their-proof-in-prose-instead-of-pointing-at-it">HXC-217
+— Fifteen closure records describe their proof in prose instead of
+pointing at it</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>When an item is closed, the record carries a field meant to hold the
+location of the captured proof, so that anyone can go and look at it and
+so that a machine can confirm the proof genuinely exists. For fifteen
+closures that field instead contains a paragraph describing what was
+proved. The descriptions are substantive and in every case checked the
+underlying evidence does exist elsewhere on disk, so nothing is actually
+missing and no closure is unfounded. The cost is that those fifteen
+cannot be verified mechanically: a check that asks whether each closure
+points at something real will report them as pointing at nothing, which
+is indistinguishable from a closure with no proof behind it at all. That
+ambiguity is the defect, and it matters because a sweep that cannot tell
+a well-documented closure from an empty one will eventually be believed
+about the wrong one. The work is to move the narrative into the record’s
+description where it belongs, put the actual location in the location
+field, and add a check that refuses a closure whose stated location does
+not resolve.</p>
+<h2
+id="hxc-218-container-health-checks-still-fail-for-ipv6-addresses-so-starting-the-scan-service-breaks">HXC-218
+— Container health checks still fail for IPv6 addresses, so starting the
+scan service breaks</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High</p>
+<p>When the security scanning tool is asked to START its supporting
+services, it checks whether each service is healthy by building a
+network address from a host and a port. For ordinary addresses this
+works, but modern IPv6 addresses contain colons of their own, so they
+must be wrapped in square brackets before a port is attached. The shared
+container code does not do that wrapping in two places, so the address
+it builds is malformed and the health check can never succeed on an IPv6
+machine. A companion fix already repaired the STATUS command, but START
+goes through a different path in the shared container library and was
+not covered, which means operators on IPv6 hosts still see startup fail
+for what looks like no reason. The obvious shortcut of pre-wrapping the
+address is unsafe, because another part of the same library compares the
+raw unwrapped form when deciding whether a service is local, and
+wrapping it would silently break that check. The benefit of fixing this
+properly is that operators running on IPv6 networks can start and
+monitor the scanner normally instead of hitting a confusing dead end.
+Success means the start command completes its health checks on an IPv6
+host exactly as it does on an IPv4 one.</p>
+<h2
+id="hxc-219-evidence-gate-handbook-never-explained-the-new-citation-rule-and-its-exported-copies-are-stale">HXC-219
+— Evidence-gate handbook never explained the new citation rule, and its
+exported copies are stale</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
+<strong>Severity:</strong> Medium</p>
+<p>A recent repair changed how the release gate decides whether a piece
+of recorded test evidence really belongs to the change it claims to
+document. Evidence must now name its commit on a labelled line rather
+than merely happening to contain the right code somewhere in the text.
+That new requirement was never written down for the people who have to
+follow it: the guide that authors read before recording evidence says
+nothing about the new labelled field, so a contributor following the
+current instructions can produce evidence the gate will reject without
+understanding why. Separately, the reference page describing the gate
+itself has printable and web copies that were generated well before the
+page was last edited, so all three versions disagree with each other and
+with the tool they describe. Fixing this means updating the
+author-facing guide to describe the labelled citation field and
+regenerating the exported copies so every version matches. The people
+who benefit are contributors recording evidence and reviewers reading
+it, who currently have no accurate written description of the rule being
+enforced. Success means someone can follow the written guide and produce
+evidence that passes the gate on the first attempt.</p>
+<h2
+id="hxc-220-the-module-name-check-has-no-permanent-test-so-the-fixed-false-alarm-could-return-unnoticed">HXC-220
+— The module-name check has no permanent test, so the fixed false alarm
+could return unnoticed</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
+<strong>Severity:</strong> High</p>
+<p>A diagnostic script used to report that two parts of the project
+shared the same module name, when in fact they no longer did. The cause
+was that it looked for the shorter name inside the longer one instead of
+comparing the two names as wholes, so a rename that deliberately made
+them different was still reported as a clash. The comparison itself has
+been corrected and behaves properly today, but no permanent automated
+test was ever added to keep it correct. That matters because this exact
+kind of check is easy to rewrite carelessly during future cleanups, and
+if the loose comparison came back nobody would notice until the script
+again told an engineer that finished work was unfinished, risking
+someone undoing a correct change. The project requires every fixed
+defect to leave behind a standing test that fails if the defect returns,
+and that test is the only piece still missing here. The people who
+benefit are engineers relying on this diagnostic to tell them the true
+state of the project. Success means a registered test exists that passes
+on the current corrected code and fails if the loose name matching is
+ever reintroduced.</p>
+<h2
+id="hxc-221-when-secure-randomness-fails-api-key-generation-quietly-falls-back-to-a-guessable-value">HXC-221
+— When secure randomness fails, API key generation quietly falls back to
+a guessable value</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>The agent component issues API keys for callers of its protocol
+service. It builds each key from sixteen bytes of cryptographic
+randomness, which is correct. But if the system’s randomness source ever
+fails to answer, the code does not stop — it silently substitutes the
+current clock reading and hands back a key derived from the time of day.
+A key made that way is guessable by anyone who can estimate when it was
+issued, and the caller receiving it is told nothing: it looks like an
+ordinary key and is accepted as one. The function is already able to
+report a failure to its caller, so the ability to refuse safely exists
+and is simply not used. The likelihood of the randomness source failing
+is genuinely low, which is why this has gone unnoticed, but the
+consequence if it does is that the service starts issuing predictable
+credentials with no signal that anything is wrong. Failing loudly is the
+correct behaviour here: a caller that receives an error can retry or
+abort, whereas a caller that receives a weak key has no way to know it
+must. The fix is to return the error instead of the clock reading, and
+to add a test that forces the randomness source to fail and confirms no
+key is produced.</p>
+<h2
+id="hxc-222-downloaded-third-party-libraries-are-committed-into-the-agent-repository-104-megabytes-of-them">HXC-222
+— Downloaded third-party libraries are committed into the agent
+repository, 104 megabytes of them</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>The agent component has two folders of downloaded third-party
+libraries committed into version control: 7,870 files under its web
+toolkit and 1,037 under its plugin service, together about 104
+megabytes. These are not our code. They are fetched automatically from a
+package registry using the manifest files that sit beside them, which
+means every one of them can be recreated on demand and none of them
+needs to be stored. Committing them makes every clone of the repository
+permanently larger and makes it hard to see our own changes among
+theirs, because any routine dependency update rewrites thousands of
+files at once. The project already has a rule against versioning
+anything that a documented mechanism can regenerate, and the ignore file
+does not currently list these folders, so nothing prevented them from
+being added. The fix is to stop tracking both folders, add them to the
+ignore file, and confirm the documented install step still reproduces
+them exactly on a fresh checkout — the last part matters, because
+removing them is only safe if the recreation path is proven to work.</p>
+<h2
+id="hxc-223-the-safety-check-that-stops-half-finished-experiments-also-blocks-the-proof-they-were-finished">HXC-223
+— The safety check that stops half-finished experiments also blocks the
+proof they were finished</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>Before every commit, a check scans the files being committed for
+markers left behind by a deliberate sabotage experiment — the kind where
+a working safeguard is temporarily broken to prove it really notices.
+Leaving such a marker in real code would be dangerous, so blocking it is
+correct. But the same experiment is required to record what it did, and
+that record necessarily quotes the sabotaged lines verbatim as its
+proof. The check cannot tell the difference between code that is still
+broken and a written account of code that was broken and then repaired,
+so it refuses the account. The two rules therefore contradict each
+other: one demands the proof be captured, the other forbids it from
+being stored. This is not hypothetical — it happened today and the proof
+file had to be left out of its own commit, which is exactly the
+situation where evidence quietly goes missing. The fix is to teach the
+check where it is looking: markers inside a recorded transcript under
+the evidence folder are a description of past work, while the same
+markers in live source are a real hazard. The check must keep refusing
+the second while permitting the first, and must be tested against both
+so it cannot drift back to refusing everything or accepting
+everything.</p>
+<h2
+id="hxc-225-one-vendored-helper-server-accounts-for-two-thirds-of-all-our-reported-vulnerabilities">HXC-225
+— One vendored helper server accounts for two thirds of all our reported
+vulnerabilities</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
+<strong>Created-By:</strong> Claude</p>
+<p>A single bundled helper component inside the agent project is
+responsible for 140 of the roughly 208 security advisories reported
+against the whole project — about two thirds of the total — and it
+entered the codebase without ever being discussed. Nobody has
+established what it does, whether we wrote it or copied it in, whether
+anything we ship actually uses it, or whether removing it would cost us
+anything. Until those questions are answered the headline advisory count
+is misleading: it reads as though the agent project carries enormous
+risk, when in reality the great bulk of it sits in one component that
+may not even be part of what we deliver. The work is to determine the
+component’s origin and purpose, whether it is reachable from anything we
+build or run, and then to make a decision about it — keep and maintain,
+upgrade its dependencies, or remove it — and record which was chosen and
+why. The decision matters more than the individual advisories, because
+upgrading dependencies inside a component we do not need would be effort
+spent on nothing.</p>
+<h2
+id="hxc-187-two-different-pieces-of-code-claim-the-same-identity-so-which-one-gets-used-depends-on-where-the-build-starts">HXC-187
+— Two different pieces of code claim the same identity, so which one
+gets used depends on where the build starts</h2>
+<p><strong>Status:</strong> Reopened <strong>Reopened-Details:</strong>
+By: AI; On: 2026-08-05; Reason: captured-evidence-contradicts; Evidence:
+docs/qa/hxc217_evidence_path_resolve_20260805T082033Z — HXC-217
+closure-evidence resolvability audit. This item’s closure record cited
+commit 09a086a6 (go.mod, 1 file, +1/-1) and unlogged build/vet results,
+with no captured artefact. A repo-wide search returns ZERO tracked paths
+and ZERO on-disk directories matching ‘hxc187’. The commits are real and
+the rename may well be correct — but a commit reference is not captured
+runtime evidence (§11.4.5 / §11.4.123), so the closure’s warrant cannot
+be produced on demand. Reopened to capture a real runtime signature for
+the module-identity invariant (§11.4.108), not to redo the rename.
+<strong>Type:</strong> Bug <strong>Evidence:</strong> commit 09a086a6,
+go.mod only (1 file, +1/-1). Root module renamed dev.helix.code -&gt;
+dev.helix.code/meta; ZERO import updates were needed because the root
+module genuinely had no importers. TWO-METHOD verification, and method 1
+alone would have produced two FALSE POSITIVES: a git ls-files sweep hit
+an ASCII-art string literal (‘dev.helix.code v1.0.0’) and prose in doc
+comments, neither an import. Method 2 (filesystem, sees submodules +
+untracked) found all 947 quoted imports under helix_code/ and zero
+elsewhere; sweep validity proven rather than assumed (9944 .go files
+under submodules/, 1909 under cli_agents/ — it had real content to see).
+Reversal conditions each cleared: no go.mod requires/replaces the root;
+scripts/audit_const046 is an independent module not a consumer; and
+D-7’s ‘no go.work exists’ was imprecise — two do exist but neither names
+dev.helix.code. SEMANTIC PROOF the collision is gone:
+dev.helix.code/internal/theme now resolves ONLY from the inner module;
+from the root it reports ‘no required module provides package’.
+Build/vet for the root module’s own 5 packages: 0/0. The agent
+deliberately did NOT delete the root stub (removal is its own 11.4.124
+decision) and did NOT touch skill_registry/U-12 (it cannot be fixed in
+isolation — reconciling it repairs helix_agent’s replace but BREAKS
+helix_llm’s currently-correct one). Gate deliberately left UNREGISTERED
+and unweakened: its premise ‘exactly one duplicate’ proved stale — 118
+live modules, 8 duplicate groups, 7 surviving the rename (1 ours: a
+self-nested tests/e2e/orchestrator copy from refactor cc339fc0; 6 in
+another repo’s nested submodule content). Registering a failing gate
+would break the sweep for all live agents, and narrowing its exclusions
+would destroy its ability to detect an accidentally-nested duplicate in
+our own tree (assertion-weakening under 11.4.120). Both refusals
+correct. <strong>Severity:</strong> High <strong>Created-By:</strong>
+Claude</p>
+<p>The project declares the same module identity in two places: once at
+the top level and once for the real application inside it. Because of
+that, one particular internal name refers to two completely different
+pieces of code — a five-line placeholder at the top level, and the real
+fifty-kilobyte subsystem inside. They share no files at all. Which one
+any given piece of code actually receives depends entirely on which
+directory the build was started from, which is not something a developer
+would ever expect or notice. Nothing is broken today only because the
+top-level placeholder has no users, but that is luck rather than design,
+and the first time someone adds one the behaviour will differ between
+two builds of the same source with no error to explain it. The fix is to
+give the top-level module a distinct identity so the collision cannot
+occur. Removing the placeholder is a separate decision and is
+deliberately not bundled with this.</p>
+<h2
+id="hxc-224-closure-evidence-pointers-are-unchecked-free-text-so-proof-of-completed-work-silently-becomes-unreachable">HXC-224
+— Closure-evidence pointers are unchecked free text, so proof of
+completed work silently becomes unreachable</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude
+<strong>Evidence:</strong>
+docs/qa/hxc217_evidence_path_resolve_20260805T082033Z</p>
+<p>When we mark a piece of work finished, we record a pointer to the
+proof that it really works. Nobody ever checked that those pointers
+actually lead anywhere. As a result three different kinds of rot
+accumulated silently and none of them were visible to any test or
+report. First, some pointers hold a whole paragraph of explanation
+instead of a location, so there is no way for a machine to follow them.
+Second, some point at a folder that was never created because the person
+doing the work saved the proof somewhere else, which means the proof
+exists but nobody can find it from the record. Third, some are attached
+to ordinary progress updates rather than to the actual completion, which
+makes routine notes look like formal proof. The effect is that a
+completed item can look fully evidence-backed in every summary and
+dashboard while the evidence is unreachable, and the only way anyone
+finds out is by manually hunting for it long afterwards. The work here
+is to make the completion pointer a checked field: it must point at
+something that genuinely exists, it must be attached only to real
+completions, and anything that fails those rules must be refused at the
+moment someone tries to record it rather than discovered months later.
+This protects everyone who relies on our finished-work reports being
+true, because a claim of proof that cannot be produced on demand is
+worse than no claim at all.</p>
+<h3 id="forensic-anchor-fact-hxc-217-audit-2026-08-05">Forensic anchor
+(FACT, HXC-217 audit 2026-08-05)</h3>
+<p>Of 127 closure records carrying an evidence pointer, <strong>16
+(across 14 tickets) did not resolve</strong>. Systematically resolving
+every one:</p>
+<ul>
+<li><strong>4 rows</strong> (HXC-107, HXC-108 x2, HXC-112) were
+<code>event_type='Updated'</code>,
+<code>reason='operator-blocked'</code> <strong>progress notes, not
+closures</strong>. Their real closure events resolve cleanly. These were
+false positives of the audit’s own population query — a guard that
+refuses a valid state (§11.4.201(1)).</li>
+<li><strong>4 rows</strong> (HXC-124, HXC-131 x2, HXC-132) were
+<strong>path drift</strong>: substantive git-tracked evidence exists at
+<code>scratch/discovery/fixes/*_evidence.md</code>; the DB recorded a
+<code>docs/qa/...</code> path that was never populated. An earlier pass
+concluded these files “never existed” because it searched the recorded
+(wrong) full path instead of the basename across full history.</li>
+<li><strong>7 rows</strong> (HXC-158, 161, 165, 167, 182, 184, 203) held
+<strong>narrative in the path field</strong>; every referent proved
+producible and has been repointed.</li>
+<li><strong>1 row</strong> (HXC-187) had <strong>no producible artefact
+at all</strong> — commit references only. Reopened separately under
+§11.4.34.</li>
+</ul>
+<h3 id="closure-criteria">Closure criteria</h3>
+<ol type="1">
+<li><code>workable-items validate</code> refuses a closure whose
+<code>evidence_path</code> does not resolve, scoped to genuine closure
+events so it cannot false-positive on progress notes.</li>
+<li>A paired §1.1 mutation proves the guard is not a tautology.</li>
+<li>The population query distinguishes closure events from historical
+updates. ## HXC-226 — The copy of the agent project we actually pull
+from reports no vulnerabilities at all</li>
+</ol>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>The agent project is mirrored to two hosting accounts, and automatic
+vulnerability alerting was only ever switched on for one of them.
+Queried today, one mirror reports two hundred and ten open alerts while
+the other reports none. The one reporting none is the one the main
+project is configured to pull from, so anyone who checks the security
+posture of the component we actually consume is shown a clean result
+while more than two hundred findings sit unseen on the sibling copy.
+Nothing is wrong with either set of code; the two mirrors hold the same
+commits. What differs is that only one of them is being watched. This is
+dangerous precisely because the answer looks reassuring: a report of
+zero findings is indistinguishable from a report of zero findings
+because nobody is looking, and the second case is what we have. The work
+is to switch alerting on for the mirror we pull from, confirm both then
+report the same figures, and add a periodic check that compares the two
+so a future divergence is noticed rather than trusted. Until that is
+done, any statement about this component’s vulnerability status must
+name which mirror it came from.</p>
 </body>
 </html>

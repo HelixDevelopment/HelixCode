@@ -1143,7 +1143,7 @@ One Azure-provider test quietly depends on an endpoint value being present in th
 
 **Status:** Fixed (→ Fixed.md)
 **Type:** Bug
-**Evidence:** docs/qa/followup_fixes_20260712T085616Z/HXC124_evidence.md
+**Evidence:** scratch/discovery/fixes/HXC124_evidence.md
 **Severity:** Medium
 **Created-By:** Claude
 
@@ -1153,10 +1153,10 @@ One automated quality-assurance test bank that drives real server workflows has 
 
 **Status:** Obsolete (→ Fixed.md)
 **Type:** Bug
-**Evidence:** docs/qa/followup_fixes_20260712T085616Z/HXC131_evidence.md
+**Evidence:** scratch/discovery/fixes/HXC131_evidence.md
 **Severity:** Medium
 **Created-By:** Claude
-**Obsolete-Details:** Since: 2026-07-12; Reason: duplicate-of; Superseding-item: b058c7c2; Triple-check evidence: docs/qa/followup_fixes_20260712T085616Z/HXC131_evidence.md
+**Obsolete-Details:** Since: 2026-07-12; Reason: duplicate-of; Superseding-item: b058c7c2; Triple-check evidence: scratch/discovery/fixes/HXC131_evidence.md
 
 The client that talks to the Cognee memory service stopped completing its login and caching the access token — its tests show the login endpoint is never called and no bearer token is stored, so authenticated calls would fail. This means memory features that rely on Cognee cannot authenticate reliably. The work is to restore the login-then-cache-token flow and prove it with the existing auth tests. Users regain dependable access to Cognee-backed memory.
 
@@ -1164,7 +1164,7 @@ The client that talks to the Cognee memory service stopped completing its login 
 
 **Status:** Completed (→ Fixed.md)
 **Type:** Task
-**Evidence:** docs/qa/hxc132_20260712T090048Z/HXC132_evidence.md
+**Evidence:** scratch/discovery/fixes/HXC132_evidence.md
 **Severity:** Medium
 **Created-By:** Claude
 
@@ -2069,16 +2069,6 @@ One of the skills shipped with the product writes a fill-in-the-blank placeholde
 
 Eight of the agent's supporting libraries have newer releases that fix known weaknesses, and every one of these updates is a minor or bug-fix-level release within the same major version, meaning the library authors are committing to not breaking how the code is called. Together they close eleven of the eighteen known weaknesses in the agent's own compiled program, including four we have confirmed the program genuinely reaches during normal operation. This matters because it is the single highest-value change available: a small, reviewable set of version bumps that measurably shrinks our exposure without redesigning anything. One of the eight also fixes a text-handling flaw that our automated safety checks route untrusted user input through, and which no advisory service had flagged at all. Everyone deploying or depending on the agent benefits, and the reviewer benefits from a change small enough to actually read. The expected outcome is the updates applied, the project rebuilt, its tests run, and a fresh scan confirming those eleven weaknesses no longer appear, with the before-and-after scan output kept as evidence. Two of the eight are minor rather than bug-fix releases and deserve a slightly closer look at build and test results.
 
-## HXC-187 — Two different pieces of code claim the same identity, so which one gets used depends on where the build starts
-
-**Status:** Fixed (→ Fixed.md)
-**Type:** Bug
-**Evidence:** commit 09a086a6, go.mod only (1 file, +1/-1). Root module renamed dev.helix.code -> dev.helix.code/meta; ZERO import updates were needed because the root module genuinely had no importers. TWO-METHOD verification, and method 1 alone would have produced two FALSE POSITIVES: a git ls-files sweep hit an ASCII-art string literal ('dev.helix.code v1.0.0') and prose in doc comments, neither an import. Method 2 (filesystem, sees submodules + untracked) found all 947 quoted imports under helix_code/ and zero elsewhere; sweep validity proven rather than assumed (9944 .go files under submodules/, 1909 under cli_agents/ — it had real content to see). Reversal conditions each cleared: no go.mod requires/replaces the root; scripts/audit_const046 is an independent module not a consumer; and D-7's 'no go.work exists' was imprecise — two do exist but neither names dev.helix.code. SEMANTIC PROOF the collision is gone: dev.helix.code/internal/theme now resolves ONLY from the inner module; from the root it reports 'no required module provides package'. Build/vet for the root module's own 5 packages: 0/0. The agent deliberately did NOT delete the root stub (removal is its own 11.4.124 decision) and did NOT touch skill_registry/U-12 (it cannot be fixed in isolation — reconciling it repairs helix_agent's replace but BREAKS helix_llm's currently-correct one). Gate deliberately left UNREGISTERED and unweakened: its premise 'exactly one duplicate' proved stale — 118 live modules, 8 duplicate groups, 7 surviving the rename (1 ours: a self-nested tests/e2e/orchestrator copy from refactor cc339fc0; 6 in another repo's nested submodule content). Registering a failing gate would break the sweep for all live agents, and narrowing its exclusions would destroy its ability to detect an accidentally-nested duplicate in our own tree (assertion-weakening under 11.4.120). Both refusals correct.
-**Severity:** High
-**Created-By:** Claude
-
-The project declares the same module identity in two places: once at the top level and once for the real application inside it. Because of that, one particular internal name refers to two completely different pieces of code — a five-line placeholder at the top level, and the real fifty-kilobyte subsystem inside. They share no files at all. Which one any given piece of code actually receives depends entirely on which directory the build was started from, which is not something a developer would ever expect or notice. Nothing is broken today only because the top-level placeholder has no users, but that is luck rather than design, and the first time someone adds one the behaviour will differ between two builds of the same source with no error to explain it. The fix is to give the top-level module a distinct identity so the collision cannot occur. Removing the placeholder is a separate decision and is deliberately not bundled with this.
-
 ## HXC-173 — An aurora_os screen-refresh test reports failure when the machine is merely busy
 
 **Status:** Fixed (→ Fixed.md)
@@ -2257,4 +2247,24 @@ The gate that checks whether each recent commit can actually be built reported a
 **Created-By:** Claude
 
 The hang just repaired was one instance of a pattern that survives in four other places in the same package, each able to park a call forever under conditions the code already permits. Two sit in the synchronous execution path and become unbounded when sandboxing is switched off or when no timeout is supplied, both of which are reachable through documented usage rather than misconfiguration. Two more sit in the output-streaming helper and are presently safe only because their single existing caller happens to rescue them, so any future caller wiring that helper the obvious way reproduces the original defect exactly. A fifth site in the background task manager amplifies all of them by calling into this code with no timeout and no way to abandon the attempt. These were found by sweeping the whole package after the fix rather than only the function named in the report, which was necessary because the reported defect and its already-fixed twin turned out to live in different files, so a reviewer re-reading the same file would have found nothing.
+
+## HXC-186 — Evidence files can accidentally satisfy the evidence requirement for an unrelated change
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc186_declared_citation_20260731T000000Z
+**Severity:** Medium
+**Created-By:** Claude
+
+Every shipped change must carry recorded proof that it works, and a check enforces that by looking for the change's identifier inside the evidence files. The evidence files also automatically stamp in whatever the project's current position was at the moment they were recorded. That stamp is an identifier of exactly the kind the check looks for, so an evidence file written while the project happened to be sitting at some change can, purely by coincidence, be accepted as that change's proof even though it demonstrates something completely unrelated. This has not yet happened, because every recording so far was made while the project sat at a position that requires no evidence, but the coincidence is available to every recording the shared tooling produces. The fix is to make the check accept only identifiers deliberately declared as what the evidence is for, ignoring the incidental position stamp. This needs care because tightening the rule may withdraw acceptance from evidence already recorded, so it is a deliberate decision rather than a quiet correction.
+
+## HXC-202 — The network address fix reached the server but not the app that connects to it
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc202_ipv6_sibling_20260731T144401Z
+**Severity:** Medium
+**Created-By:** Claude
+
+A recent change taught the product to correctly format modern internet addresses when combining them with a port number. It was applied where the server decides what address to listen on, but not in the desktop application for one platform that builds the address it connects to from the very same two configuration settings. So with such an address configured, the server starts up correctly while that application constructs an unusable address and cannot reach it — a failure that looks like the server is down when it is running perfectly. A second instance exists in a maintenance tool that contacts a code-analysis service. Neither is newly broken; both were simply outside the list of places the original change examined, so nothing was made worse. This is the seventh time in one working cycle that a correct change was applied in one place and not to a sibling doing the same thing nearby, which is worth treating as a review habit rather than seven separate oversights.
 

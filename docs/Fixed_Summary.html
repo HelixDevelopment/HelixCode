@@ -192,7 +192,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>199</td>
+<td>200</td>
 </tr>
 <tr>
 <td>Bug</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>383</strong></td>
+<td><strong>384</strong></td>
 </tr>
 </tbody>
 </table>
@@ -4198,24 +4198,26 @@ and others fail against the same healthy service.</td>
 </tr>
 <tr>
 <td>351</td>
-<td>High</td>
+<td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
-<td>HXC-187 — The project declares the same module identity in two
-places: once at the top level and once for the real application inside
-it. Because of that, one particular internal name refers to two
-completely different pieces of code — a five-line placeholder at the top
-level, and the real fifty-kilobyte subsystem inside. They share no files
-at all. Which one any given piece of code actually receives depends
-entirely on which directory the build was started from, which is not
-something a developer would ever expect or notice. Nothing is broken
-today only because the top-level placeholder has no users, but that is
-luck rather than design, and the first time someone adds one the
-behaviour will differ between two builds of the same source with no
-error to explain it. The fix is to give the top-level module a distinct
-identity so the collision cannot occur. Removing the placeholder is a
-separate decision and is deliberately not bundled with this.</td>
+<td>HXC-186 — Every shipped change must carry recorded proof that it
+works, and a check enforces that by looking for the change’s identifier
+inside the evidence files. The evidence files also automatically stamp
+in whatever the project’s current position was at the moment they were
+recorded. That stamp is an identifier of exactly the kind the check
+looks for, so an evidence file written while the project happened to be
+sitting at some change can, purely by coincidence, be accepted as that
+change’s proof even though it demonstrates something completely
+unrelated. This has not yet happened, because every recording so far was
+made while the project sat at a position that requires no evidence, but
+the coincidence is available to every recording the shared tooling
+produces. The fix is to make the check accept only identifiers
+deliberately declared as what the evidence is for, ignoring the
+incidental position stamp. This needs care because tightening the rule
+may withdraw acceptance from evidence already recorded, so it is a
+deliberate decision rather than a quiet correction.</td>
 </tr>
 <tr>
 <td>352</td>
@@ -4322,6 +4324,28 @@ and the check that currently enforces the broken form.</td>
 </tr>
 <tr>
 <td>357</td>
+<td>Medium</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-202 — A recent change taught the product to correctly format
+modern internet addresses when combining them with a port number. It was
+applied where the server decides what address to listen on, but not in
+the desktop application for one platform that builds the address it
+connects to from the very same two configuration settings. So with such
+an address configured, the server starts up correctly while that
+application constructs an unusable address and cannot reach it — a
+failure that looks like the server is down when it is running perfectly.
+A second instance exists in a maintenance tool that contacts a
+code-analysis service. Neither is newly broken; both were simply outside
+the list of places the original change examined, so nothing was made
+worse. This is the seventh time in one working cycle that a correct
+change was applied in one place and not to a sibling doing the same
+thing nearby, which is worth treating as a review habit rather than
+seven separate oversights.</td>
+</tr>
+<tr>
+<td>358</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4346,7 +4370,7 @@ a copy rather than the live collection, and separate the act of
 refreshing health from the act of reporting it.</td>
 </tr>
 <tr>
-<td>358</td>
+<td>359</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4368,7 +4392,7 @@ proven: hold the lock around the field writes only, never across process
 start, process wait, or the readiness poll.</td>
 </tr>
 <tr>
-<td>359</td>
+<td>360</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4391,7 +4415,7 @@ paths use, and to add a test proving a blocked command stays blocked
 when the background flag is set.</td>
 </tr>
 <tr>
-<td>360</td>
+<td>361</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4412,7 +4436,7 @@ a test asserting that a background command actually runs in the
 directory it was given rather than merely accepting the parameter.</td>
 </tr>
 <tr>
-<td>361</td>
+<td>362</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4435,7 +4459,7 @@ live in different files, so a reviewer re-reading the same file would
 have found nothing.</td>
 </tr>
 <tr>
-<td>362</td>
+<td>363</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4460,7 +4484,7 @@ check the origin against a configured allowlist and reject anything
 else, covering both the preflight and the ordinary request.</td>
 </tr>
 <tr>
-<td>363</td>
+<td>364</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4483,7 +4507,7 @@ away from any long-running call, and add a guard that runs under the
 race detector.</td>
 </tr>
 <tr>
-<td>364</td>
+<td>365</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4506,7 +4530,7 @@ halves with a test that fails if the returned value is ever aliased to
 the stored one.</td>
 </tr>
 <tr>
-<td>365</td>
+<td>366</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4533,7 +4557,7 @@ time it is given the same input, and to prove that by running it
 repeatedly against an unchanged tree.</td>
 </tr>
 <tr>
-<td>366</td>
+<td>367</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4543,7 +4567,7 @@ repeatedly against an unchanged tree.</td>
 path</td>
 </tr>
 <tr>
-<td>367</td>
+<td>368</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4552,7 +4576,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>368</td>
+<td>369</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4561,7 +4585,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>369</td>
+<td>370</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4569,7 +4593,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>370</td>
+<td>371</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4578,7 +4602,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>371</td>
+<td>372</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4587,7 +4611,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>372</td>
+<td>373</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4597,7 +4621,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>373</td>
+<td>374</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4606,7 +4630,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>374</td>
+<td>375</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4615,7 +4639,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>375</td>
+<td>376</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4624,7 +4648,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>376</td>
+<td>377</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4634,7 +4658,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>377</td>
+<td>378</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4643,7 +4667,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>378</td>
+<td>379</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4653,7 +4677,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>379</td>
+<td>380</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4663,7 +4687,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>380</td>
+<td>381</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4672,7 +4696,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>381</td>
+<td>382</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4681,7 +4705,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>382</td>
+<td>383</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4691,7 +4715,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>383</td>
+<td>384</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
