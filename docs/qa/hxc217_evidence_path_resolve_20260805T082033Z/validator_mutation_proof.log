@@ -1,0 +1,269 @@
+HXC-217 — closure-evidence resolvability validator: §1.1 paired-mutation proof
+================================================================================
+Captured: 2026-08-06T01:11:13Z
+Host cwd: /home/milos/Factory/projects/tools_and_research/helix_code/constitution/scripts/workable-items
+Constitution submodule HEAD at capture: 428ff9db3b22055744a69ceab7a0a6cb54e37a28
+Guard under test: unresolvableClosureEvidence() in cmd/workable-items/sync.go
+Test file:        cmd/workable-items/validate_evidence_test.go
+Anchors:          11.4.5 / 11.4.69 / 11.4.123 / 11.4.226 (evidence class), 1.1 (paired mutation),
+                  11.4.115 (RED-on-broken), 11.4.120 (gate reconciliation), 11.4.201(1) (no false refusal)
+
+STEP 0 — build + vet clean (the predecessor left an unused "path/filepath" import; removed)
+--------------------------------------------------------------------------------
+$ go build ./...
+exit=0
+$ go vet ./...
+exit=0
+
+STEP 1 — GREEN before mutation (guard present)
+--------------------------------------------------------------------------------
+$ go test ./cmd/workable-items/ -run "ClosureEvidence|FirstLine" -count=1 -v
+=== RUN   TestClosureEvidence_ResolvableAbsolutePath_NoViolation
+add: created WIT-701 (Bug, status=Queued) in Issues
+close: moved WIT-701 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestClosureEvidence_ResolvableAbsolutePath_NoViolation3322077484/001/capture.log)
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestClosureEvidence_ResolvableAbsolutePath_NoViolation (0.01s)
+=== RUN   TestClosureEvidence_ResolvableRelativePath_AnchoredAtPWD_NoViolation
+add: created WIT-702 (Bug, status=Queued) in Issues
+close: moved WIT-702 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=docs/qa/run-1/capture.log)
+--- PASS: TestClosureEvidence_ResolvableRelativePath_AnchoredAtPWD_NoViolation (0.00s)
+=== RUN   TestClosureEvidence_WellFormedPathButMissingFile_Violation
+add: created WIT-703 (Bug, status=Queued) in Issues
+close: moved WIT-703 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestClosureEvidence_WellFormedPathButMissingFile_Violation2423316313/001/docs/qa/never-committed/capture.log)
+--- PASS: TestClosureEvidence_WellFormedPathButMissingFile_Violation (0.00s)
+=== RUN   TestClosureEvidence_NarrativeText_Violation
+add: created WIT-704 (Bug, status=Queued) in Issues
+close: moved WIT-704 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=closure confirmed by manual QA during the 2026-08-05 session)
+--- PASS: TestClosureEvidence_NarrativeText_Violation (0.00s)
+=== RUN   TestClosureEvidence_OpenItemUnresolvableEvidence_NoViolation
+add: created WIT-705 (Bug, status=Queued) in Issues
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestClosureEvidence_OpenItemUnresolvableEvidence_NoViolation (0.00s)
+=== RUN   TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvidenceLands
+add: created WIT-706 (Bug, status=Queued) in Issues
+close: moved WIT-706 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvid3481559566/001/qa/run-7/capture.log)
+validate: 1 violation(s):
+  - WIT-706: closure evidence_path does not resolve (well-formed path, but nothing exists there) — history id=2, event=Fixed, on=2026-08-06: "/tmp/.private/milos/TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvid3481559566/001/qa/run-7/capture.log" (§11.4.5/§11.4.69/§11.4.123/§11.4.226 — a closure's captured proof must be producible on demand)
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvidenceLands (0.00s)
+=== RUN   TestFirstLine
+=== RUN   TestFirstLine/short_single_line_is_unchanged
+=== RUN   TestFirstLine/empty_is_unchanged
+=== RUN   TestFirstLine/newline_truncates_at_the_first_line
+=== RUN   TestFirstLine/carriage_return_truncates_too
+=== RUN   TestFirstLine/over-long_single_line_is_capped_at_120_chars
+--- PASS: TestFirstLine (0.00s)
+    --- PASS: TestFirstLine/short_single_line_is_unchanged (0.00s)
+    --- PASS: TestFirstLine/empty_is_unchanged (0.00s)
+    --- PASS: TestFirstLine/newline_truncates_at_the_first_line (0.00s)
+    --- PASS: TestFirstLine/carriage_return_truncates_too (0.00s)
+    --- PASS: TestFirstLine/over-long_single_line_is_capped_at_120_chars (0.00s)
+PASS
+ok  	github.com/HelixDevelopment/HelixConstitution/scripts/workable-items/cmd/workable-items	0.032s
+exit=0 (captured live)
+
+STEP 2 — MUTATION APPLIED: unresolvableClosureEvidence body replaced by 'return nil, nil'
+--------------------------------------------------------------------------------
+A predecessor was burned by a mutation that silently did not apply, so the mutation is
+proven applied THREE independent ways before the FAIL run: (i) a NON-EMPTY git diff --stat,
+(ii) a full diff against a byte-identical pre-mutation backup, (iii) an md5 change.
+
+(i) $ git diff --stat -- scripts/workable-items/cmd/workable-items/sync.go   [MUTATED tree]
+ scripts/workable-items/cmd/workable-items/sync.go | 59 +++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+    NON-EMPTY: 1 file changed, 59 insertions(+)  (vs 94 insertions(+) un-mutated — see STEP 4)
+
+(ii) $ diff -u <pre-mutation backup> <live sync.go>
+--- /tmp/.private/milos/claude-1000/-home-milos-Factory-projects-tools-and-research-helix-code/7237795e-6ba4-4873-bf1f-2576bdb3d028/scratchpad/sync.go.orig	2026-08-06 04:59:29.100242989 +0500
++++ /home/milos/Factory/projects/tools_and_research/helix_code/constitution/scripts/workable-items/cmd/workable-items/sync.go	2026-08-06 05:19:46.582473378 +0500
+@@ -436,42 +436,7 @@
+ // `return nil, nil` removes the guard; validate_evidence_test.go then FAILs —
+ // proving the guard is not a tautology.
+ func unresolvableClosureEvidence(db *sql.DB) ([]string, error) {
+-	rows, err := db.Query(`
+-		SELECT h.id, h.atm_id, h.event_type, h.on_date, h.evidence_path
+-		FROM item_history h
+-		WHERE h.evidence_path IS NOT NULL
+-		  AND TRIM(h.evidence_path) <> ''
+-		  AND EXISTS (
+-		        SELECT 1 FROM items i
+-		        WHERE i.atm_id = h.atm_id
+-		          AND i.status IN (
+-		                'Fixed (→ Fixed.md)', 'Implemented (→ Fixed.md)',
+-		                'Completed (→ Fixed.md)', 'Obsolete (→ Fixed.md)'))
+-		ORDER BY h.atm_id, h.id`)
+-	if err != nil {
+-		return nil, err
+-	}
+-	defer rows.Close()
+-
+-	var out []string
+-	for rows.Next() {
+-		var id int
+-		var atmID, event, onDate, evidence string
+-		if err := rows.Scan(&id, &atmID, &event, &onDate, &evidence); err != nil {
+-			return nil, err
+-		}
+-		if _, statErr := os.Stat(resolveInvocationRelative(evidence)); statErr == nil {
+-			continue
+-		}
+-		kind := "well-formed path, but nothing exists there"
+-		if strings.ContainsAny(evidence, " \t\r\n") {
+-			kind = "narrative or multi-value text in a single-path field"
+-		}
+-		out = append(out, fmt.Sprintf(
+-			"%s: closure evidence_path does not resolve (%s) — history id=%d, event=%s, on=%s: %q (§11.4.5/§11.4.69/§11.4.123/§11.4.226 — a closure's captured proof must be producible on demand)",
+-			atmID, kind, id, event, onDate, firstLine(evidence)))
+-	}
+-	return out, rows.Err()
++	return nil, nil
+ }
+ 
+ // firstLine keeps a violation message single-line + bounded when the offending
+
+(iii) md5sum sync.go
+      pre-mutation : 40dee56bd09f91cdeec21a1e30dde01f
+      MUTATED      : f114aa0254bdd8b5c6f33f4b6f471da5   <- differs, mutation really applied
+
+STEP 3 — RED: the same test command now FAILS (guard removed)
+--------------------------------------------------------------------------------
+$ go test ./cmd/workable-items/ -run "ClosureEvidence|FirstLine" -count=1 -v
+=== RUN   TestClosureEvidence_ResolvableAbsolutePath_NoViolation
+add: created WIT-701 (Bug, status=Queued) in Issues
+close: moved WIT-701 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestClosureEvidence_ResolvableAbsolutePath_NoViolation3356155004/001/capture.log)
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestClosureEvidence_ResolvableAbsolutePath_NoViolation (0.01s)
+=== RUN   TestClosureEvidence_ResolvableRelativePath_AnchoredAtPWD_NoViolation
+add: created WIT-702 (Bug, status=Queued) in Issues
+close: moved WIT-702 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=docs/qa/run-1/capture.log)
+--- PASS: TestClosureEvidence_ResolvableRelativePath_AnchoredAtPWD_NoViolation (0.00s)
+=== RUN   TestClosureEvidence_WellFormedPathButMissingFile_Violation
+add: created WIT-703 (Bug, status=Queued) in Issues
+close: moved WIT-703 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestClosureEvidence_WellFormedPathButMissingFile_Violation2203058450/001/docs/qa/never-committed/capture.log)
+    validate_evidence_test.go:138: guard reported 0 violation(s) for a NONEXISTENT evidence path, want exactly 1: []
+--- FAIL: TestClosureEvidence_WellFormedPathButMissingFile_Violation (0.00s)
+=== RUN   TestClosureEvidence_NarrativeText_Violation
+add: created WIT-704 (Bug, status=Queued) in Issues
+close: moved WIT-704 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=closure confirmed by manual QA during the 2026-08-05 session)
+    validate_evidence_test.go:162: guard reported 0 violation(s) for NARRATIVE evidence text, want exactly 1: []
+--- FAIL: TestClosureEvidence_NarrativeText_Violation (0.00s)
+=== RUN   TestClosureEvidence_OpenItemUnresolvableEvidence_NoViolation
+add: created WIT-705 (Bug, status=Queued) in Issues
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestClosureEvidence_OpenItemUnresolvableEvidence_NoViolation (0.00s)
+=== RUN   TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvidenceLands
+add: created WIT-706 (Bug, status=Queued) in Issues
+close: moved WIT-706 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvid13597404/001/qa/run-7/capture.log)
+validate: OK — 1 items, all invariants satisfied
+    validate_evidence_test.go:223: validate returned exitOK on a closure whose evidence_path does not resolve — the HXC-217 guard is not wired into validateCmd
+--- FAIL: TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvidenceLands (0.00s)
+=== RUN   TestFirstLine
+=== RUN   TestFirstLine/short_single_line_is_unchanged
+=== RUN   TestFirstLine/empty_is_unchanged
+=== RUN   TestFirstLine/newline_truncates_at_the_first_line
+=== RUN   TestFirstLine/carriage_return_truncates_too
+=== RUN   TestFirstLine/over-long_single_line_is_capped_at_120_chars
+--- PASS: TestFirstLine (0.00s)
+    --- PASS: TestFirstLine/short_single_line_is_unchanged (0.00s)
+    --- PASS: TestFirstLine/empty_is_unchanged (0.00s)
+    --- PASS: TestFirstLine/newline_truncates_at_the_first_line (0.00s)
+    --- PASS: TestFirstLine/carriage_return_truncates_too (0.00s)
+    --- PASS: TestFirstLine/over-long_single_line_is_capped_at_120_chars (0.00s)
+FAIL
+FAIL	github.com/HelixDevelopment/HelixConstitution/scripts/workable-items/cmd/workable-items	0.030s
+FAIL
+exit=1
+
+Exactly the three defect-detecting cases FAIL (missing-file violation, narrative violation,
+validateCmd wiring); the four clean-state cases still PASS — proving the suite is not a blanket
+failure and the guard is not a tautology (1.1).
+
+STEP 4 — RESTORED (original body back, byte-identical to the pre-mutation backup)
+--------------------------------------------------------------------------------
+$ cp <backup> sync.go && diff -u <backup> sync.go
+(no output — RESTORED_IDENTICAL)
+$ md5sum sync.go
+40dee56bd09f91cdeec21a1e30dde01f  sync.go   <- back to the pre-mutation digest
+$ git diff --stat -- scripts/workable-items/cmd/workable-items/sync.go   [RESTORED tree]
+ scripts/workable-items/cmd/workable-items/sync.go | 94 +++++++++++++++++++++++
+ 1 file changed, 94 insertions(+)
+    94 insertions(+) — the full guard is back (59 while mutated)
+
+STEP 5 — GREEN again after restore
+--------------------------------------------------------------------------------
+$ go build ./... && go vet ./... && go test ./cmd/workable-items/ -run "ClosureEvidence|FirstLine" -count=1 -v
+=== RUN   TestClosureEvidence_ResolvableAbsolutePath_NoViolation
+add: created WIT-701 (Bug, status=Queued) in Issues
+close: moved WIT-701 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestClosureEvidence_ResolvableAbsolutePath_NoViolation1167918571/001/capture.log)
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestClosureEvidence_ResolvableAbsolutePath_NoViolation (0.01s)
+=== RUN   TestClosureEvidence_ResolvableRelativePath_AnchoredAtPWD_NoViolation
+add: created WIT-702 (Bug, status=Queued) in Issues
+close: moved WIT-702 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=docs/qa/run-1/capture.log)
+--- PASS: TestClosureEvidence_ResolvableRelativePath_AnchoredAtPWD_NoViolation (0.00s)
+=== RUN   TestClosureEvidence_WellFormedPathButMissingFile_Violation
+add: created WIT-703 (Bug, status=Queued) in Issues
+close: moved WIT-703 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestClosureEvidence_WellFormedPathButMissingFile_Violation2526203038/001/docs/qa/never-committed/capture.log)
+--- PASS: TestClosureEvidence_WellFormedPathButMissingFile_Violation (0.00s)
+=== RUN   TestClosureEvidence_NarrativeText_Violation
+add: created WIT-704 (Bug, status=Queued) in Issues
+close: moved WIT-704 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=closure confirmed by manual QA during the 2026-08-05 session)
+--- PASS: TestClosureEvidence_NarrativeText_Violation (0.00s)
+=== RUN   TestClosureEvidence_OpenItemUnresolvableEvidence_NoViolation
+add: created WIT-705 (Bug, status=Queued) in Issues
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestClosureEvidence_OpenItemUnresolvableEvidence_NoViolation (0.00s)
+=== RUN   TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvidenceLands
+add: created WIT-706 (Bug, status=Queued) in Issues
+close: moved WIT-706 Issues→Fixed (status=Fixed (→ Fixed.md), evidence=/tmp/.private/milos/TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvid28398849/001/qa/run-7/capture.log)
+validate: 1 violation(s):
+  - WIT-706: closure evidence_path does not resolve (well-formed path, but nothing exists there) — history id=2, event=Fixed, on=2026-08-06: "/tmp/.private/milos/TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvid28398849/001/qa/run-7/capture.log" (§11.4.5/§11.4.69/§11.4.123/§11.4.226 — a closure's captured proof must be producible on demand)
+validate: OK — 1 items, all invariants satisfied
+--- PASS: TestValidate_UnresolvableClosureEvidence_FailsThenPassesWhenEvidenceLands (0.00s)
+=== RUN   TestFirstLine
+=== RUN   TestFirstLine/short_single_line_is_unchanged
+=== RUN   TestFirstLine/empty_is_unchanged
+=== RUN   TestFirstLine/newline_truncates_at_the_first_line
+=== RUN   TestFirstLine/carriage_return_truncates_too
+=== RUN   TestFirstLine/over-long_single_line_is_capped_at_120_chars
+--- PASS: TestFirstLine (0.00s)
+    --- PASS: TestFirstLine/short_single_line_is_unchanged (0.00s)
+    --- PASS: TestFirstLine/empty_is_unchanged (0.00s)
+    --- PASS: TestFirstLine/newline_truncates_at_the_first_line (0.00s)
+    --- PASS: TestFirstLine/carriage_return_truncates_too (0.00s)
+    --- PASS: TestFirstLine/over-long_single_line_is_capped_at_120_chars (0.00s)
+PASS
+ok  	github.com/HelixDevelopment/HelixConstitution/scripts/workable-items/cmd/workable-items	0.031s
+exit=0
+
+STEP 6 — full-package sweep after the change (honest state)
+--------------------------------------------------------------------------------
+$ go test ./... -count=1     (full cmd/workable-items package)
+--- FAIL: TestValidate_OK_RealDocs (0.04s)
+FAIL
+FAIL	github.com/HelixDevelopment/HelixConstitution/scripts/workable-items/cmd/workable-items	0.764s
+FAIL
+
+ONE failure remains: TestValidate_OK_RealDocs. It is PRE-EXISTING and UNRELATED to this
+guard — PROVEN, not assumed (11.4.6): the test was re-run against a pristine HEAD copy of
+sync.go (guard entirely absent) staged at an equivalent directory depth with the real
+docs/Issues.md + docs/Fixed.md, and it FAILED IDENTICALLY:
+    validate: 1 violation(s):
+      - HXC-172: Operator-blocked with no operator_block_details row (11.4.148 D3)
+    roundtrip_test.go:142: validate on real docs exited 1 (expected OK)
+That violation is emitted by the pre-existing 11.4.148-D3 check over MAIN-REPO tracker data
+(docs/Issues.md), which is owned by another stream and out of this agent's scope. Reported,
+not touched.
+
+STEP 7 — 11.4.120 gate reconciliation (two pre-existing test fixtures, IN SCOPE)
+--------------------------------------------------------------------------------
+The new guard correctly refused two OLD hermetic fixtures that closed items citing FABRICATED
+evidence paths ('docs/qa/<id>/close.md', 'qa/x.log') which never existed:
+  - reopen_relocate_test.go  seedFixedItem      -> TestValidate_CatchesReopenedInFixed
+  - status_body_sync_test.go 'close' case       -> TestNoStatusMutationLeavesDesync/close
+Per 11.4.120 the gate was NOT weakened and the fix was NOT reverted: both fixtures were
+RECONCILED to the new mechanism (write a real artefact under t.TempDir(), cite its absolute
+path). Each test's own assertion (location<->status invariant; column<->body Status desync)
+is unchanged. Both PASS after reconciliation — see STEP 6.
+
+END OF PROOF
