@@ -1,0 +1,72 @@
+# HXC-166 final assessment — captured command output
+Captured: 2026-08-06T01:00:19Z
+Meta-repo HEAD: e84e5b4c7cb84751f77ce67bdf43ad55c25bdbba
+helix_agent HEAD: 0a48f8c29785099b0450fb04051b0219d4535ce2
+
+## 1. Live advisory count (source of the '204')
+$ gh api --paginate /repos/vasic-digital/HelixAgent/dependabot/alerts?state=open | jq length
+210
+$ ... | jq severity histogram
+critical 5
+high 88
+low 18
+medium 99
+$ ... | distinct GHSA ids
+169
+$ gh api .../HelixDevelopment/HelixAgent/dependabot/alerts?state=open | jq length   # the other mirror
+0
+
+## 2. Where the alerts arise (manifest attribution)
+140	mcp-servers/GitMCP/pnpm-lock.yaml
+25	sdk/web/package-lock.json
+17	mcp-servers/postgres-mcp/ingest/uv.lock
+8	Website/package-lock.json
+8	mcp-servers/GitMCP/package.json
+5	go.mod
+2	docs/research/go-elder-plinius-v3/go-elder-plinius/go-plinius-common/go.mod
+2	pkg/api/go.mod
+1	ci/reporter/package.json
+1	plugins/mcp-server/package-lock.json
+1	plugins/packages/transport/go/go.mod
+
+## 3. The 5 critical rows (4 distinct advisories)
+GHSA-5xrq-8626-4rwp  vitest  mcp-servers/GitMCP/pnpm-lock.yaml
+GHSA-5xrq-8626-4rwp  vitest  mcp-servers/GitMCP/package.json
+GHSA-2w6w-674q-4c4q  handlebars  sdk/web/package-lock.json
+GHSA-9583-h5hc-x8cw  @react-router/node  mcp-servers/GitMCP/pnpm-lock.yaml
+GHSA-fjxv-7rqg-78g4  form-data  mcp-servers/GitMCP/pnpm-lock.yaml
+
+## 4. The ONLY alert against a genuinely shipped+runnable artifact
+GHSA-w48q-cv73-mx4w [high] @modelcontextprotocol/sdk: Model Context Protocol (MCP) TypeScript SDK does not enable DNS rebinding protection by default
+   -> mitigated in-code by HXC-172, helix_agent d0a53e0b:
+d0a53e0b fix(mcp-server): HXC-172 — implement the DNS-rebinding defence the SDK advisory names
+2: * DNS-rebinding (Host header) protection for the SSE transport.
+   -> with paired tests:
+cors_guard.test.js
+host_rebinding_guard.test.js
+
+## 5. GitMCP (148 alerts = 70.5%) cannot build: compose points at a Dockerfile that does not exist
+  mcp-gitmcp:
+    build:
+      context: ./mcp-servers/GitMCP
+      dockerfile: Dockerfile
+    container_name: helixagent-mcp-gitmcp
+$ ls mcp-servers/GitMCP/Dockerfile
+ls: cannot access '/home/milos/Factory/projects/tools_and_research/helix_code/submodules/helix_agent/mcp-servers/GitMCP/Dockerfile': No such file or directory
+
+## 6. Go reachability: docker advisories reach ONLY internal/clis/openhands, which nothing imports
+$ grep -rn "clis/openhands" --include=*.go . | grep -v ^./internal/clis/openhands/ | wc -l
+0
+$ grep -c openhands golist_deps_cmd_shipped.txt   # shipped dependency closure
+0
+0
+
+## 7. node_modules: tracked at the previous HEAD, untracked by a peer during this assessment
+$ git ls-tree -r 9a50509d --name-only | grep -c /node_modules/
+8907
+$ git ls-tree -r HEAD --name-only | grep -c /node_modules/
+0
+0
+0a48f8c2 fix(hxc-222): untrack 104MB of vendored node_modules (CONST-053)
+$ git diff --name-only 9a50509d..HEAD -- go.mod go.sum   # Go surface unchanged by that commit
+(no output above = go.mod/go.sum identical, so the Go verdict below still holds at the new HEAD)
