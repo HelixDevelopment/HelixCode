@@ -1,0 +1,81 @@
+########## helixcode-infra : priority<=warning census (whole 9-day window) ##########
+  35065 
+    855 [31m│[0m                                                                              [31m│[0m
+     90 [31m│[0m [2m/app/cognee/infrastructure/llm/structured_output_framework/litellm_instructo[0m [31m│[0m
+     90 [2m<TS>[0m [[31m[1merror    [0m] [1mLLMAPIKeyNotSetError: LLM API key is not set. (Status code: 422)[0m [[0m[1m[34mcognee.shared.logging_utils[0m][0m
+     50 			SELECT id, username, email, password_hash, api_key, role, created_at, updated_at
+     50 			FROM users
+     50 		
+     45 code: [1;36m422[0m[1m)[0m
+     45 [31m│[0m setup_and_check_environment                                                  [31m│[0m
+     45 [31m│[0m run_pipeline_blocking                                                        [31m│[0m
+     45 [31m│[0m       raise_api_key_error:                                                   [31m│[0m
+     45 [31m│[0m [31m❱ [0m 98 [2m│   [0m[1;4;94mawait[0m[1;4m setup_and_check_environment(vector_db_config, graph_db_confi[0m [31m│[0m
+     45 [31m│[0m [31m❱ [0m 88 [2m│   │   │   [0mLLMGateway.acreate_structured_output(                      [31m│[0m
+     45 [31m│[0m [31m❱ [0m 82 [2m│   │   │   [0mllm_client = [1;4mget_llm_client()[0m                              [31m│[0m
+     45 [31m│[0m [31m❱ [0m54 [2m│   │   │   │   [0m[1;4;94mawait[0m[1;4m test_llm_connection()[0m                             [31m│[0m
+     45 [31m│[0m [31m❱ [0m 44 [2m│   [0m[94masync[0m [94mfor[0m run_info [95min[0m [1;4magen[0m:                                        [31m│[0m
+     45 [31m│[0m [31m❱ [0m379 [2m│   [0m[1;4m_raise_for_missing_api_key([0m                                        [31m│[0m
+     45 [31m╭─[0m[31m────────────────────[0m[31m [0m[1;31mTraceback [0m[1;2;31m(most recent call last)[0m[31m [0m[31m─────────────────────[0m[31m─╮[0m
+     45 [31m│[0m [31m❱ [0m257 [2m│   [0mresult = [1;4;94mawait[0m[1;4m pipeline_executor_func([0m                             [31m│[0m
+     45 [31m│[0m [31m❱ [0m195 [2m│   │   [0m[1;4;94mraise[0m[1;4m LLMAPIKeyNotSetError()[0m                                   [31m│[0m
+     45 [31m│[0m [31m❱ [0m117 [2m│   │   │   [0madd_run = [94mawait[0m cognee_add(                                [31m│[0m
+     45 [31m│[0m [31m❱ [0m113 [2m│   │   [0m[1;4;94mraise[0m[1;4m e[0m                                                        [31m│[0m
+     45 [31m│[0m [2mr/llm/[0m[1mget_llm_client.py[0m:379 in get_llm_client                                [31m│[0m
+     45 [31m│[0m [2mr/llm/[0m[1mget_llm_client.py[0m:195 in _raise_for_missing_api_key                    [31m│[0m
+     45 [31m│[0m [2m/app/cognee/modules/pipelines/operations/[0m[1mpipeline.py[0m:98 in run_pipeline      [31m│[0m
+
+########## llmsverifier : priority<=warning census (whole 9-day window) ##########
+
+########## helixllm-coder : priority<=warning census (whole 9-day window) ##########
+   7106 
+      1 99.37.083.431 I slot      release: id  0 | task 1616 | stop processing: n_tokens = 357, truncated = 0
+      1 99.37.083.403 I slot print_timing: id  0 | task 1616 |       total time =     132.07 ms /    41 tokens
+      1 99.37.083.403 I slot print_timing: id  0 | task 1616 |    graphs reused =       1506
+      1 99.37.083.402 I slot print_timing: id  0 | task 1616 |        eval time =     128.55 ms /    40 tokens (    3.21 ms per token,   311.15 tokens per second)
+      1 99.37.083.399 I slot print_timing: id  0 | task 1616 | prompt eval time =       3.51 ms /     1 tokens (    3.51 ms per token,   284.58 tokens per second)
+      1 99.36.951.328 W slot   operator(): id  0 | task 1616 | n_past was set to 317
+      1 99.36.951.327 W slot   operator(): id  0 | task 1616 | need to evaluate at least 1 token for each active slot (n_past = 318, task.n_tokens() = 318)
+      1 99.36.951.323 I slot launch_slot_: id  0 | task 1616 | processing task, is_child = 0
+      1 99.36.951.237 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 1.000 (> 0.100 thold), f_keep = 0.891
+      1 99.36.929.401 I slot      release: id  0 | task 1575 | stop processing: n_tokens = 357, truncated = 0
+      1 99.36.929.374 I slot print_timing: id  0 | task 1575 |    graphs reused =       1466
+      1 99.36.929.373 I slot print_timing: id  0 | task 1575 |       total time =     149.33 ms /    68 tokens
+      1 99.36.929.373 I slot print_timing: id  0 | task 1575 |        eval time =     132.29 ms /    40 tokens (    3.31 ms per token,   302.37 tokens per second)
+      1 99.36.929.369 I slot print_timing: id  0 | task 1575 | prompt eval time =      17.04 ms /    28 tokens (    0.61 ms per token,  1643.10 tokens per second)
+      1 99.36.780.029 I slot launch_slot_: id  0 | task 1575 | processing task, is_child = 0
+      1 99.36.777.019 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 20325605941
+      1 99.36.755.893 I slot      release: id  0 | task 1553 | stop processing: n_tokens = 73, truncated = 0
+      1 99.36.755.882 I slot print_timing: id  0 | task 1553 |    graphs reused =       1428
+      1 99.36.755.881 I slot print_timing: id  0 | task 1553 |       total time =      80.76 ms /    37 tokens
+      1 99.36.755.881 I slot print_timing: id  0 | task 1553 |        eval time =      66.63 ms /    21 tokens (    3.17 ms per token,   315.19 tokens per second)
+      1 99.36.755.878 I slot print_timing: id  0 | task 1553 | prompt eval time =      14.13 ms /    16 tokens (    0.88 ms per token,  1132.42 tokens per second)
+      1 99.36.675.113 I slot launch_slot_: id  0 | task 1553 | processing task, is_child = 0
+      1 99.36.675.077 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.698 (> 0.100 thold), f_keep = 0.507
+      1 99.36.655.426 I slot      release: id  0 | task 1531 | stop processing: n_tokens = 73, truncated = 0
+
+########## helixllm-gateway : priority<=warning census (whole 9-day window) ##########
+
+########## helixagent : priority<=warning census (whole 9-day window) ##########
+      1 helixagent.service: Failed with result 'exit-code'.
+
+########## helixcode-server : priority<=warning census (whole 9-day window) ##########
+     17 
+      1 <TS> <TIME>.969 UTC [24] LOG:  checkpoint starting: time
+      1 <TS> <TIME>.878 UTC [1] LOG:  database system is ready to accept connections
+      1 <TS> <TIME>.869 UTC [26] LOG:  database system was shut down at <TS> <TIME> UTC
+      1 <TS> <TIME>.856 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+      1 <TS> <TIME>.836 UTC [1] LOG:  starting PostgreSQL 15.18 (Debian 15.18-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+      1 <TS> <TIME>.836 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+      1 <TS> <TIME>.836 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+      1 <TS> <TIME>.766 UTC [24] LOG:  checkpoint starting: time
+      1 <TS> <TIME>.573 UTC [2214] FATAL:  role "postgres" does not exist
+      1 <TS> <TIME>.434 UTC [24] LOG:  checkpoint complete: wrote 56 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=5.613 s, sync=0.015 s, total=5.668 s; sync files=12, longest=0.010 s, average=0.002 s; distance=73 kB, estimate=73 kB
+      1 <TS> <TIME>.353 UTC [1] LOG:  database system is shut down
+      1 <TS> <TIME>.348 UTC [24] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.036 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=65 kB
+      1 <TS> <TIME>.320 UTC [24] LOG:  checkpoint starting: shutdown immediate
+      1 <TS> <TIME>.312 UTC [24] LOG:  shutting down
+      1 <TS> <TIME>.312 UTC [1] LOG:  background worker "logical replication launcher" (PID 29) exited with exit code 1
+      1 <TS> <TIME>.303 UTC [1] LOG:  received smart shutdown request
+      1 <TS> <TIME>.010 UTC [24] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.016 s, sync=0.003 s, total=0.042 s; sync files=2, longest=0.002 s, average=0.002 s; distance=0 kB, estimate=0 kB
+

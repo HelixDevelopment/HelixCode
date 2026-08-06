@@ -1,0 +1,54 @@
+=== date -u ===
+Thu Aug  6 03:09:10 PM UTC 2026
+
+=== loginctl Linger ===
+Linger=yes
+
+=== default.target.wants ===
+total 8
+drwxr-xr-x 2 milos milos 4096 Jul 28 14:08 .
+drwxr-xr-x 5 milos milos 4096 Jul 28 14:03 ..
+lrwxrwxrwx 1 milos milos   58 Jun 30 13:38 gocryptfs-private.service -> /home/milos/.config/systemd/user/gocryptfs-private.service
+lrwxrwxrwx 1 milos milos   45 Jul 28 14:08 helix.target -> /home/milos/.config/systemd/user/helix.target
+
+=== helix.target.wants ===
+total 8
+drwxr-xr-x 2 milos milos 4096 Jul 28 14:08 .
+drwxr-xr-x 5 milos milos 4096 Jul 28 14:03 ..
+lrwxrwxrwx 1 milos milos   51 Jul 28 14:08 helixagent.service -> /home/milos/.config/systemd/user/helixagent.service
+lrwxrwxrwx 1 milos milos   56 Jul 28 14:08 helixcode-infra.service -> /home/milos/.config/systemd/user/helixcode-infra.service
+lrwxrwxrwx 1 milos milos   57 Jul 28 14:08 helixcode-server.service -> /home/milos/.config/systemd/user/helixcode-server.service
+lrwxrwxrwx 1 milos milos   55 Jul 28 14:08 helixllm-coder.service -> /home/milos/.config/systemd/user/helixllm-coder.service
+lrwxrwxrwx 1 milos milos   57 Jul 28 14:08 helixllm-gateway.service -> /home/milos/.config/systemd/user/helixllm-gateway.service
+lrwxrwxrwx 1 milos milos   53 Jul 27 16:31 llmsverifier.service -> /home/milos/.config/systemd/user/llmsverifier.service
+
+=== list-unit-files helix* ===
+UNIT FILE                       STATE     PRESET
+helix-pg-data-volume.service    generated -
+helix-redis-data-volume.service generated -
+helixagent.service              enabled   disabled
+helixcode-infra.service         enabled   disabled
+helixcode-server.service        enabled   disabled
+helixllm-coder.service          enabled   disabled
+helixllm-gateway.service        enabled   disabled
+llmsverifier.service            enabled   disabled
+helix.target                    enabled   disabled
+
+9 unit files listed.
+
+=== list-units helix* (loaded) ===
+  UNIT                     LOAD   ACTIVE   SUB     DESCRIPTION
+  helixagent.service       loaded active   running HelixAgent (multi-provider AI agent runtime) on :7061
+  helixcode-infra.service  loaded active   exited  HelixCode Infrastructure (PostgreSQL, Redis, Weaviate, Qdrant, ChromaDB, Cognee, Ollama)
+  helixcode-server.service loaded active   running HelixCode AI Development Server (main binary) on :8081
+  helixllm-coder.service   loaded active   exited  HelixLLM coder (Qwen3-Coder-30B) on :18434
+  helixllm-gateway.service loaded active   running HelixLLM Gateway (multi-provider LLM router)
+  llmsverifier.service     loaded active   running LLMsVerifier (model/provider verification + scoring API) on :8100
+  helix.target             loaded inactive dead    Helix Platform (HelixCode + HelixAgent + HelixLLM + infrastructure)
+
+Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+        ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+        SUB    → The low-level unit activation state, values depend on unit type.
+
+7 loaded units listed.
+To show all installed unit files use 'systemctl list-unit-files'.

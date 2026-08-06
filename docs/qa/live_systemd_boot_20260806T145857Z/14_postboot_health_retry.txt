@@ -1,0 +1,26 @@
+###### POST-BOOT RUNTIME PROOF (retry after gateway bound)  2026-08-06T18:16:31Z ######
+
+=== 1. llmsverifier  GET http://localhost:8100/api/scores ===
+{"scores":{"llamacpp":{"total":96,"model_count":1}}}
+
+<<HTTP 200 in 0.000953s>>
+
+=== 2. helixllm-gateway  GET https://localhost:8443/internal/health ===
+{"status":"healthy","components":[],"timestamp":"2026-08-06T23:16:31.2836706+05:00"}
+<<HTTP 200 in 0.007383s>>
+
+=== 3. helixagent  GET http://localhost:7061/health ===
+{"status":"healthy"}
+<<HTTP 200 in 0.000300s>>
+
+=== 4. helixcode-server  GET http://localhost:8081/health ===
+{"status":"healthy","timestamp":"2026-08-06T18:16:31.296991129Z","version":"1.0.0"}
+<<HTTP 200 in 0.001467s>>
+
+=== 5. gateway GET /v1/models (functional route, not just health) ===
+{"object":"list","data":null}
+<<HTTP 200>>
+
+=== 6. gateway GET /v1/hardware ===
+{"gpu":{"available":true,"name":"NVIDIA GeForce RTX 5090","vram_total":34190917632,"vram_free":33150730240,"compute_cap":"12.0"},"cpu":{"model":"AMD Ryzen Threadripper 7970X 32-Cores","cores":32,"threads":64,"avx2":true,"avx512":true},"ram":{"total":269723615232,"available":248067080192},"preset_profile":"high_end"}
+<<HTTP 200>>

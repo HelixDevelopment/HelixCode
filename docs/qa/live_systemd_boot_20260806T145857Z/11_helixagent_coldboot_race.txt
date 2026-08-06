@@ -1,0 +1,19 @@
+=== helixagent boot-window journal (dependency verification + failures) ===
+2026-08-06T22:24:54+05:00 the-factory systemd[1867]: Started helixagent.service - HelixAgent (multi-provider AI agent runtime) on :7061.
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=info msg="║           MANDATORY DEPENDENCY VERIFICATION                       ║"
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=info msg="✅ DEPENDENCY OK" dependency=PostgreSQL description="Primary database for storing configuration, sessions, and metadata"
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=info msg="✅ DEPENDENCY OK" dependency=Redis description="Cache layer for sessions, rate limiting, and response caching"
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=error msg="❌ DEPENDENCY FAILED" dependency=Cognee description="Knowledge graph and RAG integration for AI memory and reasoning" error="cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:43606->127.0.0.1:8000: read: connection reset by peer"
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=info msg="✅ DEPENDENCY OK" dependency=ChromaDB description="Vector database for embeddings and semantic search"
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=info msg="Dependency verification summary" failed=1 passed=3 total=4
+2026-08-06T22:24:54+05:00 the-factory helixagent[1289066]: time="2026-08-06T22:24:54+05:00" level=fatal msg="Application failed" error="FATAL: Integration dependency verification failed: BOOT BLOCKED: 1 of 4 mandatory dependencies failed:\n  1. Cognee: cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:43606->127.0.0.1:8000: read: connection reset by peer\n\nHelixAgent REQUIRES all integration components to be running.\nPlease start all dependencies with: docker-compose up -d\nOr use: make docker-start"
+2026-08-06T22:24:54+05:00 the-factory systemd[1867]: helixagent.service: Main process exited, code=exited, status=1/FAILURE
+2026-08-06T22:24:54+05:00 the-factory systemd[1867]: helixagent.service: Failed with result 'exit-code'.
+2026-08-06T22:25:09+05:00 the-factory systemd[1867]: helixagent.service: Scheduled restart job, restart counter is at 1.
+2026-08-06T22:25:10+05:00 the-factory systemd[1867]: Started helixagent.service - HelixAgent (multi-provider AI agent runtime) on :7061.
+2026-08-06T22:25:10+05:00 the-factory helixagent[1290069]: time="2026-08-06T22:25:10+05:00" level=info msg="║           MANDATORY DEPENDENCY VERIFICATION                       ║"
+2026-08-06T22:25:10+05:00 the-factory helixagent[1290069]: time="2026-08-06T22:25:10+05:00" level=info msg="✅ DEPENDENCY OK" dependency=PostgreSQL description="Primary database for storing configuration, sessions, and metadata"
+2026-08-06T22:25:10+05:00 the-factory helixagent[1290069]: time="2026-08-06T22:25:10+05:00" level=info msg="✅ DEPENDENCY OK" dependency=Redis description="Cache layer for sessions, rate limiting, and response caching"
+2026-08-06T22:25:15+05:00 the-factory helixagent[1290069]: time="2026-08-06T22:25:15+05:00" level=info msg="✅ DEPENDENCY OK" dependency=Cognee description="Knowledge graph and RAG integration for AI memory and reasoning"
+2026-08-06T22:25:15+05:00 the-factory helixagent[1290069]: time="2026-08-06T22:25:15+05:00" level=info msg="✅ DEPENDENCY OK" dependency=ChromaDB description="Vector database for embeddings and semantic search"
+2026-08-06T22:25:15+05:00 the-factory helixagent[1290069]: time="2026-08-06T22:25:15+05:00" level=info msg="Dependency verification summary" failed=0 passed=4 total=4

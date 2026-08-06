@@ -1,0 +1,34 @@
+=== helixagent: the single 'Failed with result exit-code' event, with surrounding context ===
+533-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="╔══════════════════════════════════════════════════════════════════╗"
+534-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="║           MANDATORY DEPENDENCY VERIFICATION                       ║"
+535-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="╚══════════════════════════════════════════════════════════════════╝"
+536-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="Checking dependency..." dependency=PostgreSQL
+537-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="✅ DEPENDENCY OK" dependency=PostgreSQL description="Primary database for storing configuration, sessions, and metadata"
+538-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="Checking dependency..." dependency=Redis
+539-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="✅ DEPENDENCY OK" dependency=Redis description="Cache layer for sessions, rate limiting, and response caching"
+540-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="Checking dependency..." dependency=Cognee
+541-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=error msg="❌ DEPENDENCY FAILED" dependency=Cognee description="Knowledge graph and RAG integration for AI memory and reasoning" error="cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:41894->127.0.0.1:8000: read: connection reset by peer"
+542-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="Checking dependency..." dependency=ChromaDB
+543-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="✅ DEPENDENCY OK" dependency=ChromaDB description="Vector database for embeddings and semantic search"
+544-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="────────────────────────────────────────────────────────────────────"
+545-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=info msg="Dependency verification summary" failed=1 passed=3 total=4
+546-2026-07-27T23:38:15+05:00 the-factory helixagent[2848446]: time="2026-07-27T23:38:15+05:00" level=fatal msg="Application failed" error="FATAL: Integration dependency verification failed: BOOT BLOCKED: 1 of 4 mandatory dependencies failed:\n  1. Cognee: cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:41894->127.0.0.1:8000: read: connection reset by peer\n\nHelixAgent REQUIRES all integration components to be running.\nPlease start all dependencies with: docker-compose up -d\nOr use: make docker-start"
+547-2026-07-27T23:38:15+05:00 the-factory systemd[1901]: helixagent.service: Main process exited, code=exited, status=1/FAILURE
+548:2026-07-27T23:38:15+05:00 the-factory systemd[1901]: helixagent.service: Failed with result 'exit-code'.
+549-2026-07-27T23:38:30+05:00 the-factory systemd[1901]: helixagent.service: Scheduled restart job, restart counter is at 1.
+550-2026-07-27T23:38:30+05:00 the-factory systemd[1901]: Started helixagent.service - HelixAgent (multi-provider AI agent runtime) on :7061.
+551-2026-07-27T23:38:30+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:30+05:00" level=info msg="CPU parallelism configured" gomaxprocs=64
+552-2026-07-27T23:38:30+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:30+05:00" level=info msg="Container adapter initialized via Containers module" runtime=podman
+553-2026-07-27T23:38:30+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:30+05:00" level=info msg="Initializing lazy container orchestrator..."
+554-2026-07-27T23:38:31+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:31+05:00" level=info msg="registered lazy service: milvus (category=rag, cost=free)"
+555-2026-07-27T23:38:31+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:31+05:00" level=info msg="registered lazy service: tika-extraction (category=rag, cost=free)"
+556-2026-07-27T23:38:31+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:31+05:00" level=info msg="Lazy container orchestrator initialized with services" count=2
+557-2026-07-27T23:38:31+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:31+05:00" level=info msg="Verifying ALL integration dependencies (strict mode)..."
+558-2026-07-27T23:38:31+05:00 the-factory helixagent[2859870]: time="2026-07-27T23:38:31+05:00" level=info msg="╔══════════════════════════════════════════════════════════════════╗"
+
+=== helixagent: distributed_locks occurrences (last 60 min) ===
+60
+--- sample ---
+2026-08-06T21:18:40+05:00 the-factory helixagent[371544]: 2026/08/06 21:18:40 Error cleaning locks: ERROR: relation "distributed_locks" does not exist (SQLSTATE 42P01)
+2026-08-06T21:19:40+05:00 the-factory helixagent[371544]: 2026/08/06 21:19:40 Error cleaning locks: ERROR: relation "distributed_locks" does not exist (SQLSTATE 42P01)
+2026-08-06T21:20:40+05:00 the-factory helixagent[371544]: 2026/08/06 21:20:40 Error cleaning locks: ERROR: relation "distributed_locks" does not exist (SQLSTATE 42P01)

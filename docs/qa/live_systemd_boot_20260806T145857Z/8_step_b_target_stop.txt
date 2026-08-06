@@ -1,0 +1,48 @@
+=== STEP B: stop helix.target ===
+16:41:46.379088134
+stop_exit=0
+16:41:46.390446237
+
+--- unit states after stop ---
+  UNIT                     LOAD   ACTIVE       SUB          JOB  DESCRIPTION
+  helixagent.service       loaded inactive     dead              HelixAgent (multi-provider AI agent runtime) on :7061
+  helixcode-infra.service  loaded active       exited       stop HelixCode Infrastructure (PostgreSQL, Redis, Weaviate, Qdrant, ChromaDB, Cognee, Ollama)
+  helixcode-server.service loaded inactive     dead              HelixCode AI Development Server (main binary) on :8081
+  helixllm-coder.service   loaded deactivating stop         stop HelixLLM coder (Qwen3-Coder-30B) on :18434
+  helixllm-gateway.service loaded deactivating stop-sigterm stop HelixLLM Gateway (multi-provider LLM router)
+  llmsverifier.service     loaded active       running      stop LLMsVerifier (model/provider verification + scoring API) on :8100
+  helix.target             loaded inactive     dead              Helix Platform (HelixCode + HelixAgent + HelixLLM + infrastructure)
+
+Legend: LOAD   → Reflects whether the unit definition was properly loaded.
+        ACTIVE → The high-level unit activation state, i.e. generalization of SUB.
+        SUB    → The low-level unit activation state, values depend on unit type.
+        JOB    → Pending job for the unit.
+
+7 loaded units listed.
+To show all installed unit files use 'systemctl list-unit-files'.
+
+--- port sweep after stop (expect all DEAD) ---
+down     8081
+down     8443
+down     7061
+down     8100
+down     18434
+STILL-UP 5433
+STILL-UP 6380
+STILL-UP 8083
+STILL-UP 8082
+STILL-UP 8000
+STILL-UP 6333
+STILL-UP 11434
+
+--- containers after stop ---
+helixcode-infra-postgres	Up 9 days (healthy)
+helixcode-infra-redis	Up 9 days (healthy)
+helixcode-infra-memcached	Up 9 days (healthy)
+helixcode-infra-ollama	Up 9 days (healthy)
+helixcode-infra-selenium	Up 9 days (healthy)
+helixcode-infra-chromedp	Up 9 days
+helixcode-infra-weaviate	Up 9 days (healthy)
+helixcode-infra-multicast	Up 9 days
+helixcode-infra-cognee	Up 9 days (healthy)
+container_count=7
