@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README</h1>
+</header>
+<h1 id="scriptscaf-fork-all-cli_agents-auto-merge-mechanism-sp3"><code>scripts/caf/</code>
+— Fork-ALL cli_agents + auto-merge mechanism (SP3)</h1>
+<p>Reusable, fully-parameterized bash scripts that fork every
+third-party <code>cli_agents/*</code> submodule under an org with a
+prefix, keep each fork current by merging upstream
+<code>main</code>/<code>master</code>, and recursively classify nested
+deps.</p>
+<p><strong>Nothing is hardcoded</strong> — org / prefix / src-dir /
+providers / branch / depth are all flags or <code>CAF_*</code> env vars
+(see <code>caf_lib.sh</code>).</p>
+<h2 id="files">Files</h2>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 25%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+<th>External mutation?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>caf_lib.sh</code></td>
+<td>shared helpers (URL normalize, own-org test, fork-name,
+branch-detect, <code>caf_safe_push</code> no-force guard, arg
+parsing)</td>
+<td>none (sourced)</td>
+</tr>
+<tr>
+<td><code>fork_third_party_submodule.sh</code></td>
+<td>gh+glab fork-or-create under
+<code>--org</code>/<code>--prefix</code>, wire <code>origin</code>=fork
++ <code>upstream</code>=original, record <code>--map-file</code></td>
+<td><strong>YES — OPERATOR-GATED (G-1)</strong></td>
+</tr>
+<tr>
+<td><code>update_fork_from_upstream.sh</code></td>
+<td>fetch + merge upstream <code>main</code>/<code>master</code> INTO
+each fork, fast-forward/merge only, push fan-out</td>
+<td><strong>YES (push) — OPERATOR-GATED (G-1-push)</strong></td>
+</tr>
+<tr>
+<td><code>resolve_recursive_fork_deps.sh</code></td>
+<td>recursive nested-dep classifier: third-party→<code>FORK:</code>,
+own-org→<code>PULL_TO_ROOT</code> (CONST-051)</td>
+<td>report-only by default; delegated fork is G-1</td>
+</tr>
+<tr>
+<td><code>challenge_caf.sh</code></td>
+<td>anti-bluff Challenge — proves all of the above against
+<strong>throwaway LOCAL git repos</strong> (no real remote) + paired
+§1.1 mutation</td>
+<td>none (mktemp scratch only)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="binding-constraints-cited-never-weakened">Binding constraints
+(cited, never weakened)</h2>
+<ul>
+<li><strong>§11.4.113</strong> — absolute no-force-push. Every push goes
+through <code>caf_safe_push</code>, which <strong>refuses</strong>
+<code>--force</code> / <code>--force-with-lease</code> /
+<code>--mirror</code> / <code>+ref</code> overwrites. Merge is always
+upstream→fork on top of the fork tip, so every push is a fast-forward —
+force is never needed.</li>
+<li><strong>§11.4.28(B) / CONST-051</strong> — forks stay decoupled /
+project-not-aware. The ONLY edits to a fork are non-source: remote
+config, <code>.gitignore</code>, governance pointers,
+nested-<code>.gitmodules</code> SSH rewrites. Never a blanket
+<code>git add -A</code>.</li>
+<li><strong>Rule 1 (No CI/CD)</strong> — auto-merge is host-local
+(launchd/cron) only; no <code>.github/workflows</code>,
+<code>.gitlab-ci.yml</code>, etc.</li>
+<li><strong>Rule 3 (SSH only)</strong> — every fork URL and rewritten
+nested URL is <code>git@…</code>.</li>
+<li><strong>§11.4.101</strong> — every irreversible external mutation
+(fork creation, push) is OPERATOR-GATED behind <strong>G-1</strong>; the
+agent makes only reversible local decisions autonomously. The
+<strong>default is <code>--dry-run</code></strong>.</li>
+<li><strong>CONST-033</strong> — never touches host power state.</li>
+</ul>
+<h2 id="usage">Usage</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plan only (DEFAULT — mutates nothing, no remote touched):</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/caf/fork_third_party_submodule.sh <span class="at">--dry-run</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># OPERATOR-GATED (G-1) — actually create the forks (requires gh; glab for gitlab):</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/caf/fork_third_party_submodule.sh <span class="at">--execute</span> <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">--org</span> vasic-digital <span class="at">--prefix</span> caf- <span class="at">--src-dir</span> cli_agents <span class="at">--providers</span> github,gitlab</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-merge unit of work (G-1-push for the push step):</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/caf/update_fork_from_upstream.sh <span class="at">--map-file</span> docs/caf/map.tsv <span class="at">--execute</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Recursive nested-dep classification (report-only):</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/caf/resolve_recursive_fork_deps.sh <span class="at">--src-dir</span> cli_agents <span class="at">--depth</span> 3</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Anti-bluff Challenge (local-only, no remote) + paired mutation:</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/caf/challenge_caf.sh           <span class="co"># → 28 PASS, 0 FAIL, exit 0</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> scripts/caf/challenge_caf.sh <span class="at">--mutate</span>  <span class="co"># → an assertion FAILs (guard is real), exit 1</span></span></code></pre></div>
+<h3 id="flag-env-surface-all-defaults-overridable">Flag / env surface
+(all defaults overridable)</h3>
+<pre><code>--org / CAF_ORG                 default vasic-digital
+--prefix / CAF_PREFIX           default caf-
+--src-dir / CAF_SRC_DIR         default cli_agents
+--gitmodules / CAF_GITMODULES   default &lt;repo&gt;/.gitmodules
+--providers / CAF_PROVIDERS     default github,gitlab
+--gitlab-group / CAF_GITLAB_GROUP default vasic-digital
+--branch / CAF_BRANCH           default &quot;&quot; → auto-detect remote HEAD (main|master)
+--only / CAF_ONLY               restrict to a subset (resumable retry)
+--exclude / CAF_EXCLUDE         default claude-code-source
+--depth / CAF_DEPTH             default 3 (recursion bound)
+--workdir / CAF_WORKDIR         default mktemp -d
+--map-file / CAF_MAP_FILE       default docs/caf/map.tsv
+--strategy / CAF_STRATEGY       merge (default) | ff-only
+--visibility / CAF_VISIBILITY   private (default) | public
+--dry-run (default) | --execute / --no-dry-run
+--push (default) | --no-push</code></pre>
+<h2 id="graceful-degradation">Graceful degradation</h2>
+<ul>
+<li><code>gh</code>/<code>glab</code> absent → the real-remote fork path
+SKIPs with a logged reason and exits <code>2</code>;
+<code>--dry-run</code> always works.</li>
+<li><code>update_fork_from_upstream.sh</code> and
+<code>resolve_recursive_fork_deps.sh</code> need only
+<code>git</code>.</li>
+<li><code>challenge_caf.sh</code> uses <strong>only local git</strong> —
+it requires no <code>gh</code>/<code>glab</code> and touches no real
+remote.</li>
+</ul>
+<h2 id="auto-merge-schedule-host-local-no-ci-per-rule-1">Auto-merge
+schedule (host-local, NO CI per Rule 1)</h2>
+<p><code>update_fork_from_upstream.sh</code> is the scheduled unit of
+work. NOT committed as a project pipeline.</p>
+<p><strong>macOS (launchd)</strong> —
+<code>~/Library/LaunchAgents/digital.vasic.caf-update.plist</code>,
+weekly, runs detached:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">key</span>&gt;ProgramArguments&lt;/<span class="kw">key</span>&gt;</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">array</span>&gt;</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">string</span>&gt;/opt/homebrew/bin/bash&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">string</span>&gt;/Volumes/T7/Projects/HelixCode/scripts/caf/update_fork_from_upstream.sh&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">string</span>&gt;--map-file&lt;/<span class="kw">string</span>&gt;&lt;<span class="kw">string</span>&gt;/Volumes/T7/Projects/HelixCode/docs/caf/map.tsv&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">string</span>&gt;--execute&lt;/<span class="kw">string</span>&gt;</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">array</span>&gt;</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">key</span>&gt;StartCalendarInterval&lt;/<span class="kw">key</span>&gt;&lt;<span class="kw">dict</span>&gt;&lt;<span class="kw">key</span>&gt;Weekday&lt;/<span class="kw">key</span>&gt;&lt;<span class="kw">integer</span>&gt;1&lt;/<span class="kw">integer</span>&gt;&lt;<span class="kw">key</span>&gt;Hour&lt;/<span class="kw">key</span>&gt;&lt;<span class="kw">integer</span>&gt;4&lt;/<span class="kw">integer</span>&gt;&lt;/<span class="kw">dict</span>&gt;</span></code></pre></div>
+<p><strong>Linux (cron)</strong> — <code>@weekly</code>:</p>
+<pre class="cron"><code>@weekly /usr/bin/env bash -lc &#39;nohup bash $HOME/Projects/HelixCode/scripts/caf/update_fork_from_upstream.sh --map-file $HOME/Projects/HelixCode/docs/caf/map.tsv --execute &gt; $HOME/Projects/HelixCode/qa-results/caf/update_$(date +%s).log 2&gt;&amp;1 &amp;&#39;</code></pre>
+<h2 id="evidence-ledgers">Evidence / ledgers</h2>
+<ul>
+<li>Run ledger: appended to <code>docs/caf/Status.md</code>
+(append-only).</li>
+<li>Conflicts: parked to
+<code>docs/caf/conflicts/&lt;fork&gt;_&lt;ts&gt;.md</code> —
+<strong>never</strong> auto-resolved (no <code>-s ours</code> /
+<code>-X theirs</code>).</li>
+<li>The Challenge writes only to a <code>mktemp -d</code> scratch tree
+and self-cleans.</li>
+</ul>
+<h2 id="exit-codes">Exit codes</h2>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr>
+<th>Script</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fork_third_party_submodule.sh</code></td>
+<td>all handled / dry-run planned</td>
+<td>partial (some FAIL logged)</td>
+<td>env (gh/glab/git missing)</td>
+</tr>
+<tr>
+<td><code>update_fork_from_upstream.sh</code></td>
+<td>all updated, no conflict</td>
+<td>partial: a CONFLICT parked / PUSHFAIL</td>
+<td>env (git / map-file missing)</td>
+</tr>
+<tr>
+<td><code>resolve_recursive_fork_deps.sh</code></td>
+<td>no CONST-051 violation</td>
+<td>own-org nested chain flagged</td>
+<td>env (git / scan-root missing)</td>
+</tr>
+<tr>
+<td><code>challenge_caf.sh</code></td>
+<td>all assertions PASS</td>
+<td>≥1 FAIL (incl. expected under <code>--mutate</code>)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README</h1>
+</header>
+<h1 id="opendesign-supervised-bring-up">OpenDesign — Supervised
+Bring-Up</h1>
+<p><strong>Constitution:</strong> §11.4.162 (OpenDesign is a mandatory
+core dependency for every user-facing UI surface) · §11.4.161 (rootless
+— no root, no system service) · §11.4.133 (host safety) · §11.4.77
+(gitignored-artifact re-obtain mechanism) · §11.4.174 (process-ownership
+verification before inspecting/acting on any process).</p>
+<h2 id="what-this-replaces">What this replaces</h2>
+<p>An earlier stream
+(<code>scratchpad/phase1_opendesign_install.md</code>) provisioned the
+OpenDesign daemon (<code>nexu-io/open-design</code>) as a bare
+<strong>detached process</strong>: clone → <code>pnpm install</code> →
+<code>nohup ... &amp;</code> with no health supervision, no
+restart-on-failure, and its pidfile/log living <em>outside</em> the
+tracked tree (in the sibling <code>.opendesign-src/</code> clone). That
+was sufficient to prove the integration works end-to-end but is not a
+managed service — a crashed or hung daemon just stays down/hung until a
+human notices.</p>
+<p><code>bringup.sh</code> is the supervised replacement:
+<strong>idempotent</strong>, <strong>health- checked</strong>,
+<strong>restarts only a positively-verified-ours process</strong>, and
+its own pidfile/log live inside this repo (gitignored) so they are
+discoverable without knowing the external clone path.</p>
+<h2 id="usage">Usage</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/opendesign/bringup.sh</span>            <span class="co"># same as `up`</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/opendesign/bringup.sh</span> up         <span class="co"># ensure a healthy daemon is running</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/opendesign/bringup.sh</span> status     <span class="co"># report state only, no side effects</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/opendesign/bringup.sh</span> stop       <span class="co"># stop it, only if verified ours</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/opendesign/bringup.sh</span> restart    <span class="co"># stop (if ours) + up</span></span></code></pre></div>
+<p><code>up</code> (the default) is safe to run any number of times:</p>
+<ul>
+<li><strong>Already healthy</strong> → prints the health probe result
+and exits 0 (no-op — proven by re-running it twice in a row, see
+evidence below).</li>
+<li><strong>Port occupied by our own daemon but failing health
+checks</strong> → restarts it (SIGTERM, wait, SIGKILL fallback, then a
+fresh start).</li>
+<li><strong>Port occupied by something that does NOT match our daemon’s
+cmdline signature</strong> (<code>apps/daemon/dist/cli.js</code>) →
+refuses to touch it and exits non-zero (§11.4.174 — never kill an
+unverified process; §11.4.122 — never silently remove something we
+didn’t launch).</li>
+<li><strong>Nothing running</strong> → provisions the source if missing,
+installs deps if missing, starts the daemon, and polls its health
+endpoint for up to <code>OD_HEALTH_TIMEOUT_S</code> (default 180s).</li>
+</ul>
+<h2 id="health-check">Health check</h2>
+<p><code>GET http://&lt;OD_HOST&gt;:&lt;OD_PORT&gt;/api/health</code> →
+<code>{&quot;ok&quot;:true,&quot;version&quot;:&quot;X.Y.Z&quot;}</code>. The script parses this JSON
+with <code>jq</code> — a bare HTTP 200 is not trusted on its own
+(§11.4.6).</p>
+<h2 id="re-obtain-mechanism-11.4.77">Re-obtain mechanism (§11.4.77)</h2>
+<p>The daemon’s source is <strong>not vendored into this repo</strong> —
+it is a ~1.9 GB checkout of <code>nexu-io/open-design</code>, excluded
+per §11.4.30. This script <em>is</em> the documented, automated
+regeneration mechanism: on any fresh host with no prior checkout,
+<code>bringup.sh up</code> will:</p>
+<ol type="1">
+<li><code>git clone git@github.com:nexu-io/open-design.git</code> (SSH,
+Rule 3) into <code>OD_SRC_DIR</code> (default: a sibling directory of
+the repo root,
+<code>&lt;parent-of-repo-root&gt;/.opendesign-src/open-design</code> —
+kept OUTSIDE the tracked tree, matching the prior stream’s layout).</li>
+<li><code>corepack enable &amp;&amp; pnpm install</code> (bounded by
+<code>OD_INSTALL_TIMEOUT_S</code>, default 600s) if
+<code>node_modules/</code> or the built daemon
+(<code>apps/daemon/dist/</code>) is missing.</li>
+<li>Start the daemon directly via its stable entry point,
+<code>node apps/daemon/dist/cli.js --port &lt;OD_PORT&gt; --host &lt;OD_HOST&gt; --no-open</code>
+— <strong>not</strong> the upstream dev launcher
+<code>pnpm tools-dev run web</code>, which deliberately probes for a
+free port and ignores <code>--port</code>/<code>OD_PORT</code>, making
+it unsuitable for a stable, committed <code>:7456</code> integration
+(the <code>.mcp.json</code> <code>open-design</code> MCP entry is pinned
+to <code>OD_DAEMON_URL=http://localhost:7456</code>).</li>
+</ol>
+<p>Toolchain requirement: Node.js ~24, pnpm 10.33.x (matches upstream’s
+pinned quickstart). <code>corepack enable</code> activates the pinned
+pnpm version from the checkout’s <code>package.json</code>.</p>
+<h2 id="config-env-overridable-project-agnostic-per-11.4.28">Config
+(env-overridable, project-agnostic per §11.4.28)</h2>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr>
+<th>Var</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OD_PORT</code></td>
+<td><code>7456</code></td>
+</tr>
+<tr>
+<td><code>OD_HOST</code></td>
+<td><code>127.0.0.1</code></td>
+</tr>
+<tr>
+<td><code>OD_SRC_DIR</code></td>
+<td><code>&lt;parent-of-repo-root&gt;/.opendesign-src/open-design</code></td>
+</tr>
+<tr>
+<td><code>OD_REPO_SSH</code></td>
+<td><code>git@github.com:nexu-io/open-design.git</code></td>
+</tr>
+<tr>
+<td><code>OD_HEALTH_TIMEOUT_S</code></td>
+<td><code>180</code></td>
+</tr>
+<tr>
+<td><code>OD_INSTALL_TIMEOUT_S</code></td>
+<td><code>600</code></td>
+</tr>
+</tbody>
+</table>
+<p>No operator home-directory path is hardcoded — the source directory
+default is derived from the repo root
+(<code>$(dirname &quot;$REPO_ROOT&quot;)</code>), and every value above may be
+overridden.</p>
+<h2 id="runtime-artifacts-gitignored">Runtime artifacts
+(gitignored)</h2>
+<ul>
+<li><code>scripts/opendesign/run/daemon.pid</code> — the PID this script
+launched.</li>
+<li><code>scripts/opendesign/run/daemon.log</code> — the daemon’s
+stdout/stderr.</li>
+<li><code>scripts/opendesign/run/bringup.log</code> — this script’s own
+supervisor log (every action + health-probe result, timestamped).</li>
+</ul>
+<p>Already covered by the repo’s global <code>*.pid</code> /
+<code>*.log</code> <code>.gitignore</code> patterns;
+<code>scripts/opendesign/run/</code> is also listed explicitly for
+defense-in-depth (§11.4.53).</p>
+<h2 id="honest-limitations-11.4.6">Honest limitations (§11.4.6)</h2>
+<ul>
+<li>This is a <strong>user-level supervised script</strong>, not an
+OS-managed service (no systemd unit, no launchd agent) — per the task’s
+explicit constraint (§11.4.133 host safety / §11.4.161 rootless: no
+root, no system-wide install). It does <strong>not</strong> survive a
+host reboot on its own; re-run <code>bringup.sh up</code> after a reboot
+(or wire it into whatever user-level session-start mechanism the
+operator already uses — out of scope here since that would require
+assumptions about the host’s init system).</li>
+<li>Restart only ever targets a process whose
+<code>/proc/&lt;pid&gt;/cmdline</code> matches the daemon’s own entry
+point (<code>apps/daemon/dist/cli.js</code>). A foreign process
+squatting on the configured port is left alone and the script exits
+non-zero with a clear message (§11.4.174).</li>
+<li><code>od_generate_design</code> (BYOK-gated) is unaffected by this
+script — it still needs operator secrets in <code>.env</code> per
+<code>docs/OPENDESIGN.md</code>; <code>bringup.sh</code> only supervises
+the daemon process, not BYOK configuration.</li>
+</ul>
+<h2 id="evidence">Evidence</h2>
+<p>See
+<code>scratchpad/opendesign_evidence/bringup_supervised_*.log</code> for
+a captured run proving: stop (ownership-verified) → confirmed port-free
+→ <code>status</code> reporting UNHEALTHY/DOWN → <code>up</code>
+bringing the daemon back healthy in ~3s (source already provisioned) → a
+second <code>up</code> call no-op’ing (idempotency) → the daemon’s
+SQLite-persisted project data (<code>helixcode-brand</code>) surviving
+the restart.</p>
+</body>
+</html>
