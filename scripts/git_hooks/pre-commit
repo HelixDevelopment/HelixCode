@@ -266,6 +266,51 @@ fi
 #    exactly which staged file(s) were exempted and why, rather than the
 #    exemption being silent.
 #
+#    SECOND EXEMPTION PATH — CAPTURED EVIDENCE (HXC-223, 2026-08-06). The
+#    (a)+(b) exemption above was designed for mutation-TEST SCRIPTS, and a
+#    captured-evidence artifact is STRUCTURALLY UNABLE to qualify for it: an
+#    evidence `.log` can carry the (a) opt-in marker but can NEVER satisfy
+#    (b), because it is captured OUTPUT — no trap, no restore, nothing to
+#    execute. That left §1.1 (which REQUIRES the paired-mutation proof be
+#    CAPTURED) and §11.4.84 (which refused to let that capture be committed)
+#    in direct contradiction as implemented: the proof of a correctly
+#    serialised mutation was unlandable precisely BECAUSE it proved the
+#    mutation. Forensic case: docs/qa/hxc220_module_identity_gate_
+#    20260805T120714Z/3_mutation_proof.log.
+#
+#    The discriminator is NOT location alone. `docs/qa/**` genuinely DOES
+#    contain tracked EXECUTABLES (harness `run_proof.sh`, mode 100755), so
+#    "it's under docs/qa" would be an unsound test. What matters for
+#    §11.4.84 is whether the residue is code that RUNS: the forensic case
+#    behind the clause is an always-pass JWT-verify bypass sweeping into a
+#    logo commit and becoming live. A marker inside a non-executable
+#    captured-output artifact cannot become live — nothing ever executes it.
+#    So a staged file is exempt under this SECOND path iff ALL FOUR hold:
+#      (i)   it lives under the evidence tree `docs/qa/**` (§11.4.83);
+#      (ii)  its extension is in the closed captured-output/narrative set
+#            {log, txt, out, md} — NOT .sh/.go/.py/etc, and NOT .patch or
+#            .diff (a patch is appliable, so it can still carry a mutation
+#            into live code via `git apply`);
+#      (iii) its STAGED mode is 100644 — a staged executable is code the
+#            moment it lands, whatever it happens to be named; and
+#      (iv)  its first staged line is not a `#!` shebang — a script-shaped
+#            blob is treated as code regardless of extension.
+#    Conditions (ii)+(iii)+(iv) are deliberately redundant with each other:
+#    extension alone, mode alone, and shape alone are each individually
+#    defeatable, so all three are required together.
+#
+#    NOTE — this second path deliberately does NOT require the (a) opt-in
+#    marker. Captured evidence must stay VERBATIM (§11.4.5): editing an
+#    opt-in header into a captured log would corrupt the very artifact whose
+#    fidelity is the point. The four structural conditions carry the
+#    exemption instead. Nothing outside `docs/qa/**` gets any benefit of the
+#    doubt, and live source under scripts/ / helix_code/ / any submodule is
+#    BLOCKED exactly as before.
+#
+#    Like the (a)+(b) path, every GRANTED evidence exemption emits an
+#    auditable NOTICE to stderr naming the file and the reason — exemptions
+#    are never silent.
+#
 #    Honest limitation (§11.4.6): this remains a TEXTUAL / heuristic check,
 #    not a full semantic proof that the restore idiom actually executes
 #    correctly at runtime (that would require actually invoking the staged
@@ -279,6 +324,15 @@ fi
 #    file could still satisfy the shape without the idiom being correct.
 #    This residual gap is accepted and documented rather than silently
 #    claimed closed.
+#
+#    Residual gap of the captured-evidence path (§11.4.6, HXC-223): the four
+#    conditions establish that the artifact is not executable BY ITS OWN
+#    STAGED FORM. They do not prove no external caller could ever feed it to
+#    an interpreter (`bash docs/qa/<run>/x.log`) or that a human will not
+#    later `chmod +x` it. Both would be deliberate acts against a file whose
+#    directory, extension and mode all declare it evidence, and a later
+#    chmod is itself a staged mode change this scan re-evaluates on the next
+#    commit. The gap is narrow and is documented, not claimed closed.
 # ---------------------------------------------------------------------------
 is_mutation_test_exempt() {
   # $1 = staged blob content of a file that already matched a residue
@@ -333,6 +387,44 @@ is_mutation_test_exempt() {
   return 0
 }
 
+is_captured_evidence_exempt() {
+  # $1 = staged PATH of a file that already matched a residue marker.
+  # Returns 0 (exempt) only if ALL FOUR structural conditions hold — see the
+  # "SECOND EXEMPTION PATH" block above. Deliberately path/mode/shape based:
+  # captured evidence must remain verbatim, so no in-file opt-in is demanded.
+  local f="$1" base ext mode firstline
+
+  # (i) inside the §11.4.83 evidence tree.
+  case "$f" in
+    docs/qa/*) ;;
+    *) return 1 ;;
+  esac
+
+  # (ii) closed captured-output / narrative extension set.
+  base=${f##*/}
+  case "$base" in
+    *.*) ext=$(printf '%s' "${base##*.}" | tr 'A-Z' 'a-z') ;;
+    *) return 1 ;;                       # extensionless: not a known-inert class
+  esac
+  case "$ext" in
+    log|txt|out|md) ;;
+    *) return 1 ;;
+  esac
+
+  # (iii) STAGED mode must be non-executable (100644). Read from the index,
+  # not the worktree, so it reflects exactly what is about to be committed.
+  mode=$(git ls-files --stage -- "$f" 2>/dev/null | awk 'NR==1{print $1}')
+  [ "$mode" = "100644" ] || return 1
+
+  # (iv) not script-shaped: a `#!` first line is code whatever its name.
+  firstline=$(git show ":$f" 2>/dev/null | head -1)
+  case "$firstline" in
+    '#!'*) return 1 ;;
+  esac
+
+  return 0
+}
+
 mutation_hits=""
 while IFS= read -r f; do
   case "$f" in
@@ -348,6 +440,13 @@ while IFS= read -r f; do
       # writing a file mid-commit would itself risk leaving residue).
       echo "NOTICE (§11.4.84 audit): mutation-test exemption granted for staged file: $f" >&2
       continue   # explicitly-marked + trap-restored mutation-test file: not residue
+    fi
+    if is_captured_evidence_exempt "$f"; then
+      # §11.4.84 audit trail: same stderr-only discipline as the (a)+(b)
+      # grant above — never written to the tree mid-commit.
+      echo "NOTICE (§11.4.84 audit): captured-evidence exemption granted for staged file: $f" >&2
+      echo "NOTICE (§11.4.84 audit):   reason: non-executable captured-output artifact under docs/qa/** (staged mode 100644, inert extension, no shebang) — it never executes, so the marker cannot leak a bypass into a running artifact; §1.1 requires this proof be captured." >&2
+      continue   # captured evidence, structurally non-executable: not residue
     fi
     mutation_hits="${mutation_hits}\n  ${f}"
   fi
