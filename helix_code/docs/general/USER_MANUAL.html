@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>USER_MANUAL</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">USER_MANUAL</h1>
+</header>
+<h1 id="helixcode-user-manual">HelixCode User Manual</h1>
+<p><strong>Version 2.0</strong> | Last Updated: 2025-11-05</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-introduction">Introduction</a></li>
+<li><a href="#2-installation--setup">Installation &amp; Setup</a></li>
+<li><a href="#3-llm-providers">LLM Providers</a></li>
+<li><a href="#4-core-tools">Core Tools</a></li>
+<li><a href="#5-workflows">Workflows</a></li>
+<li><a href="#6-advanced-features">Advanced Features</a></li>
+<li><a href="#7-development-modes">Development Modes</a></li>
+<li><a href="#8-api-reference">API Reference</a></li>
+<li><a href="#9-configuration">Configuration</a></li>
+<li><a href="#10-best-practices">Best Practices</a></li>
+<li><a href="#11-troubleshooting">Troubleshooting</a></li>
+<li><a href="#12-faq">FAQ</a></li>
+</ol>
+<hr />
+<h2 id="introduction">1. Introduction</h2>
+<h3 id="what-is-helixcode">What is HelixCode?</h3>
+<p>HelixCode is an enterprise-grade distributed AI development platform
+that enables intelligent task division, work preservation, and
+cross-platform development workflows. It combines the power of 14+ AI
+providers with advanced tooling to accelerate your development
+process.</p>
+<h3 id="key-capabilities">Key Capabilities</h3>
+<ul>
+<li><strong>14+ AI Providers</strong>: Anthropic Claude, Google Gemini,
+AWS Bedrock, Azure OpenAI, VertexAI, Groq, OpenAI, and more</li>
+<li><strong>Advanced Context</strong>: Extended thinking, prompt
+caching, 2M token context windows</li>
+<li><strong>Smart Tools</strong>: File operations, shell execution,
+browser control, web search, voice-to-code</li>
+<li><strong>Intelligent Workflows</strong>: Plan mode, auto-commit,
+multi-file editing, context compression</li>
+<li><strong>Enterprise Features</strong>: Checkpoint snapshots, 5-level
+autonomy modes, vision auto-switching</li>
+<li><strong>Distributed Architecture</strong>: SSH-based worker pools
+with automatic management</li>
+</ul>
+<h3 id="architecture-overview">Architecture Overview</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                     HelixCode Server                     │
+├─────────────────────────────────────────────────────────┤
+│  REST API  │  WebSocket  │  MCP Protocol  │  CLI/TUI    │
+├─────────────────────────────────────────────────────────┤
+│              LLM Provider Layer (14+ providers)          │
+├─────────────────────────────────────────────────────────┤
+│  Tools: File, Shell, Browser, Web, Voice, Mapping       │
+├─────────────────────────────────────────────────────────┤
+│  Workflows: Plan, Commit, Edit, Compress, Confirm       │
+├─────────────────────────────────────────────────────────┤
+│  Advanced: Snapshots, Autonomy Modes, Vision Switch     │
+├─────────────────────────────────────────────────────────┤
+│         Database (PostgreSQL) │ Cache (Redis)            │
+└─────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 id="installation-setup">2. Installation &amp; Setup</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li><strong>Go 1.26+</strong></li>
+<li><strong>PostgreSQL 14+</strong></li>
+<li><strong>Redis 7+</strong> (optional, recommended for
+production)</li>
+<li><strong>Git</strong></li>
+<li><strong>Docker &amp; Docker Compose</strong> (for containerized
+deployment)</li>
+</ul>
+<h3 id="quick-start">Quick Start</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone repository</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/HelixDevelopment/Helix-CLI.git</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> helixcode/HelixCode</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install dependencies</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> mod download</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Build</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Run tests</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Start development server</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> dev</span></code></pre></div>
+<h3 id="production-setup">Production Setup</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create database</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">createdb</span> helixcode</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">createuser</span> helixcode</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Set environment variables</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HELIX_DATABASE_PASSWORD</span><span class="op">=</span>your_password</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HELIX_AUTH_JWT_SECRET</span><span class="op">=</span>your_jwt_secret</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HELIX_REDIS_PASSWORD</span><span class="op">=</span>your_redis_password</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy with Docker Compose</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">docker-compose</span> up <span class="at">-d</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify deployment</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost/health</span></code></pre></div>
+<h3 id="initial-configuration">Initial Configuration</h3>
+<p>Create <code>config/config.yaml</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">server</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">address</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.0.0.0&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8080</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">database</span><span class="kw">:</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;localhost&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">5432</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">dbname</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixcode&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">  # Password via HELIX_DATABASE_PASSWORD env var</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">auth</span><span class="kw">:</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">token_expiry</span><span class="kw">:</span><span class="at"> </span><span class="dv">86400</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">session_expiry</span><span class="kw">:</span><span class="at"> </span><span class="dv">604800</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">workers</span><span class="kw">:</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">health_check_interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_concurrent_tasks</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_provider</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;anthropic&quot;</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_tokens</span><span class="kw">:</span><span class="at"> </span><span class="dv">4096</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">temperature</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.7</span></span></code></pre></div>
+<hr />
+<h2 id="llm-providers">3. LLM Providers</h2>
+<h3 id="anthropic-claude">3.1 Anthropic Claude ⭐</h3>
+<p><strong>Most powerful coding assistant with extended thinking and
+prompt caching.</strong></p>
+<p><strong>Models</strong>: - <code>claude-4-sonnet</code> /
+<code>claude-4-opus</code> (most capable) -
+<code>claude-3-7-sonnet</code> (enhanced reasoning) -
+<code>claude-3-5-sonnet-latest</code> (best for coding) -
+<code>claude-3-5-haiku-latest</code> (fast and efficient)</p>
+<p><strong>Setup</strong>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-ant-your-key&quot;</span></span></code></pre></div>
+<p><strong>Advanced Features</strong>: - 🧠 <strong>Extended
+Thinking</strong>: Automatic reasoning for complex problems - 💾
+<strong>Prompt Caching</strong>: 90% cost reduction on repeated contexts
+- 👁️ <strong>Vision</strong>: Full image analysis support - 🛠️
+<strong>Tool Caching</strong>: Cache tool definitions for multi-turn
+conversations</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>provider<span class="op">,</span> _ <span class="op">:=</span> anthropic<span class="op">.</span>NewAnthropicProvider<span class="op">(</span>ProviderConfigEntry<span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Type<span class="op">:</span>   ProviderTypeAnthropic<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    APIKey<span class="op">:</span> os<span class="op">.</span>Getenv<span class="op">(</span><span class="st">&quot;ANTHROPIC_API_KEY&quot;</span><span class="op">),</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>request <span class="op">:=</span> <span class="op">&amp;</span>LLMRequest<span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    Model<span class="op">:</span>   <span class="st">&quot;claude-4-sonnet&quot;</span><span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    Messages<span class="op">:</span> <span class="op">[]</span>Message<span class="op">{{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        Role<span class="op">:</span> <span class="st">&quot;user&quot;</span><span class="op">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        Content<span class="op">:</span> <span class="st">&quot;Think step by step: design a microservices architecture&quot;</span><span class="op">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}},</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    MaxTokens<span class="op">:</span> <span class="dv">10000</span><span class="op">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>response<span class="op">,</span> _ <span class="op">:=</span> provider<span class="op">.</span>Generate<span class="op">(</span>ctx<span class="op">,</span> request<span class="op">)</span></span></code></pre></div>
+<h3 id="google-gemini">3.2 Google Gemini ⭐</h3>
+<p><strong>Massive 2M token context windows for entire codebase
+analysis.</strong></p>
+<p><strong>Models</strong>: - <code>gemini-2.5-pro</code> (2M tokens,
+most capable) - <code>gemini-2.5-flash</code> (1M tokens, ultra-fast) -
+<code>gemini-2.0-flash</code> (fast multimodal)</p>
+<p><strong>Setup</strong>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">GEMINI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-gemini-key&quot;</span></span></code></pre></div>
+<p><strong>Key Features</strong>: - 📚 <strong>2M Token
+Context</strong>: Process entire codebases in one request - 🎨
+<strong>Multimodal</strong>: Text, images, and code understanding - 🚀
+<strong>Flash Models</strong>: Ultra-fast responses</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> llm provider set gemini <span class="at">--model</span> gemini-2.5-pro</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> analyze <span class="at">--full-context</span> <span class="at">--model</span> gemini-2.5-pro</span></code></pre></div>
+<h3 id="aws-bedrock-new">3.3 AWS Bedrock ⭐ NEW</h3>
+<p><strong>Enterprise AI platform with multiple model
+families.</strong></p>
+<p><strong>Models</strong>: - Claude 4/3.x (via Bedrock) - Amazon Titan
+- AI21 Jurassic - Cohere Command</p>
+<p><strong>Setup</strong>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure AWS credentials</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> configure</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use IAM role</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AWS_REGION</span><span class="op">=</span>us-east-1</span></code></pre></div>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>provider<span class="op">,</span> _ <span class="op">:=</span> bedrock<span class="op">.</span>NewBedrockProvider<span class="op">(</span>ProviderConfigEntry<span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    Type<span class="op">:</span>   ProviderTypeBedrock<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    Region<span class="op">:</span> <span class="st">&quot;us-east-1&quot;</span><span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="azure-openai-new">3.4 Azure OpenAI ⭐ NEW</h3>
+<p><strong>Microsoft’s enterprise OpenAI service with Entra ID
+authentication.</strong></p>
+<p><strong>Setup</strong>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_OPENAI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://your-resource.openai.azure.com/&quot;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-key&quot;</span></span></code></pre></div>
+<p><strong>Features</strong>: - Entra ID (Azure AD) authentication -
+Deployment-based routing - Content filtering - Enterprise compliance</p>
+<h3 id="google-vertexai-new">3.5 Google VertexAI ⭐ NEW</h3>
+<p><strong>Unified AI platform with Gemini and Claude Model
+Garden.</strong></p>
+<p><strong>Setup</strong>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gcloud</span> auth application-default login</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">GOOGLE_CLOUD_PROJECT</span><span class="op">=</span><span class="st">&quot;your-project-id&quot;</span></span></code></pre></div>
+<p><strong>Access to</strong>: - Gemini 2.5 Pro/Flash - Claude via Model
+Garden - PaLM 2 models</p>
+<h3 id="groq-new">3.6 Groq ⭐ NEW</h3>
+<p><strong>Ultra-fast inference with 500+ tokens/sec on LPU
+hardware.</strong></p>
+<p><strong>Models</strong>: - <code>llama-3.3-70b-versatile</code> -
+<code>mixtral-8x7b-32768</code></p>
+<p><strong>Setup</strong>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">GROQ_API_KEY</span><span class="op">=</span><span class="st">&quot;your-groq-key&quot;</span></span></code></pre></div>
+<p><strong>Performance</strong>: First token &lt; 100ms, 500+ tokens/sec
+sustained</p>
+<h3 id="other-providers">3.7 Other Providers</h3>
+<h4 id="openai">OpenAI</h4>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;sk-your-key&quot;</span></span></code></pre></div>
+<p>Models: GPT-4.1, GPT-4.5 Preview, GPT-4o, O1/O3/O4</p>
+<h4 id="local-ollamallama.cpp">Local (Ollama/Llama.cpp)</h4>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># No API key required - 100% offline</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ollama</span> serve</span></code></pre></div>
+<h4 id="free-providers">Free Providers</h4>
+<ul>
+<li><strong>XAI (Grok)</strong>: No API key for basic usage</li>
+<li><strong>OpenRouter</strong>: Free models available</li>
+<li><strong>GitHub Copilot</strong>: Free with GitHub subscription</li>
+<li><strong>Qwen</strong>: 2,000 free requests/day</li>
+</ul>
+<hr />
+<h2 id="core-tools">4. Core Tools</h2>
+<h3 id="file-system-tools-new">4.1 File System Tools ⭐ NEW</h3>
+<p><strong>Advanced file operations with intelligent caching and safe
+editing.</strong></p>
+<p><strong>Capabilities</strong>: - Read single/multiple files - Write
+with atomic operations - In-place editing with search/replace -
+Pattern-based file search - Git-aware filtering - Permission checks</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/filesystem&quot;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>fs<span class="op">,</span> _ <span class="op">:=</span> filesystem<span class="op">.</span>NewFileSystemTools<span class="op">(&amp;</span>filesystem<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    EnableCache<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    CacheSize<span class="op">:</span>   <span class="dv">1000</span><span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Read file</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>content<span class="op">,</span> _ <span class="op">:=</span> fs<span class="op">.</span>Read<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;main.go&quot;</span><span class="op">)</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Edit with search/replace</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>fs<span class="op">.</span>Edit<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;main.go&quot;</span><span class="op">,</span> <span class="op">&amp;</span>filesystem<span class="op">.</span>EditOptions<span class="op">{</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    Search<span class="op">:</span>  <span class="st">&quot;oldFunc&quot;</span><span class="op">,</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    Replace<span class="op">:</span> <span class="st">&quot;newFunc&quot;</span><span class="op">,</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Search files</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>results<span class="op">,</span> _ <span class="op">:=</span> fs<span class="op">.</span>Search<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;TODO&quot;</span><span class="op">,</span> <span class="op">&amp;</span>filesystem<span class="op">.</span>SearchOptions<span class="op">{</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    Pattern<span class="op">:</span> <span class="st">&quot;*.go&quot;</span><span class="op">,</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    Recursive<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="shell-execution-new">4.2 Shell Execution ⭐ NEW</h3>
+<p><strong>Safe command execution with sandboxing and security
+controls.</strong></p>
+<p><strong>Features</strong>: - Allowlist/blocklist security - Real-time
+output streaming - Timeout management - Working directory control -
+Dry-run mode</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/shell&quot;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>executor<span class="op">,</span> _ <span class="op">:=</span> shell<span class="op">.</span>NewCommandExecutor<span class="op">(&amp;</span>shell<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    Allowlist<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;git&quot;</span><span class="op">,</span> <span class="st">&quot;npm&quot;</span><span class="op">,</span> <span class="st">&quot;go&quot;</span><span class="op">},</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    Blocklist<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;rm&quot;</span><span class="op">,</span> <span class="st">&quot;dd&quot;</span><span class="op">,</span> <span class="st">&quot;mkfs&quot;</span><span class="op">},</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    Timeout<span class="op">:</span>   <span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> _ <span class="op">:=</span> executor<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>shell<span class="op">.</span>Command<span class="op">{</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span> <span class="st">&quot;git&quot;</span><span class="op">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    Args<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;status&quot;</span><span class="op">},</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="browser-control-new">4.3 Browser Control ⭐ NEW</h3>
+<p><strong>Chrome automation for web scraping, testing, and
+interaction.</strong></p>
+<p><strong>Capabilities</strong>: - Launch/attach to Chrome - Navigate
+and interact - Screenshots with annotation - Form filling - Console
+monitoring</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/browser&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>browser<span class="op">,</span> _ <span class="op">:=</span> browser<span class="op">.</span>NewBrowserController<span class="op">(&amp;</span>browser<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    Headless<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>browser<span class="op">.</span>Launch<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>browser<span class="op">.</span>LaunchOptions<span class="op">{})</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>browser<span class="op">.</span>Navigate<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;https://example.com&quot;</span><span class="op">)</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>screenshot<span class="op">,</span> _ <span class="op">:=</span> browser<span class="op">.</span>Screenshot<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>browser<span class="op">.</span>ScreenshotOptions<span class="op">{</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    FullPage<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="codebase-mapping-new">4.4 Codebase Mapping ⭐ NEW</h3>
+<p><strong>Tree-sitter AST parsing for deep code
+understanding.</strong></p>
+<p><strong>Supported Languages</strong>: 30+ (Go, TypeScript, Python,
+Rust, Java, C++, etc.)</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/mapping&quot;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>mapper<span class="op">,</span> _ <span class="op">:=</span> mapping<span class="op">.</span>NewMapper<span class="op">(&amp;</span>mapping<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    CacheDir<span class="op">:</span> <span class="st">&quot;.helix.cache&quot;</span><span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>codeMap<span class="op">,</span> _ <span class="op">:=</span> mapper<span class="op">.</span>MapCodebase<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;/path/to/project&quot;</span><span class="op">,</span> <span class="op">&amp;</span>mapping<span class="op">.</span>MapOptions<span class="op">{</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    Languages<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;go&quot;</span><span class="op">,</span> <span class="st">&quot;typescript&quot;</span><span class="op">},</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> file <span class="op">:=</span> <span class="kw">range</span> codeMap<span class="op">.</span>Files <span class="op">{</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;%s: %d functions, %d classes</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>        file<span class="op">.</span>Path<span class="op">,</span> <span class="bu">len</span><span class="op">(</span>file<span class="op">.</span>Functions<span class="op">),</span> <span class="bu">len</span><span class="op">(</span>file<span class="op">.</span>Classes<span class="op">))</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="web-tools-new">4.5 Web Tools ⭐ NEW</h3>
+<p><strong>Multi-provider search and HTML fetching/parsing.</strong></p>
+<p><strong>Search Engines</strong>: - Google Custom Search - Bing Web
+Search - DuckDuckGo (no API key)</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/web&quot;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>wt<span class="op">,</span> _ <span class="op">:=</span> web<span class="op">.</span>NewWebTools<span class="op">(&amp;</span>web<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    DefaultProvider<span class="op">:</span> web<span class="op">.</span>ProviderDuckDuckGo<span class="op">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Search</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>results<span class="op">,</span> _ <span class="op">:=</span> wt<span class="op">.</span>Search<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;golang best practices&quot;</span><span class="op">,</span> web<span class="op">.</span>SearchOptions<span class="op">{</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    MaxResults<span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Fetch and parse</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>markdown<span class="op">,</span> metadata<span class="op">,</span> _ <span class="op">:=</span> wt<span class="op">.</span>FetchAndParse<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;https://example.com&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="voice-to-code-new">4.6 Voice-to-Code ⭐ NEW</h3>
+<p><strong>Hands-free coding with Whisper transcription.</strong></p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/voice&quot;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>manager<span class="op">,</span> _ <span class="op">:=</span> voice<span class="op">.</span>NewVoiceInputManager<span class="op">(&amp;</span>voice<span class="op">.</span>VoiceConfig<span class="op">{</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    APIKey<span class="op">:</span>           os<span class="op">.</span>Getenv<span class="op">(</span><span class="st">&quot;OPENAI_API_KEY&quot;</span><span class="op">),</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    SampleRate<span class="op">:</span>       <span class="dv">16000</span><span class="op">,</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    SilenceTimeout<span class="op">:</span>   <span class="dv">2</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Record and transcribe in one operation</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>text<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>RecordAndTranscribe<span class="op">(</span>ctx<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="workflows">5. Workflows</h2>
+<h3 id="plan-mode-new">5.1 Plan Mode ⭐ NEW</h3>
+<p><strong>Two-phase workflow: Plan → Act with interactive
+review.</strong></p>
+<p><strong>Phases</strong>: 1. <strong>Plan</strong>: Analyze task,
+generate options, present choices 2. <strong>Act</strong>: Execute
+approved plan with progress tracking</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/workflow/planmode&quot;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>planner<span class="op">,</span> _ <span class="op">:=</span> planmode<span class="op">.</span>NewPlanner<span class="op">(</span>llmProvider<span class="op">)</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate plan</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>plan<span class="op">,</span> _ <span class="op">:=</span> planner<span class="op">.</span>GeneratePlan<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>planmode<span class="op">.</span>Task<span class="op">{</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    Description<span class="op">:</span> <span class="st">&quot;Refactor authentication module&quot;</span><span class="op">,</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    Context<span class="op">:</span>     codebaseContext<span class="op">,</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate options</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>options<span class="op">,</span> _ <span class="op">:=</span> planner<span class="op">.</span>GenerateOptions<span class="op">(</span>ctx<span class="op">,</span> task<span class="op">)</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="co">// User selects option, then execute</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>executor<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> selectedOption<span class="op">)</span></span></code></pre></div>
+<p><strong>CLI Usage</strong>:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> plan <span class="st">&quot;Refactor auth module&quot;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Review plan</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> execute <span class="at">--plan</span> <span class="op">&lt;</span>plan-id<span class="op">&gt;</span></span></code></pre></div>
+<h3 id="auto-commit-new">5.2 Auto-Commit ⭐ NEW</h3>
+<p><strong>LLM-generated commit messages following
+conventions.</strong></p>
+<p><strong>Features</strong>: - Semantic commit messages - Conventional
+commits (feat:, fix:, docs:, etc.) - Co-author attribution - Amend
+detection</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/git&quot;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>coordinator<span class="op">,</span> _ <span class="op">:=</span> git<span class="op">.</span>NewAutoCommitCoordinator<span class="op">(</span><span class="st">&quot;/path/to/repo&quot;</span><span class="op">,</span> llmProvider<span class="op">)</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> _ <span class="op">:=</span> coordinator<span class="op">.</span>AutoCommit<span class="op">(</span>ctx<span class="op">,</span> git<span class="op">.</span>CommitOptions<span class="op">{</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    Files<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;main.go&quot;</span><span class="op">},</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    Author<span class="op">:</span> git<span class="op">.</span>Person<span class="op">{</span>Name<span class="op">:</span> <span class="st">&quot;Dev&quot;</span><span class="op">,</span> Email<span class="op">:</span> <span class="st">&quot;dev@example.com&quot;</span><span class="op">},</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>    Attributions<span class="op">:</span> <span class="op">[]</span>git<span class="op">.</span>Attribution<span class="op">{</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>        git<span class="op">.</span>GetClaudeAttribution<span class="op">(),</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Committed: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> result<span class="op">.</span>Message<span class="op">)</span></span></code></pre></div>
+<p><strong>CLI Usage</strong>:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add .</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> commit <span class="at">--auto</span></span></code></pre></div>
+<h3 id="multi-file-editing-new">5.3 Multi-File Editing ⭐ NEW</h3>
+<p><strong>Atomic transactions across multiple files with automatic
+rollback.</strong></p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/multiedit&quot;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>manager<span class="op">,</span> _ <span class="op">:=</span> multiedit<span class="op">.</span>NewTransactionManager<span class="op">()</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>tx<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>Begin<span class="op">()</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>tx<span class="op">.</span>AddEdit<span class="op">(&amp;</span>multiedit<span class="op">.</span>FileEdit<span class="op">{</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    Path<span class="op">:</span>    <span class="st">&quot;file1.go&quot;</span><span class="op">,</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    Content<span class="op">:</span> newContent1<span class="op">,</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>tx<span class="op">.</span>AddEdit<span class="op">(&amp;</span>multiedit<span class="op">.</span>FileEdit<span class="op">{</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    Path<span class="op">:</span>    <span class="st">&quot;file2.go&quot;</span><span class="op">,</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    Content<span class="op">:</span> newContent2<span class="op">,</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="co">// All or nothing</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> manager<span class="op">.</span>Commit<span class="op">(</span>tx<span class="op">.</span>ID<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>Rollback<span class="op">(</span>tx<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="context-compression-new">5.4 Context Compression ⭐ NEW</h3>
+<p><strong>Automatic conversation summarization for token
+optimization.</strong></p>
+<p><strong>Strategies</strong>: - <strong>Sliding Window</strong>: Keep
+last N messages - <strong>Semantic Summarization</strong>: LLM-powered
+summaries - <strong>Hybrid</strong>: Best of both worlds (default)</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/llm/compression&quot;</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>coordinator <span class="op">:=</span> compression<span class="op">.</span>NewCompressionCoordinator<span class="op">(</span>llmProvider<span class="op">,</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    compression<span class="op">.</span>WithStrategy<span class="op">(</span>compression<span class="op">.</span>StrategyHybrid<span class="op">),</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    compression<span class="op">.</span>WithThreshold<span class="op">(</span><span class="dv">180000</span><span class="op">),</span> <span class="co">// 90% of 200K</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> shouldCompress<span class="op">,</span> _ <span class="op">:=</span> coordinator<span class="op">.</span>ShouldCompress<span class="op">(</span>conversation<span class="op">);</span> shouldCompress <span class="op">{</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    result<span class="op">,</span> _ <span class="op">:=</span> coordinator<span class="op">.</span>Compress<span class="op">(</span>ctx<span class="op">,</span> conversation<span class="op">)</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Saved %d tokens (%.1f%% reduction)</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>TokensSaved<span class="op">,</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float64</span><span class="op">(</span>result<span class="op">.</span>TokensSaved<span class="op">)/</span><span class="dt">float64</span><span class="op">(</span>result<span class="op">.</span>Original<span class="op">.</span>TokenCount<span class="op">)*</span><span class="dv">100</span><span class="op">)</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="tool-confirmation-new">5.5 Tool Confirmation ⭐ NEW</h3>
+<p><strong>Interactive confirmation for dangerous
+operations.</strong></p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/tools/confirmation&quot;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>coordinator <span class="op">:=</span> confirmation<span class="op">.</span>NewConfirmationCoordinator<span class="op">()</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> _ <span class="op">:=</span> coordinator<span class="op">.</span>Confirm<span class="op">(</span>ctx<span class="op">,</span> confirmation<span class="op">.</span>ConfirmationRequest<span class="op">{</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    ToolName<span class="op">:</span> <span class="st">&quot;bash&quot;</span><span class="op">,</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    Operation<span class="op">:</span> confirmation<span class="op">.</span>Operation<span class="op">{</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        Type<span class="op">:</span>        confirmation<span class="op">.</span>OpDelete<span class="op">,</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        Description<span class="op">:</span> <span class="st">&quot;Delete temporary files&quot;</span><span class="op">,</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        Target<span class="op">:</span>      <span class="st">&quot;/tmp/build-cache&quot;</span><span class="op">,</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>        Risk<span class="op">:</span>        confirmation<span class="op">.</span>RiskMedium<span class="op">,</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> result<span class="op">.</span>Allowed <span class="op">{</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Execute operation</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="advanced-features">6. Advanced Features</h2>
+<h3 id="checkpoint-snapshots-new">6.1 Checkpoint Snapshots ⭐ NEW</h3>
+<p><strong>Git-based workspace snapshots with instant
+rollback.</strong></p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/workflow/snapshots&quot;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>manager<span class="op">,</span> _ <span class="op">:=</span> snapshots<span class="op">.</span>NewManager<span class="op">(</span><span class="st">&quot;/path/to/repo&quot;</span><span class="op">)</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Create checkpoint</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>snapshot<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateSnapshot<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>snapshots<span class="op">.</span>CreateOptions<span class="op">{</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    Description<span class="op">:</span> <span class="st">&quot;Before refactoring&quot;</span><span class="op">,</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>    Tags<span class="op">:</span>        <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;stable&quot;</span><span class="op">},</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="co">// ... make changes ...</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Restore if needed</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>RestoreSnapshot<span class="op">(</span>ctx<span class="op">,</span> snapshot<span class="op">.</span>ID<span class="op">,</span> <span class="op">&amp;</span>snapshots<span class="op">.</span>RestoreOptions<span class="op">{</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>    CreateBackup<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>CLI Usage</strong>:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create snapshot</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot create <span class="st">&quot;Before major refactor&quot;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># List snapshots</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot list</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Restore</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot restore <span class="op">&lt;</span>snapshot-id<span class="op">&gt;</span></span></code></pre></div>
+<h3 id="autonomy-modes-new">6.2 Autonomy Modes ⭐ NEW</h3>
+<p><strong>5 levels of AI autonomy from manual to full
+automation.</strong></p>
+<p><strong>Modes</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Mode</th>
+<th>Auto Context</th>
+<th>Auto Apply</th>
+<th>Confirmation</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>None</strong></td>
+<td>❌</td>
+<td>❌</td>
+<td>Always</td>
+<td>Critical systems, auditing</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Basic</strong></td>
+<td>❌</td>
+<td>❌</td>
+<td>Always</td>
+<td>Fine-grained control</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Basic Plus</strong></td>
+<td>Suggestions</td>
+<td>❌</td>
+<td>Yes</td>
+<td>Learning the tool</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Semi Auto</strong> ⭐</td>
+<td>✅</td>
+<td>❌</td>
+<td>Yes</td>
+<td>Most workflows (default)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Full Auto</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>No</td>
+<td>Trusted tasks, automation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/workflow/autonomy&quot;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>controller<span class="op">,</span> _ <span class="op">:=</span> autonomy<span class="op">.</span>NewAutonomyController<span class="op">(</span><span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Set mode</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>controller<span class="op">.</span>SetMode<span class="op">(</span>ctx<span class="op">,</span> autonomy<span class="op">.</span>ModeSemiAuto<span class="op">)</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Check permissions</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>action <span class="op">:=</span> autonomy<span class="op">.</span>NewAction<span class="op">(</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    autonomy<span class="op">.</span>ActionApplyChange<span class="op">,</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Apply code changes&quot;</span><span class="op">,</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    autonomy<span class="op">.</span>RiskMedium<span class="op">,</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>perm<span class="op">,</span> _ <span class="op">:=</span> controller<span class="op">.</span>RequestPermission<span class="op">(</span>ctx<span class="op">,</span> action<span class="op">)</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> perm<span class="op">.</span>Granted <span class="op">&amp;&amp;</span> <span class="op">!</span>perm<span class="op">.</span>RequiresConfirm <span class="op">{</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Auto-approved</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>CLI Usage</strong>:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set autonomy mode</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> autonomy set semi-auto</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Get current mode</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> autonomy get</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Temporary escalation</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> autonomy escalate full-auto <span class="at">--duration</span> 30m</span></code></pre></div>
+<h3 id="vision-auto-switch-new">6.3 Vision Auto-Switch ⭐ NEW</h3>
+<p><strong>Automatic switching to vision models when images
+detected.</strong></p>
+<p><strong>Switch Modes</strong>: - <strong>Once</strong>: Just for this
+request - <strong>Session</strong>: For this conversation -
+<strong>Persist</strong>: Save as default</p>
+<p><strong>Example</strong>:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/llm/vision&quot;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>manager<span class="op">,</span> _ <span class="op">:=</span> vision<span class="op">.</span>NewVisionSwitchManager<span class="op">(&amp;</span>vision<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    SwitchMode<span class="op">:</span>     vision<span class="op">.</span>SwitchSession<span class="op">,</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    RequireConfirm<span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="op">},</span> registry<span class="op">)</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>ProcessInput<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>vision<span class="op">.</span>Input<span class="op">{</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    Text<span class="op">:</span> <span class="st">&quot;What&#39;s in this image?&quot;</span><span class="op">,</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    Files<span class="op">:</span> <span class="op">[]*</span>vision<span class="op">.</span>File<span class="op">{</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Path<span class="op">:</span> <span class="st">&quot;screenshot.png&quot;</span><span class="op">,</span> MIMEType<span class="op">:</span> <span class="st">&quot;image/png&quot;</span><span class="op">},</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> result<span class="op">.</span>SwitchPerformed <span class="op">{</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Switched to %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> result<span class="op">.</span>ToModel<span class="op">.</span>Name<span class="op">)</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="cognee-memory-integration-new">6.4 Cognee Memory Integration ⭐
+NEW</h3>
+<p><strong>Persistent AI memory system with graph-based knowledge
+management.</strong></p>
+<p><strong>Features</strong>: - Long-term conversation memory -
+Knowledge graph construction - Semantic search and retrieval -
+Cross-provider memory sharing - Automatic context management -
+Performance optimization</p>
+<p><strong>Configuration</strong>:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;cognee&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;enabled&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;mode&quot;</span><span class="fu">:</span> <span class="st">&quot;local&quot;</span><span class="fu">,</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;remote_api&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;service_endpoint&quot;</span><span class="fu">:</span> <span class="st">&quot;https://api.cognee.ai&quot;</span><span class="fu">,</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;api_key&quot;</span><span class="fu">:</span> <span class="st">&quot;your-cognee-key&quot;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;providers&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;openai&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cognee_enabled&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;anthropic&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cognee_enabled&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>CLI Usage</strong>:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable Cognee for a provider</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix-config</span> set providers.openai.cognee_enabled true</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure Cognee settings</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix-config</span> set cognee.enabled true</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="ex">helix-config</span> set cognee.mode local</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check Cognee status</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="ex">helix-config</span> get cognee</span></code></pre></div>
+<p><strong>API Usage</strong>:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/memory&quot;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize Cognee</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>cognee <span class="op">:=</span> memory<span class="op">.</span>NewCogneeIntegration<span class="op">(&amp;</span>config<span class="op">.</span>Cognee<span class="op">,</span> logger<span class="op">)</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> cognee<span class="op">.</span>Initialize<span class="op">(</span>ctx<span class="op">,</span> <span class="op">&amp;</span>config<span class="op">.</span>Cognee<span class="op">)</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Store memory</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>memItem <span class="op">:=</span> memory<span class="op">.</span>NewMemoryItem<span class="op">(</span><span class="st">&quot;id&quot;</span><span class="op">,</span> <span class="st">&quot;content&quot;</span><span class="op">,</span> <span class="st">&quot;type&quot;</span><span class="op">,</span> <span class="fl">1.0</span><span class="op">,</span> time<span class="op">.</span>Now<span class="op">())</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> cognee<span class="op">.</span>StoreMemory<span class="op">(</span>ctx<span class="op">,</span> memItem<span class="op">)</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Retrieve memory</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>query <span class="op">:=</span> memory<span class="op">.</span>NewRetrievalQuery<span class="op">(</span><span class="st">&quot;search term&quot;</span><span class="op">,</span> <span class="st">&quot;type&quot;</span><span class="op">,</span> <span class="dv">10</span><span class="op">)</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>results<span class="op">,</span> err <span class="op">:=</span> cognee<span class="op">.</span>RetrieveMemory<span class="op">(</span>ctx<span class="op">,</span> query<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="development-modes">7. Development Modes</h2>
+<p>HelixCode supports multiple development workflows:</p>
+<h3 id="planning-mode">Planning Mode</h3>
+<ul>
+<li>Analyze requirements</li>
+<li>Create technical specifications</li>
+<li>Break down into tasks</li>
+</ul>
+<h3 id="building-mode">Building Mode</h3>
+<ul>
+<li>Code generation</li>
+<li>Dependency management</li>
+<li>Integration</li>
+</ul>
+<h3 id="testing-mode">Testing Mode</h3>
+<ul>
+<li>Unit test generation</li>
+<li>Test execution</li>
+<li>Coverage analysis</li>
+</ul>
+<h3 id="refactoring-mode">Refactoring Mode</h3>
+<ul>
+<li>Code analysis</li>
+<li>Optimization</li>
+<li>Restructuring</li>
+</ul>
+<h3 id="debugging-mode">Debugging Mode</h3>
+<ul>
+<li>Error analysis</li>
+<li>Root cause identification</li>
+<li>Fix generation</li>
+</ul>
+<h3 id="deployment-mode">Deployment Mode</h3>
+<ul>
+<li>Build packaging</li>
+<li>Deployment automation</li>
+<li>Rollback support</li>
+</ul>
+<hr />
+<h2 id="api-reference">8. API Reference</h2>
+<h3 id="rest-api-endpoints">REST API Endpoints</h3>
+<h4 id="authentication">Authentication</h4>
+<ul>
+<li><code>POST /api/auth/register</code> - User registration</li>
+<li><code>POST /api/auth/login</code> - Login</li>
+<li><code>POST /api/auth/logout</code> - Logout</li>
+<li><code>POST /api/auth/refresh</code> - Token refresh</li>
+<li><code>GET /api/auth/me</code> - Current user</li>
+</ul>
+<h4 id="tasks">Tasks</h4>
+<ul>
+<li><code>GET /api/tasks</code> - List tasks</li>
+<li><code>POST /api/tasks</code> - Create task</li>
+<li><code>GET /api/tasks/{id}</code> - Get task</li>
+<li><code>PUT /api/tasks/{id}</code> - Update task</li>
+<li><code>DELETE /api/tasks/{id}</code> - Delete task</li>
+</ul>
+<h4 id="workers">Workers</h4>
+<ul>
+<li><code>GET /api/workers</code> - List workers</li>
+<li><code>POST /api/workers</code> - Register worker</li>
+<li><code>GET /api/workers/{id}</code> - Get worker</li>
+<li><code>DELETE /api/workers/{id}</code> - Remove worker</li>
+</ul>
+<h4 id="llm-operations">LLM Operations</h4>
+<ul>
+<li><code>POST /api/llm/generate</code> - Generate completion</li>
+<li><code>POST /api/llm/stream</code> - Stream completion</li>
+<li><code>GET /api/llm/providers</code> - List providers</li>
+<li><code>GET /api/llm/models</code> - List models</li>
+</ul>
+<hr />
+<h2 id="configuration">9. Configuration</h2>
+<h3 id="environment-variables">Environment Variables</h3>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Database</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_HOST</span><span class="op">=</span>localhost</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_PORT</span><span class="op">=</span>5432</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_NAME</span><span class="op">=</span>helixcode</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_PASSWORD</span><span class="op">=</span>secret</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Authentication</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTH_JWT_SECRET</span><span class="op">=</span>your-secret</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTH_TOKEN_EXPIRY</span><span class="op">=</span>86400</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Redis (optional)</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_HOST</span><span class="op">=</span>localhost</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_PORT</span><span class="op">=</span>6379</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_PASSWORD</span><span class="op">=</span>secret</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="co"># AI Providers</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span>sk-ant-...</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="va">GEMINI_API_KEY</span><span class="op">=</span>...</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a><span class="va">OPENAI_API_KEY</span><span class="op">=</span>sk-...</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a><span class="va">GROQ_API_KEY</span><span class="op">=</span>...</span></code></pre></div>
+<h3 id="configuration-file">Configuration File</h3>
+<p><code>config/config.yaml</code>:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">server</span><span class="kw">:</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">address</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.0.0.0&quot;</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8080</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">read_timeout</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">write_timeout</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="fu">database</span><span class="kw">:</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${HELIX_DATABASE_HOST}&quot;</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">5432</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">dbname</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixcode&quot;</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_connections</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">connection_timeout</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_provider</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;anthropic&quot;</span></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">providers</span><span class="kw">:</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">anthropic</span><span class="kw">:</span></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;claude-4-sonnet&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;claude-3-5-sonnet-latest&quot;</span><span class="kw">]</span></span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">gemini</span><span class="kw">:</span></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;gemini-2.5-pro&quot;</span><span class="kw">]</span></span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a><span class="fu">workers</span><span class="kw">:</span></span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">health_check_interval</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_concurrent_tasks</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">task_timeout</span><span class="kw">:</span><span class="at"> 3600s</span></span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a><span class="fu">tools</span><span class="kw">:</span></span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">filesystem</span><span class="kw">:</span></span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enable_cache</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cache_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shell</span><span class="kw">:</span></span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">allowlist</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;git&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;npm&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;go&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;make&quot;</span><span class="kw">]</span></span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">browser</span><span class="kw">:</span></span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">headless</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 30s</span></span></code></pre></div>
+<hr />
+<h2 id="best-practices">10. Best Practices</h2>
+<h3 id="choosing-autonomy-mode">Choosing Autonomy Mode</h3>
+<ul>
+<li><strong>Start with Semi Auto</strong>: Best for most workflows</li>
+<li><strong>Use Basic Plus</strong>: When learning new features</li>
+<li><strong>Escalate to Full Auto</strong>: For routine, trusted
+tasks</li>
+<li><strong>Drop to Basic/None</strong>: For critical or risky
+operations</li>
+</ul>
+<h3 id="managing-context">Managing Context</h3>
+<ul>
+<li>Enable context compression for long conversations</li>
+<li>Use checkpoint snapshots before major changes</li>
+<li>Leverage codebase mapping for full project understanding</li>
+<li>Utilize Gemini 2.5 Pro for entire codebase analysis (2M tokens)</li>
+</ul>
+<h3 id="security">Security</h3>
+<ul>
+<li>Always use tool confirmation for dangerous operations</li>
+<li>Review plans before execution in Plan Mode</li>
+<li>Set appropriate autonomy levels for your environment</li>
+<li>Use allowlists for shell execution</li>
+<li>Enable audit logging for compliance</li>
+</ul>
+<h3 id="performance">Performance</h3>
+<ul>
+<li>Use Groq for ultra-fast inference</li>
+<li>Enable prompt caching with Claude</li>
+<li>Use local models (Ollama) for offline work</li>
+<li>Leverage file system caching</li>
+<li>Configure appropriate timeouts</li>
+</ul>
+<hr />
+<h2 id="troubleshooting">11. Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<p><strong>Problem</strong>: “No LLM provider available”
+<strong>Solution</strong>: Set provider API key and verify with
+<code>helixcode llm providers</code></p>
+<p><strong>Problem</strong>: “Database connection failed”
+<strong>Solution</strong>: Check PostgreSQL is running and credentials
+are correct</p>
+<p><strong>Problem</strong>: “Worker health check failed”
+<strong>Solution</strong>: Verify SSH connectivity and worker
+installation</p>
+<p><strong>Problem</strong>: “Context window exceeded”
+<strong>Solution</strong>: Enable context compression or use larger
+context models (Gemini 2.5 Pro)</p>
+<p><strong>Problem</strong>: “Vision model not available”
+<strong>Solution</strong>: Ensure vision-capable provider is configured
+(Claude, Gemini, GPT-4o)</p>
+<h3 id="error-messages">Error Messages</h3>
+<ul>
+<li><code>ErrProviderNotFound</code>: Configure provider in
+config.yaml</li>
+<li><code>ErrModelNotSupported</code>: Check model availability with
+provider</li>
+<li><code>ErrContextTooLarge</code>: Enable compression or reduce
+context</li>
+<li><code>ErrPermissionDenied</code>: Review autonomy mode and
+permissions</li>
+<li><code>ErrSnapshotNotFound</code>: Verify snapshot exists with
+<code>list</code> command</li>
+</ul>
+<h3 id="debugging">Debugging</h3>
+<p>Enable debug logging:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">HELIX_LOG_LEVEL</span><span class="op">=</span>debug</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> server</span></code></pre></div>
+<p>Check logs:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-f</span> /var/log/helix/helixcode.log</span></code></pre></div>
+<hr />
+<h2 id="faq">12. FAQ</h2>
+<p><strong>Q: Which AI provider should I use?</strong> A: Claude 4
+Sonnet for complex reasoning, Gemini 2.5 Pro for large codebases, Groq
+for speed.</p>
+<p><strong>Q: How much does it cost?</strong> A: HelixCode is open
+source. Provider costs vary (free options: XAI Grok, OpenRouter,
+Copilot).</p>
+<p><strong>Q: Can I run it offline?</strong> A: Yes, use Ollama or
+Llama.cpp local providers.</p>
+<p><strong>Q: What’s the difference between modes?</strong> A: Semi Auto
+is best for most work (auto context, manual approval). Full Auto is for
+trusted automation.</p>
+<p><strong>Q: How do I backup my work?</strong> A: Use checkpoint
+snapshots or configure automatic checkpoints.</p>
+<p><strong>Q: Can multiple users collaborate?</strong> A: Yes, via
+distributed workers and shared sessions.</p>
+<p><strong>Q: What languages are supported?</strong> A: 30+ via codebase
+mapping: Go, TypeScript, Python, Rust, Java, C++, etc.</p>
+<p><strong>Q: How do I switch between providers?</strong> A:
+<code>helixcode llm provider set &lt;provider&gt; --model &lt;model&gt;</code></p>
+<p><strong>Q: Is my code sent to AI providers?</strong> A: Only what you
+explicitly request. Use local models for full privacy.</p>
+<p><strong>Q: How do I contribute?</strong> A: See CONTRIBUTING.md in
+the repository.</p>
+<hr />
+<h2 id="appendix-a-command-reference">Appendix A: Command Reference</h2>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Server</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> server                    <span class="co"># Start server</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> health                    <span class="co"># Health check</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co"># LLM</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> llm providers             <span class="co"># List providers</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> llm models                <span class="co"># List models</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> llm provider set <span class="op">&lt;</span>name<span class="op">&gt;</span>   <span class="co"># Set provider</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> llm generate <span class="st">&quot;prompt&quot;</span>     <span class="co"># Generate</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Plan Mode</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> plan <span class="st">&quot;task description&quot;</span>   <span class="co"># Create plan</span></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> plan list                 <span class="co"># List plans</span></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> plan execute <span class="op">&lt;</span>id<span class="op">&gt;</span>         <span class="co"># Execute plan</span></span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Snapshots</span></span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot create <span class="st">&quot;desc&quot;</span>    <span class="co"># Create snapshot</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot list             <span class="co"># List snapshots</span></span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot restore <span class="op">&lt;</span>id<span class="op">&gt;</span>     <span class="co"># Restore snapshot</span></span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> snapshot compare <span class="op">&lt;</span>a<span class="op">&gt;</span> <span class="op">&lt;</span>b<span class="op">&gt;</span>  <span class="co"># Compare snapshots</span></span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Autonomy</span></span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> autonomy get              <span class="co"># Get current mode</span></span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> autonomy set <span class="op">&lt;</span>mode<span class="op">&gt;</span>       <span class="co"># Set mode</span></span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> autonomy escalate <span class="op">&lt;</span>mode<span class="op">&gt;</span>  <span class="co"># Temporary escalation</span></span>
+<span id="cb41-26"><a href="#cb41-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-27"><a href="#cb41-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Workers</span></span>
+<span id="cb41-28"><a href="#cb41-28" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> worker add <span class="op">&lt;</span>host<span class="op">&gt;</span>         <span class="co"># Add worker</span></span>
+<span id="cb41-29"><a href="#cb41-29" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> worker list               <span class="co"># List workers</span></span>
+<span id="cb41-30"><a href="#cb41-30" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> worker remove <span class="op">&lt;</span>id<span class="op">&gt;</span>        <span class="co"># Remove worker</span></span>
+<span id="cb41-31"><a href="#cb41-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-32"><a href="#cb41-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Tasks</span></span>
+<span id="cb41-33"><a href="#cb41-33" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> task create <span class="st">&quot;desc&quot;</span>        <span class="co"># Create task</span></span>
+<span id="cb41-34"><a href="#cb41-34" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> task list                 <span class="co"># List tasks</span></span>
+<span id="cb41-35"><a href="#cb41-35" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode</span> task status <span class="op">&lt;</span>id<span class="op">&gt;</span>          <span class="co"># Task status</span></span></code></pre></div>
+<hr />
+<h2 id="appendix-b-keyboard-shortcuts-tui">Appendix B: Keyboard
+Shortcuts (TUI)</h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Ctrl+C</code></td>
+<td>Exit</td>
+</tr>
+<tr>
+<td><code>Tab</code></td>
+<td>Next panel</td>
+</tr>
+<tr>
+<td><code>Shift+Tab</code></td>
+<td>Previous panel</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>Execute/Confirm</td>
+</tr>
+<tr>
+<td><code>Esc</code></td>
+<td>Cancel</td>
+</tr>
+<tr>
+<td><code>↑/↓</code></td>
+<td>Navigate list</td>
+</tr>
+<tr>
+<td><code>PgUp/PgDn</code></td>
+<td>Scroll page</td>
+</tr>
+<tr>
+<td><code>Home/End</code></td>
+<td>First/last item</td>
+</tr>
+<tr>
+<td><code>Ctrl+R</code></td>
+<td>Refresh</td>
+</tr>
+<tr>
+<td><code>Ctrl+P</code></td>
+<td>Plan mode</td>
+</tr>
+<tr>
+<td><code>Ctrl+S</code></td>
+<td>Create snapshot</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="appendix-c-configuration-examples">Appendix C: Configuration
+Examples</h2>
+<h3 id="high-performance-setup">High-Performance Setup</h3>
+<div class="sourceCode" id="cb42"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_provider</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;groq&quot;</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tools</span><span class="kw">:</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">filesystem</span><span class="kw">:</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enable_cache</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cache_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5000</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="fu">workers</span><span class="kw">:</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_concurrent_tasks</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span></code></pre></div>
+<h3 id="enterprise-security-setup">Enterprise Security Setup</h3>
+<div class="sourceCode" id="cb43"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">autonomy</span><span class="kw">:</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_mode</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;basic&quot;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tools</span><span class="kw">:</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">confirmation</span><span class="kw">:</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">audit_log</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/var/log/helix/audit.log&quot;</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">shell</span><span class="kw">:</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">allowlist</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;git&quot;</span><span class="kw">]</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">blocklist</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;rm&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;dd&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;mkfs&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;sudo&quot;</span><span class="kw">]</span></span></code></pre></div>
+<h3 id="large-codebase-setup">Large Codebase Setup</h3>
+<div class="sourceCode" id="cb44"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_provider</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;gemini&quot;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_tokens</span><span class="kw">:</span><span class="at"> </span><span class="dv">2000000</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tools</span><span class="kw">:</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mapping</span><span class="kw">:</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enable_cache</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">languages</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;go&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;typescript&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;python&quot;</span><span class="kw">]</span></span></code></pre></div>
+<hr />
+<p><strong>For more information</strong>: - Documentation:
+https://docs.helixcode.dev - GitHub:
+https://github.com/HelixDevelopment/Helix-CLI - Community:
+https://community.helixcode.dev - Issues:
+https://github.com/HelixDevelopment/Helix-CLI/issues</p>
+<p><strong>Version</strong>: 2.0 <strong>Last Updated</strong>:
+2025-11-05 <strong>License</strong>: See LICENSE file</p>
+</body>
+</html>

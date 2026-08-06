@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AZURE_PROVIDER</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AZURE_PROVIDER</h1>
+</header>
+<h1 id="azure-openai-provider---implementation-guide">Azure OpenAI
+Provider - Implementation Guide</h1>
+<p>This document provides a comprehensive guide to the Azure OpenAI
+Provider implementation in HelixCode.</p>
+<h2 id="overview">Overview</h2>
+<p>The Azure OpenAI Provider enables access to OpenAI models through
+Microsoft Azure OpenAI Service. This provider supports all OpenAI models
+(GPT-4, GPT-3.5, o1, embeddings, etc.) deployed on Azure infrastructure
+with enterprise features including:</p>
+<ul>
+<li><strong>Microsoft Entra ID Authentication</strong>: Secure
+authentication using Azure Active Directory</li>
+<li><strong>Deployment-based Routing</strong>: Map model names to Azure
+deployment names</li>
+<li><strong>API Versioning</strong>: Support for latest Azure OpenAI API
+versions</li>
+<li><strong>Content Filtering</strong>: Built-in Azure content filtering
+with detailed error reporting</li>
+<li><strong>Streaming Support</strong>: Server-Sent Events (SSE) for
+real-time responses</li>
+<li><strong>Token Caching</strong>: Automatic Entra ID token caching
+with refresh</li>
+<li><strong>Managed Identity</strong>: Support for system and
+user-assigned managed identities</li>
+</ul>
+<h2 id="implementation-files">Implementation Files</h2>
+<h3 id="core-implementation">Core Implementation</h3>
+<ul>
+<li><strong><code>azure_provider.go</code></strong>: Main provider
+implementation (963 lines)
+<ul>
+<li>Provider interface implementation</li>
+<li>Azure SDK integration</li>
+<li>Deployment mapping</li>
+<li>Authentication (API key and Entra ID)</li>
+<li>Request/response handling</li>
+<li>Streaming support</li>
+<li>Content filtering</li>
+<li>Error handling</li>
+</ul></li>
+<li><strong><code>azure_provider_test.go</code></strong>: Comprehensive
+test suite (643 lines)
+<ul>
+<li>20 test cases covering all functionality</li>
+<li>Mock HTTP server tests</li>
+<li>Authentication tests (API key and Entra ID)</li>
+<li>Deployment mapping tests</li>
+<li>Content filtering tests</li>
+<li>Streaming tests</li>
+<li>Error handling tests</li>
+<li>Health check tests</li>
+</ul></li>
+</ul>
+<h3 id="configuration-files">Configuration Files</h3>
+<ul>
+<li><strong><code>config/azure_example.yaml</code></strong>: Example
+configuration demonstrating all options</li>
+<li><strong><code>provider.go</code></strong>: Updated with
+<code>ProviderTypeAzure</code> constant and factory support</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<h3 id="provider-structure">Provider Structure</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AzureProvider <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    config             ProviderConfigEntry</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    apiKey             <span class="dt">string</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    endpoint           <span class="dt">string</span>         <span class="co">// e.g., https://myresource.openai.azure.com</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    apiVersion         <span class="dt">string</span>         <span class="co">// e.g., 2025-04-01-preview</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    deploymentMap      <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span> <span class="co">// model name -&gt; deployment name</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    httpClient         <span class="op">*</span>http<span class="op">.</span>Client</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    models             <span class="op">[]</span>ModelInfo</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    entraTokenProvider <span class="op">*</span>EntraTokenProvider <span class="co">// for Entra ID auth</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    lastHealth         <span class="op">*</span>ProviderHealth</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="entra-token-provider">Entra Token Provider</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> EntraTokenProvider <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    credential  azcore<span class="op">.</span>TokenCredential</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tokenCache  <span class="op">*</span><span class="dt">string</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    tokenExpiry time<span class="op">.</span>Time</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    mutex       sync<span class="op">.</span>RWMutex</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Features</strong>: - Thread-safe token caching - Automatic
+token refresh (5 minutes before expiry) - Double-checked locking pattern
+- Support for any Azure credential type</p>
+<h2 id="supported-models">Supported Models</h2>
+<h3 id="gpt-4-family">GPT-4 Family</h3>
+<ul>
+<li><code>gpt-4-turbo</code> - Latest GPT-4 model with 128K context</li>
+<li><code>gpt-4</code> - Standard GPT-4 with 8K context</li>
+<li><code>gpt-4-32k</code> - Extended context window (32K)</li>
+<li><code>gpt-4-vision-preview</code> - Multimodal capabilities</li>
+<li><code>gpt-4o</code> - Latest multimodal model</li>
+<li><code>gpt-4o-mini</code> - Fast and efficient variant</li>
+</ul>
+<h3 id="gpt-3.5-family">GPT-3.5 Family</h3>
+<ul>
+<li><code>gpt-35-turbo</code> - Fast and cost-effective</li>
+<li><code>gpt-35-turbo-16k</code> - Extended context</li>
+</ul>
+<h3 id="o1-reasoning-models">o1 Reasoning Models</h3>
+<ul>
+<li><code>o1-preview</code> - Advanced reasoning (128K context, 32K
+output)</li>
+<li><code>o1-mini</code> - Faster reasoning (128K context, 16K
+output)</li>
+</ul>
+<h3 id="embedding-models">Embedding Models</h3>
+<ul>
+<li><code>text-embedding-3-large</code> - Latest large embeddings</li>
+<li><code>text-embedding-ada-002</code> - Classic embedding model</li>
+</ul>
+<p>All models support: - Text generation - Code generation and analysis
+- Planning and debugging - Refactoring and testing - Tools/function
+calling (except o1 models) - Vision capabilities (selected models)</p>
+<h2 id="configuration">Configuration</h2>
+<h3 id="basic-api-key-authentication">Basic API Key Authentication</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">providers</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">azure</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;azure&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${AZURE_OPENAI_API_KEY}&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">endpoint</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://myresource.openai.azure.com&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2025-04-01-preview&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">deployment_map</span><span class="kw">:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">gpt-4-turbo</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;my-gpt4-deployment&quot;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">gpt-35-turbo</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;my-gpt35-deployment&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;gpt-4-turbo&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;gpt-35-turbo&quot;</span></span></code></pre></div>
+<h3 id="entra-id-authentication">Entra ID Authentication</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">providers</span><span class="kw">:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">azure</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;azure&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">endpoint</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://myresource.openai.azure.com&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2025-04-01-preview&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">use_entra_id</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">  # Enable Entra ID</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">deployment_map</span><span class="kw">:</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">gpt-4-turbo</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;production-gpt4&quot;</span></span></code></pre></div>
+<h3 id="managed-identity">Managed Identity</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">providers</span><span class="kw">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">azure</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;azure&quot;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">endpoint</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://myresource.openai.azure.com&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">use_entra_id</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">managed_identity</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">      # Optional: for user-assigned identity</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">managed_identity_client_id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;00000000-0000-0000-0000-000000000000&quot;</span></span></code></pre></div>
+<h3 id="environment-variables">Environment Variables</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># API Key Authentication</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_OPENAI_API_KEY</span><span class="op">=</span><span class="st">&quot;your-api-key&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_OPENAI_ENDPOINT</span><span class="op">=</span><span class="st">&quot;https://myresource.openai.azure.com&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_API_VERSION</span><span class="op">=</span><span class="st">&quot;2025-04-01-preview&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Deployment map (JSON string or file path)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_DEPLOYMENTS_MAP</span><span class="op">=</span><span class="st">&#39;{&quot;gpt-4-turbo&quot;:&quot;my-deployment&quot;}&#39;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># OR</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_DEPLOYMENTS_MAP</span><span class="op">=</span><span class="st">&quot;/path/to/deployments.json&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Entra ID Authentication</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_TENANT_ID</span><span class="op">=</span><span class="st">&quot;your-tenant-id&quot;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_CLIENT_ID</span><span class="op">=</span><span class="st">&quot;your-client-id&quot;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_CLIENT_SECRET</span><span class="op">=</span><span class="st">&quot;your-client-secret&quot;</span></span></code></pre></div>
+<h2 id="deployment-mapping">Deployment Mapping</h2>
+<p>Azure OpenAI uses deployment names instead of model names. The
+provider supports multiple ways to configure this mapping:</p>
+<h3 id="inline-map-yaml">1. Inline Map (YAML)</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">deployment_map</span><span class="kw">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gpt-4-turbo</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;my-gpt4-deployment&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gpt-35-turbo</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;my-gpt35-deployment&quot;</span></span></code></pre></div>
+<h3 id="json-string">2. JSON String</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">deployment_map</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;{&quot;gpt-4-turbo&quot;:&quot;my-deployment&quot;}&#39;</span></span></code></pre></div>
+<h3 id="external-json-file">3. External JSON File</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">deployment_map</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/etc/helixcode/azure-deployments.json&quot;</span></span></code></pre></div>
+<p>File contents:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;gpt-4-turbo&quot;</span><span class="fu">:</span> <span class="st">&quot;production-gpt4-deployment&quot;</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;gpt-35-turbo&quot;</span><span class="fu">:</span> <span class="st">&quot;production-gpt35-deployment&quot;</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;gpt-4o&quot;</span><span class="fu">:</span> <span class="st">&quot;gpt4o-deployment&quot;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="environment-variable">4. Environment Variable</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AZURE_DEPLOYMENTS_MAP</span><span class="op">=</span><span class="st">&#39;{&quot;gpt-4-turbo&quot;:&quot;my-deployment&quot;}&#39;</span></span></code></pre></div>
+<h3 id="fallback-behavior">Fallback Behavior</h3>
+<p>If no mapping is found for a model, the provider uses the model name
+as the deployment name. This works when your Azure deployments are named
+identically to the models.</p>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="basic-generation">Basic Generation</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/llm&quot;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Initialize provider</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> llm<span class="op">.</span>ProviderConfigEntry<span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    Type<span class="op">:</span>   llm<span class="op">.</span>ProviderTypeAzure<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    APIKey<span class="op">:</span> os<span class="op">.</span>Getenv<span class="op">(</span><span class="st">&quot;AZURE_OPENAI_API_KEY&quot;</span><span class="op">),</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    Parameters<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;endpoint&quot;</span><span class="op">:</span>    <span class="st">&quot;https://myresource.openai.azure.com&quot;</span><span class="op">,</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;api_version&quot;</span><span class="op">:</span> <span class="st">&quot;2025-04-01-preview&quot;</span><span class="op">,</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;deployment_map&quot;</span><span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;gpt-4-turbo&quot;</span><span class="op">:</span> <span class="st">&quot;my-gpt4-deployment&quot;</span><span class="op">,</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>provider<span class="op">,</span> err <span class="op">:=</span> llm<span class="op">.</span>NewAzureProvider<span class="op">(</span>config<span class="op">)</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> provider<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Generate response</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>request <span class="op">:=</span> <span class="op">&amp;</span>llm<span class="op">.</span>LLMRequest<span class="op">{</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">:</span>    uuid<span class="op">.</span>New<span class="op">(),</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    Model<span class="op">:</span> <span class="st">&quot;gpt-4-turbo&quot;</span><span class="op">,</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    Messages<span class="op">:</span> <span class="op">[]</span>llm<span class="op">.</span>Message<span class="op">{</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Role<span class="op">:</span> <span class="st">&quot;user&quot;</span><span class="op">,</span> Content<span class="op">:</span> <span class="st">&quot;Explain Azure OpenAI Service.&quot;</span><span class="op">},</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    MaxTokens<span class="op">:</span>   <span class="dv">500</span><span class="op">,</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    Temperature<span class="op">:</span> <span class="fl">0.7</span><span class="op">,</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>response<span class="op">,</span> err <span class="op">:=</span> provider<span class="op">.</span>Generate<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> request<span class="op">)</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Println<span class="op">(</span>response<span class="op">.</span>Content<span class="op">)</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Tokens used: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> response<span class="op">.</span>Usage<span class="op">.</span>TotalTokens<span class="op">)</span></span></code></pre></div>
+<h3 id="streaming-generation">Streaming Generation</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>request <span class="op">:=</span> <span class="op">&amp;</span>llm<span class="op">.</span>LLMRequest<span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">:</span>    uuid<span class="op">.</span>New<span class="op">(),</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    Model<span class="op">:</span> <span class="st">&quot;gpt-4-turbo&quot;</span><span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    Messages<span class="op">:</span> <span class="op">[]</span>llm<span class="op">.</span>Message<span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Role<span class="op">:</span> <span class="st">&quot;user&quot;</span><span class="op">,</span> Content<span class="op">:</span> <span class="st">&quot;Write a story.&quot;</span><span class="op">},</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    MaxTokens<span class="op">:</span> <span class="dv">1000</span><span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>ch <span class="op">:=</span> <span class="bu">make</span><span class="op">(</span><span class="kw">chan</span> llm<span class="op">.</span>LLMResponse<span class="op">,</span> <span class="dv">10</span><span class="op">)</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> provider<span class="op">.</span>GenerateStream<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> request<span class="op">,</span> ch<span class="op">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Stream error: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> response <span class="op">:=</span> <span class="kw">range</span> ch <span class="op">{</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Print<span class="op">(</span>response<span class="op">.</span>Content<span class="op">)</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="with-tool-calling">With Tool Calling</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>request <span class="op">:=</span> <span class="op">&amp;</span>llm<span class="op">.</span>LLMRequest<span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">:</span>    uuid<span class="op">.</span>New<span class="op">(),</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    Model<span class="op">:</span> <span class="st">&quot;gpt-4-turbo&quot;</span><span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    Messages<span class="op">:</span> <span class="op">[]</span>llm<span class="op">.</span>Message<span class="op">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span>Role<span class="op">:</span> <span class="st">&quot;user&quot;</span><span class="op">,</span> Content<span class="op">:</span> <span class="st">&quot;What&#39;s the weather in Seattle?&quot;</span><span class="op">},</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    Tools<span class="op">:</span> <span class="op">[]</span>llm<span class="op">.</span>Tool<span class="op">{</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>            Type<span class="op">:</span> <span class="st">&quot;function&quot;</span><span class="op">,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>            Function<span class="op">:</span> llm<span class="op">.</span>FunctionDefinition<span class="op">{</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>                Name<span class="op">:</span>        <span class="st">&quot;get_weather&quot;</span><span class="op">,</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>                Description<span class="op">:</span> <span class="st">&quot;Get current weather for a location&quot;</span><span class="op">,</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                Parameters<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;type&quot;</span><span class="op">:</span> <span class="st">&quot;object&quot;</span><span class="op">,</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;properties&quot;</span><span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                        <span class="st">&quot;location&quot;</span><span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>                            <span class="st">&quot;type&quot;</span><span class="op">:</span>        <span class="st">&quot;string&quot;</span><span class="op">,</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>                            <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;City name&quot;</span><span class="op">,</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>                        <span class="op">},</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>                    <span class="op">},</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>                    <span class="st">&quot;required&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;location&quot;</span><span class="op">},</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>                <span class="op">},</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>response<span class="op">,</span> err <span class="op">:=</span> provider<span class="op">.</span>Generate<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> request<span class="op">)</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="co">// Check for tool calls</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> toolCall <span class="op">:=</span> <span class="kw">range</span> response<span class="op">.</span>ToolCalls <span class="op">{</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Tool: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> toolCall<span class="op">.</span>Function<span class="op">.</span>Name<span class="op">)</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Args: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> toolCall<span class="op">.</span>Function<span class="op">.</span>Arguments<span class="op">)</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="entra-id-authentication-1">Entra ID Authentication</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;github.com/Azure/azure-sdk-for-go/sdk/azidentity&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;dev.helix.code/internal/llm&quot;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Create credential</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>credential<span class="op">,</span> err <span class="op">:=</span> azidentity<span class="op">.</span>NewDefaultAzureCredential<span class="op">(</span><span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Create Entra token provider</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>entraProvider <span class="op">:=</span> llm<span class="op">.</span>NewEntraTokenProvider<span class="op">(</span>credential<span class="op">)</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Create Azure provider</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>provider <span class="op">:=</span> <span class="op">&amp;</span>llm<span class="op">.</span>AzureProvider<span class="op">{</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    endpoint<span class="op">:</span>           <span class="st">&quot;https://myresource.openai.azure.com&quot;</span><span class="op">,</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    apiVersion<span class="op">:</span>         <span class="st">&quot;2025-04-01-preview&quot;</span><span class="op">,</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    entraTokenProvider<span class="op">:</span> entraProvider<span class="op">,</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    deploymentMap<span class="op">:</span>      loadDeploymentMap<span class="op">(),</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    httpClient<span class="op">:</span>         <span class="op">&amp;</span>http<span class="op">.</span>Client<span class="op">{</span>Timeout<span class="op">:</span> <span class="dv">120</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">},</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    models<span class="op">:</span>             llm<span class="op">.</span>getAzureModels<span class="op">(),</span></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Use normally</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>response<span class="op">,</span> err <span class="op">:=</span> provider<span class="op">.</span>Generate<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> request<span class="op">)</span></span></code></pre></div>
+<h2 id="content-filtering">Content Filtering</h2>
+<p>Azure OpenAI includes built-in content filtering that analyzes both
+prompts and completions for:</p>
+<ul>
+<li>Hate speech</li>
+<li>Self-harm</li>
+<li>Sexual content</li>
+<li>Violence</li>
+</ul>
+<p>Severity levels: <code>safe</code>, <code>low</code>,
+<code>medium</code>, <code>high</code></p>
+<p>When content is filtered, the provider returns a descriptive
+error:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">:=</span> provider<span class="op">.</span>Generate<span class="op">(</span>ctx<span class="op">,</span> request<span class="op">)</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> strings<span class="op">.</span>Contains<span class="op">(</span>err<span class="op">.</span>Error<span class="op">(),</span> <span class="st">&quot;content filtered&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle content filtering</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Content was blocked by Azure filtering&quot;</span><span class="op">)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Error message format:</p>
+<pre><code>content filtered by Azure: prompt contains prohibited content (hate=medium, self_harm=safe, sexual=safe, violence=safe)</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<p>The provider handles Azure-specific errors:</p>
+<h3 id="error-codes">Error Codes</h3>
+<ul>
+<li><code>content_filter</code> → Content filtering error</li>
+<li><code>DeploymentNotFound</code> → <code>ErrModelNotFound</code></li>
+<li><code>InvalidRequestError</code> →
+<code>ErrInvalidRequest</code></li>
+<li><code>RateLimitError</code>, <code>429</code> →
+<code>ErrRateLimited</code></li>
+<li><code>QuotaExceeded</code> → Quota exceeded error</li>
+<li><code>InvalidApiKey</code>, <code>Unauthorized</code> →
+Authentication error</li>
+</ul>
+<h3 id="http-status-codes">HTTP Status Codes</h3>
+<ul>
+<li><code>401</code> → Unauthorized (check API key/token)</li>
+<li><code>403</code> → Forbidden (check permissions)</li>
+<li><code>404</code> → Model/deployment not found</li>
+<li><code>429</code> → Rate limited</li>
+<li><code>400</code> → Invalid request</li>
+</ul>
+<h3 id="example">Example</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>response<span class="op">,</span> err <span class="op">:=</span> provider<span class="op">.</span>Generate<span class="op">(</span>ctx<span class="op">,</span> request<span class="op">)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">{</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> errors<span class="op">.</span>Is<span class="op">(</span>err<span class="op">,</span> llm<span class="op">.</span>ErrRateLimited<span class="op">):</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Implement exponential backoff</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        time<span class="op">.</span>Sleep<span class="op">(</span>time<span class="op">.</span>Second <span class="op">*</span> <span class="dv">5</span><span class="op">)</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Retry...</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> errors<span class="op">.</span>Is<span class="op">(</span>err<span class="op">,</span> llm<span class="op">.</span>ErrModelNotFound<span class="op">):</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check deployment mapping</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Deployment not found - check your deployment_map&quot;</span><span class="op">)</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> strings<span class="op">.</span>Contains<span class="op">(</span>err<span class="op">.</span>Error<span class="op">(),</span> <span class="st">&quot;content filtered&quot;</span><span class="op">):</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Content was filtered</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Content blocked by Azure&quot;</span><span class="op">)</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Error: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="health-checks">Health Checks</h2>
+<p>The provider implements health checking:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>health<span class="op">,</span> err <span class="op">:=</span> provider<span class="op">.</span>GetHealth<span class="op">(</span>context<span class="op">.</span>Background<span class="op">())</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Provider unhealthy: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Status: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> health<span class="op">.</span>Status<span class="op">)</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Latency: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> health<span class="op">.</span>Latency<span class="op">)</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Models: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> health<span class="op">.</span>ModelCount<span class="op">)</span></span></code></pre></div>
+<p>Health check performs a minimal request to verify: - Connectivity to
+Azure endpoint - Authentication validity - Deployment availability</p>
+<h2 id="testing">Testing</h2>
+<p>The implementation includes 20 comprehensive test cases:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all Azure provider tests</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> ./internal/llm <span class="at">-run</span> TestAzureProvider</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific test</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> ./internal/llm <span class="at">-run</span> TestAzureProvider_Generate_APIKey</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with coverage</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-cover</span> ./internal/llm <span class="at">-run</span> TestAzureProvider</span></code></pre></div>
+<h3 id="test-coverage">Test Coverage</h3>
+<ol type="1">
+<li>Provider initialization (API key)</li>
+<li>Provider initialization (Entra ID)</li>
+<li>Missing endpoint validation</li>
+<li>Explicit deployment mapping</li>
+<li>Fallback deployment mapping</li>
+<li>JSON deployment mapping</li>
+<li>Basic generation with API key</li>
+<li>Content filtering error</li>
+<li>Rate limit error</li>
+<li>Deployment not found error</li>
+<li>Streaming generation</li>
+<li>Entra token caching</li>
+<li>Provider type and name</li>
+<li>Models and capabilities</li>
+<li>IsAvailable check</li>
+<li>Health check success</li>
+<li>Health check failure</li>
+<li>Provider close</li>
+<li>Tool support</li>
+<li>Default max tokens</li>
+</ol>
+<h2 id="dependencies">Dependencies</h2>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>require <span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    github<span class="op">.</span>com<span class="op">/</span>Azure<span class="op">/</span>azure<span class="op">-</span>sdk<span class="op">-</span><span class="cf">for</span><span class="op">-</span><span class="cf">go</span><span class="op">/</span>sdk<span class="op">/</span>azcore v1<span class="fl">.16</span><span class="er">.0</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    github<span class="op">.</span>com<span class="op">/</span>Azure<span class="op">/</span>azure<span class="op">-</span>sdk<span class="op">-</span><span class="cf">for</span><span class="op">-</span><span class="cf">go</span><span class="op">/</span>sdk<span class="op">/</span>azidentity v1<span class="fl">.8</span><span class="er">.0</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    github<span class="op">.</span>com<span class="op">/</span>google<span class="op">/</span>uuid v1<span class="fl">.6</span><span class="er">.0</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h2 id="api-versioning">API Versioning</h2>
+<p>The provider defaults to <code>2025-04-01-preview</code> (latest
+stable). Supported versions:</p>
+<ul>
+<li><code>2025-04-01-preview</code> (recommended)</li>
+<li><code>2024-10-01-preview</code></li>
+<li><code>2024-08-01-preview</code></li>
+<li><code>2024-06-01</code></li>
+</ul>
+<p>Specify in configuration:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">api_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2025-04-01-preview&quot;</span></span></code></pre></div>
+<h2 id="performance-characteristics">Performance Characteristics</h2>
+<ul>
+<li><strong>Latency</strong>: Similar to OpenAI (200ms - 2s first
+token)</li>
+<li><strong>Throughput</strong>: Based on Azure deployment tier</li>
+<li><strong>Rate Limits</strong>: Configurable per deployment
+(TPM/RPM)</li>
+<li><strong>Regional Availability</strong>: Deploy in regions close to
+users</li>
+<li><strong>SLA</strong>: 99.9% uptime for Standard tier</li>
+</ul>
+<h2 id="security-considerations">Security Considerations</h2>
+<ol type="1">
+<li><strong>Managed Identity</strong>: Use Azure managed identities for
+production</li>
+<li><strong>Private Endpoints</strong>: Enable private endpoints for
+VNet isolation</li>
+<li><strong>Content Filtering</strong>: Configure content filters based
+on use case</li>
+<li><strong>RBAC</strong>: Use Azure RBAC for fine-grained access
+control</li>
+<li><strong>Audit Logging</strong>: Enable diagnostic logging for
+compliance</li>
+<li><strong>Key Rotation</strong>: Implement regular API key
+rotation</li>
+<li><strong>Network Security</strong>: Use Azure Firewall rules to
+restrict access</li>
+</ol>
+<h2 id="migration-from-openai">Migration from OpenAI</h2>
+<h3 id="key-changes">Key Changes</h3>
+<ol type="1">
+<li><strong>Endpoint</strong>: Change from <code>api.openai.com</code>
+to Azure resource endpoint</li>
+<li><strong>Authentication</strong>: Use <code>api-key</code> header
+instead of <code>Authorization: Bearer</code></li>
+<li><strong>API Version</strong>: Add <code>api-version</code> query
+parameter</li>
+<li><strong>Deployments</strong>: Map model names to deployment
+names</li>
+<li><strong>URL Format</strong>:
+<code>/openai/deployments/{deployment}/chat/completions</code></li>
+</ol>
+<h3 id="migration-steps">Migration Steps</h3>
+<ol type="1">
+<li>Deploy models in Azure OpenAI portal</li>
+<li>Create deployment mappings</li>
+<li>Update configuration to use Azure provider</li>
+<li>Test with health check</li>
+<li>Monitor content filtering</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<p><strong>Issue</strong>: “deployment not found” -
+<strong>Solution</strong>: Check deployment_map configuration - Verify
+deployment exists in Azure portal - Ensure deployment name is
+correct</p>
+<p><strong>Issue</strong>: “unauthorized: check API key” -
+<strong>Solution</strong>: Verify API key is correct - Check key is set
+in environment variable - For Entra ID, check credentials are valid</p>
+<p><strong>Issue</strong>: “content filtered by Azure” -
+<strong>Solution</strong>: Review and modify prompt - Adjust content
+filtering settings in Azure portal - Check which category triggered the
+filter</p>
+<p><strong>Issue</strong>: “rate limited” - <strong>Solution</strong>:
+Implement exponential backoff - Increase deployment quota in Azure - Use
+multiple deployments for load distribution</p>
+<p><strong>Issue</strong>: Entra ID token expired -
+<strong>Solution</strong>: Token automatically refreshes - Check Azure
+credentials are valid - Verify token scopes are correct</p>
+<h2 id="best-practices">Best Practices</h2>
+<ol type="1">
+<li><strong>Use Entra ID</strong>: Prefer Entra ID over API keys for
+production</li>
+<li><strong>Deployment Naming</strong>: Use descriptive deployment
+names</li>
+<li><strong>Error Handling</strong>: Implement retry logic for rate
+limits</li>
+<li><strong>Monitoring</strong>: Track token usage and latency</li>
+<li><strong>Content Filtering</strong>: Configure appropriate filters
+for your use case</li>
+<li><strong>Regional Deployment</strong>: Deploy close to your
+users</li>
+<li><strong>Health Checks</strong>: Monitor provider health
+regularly</li>
+<li><strong>Caching</strong>: Provider automatically caches Entra ID
+tokens</li>
+<li><strong>Timeouts</strong>: Configure appropriate HTTP timeouts
+(default 120s)</li>
+<li><strong>Versioning</strong>: Pin API version for stability</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li><a href="https://learn.microsoft.com/azure/ai-services/openai/">Azure
+OpenAI Documentation</a></li>
+<li><a href="https://learn.microsoft.com/azure/ai-services/openai/reference">Azure
+OpenAI API Reference</a></li>
+<li><a href="https://github.com/Azure/azure-sdk-for-go">Azure SDK for
+Go</a></li>
+<li><a href="https://learn.microsoft.com/azure/ai-services/openai/concepts/content-filter">Content
+Filtering</a></li>
+<li><a href="../Design/TechnicalDesigns/Providers/AzureProvider.md">Technical
+Design Document</a></li>
+</ul>
+<h2 id="support">Support</h2>
+<p>For issues or questions: 1. Check this documentation 2. Review test
+cases for examples 3. Check Azure OpenAI service health 4. Review Azure
+portal deployment status 5. Enable debug logging for detailed errors</p>
+</body>
+</html>

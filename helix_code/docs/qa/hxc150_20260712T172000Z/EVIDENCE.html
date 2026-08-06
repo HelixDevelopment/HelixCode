@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EVIDENCE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EVIDENCE</h1>
+</header>
+<h1 id="hxc-150-qa-evidence-11.4.83">HXC-150 — QA evidence
+(§11.4.83)</h1>
+<p><strong>Item:</strong> HXC-150 (Bug/Low) — tests/ddos env-var names
+mismatch .env.full-test causing false SKIP <strong>Fix commit:</strong>
+helix_code <code>eefe78a2</code> (3 files; pushed github+gitlab)
+<strong>Date (UTC):</strong> 2026-07-12T17:20:00Z <strong>Closure
+vocab:</strong> Fixed (§11.4.33, Bug)</p>
+<h2 id="root-cause">Root cause</h2>
+<p>The ddos harness <code>bootRealServer</code> read
+TEST_PG_<em>/TEST_REDIS_</em> env vars but .env.full-test exports
+HELIX_DATABASE_<em>/HELIX_REDIS_</em> with different defaults (user
+helixcode vs helix, password helixcode_test_password vs helix, db
+helixcode_test vs helix_test). So under the standard workflow the suite
+false-SKIPped even with healthy infra.</p>
+<h2 id="fix">Fix</h2>
+<p>Moved envOr/envOrInt to always-compiled ddos_harness.go + added
+envOrHelix/envOrIntHelix helpers (HELIX_ first → TEST_ fallback →
+hardcoded default). Updated bootRealServer to use HELIX_ keys. 6 unit
+tests prove the 3-tier fallback.</p>
+<h2 id="verification">Verification</h2>
+<p>go vet ./tests/ddos/… + go vet -tags=integration both clean. go test
+-count=1 -run TestEnvOr → PASS. Anti-bluff smoke clean.</p>
+</body>
+</html>

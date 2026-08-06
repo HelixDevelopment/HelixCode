@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EDIT_FORMATS_USER_GUIDE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EDIT_FORMATS_USER_GUIDE</h1>
+</header>
+<h1 id="edit-formats-user-guide">Edit Formats User Guide</h1>
+<h2 id="helixcode-llm-response-formats">HelixCode LLM Response
+Formats</h2>
+<p><strong>Version:</strong> 1.0 <strong>Last Updated:</strong> November
+7, 2025 <strong>Feature Status:</strong> ✅ Production Ready</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#format-overview">Format Overview</a></li>
+<li><a href="#whole-file-format">Whole-File Format</a></li>
+<li><a href="#diff-format">Diff Format</a></li>
+<li><a href="#git-unified-diff-udiff-format">Git Unified Diff (UDiff)
+Format</a></li>
+<li><a href="#searchreplace-format">Search/Replace Format</a></li>
+<li><a href="#editor-format">Editor Format</a></li>
+<li><a href="#architect-format">Architect Format</a></li>
+<li><a href="#ask-format">Ask Format</a></li>
+<li><a href="#line-number-format">Line Number Format</a></li>
+<li><a href="#format-auto-detection">Format Auto-Detection</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>Edit Formats define how LLMs (Language Learning Models) communicate
+file changes to HelixCode. Different formats suit different use cases -
+from simple whole-file replacements to complex architectural
+changes.</p>
+<h3 id="why-multiple-formats">Why Multiple Formats?</h3>
+<ul>
+<li><strong>Flexibility</strong>: Choose the right format for your
+task</li>
+<li><strong>Efficiency</strong>: Small changes don’t need whole-file
+replacements</li>
+<li><strong>Clarity</strong>: Structured formats make changes easy to
+review</li>
+<li><strong>Safety</strong>: Ask mode allows confirmation before
+changes</li>
+<li><strong>Compatibility</strong>: Works with all 13 supported LLM
+providers</li>
+</ul>
+<h3 id="supported-formats">Supported Formats</h3>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Best For</th>
+<th>Complexity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Whole-File</td>
+<td>Small files, new files</td>
+<td>Simple</td>
+</tr>
+<tr>
+<td>Diff</td>
+<td>Precise changes with context</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>UDiff</td>
+<td>Git workflows, version control</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Search/Replace</td>
+<td>Find and replace operations</td>
+<td>Simple</td>
+</tr>
+<tr>
+<td>Editor</td>
+<td>Line-specific edits</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Architect</td>
+<td>High-level refactoring</td>
+<td>Simple</td>
+</tr>
+<tr>
+<td>Ask</td>
+<td>Clarification, confirmation</td>
+<td>Simple</td>
+</tr>
+<tr>
+<td>Line Number</td>
+<td>Direct line editing</td>
+<td>Medium</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="using-a-format">Using a Format</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tell HelixCode which format to use</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--format</span> whole <span class="st">&quot;Create a Hello World program&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or let auto-detection figure it out</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="st">&quot;Update the timeout in config.yaml to 60 seconds&quot;</span></span></code></pre></div>
+<h3 id="format-in-api">Format in API</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/editor/formats&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Create format registry</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> _ <span class="op">:=</span> formats<span class="op">.</span>RegisterAllFormats<span class="op">()</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Parse LLM response</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>edits<span class="op">,</span> format<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>ParseWithAutoDetect<span class="op">(</span>ctx<span class="op">,</span> llmResponse<span class="op">)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply edits</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> edit <span class="op">:=</span> <span class="kw">range</span> edits <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    applyEdit<span class="op">(</span>edit<span class="op">)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="format-overview">Format Overview</h2>
+<h3 id="format-selection-guide">Format Selection Guide</h3>
+<p><strong>Choose Whole-File when:</strong> - Creating new files - File
+is small (&lt;100 lines) - Complete rewrite needed</p>
+<p><strong>Choose Diff/UDiff when:</strong> - Making precise changes -
+Need to see context - Working with version control</p>
+<p><strong>Choose Search/Replace when:</strong> - Simple find/replace
+operations - Updating configuration values - Renaming variables</p>
+<p><strong>Choose Editor when:</strong> - Editing specific lines -
+Multiple small changes - Line-based operations</p>
+<p><strong>Choose Architect when:</strong> - Restructuring project -
+Creating/deleting files - High-level refactoring</p>
+<p><strong>Choose Ask when:</strong> - Need clarification - Unsure about
+approach - Want user confirmation</p>
+<p><strong>Choose Line Number when:</strong> - Direct line editing -
+Reviewing numbered output - Precise line-by-line control</p>
+<hr />
+<h2 id="whole-file-format">Whole-File Format</h2>
+<p>Replace entire file content. Simplest format, best for small
+files.</p>
+<h3 id="syntax">Syntax</h3>
+<pre><code>File: &lt;file_path&gt;
+```go
+&lt;complete file content&gt;</code></pre>
+<pre><code>
+### Examples
+
+**Creating a new file:**
+</code></pre>
+<p>File: src/hello.go</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;fmt&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Hello, World!&quot;</span><span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre><code>
+**Updating a small file:**
+</code></pre>
+<p>File: config.yaml</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">server</span><span class="kw">:</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8080</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="dv">60</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">database</span><span class="kw">:</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> localhost</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">5432</span></span></code></pre></div>
+<pre><code>
+### Advantages
+
+- Simple and clear
+- Easy to review
+- No ambiguity
+
+### Disadvantages
+
+- Inefficient for large files
+- Large token usage
+- Can&#39;t see what changed
+
+### When to Use
+
+✅ Files under 100 lines
+✅ Creating new files
+✅ Complete rewrites
+❌ Large files with small changes
+❌ Need to show context
+
+---
+
+## Diff Format
+
+Standard unified diff format with context lines.
+
+### Syntax
+</code></pre>
+<p>— a/<file_path> +++ b/<file_path> @@ -old_start,old_count
++new_start,new_count @@ context line -removed line +added line context
+line</p>
+<pre><code>
+### Examples
+
+**Adding an import:**
+</code></pre>
+<p>— a/src/main.go +++ b/src/main.go @@ -1,5 +1,6 @@ package main</p>
+<p>import “fmt” +import “os”</p>
+<p>func main() {</p>
+<pre><code>
+**Updating a function:**
+</code></pre>
+<p>— a/src/utils.go +++ b/src/utils.go @@ -10,7 +10,8 @@ func
+calculateTotal(items []Item) float64 { total := 0.0 for _, item := range
+items { - total += item.Price + // Apply tax + total += item.Price * 1.1
+} return total }</p>
+<pre><code>
+### Advantages
+
+- Shows context
+- Clear what changed
+- Standard format
+- Good for review
+
+### Disadvantages
+
+- More verbose than search/replace
+- Need to know line numbers
+- Can be complex for large changes
+
+### When to Use
+
+✅ Precise changes with context
+✅ Code reviews
+✅ Multiple related changes
+❌ Simple find/replace
+❌ Whole-file rewrites
+
+---
+
+## Git Unified Diff (UDiff) Format
+
+Git-style unified diff with extended headers.
+
+### Syntax
+</code></pre>
+<p>diff –git a/<file_path> b/<file_path> index <old_hash>..<new_hash>
+<mode> — a/<file_path> +++ b/<file_path> @@ -old_start,old_count
++new_start,new_count @@ context -removed +added</p>
+<pre><code>
+### Examples
+
+**Creating a new file:**
+</code></pre>
+<p>diff –git a/src/models/user.go b/src/models/user.go new file mode
+100644 index 0000000..a1b2c3d — /dev/null +++ b/src/models/user.go @@
+-0,0 +1,8 @@ +package models + +type User struct { + ID int + Username
+string + Email string +}</p>
+<pre><code>
+**Renaming a file:**
+</code></pre>
+<p>diff –git a/old_name.go b/new_name.go similarity index 100% rename
+from old_name.go rename to new_name.go</p>
+<pre><code>
+**Deleting a file:**
+</code></pre>
+<p>diff –git a/deprecated.go b/deprecated.go deleted file mode 100644
+index a1b2c3d..0000000 — a/deprecated.go +++ /dev/null</p>
+<pre><code>
+### Advantages
+
+- Full git metadata
+- Supports file operations
+- Version control friendly
+- Industry standard
+
+### Disadvantages
+
+- More verbose
+- Complex syntax
+- Requires git knowledge
+
+### When to Use
+
+✅ Git workflows
+✅ File operations (create/delete/rename)
+✅ Version control integration
+✅ Patch generation
+❌ Quick edits
+❌ Non-git projects
+
+---
+
+## Search/Replace Format
+
+Regex-based find and replace operations.
+
+### Syntax
+
+**Block Style:**</code></pre>
+<p>File: <file_path> &lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH
+<exact text to find> ======= <replacement text>
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</p>
+<pre><code>
+**Keyword Style:**</code></pre>
+<p>File: <file_path> SEARCH: <text to find> REPLACE:
+<replacement text></p>
+<pre><code>
+**Inline Style:**</code></pre>
+<p>File: <file_path> search: <pattern> replace: <text></p>
+<pre><code>
+### Examples
+
+**Simple replacement:**
+</code></pre>
+<p>File: config.yaml &lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH timeout: 30
+======= timeout: 60 &gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</p>
+<pre><code>
+**Function replacement:**
+</code></pre>
+<p>File: src/auth.go &lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH func
+authenticate(user string) bool { return false } ======= func
+authenticate(user string, token string) bool { return
+validateToken(user, token) } &gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</p>
+<pre><code>
+**Multiple replacements:**
+</code></pre>
+<p>File: README.md SEARCH: version 1.0 REPLACE: version 2.0</p>
+<p>File: package.json search: “version”: “1.0.0” replace: “version”:
+“2.0.0”</p>
+<pre><code>
+### Advantages
+
+- Simple and intuitive
+- Exact matching
+- Works for any text
+- Multiple replacements
+
+### Disadvantages
+
+- Must match exactly (whitespace matters)
+- No context shown
+- Can match wrong occurrence
+
+### When to Use
+
+✅ Simple text replacement
+✅ Configuration updates
+✅ Variable renaming
+✅ Known exact text
+❌ Need to see context
+❌ Complex structural changes
+
+---
+
+## Editor Format
+
+Line-based editing with insert, delete, and replace operations.
+
+### Syntax
+</code></pre>
+<p>File: <file_path> INSERT AT LINE <num>: <content to insert></p>
+<p>DELETE LINE <num> DELETE LINE <start>-<end></p>
+<p>REPLACE LINE <num>: <new content for line></p>
+<pre><code>
+**Alternative compact format:**</code></pre>
+<p>L<num>: <content></p>
+<pre><code>
+### Examples
+
+**Inserting lines:**
+</code></pre>
+<p>File: src/main.go INSERT AT LINE 5: import “os” import “log”</p>
+<p>INSERT AT LINE 20: // TODO: Add error handling</p>
+<pre><code>
+**Deleting lines:**
+</code></pre>
+<p>File: config.yaml DELETE LINE 10</p>
+<p>DELETE LINE 20-25</p>
+<pre><code>
+**Replacing lines:**
+</code></pre>
+<p>File: src/utils.go REPLACE LINE 15: func calculateTotal(items []Item,
+tax float64) float64 {</p>
+<p>REPLACE LINE 30: return total * (1 + tax)</p>
+<pre><code>
+**Compact format:**
+</code></pre>
+<p>File: test.txt L1: First line updated L5: Fifth line updated L10:
+L15: Fifteenth line updated</p>
+<pre><code>
+### Advantages
+
+- Precise line control
+- Multiple operations
+- Clear intent
+- Compact notation available
+
+### Disadvantages
+
+- Need to know line numbers
+- No context shown
+- Order matters
+
+### When to Use
+
+✅ Known line numbers
+✅ Multiple small edits
+✅ Line-specific changes
+✅ Scripted edits
+❌ Large changes
+❌ Don&#39;t know line numbers
+
+---
+
+## Architect Format
+
+High-level structural changes and file operations.
+
+### Syntax
+</code></pre>
+<p>CREATE FILE: <path></p>
+<pre class="&lt;language&gt;"><code>&lt;file content&gt;</code></pre>
+<p>MODIFY FILE: <path> Changes: - <description of changes></p>
+<p>DELETE FILE: <path></p>
+<p>RENAME FILE: <old_path> TO <new_path></p>
+<p>MOVE FILE: <old_path> TO <new_directory></p>
+<pre><code>
+### Examples
+
+**Creating files:**
+</code></pre>
+<p>CREATE FILE: src/models/user.go</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> models</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> User <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    ID       <span class="dt">int</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    Username <span class="dt">string</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    Email    <span class="dt">string</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewUser<span class="op">(</span>username<span class="op">,</span> email <span class="dt">string</span><span class="op">)</span> <span class="op">*</span>User <span class="op">{</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">&amp;</span>User<span class="op">{</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>        Username<span class="op">:</span> username<span class="op">,</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>        Email<span class="op">:</span>    email<span class="op">,</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<pre><code>
+**Describing modifications:**
+</code></pre>
+<p>MODIFY FILE: src/main.go Changes: - Add user authentication
+middleware - Update route handlers to use new User model - Add error
+handling for database operations - Implement graceful shutdown</p>
+<pre><code>
+**File operations:**
+</code></pre>
+<p>DELETE FILE: src/legacy/old_module.go</p>
+<p>RENAME FILE: config.yml TO config.yaml</p>
+<p>MOVE FILE: utils/helper.go TO src/utils/helper.go</p>
+<pre><code>
+**Multiple operations:**
+</code></pre>
+<p>CREATE FILE: src/middleware/auth.go</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> middleware</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> AuthMiddleware<span class="op">()</span> gin<span class="op">.</span>HandlerFunc <span class="op">{</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">func</span><span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Authentication logic</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>        c<span class="op">.</span>Next<span class="op">()</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>MODIFY FILE: src/main.go Changes: - Import new auth middleware - Add
+middleware to router - Update error handling</p>
+<p>DELETE FILE: src/old_auth.go</p>
+<p>RENAME FILE: config.json TO config.yaml</p>
+<pre><code>
+### Advantages
+
+- High-level view
+- Describes intent
+- Multiple operations
+- Clear structure
+
+### Disadvantages
+
+- Less precise
+- Descriptions need implementation
+- No exact code shown
+
+### When to Use
+
+✅ Project restructuring
+✅ File operations
+✅ High-level planning
+✅ Architecture changes
+❌ Precise code edits
+❌ Small changes
+
+---
+
+## Ask Format
+
+Question and confirmation mode before making changes.
+
+### Syntax
+</code></pre>
+<p>QUESTION: <your question>? File: <file_path> Context:
+<relevant context></p>
+<p>PROPOSED CHANGE: File: <file_path> Description:
+<what you plan to change> Rationale: <why this change is needed></p>
+<p>CLARIFICATION: <what you need to know>?</p>
+<p>CONFIRM: <action> for <file>?</p>
+<pre><code>
+### Examples
+
+**Asking for clarification:**
+</code></pre>
+<p>QUESTION: Should I use a mutex or a channel for concurrency control?
+File: src/worker/pool.go Context: Managing access to the shared worker
+queue between goroutines</p>
+<pre><code>
+**Proposing changes:**
+</code></pre>
+<p>PROPOSED CHANGE: File: src/auth/middleware.go Description: Add JWT
+token validation middleware with RSA signature verification Rationale:
+Current implementation doesn’t validate token signatures, which is a
+security risk</p>
+<p>PROPOSED CHANGE: File: src/config/config.go Description: Add support
+for environment-specific configuration files Rationale: Need different
+settings for dev, staging, and production</p>
+<pre><code>
+**Requesting confirmation:**
+</code></pre>
+<p>CONFIRM: Delete the deprecated helper functions for
+utils/legacy.go?</p>
+<p>CONFIRM: Refactor the authentication system to use OAuth2 for
+src/auth/?</p>
+<pre><code>
+**Multiple questions:**
+</code></pre>
+<p>QUESTION: Which error handling strategy do you prefer? File:
+src/handlers/api.go Context: Currently using panic for errors</p>
+<p>Options: - Return errors (idiomatic Go) - Use panic (current
+approach) - Custom error types</p>
+<p>CLARIFICATION: Should I maintain backward compatibility with the old
+API?</p>
+<p>PROPOSED CHANGE: File: src/api/v2/handlers.go Description: Create new
+v2 API with improved error handling Rationale: Clean slate without
+breaking existing clients</p>
+<pre><code>
+### Advantages
+
+- Prevents mistakes
+- Clarifies ambiguity
+- Gets user input
+- Safe approach
+
+### Disadvantages
+
+- Requires interaction
+- Slower workflow
+- Not automated
+
+### When to Use
+
+✅ Unsure about approach
+✅ Ambiguous requirements
+✅ Major architectural decisions
+✅ Risk of breaking changes
+❌ Simple, clear tasks
+❌ Automated workflows
+
+---
+
+## Line Number Format
+
+Direct line editing with numbered line prefixes.
+
+### Syntax
+</code></pre>
+<p>File: <file_path> 1| <first line content> 2| <second line content> 3|
+<third line content> …</p>
+<pre><code>
+**Alternative separators:**
+- `&lt;num&gt;: &lt;content&gt;`
+- `&lt;num&gt; &lt;content&gt;`
+
+### Examples
+
+**Complete file with line numbers:**
+</code></pre>
+<p>File: src/config.go 1| package config 2| 3| import ( 4| “fmt” 5| “os”
+6| ) 7| 8| type Config struct { 9| Host string 10| Port int 11| } 12|
+13| func Load() (*Config, error) { 14| return &amp;Config{ 15| Host:
+“localhost”, 16| Port: 8080, 17| }, nil 18| }</p>
+<pre><code>
+**Using colon separator:**
+</code></pre>
+<p>File: config.yaml 1: server: 2: host: localhost 3: port: 8080 4:
+timeout: 60 5: 6: database: 7: host: localhost 8: port: 5432 9: name:
+mydb</p>
+<pre><code>
+### Advantages
+
+- Complete control
+- See all lines
+- Easy to review
+- Clear structure
+
+### Disadvantages
+
+- Verbose for large files
+- Must include all lines
+- High token usage
+
+### When to Use
+
+✅ Small files
+✅ Need full view
+✅ Line-by-line review
+✅ Complete rewrites
+❌ Large files
+❌ Small changes
+
+---
+
+## Format Auto-Detection
+
+HelixCode can automatically detect which format an LLM response uses.
+
+### How It Works
+
+The system checks for format-specific markers:
+
+| Format | Detection Markers |
+|--------|-------------------|
+| Whole-File | ` ``` ` + `File:` |
+| Diff | `---`, `+++`, `@@` |
+| UDiff | `diff --git`, `index` |
+| Search/Replace | `SEARCH:`, `REPLACE:`, `&lt;&lt;&lt;&lt;&lt;&lt;&lt;` |
+| Editor | `INSERT AT LINE`, `DELETE LINE`, `REPLACE LINE` |
+| Architect | `CREATE FILE`, `MODIFY FILE`, `DELETE FILE` |
+| Ask | `QUESTION:`, `PROPOSED CHANGE:`, `?` |
+| Line Number | `&lt;num&gt;|`, `&lt;num&gt;:` with multiple lines |
+
+### Confidence Scoring
+
+Formats are detected based on marker presence:
+- **High confidence**: Multiple specific markers found
+- **Medium confidence**: Some markers found
+- **Low confidence**: Generic markers only
+
+### Manual Override
+
+```go
+// Force specific format
+edits, err := registry.ParseWithFormat(ctx, formats.FormatTypeWhole, content)
+
+// Or let auto-detection work
+edits, format, err := registry.ParseWithAutoDetect(ctx, content)</code></pre>
+<h3 id="detection-priority">Detection Priority</h3>
+<p>When multiple formats match: 1. UDiff (most specific markers) 2. Diff
+3. Search/Replace 4. Editor 5. Line Number 6. Architect 7. Ask 8.
+Whole-File (fallback)</p>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="choose-the-right-format">1. Choose the Right Format</h3>
+<p><strong>For small changes</strong>: Search/Replace or Editor</p>
+<pre><code>File: config.yaml
+search: timeout: 30
+replace: timeout: 60</code></pre>
+<p><strong>For new files</strong>: Whole-File or Architect</p>
+<pre><code>CREATE FILE: src/models/user.go
+```go
+package models
+...</code></pre>
+<pre><code>
+**For refactoring**: Architect or Ask</code></pre>
+<p>PROPOSED CHANGE: File: src/auth/ Description: Refactor authentication
+to use OAuth2 Rationale: Improve security and enable SSO</p>
+<pre><code>
+### 2. Be Explicit
+
+**Good:**</code></pre>
+<p>File: src/main.go &lt;&lt;&lt;&lt;&lt;&lt;&lt; SEARCH func
+calculateTotal(items []Item) float64 { total := 0.0 for <em>, item :=
+range items { total += item.Price } return total } ======= func
+calculateTotal(items []Item, tax float64) float64 { total := 0.0 for
+</em>, item := range items { total += item.Price * (1 + tax) } return
+total } &gt;&gt;&gt;&gt;&gt;&gt;&gt; REPLACE</p>
+<pre><code>
+**Avoid:**</code></pre>
+<p>Update calculateTotal to include tax</p>
+<pre><code>
+### 3. Provide Context
+
+**Diff format - show context:**</code></pre>
+<p>@@ -10,7 +10,8 @@ func calculateTotal(items []Item) float64 { total
+:= 0.0 for _, item := range items { - total += item.Price + // Apply
+sales tax + total += item.Price * 1.08 } return total }</p>
+<pre><code>
+### 4. Use Ask Mode When Unsure
+</code></pre>
+<p>QUESTION: Should I use pointer receivers or value receivers for this
+struct? File: src/models/user.go Context: User struct with many fields,
+will be copied frequently</p>
+<p>PROPOSED CHANGE: File: src/models/user.go Description: Change all
+methods to use pointer receivers Rationale: Avoid copying large struct,
+more efficient</p>
+<pre><code>
+### 5. Group Related Changes
+
+**Architect format for multiple files:**</code></pre>
+<p>CREATE FILE: src/middleware/auth.go</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span></code></pre></div>
+<p>MODIFY FILE: src/main.go Changes: - Add auth middleware import -
+Register middleware</p>
+<p>DELETE FILE: src/old_auth.go</p>
+<pre><code>
+### 6. Verify Search Patterns
+
+Search/Replace requires **exact** matches:
+
+**Wrong:**</code></pre>
+<p>SEARCH: func calculateTotal(items []Item) float64 {</p>
+<pre><code>(extra space)
+
+**Correct:**</code></pre>
+<p>SEARCH: func calculateTotal(items []Item) float64 {</p>
+<pre><code>
+### 7. Use Line Numbers Carefully
+
+Always verify current line numbers:
+
+```bash
+# Get current line numbers
+cat -n src/main.go
+
+# Then use editor format
+File: src/main.go
+INSERT AT LINE 5:
+import &quot;os&quot;</code></pre>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="format-not-detected">Format Not Detected</h3>
+<p><strong>Problem:</strong> Auto-detection fails</p>
+<p><strong>Solution:</strong> 1. Add explicit markers:
+<code>File: test.go</code>go … <code></code></p>
+<ol start="2" type="1">
+<li><p>Or specify format manually:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>edits<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>ParseWithFormat<span class="op">(</span>ctx<span class="op">,</span> FormatTypeWhole<span class="op">,</span> content<span class="op">)</span></span></code></pre></div></li>
+</ol>
+<h3 id="search-pattern-not-found">Search Pattern Not Found</h3>
+<p><strong>Problem:</strong>
+<code>search pattern not found in file</code></p>
+<p><strong>Solution:</strong> 1. Check exact whitespace:
+<code>bash    cat -A file.go  # Show all characters</code></p>
+<ol start="2" type="1">
+<li><p>Copy exact text from file:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get exact content</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">&#39;10,15p&#39;</span> file.go</span></code></pre></div></li>
+<li><p>Use diff/editor format instead</p></li>
+</ol>
+<h3 id="line-numbers-wrong">Line Numbers Wrong</h3>
+<p><strong>Problem:</strong> Editor format edits wrong lines</p>
+<p><strong>Solution:</strong> 1. Get current line numbers:
+<code>bash    cat -n file.go | grep &quot;function name&quot;</code></p>
+<ol start="2" type="1">
+<li>Use diff format instead (more robust)</li>
+</ol>
+<h3 id="diff-wont-apply">Diff Won’t Apply</h3>
+<p><strong>Problem:</strong> Context doesn’t match</p>
+<p><strong>Solution:</strong> 1. Increase context lines 2. Use
+search/replace instead 3. Use whole-file format</p>
+<h3 id="ambiguous-format">Ambiguous Format</h3>
+<p><strong>Problem:</strong> Multiple formats detected</p>
+<p><strong>Solution:</strong> 1. Add more specific markers 2. Remove
+conflicting syntax 3. Specify format explicitly</p>
+<hr />
+<h2 id="faq">FAQ</h2>
+<p><strong>Q: Which format should I use?</strong> A: Start with
+search/replace for simple changes, diff for precise edits, and
+whole-file for small files.</p>
+<p><strong>Q: Can I mix formats in one response?</strong> A: No, each
+LLM response should use one format. Multiple files can be edited, but
+use same format.</p>
+<p><strong>Q: How does auto-detection work?</strong> A: It looks for
+format-specific markers (like <code>@@</code> for diff,
+<code>SEARCH:</code> for search/replace) and chooses best match.</p>
+<p><strong>Q: What if auto-detection picks wrong format?</strong> A:
+Specify format explicitly in your prompt: “Use diff format to
+update…”</p>
+<p><strong>Q: Do all LLM providers support all formats?</strong> A: Yes,
+formats are independent of providers. All 13 providers can use any
+format.</p>
+<p><strong>Q: Can I create custom formats?</strong> A: Yes, implement
+the <code>EditFormat</code> interface and register with
+<code>registry.Register(yourFormat)</code>.</p>
+<p><strong>Q: Which format is most token-efficient?</strong> A:
+Search/Replace for small changes, Editor for line-specific edits.
+Whole-file uses most tokens.</p>
+<p><strong>Q: Can ask mode be automated?</strong> A: No, ask mode
+requires user interaction. Use other formats for automation.</p>
+<p><strong>Q: How do I handle merge conflicts?</strong> A: Use ask mode
+to get clarification, or architect mode to describe intended
+resolution.</p>
+<p><strong>Q: What’s the difference between diff and udiff?</strong> A:
+UDiff includes git metadata (index, mode) and supports file operations
+(create/delete/rename). Diff is simpler.</p>
+<p><strong>Q: Can I use regular expressions in search/replace?</strong>
+A: The pattern matching is literal by default. Regex support depends on
+implementation configuration.</p>
+<p><strong>Q: How precise are line numbers in editor format?</strong> A:
+Very precise, but they must match current file state. Numbers shift when
+lines are added/removed.</p>
+<hr />
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="./MENTIONS_USER_GUIDE.md">@ Mentions User Guide</a></li>
+<li><a href="./SLASH_COMMANDS_USER_GUIDE.md">Slash Commands User
+Guide</a></li>
+<li><a href="./MODEL_ALIASES_USER_GUIDE.md">Model Aliases User
+Guide</a></li>
+<li><a href="./API.md">HelixCode API Documentation</a></li>
+</ul>
+<hr />
+<p><strong>Document Version:</strong> 1.0 <strong>Last Updated:</strong>
+November 7, 2025 <strong>Feedback:</strong> <a href="https://github.com/user/helixcode/issues">GitHub Issues</a></p>
+</body>
+</html>

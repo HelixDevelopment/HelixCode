@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FOCUS_CHAIN_USER_GUIDE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FOCUS_CHAIN_USER_GUIDE</h1>
+</header>
+<h1 id="focus-chain-system---comprehensive-user-guide">Focus Chain
+System - Comprehensive User Guide</h1>
+<h2 id="helixcode-phase-2-feature-3">HelixCode Phase 2, Feature 3</h2>
+<p><strong>Version:</strong> 1.0 <strong>Last Updated:</strong> November
+7, 2025 <strong>Status:</strong> ✅ Complete</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#core-concepts">Core Concepts</a></li>
+<li><a href="#api-reference">API Reference</a></li>
+<li><a href="#usage-examples">Usage Examples</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#integration-guide">Integration Guide</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>The Focus Chain System provides state management and context
+preservation across multiple interactions in HelixCode. It enables
+tracking of what users and LLMs are currently focused on, maintaining
+conversation context, and building intelligent focus-aware prompts.</p>
+<h3 id="what-is-a-focus">What is a Focus?</h3>
+<p>A <strong>Focus</strong> represents a single point of attention in
+the development process - a file being edited, a bug being fixed, a
+feature being implemented, or any other work item that requires
+concentration.</p>
+<h3 id="what-is-a-focus-chain">What is a Focus Chain?</h3>
+<p>A <strong>Focus Chain</strong> is an ordered sequence of focuses that
+represents the flow of a conversation or work session. It maintains the
+history of what you’ve been working on and provides context for current
+work.</p>
+<h3 id="key-features">Key Features</h3>
+<ul>
+<li><strong>Hierarchical Focus</strong>: Parent-child relationships for
+complex tasks</li>
+<li><strong>Multiple Focus Types</strong>: Files, directories, tasks,
+errors, tests, functions, classes, packages</li>
+<li><strong>Priority Levels</strong>: Low, Normal, High, Critical</li>
+<li><strong>Expiration Support</strong>: Auto-cleanup of stale
+focuses</li>
+<li><strong>Tags and Metadata</strong>: Flexible categorization and
+custom data</li>
+<li><strong>Thread-Safe</strong>: Concurrent access support</li>
+<li><strong>Chain Management</strong>: Multiple parallel focus
+chains</li>
+<li><strong>Context Preservation</strong>: Shared and per-focus
+context</li>
+</ul>
+<hr />
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="creating-a-simple-focus">Creating a Simple Focus</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;dev.helix.code/internal/focus&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a focus on a file</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    myFocus <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;src/main.go&quot;</span><span class="op">)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    myFocus<span class="op">.</span>Description <span class="op">=</span> <span class="st">&quot;Working on main entry point&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    myFocus<span class="op">.</span>Priority <span class="op">=</span> focus<span class="op">.</span>PriorityHigh</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    myFocus<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;backend&quot;</span><span class="op">)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add some context</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    myFocus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;line&quot;</span><span class="op">,</span> <span class="dv">42</span><span class="op">)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    myFocus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;function&quot;</span><span class="op">,</span> <span class="st">&quot;main&quot;</span><span class="op">)</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print focus info</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span>myFocus<span class="op">.</span>String<span class="op">())</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="creating-and-using-a-chain">Creating and Using a Chain</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create a chain</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>chain <span class="op">:=</span> focus<span class="op">.</span>NewChain<span class="op">(</span><span class="st">&quot;feature-implementation&quot;</span><span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Add focuses</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>Push<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTask<span class="op">,</span> <span class="st">&quot;implement-auth&quot;</span><span class="op">))</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>Push<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;auth/handler.go&quot;</span><span class="op">))</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>Push<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTest<span class="op">,</span> <span class="st">&quot;auth/handler_test.go&quot;</span><span class="op">))</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Navigate</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>current<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>Current<span class="op">()</span>        <span class="co">// Current focus</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>prev<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>Previous<span class="op">()</span>          <span class="co">// Go back</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>next<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>Next<span class="op">()</span>              <span class="co">// Go forward</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Get specific focus</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>first<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>First<span class="op">()</span>            <span class="co">// First focus</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>last<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>Last<span class="op">()</span>              <span class="co">// Last focus</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Get info</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Chain has %d focuses</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> chain<span class="op">.</span>Size<span class="op">())</span></span></code></pre></div>
+<h3 id="using-the-manager">Using the Manager</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create manager</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> focus<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create chains</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>authChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;auth-feature&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span>  <span class="co">// Set as active</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>testChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;tests&quot;</span><span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Push to active chain</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>PushToActive<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;main.go&quot;</span><span class="op">))</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Get current focus from active chain</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>current<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>GetCurrentFocus<span class="op">()</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Switch active chain</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>SetActiveChain<span class="op">(</span>testChain<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Get statistics</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>stats <span class="op">:=</span> manager<span class="op">.</span>GetStatistics<span class="op">()</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Total chains: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> stats<span class="op">.</span>TotalChains<span class="op">)</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Total focuses: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> stats<span class="op">.</span>TotalFocuses<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="core-concepts">Core Concepts</h2>
+<h3 id="focus-types">Focus Types</h3>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 35%" />
+<col style="width: 48%" />
+</colgroup>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+<th>Example Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>FocusTypeFile</code></td>
+<td>Single file</td>
+<td>Editing <code>main.go</code></td>
+</tr>
+<tr>
+<td><code>FocusTypeDirectory</code></td>
+<td>Directory</td>
+<td>Working in <code>src/api/</code></td>
+</tr>
+<tr>
+<td><code>FocusTypeTask</code></td>
+<td>Feature or task</td>
+<td>Implementing authentication</td>
+</tr>
+<tr>
+<td><code>FocusTypeError</code></td>
+<td>Bug or error</td>
+<td>Fixing bug #1234</td>
+</tr>
+<tr>
+<td><code>FocusTypeTest</code></td>
+<td>Test case</td>
+<td>Writing unit tests</td>
+</tr>
+<tr>
+<td><code>FocusTypeFunction</code></td>
+<td>Specific function</td>
+<td>Refactoring <code>handleRequest()</code></td>
+</tr>
+<tr>
+<td><code>FocusTypeClass</code></td>
+<td>Class/struct</td>
+<td>Modifying <code>User</code> struct</td>
+</tr>
+<tr>
+<td><code>FocusTypePackage</code></td>
+<td>Package/module</td>
+<td>Updating <code>auth</code> package</td>
+</tr>
+<tr>
+<td><code>FocusTypeProject</code></td>
+<td>Entire project</td>
+<td>Project overview</td>
+</tr>
+<tr>
+<td><code>FocusTypeCustom</code></td>
+<td>Custom type</td>
+<td>Any custom focus</td>
+</tr>
+</tbody>
+</table>
+<h3 id="priority-levels">Priority Levels</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    PriorityLow      FocusPriority <span class="op">=</span> <span class="dv">1</span>   <span class="co">// Minor tasks</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    PriorityNormal   FocusPriority <span class="op">=</span> <span class="dv">5</span>   <span class="co">// Regular work</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    PriorityHigh     FocusPriority <span class="op">=</span> <span class="dv">10</span>  <span class="co">// Important tasks</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    PriorityCritical FocusPriority <span class="op">=</span> <span class="dv">20</span>  <span class="co">// Critical issues</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="hierarchical-focus">Hierarchical Focus</h3>
+<p>Focuses can have parent-child relationships:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create project focus</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>project <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeProject<span class="op">,</span> <span class="st">&quot;myapp&quot;</span><span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create directory focus</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>srcDir <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeDirectory<span class="op">,</span> <span class="st">&quot;src&quot;</span><span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>project<span class="op">.</span>AddChild<span class="op">(</span>srcDir<span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Create file focus</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>mainFile <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;src/main.go&quot;</span><span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>srcDir<span class="op">.</span>AddChild<span class="op">(</span>mainFile<span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Navigate hierarchy</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>depth <span class="op">:=</span> mainFile<span class="op">.</span>GetDepth<span class="op">()</span>           <span class="co">// Returns 2</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>root <span class="op">:=</span> mainFile<span class="op">.</span>GetRoot<span class="op">()</span>             <span class="co">// Returns project</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>path <span class="op">:=</span> mainFile<span class="op">.</span>GetPath<span class="op">()</span>             <span class="co">// Returns [project, srcDir, mainFile]</span></span></code></pre></div>
+<h3 id="context-and-metadata">Context and Metadata</h3>
+<p><strong>Context</strong>: Dynamic, any-type data</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;line&quot;</span><span class="op">,</span> <span class="dv">42</span><span class="op">)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;cursor&quot;</span><span class="op">,</span> CursorPosition<span class="op">{</span>Line<span class="op">:</span> <span class="dv">10</span><span class="op">,</span> Col<span class="op">:</span> <span class="dv">5</span><span class="op">})</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;edited&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>value<span class="op">,</span> ok <span class="op">:=</span> focus<span class="op">.</span>GetContext<span class="op">(</span><span class="st">&quot;line&quot;</span><span class="op">)</span>  <span class="co">// Returns (42, true)</span></span></code></pre></div>
+<p><strong>Metadata</strong>: String key-value pairs</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;author&quot;</span><span class="op">,</span> <span class="st">&quot;john&quot;</span><span class="op">)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;created&quot;</span><span class="op">,</span> <span class="st">&quot;2025-11-07&quot;</span><span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;ticket&quot;</span><span class="op">,</span> <span class="st">&quot;PROJ-123&quot;</span><span class="op">)</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>author<span class="op">,</span> ok <span class="op">:=</span> focus<span class="op">.</span>GetMetadata<span class="op">(</span><span class="st">&quot;author&quot;</span><span class="op">)</span>  <span class="co">// Returns (&quot;john&quot;, true)</span></span></code></pre></div>
+<h3 id="expiration">Expiration</h3>
+<p>Focuses can have expiration times for automatic cleanup:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Set expiration 1 hour from now</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetExpiration<span class="op">(</span><span class="dv">1</span> <span class="op">*</span> time<span class="op">.</span>Hour<span class="op">)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if expired</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> focus<span class="op">.</span>IsExpired<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Handle expired focus</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Chains auto-remove expired focuses</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>Push<span class="op">(</span>someExpiredFocus<span class="op">)</span>  <span class="co">// Automatically cleaned</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>CleanExpired<span class="op">()</span>           <span class="co">// Manual cleanup</span></span></code></pre></div>
+<hr />
+<h2 id="api-reference">API Reference</h2>
+<h3 id="focus-api">Focus API</h3>
+<p><strong>Creation:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewFocus<span class="op">(</span>focusType FocusType<span class="op">,</span> target <span class="dt">string</span><span class="op">)</span> <span class="op">*</span>Focus</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewFocusWithPriority<span class="op">(</span>focusType FocusType<span class="op">,</span> target <span class="dt">string</span><span class="op">,</span> priority FocusPriority<span class="op">)</span> <span class="op">*</span>Focus</span></code></pre></div>
+<p><strong>Validation:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> Validate<span class="op">()</span> <span class="dt">error</span></span></code></pre></div>
+<p><strong>Tags:</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> AddTag<span class="op">(</span>tag <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> HasTag<span class="op">(</span>tag <span class="dt">string</span><span class="op">)</span> <span class="dt">bool</span></span></code></pre></div>
+<p><strong>Context:</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> SetContext<span class="op">(</span>key <span class="dt">string</span><span class="op">,</span> value <span class="kw">interface</span><span class="op">{})</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> GetContext<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="kw">interface</span><span class="op">{},</span> <span class="dt">bool</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Metadata:</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> SetMetadata<span class="op">(</span>key<span class="op">,</span> value <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> GetMetadata<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">bool</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Expiration:</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> SetExpiration<span class="op">(</span>duration time<span class="op">.</span>Duration<span class="op">)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> IsExpired<span class="op">()</span> <span class="dt">bool</span></span></code></pre></div>
+<p><strong>Hierarchy:</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> AddChild<span class="op">(</span>child <span class="op">*</span>Focus<span class="op">)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> RemoveChild<span class="op">(</span>childID <span class="dt">string</span><span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> GetDepth<span class="op">()</span> <span class="dt">int</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> GetRoot<span class="op">()</span> <span class="op">*</span>Focus</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> GetPath<span class="op">()</span> <span class="op">[]*</span>Focus</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> FindChild<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="op">*</span>Focus</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> CountDescendants<span class="op">()</span> <span class="dt">int</span></span></code></pre></div>
+<p><strong>Utility:</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> Touch<span class="op">()</span>              <span class="co">// Update timestamp</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> Clone<span class="op">()</span> <span class="op">*</span>Focus       <span class="co">// Deep copy</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>f <span class="op">*</span>Focus<span class="op">)</span> String<span class="op">()</span> <span class="dt">string</span>      <span class="co">// String representation</span></span></code></pre></div>
+<h3 id="chain-api">Chain API</h3>
+<p><strong>Creation:</strong></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewChain<span class="op">(</span>name <span class="dt">string</span><span class="op">)</span> <span class="op">*</span>Chain</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewChainWithSize<span class="op">(</span>name <span class="dt">string</span><span class="op">,</span> maxSize <span class="dt">int</span><span class="op">)</span> <span class="op">*</span>Chain</span></code></pre></div>
+<p><strong>Stack Operations:</strong></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Push<span class="op">(</span>focus <span class="op">*</span>Focus<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Pop<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Current<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Navigation:</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Next<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Previous<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> First<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Last<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Get<span class="op">(</span>index <span class="dt">int</span><span class="op">)</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetByID<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> SetCurrent<span class="op">(</span>index <span class="dt">int</span><span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<p><strong>Filtering:</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetRecent<span class="op">(</span>n <span class="dt">int</span><span class="op">)</span> <span class="op">[]*</span>Focus</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetByType<span class="op">(</span>focusType FocusType<span class="op">)</span> <span class="op">[]*</span>Focus</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetByTag<span class="op">(</span>tag <span class="dt">string</span><span class="op">)</span> <span class="op">[]*</span>Focus</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetByPriority<span class="op">(</span>minPriority FocusPriority<span class="op">)</span> <span class="op">[]*</span>Focus</span></code></pre></div>
+<p><strong>Modification:</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Remove<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Clear<span class="op">()</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> CleanExpired<span class="op">()</span> <span class="dt">int</span></span></code></pre></div>
+<p><strong>Operations:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Merge<span class="op">(</span>other <span class="op">*</span>Chain<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Split<span class="op">(</span>index <span class="dt">int</span><span class="op">)</span> <span class="op">(*</span>Chain<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Reverse<span class="op">()</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Clone<span class="op">()</span> <span class="op">*</span>Chain</span></code></pre></div>
+<p><strong>Info:</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> Size<span class="op">()</span> <span class="dt">int</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> IsEmpty<span class="op">()</span> <span class="dt">bool</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> String<span class="op">()</span> <span class="dt">string</span></span></code></pre></div>
+<p><strong>Context:</strong></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> SetContext<span class="op">(</span>key <span class="dt">string</span><span class="op">,</span> value <span class="kw">interface</span><span class="op">{})</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetContext<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="kw">interface</span><span class="op">{},</span> <span class="dt">bool</span><span class="op">)</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> SetMetadata<span class="op">(</span>key<span class="op">,</span> value <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Chain<span class="op">)</span> GetMetadata<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">bool</span><span class="op">)</span></span></code></pre></div>
+<h3 id="manager-api">Manager API</h3>
+<p><strong>Creation:</strong></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewManager<span class="op">()</span> <span class="op">*</span>Manager</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewManagerWithLimit<span class="op">(</span>maxChains <span class="dt">int</span><span class="op">)</span> <span class="op">*</span>Manager</span></code></pre></div>
+<p><strong>Chain Management:</strong></p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> CreateChain<span class="op">(</span>name <span class="dt">string</span><span class="op">,</span> setActive <span class="dt">bool</span><span class="op">)</span> <span class="op">(*</span>Chain<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> CreateChainWithSize<span class="op">(</span>name <span class="dt">string</span><span class="op">,</span> maxSize <span class="dt">int</span><span class="op">,</span> setActive <span class="dt">bool</span><span class="op">)</span> <span class="op">(*</span>Chain<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetChain<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>Chain<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetActiveChain<span class="op">()</span> <span class="op">(*</span>Chain<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> SetActiveChain<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> DeleteChain<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetAllChains<span class="op">()</span> <span class="op">[]*</span>Chain</span></code></pre></div>
+<p><strong>Focus Operations:</strong></p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> PushToActive<span class="op">(</span>focus <span class="op">*</span>Focus<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetCurrentFocus<span class="op">()</span> <span class="op">(*</span>Focus<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Queries:</strong></p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> FindChainsByName<span class="op">(</span>nameSubstring <span class="dt">string</span><span class="op">)</span> <span class="op">[]*</span>Chain</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetRecentChains<span class="op">(</span>n <span class="dt">int</span><span class="op">)</span> <span class="op">[]*</span>Chain</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> Count<span class="op">()</span> <span class="dt">int</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetStatistics<span class="op">()</span> <span class="op">*</span>ManagerStatistics</span></code></pre></div>
+<p><strong>Maintenance:</strong></p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> CleanExpiredFocuses<span class="op">()</span> <span class="dt">int</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> MergeChains<span class="op">(</span>targetID<span class="op">,</span> sourceID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> Clear<span class="op">()</span></span></code></pre></div>
+<p><strong>Import/Export:</strong></p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> ExportChain<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>ChainSnapshot<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> ImportChain<span class="op">(</span>snapshot <span class="op">*</span>ChainSnapshot<span class="op">,</span> setActive <span class="dt">bool</span><span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<p><strong>Callbacks:</strong></p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> OnCreate<span class="op">(</span>callback ChainCallback<span class="op">)</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> OnDelete<span class="op">(</span>callback ChainCallback<span class="op">)</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> OnActivate<span class="op">(</span>callback ChainCallback<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="example-1-development-workflow">Example 1: Development
+Workflow</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create manager and chain for a feature</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> focus<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>chain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;user-auth-feature&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Start with high-level task</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>task <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>FocusTypeTask<span class="op">,</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Implement user authentication&quot;</span><span class="op">,</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>PriorityHigh<span class="op">,</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>task<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;feature&quot;</span><span class="op">)</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>task<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;authentication&quot;</span><span class="op">)</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>PushToActive<span class="op">(</span>task<span class="op">)</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Focus on specific file</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>file <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;auth/handler.go&quot;</span><span class="op">)</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>file<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;line&quot;</span><span class="op">,</span> <span class="dv">50</span><span class="op">)</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>file<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;function&quot;</span><span class="op">,</span> <span class="st">&quot;Login&quot;</span><span class="op">)</span></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>PushToActive<span class="op">(</span>file<span class="op">)</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Encounter an error</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>bug <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>FocusTypeError<span class="op">,</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Login returns 500 error&quot;</span><span class="op">,</span></span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>PriorityCritical<span class="op">,</span></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>bug<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;error_code&quot;</span><span class="op">,</span> <span class="st">&quot;500&quot;</span><span class="op">)</span></span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>bug<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;stack_trace&quot;</span><span class="op">,</span> <span class="st">&quot;...&quot;</span><span class="op">)</span></span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>PushToActive<span class="op">(</span>bug<span class="op">)</span></span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a><span class="co">// 4. After fixing, move to tests</span></span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>test <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTest<span class="op">,</span> <span class="st">&quot;auth/handler_test.go&quot;</span><span class="op">)</span></span>
+<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a>test<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;unit-test&quot;</span><span class="op">)</span></span>
+<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>PushToActive<span class="op">(</span>test<span class="op">)</span></span>
+<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a><span class="co">// Review workflow</span></span>
+<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a>current<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>GetCurrentFocus<span class="op">()</span></span>
+<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Currently: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> current<span class="op">.</span>Target<span class="op">)</span></span>
+<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a><span class="co">// Go back through history</span></span>
+<span id="cb32-41"><a href="#cb32-41" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>Previous<span class="op">()</span></span>
+<span id="cb32-42"><a href="#cb32-42" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>Previous<span class="op">()</span></span>
+<span id="cb32-43"><a href="#cb32-43" aria-hidden="true" tabindex="-1"></a>prev<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>Current<span class="op">()</span></span>
+<span id="cb32-44"><a href="#cb32-44" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Was working on: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> prev<span class="op">.</span>Target<span class="op">)</span></span></code></pre></div>
+<h3 id="example-2-code-review-session">Example 2: Code Review
+Session</h3>
+<div class="sourceCode" id="cb33"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> focus<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>reviewChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;code-review-pr-123&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Get list of changed files from PR</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>changedFiles <span class="op">:=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/api/handler.go&quot;</span><span class="op">,</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/api/middleware.go&quot;</span><span class="op">,</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/api/validator.go&quot;</span><span class="op">,</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Create focus for each file</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> file <span class="op">:=</span> <span class="kw">range</span> changedFiles <span class="op">{</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    f <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> file<span class="op">)</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    f<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;code-review&quot;</span><span class="op">)</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>    f<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;pr-123&quot;</span><span class="op">)</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    f<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;reviewer&quot;</span><span class="op">,</span> <span class="st">&quot;john&quot;</span><span class="op">)</span></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>    reviewChain<span class="op">.</span>Push<span class="op">(</span>f<span class="op">)</span></span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Review each file</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> reviewChain<span class="op">.</span>CurrentIdx <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>    current<span class="op">,</span> _ <span class="op">:=</span> reviewChain<span class="op">.</span>Current<span class="op">()</span></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Simulate review</span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Reviewing: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> current<span class="op">.</span>Target<span class="op">)</span></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Add review notes</span></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>    current<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;status&quot;</span><span class="op">,</span> <span class="st">&quot;approved&quot;</span><span class="op">)</span></span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>    current<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;comments&quot;</span><span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;LGTM&quot;</span><span class="op">,</span></span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;Good error handling&quot;</span><span class="op">,</span></span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Move to next</span></span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>    reviewChain<span class="op">.</span>Next<span class="op">()</span></span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a><span class="co">// Get all reviewed files</span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>allFocuses <span class="op">:=</span> reviewChain<span class="op">.</span>GetByTag<span class="op">(</span><span class="st">&quot;code-review&quot;</span><span class="op">)</span></span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Reviewed %d files</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>allFocuses<span class="op">))</span></span></code></pre></div>
+<h3 id="example-3-bug-fixing-session">Example 3: Bug Fixing Session</h3>
+<div class="sourceCode" id="cb34"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> focus<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>bugChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;fix-bug-1234&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Start with bug report</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>bug <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>FocusTypeError<span class="op">,</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Users can&#39;t login after password reset&quot;</span><span class="op">,</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>PriorityCritical<span class="op">,</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>bug<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;ticket&quot;</span><span class="op">,</span> <span class="st">&quot;BUG-1234&quot;</span><span class="op">)</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>bug<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;reporter&quot;</span><span class="op">,</span> <span class="st">&quot;customer-support&quot;</span><span class="op">)</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>bug<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;impact&quot;</span><span class="op">,</span> <span class="st">&quot;high&quot;</span><span class="op">)</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>bugChain<span class="op">.</span>Push<span class="op">(</span>bug<span class="op">)</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Investigate related files</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>suspects <span class="op">:=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;auth/password.go&quot;</span><span class="op">,</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;auth/session.go&quot;</span><span class="op">,</span></span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;db/user_repo.go&quot;</span><span class="op">,</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> file <span class="op">:=</span> <span class="kw">range</span> suspects <span class="op">{</span></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>    f <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> file<span class="op">)</span></span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>    f<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;investigation&quot;</span><span class="op">)</span></span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>    bugChain<span class="op">.</span>Push<span class="op">(</span>f<span class="op">)</span></span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Found the issue in one file</span></span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>problemFile<span class="op">,</span> _ <span class="op">:=</span> bugChain<span class="op">.</span>GetByID<span class="op">(</span><span class="st">&quot;specific-focus-id&quot;</span><span class="op">)</span></span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>problemFile<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;issue_found&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>problemFile<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;root_cause&quot;</span><span class="op">,</span> <span class="st">&quot;session not refreshed after password reset&quot;</span><span class="op">)</span></span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a><span class="co">// Add fix focus</span></span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a>fix <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;auth/session.go&quot;</span><span class="op">)</span></span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a>fix<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;fix_applied&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a>fix<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;commit&quot;</span><span class="op">,</span> <span class="st">&quot;abc123&quot;</span><span class="op">)</span></span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a>bugChain<span class="op">.</span>Push<span class="op">(</span>fix<span class="op">)</span></span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-39"><a href="#cb34-39" aria-hidden="true" tabindex="-1"></a><span class="co">// Add test to verify fix</span></span>
+<span id="cb34-40"><a href="#cb34-40" aria-hidden="true" tabindex="-1"></a>test <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTest<span class="op">,</span> <span class="st">&quot;auth/session_test.go&quot;</span><span class="op">)</span></span>
+<span id="cb34-41"><a href="#cb34-41" aria-hidden="true" tabindex="-1"></a>test<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;bug-fix&quot;</span><span class="op">)</span></span>
+<span id="cb34-42"><a href="#cb34-42" aria-hidden="true" tabindex="-1"></a>test<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;regression-test&quot;</span><span class="op">)</span></span>
+<span id="cb34-43"><a href="#cb34-43" aria-hidden="true" tabindex="-1"></a>bugChain<span class="op">.</span>Push<span class="op">(</span>test<span class="op">)</span></span>
+<span id="cb34-44"><a href="#cb34-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-45"><a href="#cb34-45" aria-hidden="true" tabindex="-1"></a><span class="co">// Summary</span></span>
+<span id="cb34-46"><a href="#cb34-46" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Bug fix workflow: %d steps</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> bugChain<span class="op">.</span>Size<span class="op">())</span></span>
+<span id="cb34-47"><a href="#cb34-47" aria-hidden="true" tabindex="-1"></a>investigationFocuses <span class="op">:=</span> bugChain<span class="op">.</span>GetByTag<span class="op">(</span><span class="st">&quot;investigation&quot;</span><span class="op">)</span></span>
+<span id="cb34-48"><a href="#cb34-48" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Investigated %d files</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>investigationFocuses<span class="op">))</span></span></code></pre></div>
+<h3 id="example-4-multi-chain-management">Example 4: Multi-Chain
+Management</h3>
+<div class="sourceCode" id="cb35"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> focus<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Active development chain</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>devChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;active-development&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>devChain<span class="op">.</span>Push<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;main.go&quot;</span><span class="op">))</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Background research chain</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>researchChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;research&quot;</span><span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>researchChain<span class="op">.</span>Push<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTask<span class="op">,</span> <span class="st">&quot;investigate-caching&quot;</span><span class="op">))</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Code review chain</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>reviewChain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;code-reviews&quot;</span><span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>reviewChain<span class="op">.</span>Push<span class="op">(</span>focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTask<span class="op">,</span> <span class="st">&quot;review-pr-45&quot;</span><span class="op">))</span></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Switch between chains as needed</span></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>SetActiveChain<span class="op">(</span>reviewChain<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Do review work...</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>SetActiveChain<span class="op">(</span>devChain<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Resume development...</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Get statistics</span></span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>stats <span class="op">:=</span> manager<span class="op">.</span>GetStatistics<span class="op">()</span></span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Managing %d chains</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> stats<span class="op">.</span>TotalChains<span class="op">)</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Total focus points: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> stats<span class="op">.</span>TotalFocuses<span class="op">)</span></span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Average focuses per chain: %.1f</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> stats<span class="op">.</span>AverageFocusesPerChain<span class="op">)</span></span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Find chains by name</span></span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a>authChains <span class="op">:=</span> manager<span class="op">.</span>FindChainsByName<span class="op">(</span><span class="st">&quot;auth&quot;</span><span class="op">)</span></span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Found %d auth-related chains</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>authChains<span class="op">))</span></span></code></pre></div>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="use-appropriate-focus-types">1. Use Appropriate Focus Types</h3>
+<p>Choose the right focus type for your work:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ✅ Good: Specific types</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>task <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTask<span class="op">,</span> <span class="st">&quot;implement-login&quot;</span><span class="op">)</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>file <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;auth.go&quot;</span><span class="op">)</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>bug <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeError<span class="op">,</span> <span class="st">&quot;crash-on-startup&quot;</span><span class="op">)</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="co">// ❌ Bad: Everything as custom</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>everything <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeCustom<span class="op">,</span> <span class="st">&quot;work&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="set-meaningful-priorities">2. Set Meaningful Priorities</h3>
+<p>Use priority levels consistently:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Critical: Production issues, security vulnerabilities</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>critical <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>FocusTypeError<span class="op">,</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SQL injection in login&quot;</span><span class="op">,</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>PriorityCritical<span class="op">,</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="co">// High: Important features, blocking bugs</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>high <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>FocusTypeTask<span class="op">,</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;User registration&quot;</span><span class="op">,</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>PriorityHigh<span class="op">,</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Normal: Regular development work</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>normal <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;utils.go&quot;</span><span class="op">)</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Low: Nice-to-have improvements</span></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>low <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>FocusTypeTask<span class="op">,</span></span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Update README&quot;</span><span class="op">,</span></span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>    focus<span class="op">.</span>PriorityLow<span class="op">,</span></span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="use-tags-for-organization">3. Use Tags for Organization</h3>
+<p>Tags enable powerful filtering:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>focus <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;api.go&quot;</span><span class="op">)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;backend&quot;</span><span class="op">)</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;api&quot;</span><span class="op">)</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;refactoring&quot;</span><span class="op">)</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>AddTag<span class="op">(</span><span class="st">&quot;in-progress&quot;</span><span class="op">)</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Later: Find all backend refactoring work</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>backendWork <span class="op">:=</span> chain<span class="op">.</span>GetByTag<span class="op">(</span><span class="st">&quot;backend&quot;</span><span class="op">)</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>inProgress <span class="op">:=</span> chain<span class="op">.</span>GetByTag<span class="op">(</span><span class="st">&quot;in-progress&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="leverage-context-for-state">4. Leverage Context for State</h3>
+<p>Store dynamic data in context:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>focus <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;handler.go&quot;</span><span class="op">)</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Editor state</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;line&quot;</span><span class="op">,</span> <span class="dv">42</span><span class="op">)</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;column&quot;</span><span class="op">,</span> <span class="dv">10</span><span class="op">)</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;selected_text&quot;</span><span class="op">,</span> <span class="st">&quot;function handleRequest&quot;</span><span class="op">)</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Work state</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;last_edit&quot;</span><span class="op">,</span> time<span class="op">.</span>Now<span class="op">())</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;saved&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">)</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;test_status&quot;</span><span class="op">,</span> <span class="st">&quot;passing&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="use-metadata-for-persistent-info">5. Use Metadata for Persistent
+Info</h3>
+<p>Metadata for searchable string data:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;author&quot;</span><span class="op">,</span> <span class="st">&quot;john&quot;</span><span class="op">)</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;ticket&quot;</span><span class="op">,</span> <span class="st">&quot;PROJ-123&quot;</span><span class="op">)</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;branch&quot;</span><span class="op">,</span> <span class="st">&quot;feature/auth&quot;</span><span class="op">)</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;reviewed_by&quot;</span><span class="op">,</span> <span class="st">&quot;jane&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="set-expiration-for-temporary-focus">6. Set Expiration for
+Temporary Focus</h3>
+<p>Use expiration for time-sensitive focuses:</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Short-lived focus for current editing session</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>editFocus <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;temp.go&quot;</span><span class="op">)</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>editFocus<span class="op">.</span>SetExpiration<span class="op">(</span><span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Minute<span class="op">)</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Bug fix has 1-week deadline</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>bugFocus <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeError<span class="op">,</span> <span class="st">&quot;memory-leak&quot;</span><span class="op">)</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>bugFocus<span class="op">.</span>SetExpiration<span class="op">(</span><span class="dv">7</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">*</span> time<span class="op">.</span>Hour<span class="op">)</span></span></code></pre></div>
+<h3 id="organize-with-hierarchy">7. Organize with Hierarchy</h3>
+<p>Use parent-child for complex work:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Feature focus</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>feature <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTask<span class="op">,</span> <span class="st">&quot;user-authentication&quot;</span><span class="op">)</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Sub-components</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>login <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;login.go&quot;</span><span class="op">)</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>session <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> <span class="st">&quot;session.go&quot;</span><span class="op">)</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>tests <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeTest<span class="op">,</span> <span class="st">&quot;auth_test.go&quot;</span><span class="op">)</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>feature<span class="op">.</span>AddChild<span class="op">(</span>login<span class="op">)</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>feature<span class="op">.</span>AddChild<span class="op">(</span>session<span class="op">)</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>feature<span class="op">.</span>AddChild<span class="op">(</span>tests<span class="op">)</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Navigate hierarchy</span></span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>allSubtasks <span class="op">:=</span> feature<span class="op">.</span>Children</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>totalWork <span class="op">:=</span> feature<span class="op">.</span>CountDescendants<span class="op">()</span></span></code></pre></div>
+<h3 id="regular-cleanup">8. Regular Cleanup</h3>
+<p>Remove expired and completed focuses:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Periodic cleanup</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>cleanedCount <span class="op">:=</span> chain<span class="op">.</span>CleanExpired<span class="op">()</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Removed %d expired focuses</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> cleanedCount<span class="op">)</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Or let manager clean all chains</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>totalCleaned <span class="op">:=</span> manager<span class="op">.</span>CleanExpiredFocuses<span class="op">()</span></span></code></pre></div>
+<h3 id="use-callbacks-for-integration">9. Use Callbacks for
+Integration</h3>
+<p>Register callbacks for automation:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>OnCreate<span class="op">(</span><span class="kw">func</span><span class="op">(</span>chain <span class="op">*</span>Chain<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;New chain created: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> chain<span class="op">.</span>Name<span class="op">)</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Persist to database, send notification, etc.</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>OnActivate<span class="op">(</span><span class="kw">func</span><span class="op">(</span>chain <span class="op">*</span>Chain<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Switched to chain: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> chain<span class="op">.</span>Name<span class="op">)</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update UI, change context, etc.</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>OnDelete<span class="op">(</span><span class="kw">func</span><span class="op">(</span>chain <span class="op">*</span>Chain<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Chain deleted: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> chain<span class="op">.</span>Name<span class="op">)</span></span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cleanup resources, archive, etc.</span></span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="exportimport-for-persistence">10. Export/Import for
+Persistence</h3>
+<p>Save and restore chains:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Export chain</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>snapshot<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>ExportChain<span class="op">(</span>chain<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Save to file/database</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>data<span class="op">,</span> _ <span class="op">:=</span> json<span class="op">.</span>Marshal<span class="op">(</span>snapshot<span class="op">)</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>os<span class="op">.</span>WriteFile<span class="op">(</span><span class="st">&quot;chain.json&quot;</span><span class="op">,</span> data<span class="op">,</span> <span class="bn">0644</span><span class="op">)</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Later: Load from file</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>data<span class="op">,</span> _ <span class="op">:=</span> os<span class="op">.</span>ReadFile<span class="op">(</span><span class="st">&quot;chain.json&quot;</span><span class="op">)</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> snapshot <span class="op">*</span>focus<span class="op">.</span>ChainSnapshot</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>json<span class="op">.</span>Unmarshal<span class="op">(</span>data<span class="op">,</span> <span class="op">&amp;</span>snapshot<span class="op">)</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Import</span></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>ImportChain<span class="op">(</span>snapshot<span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="integration-guide">Integration Guide</h2>
+<h3 id="integration-with-task-system">Integration with Task System</h3>
+<div class="sourceCode" id="cb46"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">// When creating a task, create corresponding focus</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> createTaskWithFocus<span class="op">(</span>manager <span class="op">*</span>focus<span class="op">.</span>Manager<span class="op">,</span> taskName <span class="dt">string</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create task (your existing code)</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    task <span class="op">:=</span> createTask<span class="op">(</span>taskName<span class="op">)</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create focus</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    taskFocus <span class="op">:=</span> focus<span class="op">.</span>NewFocusWithPriority<span class="op">(</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>        focus<span class="op">.</span>FocusTypeTask<span class="op">,</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>        taskName<span class="op">,</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>        focus<span class="op">.</span>PriorityHigh<span class="op">,</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>    taskFocus<span class="op">.</span>SetMetadata<span class="op">(</span><span class="st">&quot;task_id&quot;</span><span class="op">,</span> task<span class="op">.</span>ID<span class="op">)</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Push to active chain</span></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>PushToActive<span class="op">(</span>taskFocus<span class="op">)</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-with-llm-context">Integration with LLM Context</h3>
+<div class="sourceCode" id="cb47"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Build LLM prompt with focus context</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> buildPromptWithFocus<span class="op">(</span>manager <span class="op">*</span>focus<span class="op">.</span>Manager<span class="op">)</span> <span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    chain<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>GetActiveChain<span class="op">()</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    recent <span class="op">:=</span> chain<span class="op">.</span>GetRecent<span class="op">(</span><span class="dv">5</span><span class="op">)</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    prompt <span class="op">:=</span> <span class="st">&quot;You are currently working on:</span><span class="ch">\n\n</span><span class="st">&quot;</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i<span class="op">,</span> f <span class="op">:=</span> <span class="kw">range</span> recent <span class="op">{</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>        prompt <span class="op">+=</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;%d. %s (%s)</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">+</span><span class="dv">1</span><span class="op">,</span> f<span class="op">.</span>Target<span class="op">,</span> f<span class="op">.</span>Type<span class="op">)</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> f<span class="op">.</span>Description <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>            prompt <span class="op">+=</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;   %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> f<span class="op">.</span>Description<span class="op">)</span></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>    current<span class="op">,</span> _ <span class="op">:=</span> chain<span class="op">.</span>Current<span class="op">()</span></span>
+<span id="cb47-16"><a href="#cb47-16" aria-hidden="true" tabindex="-1"></a>    prompt <span class="op">+=</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;</span><span class="ch">\n</span><span class="st">Current focus: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> current<span class="op">.</span>Target<span class="op">)</span></span>
+<span id="cb47-17"><a href="#cb47-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb47-18"><a href="#cb47-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> prompt</span>
+<span id="cb47-19"><a href="#cb47-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-with-file-editor">Integration with File Editor</h3>
+<div class="sourceCode" id="cb48"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Update focus when file changes</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> onFileChange<span class="op">(</span>manager <span class="op">*</span>focus<span class="op">.</span>Manager<span class="op">,</span> filePath <span class="dt">string</span><span class="op">,</span> line <span class="dt">int</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get or create focus for file</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    currentFocus<span class="op">,</span> err <span class="op">:=</span> manager<span class="op">.</span>GetCurrentFocus<span class="op">()</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">||</span> currentFocus<span class="op">.</span>Target <span class="op">!=</span> filePath <span class="op">{</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create new focus</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>        fileFocus <span class="op">:=</span> focus<span class="op">.</span>NewFocus<span class="op">(</span>focus<span class="op">.</span>FocusTypeFile<span class="op">,</span> filePath<span class="op">)</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>        manager<span class="op">.</span>PushToActive<span class="op">(</span>fileFocus<span class="op">)</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>        currentFocus <span class="op">=</span> fileFocus</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update context</span></span>
+<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a>    currentFocus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;line&quot;</span><span class="op">,</span> line<span class="op">)</span></span>
+<span id="cb48-15"><a href="#cb48-15" aria-hidden="true" tabindex="-1"></a>    currentFocus<span class="op">.</span>SetContext<span class="op">(</span><span class="st">&quot;last_edit&quot;</span><span class="op">,</span> time<span class="op">.</span>Now<span class="op">())</span></span>
+<span id="cb48-16"><a href="#cb48-16" aria-hidden="true" tabindex="-1"></a>    currentFocus<span class="op">.</span>Touch<span class="op">()</span></span>
+<span id="cb48-17"><a href="#cb48-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="issue-focus-not-found-in-chain">Issue: Focus Not Found in
+Chain</h3>
+<p><strong>Problem:</strong> <code>GetByID()</code> returns error</p>
+<p><strong>Solution:</strong></p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if focus exists</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">,</span> err <span class="op">:=</span> chain<span class="op">.</span>GetByID<span class="op">(</span>id<span class="op">)</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Focus might have been removed or expired</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    allFocuses <span class="op">:=</span> chain<span class="op">.</span>GetAll<span class="op">()</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Available focuses: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>allFocuses<span class="op">))</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="issue-chain-at-maximum-size">Issue: Chain at Maximum Size</h3>
+<p><strong>Problem:</strong> Push fails when chain is full</p>
+<p><strong>Solution:</strong></p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create chain with larger size</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>chain <span class="op">:=</span> focus<span class="op">.</span>NewChainWithSize<span class="op">(</span><span class="st">&quot;work&quot;</span><span class="op">,</span> <span class="dv">1000</span><span class="op">)</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Or use unlimited size (0)</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>MaxSize <span class="op">=</span> <span class="dv">0</span></span></code></pre></div>
+<h3 id="issue-expired-focuses-not-removed">Issue: Expired Focuses Not
+Removed</h3>
+<p><strong>Problem:</strong> Expired focuses still in chain</p>
+<p><strong>Solution:</strong></p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Explicitly clean</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>removed <span class="op">:=</span> chain<span class="op">.</span>CleanExpired<span class="op">()</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Removed %d expired focuses</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> removed<span class="op">)</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Or use manager to clean all</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>CleanExpiredFocuses<span class="op">()</span></span></code></pre></div>
+<hr />
+<h2 id="faq">FAQ</h2>
+<p><strong>Q: When should I use Focus vs Context vs
+Metadata?</strong></p>
+<p>A: - <strong>Focus</strong>: Represents what you’re working on (file,
+task, bug) - <strong>Context</strong>: Dynamic runtime data (line
+number, cursor position, state) - <strong>Metadata</strong>: Persistent
+searchable strings (author, ticket ID, branch name)</p>
+<p><strong>Q: Should I create a new chain for each session?</strong></p>
+<p>A: It depends on your workflow. Common patterns: - One chain per
+feature/task - One chain per work session (day/week) - Multiple chains
+for parallel work streams</p>
+<p><strong>Q: How many focuses should a chain have?</strong></p>
+<p>A: Typical chains have 5-20 focuses. Use <code>MaxSize</code> if you
+need to limit. Remove completed focuses periodically.</p>
+<p><strong>Q: Can I share chains between users?</strong></p>
+<p>A: Yes, use Export/Import:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>snapshot<span class="op">,</span> _ <span class="op">:=</span> manager1<span class="op">.</span>ExportChain<span class="op">(</span>chainID<span class="op">)</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>manager2<span class="op">.</span>ImportChain<span class="op">(</span>snapshot<span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Q: How do I prevent memory leaks?</strong></p>
+<p>A: Use expiration and regular cleanup:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Set expiration on focuses</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>focus<span class="op">.</span>SetExpiration<span class="op">(</span><span class="dv">1</span> <span class="op">*</span> time<span class="op">.</span>Hour<span class="op">)</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Regular cleanup</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>chain<span class="op">.</span>CleanExpired<span class="op">()</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>CleanExpiredFocuses<span class="op">()</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Delete unused chains</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>DeleteChain<span class="op">(</span>oldChainID<span class="op">)</span></span></code></pre></div>
+<p><strong>Q: Can I use Focus Chain in concurrent code?</strong></p>
+<p>A: Yes! Manager operations are thread-safe:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> focus<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;worker-1&quot;</span><span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>CreateChain<span class="op">(</span><span class="st">&quot;worker-2&quot;</span><span class="op">,</span> <span class="ot">false</span><span class="op">)</span></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span></code></pre></div>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The Focus Chain System provides a powerful way to manage context and
+state across development sessions. By leveraging focuses, chains, and
+the manager, you can build intelligent, context-aware development tools
+that remember what users are working on and provide relevant
+assistance.</p>
+<h3 id="key-takeaways">Key Takeaways</h3>
+<ol type="1">
+<li><strong>Use appropriate focus types</strong> for different work
+items</li>
+<li><strong>Set priorities</strong> to distinguish importance</li>
+<li><strong>Leverage tags</strong> for organization and filtering</li>
+<li><strong>Use context for runtime state</strong>, metadata for
+persistent info</li>
+<li><strong>Set expiration</strong> for temporary focuses</li>
+<li><strong>Regular cleanup</strong> prevents memory leaks</li>
+<li><strong>Callbacks enable integration</strong> with existing
+systems</li>
+<li><strong>Thread-safe</strong> operations support concurrent
+access</li>
+</ol>
+<hr />
+<p><strong>Document Version:</strong> 1.0 <strong>Last Updated:</strong>
+November 7, 2025 <strong>Next Feature:</strong> Hooks System (Phase 2,
+Feature 4)</p>
+</body>
+</html>

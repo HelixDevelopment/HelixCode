@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DYNAMIC_PORT_BINDING_AND_SERVICE_DISCOVERY</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DYNAMIC_PORT_BINDING_AND_SERVICE_DISCOVERY</h1>
+</header>
+<h1 id="dynamic-port-binding-and-service-discovery-architecture">Dynamic
+Port Binding and Service Discovery Architecture</h1>
+<p><strong>Version</strong>: 1.0<br />
+<strong>Date</strong>: 2025-11-07<br />
+<strong>Status</strong>: Design Phase</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#problem-statement">Problem Statement</a></li>
+<li><a href="#architecture-overview">Architecture Overview</a></li>
+<li><a href="#core-components">Core Components</a></li>
+<li><a href="#port-allocation-mechanism">Port Allocation
+Mechanism</a></li>
+<li><a href="#service-discovery-protocol">Service Discovery
+Protocol</a></li>
+<li><a href="#configuration-broadcasting">Configuration
+Broadcasting</a></li>
+<li><a href="#fallback-strategies">Fallback Strategies</a></li>
+<li><a href="#testing-strategy">Testing Strategy</a></li>
+<li><a href="#implementation-plan">Implementation Plan</a></li>
+<li><a href="#api-reference">API Reference</a></li>
+</ol>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This document outlines the architecture for a dynamic port binding
+and service discovery system for HelixCode’s distributed services. The
+system enables services to:</p>
+<ul>
+<li><strong>Dynamically allocate ports</strong> when default ports are
+unavailable</li>
+<li><strong>Broadcast configuration</strong> to dependent services</li>
+<li><strong>Discover services</strong> via multiple mechanisms (default
+port, broadcast, registry)</li>
+<li><strong>Handle errors gracefully</strong> with fallback
+strategies</li>
+<li><strong>Work across environments</strong> (local, Docker,
+Kubernetes, distributed)</li>
+</ul>
+<h3 id="key-benefits">Key Benefits</h3>
+<ul>
+<li><strong>Zero-configuration</strong> service startup in most
+cases</li>
+<li><strong>Resilient</strong> to port conflicts and network
+changes</li>
+<li><strong>Testable</strong> with comprehensive test coverage</li>
+<li><strong>Production-ready</strong> with monitoring and
+observability</li>
+</ul>
+<hr />
+<h2 id="problem-statement">Problem Statement</h2>
+<h3 id="current-limitations">Current Limitations</h3>
+<ol type="1">
+<li><strong>Fixed Port Configuration</strong>: Services use hard-coded
+ports (e.g., PostgreSQL:5432, Redis:6379)</li>
+<li><strong>Port Conflicts</strong>: When default ports are occupied,
+services fail to start</li>
+<li><strong>Manual Configuration</strong>: Developers must manually
+update configurations when ports change</li>
+<li><strong>Testing Challenges</strong>: Running multiple test suites in
+parallel causes port conflicts</li>
+<li><strong>Docker Limitations</strong>: Port mapping requires manual
+orchestration</li>
+</ol>
+<h3 id="requirements">Requirements</h3>
+<p>The solution must:</p>
+<ol type="1">
+<li>✅ Automatically bind to first available port if default is
+taken</li>
+<li>✅ Broadcast service configuration to dependent services</li>
+<li>✅ Support service discovery via multiple mechanisms</li>
+<li>✅ Handle error states and provide fallback options</li>
+<li>✅ Be fully tested (unit, integration, E2E, automation)</li>
+<li>✅ Be comprehensively documented</li>
+<li>✅ Work in all deployment scenarios (local, Docker, Kubernetes)</li>
+<li>✅ Support both synchronous and asynchronous discovery</li>
+<li>✅ Provide monitoring and observability</li>
+</ol>
+<hr />
+<h2 id="architecture-overview">Architecture Overview</h2>
+<h3 id="high-level-design">High-Level Design</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                     Service Discovery Layer                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │   Service    │  │  Discovery   │  │  Port        │         │
+│  │   Registry   │  │  Client      │  │  Allocator   │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│          │                  │                  │                 │
+│          └──────────────────┴──────────────────┘                │
+│                             │                                    │
+├─────────────────────────────┼────────────────────────────────────┤
+│                             │                                    │
+│  ┌──────────────┐  ┌───────▼──────┐  ┌──────────────┐         │
+│  │  Broadcast   │  │  Configuration│  │  Health      │         │
+│  │  Service     │  │  Manager      │  │  Monitor     │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         │                   │                   │
+    ┌────▼────┐        ┌────▼────┐        ┌────▼────┐
+    │ Service │        │ Service │        │ Service │
+    │    A    │        │    B    │        │    C    │
+    │ (DB)    │        │ (Redis) │        │ (API)   │
+    └─────────┘        └─────────┘        └─────────┘</code></pre>
+<h3 id="components-interaction">Components Interaction</h3>
+<ol type="1">
+<li><strong>Service A</strong> starts and requests port allocation</li>
+<li><strong>Port Allocator</strong> finds first available port (fallback
+if default is taken)</li>
+<li><strong>Service A</strong> registers with <strong>Service
+Registry</strong></li>
+<li><strong>Broadcast Service</strong> announces Service A’s
+configuration</li>
+<li><strong>Service B</strong> discovers Service A via:
+<ul>
+<li>Default port attempt</li>
+<li>Registry lookup</li>
+<li>Broadcast listener</li>
+</ul></li>
+<li><strong>Configuration Manager</strong> updates dependent
+services</li>
+<li><strong>Health Monitor</strong> tracks service availability</li>
+</ol>
+<hr />
+<h2 id="core-components">Core Components</h2>
+<h3 id="port-allocator">1. Port Allocator</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/port_allocator.go</code></p>
+<p><strong>Responsibilities</strong>: - Allocate ports with fallback
+mechanism - Check port availability - Manage port ranges - Handle port
+reservations - Support named port pools (e.g., “database”, “cache”,
+“api”)</p>
+<p><strong>Key Functions</strong>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> PortAllocator <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    AllocatePort<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> preferredPort <span class="dt">int</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    AllocatePortInRange<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> startPort<span class="op">,</span> endPort <span class="dt">int</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ReleasePort<span class="op">(</span>port <span class="dt">int</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    IsPortAvailable<span class="op">(</span>port <span class="dt">int</span><span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    GetPortForService<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">bool</span><span class="op">)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="service-registry">2. Service Registry</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/registry.go</code></p>
+<p><strong>Responsibilities</strong>: - Store service metadata (name,
+host, port, version) - Support service registration and deregistration -
+Health check integration - TTL-based expiration - Multi-protocol support
+(HTTP, gRPC, custom)</p>
+<p><strong>Data Model</strong>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ServiceEndpoint <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    ID           <span class="dt">string</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Name         <span class="dt">string</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Host         <span class="dt">string</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Port         <span class="dt">int</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    Protocol     <span class="dt">string</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Version      <span class="dt">string</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Metadata     <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    HealthURL    <span class="dt">string</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    RegisteredAt time<span class="op">.</span>Time</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    LastHeartbeat time<span class="op">.</span>Time</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    TTL          time<span class="op">.</span>Duration</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="discovery-client">3. Discovery Client</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/client.go</code></p>
+<p><strong>Responsibilities</strong>: - Discover services by name -
+Support multiple discovery strategies - Implement retry logic with
+exponential backoff - Cache discovered endpoints - Handle service
+failover</p>
+<p><strong>Key Functions</strong>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DiscoveryClient <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    Discover<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> opts <span class="op">...</span>DiscoverOption<span class="op">)</span> <span class="op">(*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    DiscoverAll<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">([]*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    Watch<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> ServiceEvent<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Close<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="broadcast-service">4. Broadcast Service</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/broadcast.go</code></p>
+<p><strong>Responsibilities</strong>: - Broadcast service announcements
+(UDP multicast) - Listen for service announcements - Support multiple
+broadcast channels - Handle network segmentation</p>
+<p><strong>Protocol</strong>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;service_announcement&quot;</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;service&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;postgres-primary&quot;</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;host&quot;</span><span class="fu">:</span> <span class="st">&quot;localhost&quot;</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;port&quot;</span><span class="fu">:</span> <span class="dv">5434</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;protocol&quot;</span><span class="fu">:</span> <span class="st">&quot;tcp&quot;</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;database&quot;</span><span class="fu">:</span> <span class="st">&quot;helixcode&quot;</span><span class="fu">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;16.0&quot;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-11-07T12:00:00Z&quot;</span><span class="fu">,</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ttl&quot;</span><span class="fu">:</span> <span class="dv">60</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="configuration-manager">5. Configuration Manager</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/config_manager.go</code></p>
+<p><strong>Responsibilities</strong>: - Manage service configurations
+dynamically - Update configurations when services change - Support
+hot-reload of configurations - Validate configuration changes</p>
+<h3 id="health-monitor">6. Health Monitor</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/health.go</code></p>
+<p><strong>Responsibilities</strong>: - Monitor service health - Update
+registry with health status - Trigger failover on health check failures
+- Support custom health check strategies</p>
+<hr />
+<h2 id="port-allocation-mechanism">Port Allocation Mechanism</h2>
+<h3 id="port-selection-strategy">Port Selection Strategy</h3>
+<ol type="1">
+<li><strong>Try Default Port</strong>: Attempt to bind to the
+preferred/default port</li>
+<li><strong>Try Port Range</strong>: If default is unavailable, scan
+port range</li>
+<li><strong>Random Selection</strong>: For large ranges, use random
+selection with validation</li>
+<li><strong>Ephemeral Ports</strong>: Fall back to OS-assigned ephemeral
+ports if configured</li>
+</ol>
+<h3 id="port-ranges-by-service-type">Port Ranges by Service Type</h3>
+<table>
+<thead>
+<tr>
+<th>Service Type</th>
+<th>Default Port</th>
+<th>Fallback Range</th>
+<th>Pool Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL</td>
+<td>5432</td>
+<td>5433-5442</td>
+<td>database</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>6379</td>
+<td>6380-6389</td>
+<td>cache</td>
+</tr>
+<tr>
+<td>HTTP API</td>
+<td>8080</td>
+<td>8081-8099</td>
+<td>api</td>
+</tr>
+<tr>
+<td>gRPC</td>
+<td>9090</td>
+<td>9091-9109</td>
+<td>grpc</td>
+</tr>
+<tr>
+<td>Metrics</td>
+<td>9090</td>
+<td>9100-9199</td>
+<td>metrics</td>
+</tr>
+<tr>
+<td>WebSocket</td>
+<td>8000</td>
+<td>8001-8020</td>
+<td>websocket</td>
+</tr>
+</tbody>
+</table>
+<h3 id="port-allocation-algorithm">Port Allocation Algorithm</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> AllocatePort<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> preferredPort <span class="dt">int</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Check if preferred port is available</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pa<span class="op">.</span>IsPortAvailable<span class="op">(</span>preferredPort<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        pa<span class="op">.</span>reservePort<span class="op">(</span>preferredPort<span class="op">,</span> serviceName<span class="op">)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> preferredPort<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Check if service already has a port assigned</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> existingPort<span class="op">,</span> exists <span class="op">:=</span> pa<span class="op">.</span>GetPortForService<span class="op">(</span>serviceName<span class="op">);</span> exists <span class="op">{</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> existingPort<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Get fallback range for service type</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    serviceType <span class="op">:=</span> pa<span class="op">.</span>getServiceType<span class="op">(</span>serviceName<span class="op">)</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    startPort<span class="op">,</span> endPort <span class="op">:=</span> pa<span class="op">.</span>getPortRange<span class="op">(</span>serviceType<span class="op">)</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Scan range for available port</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> port <span class="op">:=</span> startPort<span class="op">;</span> port <span class="op">&lt;=</span> endPort<span class="op">;</span> port<span class="op">++</span> <span class="op">{</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> pa<span class="op">.</span>IsPortAvailable<span class="op">(</span>port<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            pa<span class="op">.</span>reservePort<span class="op">(</span>port<span class="op">,</span> serviceName<span class="op">)</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> port<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. If no port found in range, try ephemeral</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pa<span class="op">.</span>config<span class="op">.</span>AllowEphemeral <span class="op">{</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> pa<span class="op">.</span>allocateEphemeralPort<span class="op">(</span>serviceName<span class="op">)</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">,</span> ErrNoPortsAvailable</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="port-availability-check">Port Availability Check</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> IsPortAvailable<span class="op">(</span>port <span class="dt">int</span><span class="op">)</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Try to bind to the port</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    listener<span class="op">,</span> err <span class="op">:=</span> net<span class="op">.</span>Listen<span class="op">(</span><span class="st">&quot;tcp&quot;</span><span class="op">,</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;:%d&quot;</span><span class="op">,</span> port<span class="op">))</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">false</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    listener<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">true</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="service-discovery-protocol">Service Discovery Protocol</h2>
+<h3 id="discovery-strategies">Discovery Strategies</h3>
+<p>The system supports multiple discovery strategies, attempted in
+order:</p>
+<ol type="1">
+<li><strong>Default Port</strong> (fastest, no overhead)</li>
+<li><strong>Registry Lookup</strong> (centralized, reliable)</li>
+<li><strong>Broadcast Discovery</strong> (peer-to-peer, works across
+networks)</li>
+<li><strong>DNS Discovery</strong> (for Kubernetes/Docker Swarm)</li>
+<li><strong>Configuration File</strong> (fallback, manual)</li>
+</ol>
+<h3 id="discovery-workflow">Discovery Workflow</h3>
+<pre><code>┌──────────┐
+│ Client   │
+│ Needs    │
+│ Service  │
+└────┬─────┘
+     │
+     ├─&gt; 1. Try Default Port
+     │   └─&gt; Success? Return endpoint
+     │
+     ├─&gt; 2. Query Registry
+     │   └─&gt; Found? Return endpoint
+     │
+     ├─&gt; 3. Listen for Broadcast
+     │   └─&gt; Received? Return endpoint
+     │
+     ├─&gt; 4. DNS Lookup (if enabled)
+     │   └─&gt; Resolved? Return endpoint
+     │
+     └─&gt; 5. Check Configuration File
+         └─&gt; Found? Return endpoint
+         
+         No? Return error with retry suggestion</code></pre>
+<h3 id="example-discovering-postgresql">Example: Discovering
+PostgreSQL</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Client code</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>client<span class="op">,</span> _ <span class="op">:=</span> discovery<span class="op">.</span>NewClient<span class="op">(</span>discovery<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    RegistryURL<span class="op">:</span> <span class="st">&quot;http://localhost:7000&quot;</span><span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    BroadcastEnabled<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    Strategies<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;default&quot;</span><span class="op">,</span> <span class="st">&quot;registry&quot;</span><span class="op">,</span> <span class="st">&quot;broadcast&quot;</span><span class="op">},</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Discover PostgreSQL service</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>endpoint<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Discover<span class="op">(</span><span class="st">&quot;postgres-primary&quot;</span><span class="op">,</span> </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    discovery<span class="op">.</span>WithTimeout<span class="op">(</span><span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">),</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    discovery<span class="op">.</span>WithRetries<span class="op">(</span><span class="dv">3</span><span class="op">),</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span><span class="st">&quot;Failed to discover PostgreSQL:&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Use the discovered endpoint</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>dsn <span class="op">:=</span> fmt<span class="op">.</span>Sprintf<span class="op">(</span><span class="st">&quot;postgres://user:pass@%s:%d/db&quot;</span><span class="op">,</span> </span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    endpoint<span class="op">.</span>Host<span class="op">,</span> endpoint<span class="op">.</span>Port<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="configuration-broadcasting">Configuration Broadcasting</h2>
+<h3 id="broadcast-mechanism">Broadcast Mechanism</h3>
+<p>Services broadcast their configuration using <strong>UDP
+multicast</strong> to a well-known address:</p>
+<ul>
+<li><strong>Multicast Address</strong>: <code>239.255.0.1</code></li>
+<li><strong>Port</strong>: <code>7001</code></li>
+<li><strong>Protocol</strong>: JSON over UDP</li>
+</ul>
+<h3 id="broadcast-message-format">Broadcast Message Format</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.0&quot;</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;service_announcement&quot;</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;action&quot;</span><span class="fu">:</span> <span class="st">&quot;register&quot;</span><span class="fu">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;service&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;postgres-primary-abc123&quot;</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;postgres-primary&quot;</span><span class="fu">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;host&quot;</span><span class="fu">:</span> <span class="st">&quot;192.168.1.100&quot;</span><span class="fu">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;port&quot;</span><span class="fu">:</span> <span class="dv">5434</span><span class="fu">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;protocol&quot;</span><span class="fu">:</span> <span class="st">&quot;tcp&quot;</span><span class="fu">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;16.0&quot;</span><span class="fu">,</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;database&quot;</span><span class="fu">:</span> <span class="st">&quot;helixcode&quot;</span><span class="fu">,</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;sslmode&quot;</span><span class="fu">:</span> <span class="st">&quot;disable&quot;</span><span class="fu">,</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;max_connections&quot;</span><span class="fu">:</span> <span class="st">&quot;100&quot;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;health_url&quot;</span><span class="fu">:</span> <span class="st">&quot;http://192.168.1.100:5434/health&quot;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-11-07T12:00:00Z&quot;</span><span class="fu">,</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ttl&quot;</span><span class="fu">:</span> <span class="dv">60</span><span class="fu">,</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256_hash_for_verification&quot;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="broadcast-actions">Broadcast Actions</h3>
+<ol type="1">
+<li><strong>register</strong>: Service comes online</li>
+<li><strong>deregister</strong>: Service going offline gracefully</li>
+<li><strong>update</strong>: Configuration change</li>
+<li><strong>heartbeat</strong>: Periodic keep-alive</li>
+</ol>
+<h3 id="broadcast-listener">Broadcast Listener</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> BroadcastListener <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    conn     <span class="op">*</span>net<span class="op">.</span>UDPConn</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    handlers <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span>AnnouncementHandler</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    stop     <span class="kw">chan</span> <span class="dt">bool</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>bl <span class="op">*</span>BroadcastListener<span class="op">)</span> Listen<span class="op">()</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    addr<span class="op">,</span> _ <span class="op">:=</span> net<span class="op">.</span>ResolveUDPAddr<span class="op">(</span><span class="st">&quot;udp&quot;</span><span class="op">,</span> <span class="st">&quot;239.255.0.1:7001&quot;</span><span class="op">)</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    conn<span class="op">,</span> _ <span class="op">:=</span> net<span class="op">.</span>ListenMulticastUDP<span class="op">(</span><span class="st">&quot;udp&quot;</span><span class="op">,</span> <span class="ot">nil</span><span class="op">,</span> addr<span class="op">)</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">select</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> <span class="op">&lt;-</span>bl<span class="op">.</span>stop<span class="op">:</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>            buf <span class="op">:=</span> <span class="bu">make</span><span class="op">([]</span><span class="dt">byte</span><span class="op">,</span> <span class="dv">4096</span><span class="op">)</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>            n<span class="op">,</span> _<span class="op">,</span> err <span class="op">:=</span> conn<span class="op">.</span>ReadFromUDP<span class="op">(</span>buf<span class="op">)</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>            <span class="kw">var</span> announcement ServiceAnnouncement</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>            json<span class="op">.</span>Unmarshal<span class="op">(</span>buf<span class="op">[:</span>n<span class="op">],</span> <span class="op">&amp;</span>announcement<span class="op">)</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Process announcement</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>            bl<span class="op">.</span>handleAnnouncement<span class="op">(&amp;</span>announcement<span class="op">)</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="fallback-strategies">Fallback Strategies</h2>
+<h3 id="strategy-hierarchy">Strategy Hierarchy</h3>
+<ol type="1">
+<li><strong>Primary</strong>: Default port + Registry</li>
+<li><strong>Secondary</strong>: Broadcast discovery</li>
+<li><strong>Tertiary</strong>: DNS resolution</li>
+<li><strong>Quaternary</strong>: Configuration file</li>
+<li><strong>Emergency</strong>: Manual configuration override</li>
+</ol>
+<h3 id="error-handling">Error Handling</h3>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 39%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr>
+<th>Error Type</th>
+<th>Fallback Action</th>
+<th>Retry Logic</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Port conflict</td>
+<td>Try next available port</td>
+<td>Immediate</td>
+</tr>
+<tr>
+<td>Registry unavailable</td>
+<td>Use broadcast discovery</td>
+<td>3 retries, exponential backoff</td>
+</tr>
+<tr>
+<td>Broadcast timeout</td>
+<td>Try DNS resolution</td>
+<td>After 5 seconds</td>
+</tr>
+<tr>
+<td>DNS failure</td>
+<td>Check configuration file</td>
+<td>No retry</td>
+</tr>
+<tr>
+<td>All strategies failed</td>
+<td>Return detailed error</td>
+<td>Manual intervention needed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="timeout-configuration">Timeout Configuration</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> DiscoveryTimeouts <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DefaultPortCheck  time<span class="op">.</span>Duration <span class="co">// 100ms</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    RegistryLookup    time<span class="op">.</span>Duration <span class="co">// 1s</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    BroadcastWait     time<span class="op">.</span>Duration <span class="co">// 5s</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    DNSResolution     time<span class="op">.</span>Duration <span class="co">// 2s</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    OverallTimeout    time<span class="op">.</span>Duration <span class="co">// 10s</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="graceful-degradation">Graceful Degradation</h3>
+<p>When service discovery partially fails:</p>
+<ol type="1">
+<li><strong>Use cached endpoints</strong> if available (with staleness
+check)</li>
+<li><strong>Log warnings</strong> but continue operation</li>
+<li><strong>Trigger background refresh</strong> to update stale
+entries</li>
+<li><strong>Emit metrics</strong> for monitoring and alerting</li>
+</ol>
+<hr />
+<h2 id="testing-strategy">Testing Strategy</h2>
+<h3 id="test-coverage-requirements">Test Coverage Requirements</h3>
+<p>All components must achieve <strong>90%+ test coverage</strong>
+across:</p>
+<ol type="1">
+<li><strong>Unit Tests</strong>: Individual component logic</li>
+<li><strong>Integration Tests</strong>: Component interactions</li>
+<li><strong>E2E Tests</strong>: Full discovery workflows</li>
+<li><strong>Automation Tests</strong>: Real Docker environment</li>
+<li><strong>Performance Tests</strong>: Scalability and latency</li>
+<li><strong>Chaos Tests</strong>: Failure scenarios</li>
+</ol>
+<h3 id="test-scenarios">Test Scenarios</h3>
+<h4 id="unit-tests-internaldiscovery_test.go">Unit Tests
+(<code>internal/discovery/*_test.go</code>)</h4>
+<ol type="1">
+<li>Port Allocator:
+<ul>
+<li>Default port available</li>
+<li>Default port occupied → fallback</li>
+<li>All ports in range occupied → ephemeral</li>
+<li>Invalid port ranges</li>
+<li>Concurrent port allocation</li>
+<li>Port release and reallocation</li>
+</ul></li>
+<li>Service Registry:
+<ul>
+<li>Service registration</li>
+<li>Service deregistration</li>
+<li>Duplicate registration handling</li>
+<li>TTL expiration</li>
+<li>Concurrent registrations</li>
+<li>Health check integration</li>
+</ul></li>
+<li>Discovery Client:
+<ul>
+<li>Successful discovery (all strategies)</li>
+<li>Strategy fallback chain</li>
+<li>Timeout handling</li>
+<li>Retry logic with backoff</li>
+<li>Cache hit/miss scenarios</li>
+<li>Concurrent discovery requests</li>
+</ul></li>
+<li>Broadcast Service:
+<ul>
+<li>Message serialization/deserialization</li>
+<li>UDP multicast send/receive</li>
+<li>Message validation</li>
+<li>TTL expiration</li>
+<li>Malformed message handling</li>
+</ul></li>
+</ol>
+<h4 id="integration-tests-testintegrationdiscovery_integration_test.go">Integration
+Tests (<code>test/integration/discovery_integration_test.go</code>)</h4>
+<ol type="1">
+<li>Full Discovery Workflow:
+<ul>
+<li>Service starts → allocates port → registers → broadcasts</li>
+<li>Client discovers service via registry</li>
+<li>Client discovers service via broadcast</li>
+<li>Multiple services with dependencies</li>
+</ul></li>
+<li>Port Conflict Resolution:
+<ul>
+<li>Start two PostgreSQL instances → both get unique ports</li>
+<li>Verify dependent services find correct instances</li>
+</ul></li>
+<li>Configuration Broadcasting:
+<ul>
+<li>Service updates configuration → broadcast sent</li>
+<li>Dependent services receive update → reconnect</li>
+</ul></li>
+<li>Health Monitoring:
+<ul>
+<li>Service becomes unhealthy → registry updated</li>
+<li>Clients discover alternate healthy instance</li>
+</ul></li>
+</ol>
+<h4 id="e2e-tests-testse2etestbankdiscovery">E2E Tests
+(<code>tests/e2e/testbank/discovery/</code>)</h4>
+<ol type="1">
+<li>Multi-Service Environment:
+<ul>
+<li>Start full HelixCode stack (DB, Redis, API, Workers)</li>
+<li>All services discover each other automatically</li>
+<li>Verify end-to-end functionality</li>
+</ul></li>
+<li>Docker Environment:
+<ul>
+<li>Run services in Docker containers</li>
+<li>Test bridge network discovery</li>
+<li>Test host network discovery</li>
+</ul></li>
+<li>Failure Scenarios:
+<ul>
+<li>Kill service mid-operation → clients failover</li>
+<li>Network partition → broadcast fails → registry works</li>
+<li>Registry crash → broadcast takes over</li>
+</ul></li>
+</ol>
+<h4 id="automation-tests-testautomationdiscovery_automation_test.go">Automation
+Tests (<code>test/automation/discovery_automation_test.go</code>)</h4>
+<ol type="1">
+<li>Real Infrastructure Tests:
+<ul>
+<li>Spawn actual PostgreSQL and Redis containers</li>
+<li>Test dynamic port allocation</li>
+<li>Test service discovery across containers</li>
+<li>Test configuration updates</li>
+</ul></li>
+<li>Performance Tests:
+<ul>
+<li>1000 concurrent discovery requests</li>
+<li>Measure latency for each strategy</li>
+<li>Test registry under load</li>
+</ul></li>
+<li>Chaos Tests:
+<ul>
+<li>Random service restarts</li>
+<li>Random network delays</li>
+<li>Random port conflicts</li>
+<li>Verify system recovers automatically</li>
+</ul></li>
+</ol>
+<h3 id="test-implementation-example">Test Implementation Example</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Integration test</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestDynamicPortAllocation_Integration<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Start port allocator</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    allocator <span class="op">:=</span> discovery<span class="op">.</span>NewPortAllocator<span class="op">()</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Start two PostgreSQL instances</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    port1<span class="op">,</span> err <span class="op">:=</span> allocator<span class="op">.</span>AllocatePort<span class="op">(</span><span class="st">&quot;postgres-1&quot;</span><span class="op">,</span> <span class="dv">5432</span><span class="op">)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">5432</span><span class="op">,</span> port1<span class="op">)</span> <span class="co">// First gets default</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    port2<span class="op">,</span> err <span class="op">:=</span> allocator<span class="op">.</span>AllocatePort<span class="op">(</span><span class="st">&quot;postgres-2&quot;</span><span class="op">,</span> <span class="dv">5432</span><span class="op">)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> <span class="dv">5433</span><span class="op">,</span> port2<span class="op">)</span> <span class="co">// Second gets fallback</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Start actual Docker containers</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    container1 <span class="op">:=</span> startPostgres<span class="op">(</span>t<span class="op">,</span> port1<span class="op">)</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    container2 <span class="op">:=</span> startPostgres<span class="op">(</span>t<span class="op">,</span> port2<span class="op">)</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> container1<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> container2<span class="op">.</span>Stop<span class="op">()</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Register services</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    registry <span class="op">:=</span> discovery<span class="op">.</span>NewRegistry<span class="op">()</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Register<span class="op">(&amp;</span>discovery<span class="op">.</span>ServiceEndpoint<span class="op">{</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;postgres-1&quot;</span><span class="op">,</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        Port<span class="op">:</span> port1<span class="op">,</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>        Host<span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Register<span class="op">(&amp;</span>discovery<span class="op">.</span>ServiceEndpoint<span class="op">{</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        Name<span class="op">:</span> <span class="st">&quot;postgres-2&quot;</span><span class="op">,</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>        Port<span class="op">:</span> port2<span class="op">,</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>        Host<span class="op">:</span> <span class="st">&quot;localhost&quot;</span><span class="op">,</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Client discovers services</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>    client <span class="op">:=</span> discovery<span class="op">.</span>NewClient<span class="op">(</span>registry<span class="op">)</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    endpoint1<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Discover<span class="op">(</span><span class="st">&quot;postgres-1&quot;</span><span class="op">)</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>    assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> port1<span class="op">,</span> endpoint1<span class="op">.</span>Port<span class="op">)</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>    endpoint2<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Discover<span class="op">(</span><span class="st">&quot;postgres-2&quot;</span><span class="op">)</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>    assert<span class="op">.</span>Equal<span class="op">(</span>t<span class="op">,</span> port2<span class="op">,</span> endpoint2<span class="op">.</span>Port<span class="op">)</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify actual connectivity</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    conn1<span class="op">,</span> err <span class="op">:=</span> sql<span class="op">.</span>Open<span class="op">(</span><span class="st">&quot;postgres&quot;</span><span class="op">,</span> buildDSN<span class="op">(</span>endpoint1<span class="op">))</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>    assert<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> conn1<span class="op">.</span>Ping<span class="op">())</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    conn2<span class="op">,</span> err <span class="op">:=</span> sql<span class="op">.</span>Open<span class="op">(</span><span class="st">&quot;postgres&quot;</span><span class="op">,</span> buildDSN<span class="op">(</span>endpoint2<span class="op">))</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>    require<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>    assert<span class="op">.</span>NoError<span class="op">(</span>t<span class="op">,</span> conn2<span class="op">.</span>Ping<span class="op">())</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="implementation-plan">Implementation Plan</h2>
+<h3 id="phase-1-core-infrastructure-week-1">Phase 1: Core Infrastructure
+(Week 1)</h3>
+<p><strong>Deliverables</strong>: - [ ] Port Allocator implementation -
+[ ] Service Registry implementation - [ ] Basic Discovery Client - [ ]
+Unit tests (90% coverage)</p>
+<p><strong>Files</strong>: -
+<code>internal/discovery/port_allocator.go</code> -
+<code>internal/discovery/registry.go</code> -
+<code>internal/discovery/client.go</code> -
+<code>internal/discovery/*_test.go</code></p>
+<h3 id="phase-2-broadcasting-health-week-2">Phase 2: Broadcasting &amp;
+Health (Week 2)</h3>
+<p><strong>Deliverables</strong>: - [ ] Broadcast Service implementation
+- [ ] Configuration Manager - [ ] Health Monitor - [ ] Integration
+tests</p>
+<p><strong>Files</strong>: -
+<code>internal/discovery/broadcast.go</code> -
+<code>internal/discovery/config_manager.go</code> -
+<code>internal/discovery/health.go</code> -
+<code>test/integration/discovery_integration_test.go</code></p>
+<h3 id="phase-3-docker-integration-week-3">Phase 3: Docker Integration
+(Week 3)</h3>
+<p><strong>Deliverables</strong>: - [ ] Update Docker Compose files - [
+] Update docker-compose.test.yml with dynamic ports - [ ] Update
+docker-compose.e2e.yml - [ ] Automation tests</p>
+<p><strong>Files</strong>: - <code>docker-compose.test.yml</code> -
+<code>tests/e2e/docker/docker-compose.e2e.yml</code> -
+<code>test/automation/discovery_automation_test.go</code></p>
+<h3 id="phase-4-service-updates-week-4">Phase 4: Service Updates (Week
+4)</h3>
+<p><strong>Deliverables</strong>: - [ ] Update Database package to use
+discovery - [ ] Update Redis package to use discovery - [ ] Update
+Server package to use discovery - [ ] E2E tests</p>
+<p><strong>Files</strong>: - <code>internal/database/database.go</code>
+- <code>internal/redis/redis.go</code> -
+<code>internal/server/server.go</code> -
+<code>tests/e2e/testbank/discovery/</code></p>
+<h3 id="phase-5-documentation-polish-week-5">Phase 5: Documentation
+&amp; Polish (Week 5)</h3>
+<p><strong>Deliverables</strong>: - [ ] Complete API documentation - [ ]
+User guide - [ ] Troubleshooting guide - [ ] Performance tuning guide -
+[ ] Migration guide for existing deployments</p>
+<p><strong>Files</strong>: -
+<code>docs/Architecture/DYNAMIC_PORT_BINDING_AND_SERVICE_DISCOVERY.md</code>
+(this file) - <code>docs/UserGuides/SERVICE_DISCOVERY_GUIDE.md</code> -
+<code>docs/Troubleshooting/SERVICE_DISCOVERY.md</code></p>
+<hr />
+<h2 id="api-reference">API Reference</h2>
+<h3 id="port-allocator-api">Port Allocator API</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// NewPortAllocator creates a new port allocator</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewPortAllocator<span class="op">(</span>config PortAllocatorConfig<span class="op">)</span> <span class="op">*</span>PortAllocator</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// AllocatePort allocates a port for a service</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> AllocatePort<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> preferredPort <span class="dt">int</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">// AllocatePortInRange allocates a port within a specific range</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> AllocatePortInRange<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> start<span class="op">,</span> end <span class="dt">int</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">// ReleasePort releases a previously allocated port</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> ReleasePort<span class="op">(</span>port <span class="dt">int</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">// IsPortAvailable checks if a port is available for binding</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> IsPortAvailable<span class="op">(</span>port <span class="dt">int</span><span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">// GetPortForService returns the port allocated to a service</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pa <span class="op">*</span>PortAllocator<span class="op">)</span> GetPortForService<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">int</span><span class="op">,</span> <span class="dt">bool</span><span class="op">)</span></span></code></pre></div>
+<h3 id="service-registry-api">Service Registry API</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// NewRegistry creates a new service registry</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewRegistry<span class="op">(</span>config RegistryConfig<span class="op">)</span> <span class="op">*</span>Registry</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Register registers a service endpoint</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> Register<span class="op">(</span>endpoint <span class="op">*</span>ServiceEndpoint<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Deregister removes a service endpoint</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> Deregister<span class="op">(</span>serviceID <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Lookup finds service endpoints by name</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> Lookup<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">([]*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Get retrieves a specific service endpoint by ID</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> Get<span class="op">(</span>serviceID <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co">// List returns all registered services</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> List<span class="op">()</span> <span class="op">([]*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co">// UpdateHealth updates the health status of a service</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Registry<span class="op">)</span> UpdateHealth<span class="op">(</span>serviceID <span class="dt">string</span><span class="op">,</span> healthy <span class="dt">bool</span><span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<h3 id="discovery-client-api">Discovery Client API</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// NewClient creates a new discovery client</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewClient<span class="op">(</span>config ClientConfig<span class="op">)</span> <span class="op">(*</span>Client<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Discover discovers a single service instance</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Client<span class="op">)</span> Discover<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">,</span> opts <span class="op">...</span>DiscoverOption<span class="op">)</span> <span class="op">(*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">// DiscoverAll discovers all instances of a service</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Client<span class="op">)</span> DiscoverAll<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">([]*</span>ServiceEndpoint<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Watch watches for service changes</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Client<span class="op">)</span> Watch<span class="op">(</span>serviceName <span class="dt">string</span><span class="op">)</span> <span class="op">(&lt;-</span><span class="kw">chan</span> ServiceEvent<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Close closes the discovery client</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>c <span class="op">*</span>Client<span class="op">)</span> Close<span class="op">()</span> <span class="dt">error</span></span></code></pre></div>
+<h3 id="broadcast-service-api">Broadcast Service API</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// NewBroadcaster creates a new broadcast service</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewBroadcaster<span class="op">(</span>config BroadcastConfig<span class="op">)</span> <span class="op">(*</span>Broadcaster<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Announce broadcasts a service announcement</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>Broadcaster<span class="op">)</span> Announce<span class="op">(</span>action <span class="dt">string</span><span class="op">,</span> endpoint <span class="op">*</span>ServiceEndpoint<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Listen starts listening for announcements</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>Broadcaster<span class="op">)</span> Listen<span class="op">()</span> <span class="op">(&lt;-</span><span class="kw">chan</span> <span class="op">*</span>ServiceAnnouncement<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Stop stops the broadcaster</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>b <span class="op">*</span>Broadcaster<span class="op">)</span> Stop<span class="op">()</span> <span class="dt">error</span></span></code></pre></div>
+<hr />
+<h2 id="monitoring-observability">Monitoring &amp; Observability</h2>
+<h3 id="metrics">Metrics</h3>
+<p>The discovery system exposes the following metrics (Prometheus
+format):</p>
+<pre><code># Port Allocation
+discovery_ports_allocated_total{service_type=&quot;database&quot;}
+discovery_ports_released_total{service_type=&quot;database&quot;}
+discovery_port_conflicts_total{service_type=&quot;database&quot;}
+
+# Service Registry
+discovery_services_registered_total{service_name=&quot;postgres&quot;}
+discovery_services_deregistered_total{service_name=&quot;postgres&quot;}
+discovery_service_lookups_total{service_name=&quot;postgres&quot;,result=&quot;success|failure&quot;}
+discovery_service_lookup_duration_seconds{service_name=&quot;postgres&quot;}
+
+# Discovery Client
+discovery_requests_total{strategy=&quot;registry|broadcast|dns&quot;,result=&quot;success|failure&quot;}
+discovery_request_duration_seconds{strategy=&quot;registry&quot;}
+discovery_cache_hits_total{service_name=&quot;postgres&quot;}
+discovery_cache_misses_total{service_name=&quot;postgres&quot;}
+
+# Broadcast Service
+discovery_announcements_sent_total{action=&quot;register|deregister|heartbeat&quot;}
+discovery_announcements_received_total{action=&quot;register|deregister|heartbeat&quot;}
+discovery_broadcast_errors_total{type=&quot;send|receive&quot;}
+
+# Health
+discovery_health_checks_total{service_name=&quot;postgres&quot;,result=&quot;success|failure&quot;}
+discovery_unhealthy_services{service_name=&quot;postgres&quot;}</code></pre>
+<h3 id="logging">Logging</h3>
+<p>Structured logging using <code>log/slog</code>:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>slog<span class="op">.</span>Info<span class="op">(</span><span class="st">&quot;Service registered&quot;</span><span class="op">,</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;service_name&quot;</span><span class="op">,</span> endpoint<span class="op">.</span>Name<span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;service_id&quot;</span><span class="op">,</span> endpoint<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;port&quot;</span><span class="op">,</span> endpoint<span class="op">.</span>Port<span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;protocol&quot;</span><span class="op">,</span> endpoint<span class="op">.</span>Protocol<span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>slog<span class="op">.</span>Warn<span class="op">(</span><span class="st">&quot;Port conflict detected, using fallback&quot;</span><span class="op">,</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;service_name&quot;</span><span class="op">,</span> serviceName<span class="op">,</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;preferred_port&quot;</span><span class="op">,</span> preferredPort<span class="op">,</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;allocated_port&quot;</span><span class="op">,</span> allocatedPort<span class="op">,</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>slog<span class="op">.</span>Error<span class="op">(</span><span class="st">&quot;Discovery failed after all strategies&quot;</span><span class="op">,</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;service_name&quot;</span><span class="op">,</span> serviceName<span class="op">,</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;strategies_tried&quot;</span><span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;registry&quot;</span><span class="op">,</span> <span class="st">&quot;broadcast&quot;</span><span class="op">,</span> <span class="st">&quot;dns&quot;</span><span class="op">},</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;error&quot;</span><span class="op">,</span> err<span class="op">,</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="security-considerations">Security Considerations</h2>
+<h3 id="port-security">Port Security</h3>
+<ul>
+<li><strong>Port Range Restrictions</strong>: Only allow allocation in
+configured ranges</li>
+<li><strong>Service Authentication</strong>: Verify service identity
+before registration</li>
+<li><strong>Rate Limiting</strong>: Prevent port exhaustion attacks</li>
+</ul>
+<h3 id="broadcast-security">Broadcast Security</h3>
+<ul>
+<li><strong>Message Signing</strong>: Sign broadcast messages with
+HMAC-SHA256</li>
+<li><strong>TTL Validation</strong>: Reject messages with expired or
+excessive TTL</li>
+<li><strong>Source Validation</strong>: Verify source IP against allowed
+ranges</li>
+</ul>
+<h3 id="registry-security">Registry Security</h3>
+<ul>
+<li><strong>TLS Encryption</strong>: Use TLS for registry
+communication</li>
+<li><strong>Access Control</strong>: Require authentication for registry
+operations</li>
+<li><strong>Audit Logging</strong>: Log all registration/deregistration
+events</li>
+</ul>
+<hr />
+<h2 id="appendix-a-configuration-examples">Appendix A: Configuration
+Examples</h2>
+<h3 id="port-allocator-configuration">Port Allocator Configuration</h3>
+<div class="sourceCode" id="cb20"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">port_allocator</span><span class="kw">:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">allow_ephemeral</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port_ranges</span><span class="kw">:</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">database</span><span class="kw">:</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start</span><span class="kw">:</span><span class="at"> </span><span class="dv">5433</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">end</span><span class="kw">:</span><span class="at"> </span><span class="dv">5442</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cache</span><span class="kw">:</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start</span><span class="kw">:</span><span class="at"> </span><span class="dv">6380</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">end</span><span class="kw">:</span><span class="at"> </span><span class="dv">6389</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">api</span><span class="kw">:</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">start</span><span class="kw">:</span><span class="at"> </span><span class="dv">8081</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">end</span><span class="kw">:</span><span class="at"> </span><span class="dv">8099</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">reserved_ports</span><span class="kw">:</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="dv">22</span><span class="co">    # SSH</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="dv">80</span><span class="co">    # HTTP</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="dv">443</span><span class="co">   # HTTPS</span></span></code></pre></div>
+<h3 id="service-registry-configuration">Service Registry
+Configuration</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">service_registry</span><span class="kw">:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">listen_address</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.0.0.0:7000&quot;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">storage_backend</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;memory&quot;</span><span class="co">  # or &quot;etcd&quot;, &quot;consul&quot;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ttl_default</span><span class="kw">:</span><span class="at"> 60s</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">cleanup_interval</span><span class="kw">:</span><span class="at"> 30s</span></span></code></pre></div>
+<h3 id="broadcast-configuration">Broadcast Configuration</h3>
+<div class="sourceCode" id="cb22"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">broadcast</span><span class="kw">:</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">multicast_address</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;239.255.0.1:7001&quot;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">interface</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0.0.0.0&quot;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ttl</span><span class="kw">:</span><span class="at"> 60s</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">announce_interval</span><span class="kw">:</span><span class="at"> 30s</span></span></code></pre></div>
+<h3 id="discovery-client-configuration">Discovery Client
+Configuration</h3>
+<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">discovery</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">registry_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;http://localhost:7000&quot;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">strategies</span><span class="kw">:</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> default</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> registry</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> broadcast</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> dns</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">timeouts</span><span class="kw">:</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default_port_check</span><span class="kw">:</span><span class="at"> 100ms</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">registry_lookup</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">broadcast_wait</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">dns_resolution</span><span class="kw">:</span><span class="at"> 2s</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">overall</span><span class="kw">:</span><span class="at"> 10s</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">cache</span><span class="kw">:</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ttl</span><span class="kw">:</span><span class="at"> 5m</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_entries</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span></code></pre></div>
+<hr />
+<h2 id="appendix-b-troubleshooting">Appendix B: Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<ol type="1">
+<li><strong>“No ports available” error</strong>
+<ul>
+<li><strong>Cause</strong>: All ports in range are occupied</li>
+<li><strong>Solution</strong>: Increase port range or enable ephemeral
+ports</li>
+</ul></li>
+<li><strong>“Service not found” error</strong>
+<ul>
+<li><strong>Cause</strong>: Service hasn’t registered or registry is
+down</li>
+<li><strong>Solution</strong>: Check service logs, verify registry is
+running</li>
+</ul></li>
+<li><strong>Discovery timeout</strong>
+<ul>
+<li><strong>Cause</strong>: Network issues or service not
+responding</li>
+<li><strong>Solution</strong>: Check network connectivity, increase
+timeouts</li>
+</ul></li>
+<li><strong>Broadcast not working</strong>
+<ul>
+<li><strong>Cause</strong>: Firewall blocking UDP multicast</li>
+<li><strong>Solution</strong>: Allow UDP port 7001, enable multicast on
+network</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="appendix-c-performance-benchmarks">Appendix C: Performance
+Benchmarks</h2>
+<h3 id="expected-performance">Expected Performance</h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Latency (p50)</th>
+<th>Latency (p99)</th>
+<th>Throughput</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Port Allocation</td>
+<td>&lt; 1ms</td>
+<td>&lt; 5ms</td>
+<td>10,000 ops/sec</td>
+</tr>
+<tr>
+<td>Registry Lookup</td>
+<td>&lt; 10ms</td>
+<td>&lt; 50ms</td>
+<td>5,000 ops/sec</td>
+</tr>
+<tr>
+<td>Broadcast Send</td>
+<td>&lt; 5ms</td>
+<td>&lt; 20ms</td>
+<td>1,000 msgs/sec</td>
+</tr>
+<tr>
+<td>Discovery (cached)</td>
+<td>&lt; 1ms</td>
+<td>&lt; 5ms</td>
+<td>50,000 ops/sec</td>
+</tr>
+<tr>
+<td>Discovery (uncached)</td>
+<td>&lt; 50ms</td>
+<td>&lt; 200ms</td>
+<td>1,000 ops/sec</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Document Version</strong>: 1.0<br />
+<strong>Last Updated</strong>: 2025-11-07<br />
+<strong>Authors</strong>: HelixCode Core Team<br />
+<strong>Status</strong>: Design Phase - Ready for Implementation</p>
+</body>
+</html>

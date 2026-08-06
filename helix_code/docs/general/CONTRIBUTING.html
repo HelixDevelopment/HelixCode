@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONTRIBUTING</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONTRIBUTING</h1>
+</header>
+<h1 id="contributing-to-helixcode-documentation">Contributing to
+HelixCode Documentation</h1>
+<p>This guide explains how to update and maintain the HelixCode
+documentation.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#documentation-structure">Documentation Structure</a></li>
+<li><a href="#updating-the-manual">Updating the Manual</a></li>
+<li><a href="#build-process-integration">Build Process
+Integration</a></li>
+<li><a href="#testing-documentation-locally">Testing Documentation
+Locally</a></li>
+<li><a href="#automated-workflows">Automated Workflows</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ol>
+<h2 id="documentation-structure">Documentation Structure</h2>
+<pre><code>HelixCode/
+├── docs/                           # Source documentation (Markdown)
+│   ├── USER_MANUAL.md             # Comprehensive user manual
+│   ├── USER_GUIDE.md              # Quick start guide
+│   ├── API_REFERENCE.md           # API documentation
+│   ├── ARCHITECTURE.md            # System architecture
+│   ├── CONTRIBUTING.md            # This file
+│   └── ...
+├── website/                        # Generated website files
+│   ├── manual/                    # Manual in HTML format
+│   │   ├── index.html
+│   │   ├── USER_MANUAL.html
+│   │   ├── USER_MANUAL.md
+│   │   └── style.css
+│   ├── guides/                    # Additional guides
+│   └── pdf/                       # PDF versions (optional)
+└── scripts/
+    ├── sync-manual.sh             # Sync manual to website
+    ├── update-docs.sh             # Master documentation script
+    └── build.sh                   # Main build script</code></pre>
+<h2 id="updating-the-manual">Updating the Manual</h2>
+<h3 id="quick-update">Quick Update</h3>
+<ol type="1">
+<li><p><strong>Edit the Markdown source:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit the manual</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">vim</span> docs/USER_MANUAL.md</span></code></pre></div></li>
+<li><p><strong>Run the sync script:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Single command to sync</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> sync-manual</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use the script directly</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/sync-manual.sh</span></span></code></pre></div></li>
+</ol>
+<h3 id="full-documentation-update">Full Documentation Update</h3>
+<p>For a complete documentation update including HTML generation, PDF
+creation, and changelog:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Basic update (Markdown to HTML + sync)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/update-docs.sh</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With PDF generation</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/update-docs.sh</span> <span class="at">--pdf</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With PDF and changelog update</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/update-docs.sh</span> <span class="at">--pdf</span> <span class="at">--changelog</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Verbose output</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/update-docs.sh</span> <span class="at">--pdf</span> <span class="at">--changelog</span> <span class="at">--verbose</span></span></code></pre></div>
+<h3 id="what-gets-updated">What Gets Updated</h3>
+<p>The documentation sync process:</p>
+<ol type="1">
+<li><strong>Timestamps</strong>: Updates “Last Updated” dates in all
+Markdown files</li>
+<li><strong>HTML Conversion</strong>: Converts Markdown to HTML using
+pandoc</li>
+<li><strong>Website Sync</strong>: Copies files to the
+<code>website/</code> directory</li>
+<li><strong>Metadata</strong>: Generates sync metadata and
+timestamps</li>
+<li><strong>PDF (optional)</strong>: Creates PDF versions using
+pandoc</li>
+<li><strong>Changelog (optional)</strong>: Adds entry to
+CHANGELOG.md</li>
+</ol>
+<h2 id="build-process-integration">Build Process Integration</h2>
+<h3 id="makefile-targets">Makefile Targets</h3>
+<p>The build system provides several targets for documentation:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sync user manual to website</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> sync-manual</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert Markdown to HTML only</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> manual-html</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build all documentation</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> docs</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Full release build (code + docs + tests)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> release</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate all assets (logo + docs)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> assets</span></code></pre></div>
+<h3 id="build-script-integration">Build Script Integration</h3>
+<p>The main build script (<code>scripts/build.sh</code>) includes
+documentation by default:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Standard build (includes docs)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/build.sh</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Build without documentation</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/build.sh</span> <span class="at">--no-docs</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Build with tests</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/build.sh</span> <span class="at">--with-tests</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Full release build</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/build.sh</span> <span class="at">--with-tests</span></span></code></pre></div>
+<h3 id="pre-build-hook">Pre-Build Hook</h3>
+<p>Documentation is automatically regenerated before builds when using:
+- <code>make release</code> - <code>make assets</code> -
+<code>scripts/build.sh</code> (unless <code>--no-docs</code> is
+specified)</p>
+<h2 id="testing-documentation-locally">Testing Documentation
+Locally</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Install the required tools:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install pandoc</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux (Debian/Ubuntu)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install pandoc</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># For PDF generation (optional)</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install basictex  <span class="co"># macOS</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install texlive-xetex  <span class="co"># Linux</span></span></code></pre></div>
+<h3 id="preview-html-locally">Preview HTML Locally</h3>
+<ol type="1">
+<li><p><strong>Generate the HTML:</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> manual-html</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/sync-manual.sh</span></span></code></pre></div></li>
+<li><p><strong>Open in browser:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> website/manual/index.html</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">xdg-open</span> website/manual/index.html</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Or navigate to:</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">file:///path/to/HelixCode/website/manual/index.html</span></span></code></pre></div></li>
+</ol>
+<h3 id="validate-markdown">Validate Markdown</h3>
+<p>Check for common Markdown issues:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for broken links</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-r</span> <span class="st">&quot;\[.*\](.*)&quot;</span> docs/<span class="pp">*</span>.md</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Validate Markdown syntax (if markdownlint is installed)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">markdownlint</span> docs/<span class="pp">*</span>.md</span></code></pre></div>
+<h3 id="test-the-build-process">Test the Build Process</h3>
+<p>Test the complete build workflow:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test manual sync</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> sync-manual</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test full documentation build</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> docs</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Test release build</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> release</span></code></pre></div>
+<h2 id="automated-workflows">Automated Workflows</h2>
+<h3 id="pre-commit-hook-optional">Pre-Commit Hook (Optional)</h3>
+<p>A pre-commit hook can automatically update documentation before
+commits. To install:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make the hook executable</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x .git/hooks/pre-commit</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The hook will:</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Detect if manual files changed</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Regenerate HTML if needed</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Update timestamps</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Stage updated files</span></span></code></pre></div>
+<p>To skip the hook for a specific commit:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">--no-verify</span> <span class="at">-m</span> <span class="st">&quot;Your message&quot;</span></span></code></pre></div>
+<h3 id="cicd-integration">CI/CD Integration</h3>
+<p>For continuous integration, add to your CI pipeline:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example for GitHub Actions</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build Documentation</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">  run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    make docs</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Check for Changes</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">  run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    git diff --exit-code website/</span></code></pre></div>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="writing-documentation">Writing Documentation</h3>
+<ol type="1">
+<li><strong>Clear Structure</strong>: Use hierarchical headings (H1 &gt;
+H2 &gt; H3)</li>
+<li><strong>Code Examples</strong>: Include practical examples with
+proper syntax highlighting</li>
+<li><strong>Tables</strong>: Use tables for comparison and configuration
+reference</li>
+<li><strong>Links</strong>: Use relative links for internal
+documentation</li>
+<li><strong>Images</strong>: Store images in <code>docs/images/</code>
+and reference them relatively</li>
+</ol>
+<h3 id="markdown-style">Markdown Style</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># H1 - Main Title</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## H2 - Section</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">### H3 - Subsection</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>**Bold for emphasis**</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>*Italic for terms*</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="in">`code`</span> for inline code</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="sc">\`\`\`</span>language</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>code block</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="sc">\`\`\`</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Bullet lists</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Numbered lists</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Column 1 <span class="pp">|</span> Column 2 <span class="pp">|</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="pp">|----------|----------|</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Value    <span class="pp">|</span> Value    <span class="pp">|</span></span></code></pre></div>
+<h3 id="version-control">Version Control</h3>
+<ol type="1">
+<li><p><strong>Update Timestamps</strong>: Always update “Last Updated”
+dates</p></li>
+<li><p><strong>Commit Messages</strong>: Use conventional commits</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docs:</span> update user manual with new LLM providers</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docs:</span> add troubleshooting section</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docs:</span> fix typos in API reference</span></code></pre></div></li>
+<li><p><strong>Review Changes</strong>: Always review HTML output before
+committing</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> sync-manual</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> website/manual/USER_MANUAL.html</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> diff website/</span></code></pre></div></li>
+</ol>
+<h3 id="documentation-checklist">Documentation Checklist</h3>
+<p>Before committing documentation changes:</p>
+<ul class="task-list">
+<li><label><input type="checkbox"></input>Markdown source updated</label></li>
+<li><label><input type="checkbox"></input>Timestamps updated
+(automated)</label></li>
+<li><label><input type="checkbox"></input>HTML generated and
+reviewed</label></li>
+<li><label><input type="checkbox"></input>Links tested and
+working</label></li>
+<li><label><input type="checkbox"></input>Code examples tested</label></li>
+<li><label><input type="checkbox"></input>Screenshots updated (if
+needed)</label></li>
+<li><label><input type="checkbox"></input>CHANGELOG.md updated (for major
+changes)</label></li>
+<li><label><input type="checkbox"></input>Version number incremented (if
+applicable)</label></li>
+</ul>
+<h2 id="common-tasks">Common Tasks</h2>
+<h3 id="adding-a-new-documentation-file">Adding a New Documentation
+File</h3>
+<ol type="1">
+<li><p>Create the Markdown file in <code>docs/</code>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> docs/NEW_GUIDE.md</span></code></pre></div></li>
+<li><p>Add it to the update script:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit scripts/update-docs.sh</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add to MARKDOWN_FILES array</span></span></code></pre></div></li>
+<li><p>Update the sync script if needed:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit scripts/sync-manual.sh</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Add conversion logic</span></span></code></pre></div></li>
+</ol>
+<h3 id="updating-styling">Updating Styling</h3>
+<p>The CSS is located at <code>website/manual/style.css</code>. To
+update:</p>
+<ol type="1">
+<li><p>Edit the CSS in <code>scripts/sync-manual.sh</code> (it’s
+generated)</p></li>
+<li><p>Re-run the sync:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> sync-manual</span></code></pre></div></li>
+<li><p>Refresh your browser to see changes</p></li>
+</ol>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<p><strong>Problem</strong>: HTML not updating</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clear website directory and regenerate</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> website/manual/<span class="pp">*</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> sync-manual</span></code></pre></div>
+<p><strong>Problem</strong>: Timestamps not updating</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run update script explicitly</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./scripts/update-docs.sh</span></span></code></pre></div>
+<p><strong>Problem</strong>: pandoc errors</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check pandoc version</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pandoc</span> <span class="at">--version</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Reinstall if needed</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> reinstall pandoc  <span class="co"># macOS</span></span></code></pre></div>
+<h2 id="workflow-summary">Workflow Summary</h2>
+<h3 id="for-quick-updates">For Quick Updates</h3>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">1.</span> Edit docs/USER_MANUAL.md</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">2.</span> make sync-manual</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="ex">3.</span> git add docs/ website/</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ex">4.</span> git commit <span class="at">-m</span> <span class="st">&quot;docs: update manual&quot;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ex">5.</span> git push</span></code></pre></div>
+<h3 id="for-release-documentation">For Release Documentation</h3>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">1.</span> Edit docs/<span class="pp">*</span>.md files</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ex">2.</span> ./scripts/update-docs.sh <span class="at">--pdf</span> <span class="at">--changelog</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="ex">3.</span> Review changes in website/</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="ex">4.</span> make test  <span class="co"># Verify builds work</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="ex">5.</span> git add docs/ website/ CHANGELOG.md</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="ex">6.</span> git commit <span class="at">-m</span> <span class="st">&quot;docs: release documentation update&quot;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="ex">7.</span> git push</span></code></pre></div>
+<h3 id="for-full-release">For Full Release</h3>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">1.</span> Update documentation</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">2.</span> make release  <span class="co"># Builds everything</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="ex">3.</span> Review bin/ and website/</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="ex">4.</span> git add .</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="ex">5.</span> git commit <span class="at">-m</span> <span class="st">&quot;release: version X.Y.Z&quot;</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="ex">6.</span> git tag vX.Y.Z</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="ex">7.</span> git push <span class="at">--tags</span></span></code></pre></div>
+<h2 id="getting-help">Getting Help</h2>
+<ul>
+<li><strong>Questions</strong>: Open an issue on GitHub</li>
+<li><strong>Bugs</strong>: Report documentation bugs in the issue
+tracker</li>
+<li><strong>Improvements</strong>: Submit a pull request with your
+changes</li>
+</ul>
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+<li><a href="https://www.markdownguide.org/">Markdown Guide</a></li>
+<li><a href="https://pandoc.org/MANUAL.html">Pandoc Manual</a></li>
+<li><a href="https://docs.helixcode.dev">HelixCode
+Documentation</a></li>
+</ul>
+<hr />
+<p><strong>Last Updated</strong>: 2025-11-06 <strong>Version</strong>:
+1.0</p>
+</body>
+</html>

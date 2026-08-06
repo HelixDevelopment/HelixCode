@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DEVELOPMENT</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DEVELOPMENT</h1>
+</header>
+<h1 id="helixcode-development-guide">HelixCode Development Guide</h1>
+<h2 id="getting-started">🚀 Getting Started</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Go 1.26+ (this inner module declares <code>go 1.26</code> — it will
+not build on older toolchains)</li>
+<li>PostgreSQL 15+</li>
+<li>Redis 7+</li>
+<li>Git</li>
+</ul>
+<h3 id="development-setup">Development Setup</h3>
+<ol type="1">
+<li><p><strong>Clone the repository</strong>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>repository-url<span class="op">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode</span></code></pre></div></li>
+<li><p><strong>Setup dependencies</strong>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> setup-deps</span></code></pre></div></li>
+<li><p><strong>Generate logo assets</strong>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> logo-assets</span></code></pre></div></li>
+<li><p><strong>Build the application</strong>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build</span></code></pre></div></li>
+<li><p><strong>Run development server</strong>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> dev</span></code></pre></div></li>
+</ol>
+<h2 id="project-architecture">🏗️ Project Architecture</h2>
+<h3 id="core-components">Core Components</h3>
+<h4 id="database-layer-internaldatabase">1. Database Layer
+(<code>internal/database/</code>)</h4>
+<ul>
+<li><strong>database.go</strong>: PostgreSQL connection pool and schema
+management</li>
+<li><strong>Features</strong>: Connection pooling, health checks,
+automatic schema creation</li>
+</ul>
+<h4 id="authentication-internalauth">2. Authentication
+(<code>internal/auth/</code>)</h4>
+<ul>
+<li><strong>auth.go</strong>: JWT-based authentication with session
+management</li>
+<li><strong>Features</strong>: User registration, login, token refresh,
+password hashing</li>
+</ul>
+<h4 id="worker-management-internalworker">3. Worker Management
+(<code>internal/worker/</code>)</h4>
+<ul>
+<li><strong>manager.go</strong>: Distributed worker registration and
+health monitoring</li>
+<li><strong>Features</strong>: Worker discovery, capability-based
+assignment, health checks</li>
+</ul>
+<h4 id="task-management-internaltask">4. Task Management
+(<code>internal/task/</code>)</h4>
+<ul>
+<li><strong>manager.go</strong>: Distributed task management with work
+preservation</li>
+<li><strong>Features</strong>: Task creation, assignment, checkpointing,
+rollback</li>
+</ul>
+<h4 id="server-internalserver">5. Server
+(<code>internal/server/</code>)</h4>
+<ul>
+<li><strong>server.go</strong>: HTTP server with REST API endpoints</li>
+<li><strong>Features</strong>: Gin framework, middleware, route
+management</li>
+</ul>
+<h4 id="configuration-internalconfig">6. Configuration
+(<code>internal/config/</code>)</h4>
+<ul>
+<li><strong>config.go</strong>: Configuration management with Viper</li>
+<li><strong>Features</strong>: Environment variables, config file
+support, validation</li>
+</ul>
+<h4 id="logo-processing-internallogo">7. Logo Processing
+(<code>internal/logo/</code>)</h4>
+<ul>
+<li><strong>processor.go</strong>: Logo asset generation and color
+extraction</li>
+<li><strong>Features</strong>: ASCII art generation, icon creation,
+theme generation</li>
+</ul>
+<h2 id="development-workflow">🔧 Development Workflow</h2>
+<h3 id="code-organization">Code Organization</h3>
+<pre><code>internal/
+├── auth/           # Authentication &amp; authorization
+├── config/         # Configuration management
+├── database/       # Database layer
+├── logo/           # Logo processing
+├── server/         # HTTP server
+├── task/           # Task management
+├── theme/          # Color themes
+└── worker/         # Worker management</code></pre>
+<h3 id="adding-new-features">Adding New Features</h3>
+<ol type="1">
+<li><strong>Define the data model</strong> in the database schema</li>
+<li><strong>Create repository interface</strong> for data access</li>
+<li><strong>Implement business logic</strong> in the appropriate
+manager</li>
+<li><strong>Add API endpoints</strong> in the server</li>
+<li><strong>Write comprehensive tests</strong></li>
+<li><strong>Update documentation</strong></li>
+</ol>
+<h3 id="testing-strategy">Testing Strategy</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all tests</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> test</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific package tests</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> ./internal/auth</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run tests with coverage</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-cover</span> ./...</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Run integration tests</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span><span class="op">=</span>integration ./...</span></code></pre></div>
+<h3 id="code-quality">Code Quality</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Format code</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> fmt</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Lint code</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> lint</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check dependencies</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> mod tidy</span></code></pre></div>
+<h2 id="api-development">📚 API Development</h2>
+<h3 id="adding-new-endpoints">Adding New Endpoints</h3>
+<ol type="1">
+<li><strong>Define route</strong> in
+<code>internal/server/server.go</code></li>
+<li><strong>Implement handler method</strong></li>
+<li><strong>Add request/response models</strong></li>
+<li><strong>Update OpenAPI documentation</strong></li>
+<li><strong>Add tests</strong></li>
+</ol>
+<h3 id="example-adding-user-profile-endpoint">Example: Adding User
+Profile Endpoint</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Add route in setupRoutes()</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>users<span class="op">.</span>GET<span class="op">(</span><span class="st">&quot;/profile&quot;</span><span class="op">,</span> s<span class="op">.</span>getUserProfile<span class="op">)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Implement handler</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>s <span class="op">*</span>Server<span class="op">)</span> getUserProfile<span class="op">(</span>c <span class="op">*</span>gin<span class="op">.</span>Context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implementation</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="database-development">🗄️ Database Development</h2>
+<h3 id="schema-changes">Schema Changes</h3>
+<ol type="1">
+<li><strong>Update schema</strong> in
+<code>internal/database/database.go</code></li>
+<li><strong>Create migration</strong> if needed</li>
+<li><strong>Update repository interfaces</strong></li>
+<li><strong>Update tests</strong></li>
+</ol>
+<h3 id="adding-new-table">Adding New Table</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Add to createSchemaSQL in database.go</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> new_table (</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> UUID <span class="kw">PRIMARY</span> <span class="kw">KEY</span> <span class="kw">DEFAULT</span> uuid_generate_v4(),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- columns</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    created_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> NOW(),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    updated_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> NOW()</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h2 id="design-system-development">🎨 Design System Development</h2>
+<h3 id="color-scheme">Color Scheme</h3>
+<p>Colors are automatically extracted from the logo. To update:</p>
+<ol type="1">
+<li><p><strong>Replace logo.png</strong> in
+<code>assets/images/</code></p></li>
+<li><p><strong>Run logo asset generation</strong>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> logo-assets</span></code></pre></div></li>
+</ol>
+<h3 id="adding-new-themes">Adding New Themes</h3>
+<ol type="1">
+<li><p><strong>Update theme generation</strong> in
+<code>internal/logo/processor.go</code></p></li>
+<li><p><strong>Add theme constants</strong> in
+<code>internal/theme/theme.go</code></p></li>
+<li><p><strong>Regenerate assets</strong>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> logo-assets</span></code></pre></div></li>
+</ol>
+<h2 id="integration-development">🔌 Integration Development</h2>
+<h3 id="adding-new-llm-providers">Adding New LLM Providers</h3>
+<ol type="1">
+<li><strong>Add provider configuration</strong> in config</li>
+<li><strong>Implement provider interface</strong></li>
+<li><strong>Add to task capabilities</strong></li>
+<li><strong>Update worker registration</strong></li>
+</ol>
+<h3 id="adding-new-task-types">Adding New Task Types</h3>
+<ol type="1">
+<li><strong>Define task type</strong> in
+<code>internal/task/manager.go</code></li>
+<li><strong>Add required capabilities</strong></li>
+<li><strong>Implement task execution logic</strong></li>
+<li><strong>Update API endpoints</strong></li>
+</ol>
+<h2 id="deployment">🚀 Deployment</h2>
+<h3 id="development-deployment">Development Deployment</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for development</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> build</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with development config</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/helixcode</span> <span class="at">--config</span> config/dev/config.yaml</span></code></pre></div>
+<h3 id="production-deployment">Production Deployment</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build for production</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> prod</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with production config</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./bin/helixcode</span> <span class="at">--config</span> config/prod/config.yaml</span></code></pre></div>
+<h3 id="containerized-deployment">Containerized deployment</h3>
+<p>Per Constitution Rule 4 (No Manual Container Commands) + §11.4.76,
+container workflows go through the orchestrator — direct
+<code>docker</code>/<code>docker-compose</code> commands are NOT a
+supported workflow (and the host uses podman, not docker). Run the
+platform standalone via the repo-root <code>./helix</code> facade script
+(it drives the containerized stack, delegating to the containers
+submodule per §11.4.76):</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> start      <span class="co"># boot the containerized stack</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> status     <span class="co"># show stack status</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> logs       <span class="co"># tail logs</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> restart    <span class="co"># restart the stack</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./helix</span> stop       <span class="co"># tear down</span></span></code></pre></div>
+<p>The host application binary itself is built with
+<code>make build</code> → <code>./bin/helixcode</code> (see Build
+Commands above); CI-style container builds/tests are driven by the
+orchestrator, never by hand-run <code>docker</code> commands.</p>
+<h2 id="debugging">🔍 Debugging</h2>
+<h3 id="logging">Logging</h3>
+<ul>
+<li><strong>Development</strong>: Set <code>logging.level: debug</code>
+in config</li>
+<li><strong>Production</strong>: Set <code>logging.level: info</code> or
+<code>warn</code></li>
+</ul>
+<h3 id="database-debugging">Database Debugging</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Connect to database</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="at">-h</span> localhost <span class="at">-U</span> helixcode <span class="at">-d</span> helixcode</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check connections</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">SELECT</span> <span class="pp">*</span> FROM pg_stat_activity<span class="kw">;</span></span></code></pre></div>
+<h3 id="api-debugging">API Debugging</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test health endpoint</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8080/health</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test API endpoints</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer &lt;token&gt;&quot;</span> http://localhost:8080/api/v1/users/me</span></code></pre></div>
+<h2 id="monitoring">📊 Monitoring</h2>
+<h3 id="health-checks">Health Checks</h3>
+<ul>
+<li><strong>Database</strong>: <code>GET /health</code></li>
+<li><strong>Worker status</strong>: Monitor worker heartbeats</li>
+<li><strong>Task progress</strong>: Track task completion rates</li>
+</ul>
+<h3 id="metrics">Metrics</h3>
+<ul>
+<li><strong>Worker metrics</strong>: CPU, memory, disk usage</li>
+<li><strong>Task metrics</strong>: Completion time, success rates</li>
+<li><strong>System metrics</strong>: API response times, error
+rates</li>
+</ul>
+<h2 id="security">🔒 Security</h2>
+<h3 id="authentication">Authentication</h3>
+<ul>
+<li>Use JWT tokens for API access</li>
+<li>Implement session management</li>
+<li>Use environment variables for secrets</li>
+</ul>
+<h3 id="input-validation">Input Validation</h3>
+<ul>
+<li>Validate all user inputs</li>
+<li>Use prepared statements for database queries</li>
+<li>Implement rate limiting</li>
+</ul>
+<h3 id="security-headers">Security Headers</h3>
+<ul>
+<li>CORS configuration</li>
+<li>XSS protection</li>
+<li>Content security policy</li>
+</ul>
+<h2 id="performance">📈 Performance</h2>
+<h3 id="database-optimization">Database Optimization</h3>
+<ul>
+<li>Use connection pooling</li>
+<li>Implement database indexes</li>
+<li>Monitor query performance</li>
+</ul>
+<h3 id="caching">Caching</h3>
+<ul>
+<li>Use Redis for session storage</li>
+<li>Implement response caching</li>
+<li>Cache frequently accessed data</li>
+</ul>
+<h3 id="worker-optimization">Worker Optimization</h3>
+<ul>
+<li>Load balancing across workers</li>
+<li>Resource monitoring</li>
+<li>Auto-scaling based on load</li>
+</ul>
+<h2 id="contributing">🤝 Contributing</h2>
+<h3 id="code-review-process">Code Review Process</h3>
+<ol type="1">
+<li><strong>Create feature branch</strong> from main</li>
+<li><strong>Make changes</strong> with tests</li>
+<li><strong>Submit pull request</strong></li>
+<li><strong>Address review comments</strong></li>
+<li><strong>Merge after approval</strong></li>
+</ol>
+<h3 id="commit-guidelines">Commit Guidelines</h3>
+<ul>
+<li>Use conventional commit messages</li>
+<li>Include tests with new features</li>
+<li>Update documentation</li>
+<li>Ensure code passes CI checks</li>
+</ul>
+<h3 id="release-process">Release Process</h3>
+<ol type="1">
+<li><strong>Update version</strong> in main.go</li>
+<li><strong>Update changelog</strong></li>
+<li><strong>Create release tag</strong></li>
+<li><strong>Build release binaries</strong></li>
+<li><strong>Deploy to production</strong></li>
+</ol>
+<hr />
+<p><strong>Happy coding! 🚀</strong></p>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Per constitution §11.4.99, these development instructions were
+cross-referenced against the latest official sources + the repository’s
+actual state on <strong>2026-05-29</strong>:</p>
+<ul>
+<li><strong>Go version</strong> — corrected “Go 1.21+” → <strong>“Go
+1.26+”</strong> to match <code>helix_code/go.mod</code>
+(<code>go 1.26</code>; won’t build below it). Verified against
+https://go.dev/doc/devel/release (Go 1.26.0 released 2026-02-10, latest
+1.26.3; Go 1.21/1.24 are past support).</li>
+<li><strong>make targets</strong> — <code>setup-deps</code>,
+<code>logo-assets</code>, <code>build</code>, <code>dev</code>,
+<code>test</code>, <code>fmt</code>, <code>lint</code>,
+<code>prod</code> all verified present in
+<code>helix_code/Makefile</code>.</li>
+<li><strong>Container workflow</strong> — removed the
+<code>docker build</code>/<code>docker run</code> instructions (violate
+Constitution Rule 4 + the host uses podman, not docker) and replaced
+them with the real repo-root <code>./helix</code> facade (subcommands
+verified: start/status/logs/restart/stop). Negative finding: the
+<code>make container-*</code> targets referenced in CLAUDE.md §3.4 do
+NOT exist in either Makefile — flagged for a separate CLAUDE.md
+correction (not cited here).</li>
+<li><strong>PostgreSQL 15+ / Redis 7+</strong> — consistent with
+CLAUDE.md §3.1.</li>
+</ul>
+<p>Sources verified 2026-05-29: https://go.dev/doc/devel/release ; repo
+cross-reference (<code>helix_code/go.mod</code>,
+<code>helix_code/Makefile</code>, <code>./helix</code>, CLAUDE.md
+§3.1/§3.4).</p>
+</body>
+</html>

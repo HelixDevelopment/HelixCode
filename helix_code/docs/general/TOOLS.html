@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TOOLS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">TOOLS</h1>
+</header>
+<h1 id="helixcode-tools-documentation">HelixCode Tools
+Documentation</h1>
+<h2 id="overview">Overview</h2>
+<p>HelixCode provides a comprehensive tool ecosystem for AI-powered
+development workflows. The tools are organized into categories and
+accessible through a unified registry that provides schema validation,
+type safety, and automatic resource management.</p>
+<h2 id="architecture">Architecture</h2>
+<h3 id="tool-registry">Tool Registry</h3>
+<p>The <code>ToolRegistry</code> is the central hub for all tools.
+It:</p>
+<ul>
+<li>Manages tool lifecycle and dependencies</li>
+<li>Provides schema validation for parameters</li>
+<li>Handles resource cleanup and error recovery</li>
+<li>Supports tool aliases for convenience</li>
+<li>Exports OpenAPI-compatible schemas</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> err <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>tools<span class="op">.</span>DefaultRegistryConfig<span class="op">())</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> registry<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Execute a tool</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_read&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;/path/to/file.go&quot;</span><span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="tool-categories">Tool Categories</h3>
+<ol type="1">
+<li><strong>FileSystem</strong> - File operations (read, write, edit,
+search)</li>
+<li><strong>Shell</strong> - Command execution (sync, async,
+background)</li>
+<li><strong>Web</strong> - HTTP requests and web scraping</li>
+<li><strong>Browser</strong> - Browser automation and screenshots</li>
+<li><strong>Mapping</strong> - Codebase analysis and symbol
+extraction</li>
+<li><strong>MultiEdit</strong> - Transactional multi-file editing</li>
+<li><strong>Interactive</strong> - User prompts and task tracking</li>
+<li><strong>Notebook</strong> - Jupyter notebook manipulation</li>
+</ol>
+<h2 id="tool-reference">Tool Reference</h2>
+<h3 id="filesystem-tools">FileSystem Tools</h3>
+<h4 id="fs_read"><code>fs_read</code></h4>
+<p>Read file contents from the filesystem.</p>
+<p><strong>Parameters:</strong> - <code>path</code> (string, required):
+Path to the file to read - <code>start_line</code> (integer, optional):
+Start line number for partial read - <code>end_line</code> (integer,
+optional): End line number for partial read</p>
+<p><strong>Returns:</strong> FileContent object with content, lines,
+metadata</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>content<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_read&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;main.go&quot;</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Security:</strong> Validates paths against workspace
+boundaries, blocks access to sensitive files (.env, credentials,
+etc.)</p>
+<hr />
+<h4 id="fs_write"><code>fs_write</code></h4>
+<p>Write content to a file atomically.</p>
+<p><strong>Parameters:</strong> - <code>path</code> (string, required):
+Path to the file to write - <code>content</code> (string, required):
+Content to write - <code>backup</code> (boolean, optional): Create
+backup before writing</p>
+<p><strong>Returns:</strong> nil on success</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_write&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;output.txt&quot;</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;content&quot;</span><span class="op">:</span> <span class="st">&quot;Hello, World!&quot;</span><span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;backup&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Security:</strong> Requires write permissions, creates
+backups, uses atomic writes to prevent corruption</p>
+<hr />
+<h4 id="fs_edit"><code>fs_edit</code></h4>
+<p>Edit file contents by replacing strings.</p>
+<p><strong>Parameters:</strong> - <code>path</code> (string, required):
+Path to the file to edit - <code>old_string</code> (string, required):
+String to replace (must be unique unless replace_all is true) -
+<code>new_string</code> (string, required): Replacement string -
+<code>replace_all</code> (boolean, optional): Replace all
+occurrences</p>
+<p><strong>Returns:</strong> EditResult with diff and statistics</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_edit&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;config.go&quot;</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;old_string&quot;</span><span class="op">:</span> <span class="st">&quot;localhost:8080&quot;</span><span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;new_string&quot;</span><span class="op">:</span> <span class="st">&quot;0.0.0.0:8080&quot;</span><span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Best Practices:</strong> - Ensure <code>old_string</code> is
+unique in the file to avoid ambiguous replacements - Use
+<code>replace_all: true</code> for renaming variables/identifiers -
+Review the diff before applying changes</p>
+<hr />
+<h4 id="glob"><code>glob</code></h4>
+<p>Find files matching a glob pattern.</p>
+<p><strong>Parameters:</strong> - <code>pattern</code> (string,
+required): Glob pattern (e.g., <code>**/*.go</code>,
+<code>src/**/*.ts</code>) - <code>root</code> (string, optional): Root
+directory to search from</p>
+<p><strong>Returns:</strong> Array of matching file paths</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>files<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;glob&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;pattern&quot;</span><span class="op">:</span> <span class="st">&quot;**/*.go&quot;</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Supported Patterns:</strong> - <code>*</code> - matches any
+sequence of characters - <code>?</code> - matches any single character -
+<code>**</code> - matches any number of directories - <code>[abc]</code>
+- matches any character in the set - <code>{a,b}</code> - matches either
+pattern</p>
+<hr />
+<h4 id="grep"><code>grep</code></h4>
+<p>Search file contents for a pattern.</p>
+<p><strong>Parameters:</strong> - <code>pattern</code> (string,
+required): Pattern to search for - <code>root</code> (string, optional):
+Root directory to search from - <code>regex</code> (boolean, optional):
+Use regex pattern matching - <code>case_sensitive</code> (boolean,
+optional): Case sensitive search (default: true) -
+<code>max_matches</code> (integer, optional): Maximum number of matches
+to return</p>
+<p><strong>Returns:</strong> Array of ContentMatch objects with file
+path, line number, and context</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>matches<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;grep&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;pattern&quot;</span><span class="op">:</span> <span class="st">&quot;TODO:&quot;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;regex&quot;</span><span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;case_sensitive&quot;</span><span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Performance Tips:</strong> - Use <code>max_matches</code> to
+limit results for large codebases - Exclude directories like
+<code>node_modules</code> in configuration - Use regex for complex
+patterns but be aware of performance impact</p>
+<hr />
+<h3 id="shell-tools">Shell Tools</h3>
+<h4 id="shell"><code>shell</code></h4>
+<p>Execute a shell command synchronously.</p>
+<p><strong>Parameters:</strong> - <code>command</code> (string,
+required): Shell command to execute - <code>workdir</code> (string,
+optional): Working directory - <code>timeout</code> (integer, optional):
+Timeout in seconds (default: 30) - <code>env</code> (object, optional):
+Environment variables</p>
+<p><strong>Returns:</strong> ExecutionResult with stdout, stderr, exit
+code</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;shell&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;command&quot;</span><span class="op">:</span> <span class="st">&quot;go test ./...&quot;</span><span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;timeout&quot;</span><span class="op">:</span> <span class="dv">300</span><span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Security:</strong> - Commands are validated against blocklist
+(rm -rf /, dd, mkfs, etc.) - Runs in sandbox with resource limits -
+Audit logging for dangerous commands - Environment isolation</p>
+<hr />
+<h4 id="shell_background"><code>shell_background</code></h4>
+<p>Execute a shell command asynchronously in the background.</p>
+<p><strong>Parameters:</strong> - <code>command</code> (string,
+required): Shell command to execute - <code>workdir</code> (string,
+optional): Working directory - <code>env</code> (object, optional):
+Environment variables</p>
+<p><strong>Returns:</strong> AsyncExecution object with execution ID</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>execution<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;shell_background&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;command&quot;</span><span class="op">:</span> <span class="st">&quot;npm run build&quot;</span><span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Later, check status</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>status<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;shell_output&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;execution_id&quot;</span><span class="op">:</span> execution<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h4 id="shell_output"><code>shell_output</code></h4>
+<p>Get output from a background shell execution.</p>
+<p><strong>Parameters:</strong> - <code>execution_id</code> (string,
+required): ID from shell_background</p>
+<p><strong>Returns:</strong> ExecutionStatus with current output and
+state</p>
+<hr />
+<h4 id="shell_kill"><code>shell_kill</code></h4>
+<p>Kill a running background shell execution.</p>
+<p><strong>Parameters:</strong> - <code>execution_id</code> (string,
+required): ID from shell_background - <code>signal</code> (string,
+optional): Signal to send (SIGTERM, SIGKILL)</p>
+<p><strong>Returns:</strong> nil on success</p>
+<hr />
+<h3 id="web-tools">Web Tools</h3>
+<h4 id="web_fetch"><code>web_fetch</code></h4>
+<p>Fetch content from a URL.</p>
+<p><strong>Parameters:</strong> - <code>url</code> (string, required):
+URL to fetch - <code>parse_markdown</code> (boolean, optional): Parse
+HTML to markdown (default: true) - <code>follow_redirects</code>
+(boolean, optional): Follow redirects (default: true)</p>
+<p><strong>Returns:</strong> Markdown content and metadata or raw
+FetchResult</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>markdown<span class="op">,</span> metadata<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;web_fetch&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;url&quot;</span><span class="op">:</span> <span class="st">&quot;https://example.com/docs&quot;</span><span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;parse_markdown&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Features:</strong> - Automatic HTML to Markdown conversion -
+Caching with TTL - Rate limiting - User-agent rotation - Redirect
+handling</p>
+<p><strong>Security:</strong> - Blocks private IP addresses - Domain
+blocklist (.onion, etc.) - Content-Type validation - Size limits (10 MB
+default)</p>
+<hr />
+<h4 id="web_search"><code>web_search</code></h4>
+<p>Search the web for information.</p>
+<p><strong>Parameters:</strong> - <code>query</code> (string, required):
+Search query - <code>max_results</code> (integer, optional): Maximum
+results (default: 10) - <code>provider</code> (string, optional): Search
+provider (google, bing, duckduckgo)</p>
+<p><strong>Returns:</strong> SearchResult with URLs, titles,
+snippets</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>results<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;web_search&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;query&quot;</span><span class="op">:</span> <span class="st">&quot;golang best practices 2025&quot;</span><span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;max_results&quot;</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Providers:</strong> - DuckDuckGo (default, no API key
+required) - Google (requires API key and CSE ID) - Bing (requires API
+key)</p>
+<hr />
+<h3 id="browser-tools">Browser Tools</h3>
+<h4 id="browser_launch"><code>browser_launch</code></h4>
+<p>Launch a new browser instance.</p>
+<p><strong>Parameters:</strong> - <code>headless</code> (boolean,
+optional): Run in headless mode (default: true) - <code>width</code>
+(integer, optional): Window width (default: 1280) - <code>height</code>
+(integer, optional): Window height (default: 720)</p>
+<p><strong>Returns:</strong> Browser object with ID and WebSocket
+URL</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>browser<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;browser_launch&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;headless&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;width&quot;</span><span class="op">:</span> <span class="dv">1920</span><span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;height&quot;</span><span class="op">:</span> <span class="dv">1080</span><span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h4 id="browser_navigate"><code>browser_navigate</code></h4>
+<p>Navigate browser to a URL.</p>
+<p><strong>Parameters:</strong> - <code>browser_id</code> (string,
+required): Browser instance ID - <code>url</code> (string, required):
+URL to navigate to</p>
+<p><strong>Returns:</strong> nil on success</p>
+<hr />
+<h4 id="browser_screenshot"><code>browser_screenshot</code></h4>
+<p>Take a screenshot of the browser window.</p>
+<p><strong>Parameters:</strong> - <code>browser_id</code> (string,
+required): Browser instance ID - <code>format</code> (string, optional):
+Image format (png, jpeg) - <code>quality</code> (integer, optional):
+Image quality 0-100 - <code>annotate</code> (boolean, optional):
+Annotate interactive elements</p>
+<p><strong>Returns:</strong> Screenshot object with image data and
+metadata</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>screenshot<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;browser_screenshot&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;browser_id&quot;</span><span class="op">:</span> browser<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;format&quot;</span><span class="op">:</span> <span class="st">&quot;png&quot;</span><span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;annotate&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Annotation Features:</strong> - Labels interactive elements
+(buttons, links, inputs) - Generates element IDs for clicking/typing -
+Extracts bounding boxes - Highlights hover states</p>
+<hr />
+<h4 id="browser_close"><code>browser_close</code></h4>
+<p>Close a browser instance.</p>
+<p><strong>Parameters:</strong> - <code>browser_id</code> (string,
+required): Browser instance ID</p>
+<p><strong>Returns:</strong> nil on success</p>
+<hr />
+<h3 id="mapping-tools">Mapping Tools</h3>
+<h4 id="codebase_map"><code>codebase_map</code></h4>
+<p>Create a map of the codebase structure and definitions.</p>
+<p><strong>Parameters:</strong> - <code>root</code> (string, optional):
+Root directory to map - <code>languages</code> (array, optional):
+Languages to include - <code>use_cache</code> (boolean, optional): Use
+cached results (default: true)</p>
+<p><strong>Returns:</strong> CodebaseMap with files, definitions,
+dependencies</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>codebaseMap<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;codebase_map&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;languages&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;go&quot;</span><span class="op">,</span> <span class="st">&quot;python&quot;</span><span class="op">,</span> <span class="st">&quot;typescript&quot;</span><span class="op">},</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;use_cache&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Extracted Information:</strong> - Functions, methods,
+classes, structs - Imports and dependencies - Comments and docstrings -
+Line counts and complexity metrics - Symbol locations (file, line,
+column)</p>
+<p><strong>Supported Languages:</strong> - Go, Python,
+JavaScript/TypeScript, Java, C/C++, Rust, Ruby, PHP</p>
+<hr />
+<h4 id="file_definitions"><code>file_definitions</code></h4>
+<p>Get all definitions from a specific file.</p>
+<p><strong>Parameters:</strong> - <code>path</code> (string, required):
+Path to the file</p>
+<p><strong>Returns:</strong> FileMap with definitions, imports,
+exports</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>definitions<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;file_definitions&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;internal/server/router.go&quot;</span><span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h3 id="multiedit-tools">MultiEdit Tools</h3>
+<p>Multi-file editing uses a transactional approach to safely edit
+multiple files atomically.</p>
+<h4 id="workflow">Workflow</h4>
+<ol type="1">
+<li><strong>Begin</strong> - Start a transaction</li>
+<li><strong>Add</strong> - Add file edits to the transaction</li>
+<li><strong>Preview</strong> - Review changes and conflicts</li>
+<li><strong>Commit</strong> - Apply all changes atomically (or
+Rollback)</li>
+</ol>
+<h4 id="multiedit_begin"><code>multiedit_begin</code></h4>
+<p>Begin a multi-file edit transaction.</p>
+<p><strong>Parameters:</strong> - <code>description</code> (string,
+required): Description of the edit operation -
+<code>require_preview</code> (boolean, optional): Require preview before
+commit (default: true)</p>
+<p><strong>Returns:</strong> EditTransaction object with ID</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>tx<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_begin&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;Refactor authentication logic&quot;</span><span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;require_preview&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h4 id="multiedit_add"><code>multiedit_add</code></h4>
+<p>Add a file edit to an open transaction.</p>
+<p><strong>Parameters:</strong> - <code>transaction_id</code> (string,
+required): Transaction ID - <code>file_path</code> (string, required):
+Path to the file - <code>operation</code> (string, required): Operation
+type (create, update, delete) - <code>new_content</code> (string,
+required for create/update): New file content</p>
+<p><strong>Returns:</strong> nil on success</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_add&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> tx<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;file_path&quot;</span><span class="op">:</span> <span class="st">&quot;internal/auth/handler.go&quot;</span><span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;operation&quot;</span><span class="op">:</span> <span class="st">&quot;update&quot;</span><span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;new_content&quot;</span><span class="op">:</span> updatedContent<span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h4 id="multiedit_preview"><code>multiedit_preview</code></h4>
+<p>Preview changes in a multi-file edit transaction.</p>
+<p><strong>Parameters:</strong> - <code>transaction_id</code> (string,
+required): Transaction ID</p>
+<p><strong>Returns:</strong> PreviewResult with diffs, conflicts,
+summary</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>preview<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_preview&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> tx<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Check for conflicts</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> preview<span class="op">.</span>Summary<span class="op">.</span>HasConflicts <span class="op">{</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Handle conflicts</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h4 id="multiedit_commit"><code>multiedit_commit</code></h4>
+<p>Commit a multi-file edit transaction.</p>
+<p><strong>Parameters:</strong> - <code>transaction_id</code> (string,
+required): Transaction ID</p>
+<p><strong>Returns:</strong> nil on success</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_commit&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> tx<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Safety Features:</strong> - Automatic backups before changes
+- Checksum verification to detect concurrent modifications - Atomic
+commit (all or nothing) - Automatic rollback on failure - Git
+integration for detecting uncommitted changes</p>
+<hr />
+<h3 id="interactive-tools">Interactive Tools</h3>
+<h4 id="ask_user"><code>ask_user</code></h4>
+<p>Ask the user a question and wait for their response.</p>
+<p><strong>Parameters:</strong> - <code>question</code> (string,
+required): Question to ask - <code>options</code> (array, optional):
+Predefined options - <code>default</code> (string, optional): Default
+answer - <code>timeout</code> (integer, optional): Timeout in
+seconds</p>
+<p><strong>Returns:</strong> UserResponse with answer</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>response<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;ask_user&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;question&quot;</span><span class="op">:</span> <span class="st">&quot;Which authentication method should we use?&quot;</span><span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;options&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;JWT&quot;</span><span class="op">,</span> <span class="st">&quot;OAuth&quot;</span><span class="op">,</span> <span class="st">&quot;Session&quot;</span><span class="op">},</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;default&quot;</span><span class="op">:</span> <span class="st">&quot;JWT&quot;</span><span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h4 id="task_tracker"><code>task_tracker</code></h4>
+<p>Track and manage tasks during execution.</p>
+<p><strong>Parameters:</strong> - <code>action</code> (string,
+required): Action (create, update, list, get, complete) -
+<code>task_id</code> (string, required for update/get/complete): Task ID
+- <code>title</code> (string, required for create): Task title -
+<code>description</code> (string, optional): Task description -
+<code>status</code> (string, optional): Status (pending, in_progress,
+completed, failed) - <code>progress</code> (integer, optional): Progress
+percentage (0-100)</p>
+<p><strong>Returns:</strong> Task object or array of tasks</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create task</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>task<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;task_tracker&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;action&quot;</span><span class="op">:</span> <span class="st">&quot;create&quot;</span><span class="op">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;title&quot;</span><span class="op">:</span> <span class="st">&quot;Run integration tests&quot;</span><span class="op">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;Execute all integration tests and verify results&quot;</span><span class="op">,</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Update progress</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;task_tracker&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;action&quot;</span><span class="op">:</span> <span class="st">&quot;update&quot;</span><span class="op">,</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;task_id&quot;</span><span class="op">:</span> task<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;status&quot;</span><span class="op">:</span> <span class="st">&quot;in_progress&quot;</span><span class="op">,</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;progress&quot;</span><span class="op">:</span> <span class="dv">50</span><span class="op">,</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Complete task</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;task_tracker&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;action&quot;</span><span class="op">:</span> <span class="st">&quot;complete&quot;</span><span class="op">,</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;task_id&quot;</span><span class="op">:</span> task<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h3 id="notebook-tools">Notebook Tools</h3>
+<h4 id="notebook_read"><code>notebook_read</code></h4>
+<p>Read and parse a Jupyter notebook (.ipynb) file.</p>
+<p><strong>Parameters:</strong> - <code>path</code> (string, required):
+Path to the notebook file - <code>include_outputs</code> (boolean,
+optional): Include cell outputs (default: true)</p>
+<p><strong>Returns:</strong> Notebook object with cells and metadata</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>notebook<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;notebook_read&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;analysis.ipynb&quot;</span><span class="op">,</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;include_outputs&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h4 id="notebook_edit"><code>notebook_edit</code></h4>
+<p>Edit a cell in a Jupyter notebook.</p>
+<p><strong>Parameters:</strong> - <code>path</code> (string, required):
+Path to the notebook file - <code>cell_index</code> (integer, optional):
+Cell index (0-based) - <code>cell_id</code> (string, optional): Cell ID
+(alternative to index) - <code>source</code> (string, required): New
+source code/markdown - <code>cell_type</code> (string, optional): Cell
+type (code, markdown) - <code>operation</code> (string, optional):
+Operation (replace, insert, delete)</p>
+<p><strong>Returns:</strong> Updated Notebook object</p>
+<p><strong>Example:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Replace cell content</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;notebook_edit&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;analysis.ipynb&quot;</span><span class="op">,</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;cell_index&quot;</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;source&quot;</span><span class="op">:</span> <span class="st">&quot;import pandas as pd</span><span class="ch">\n</span><span class="st">import numpy as np&quot;</span><span class="op">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;operation&quot;</span><span class="op">:</span> <span class="st">&quot;replace&quot;</span><span class="op">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Insert new cell</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>_<span class="op">,</span> err <span class="op">=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;notebook_edit&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;analysis.ipynb&quot;</span><span class="op">,</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;cell_index&quot;</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;source&quot;</span><span class="op">:</span> <span class="st">&quot;# Data Processing</span><span class="ch">\n</span><span class="st">This section handles data processing.&quot;</span><span class="op">,</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;cell_type&quot;</span><span class="op">:</span> <span class="st">&quot;markdown&quot;</span><span class="op">,</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;operation&quot;</span><span class="op">:</span> <span class="st">&quot;insert&quot;</span><span class="op">,</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h2 id="security-considerations">Security Considerations</h2>
+<h3 id="path-validation">Path Validation</h3>
+<p>All file operations validate paths to prevent: - Directory traversal
+attacks (<code>../../../etc/passwd</code>) - Access outside workspace
+boundaries - Symlink exploitation - Access to sensitive files
+(<code>.env</code>, credentials, keys)</p>
+<h3 id="command-execution">Command Execution</h3>
+<p>Shell commands are protected by: - Blocklist of dangerous commands
+(<code>rm -rf /</code>, <code>dd</code>, <code>mkfs</code>, etc.) -
+Resource limits (memory, CPU, processes) - Timeout enforcement -
+Environment isolation - Audit logging</p>
+<h3 id="web-access">Web Access</h3>
+<p>Web operations implement: - Domain blocklist (<code>.onion</code>,
+private IPs, etc.) - Rate limiting - Content-Type validation - Size
+limits - User-agent rotation - SSL/TLS verification</p>
+<h3 id="multi-edit-safety">Multi-Edit Safety</h3>
+<p>Transactional edits ensure: - Atomic operations (all or nothing) -
+Backup creation before changes - Checksum verification - Conflict
+detection - Automatic rollback on failure</p>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="error-handling">Error Handling</h3>
+<p>Always check errors and handle them appropriately:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_read&quot;</span><span class="op">,</span> params<span class="op">)</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check for specific error types</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> errors<span class="op">.</span>Is<span class="op">(</span>err<span class="op">,</span> filesystem<span class="op">.</span>ErrFileNotFound<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle missing file</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> errors<span class="op">.</span>Is<span class="op">(</span>err<span class="op">,</span> filesystem<span class="op">.</span>ErrPermissionDenied<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle permission error</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handle other errors</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="context-management">Context Management</h3>
+<p>Use contexts for cancellation and timeouts:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ctx<span class="op">,</span> cancel <span class="op">:=</span> context<span class="op">.</span>WithTimeout<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> <span class="dv">30</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> cancel<span class="op">()</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;web_fetch&quot;</span><span class="op">,</span> params<span class="op">)</span></span></code></pre></div>
+<h3 id="resource-cleanup">Resource Cleanup</h3>
+<p>Always close the registry when done:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> err <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>config<span class="op">)</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> registry<span class="op">.</span>Close<span class="op">()</span></span></code></pre></div>
+<h3 id="validation">Validation</h3>
+<p>Validate parameters before execution:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>tool<span class="op">,</span> err <span class="op">:=</span> registry<span class="op">.</span>Get<span class="op">(</span><span class="st">&quot;fs_read&quot;</span><span class="op">)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> tool<span class="op">.</span>Validate<span class="op">(</span>params<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Handle validation error</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>result<span class="op">,</span> err <span class="op">:=</span> tool<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> params<span class="op">)</span></span></code></pre></div>
+<h3 id="performance">Performance</h3>
+<p>For repeated operations, reuse the registry:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Bad: Creating new registry for each operation</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> file <span class="op">:=</span> <span class="kw">range</span> files <span class="op">{</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">,</span> _ <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>config<span class="op">)</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_read&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span><span class="st">&quot;path&quot;</span><span class="op">:</span> file<span class="op">})</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Good: Reuse registry</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> err <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>config<span class="op">)</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> registry<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> file <span class="op">:=</span> <span class="kw">range</span> files <span class="op">{</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_read&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span><span class="st">&quot;path&quot;</span><span class="op">:</span> file<span class="op">})</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="configuration">Configuration</h2>
+<h3 id="registry-configuration">Registry Configuration</h3>
+<p>Customize the registry behavior:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> tools<span class="op">.</span>DefaultRegistryConfig<span class="op">()</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">// FileSystem configuration</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>FileSystemConfig<span class="op">.</span>MaxFileSize <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> <span class="dv">1024</span> <span class="op">*</span> <span class="dv">1024</span> <span class="co">// 100 MB</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>FileSystemConfig<span class="op">.</span>CacheEnabled <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>FileSystemConfig<span class="op">.</span>CacheTTL <span class="op">=</span> <span class="dv">5</span> <span class="op">*</span> time<span class="op">.</span>Minute</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>FileSystemConfig<span class="op">.</span>BlockedPaths <span class="op">=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;.git&quot;</span><span class="op">,</span> <span class="st">&quot;node_modules&quot;</span><span class="op">,</span> <span class="st">&quot;.env&quot;</span><span class="op">}</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Shell configuration</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ShellConfig<span class="op">.</span>MaxConcurrent <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ShellConfig<span class="op">.</span>DefaultTimeout <span class="op">=</span> <span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Second</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ShellConfig<span class="op">.</span>MaxTimeout <span class="op">=</span> <span class="dv">10</span> <span class="op">*</span> time<span class="op">.</span>Minute</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ShellConfig<span class="op">.</span>AuditLog <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Web configuration</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>WebConfig<span class="op">.</span>CacheEnabled <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>WebConfig<span class="op">.</span>RateLimitEnabled <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>WebConfig<span class="op">.</span>MaxContentSize <span class="op">=</span> <span class="dv">10</span> <span class="op">*</span> <span class="dv">1024</span> <span class="op">*</span> <span class="dv">1024</span> <span class="co">// 10 MB</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Browser configuration</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>BrowserConfig<span class="op">.</span>MaxConcurrentBrowsers <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>BrowserConfig<span class="op">.</span>DefaultHeadless <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> err <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>config<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="extending-the-tool-system">Extending the Tool System</h2>
+<h3 id="creating-custom-tools">Creating Custom Tools</h3>
+<p>Implement the <code>Tool</code> interface:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> CustomTool <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    registry <span class="op">*</span>ToolRegistry</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t <span class="op">*</span>CustomTool<span class="op">)</span> Name<span class="op">()</span> <span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;custom_tool&quot;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t <span class="op">*</span>CustomTool<span class="op">)</span> Description<span class="op">()</span> <span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">&quot;Description of what the tool does&quot;</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t <span class="op">*</span>CustomTool<span class="op">)</span> Category<span class="op">()</span> ToolCategory <span class="op">{</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> CategoryFileSystem</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t <span class="op">*</span>CustomTool<span class="op">)</span> Schema<span class="op">()</span> ToolSchema <span class="op">{</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ToolSchema<span class="op">{</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        Type<span class="op">:</span> <span class="st">&quot;object&quot;</span><span class="op">,</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>        Properties<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;param1&quot;</span><span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;type&quot;</span><span class="op">:</span> <span class="st">&quot;string&quot;</span><span class="op">,</span></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;Parameter description&quot;</span><span class="op">,</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a>        Required<span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;param1&quot;</span><span class="op">},</span></span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>        Description<span class="op">:</span> <span class="st">&quot;Tool description&quot;</span><span class="op">,</span></span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t <span class="op">*</span>CustomTool<span class="op">)</span> Validate<span class="op">(</span>params <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> ok <span class="op">:=</span> params<span class="op">[</span><span class="st">&quot;param1&quot;</span><span class="op">];</span> <span class="op">!</span>ok <span class="op">{</span></span>
+<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;param1 is required&quot;</span><span class="op">)</span></span>
+<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>t <span class="op">*</span>CustomTool<span class="op">)</span> Execute<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> params <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="op">(</span><span class="kw">interface</span><span class="op">{},</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Implementation</span></span>
+<span id="cb29-40"><a href="#cb29-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb29-41"><a href="#cb29-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb29-42"><a href="#cb29-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-43"><a href="#cb29-43" aria-hidden="true" tabindex="-1"></a><span class="co">// Register the tool</span></span>
+<span id="cb29-44"><a href="#cb29-44" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>Register<span class="op">(&amp;</span>CustomTool<span class="op">{</span>registry<span class="op">:</span> registry<span class="op">})</span></span></code></pre></div>
+<hr />
+<h2 id="examples">Examples</h2>
+<h3 id="example-1-analyze-and-refactor-code">Example 1: Analyze and
+Refactor Code</h3>
+<div class="sourceCode" id="cb30"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>ctx <span class="op">:=</span> context<span class="op">.</span>Background<span class="op">()</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> _ <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>tools<span class="op">.</span>DefaultRegistryConfig<span class="op">())</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> registry<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Map the codebase</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>codebaseMap<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;codebase_map&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;languages&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;go&quot;</span><span class="op">},</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Find all </span><span class="al">TODO</span><span class="co"> comments</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>todos<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;grep&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;pattern&quot;</span><span class="op">:</span> <span class="st">&quot;TODO:&quot;</span><span class="op">,</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;case_sensitive&quot;</span><span class="op">:</span> <span class="ot">false</span><span class="op">,</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Start multi-file edit</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>tx<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_begin&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;description&quot;</span><span class="op">:</span> <span class="st">&quot;Address TODO comments&quot;</span><span class="op">,</span></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Add edits for each </span><span class="al">TODO</span></span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> todo <span class="op">:=</span> <span class="kw">range</span> todos<span class="op">.([]</span>ContentMatch<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Process </span><span class="al">TODO</span><span class="co"> and add edit</span></span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_add&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> tx<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;file_path&quot;</span><span class="op">:</span> todo<span class="op">.</span>Path<span class="op">,</span></span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;operation&quot;</span><span class="op">:</span> <span class="st">&quot;update&quot;</span><span class="op">,</span></span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;new_content&quot;</span><span class="op">:</span> processedContent<span class="op">,</span></span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a><span class="co">// Preview changes</span></span>
+<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a>preview<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_preview&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> tx<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a><span class="co">// Commit if no conflicts</span></span>
+<span id="cb30-38"><a href="#cb30-38" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">!</span>preview<span class="op">.</span>Summary<span class="op">.</span>HasConflicts <span class="op">{</span></span>
+<span id="cb30-39"><a href="#cb30-39" aria-hidden="true" tabindex="-1"></a>    registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;multiedit_commit&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb30-40"><a href="#cb30-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;transaction_id&quot;</span><span class="op">:</span> tx<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb30-41"><a href="#cb30-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">})</span></span>
+<span id="cb30-42"><a href="#cb30-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="example-2-web-research-and-documentation">Example 2: Web
+Research and Documentation</h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Search for documentation</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>results<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;web_search&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;query&quot;</span><span class="op">:</span> <span class="st">&quot;Go context best practices&quot;</span><span class="op">,</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;max_results&quot;</span><span class="op">:</span> <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Fetch and parse top result</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>markdown<span class="op">,</span> metadata<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;web_fetch&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;url&quot;</span><span class="op">:</span> results<span class="op">[</span><span class="dv">0</span><span class="op">].</span>URL<span class="op">,</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;parse_markdown&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Create documentation file</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_write&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;docs/context-best-practices.md&quot;</span><span class="op">,</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;content&quot;</span><span class="op">:</span> markdown<span class="op">,</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="example-3-automated-testing-with-browser">Example 3: Automated
+Testing with Browser</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Launch browser</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>browser<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;browser_launch&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;headless&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Navigate to application</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;browser_navigate&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;browser_id&quot;</span><span class="op">:</span> browser<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;url&quot;</span><span class="op">:</span> <span class="st">&quot;http://localhost:3000&quot;</span><span class="op">,</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Take screenshot</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>screenshot<span class="op">,</span> _ <span class="op">:=</span> registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;browser_screenshot&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;browser_id&quot;</span><span class="op">:</span> browser<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;annotate&quot;</span><span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a><span class="co">// Save screenshot</span></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;fs_write&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;path&quot;</span><span class="op">:</span> <span class="st">&quot;screenshots/homepage.png&quot;</span><span class="op">,</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;content&quot;</span><span class="op">:</span> screenshot<span class="op">.</span>Data<span class="op">,</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a><span class="co">// Close browser</span></span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>Execute<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;browser_close&quot;</span><span class="op">,</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;browser_id&quot;</span><span class="op">:</span> browser<span class="op">.</span>ID<span class="op">,</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<p><strong>Issue:</strong> “path is outside workspace” -
+<strong>Solution:</strong> Ensure all file paths are within the
+configured workspace root</p>
+<p><strong>Issue:</strong> “command blocked by security policy” -
+<strong>Solution:</strong> Review the command for dangerous operations
+or use allowlist mode</p>
+<p><strong>Issue:</strong> “too many concurrent browsers” -
+<strong>Solution:</strong> Close unused browsers or increase
+MaxConcurrentBrowsers in config</p>
+<p><strong>Issue:</strong> “file was modified since transaction started”
+- <strong>Solution:</strong> Resolve conflicts manually or retry the
+transaction</p>
+<h3 id="debug-mode">Debug Mode</h3>
+<p>Enable detailed logging:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> tools<span class="op">.</span>DefaultRegistryConfig<span class="op">()</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>FileSystemConfig<span class="op">.</span>CacheEnabled <span class="op">=</span> <span class="ot">false</span> <span class="co">// Disable cache for debugging</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ShellConfig<span class="op">.</span>AuditLog <span class="op">=</span> <span class="ot">true</span> <span class="co">// Enable audit log</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>registry<span class="op">,</span> _ <span class="op">:=</span> tools<span class="op">.</span>NewToolRegistry<span class="op">(</span>config<span class="op">)</span></span></code></pre></div>
+<h3 id="performance-profiling">Performance Profiling</h3>
+<div class="sourceCode" id="cb34"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;net/http/pprof&quot;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    http<span class="op">.</span>ListenAndServe<span class="op">(</span><span class="st">&quot;localhost:6060&quot;</span><span class="op">,</span> <span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Access profiling at http://localhost:6060/debug/pprof/</span></span></code></pre></div>
+<hr />
+<h2 id="api-reference">API Reference</h2>
+<p>For detailed API documentation, see: - <a href="https://pkg.go.dev/dev.helix.code/internal/tools">GoDoc</a> - <a href="./tools-openapi.json">OpenAPI Schema</a> (generated via
+<code>registry.ExportSchemas()</code>)</p>
+<hr />
+<h2 id="license">License</h2>
+<p>Copyright (c) 2025 HelixCode Project</p>
+</body>
+</html>

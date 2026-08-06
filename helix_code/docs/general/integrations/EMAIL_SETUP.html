@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>EMAIL_SETUP</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">EMAIL_SETUP</h1>
+</header>
+<h1 id="email-smtp-integration-setup-guide">Email (SMTP) Integration
+Setup Guide</h1>
+<p>This guide will walk you through setting up email notifications for
+HelixCode using SMTP.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>SMTP server access (Gmail, Office 365, or custom server)</li>
+<li>Email account credentials or app password</li>
+</ul>
+<h2 id="supported-email-providers">Supported Email Providers</h2>
+<ul>
+<li><strong>Gmail</strong> (recommended for personal use)</li>
+<li><strong>Office 365 / Outlook</strong></li>
+<li><strong>Custom SMTP servers</strong></li>
+<li><strong>SendGrid, Mailgun</strong> (transactional email
+services)</li>
+</ul>
+<h2 id="setup-for-gmail">Setup for Gmail</h2>
+<h3 id="step-1-enable-2-factor-authentication">Step 1: Enable 2-Factor
+Authentication</h3>
+<ol type="1">
+<li>Go to https://myaccount.google.com/security</li>
+<li>Enable <strong>“2-Step Verification”</strong></li>
+</ol>
+<h3 id="step-2-generate-app-password">Step 2: Generate App Password</h3>
+<ol type="1">
+<li>Go to https://myaccount.google.com/apppasswords</li>
+<li>Select <strong>“Mail”</strong> as the app</li>
+<li>Select your device or enter custom name: <code>HelixCode</code></li>
+<li>Click <strong>“Generate”</strong></li>
+<li><strong>Copy the 16-character password</strong> (e.g.,
+<code>abcd efgh ijkl mnop</code>)</li>
+</ol>
+<h3 id="step-3-configure-helixcode">Step 3: Configure HelixCode</h3>
+<p>Add to your <code>.env</code> file:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.gmail.com</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>your-email@gmail.com</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>abcdefghijklmnop  <span class="co"># App password (no spaces)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_FROM</span><span class="op">=</span>your-email@gmail.com</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_RECIPIENTS</span><span class="op">=</span>admin@example.com,team@example.com</span></code></pre></div>
+<h2 id="setup-for-office-365-outlook">Setup for Office 365 /
+Outlook</h2>
+<h3 id="step-1-get-credentials">Step 1: Get Credentials</h3>
+<ul>
+<li>Use your Office 365 email and password</li>
+<li>Ensure SMTP is enabled for your account (check with admin)</li>
+</ul>
+<h3 id="step-2-configure-helixcode">Step 2: Configure HelixCode</h3>
+<p>Add to your <code>.env</code> file:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.office365.com</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>your-email@company.com</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-password</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_FROM</span><span class="op">=</span>your-email@company.com</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_RECIPIENTS</span><span class="op">=</span>admin@company.com</span></code></pre></div>
+<h2 id="setup-for-custom-smtp-server">Setup for Custom SMTP Server</h2>
+<h3 id="step-1-get-smtp-details">Step 1: Get SMTP Details</h3>
+<p>Contact your email administrator for: - SMTP server address - SMTP
+port (usually 587 for TLS, 465 for SSL, 25 for unencrypted) -
+Authentication credentials</p>
+<h3 id="step-2-configure-helixcode-1">Step 2: Configure HelixCode</h3>
+<p>Add to your <code>.env</code> file:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.yourcompany.com</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>notifications@yourcompany.com</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-password</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_FROM</span><span class="op">=</span>HelixCode <span class="op">&lt;</span>notifications@yourcompany.com<span class="op">&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_RECIPIENTS</span><span class="op">=</span>team@yourcompany.com</span></code></pre></div>
+<h2 id="configure-config.yaml">Configure config.yaml</h2>
+<p>Edit <code>config/config.yaml</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp</span><span class="kw">:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">server</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${HELIX_EMAIL_SMTP_SERVER}&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">587</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">username</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${HELIX_EMAIL_USERNAME}&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">password</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;${HELIX_EMAIL_PASSWORD}&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">from</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixCode &lt;${HELIX_EMAIL_FROM}&gt;&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">tls</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">recipients</span><span class="kw">:</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">]</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">critical</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;oncall@example.com&quot;</span><span class="kw">]</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span></code></pre></div>
+<h2 id="test-integration">Test Integration</h2>
+<h3 id="using-helixcode-cli-if-available">Using HelixCode CLI (if
+available)</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> notify test <span class="at">--channel</span> email <span class="at">--message</span> <span class="st">&quot;Test email notification&quot;</span></span></code></pre></div>
+<h3 id="using-api">Using API</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:8080/api/v1/notifications/test <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer YOUR_TOKEN&quot;</span> <span class="dt">\</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-d</span> <span class="st">&#39;{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;channel&quot;: &quot;email&quot;,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;title&quot;: &quot;Test Email Notification&quot;,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;message&quot;: &quot;Testing email integration from HelixCode&quot;,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;type&quot;: &quot;info&quot;,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;metadata&quot;: {</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="st">      &quot;recipients&quot;: [&quot;admin@example.com&quot;]</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="st">  }&#39;</span></span></code></pre></div>
+<h3 id="using-go-code">Using Go Code</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/internal/notification&quot;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Create notification engine</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>engine <span class="op">:=</span> notification<span class="op">.</span>NewNotificationEngine<span class="op">()</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Register email channel</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>emailChannel <span class="op">:=</span> notification<span class="op">.</span>NewEmailChannel<span class="op">(</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;smtp.gmail.com&quot;</span><span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dv">587</span><span class="op">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;your-email@gmail.com&quot;</span><span class="op">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;app-password&quot;</span><span class="op">,</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;HelixCode &lt;your-email@gmail.com&gt;&quot;</span><span class="op">,</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>engine<span class="op">.</span>RegisterChannel<span class="op">(</span>emailChannel<span class="op">)</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Send test notification</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>testNotif <span class="op">:=</span> <span class="op">&amp;</span>notification<span class="op">.</span>Notification<span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    Title<span class="op">:</span>   <span class="st">&quot;Test Email&quot;</span><span class="op">,</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    Message<span class="op">:</span> <span class="st">&quot;Testing email integration&quot;</span><span class="op">,</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    Type<span class="op">:</span>    notification<span class="op">.</span>NotificationTypeInfo<span class="op">,</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;recipients&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;admin@example.com&quot;</span><span class="op">},</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> engine<span class="op">.</span>SendDirect<span class="op">(</span>context<span class="op">.</span>Background<span class="op">(),</span> testNotif<span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;email&quot;</span><span class="op">})</span></span></code></pre></div>
+<h2 id="recipient-management">Recipient Management</h2>
+<h3 id="single-recipient">Single Recipient</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;recipient&quot;</span><span class="op">:</span> <span class="st">&quot;admin@example.com&quot;</span><span class="op">,</span>  <span class="co">// Note: singular &quot;recipient&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="multiple-recipients">Multiple Recipients</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;recipients&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span>  <span class="co">// Note: plural &quot;recipients&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;admin@example.com&quot;</span><span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;team@example.com&quot;</span><span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;oncall@example.com&quot;</span><span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="using-default-recipients-from-config">Using Default Recipients
+from Config</h3>
+<p>Configure in <code>config.yaml</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">recipients</span><span class="kw">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;team@example.com&quot;</span><span class="kw">]</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">critical</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin@example.com&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;oncall@example.com&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;cto@example.com&quot;</span><span class="kw">]</span></span></code></pre></div>
+<p>Then use rules to select recipient lists:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Critical errors to oncall&quot;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==error&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;email&quot;</span><span class="kw">]</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> urgent</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">template</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;critical_alert&quot;</span></span></code></pre></div>
+<h2 id="common-smtp-ports">Common SMTP Ports</h2>
+<table>
+<thead>
+<tr>
+<th>Port</th>
+<th>Protocol</th>
+<th>Description</th>
+<th>Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>25</td>
+<td>SMTP (unencrypted)</td>
+<td>Legacy, often blocked by ISPs</td>
+<td>❌ No</td>
+</tr>
+<tr>
+<td>465</td>
+<td>SMTPS (SSL)</td>
+<td>Deprecated but still works</td>
+<td>⚠️ Use if required</td>
+</tr>
+<tr>
+<td>587</td>
+<td>SMTP + STARTTLS</td>
+<td>Modern, secure</td>
+<td>✅ <strong>Recommended</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="error-authentication-failed">Error: “Authentication failed”</h3>
+<ul>
+<li><strong>Gmail:</strong> Ensure you’re using an app password, not
+your account password</li>
+<li><strong>Office 365:</strong> Verify your credentials and that SMTP
+is enabled</li>
+<li><strong>Custom:</strong> Check username and password with your
+admin</li>
+</ul>
+<h3 id="error-connection-refused">Error: “Connection refused”</h3>
+<ul>
+<li><strong>Cause:</strong> Incorrect SMTP server or port</li>
+<li><strong>Solution:</strong> Verify SMTP server address and port
+number</li>
+<li><strong>Gmail:</strong> Use <code>smtp.gmail.com:587</code></li>
+<li><strong>Office 365:</strong> Use
+<code>smtp.office365.com:587</code></li>
+</ul>
+<h3 id="error-tls-handshake-failed">Error: “TLS handshake failed”</h3>
+<ul>
+<li><strong>Cause:</strong> TLS/SSL configuration issue</li>
+<li><strong>Solution:</strong>
+<ul>
+<li>Try port 465 with <code>tls: false</code> (uses SSL instead)</li>
+<li>Verify server supports STARTTLS on port 587</li>
+</ul></li>
+</ul>
+<h3 id="error-recipient-not-specified">Error: “Recipient not
+specified”</h3>
+<ul>
+<li><p><strong>Cause:</strong> Missing recipients in notification
+metadata</p></li>
+<li><p><strong>Solution:</strong> Always include recipients in
+metadata:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;recipients&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;admin@example.com&quot;</span><span class="op">},</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></li>
+</ul>
+<h3 id="emails-going-to-spam">Emails going to spam</h3>
+<ul>
+<li><strong>Cause:</strong> Missing SPF, DKIM, DMARC records</li>
+<li><strong>Solution:</strong>
+<ul>
+<li>For Gmail/Office365: Emails should not go to spam</li>
+<li>For custom domains: Configure SPF, DKIM, DMARC DNS records</li>
+<li>Add “HelixCode” to subject to help filtering</li>
+</ul></li>
+</ul>
+<h3 id="rate-limiting">Rate limiting</h3>
+<ul>
+<li><strong>Gmail:</strong> 500 emails/day (free), 2000/day
+(Workspace)</li>
+<li><strong>Office 365:</strong> Varies by plan (typically
+10,000/day)</li>
+<li><strong>Solution:</strong> Use dedicated transactional email service
+for high volume</li>
+</ul>
+<h2 id="advanced-configuration">Advanced Configuration</h2>
+<h3 id="html-email-templates-future-feature">HTML Email Templates
+(Future Feature)</h3>
+<p>Future versions will support HTML templates:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">templates</span><span class="kw">:</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">html</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/etc/helixcode/email-templates&quot;</span></span></code></pre></div>
+<h3 id="attachments-future-feature">Attachments (Future Feature)</h3>
+<p>Future versions will support file attachments:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;recipients&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;admin@example.com&quot;</span><span class="op">},</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;attachments&quot;</span><span class="op">:</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/tmp/logs/error.log&quot;</span><span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;/tmp/reports/summary.pdf&quot;</span><span class="op">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="email-priority">Email Priority</h3>
+<p>Set email priority/importance:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">priority_header</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">  # Adds X-Priority header</span></span></code></pre></div>
+<h2 id="security-best-practices">Security Best Practices</h2>
+<ol type="1">
+<li><strong>Never commit passwords to version control</strong>
+<ul>
+<li>Use environment variables</li>
+<li>Add <code>.env</code> to <code>.gitignore</code></li>
+</ul></li>
+<li><strong>Use app passwords, not account passwords</strong>
+<ul>
+<li>Gmail: Use app passwords</li>
+<li>Office 365: Use app passwords where supported</li>
+</ul></li>
+<li><strong>Enable TLS/SSL</strong>
+<ul>
+<li>Always use encrypted connections</li>
+<li>Prefer port 587 with STARTTLS</li>
+</ul></li>
+<li><strong>Rotate credentials regularly</strong>
+<ul>
+<li>Change passwords periodically</li>
+<li>Regenerate app passwords</li>
+</ul></li>
+<li><strong>Use dedicated email accounts</strong>
+<ul>
+<li>Don’t use personal email for system notifications</li>
+<li>Create dedicated accounts like
+<code>notifications@company.com</code></li>
+</ul></li>
+<li><strong>Implement SPF/DKIM/DMARC</strong> (for custom domains)
+<ul>
+<li>Prevents email spoofing</li>
+<li>Improves deliverability</li>
+<li>Reduces spam classification</li>
+</ul></li>
+</ol>
+<h2 id="using-transactional-email-services">Using Transactional Email
+Services</h2>
+<p>For high-volume or production use, consider dedicated services:</p>
+<h3 id="sendgrid">SendGrid</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.sendgrid.net</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>apikey</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-sendgrid-api-key</span></code></pre></div>
+<h3 id="mailgun">Mailgun</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.mailgun.org</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>postmaster@your-domain.mailgun.org</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-mailgun-password</span></code></pre></div>
+<h3 id="amazon-ses">Amazon SES</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_SERVER</span><span class="op">=</span>email-smtp.us-east-1.amazonaws.com</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_USERNAME</span><span class="op">=</span>your-ses-smtp-username</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_EMAIL_PASSWORD</span><span class="op">=</span>your-ses-smtp-password</span></code></pre></div>
+<h2 id="resources">Resources</h2>
+<ul>
+<li><a href="https://support.google.com/mail/answer/7126229">Gmail SMTP
+Settings</a></li>
+<li><a href="https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-8361e398-8af4-4e97-b147-6c6c4ac95353">Office
+365 SMTP Settings</a></li>
+<li><a href="https://tools.ietf.org/html/rfc5321">SMTP RFC
+Documentation</a></li>
+<li><a href="../API.md">HelixCode Notification API
+Documentation</a></li>
+</ul>
+<h2 id="support">Support</h2>
+<p>If you encounter issues: 1. Check the <a href="#troubleshooting">Troubleshooting</a> section 2. Verify SMTP
+settings with your email provider 3. Check HelixCode logs for detailed
+error messages 4. Test SMTP connection with tools like
+<code>telnet</code> or <code>swaks</code> 5. Open an issue on GitHub</p>
+</body>
+</html>

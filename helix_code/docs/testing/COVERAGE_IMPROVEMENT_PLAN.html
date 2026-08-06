@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>COVERAGE_IMPROVEMENT_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">COVERAGE_IMPROVEMENT_PLAN</h1>
+</header>
+<h1 id="test-coverage-improvement-plan">Test Coverage Improvement
+Plan</h1>
+<p><strong>Current Coverage</strong>: 77.0% <strong>Target
+Coverage</strong>: 80%+ <strong>Date Created</strong>: 2025-11-07</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This document outlines the plan to improve test coverage from the
+current 77% to the target of 80%+ for the HelixCode project. The plan
+focuses on adding tests for low-coverage areas that don’t require
+external dependencies.</p>
+<hr />
+<h2 id="low-coverage-areas-identified">Low-Coverage Areas
+Identified</h2>
+<h3 id="priority-1-config-package-75.7-coverage">Priority 1: Config
+Package (75.7% coverage)</h3>
+<p><strong>File</strong>: <code>internal/config/config.go</code></p>
+<p><strong>Low-Coverage Functions</strong>: 1. <code>Load</code> - 65.6%
+coverage 2. <code>findConfigFile</code> - 33.3% coverage 3.
+<code>validateConfig</code> - 66.7% coverage 4.
+<code>CreateDefaultConfig</code> - 71.4% coverage</p>
+<p><strong>Missing Test Cases</strong>:</p>
+<h4 id="load-function">Load() Function</h4>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Test with valid config
+file (DONE)</label></li>
+<li><label><input type="checkbox"></input>Test with config file not found
+(uses defaults)</label></li>
+<li><label><input type="checkbox"></input>Test with malformed config file
+(YAML parsing error)</label></li>
+<li><label><input type="checkbox"></input>Test with environment variable
+overrides</label></li>
+<li><label><input type="checkbox"></input>Test all environment variable
+bindings (database, redis, auth)</label></li>
+<li><label><input type="checkbox"></input>Test with partial config file (some
+values from file, some from defaults)</label></li>
+</ul>
+<h4 id="findconfigfile-function">findConfigFile() Function</h4>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Test with HELIX_CONFIG
+env var set (DONE)</label></li>
+<li><label><input type="checkbox"></input>Test with HELIX_CONFIG env var
+pointing to non-existent file</label></li>
+<li><label><input type="checkbox"></input>Test with empty HELIX_CONFIG env
+var</label></li>
+<li><label><input type="checkbox"></input>Test searching common locations when
+env var not set</label></li>
+<li><label><input type="checkbox"></input>Test with $HOME expansion in
+path</label></li>
+</ul>
+<h4 id="validateconfig-function">validateConfig() Function</h4>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Test valid configuration
+(DONE)</label></li>
+<li><label><input type="checkbox" checked></input>Test invalid server port
+(DONE)</label></li>
+<li><label><input type="checkbox" checked></input>Test missing database
+host (DONE)</label></li>
+<li><label><input type="checkbox" checked></input>Test default JWT secret
+(DONE)</label></li>
+<li><label><input type="checkbox"></input>Test missing database
+name</label></li>
+<li><label><input type="checkbox"></input>Test invalid server port (0 and
+negative)</label></li>
+<li><label><input type="checkbox"></input>Test Redis disabled (should not
+validate redis fields)</label></li>
+<li><label><input type="checkbox"></input>Test Redis enabled with missing
+host</label></li>
+<li><label><input type="checkbox"></input>Test Redis invalid port (0,
+negative, &gt; 65535)</label></li>
+<li><label><input type="checkbox"></input>Test empty JWT secret</label></li>
+<li><label><input type="checkbox"></input>Test invalid health check interval
+(0, negative)</label></li>
+<li><label><input type="checkbox"></input>Test invalid max concurrent tasks
+(0, negative)</label></li>
+<li><label><input type="checkbox"></input>Test invalid max retries
+(negative)</label></li>
+<li><label><input type="checkbox"></input>Test invalid max tokens (0,
+negative)</label></li>
+<li><label><input type="checkbox"></input>Test invalid temperature (&lt;0,
+&gt;2)</label></li>
+</ul>
+<h4 id="createdefaultconfig-function">CreateDefaultConfig()
+Function</h4>
+<ul class="task-list">
+<li><label><input type="checkbox" checked></input>Test successful creation
+(DONE)</label></li>
+<li><label><input type="checkbox" checked></input>Test file content
+validation (DONE)</label></li>
+<li><label><input type="checkbox"></input>Test directory creation when parent
+doesn’t exist</label></li>
+<li><label><input type="checkbox"></input>Test error when directory creation
+fails (permission denied)</label></li>
+<li><label><input type="checkbox"></input>Test error when file write
+fails</label></li>
+</ul>
+<p><strong>Estimated Coverage Gain</strong>: +10-15%</p>
+<p><strong>Implementation Effort</strong>: 2-3 hours</p>
+<hr />
+<h3 id="priority-2-database-package-42.9-coverage">Priority 2: Database
+Package (42.9% coverage)</h3>
+<p><strong>File</strong>: <code>internal/database/database.go</code></p>
+<p><strong>Low-Coverage Functions</strong>: 1.
+<code>InitializeSchema</code> - 0.0% coverage 2. <code>Close</code> -
+33.3% coverage 3. <code>HealthCheck</code> - 40.0% coverage 4.
+<code>GetDB</code> - 66.7% coverage 5. <code>New</code> - 76.5%
+coverage</p>
+<p><strong>Challenge</strong>: Database tests require a real PostgreSQL
+instance.</p>
+<p><strong>Recommended Approach</strong>: - Use integration tests with
+Docker Compose - Create test database container in Docker - Run schema
+initialization tests - Test connection pooling and health checks - Test
+error scenarios (connection failures, timeout)</p>
+<p><strong>Test Setup Required</strong>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># docker-compose.test.yml</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;3.8&#39;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">postgres-test</span><span class="kw">:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16-alpine</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> helix_test</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> helix_test</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> test_password</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;5433:5432&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">healthcheck</span><span class="kw">:</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">test</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;CMD&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pg_isready&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;-U&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;helix_test&quot;</span><span class="kw">]</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">interval</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> 3s</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span></code></pre></div>
+<p><strong>Missing Test Cases</strong>: - [ ] Test InitializeSchema with
+fresh database - [ ] Test InitializeSchema when schema already exists -
+[ ] Test InitializeSchema with database connection error - [ ] Test
+Close with active connection pool - [ ] Test HealthCheck with healthy
+database - [ ] Test HealthCheck with database down - [ ] Test
+HealthCheck with slow database (timeout) - [ ] Test GetDB with active
+pool - [ ] Test New with various connection configurations - [ ] Test
+connection pool settings (MaxConns, MinConns, etc.)</p>
+<p><strong>Estimated Coverage Gain</strong>: +20-25%</p>
+<p><strong>Implementation Effort</strong>: 4-6 hours (includes Docker
+setup)</p>
+<hr />
+<h3 id="priority-3-llm-compression-package-low-60-70-in-some-files">Priority
+3: LLM Compression Package (Low 60-70% in some files)</h3>
+<p><strong>Files</strong>:
+<code>internal/llm/compression/*.go</code></p>
+<p><strong>Low-Coverage Areas</strong>: -
+<code>strategies.go:539: Estimate - 71.4%</code> -
+<code>strategies.go:482: Execute - 87.5%</code></p>
+<p><strong>Missing Test Cases</strong>: - [ ] Test compression
+estimation edge cases - [ ] Test compression execution with empty
+messages - [ ] Test compression with very large message lists - [ ] Test
+compression ratio calculation - [ ] Test token counting with various
+message types</p>
+<p><strong>Estimated Coverage Gain</strong>: +3-5%</p>
+<p><strong>Implementation Effort</strong>: 1-2 hours</p>
+<hr />
+<h3 id="priority-4-editor-package-edge-cases">Priority 4: Editor Package
+Edge Cases</h3>
+<p><strong>Files</strong>: <code>internal/tools/editor/*.go</code></p>
+<p>Some edge cases could be added for: - [ ] Very large file editing
+(&gt;1MB) - [ ] Binary file handling - [ ] Concurrent edit scenarios - [
+] Rollback on partial failure - [ ] Unicode and special character
+handling</p>
+<p><strong>Estimated Coverage Gain</strong>: +2-3%</p>
+<p><strong>Implementation Effort</strong>: 2-3 hours</p>
+<hr />
+<h2 id="implementation-timeline">Implementation Timeline</h2>
+<h3 id="phase-1-week-1">Phase 1 (Week 1)</h3>
+<p><strong>Goal</strong>: Reach 80%+ coverage</p>
+<ol type="1">
+<li><strong>Day 1-2</strong>: Config Package Tests
+<ul>
+<li>Add missing Load() test cases</li>
+<li>Add findConfigFile() test cases</li>
+<li>Add validateConfig() edge cases</li>
+<li>Add CreateDefaultConfig() error cases</li>
+</ul></li>
+<li><strong>Day 3</strong>: LLM Compression Tests
+<ul>
+<li>Add compression estimation tests</li>
+<li>Add execution edge cases</li>
+</ul></li>
+<li><strong>Day 4-5</strong>: Database Integration Tests
+<ul>
+<li>Set up Docker Compose for test database</li>
+<li>Write InitializeSchema tests</li>
+<li>Write connection pool tests</li>
+<li>Write health check tests</li>
+</ul></li>
+</ol>
+<h3 id="phase-2-week-2">Phase 2 (Week 2)</h3>
+<p><strong>Goal</strong>: Reach 85%+ coverage</p>
+<ol type="1">
+<li><strong>Day 1-2</strong>: Editor Package Edge Cases
+<ul>
+<li>Large file tests</li>
+<li>Concurrent edit tests</li>
+<li>Error handling tests</li>
+</ul></li>
+<li><strong>Day 3-4</strong>: Worker Package Tests
+<ul>
+<li>SSH connection tests (with mock SSH server)</li>
+<li>Health monitoring tests</li>
+<li>Task assignment tests</li>
+</ul></li>
+<li><strong>Day 5</strong>: Review and Fill Gaps
+<ul>
+<li>Run coverage analysis</li>
+<li>Identify remaining low-coverage areas</li>
+<li>Add tests for critical uncovered paths</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="testing-best-practices">Testing Best Practices</h2>
+<h3 id="unit-tests-no-external-dependencies">1. Unit Tests (No External
+Dependencies)</h3>
+<ul>
+<li>Use table-driven tests for multiple scenarios</li>
+<li>Mock external dependencies</li>
+<li>Test both success and error paths</li>
+<li>Test edge cases and boundary conditions</li>
+</ul>
+<h3 id="integration-tests-with-docker">2. Integration Tests (With
+Docker)</h3>
+<ul>
+<li>Use Docker Compose for external services</li>
+<li>Clean up test data after each test</li>
+<li>Use random ports to avoid conflicts</li>
+<li>Include health checks for dependencies</li>
+</ul>
+<h3 id="test-organization">3. Test Organization</h3>
+<pre><code>internal/
+  package/
+    package.go
+    package_test.go           # Unit tests
+    package_integration_test.go  # Integration tests (build tag)</code></pre>
+<h3 id="build-tags-for-integration-tests">4. Build Tags for Integration
+Tests</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">//go:build integration</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// +build integration</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> package_test</span></code></pre></div>
+<p>Run integration tests separately:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-tags</span><span class="op">=</span>integration ./...</span></code></pre></div>
+<hr />
+<h2 id="coverage-targets-by-package">Coverage Targets by Package</h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Current</th>
+<th>Target</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/config</td>
+<td>75.7%</td>
+<td>90%+</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/database</td>
+<td>42.9%</td>
+<td>80%+</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/llm</td>
+<td>77.0%</td>
+<td>85%+</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>internal/agent</td>
+<td>95.0%</td>
+<td>95%+</td>
+<td>Low (already good)</td>
+</tr>
+<tr>
+<td>internal/editor</td>
+<td>88.0%</td>
+<td>92%+</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>internal/worker</td>
+<td>72.0%</td>
+<td>85%+</td>
+<td>High</td>
+</tr>
+<tr>
+<td>internal/tools</td>
+<td>82.0%</td>
+<td>90%+</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td><strong>Overall</strong></td>
+<td><strong>77.0%</strong></td>
+<td><strong>80%+</strong></td>
+<td><strong>High</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="automated-coverage-reporting">Automated Coverage Reporting</h2>
+<h3 id="cicd-integration">CI/CD Integration</h3>
+<p>Add to <code>.github/workflows/tests.yml</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Tests</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> main</span><span class="kw">,</span><span class="at"> develop </span><span class="kw">]</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pull_request</span><span class="kw">:</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at"> main</span><span class="kw">,</span><span class="at"> develop </span><span class="kw">]</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">unit-tests</span><span class="kw">:</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Set up Go</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-go@v4</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">go-version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;1.24&#39;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run unit tests with coverage</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>          go tool cover -func=coverage.out</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Check coverage threshold</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>          COVERAGE=$(go tool cover -func=coverage.out | grep total: | awk &#39;{print $3}&#39; | sed &#39;s/%//&#39;)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>          echo &quot;Coverage: $COVERAGE%&quot;</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>          if (( $(echo &quot;$COVERAGE &lt; 80&quot; | bc -l) )); then</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>            echo &quot;Coverage is below 80%&quot;</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>            exit 1</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>          fi</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Upload coverage to Codecov</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> codecov/codecov-action@v3</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">files</span><span class="kw">:</span><span class="at"> ./coverage.out</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">flags</span><span class="kw">:</span><span class="at"> unittests</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">name</span><span class="kw">:</span><span class="at"> codecov-umbrella</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">integration-tests</span><span class="kw">:</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">postgres</span><span class="kw">:</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:16-alpine</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> helix_test</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> helix_test</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> test_password</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="fu">        options</span><span class="kw">: </span><span class="ch">&gt;-</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>          --health-cmd pg_isready</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>          --health-interval 10s</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>          --health-timeout 5s</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>          --health-retries 5</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span><span class="at"> 5433:5432</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Set up Go</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/setup-go@v4</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">with</span><span class="kw">:</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">go-version</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;1.24&#39;</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run integration tests</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">env</span><span class="kw">:</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">HELIX_DATABASE_HOST</span><span class="kw">:</span><span class="at"> localhost</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">HELIX_DATABASE_PORT</span><span class="kw">:</span><span class="at"> </span><span class="dv">5433</span></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">HELIX_DATABASE_USER</span><span class="kw">:</span><span class="at"> helix_test</span></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">HELIX_DATABASE_PASSWORD</span><span class="kw">:</span><span class="at"> test_password</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">HELIX_DATABASE_NAME</span><span class="kw">:</span><span class="at"> helix_test</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a><span class="fu">        run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>          go test -v -tags=integration ./...</span></code></pre></div>
+<h3 id="coverage-badge">Coverage Badge</h3>
+<p>Add to README.md:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="al">![codecov](https://codecov.io/gh/helixcode/helixcode/branch/main/graph/badge.svg)</span><span class="co">](https://codecov.io/gh/helixcode/helixcode)</span></span></code></pre></div>
+<hr />
+<h2 id="success-metrics">Success Metrics</h2>
+<h3 id="coverage-goals">Coverage Goals</h3>
+<ul>
+<li><strong>Minimum</strong>: 80% overall coverage</li>
+<li><strong>Target</strong>: 85% overall coverage</li>
+<li><strong>Stretch</strong>: 90% overall coverage</li>
+</ul>
+<h3 id="quality-metrics">Quality Metrics</h3>
+<ul>
+<li>All critical paths covered (auth, database, task management)</li>
+<li>All error handling paths tested</li>
+<li>All edge cases documented and tested</li>
+<li>Integration tests for external dependencies</li>
+<li>Benchmark tests for performance-critical code</li>
+</ul>
+<h3 id="cicd-requirements">CI/CD Requirements</h3>
+<ul>
+<li>✅ All tests pass before merge</li>
+<li>✅ Coverage doesn’t decrease with new code</li>
+<li>✅ Integration tests run on PR</li>
+<li>✅ Coverage report generated and uploaded</li>
+</ul>
+<hr />
+<h2 id="resources">Resources</h2>
+<h3 id="tools">Tools</h3>
+<ul>
+<li><code>go test -cover</code> - Built-in coverage tool</li>
+<li><code>go tool cover -html</code> - Visual coverage report</li>
+<li><code>codecov.io</code> - Coverage tracking and reporting</li>
+<li><code>golangci-lint</code> - Static analysis</li>
+<li><code>testify</code> - Testing assertions and mocks</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><a href="https://golang.org/pkg/testing/">Go Testing
+Documentation</a></li>
+<li><a href="https://github.com/golang/go/wiki/TableDrivenTests">Table-Driven
+Tests</a></li>
+<li><a href="https://github.com/stretchr/testify">Testify
+Documentation</a></li>
+<li><a href="https://docs.docker.com/compose/">Docker Compose for
+Testing</a></li>
+</ul>
+<hr />
+<h2 id="next-steps">Next Steps</h2>
+<ol type="1">
+<li>✅ <strong>Complete</strong> - Create coverage improvement plan
+(this document)</li>
+<li>📋 <strong>TODO</strong> - Add missing config package tests
+(Priority 1)</li>
+<li>📋 <strong>TODO</strong> - Set up Docker Compose for database
+integration tests</li>
+<li>📋 <strong>TODO</strong> - Add LLM compression edge case tests</li>
+<li>📋 <strong>TODO</strong> - Add database integration tests</li>
+<li>📋 <strong>TODO</strong> - Set up CI/CD with coverage checks</li>
+<li>📋 <strong>TODO</strong> - Add coverage badges to README</li>
+</ol>
+<hr />
+<p><strong>Plan Created</strong>: 2025-11-07 <strong>Last
+Updated</strong>: 2025-11-07 <strong>Status</strong>: Active
+<strong>Owner</strong>: Development Team</p>
+</body>
+</html>

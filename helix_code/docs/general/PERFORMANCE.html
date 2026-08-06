@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>PERFORMANCE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">PERFORMANCE</h1>
+</header>
+<h1 id="helixcode-notification-performance-guide">HelixCode Notification
+Performance Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>This document provides comprehensive guidance on performance testing,
+benchmarking, and optimization of the HelixCode notification system.</p>
+<hr />
+<h2 id="performance-testing-categories">Performance Testing
+Categories</h2>
+<h3 id="benchmarks---micro-level-performance">1.
+<strong>Benchmarks</strong> - Micro-level Performance</h3>
+<p>Benchmarks measure the performance of individual components and
+operations.</p>
+<p><strong>Location:</strong>
+<code>internal/notification/benchmark_test.go</code>,
+<code>internal/event/benchmark_test.go</code></p>
+<p><strong>Purpose:</strong> - Measure individual function performance -
+Track performance regressions - Compare different implementations -
+Identify optimization opportunities</p>
+<h3 id="load-tests---realistic-production-scenarios">2. <strong>Load
+Tests</strong> - Realistic Production Scenarios</h3>
+<p>Load tests simulate realistic production workloads.</p>
+<p><strong>Location:</strong>
+<code>test/load/notification_load_test.go</code></p>
+<p><strong>Purpose:</strong> - Validate system behavior under expected
+load - Measure throughput and latency - Test concurrent operations -
+Verify resource efficiency</p>
+<h3 id="stress-tests---system-limits">3. <strong>Stress Tests</strong> -
+System Limits</h3>
+<p>Stress tests push the system beyond normal operating conditions.</p>
+<p><strong>Purpose:</strong> - Find breaking points - Test error
+handling under extreme load - Validate recovery mechanisms - Identify
+resource leaks</p>
+<hr />
+<h2 id="running-performance-tests">Running Performance Tests</h2>
+<h3 id="benchmarks">Benchmarks</h3>
+<p><strong>Run all benchmarks:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>. <span class="at">-benchmem</span> <span class="at">-run</span><span class="op">=</span>^$</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/event <span class="at">-bench</span><span class="op">=</span>. <span class="at">-benchmem</span> <span class="at">-run</span><span class="op">=</span>^$</span></code></pre></div>
+<p><strong>Run specific benchmark:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkEngine_SendDirect <span class="at">-benchmem</span> <span class="at">-run</span><span class="op">=</span>^$</span></code></pre></div>
+<p><strong>Run with custom iterations:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkQueue <span class="at">-benchtime</span><span class="op">=</span>10s <span class="at">-run</span><span class="op">=</span>^$</span></code></pre></div>
+<p><strong>Save benchmark results:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>. <span class="at">-benchmem</span> <span class="at">-run</span><span class="op">=</span>^$ <span class="op">&gt;</span> bench_old.txt</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Make changes</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>. <span class="at">-benchmem</span> <span class="at">-run</span><span class="op">=</span>^$ <span class="op">&gt;</span> bench_new.txt</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">benchcmp</span> bench_old.txt bench_new.txt</span></code></pre></div>
+<p><strong>Run with CPU profiling:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkEngine <span class="at">-cpuprofile</span><span class="op">=</span>cpu.prof <span class="at">-run</span><span class="op">=</span>^$</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof cpu.prof</span></code></pre></div>
+<p><strong>Run with memory profiling:</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkEngine <span class="at">-memprofile</span><span class="op">=</span>mem.prof <span class="at">-run</span><span class="op">=</span>^$</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof mem.prof</span></code></pre></div>
+<h3 id="load-tests">Load Tests</h3>
+<p><strong>Run all load tests:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./test/load <span class="at">-v</span></span></code></pre></div>
+<p><strong>Run specific load test:</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./test/load <span class="at">-v</span> <span class="at">-run</span><span class="op">=</span>TestLoad_1000NotificationsPerSecond</span></code></pre></div>
+<p><strong>Skip load tests (short mode):</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./test/load <span class="at">-v</span> <span class="at">-short</span></span></code></pre></div>
+<p><strong>Run with timeout:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./test/load <span class="at">-v</span> <span class="at">-timeout</span><span class="op">=</span>30m</span></code></pre></div>
+<h3 id="stress-tests">Stress Tests</h3>
+<p><strong>Run stress tests:</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./test/load <span class="at">-v</span> <span class="at">-run</span><span class="op">=</span>TestStress</span></code></pre></div>
+<hr />
+<h2 id="benchmark-reference">Benchmark Reference</h2>
+<h3 id="notification-system-benchmarks">Notification System
+Benchmarks</h3>
+<h4 id="benchmarkslackchannel_send"><strong>BenchmarkSlackChannel_Send</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Slack channel send performance</li>
+<li><strong>Typical:</strong> ~190µs/op, ~9600 B/op, ~140 allocs/op</li>
+</ul>
+<h4 id="benchmarkdiscordchannel_send"><strong>BenchmarkDiscordChannel_Send</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Discord channel send performance</li>
+<li><strong>Typical:</strong> ~190µs/op, ~9300 B/op, ~130 allocs/op</li>
+</ul>
+<h4 id="benchmarknotificationengine_registerchannel"><strong>BenchmarkNotificationEngine_RegisterChannel</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Channel registration overhead</li>
+<li><strong>Typical:</strong> ~160ns/op, ~176 B/op, ~6 allocs/op</li>
+</ul>
+<h4 id="benchmarknotificationengine_senddirect"><strong>BenchmarkNotificationEngine_SendDirect</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Direct send performance (bypassing
+rules)</li>
+<li><strong>Typical:</strong> &lt;1µs/op with mock channel</li>
+</ul>
+<h4 id="benchmarknotificationengine_sendnotificationwithrules"><strong>BenchmarkNotificationEngine_SendNotificationWithRules</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Send with rule evaluation</li>
+<li><strong>Typical:</strong> Depends on number of rules</li>
+</ul>
+<h4 id="benchmarkretryablechannel_sendsuccess"><strong>BenchmarkRetryableChannel_SendSuccess</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Retry wrapper overhead when no retries
+needed</li>
+<li><strong>Typical:</strong> &lt;1µs/op</li>
+</ul>
+<h4 id="benchmarkretryablechannel_sendwithretries"><strong>BenchmarkRetryableChannel_SendWithRetries</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Performance with actual retries</li>
+<li><strong>Typical:</strong> Depends on backoff configuration</li>
+</ul>
+<h4 id="benchmarkratelimiter_allow"><strong>BenchmarkRateLimiter_Allow</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Rate limiter check performance</li>
+<li><strong>Typical:</strong> &lt;100ns/op</li>
+</ul>
+<h4 id="benchmarkratelimitedchannel_send"><strong>BenchmarkRateLimitedChannel_Send</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Rate-limited send performance</li>
+<li><strong>Typical:</strong> &lt;1µs/op when within limits</li>
+</ul>
+<h4 id="benchmarknotificationqueue_enqueue"><strong>BenchmarkNotificationQueue_Enqueue</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Queue enqueue performance</li>
+<li><strong>Typical:</strong> ~100ns/op</li>
+</ul>
+<h4 id="benchmarknotificationqueue_dequeue"><strong>BenchmarkNotificationQueue_Dequeue</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Queue dequeue performance</li>
+<li><strong>Typical:</strong> ~50ns/op</li>
+</ul>
+<h4 id="benchmarknotificationqueue_throughput"><strong>BenchmarkNotificationQueue_Throughput</strong></h4>
+<ul>
+<li><strong>Measures:</strong> End-to-end queue throughput with
+workers</li>
+<li><strong>Typical:</strong> Depends on worker count and channel
+speed</li>
+</ul>
+<h4 id="benchmarkmetrics_recordsent"><strong>BenchmarkMetrics_RecordSent</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Metrics recording overhead</li>
+<li><strong>Typical:</strong> ~50ns/op</li>
+</ul>
+<h4 id="benchmarkengine_concurrentsends"><strong>BenchmarkEngine_ConcurrentSends</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Concurrent send performance</li>
+<li><strong>Typical:</strong> Scalability with goroutines</li>
+</ul>
+<h4 id="benchmarkmetrics_concurrentwrites"><strong>BenchmarkMetrics_ConcurrentWrites</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Metrics thread safety overhead</li>
+<li><strong>Typical:</strong> Lock contention impact</li>
+</ul>
+<h4 id="benchmarkqueue_parallel_workers">**BenchmarkQueue_Parallel_*Workers**</h4>
+<ul>
+<li><strong>Measures:</strong> Queue throughput with different worker
+counts</li>
+<li><strong>Comparison:</strong> 1, 5, 10, 20 workers</li>
+</ul>
+<h3 id="event-bus-benchmarks">Event Bus Benchmarks</h3>
+<h4 id="benchmarkeventbus_publishsync"><strong>BenchmarkEventBus_PublishSync</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Synchronous event publishing</li>
+<li><strong>Typical:</strong> &lt;1µs/op with simple handlers</li>
+</ul>
+<h4 id="benchmarkeventbus_publishasync"><strong>BenchmarkEventBus_PublishAsync</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Asynchronous event publishing</li>
+<li><strong>Typical:</strong> Lower latency than sync</li>
+</ul>
+<h4 id="benchmarkeventbus_concurrentpublish"><strong>BenchmarkEventBus_ConcurrentPublish</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Concurrent event publishing</li>
+<li><strong>Typical:</strong> Scalability validation</li>
+</ul>
+<h4 id="benchmarkeventbus_publishmultiplesubscribers"><strong>BenchmarkEventBus_PublishMultipleSubscribers</strong></h4>
+<ul>
+<li><strong>Measures:</strong> Performance with many subscribers</li>
+<li><strong>Typical:</strong> Linear degradation with subscribers</li>
+</ul>
+<hr />
+<h2 id="load-test-reference">Load Test Reference</h2>
+<h3 id="testload_1000notificationspersecond">TestLoad_1000NotificationsPerSecond</h3>
+<p><strong>Scenario:</strong> 1000 notifications/second for 10
+seconds</p>
+<p><strong>Parameters:</strong> - Duration: 10 seconds - Target Rate:
+1000/sec - Queue Workers: 10 - Queue Size: 10000</p>
+<p><strong>Success Criteria:</strong> - Actual rate within 10% of target
+(900-1100/sec) - Failure rate &lt; 1% - Queue drains within 30
+seconds</p>
+<p><strong>Metrics:</strong> - Total sent - Total failed - Actual rate
+achieved - Final queue size</p>
+<h3 id="testload_concurrentchannels">TestLoad_ConcurrentChannels</h3>
+<p><strong>Scenario:</strong> 20 concurrent senders across 10
+channels</p>
+<p><strong>Parameters:</strong> - Duration: 5 seconds - Concurrent
+Senders: 20 - Channels: 10 - Send Interval: 10ms</p>
+<p><strong>Success Criteria:</strong> - No errors - Even distribution
+across channels - Success rate &gt; 99%</p>
+<p><strong>Metrics:</strong> - Total sent - Total failed - Rate per
+second - Success rate</p>
+<h3 id="testload_queuesaturation">TestLoad_QueueSaturation</h3>
+<p><strong>Scenario:</strong> Saturate queue with slow channel
+processing</p>
+<p><strong>Parameters:</strong> - Queue Size: 100 - Workers: 5 - Channel
+Delay: 50ms - Rapid Fire: 200 notifications</p>
+<p><strong>Success Criteria:</strong> - Queue handles saturation
+gracefully - No notifications lost - Backpressure works correctly</p>
+<p><strong>Metrics:</strong> - Enqueued count - Rejected count -
+Processed count - Final queue state</p>
+<h3 id="testload_retrystorm">TestLoad_RetryStorm</h3>
+<p><strong>Scenario:</strong> High retry rate with flaky channels</p>
+<p><strong>Parameters:</strong> - Goroutines: 20 - Notifications per
+Goroutine: 50 - Failure Rate: 50% - Max Retries: 3</p>
+<p><strong>Success Criteria:</strong> - Success rate &gt; 50% (with
+retries) - No deadlocks - Reasonable completion time</p>
+<p><strong>Metrics:</strong> - Total succeeded - Total failed - Success
+rate - Average attempts per notification</p>
+<h3 id="testload_ratelimiterstress">TestLoad_RateLimiterStress</h3>
+<p><strong>Scenario:</strong> Attempt to exceed rate limits</p>
+<p><strong>Parameters:</strong> - Rate Limit: 100/second - Attempted:
+500 notifications - Burst pattern</p>
+<p><strong>Success Criteria:</strong> - Rate stays below limit - No rate
+limit bypass - Smooth throttling</p>
+<p><strong>Metrics:</strong> - Attempted sends - Actual sends - Actual
+rate - Rate limit enforcement</p>
+<h3 id="testload_eventbushighvolume">TestLoad_EventBusHighVolume</h3>
+<p><strong>Scenario:</strong> High-volume event publishing</p>
+<p><strong>Parameters:</strong> - Events: 10,000 - Subscribers: 5 -
+Async Mode: true - Processing Delay: 1ms</p>
+<p><strong>Success Criteria:</strong> - All events delivered - All
+handlers called - Completes within timeout</p>
+<p><strong>Metrics:</strong> - Published count - Processed count -
+Publish rate - Processing completion</p>
+<h3 id="testload_metricsunderload">TestLoad_MetricsUnderLoad</h3>
+<p><strong>Scenario:</strong> Concurrent metric recording</p>
+<p><strong>Parameters:</strong> - Goroutines: 50 - Records per
+Goroutine: 1000 - Channels: 10</p>
+<p><strong>Success Criteria:</strong> - Accurate counts - No data races
+- Fast recording</p>
+<p><strong>Metrics:</strong> - Total records - Recording rate - Accuracy
+verification - Success rate calculation</p>
+<hr />
+<h2 id="performance-optimization-guide">Performance Optimization
+Guide</h2>
+<h3 id="channel-optimization">Channel Optimization</h3>
+<p><strong>1. Batch API Requests</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Instead of single sends:</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> notif <span class="op">:=</span> <span class="kw">range</span> notifications <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    channel<span class="op">.</span>Send<span class="op">(</span>ctx<span class="op">,</span> notif<span class="op">)</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Batch when supported:</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>channel<span class="op">.</span>SendBatch<span class="op">(</span>ctx<span class="op">,</span> notifications<span class="op">)</span></span></code></pre></div>
+<p><strong>2. Connection Pooling</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Reuse HTTP clients</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> httpClient <span class="op">=</span> <span class="op">&amp;</span>http<span class="op">.</span>Client<span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    Timeout<span class="op">:</span> <span class="dv">30</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    Transport<span class="op">:</span> <span class="op">&amp;</span>http<span class="op">.</span>Transport<span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        MaxIdleConns<span class="op">:</span>        <span class="dv">100</span><span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        MaxIdleConnsPerHost<span class="op">:</span> <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        IdleConnTimeout<span class="op">:</span>     <span class="dv">90</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>3. Optimize Payload Size</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Minimize unnecessary data</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>notification <span class="op">:=</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    Title<span class="op">:</span>   <span class="st">&quot;Alert&quot;</span><span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    Message<span class="op">:</span> summary<span class="op">,</span>  <span class="co">// Not full logs</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    Metadata<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;id&quot;</span><span class="op">:</span> taskID<span class="op">,</span>  <span class="co">// Just reference</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="queue-optimization">Queue Optimization</h3>
+<p><strong>1. Right-Size Workers</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// CPU-bound channels: workers = CPU cores</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>queue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> runtime<span class="op">.</span>NumCPU<span class="op">(),</span> <span class="dv">10000</span><span class="op">)</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">// I/O-bound channels: more workers</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>queue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">10000</span><span class="op">)</span></span></code></pre></div>
+<p><strong>2. Adjust Queue Size</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Low latency: small queue</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>queue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">100</span><span class="op">)</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">// High throughput: large queue</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>queue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">10000</span><span class="op">)</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Memory-constrained: bounded queue with backpressure</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>queue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">500</span><span class="op">)</span></span></code></pre></div>
+<p><strong>3. Priority Queuing</strong> (Future Enhancement)</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Separate queues by priority</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>urgentQueue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">1000</span><span class="op">)</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>normalQueue <span class="op">:=</span> NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">5000</span><span class="op">)</span></span></code></pre></div>
+<h3 id="rate-limiting-optimization">Rate Limiting Optimization</h3>
+<p><strong>1. Channel-Specific Limits</strong></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Use realistic limits per channel</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>limits <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]*</span>RateLimiter<span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;slack&quot;</span><span class="op">:</span>    NewRateLimiter<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">),</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;discord&quot;</span><span class="op">:</span>  NewRateLimiter<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="dv">5</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">),</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;telegram&quot;</span><span class="op">:</span> NewRateLimiter<span class="op">(</span><span class="dv">30</span><span class="op">,</span> <span class="dv">1</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">),</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;email&quot;</span><span class="op">:</span>    NewRateLimiter<span class="op">(</span><span class="dv">10</span><span class="op">,</span> <span class="dv">1</span><span class="op">*</span>time<span class="op">.</span>Minute<span class="op">),</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>2. Adaptive Rate Limiting</strong> (Future Enhancement)</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Adjust based on API responses</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> resp<span class="op">.</span>StatusCode <span class="op">==</span> <span class="dv">429</span> <span class="op">{</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    limiter<span class="op">.</span>Reduce<span class="op">()</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="retry-optimization">Retry Optimization</h3>
+<p><strong>1. Exponential Backoff</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> RetryConfig<span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    MaxRetries<span class="op">:</span>     <span class="dv">3</span><span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    InitialBackoff<span class="op">:</span> <span class="dv">1</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    MaxBackoff<span class="op">:</span>     <span class="dv">60</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    BackoffFactor<span class="op">:</span>  <span class="fl">2.0</span><span class="op">,</span>  <span class="co">// Exponential</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>2. Circuit Breaker</strong> (Future Enhancement)</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Stop retrying if channel consistently fails</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> failureRate <span class="op">&gt;</span> <span class="fl">0.8</span> <span class="op">{</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    circuitBreaker<span class="op">.</span>Open<span class="op">()</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="event-bus-optimization">Event Bus Optimization</h3>
+<p><strong>1. Async Mode for High Volume</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Sync for low-latency requirements</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>bus <span class="op">:=</span> NewEventBus<span class="op">(</span><span class="ot">false</span><span class="op">)</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Async for high throughput</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>bus <span class="op">:=</span> NewEventBus<span class="op">(</span><span class="ot">true</span><span class="op">)</span></span></code></pre></div>
+<p><strong>2. Selective Subscription</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Only subscribe to needed events</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>bus<span class="op">.</span>Subscribe<span class="op">(</span>EventTaskFailed<span class="op">,</span> handler<span class="op">)</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Not all events:</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co">// bus.SubscribeAll(handler)  // Avoid</span></span></code></pre></div>
+<h3 id="metrics-optimization">Metrics Optimization</h3>
+<p><strong>1. Sampling</strong> (Future Enhancement)</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Sample metrics for very high volume</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> rand<span class="op">.</span>Float64<span class="op">()</span> <span class="op">&lt;</span> <span class="fl">0.1</span> <span class="op">{</span>  <span class="co">// 10% sampling</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    metrics<span class="op">.</span>RecordSent<span class="op">(</span>channel<span class="op">,</span> duration<span class="op">)</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>2. Aggregation</strong></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Aggregate before recording</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> aggregator <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    count    <span class="dt">int</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    totalTime time<span class="op">.</span>Duration</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>a <span class="op">*</span>aggregator<span class="op">)</span> flush<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    metrics<span class="op">.</span>RecordSent<span class="op">(</span>channel<span class="op">,</span> a<span class="op">.</span>totalTime<span class="op">/</span>time<span class="op">.</span>Duration<span class="op">(</span>a<span class="op">.</span>count<span class="op">))</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="performance-targets">Performance Targets</h2>
+<h3 id="throughput-targets">Throughput Targets</h3>
+<p><strong>Notification Engine:</strong> - Single channel direct send:
+&gt; 10,000/sec - With retry wrapper: &gt; 5,000/sec - With rate
+limiting: Matches limit (e.g., 100/sec for Slack) - Queue throughput:
+&gt; 1,000/sec with 10 workers</p>
+<p><strong>Event Bus:</strong> - Sync mode: &gt; 100,000/sec - Async
+mode: &gt; 500,000/sec - With 10 subscribers: &gt; 10,000/sec</p>
+<h3 id="latency-targets">Latency Targets</h3>
+<p><strong>Notification Operations:</strong> - Channel registration:
+&lt; 1µs - Direct send (mock): &lt; 1µs - Rule evaluation: &lt; 100ns
+per rule - Queue enqueue: &lt; 200ns - Queue dequeue: &lt; 100ns</p>
+<p><strong>Event Operations:</strong> - Event publish (sync): &lt; 10µs
+- Event publish (async): &lt; 1µs - Subscription: &lt; 1µs</p>
+<h3 id="resource-targets">Resource Targets</h3>
+<p><strong>Memory:</strong> - Notification engine: &lt; 1 MB base -
+Queue (1000 items): &lt; 2 MB - Event bus: &lt; 500 KB - Metrics: &lt; 1
+MB per 100,000 records</p>
+<p><strong>CPU:</strong> - Idle overhead: &lt; 0.1% - Under load
+(1000/sec): &lt; 10% - Worker goroutines: Minimal CPU when idle</p>
+<p><strong>Goroutines:</strong> - Base system: &lt; 20 goroutines -
+Queue workers: 1 per worker - Event bus async: 1 per event
+(short-lived)</p>
+<hr />
+<h2 id="profiling-guide">Profiling Guide</h2>
+<h3 id="cpu-profiling">CPU Profiling</h3>
+<p><strong>1. Generate CPU Profile</strong></p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkQueue_Throughput <span class="dt">\</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-cpuprofile</span><span class="op">=</span>cpu.prof <span class="at">-run</span><span class="op">=</span>^$</span></code></pre></div>
+<p><strong>2. Analyze Profile</strong></p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof cpu.prof</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive commands:</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">top10</span>           <span class="co"># Top 10 functions</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">list</span> SendDirect <span class="co"># Source code view</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">web</span>             <span class="co"># Visual graph (requires graphviz)</span></span></code></pre></div>
+<p><strong>3. Web Interface</strong></p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof <span class="at">-http</span><span class="op">=</span>:8080 cpu.prof</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Open http://localhost:8080 in browser</span></span></code></pre></div>
+<h3 id="memory-profiling">Memory Profiling</h3>
+<p><strong>1. Generate Memory Profile</strong></p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkEngine <span class="dt">\</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-memprofile</span><span class="op">=</span>mem.prof <span class="at">-run</span><span class="op">=</span>^$</span></code></pre></div>
+<p><strong>2. Analyze Allocations</strong></p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof mem.prof</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">top10</span>              <span class="co"># Top allocators</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">list</span> NewNotification</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">alloc_space</span>        <span class="co"># Switch to alloc space</span></span></code></pre></div>
+<p><strong>3. Find Memory Leaks</strong></p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run long-running test with memory profile</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-memprofile</span><span class="op">=</span>mem.prof <span class="at">-timeout</span><span class="op">=</span>10m</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Look for growing allocations</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof <span class="at">-alloc_space</span> mem.prof</span></code></pre></div>
+<h3 id="mutex-profiling">Mutex Profiling</h3>
+<p><strong>1. Generate Mutex Profile</strong></p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test ./internal/notification <span class="at">-bench</span><span class="op">=</span>BenchmarkEngine_Concurrent <span class="dt">\</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">-mutexprofile</span><span class="op">=</span>mutex.prof <span class="at">-run</span><span class="op">=</span>^$</span></code></pre></div>
+<p><strong>2. Find Contention</strong></p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof mutex.prof</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">top10</span>  <span class="co"># Most contended mutexes</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="ex">pprof</span><span class="kw">)</span> <span class="ex">list</span>   <span class="co"># Source locations</span></span></code></pre></div>
+<h3 id="block-profiling">Block Profiling</h3>
+<p><strong>1. Enable Block Profiling in Code</strong></p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;runtime&quot;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> init<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    runtime<span class="op">.</span>SetBlockProfileRate<span class="op">(</span><span class="dv">1</span><span class="op">)</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>2. Run with Block Profile</strong></p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-blockprofile</span><span class="op">=</span>block.prof</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof block.prof</span></code></pre></div>
+<hr />
+<h2 id="monitoring-in-production">Monitoring in Production</h2>
+<h3 id="key-metrics-to-monitor">Key Metrics to Monitor</h3>
+<p><strong>1. Throughput Metrics</strong> - Notifications sent per
+second - Notifications failed per second - Events published per
+second</p>
+<p><strong>2. Latency Metrics</strong> - Average send time per channel -
+p50, p95, p99 latencies - Queue wait time</p>
+<p><strong>3. Error Metrics</strong> - Failure rate per channel - Retry
+rate - Rate limit hits</p>
+<p><strong>4. Resource Metrics</strong> - Queue size - Active goroutines
+- Memory usage - CPU usage</p>
+<h3 id="prometheus-integration-future-enhancement">Prometheus
+Integration (Future Enhancement)</h3>
+<div class="sourceCode" id="cb36"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;github.com/prometheus/client_golang/prometheus&quot;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> <span class="op">(</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    notificationsSent <span class="op">=</span> prometheus<span class="op">.</span>NewCounterVec<span class="op">(</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>        prometheus<span class="op">.</span>CounterOpts<span class="op">{</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>            Name<span class="op">:</span> <span class="st">&quot;notifications_sent_total&quot;</span><span class="op">,</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>            Help<span class="op">:</span> <span class="st">&quot;Total notifications sent&quot;</span><span class="op">,</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;channel&quot;</span><span class="op">,</span> <span class="st">&quot;type&quot;</span><span class="op">},</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    sendDuration <span class="op">=</span> prometheus<span class="op">.</span>NewHistogramVec<span class="op">(</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>        prometheus<span class="op">.</span>HistogramOpts<span class="op">{</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>            Name<span class="op">:</span>    <span class="st">&quot;notification_send_duration_seconds&quot;</span><span class="op">,</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>            Help<span class="op">:</span>    <span class="st">&quot;Notification send duration&quot;</span><span class="op">,</span></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>            Buckets<span class="op">:</span> prometheus<span class="op">.</span>DefBuckets<span class="op">,</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;channel&quot;</span><span class="op">},</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">)</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="alert-rules">Alert Rules</h3>
+<p><strong>High Failure Rate:</strong></p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">alert</span><span class="kw">:</span><span class="at"> HighNotificationFailureRate</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">expr</span><span class="kw">:</span><span class="at"> rate(notifications_failed_total[5m]) &gt; 0.1</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">for</span><span class="kw">:</span><span class="at"> 5m</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="fu">severity</span><span class="kw">:</span><span class="at"> warning</span></span></code></pre></div>
+<p><strong>Queue Saturation:</strong></p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">alert</span><span class="kw">:</span><span class="at"> NotificationQueueFull</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">expr</span><span class="kw">:</span><span class="at"> notification_queue_size &gt; notification_queue_max * 0.9</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="fu">for</span><span class="kw">:</span><span class="at"> 2m</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">severity</span><span class="kw">:</span><span class="at"> warning</span></span></code></pre></div>
+<p><strong>Slow Channel:</strong></p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">alert</span><span class="kw">:</span><span class="at"> SlowNotificationChannel</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">expr</span><span class="kw">:</span><span class="at"> histogram_quantile(0.95, notification_send_duration_seconds) &gt; 5</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">for</span><span class="kw">:</span><span class="at"> 10m</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="fu">severity</span><span class="kw">:</span><span class="at"> warning</span></span></code></pre></div>
+<hr />
+<h2 id="troubleshooting-performance-issues">Troubleshooting Performance
+Issues</h2>
+<h3 id="issue-low-throughput">Issue: Low Throughput</h3>
+<p><strong>Symptoms:</strong> - Actual rate far below target - Queue
+growing continuously - High latency</p>
+<p><strong>Diagnosis:</strong></p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check CPU usage</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="ex">top</span> <span class="at">-p</span> <span class="va">$(</span><span class="ex">pgrep</span> helixcode<span class="va">)</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Profile CPU</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-bench</span><span class="op">=</span>BenchmarkQueue_Throughput <span class="at">-cpuprofile</span><span class="op">=</span>cpu.prof</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof cpu.prof</span></code></pre></div>
+<p><strong>Solutions:</strong> 1. Increase worker count 2. Optimize
+channel implementations 3. Enable async event bus 4. Review rate
+limits</p>
+<h3 id="issue-high-memory-usage">Issue: High Memory Usage</h3>
+<p><strong>Symptoms:</strong> - Memory growing over time - OOM errors -
+GC pressure</p>
+<p><strong>Diagnosis:</strong></p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Memory profile</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-memprofile</span><span class="op">=</span>mem.prof</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof <span class="at">-alloc_space</span> mem.prof</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check for leaks</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pprof</span><span class="op">&gt;</span> top10</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pprof</span><span class="op">&gt;</span> list suspect_function</span></code></pre></div>
+<p><strong>Solutions:</strong> 1. Reduce queue size 2. Clear old metrics
+3. Fix goroutine leaks 4. Optimize payload sizes</p>
+<h3 id="issue-lock-contention">Issue: Lock Contention</h3>
+<p><strong>Symptoms:</strong> - High CPU usage - Low throughput - Slow
+response times</p>
+<p><strong>Diagnosis:</strong></p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mutex profile</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-mutexprofile</span><span class="op">=</span>mutex.prof</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool pprof mutex.prof</span></code></pre></div>
+<p><strong>Solutions:</strong> 1. Reduce lock scope 2. Use read locks
+where possible 3. Shard data structures 4. Lock-free algorithms</p>
+<h3 id="issue-goroutine-leaks">Issue: Goroutine Leaks</h3>
+<p><strong>Symptoms:</strong> - Growing goroutine count - Memory leaks -
+Eventual crashes</p>
+<p><strong>Diagnosis:</strong></p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check goroutine count</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:6060/debug/pprof/goroutine</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Runtime stack traces</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="bu">kill</span> <span class="at">-QUIT</span> <span class="va">$(</span><span class="ex">pgrep</span> helixcode<span class="va">)</span></span></code></pre></div>
+<p><strong>Solutions:</strong> 1. Ensure all goroutines have exit
+conditions 2. Use context cancellation 3. Close channels properly 4.
+Review defer statements</p>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="always-benchmark-changes">1. Always Benchmark Changes</h3>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before changes</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-bench</span><span class="op">=</span>. <span class="op">&gt;</span> bench_before.txt</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After changes</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-bench</span><span class="op">=</span>. <span class="op">&gt;</span> bench_after.txt</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="ex">benchcmp</span> bench_before.txt bench_after.txt</span></code></pre></div>
+<h3 id="profile-in-production-like-environment">2. Profile in
+Production-Like Environment</h3>
+<ul>
+<li>Use realistic data sizes</li>
+<li>Enable all middleware (retry, rate limit)</li>
+<li>Test with actual API endpoints</li>
+<li>Monitor resource usage</li>
+</ul>
+<h3 id="set-performance-budgets">3. Set Performance Budgets</h3>
+<div class="sourceCode" id="cb45"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestPerformanceBudget<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    start <span class="op">:=</span> time<span class="op">.</span>Now<span class="op">()</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Operation under test</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> engine<span class="op">.</span>SendDirect<span class="op">(</span>ctx<span class="op">,</span> notif<span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;mock&quot;</span><span class="op">})</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    elapsed <span class="op">:=</span> time<span class="op">.</span>Since<span class="op">(</span>start<span class="op">)</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Budget: Must complete in 1ms</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> elapsed <span class="op">&gt;</span> <span class="dv">1</span><span class="op">*</span>time<span class="op">.</span>Millisecond <span class="op">{</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>        t<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;Operation too slow: %v (budget: 1ms)&quot;</span><span class="op">,</span> elapsed<span class="op">)</span></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="use-realistic-test-data">4. Use Realistic Test Data</h3>
+<div class="sourceCode" id="cb46"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Production-like notification</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>notif <span class="op">:=</span> <span class="op">&amp;</span>Notification<span class="op">{</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    Title<span class="op">:</span>   strings<span class="op">.</span>Repeat<span class="op">(</span><span class="st">&quot;Long Title &quot;</span><span class="op">,</span> <span class="dv">10</span><span class="op">),</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    Message<span class="op">:</span> strings<span class="op">.</span>Repeat<span class="op">(</span><span class="st">&quot;Long message content &quot;</span><span class="op">,</span> <span class="dv">100</span><span class="op">),</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    Metadata<span class="op">:</span> <span class="bu">make</span><span class="op">(</span><span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{},</span> <span class="dv">50</span><span class="op">),</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="test-concurrent-scenarios">5. Test Concurrent Scenarios</h3>
+<div class="sourceCode" id="cb47"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestConcurrentLoad<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> wg sync<span class="op">.</span>WaitGroup</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="op">:=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> i<span class="op">++</span> <span class="op">{</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>        wg<span class="op">.</span>Add<span class="op">(</span><span class="dv">1</span><span class="op">)</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">defer</span> wg<span class="op">.</span>Done<span class="op">()</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>            engine<span class="op">.</span>SendDirect<span class="op">(</span>ctx<span class="op">,</span> notif<span class="op">,</span> channels<span class="op">)</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}()</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    wg<span class="op">.</span>Wait<span class="op">()</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="https://github.com/dgryski/go-perfbook">Go Performance Best
+Practices</a></li>
+<li><a href="https://go.dev/blog/pprof">Go Profiling Guide</a></li>
+<li><a href="https://dave.cheney.net/high-performance-go-workshop/dotgo-paris.html">High
+Performance Go</a></li>
+<li><a href="./TESTING.md">Testing Guide</a></li>
+<li><a href="./API_REFERENCE.md">API Reference</a></li>
+<li><a href="./CONFIG_REFERENCE.md">Configuration Reference</a></li>
+</ul>
+</body>
+</html>

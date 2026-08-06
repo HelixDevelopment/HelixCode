@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONFIGURATION_SYSTEM</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONFIGURATION_SYSTEM</h1>
+</header>
+<h1 id="helixcode-configuration-system---complete-guide">HelixCode
+Configuration System - Complete Guide</h1>
+<h2 id="overview">📋 Overview</h2>
+<p>The HelixCode configuration system provides a comprehensive,
+platform-optimized, and extensible framework for managing application
+settings across all supported platforms. It supports real-time
+validation, migration, templating, and platform-specific UI
+components.</p>
+<h2 id="architecture">🏗️ Architecture</h2>
+<h3 id="core-components">Core Components</h3>
+<pre><code>Configuration System
+├── Core Configuration (HelixConfig)
+├── Configuration Manager (HelixConfigManager)
+├── Configuration UI (ConfigUI)
+├── Platform UI Adapters
+│   ├── Desktop UI Adapter
+│   ├── Web UI Adapter
+│   ├── Mobile UI Adapter
+│   └── TUI Adapter
+├── Advanced Features
+│   ├── Configuration Validator
+│   ├── Configuration Migrator
+│   ├── Configuration Transformer
+│   └── Configuration Template Manager
+└── Testing &amp; Validation</code></pre>
+<h2 id="core-configuration-structure">🔧 Core Configuration
+Structure</h2>
+<h3 id="application-configuration">Application Configuration</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">application</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixCode&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Distributed AI Development Platform&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0.0&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">environment</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;development&quot;</span><span class="co">  # development, testing, staging, production</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">workspace</span><span class="kw">:</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;~/helixcode&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_save</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">backup_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sync_interval</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;5m&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sessions</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_save</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">save_interval</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_sessions</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">encryption_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">logging</span><span class="kw">:</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">level</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;info&quot;</span><span class="co">  # debug, info, warn, error</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">format</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;structured&quot;</span><span class="co">  # structured, text, json</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">output</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;both&quot;</span><span class="co">  # file, console, both</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;~/.helixcode/logs/helix.log&quot;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_file_size</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;100MB&quot;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_files</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">module_levels</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">structured_logging</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">correlation_id</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">stack_traces</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">log_performance</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">log_slow_queries</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">slow_query_threshold</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1s&quot;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ui</span><span class="kw">:</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">theme</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;dark&quot;</span><span class="co">  # dark, light, auto</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">language</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;en&quot;</span><span class="co">  # en, zh, es, fr, de, ja</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">font_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">14</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">font_family</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;SF Mono&quot;</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sidebar_width</span><span class="kw">:</span><span class="at"> </span><span class="dv">250</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">status_bar_visible</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">toolbar_visible</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tab_bar_visible</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">minimap_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">line_numbers_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">word_wrap_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_complete_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_indent_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">bracket_matching_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cursor_blink</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">smooth_scrolling</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">animations_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">hot_reload</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">accessibility</span><span class="kw">:</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">screen_reader</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">high_contrast</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">keyboard_navigation</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">focus_visible</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">reduced_motion</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">font_scaling</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">icon_scaling</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">color_blind_mode</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;none&quot;</span><span class="co">  # none, protanopia, deuteranopia, tritanopia</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">shortcuts</span><span class="kw">:</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">custom_shortcuts</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">vi_mode</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">emacs_mode</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div>
+<h3 id="database-configuration">Database Configuration</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">database</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;postgresql&quot;</span><span class="co">  # postgresql, mysql, sqlite</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;localhost&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">5432</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">database</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixcode&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">username</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixcode&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">password</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ssl_mode</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;require&quot;</span><span class="co">  # disable, allow, prefer, require, verify-ca, verify-full</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">connection_pool</span><span class="kw">:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_connections</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_idle_connections</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">connection_lifetime</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1h&quot;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">health_check_interval</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">health_check_timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;5s&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">backup</span><span class="kw">:</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">schedule</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;0 2 * * *&quot;</span><span class="co">  # Daily at 2 AM</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">retention</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30d&quot;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">encryption_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">compression_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">migrations</span><span class="kw">:</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_migrate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">migration_timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;5m&quot;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">backup_before_migrate</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<h3 id="redis-configuration">Redis Configuration</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">redis</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;localhost&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">6379</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">password</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">database</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">connection_pool</span><span class="kw">:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_connections</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_idle_connections</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">connection_lifetime</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30m&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">health_check_interval</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;10s&quot;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">security</span><span class="kw">:</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tls_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cert_file</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key_file</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ca_cert</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">clustering</span><span class="kw">:</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">nodes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sentinel_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sentinel_master</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sentinel_nodes</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span></code></pre></div>
+<h3 id="llm-configuration">LLM Configuration</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_provider</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;local&quot;</span><span class="co">  # local, openai, anthropic, gemini, qwen, azure, vertexai, bedrock, xai, groq, openrouter, copilot</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">default_model</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;llama-3.2-3b&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">providers</span><span class="kw">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">openai</span><span class="kw">:</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://api.openai.com/v1&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">organization</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;gpt-4&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;gpt-4-turbo&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;gpt-3.5-turbo&quot;</span><span class="kw">]</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">anthropic</span><span class="kw">:</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://api.anthropic.com&quot;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;claude-3-opus&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;claude-3-sonnet&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;claude-3-haiku&quot;</span><span class="kw">]</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">gemini</span><span class="kw">:</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://generativelanguage.googleapis.com/v1beta&quot;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;gemini-pro&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;gemini-pro-vision&quot;</span><span class="kw">]</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">qwen</span><span class="kw">:</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://dashscope.aliyuncs.com/api/v1&quot;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;qwen-turbo&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;qwen-plus&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;qwen-max&quot;</span><span class="kw">]</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">azure</span><span class="kw">:</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">endpoint</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2024-02-15-preview&quot;</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">deployment_names</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">vertexai</span><span class="kw">:</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">service_account_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">project_id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">location</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;us-central1&quot;</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">bedrock</span><span class="kw">:</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">access_key_id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">secret_access_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">region</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;us-east-1&quot;</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">xai</span><span class="kw">:</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://api.x.ai/v1&quot;</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">groq</span><span class="kw">:</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://api.groq.com/openai/v1&quot;</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">openrouter</span><span class="kw">:</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://openrouter.ai/api/v1&quot;</span></span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">copilot</span><span class="kw">:</span></span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;https://api.githubcopilot.com&quot;</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30s&quot;</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">features</span><span class="kw">:</span></span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">reasoning_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">streaming_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">function_calling_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image_generation_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">audio_transcription_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">code_execution_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">web_search_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">optimization</span><span class="kw">:</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cost_management</span><span class="kw">:</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">budget_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">monthly_budget</span><span class="kw">:</span><span class="at"> </span><span class="fl">100.0</span></span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">cost_tracking</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">cost_alerts</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">token_management</span><span class="kw">:</span></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_tokens_per_request</span><span class="kw">:</span><span class="at"> </span><span class="dv">4096</span></span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">context_window_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">8192</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token_usage_tracking</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">response_caching</span><span class="kw">:</span></span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">cache_ttl</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1h&quot;</span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">cache_size</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1GB&quot;</span></span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">model_fallback</span><span class="kw">:</span></span>
+<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">fallback_providers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;local&quot;</span><span class="kw">]</span></span>
+<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">fallback_models</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;llama-3.2-3b&quot;</span><span class="kw">]</span></span>
+<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">quality_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.8</span></span></code></pre></div>
+<h3 id="platform-configuration">Platform Configuration</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">platform</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">current_platform</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;desktop&quot;</span><span class="co">  # desktop, web, mobile, tui</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">desktop</span><span class="kw">:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_start</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">minimize_to_tray</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">show_in_taskbar</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">file_associations</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;.go&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;.js&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;.py&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;.java&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;.cpp&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;.h&quot;</span><span class="kw">]</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">context_menu</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_update</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">hardware_acceleration</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">gpu_acceleration</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">memory_limit</span><span class="kw">:</span><span class="at"> </span><span class="dv">2147483648</span><span class="co">  # 2GB</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ui_scale</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">high_dpi</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">web</span><span class="kw">:</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;localhost&quot;</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">3000</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">base_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/&quot;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;./static&quot;</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cache_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cache_ttl</span><span class="kw">:</span><span class="at"> </span><span class="dv">3600</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">pwa_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">offline_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cs_protection</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">xss_protection</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">compression_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">minify_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">real_time_updates</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">websocket_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mobile</span><span class="kw">:</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ios</span><span class="kw">:</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">app_store_connect</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">push_notifications</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">background_tasks</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">watch_kit_app</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">team_id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">bundle_id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;dev.helix.code&quot;</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">development_cert</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">android</span><span class="kw">:</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">google_play_console</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">push_notifications</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">background_tasks</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">wear_os_app</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">package_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;dev.helix.code&quot;</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">signing_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">debug_build</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cross_platform</span><span class="kw">:</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">framework</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;react-native&quot;</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">offline_first</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sync_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">image_optimization</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">lazy_loading</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">biometric_auth</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">device_encryption</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tui</span><span class="kw">:</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">compatibility_mode</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;auto&quot;</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">color_scheme</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;dark&quot;</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">true_color</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">mouse_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">render_fps</span><span class="kw">:</span><span class="at"> </span><span class="dv">60</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">buffer_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">10000</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">status_line</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tab_bar</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">split_screen</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">aurora_os</span><span class="kw">:</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sailfish_integration</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">store_integration</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sdk_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;4.4&quot;</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">native_ui</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">qt_components</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">harmony_os</span><span class="kw">:</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">harmony_services</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">app_gallery</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">dev_eco_studio</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sdk_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;5.0&quot;</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ark_ui</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">cross_platform</span><span class="kw">:</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">consistent_theme</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sync_config</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sync_data</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">update_across_platforms</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">common_feature_set</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">platform_optimizations</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<h2 id="platform-specific-ui">🎨 Platform-Specific UI</h2>
+<h3 id="desktop-ui-features">Desktop UI Features</h3>
+<ul>
+<li><strong>Native Window Management</strong>: Resizable, minimizable,
+full-screen support</li>
+<li><strong>System Tray Integration</strong>: Minimize to system tray
+with background operation</li>
+<li><strong>Native Menus</strong>: System-native menu bar and context
+menus</li>
+<li><strong>File Associations</strong>: Automatic file type associations
+and registration</li>
+<li><strong>Native Fonts</strong>: System font rendering and
+anti-aliasing</li>
+<li><strong>Keyboard Shortcuts</strong>: Platform-specific keyboard
+shortcuts</li>
+<li><strong>Drag &amp; Drop</strong>: Native drag and drop support</li>
+<li><strong>System Notifications</strong>: Native desktop notification
+support</li>
+<li><strong>Auto Updates</strong>: Automatic update checking and
+installation</li>
+<li><strong>GPU Acceleration</strong>: Hardware-accelerated
+rendering</li>
+</ul>
+<h3 id="web-ui-features">Web UI Features</h3>
+<ul>
+<li><strong>Responsive Design</strong>: Adaptive layouts for all screen
+sizes</li>
+<li><strong>PWA Support</strong>: Progressive Web App capabilities</li>
+<li><strong>Offline Support</strong>: Service worker-based offline
+functionality</li>
+<li><strong>WebSockets</strong>: Real-time bidirectional
+communication</li>
+<li><strong>Touch Support</strong>: Touch-friendly interface for mobile
+browsers</li>
+<li><strong>Browser Storage</strong>: LocalStorage and IndexedDB
+integration</li>
+<li><strong>Push Notifications</strong>: Web Push API support</li>
+<li><strong>CSS Animations</strong>: Smooth transitions and
+micro-interactions</li>
+<li><strong>Compression</strong>: Gzip/Brotli compression for
+performance</li>
+<li><strong>Accessibility</strong>: WCAG 2.1 AA compliance</li>
+</ul>
+<h3 id="mobile-ui-features">Mobile UI Features</h3>
+<ul>
+<li><strong>Touch Gestures</strong>: Swipe, pinch, tap, long-press
+support</li>
+<li><strong>Biometric Authentication</strong>: Face ID, Touch ID,
+fingerprint support</li>
+<li><strong>Push Notifications</strong>: Native push notification
+handling</li>
+<li><strong>Offline First</strong>: Local-first data
+synchronization</li>
+<li><strong>App Lifecycle</strong>: Proper background/foreground
+handling</li>
+<li><strong>Camera Access</strong>: Device camera integration</li>
+<li><strong>Location Services</strong>: GPS and location-based
+features</li>
+<li><strong>Device Orientation</strong>: Auto-rotation and orientation
+locking</li>
+<li><strong>Native Plugins</strong>: Access to device hardware and
+APIs</li>
+<li><strong>Battery Optimization</strong>: Efficient power usage</li>
+</ul>
+<h3 id="tui-features">TUI Features</h3>
+<ul>
+<li><strong>Terminal Colors</strong>: ANSI color support and themes</li>
+<li><strong>Keyboard Navigation</strong>: Full keyboard
+accessibility</li>
+<li><strong>Mouse Support</strong>: Mouse interaction in terminal</li>
+<li><strong>Unicode Support</strong>: International character
+support</li>
+<li><strong>Screen Reader</strong>: Compatibility with screen
+readers</li>
+<li><strong>Clipboard Access</strong>: Terminal clipboard
+integration</li>
+<li><strong>Terminal Shortcuts</strong>: Common terminal
+keybindings</li>
+<li><strong>Resize Handling</strong>: Dynamic terminal resize
+support</li>
+<li><strong>Buffer Management</strong>: Large file and output
+handling</li>
+<li><strong>Performance</strong>: Optimized rendering and scrolling</li>
+</ul>
+<h2 id="validation-system">🔍 Validation System</h2>
+<h3 id="built-in-validation-rules">Built-in Validation Rules</h3>
+<ul>
+<li><strong>Type Validation</strong>: String, number, boolean, array,
+object validation</li>
+<li><strong>Range Validation</strong>: Min/max values for numbers</li>
+<li><strong>Length Validation</strong>: Min/max lengths for strings</li>
+<li><strong>Pattern Validation</strong>: Regex pattern matching</li>
+<li><strong>Enum Validation</strong>: Value must be in allowed enum</li>
+<li><strong>Format Validation</strong>: Email, URL, date-time, IPv4,
+hostname</li>
+<li><strong>Required Fields</strong>: Required field validation</li>
+<li><strong>Custom Rules</strong>: Extensible custom validation
+functions</li>
+</ul>
+<h3 id="validation-examples">Validation Examples</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Basic validation</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>validator <span class="op">:=</span> NewConfigurationValidator<span class="op">(</span><span class="ot">true</span><span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> getDefaultConfig<span class="op">()</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>result <span class="op">:=</span> validator<span class="op">.</span>Validate<span class="op">(</span>config<span class="op">)</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Check validation result</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">!</span>result<span class="op">.</span>Valid <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> err <span class="op">:=</span> <span class="kw">range</span> result<span class="op">.</span>Errors <span class="op">{</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Error: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> err<span class="op">.</span>Message<span class="op">)</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Custom validation rule</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>validator<span class="op">.</span>AddCustomRule<span class="op">(</span><span class="st">&quot;database.password&quot;</span><span class="op">,</span> <span class="kw">func</span><span class="op">(</span>value <span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> str<span class="op">,</span> ok <span class="op">:=</span> value<span class="op">.(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">{</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>str<span class="op">)</span> <span class="op">&lt;</span> <span class="dv">8</span> <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;password must be at least 8 characters&quot;</span><span class="op">)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h2 id="migration-system">🔄 Migration System</h2>
+<h3 id="migration-features">Migration Features</h3>
+<ul>
+<li><strong>Version Tracking</strong>: Configuration version
+management</li>
+<li><strong>Automatic Migration</strong>: Seamless version upgrades</li>
+<li><strong>Backup Support</strong>: Automatic backups before
+migration</li>
+<li><strong>Rollback Support</strong>: Migration rollback
+capability</li>
+<li><strong>Path Finding</strong>: Intelligent migration path
+calculation</li>
+<li><strong>Dry Run</strong>: Test migrations without applying
+changes</li>
+</ul>
+<h3 id="migration-example">Migration Example</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>migrator <span class="op">:=</span> NewConfigurationMigrator<span class="op">(</span><span class="st">&quot;1.0.0&quot;</span><span class="op">)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Define migration</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>migration <span class="op">:=</span> Migration<span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    From<span class="op">:</span>   <span class="st">&quot;1.0.0&quot;</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    To<span class="op">:</span>     <span class="st">&quot;1.1.0&quot;</span><span class="op">,</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span>   <span class="st">&quot;add_workspace_auto_save&quot;</span><span class="op">,</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    Desc<span class="op">:</span>   <span class="st">&quot;Add workspace auto_save setting&quot;</span><span class="op">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    Up<span class="op">:</span> <span class="kw">func</span><span class="op">(</span>config <span class="op">*</span>HelixConfig<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        config<span class="op">.</span>Application<span class="op">.</span>Workspace<span class="op">.</span>AutoSave <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    Backup<span class="op">:</span> <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply migration</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> migrator<span class="op">.</span>Migrate<span class="op">(</span>config<span class="op">,</span> <span class="st">&quot;1.2.0&quot;</span><span class="op">)</span></span></code></pre></div>
+<h2 id="template-system">🎯 Template System</h2>
+<h3 id="template-features">Template Features</h3>
+<ul>
+<li><strong>Parameterized Templates</strong>: Variables and
+substitutions</li>
+<li><strong>Variable Validation</strong>: Type checking and
+constraints</li>
+<li><strong>Default Environments</strong>: Development, testing,
+production templates</li>
+<li><strong>Custom Templates</strong>: User-defined templates</li>
+<li><strong>Template Inheritance</strong>: Template composition and
+extension</li>
+<li><strong>Export/Import</strong>: Template sharing and backup</li>
+</ul>
+<h3 id="template-example">Template Example</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># development-template.yaml</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">id</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;development&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Development Environment&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">description</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Configuration optimized for development&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">category</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;environment&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">author</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;system&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0.0&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;development&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;debug&quot;</span><span class="kw">]</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">variables</span><span class="kw">:</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">workspace_path</span><span class="kw">:</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Workspace Path&quot;</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;string&quot;</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;~/development/helixcode&quot;</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">pattern</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;^[^/].*&quot;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">debug_enabled</span><span class="kw">:</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Debug Enabled&quot;</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;boolean&quot;</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="fu">config</span><span class="kw">:</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">application</span><span class="kw">:</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;development&quot;</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">workspace</span><span class="kw">:</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_save</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">default_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;{{workspace_path}}&quot;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">development</span><span class="kw">:</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">debug</span><span class="kw">:</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;{{debug_enabled}}&quot;</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">level</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;debug&quot;</span></span></code></pre></div>
+<h2 id="security-features">🛡️ Security Features</h2>
+<h3 id="security-configuration">Security Configuration</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">security</span><span class="kw">:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authentication</span><span class="kw">:</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">methods</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;password&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;2fa&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;oauth&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;certificate&quot;</span><span class="kw">]</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">password_policy</span><span class="kw">:</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">min_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">8</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">require_uppercase</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">require_lowercase</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">require_numbers</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">require_special</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">session_management</span><span class="kw">:</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">timeout</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30m&quot;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_concurrent_sessions</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">remember_me_duration</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30d&quot;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">oauth_providers</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;github&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;google&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;microsoft&quot;</span><span class="kw">]</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">authorization</span><span class="kw">:</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">rbac</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">roles</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;admin&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;developer&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;viewer&quot;</span><span class="kw">]</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">permissions</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">default_policy</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;deny&quot;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">encryption</span><span class="kw">:</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">algorithm</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;AES-256-GCM&quot;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key_rotation</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;90d&quot;</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">at_rest</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">in_transit</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">data_protection</span><span class="kw">:</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">encryption_at_rest</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">encryption_in_transit</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">key_rotation</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;90d&quot;</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">retention_policy</span><span class="kw">:</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">default_retention</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;365d&quot;</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">specific_retention</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_delete</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">notification_period</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;30d&quot;</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">masking_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">masked_fields</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">backup_encryption</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">network</span><span class="kw">:</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">firewall_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">allowed_ips</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">blocked_ips</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">allowed_ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="dv">8080</span><span class="kw">,</span><span class="at"> </span><span class="dv">22</span><span class="kw">]</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">blocked_ports</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tls_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tls_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.3&quot;</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cipher_suites</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">vpn_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">vpn_provider</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&quot;</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">vpn_config</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">audit</span><span class="kw">:</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">log_level</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;info&quot;</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">log_path</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;~/.helixcode/logs/audit.log&quot;</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_log_size</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;100MB&quot;</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">log_retention</span><span class="kw">:</span><span class="at"> </span><span class="dv">90</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">events</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;login&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;logout&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;config_change&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;task_execution&quot;</span><span class="kw">]</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">real_time_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">alert_endpoints</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">privacy</span><span class="kw">:</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">data_collection_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">analytics_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">consent_required</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">consent_version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">data_sharing_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">shared_data_types</span><span class="kw">:</span><span class="at"> </span><span class="kw">[]</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">anonymize_data</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">anonymization_method</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;hashing&quot;</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">right_to_deletion</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">data_deletion_method</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;secure_erase&quot;</span></span></code></pre></div>
+<h2 id="performance-optimization">📊 Performance Optimization</h2>
+<h3 id="configuration-performance">Configuration Performance</h3>
+<ul>
+<li><strong>Lazy Loading</strong>: Load configuration sections on
+demand</li>
+<li><strong>Caching</strong>: In-memory configuration caching</li>
+<li><strong>Validation Caching</strong>: Cached validation results</li>
+<li><strong>Batch Updates</strong>: Atomic configuration updates</li>
+<li><strong>Change Detection</strong>: Efficient change detection</li>
+<li><strong>Memory Optimization</strong>: Minimal memory footprint</li>
+</ul>
+<h3 id="performance-metrics">Performance Metrics</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">performance</span><span class="kw">:</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">optimization</span><span class="kw">:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">auto_tune</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">metrics_collection</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">profiling</span><span class="kw">:</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">sampling_rate</span><span class="kw">:</span><span class="at"> </span><span class="fl">100.0</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">max_duration</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;5m&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">auto_analysis</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">analysis_tool</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;go tool pprof&quot;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">caching</span><span class="kw">:</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">config_cache</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">validation_cache</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">template_cache</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">cache_ttl</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1h&quot;</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_cache_size</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;100MB&quot;</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">monitoring</span><span class="kw">:</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">metrics_interval</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1m&quot;</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">alert_thresholds</span><span class="kw">:</span><span class="at"> </span><span class="kw">{}</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">dashboard_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<h2 id="usage-examples">🔧 Usage Examples</h2>
+<h3 id="basic-configuration-usage">Basic Configuration Usage</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Load configuration</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>config<span class="op">,</span> err <span class="op">:=</span> LoadHelixConfig<span class="op">()</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Update configuration</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>UpdateHelixConfig<span class="op">(</span><span class="kw">func</span><span class="op">(</span>config <span class="op">*</span>HelixConfig<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>LLM<span class="op">.</span>DefaultProvider <span class="op">=</span> <span class="st">&quot;openai&quot;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>Server<span class="op">.</span>Port <span class="op">=</span> <span class="dv">9090</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>Application<span class="op">.</span>Logging<span class="op">.</span>Level <span class="op">=</span> <span class="st">&quot;debug&quot;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Save configuration</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> SaveHelixConfig<span class="op">(</span>config<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="platform-ui-usage">Platform UI Usage</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get appropriate UI adapter for current platform</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>adapter <span class="op">:=</span> GetPlatformUIAdapterForCurrentPlatform<span class="op">()</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create configuration UI</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>configUI<span class="op">,</span> err <span class="op">:=</span> NewConfigUI<span class="op">(</span>configPath<span class="op">)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Render configuration form</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>form<span class="op">,</span> err <span class="op">:=</span> adapter<span class="op">.</span>RenderConfigForm<span class="op">(</span>configUI<span class="op">)</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Show configuration dialog</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>changesMade<span class="op">,</span> err <span class="op">:=</span> adapter<span class="op">.</span>ShowConfigDialog<span class="op">(</span>configUI<span class="op">)</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> changesMade <span class="op">{</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Configuration was modified&quot;</span><span class="op">)</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="template-usage">Template Usage</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create template manager</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> NewConfigurationTemplateManager<span class="op">()</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply development template</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>variables <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;workspace_path&quot;</span><span class="op">:</span> <span class="st">&quot;~/my_project&quot;</span><span class="op">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;debug_enabled&quot;</span><span class="op">:</span>  <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>config<span class="op">,</span> err <span class="op">:=</span> manager<span class="op">.</span>ApplyTemplate<span class="op">(</span><span class="st">&quot;development&quot;</span><span class="op">,</span> variables<span class="op">)</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Create custom template</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>template<span class="op">,</span> err <span class="op">:=</span> manager<span class="op">.</span>CreateTemplateFromConfig<span class="op">(</span>config<span class="op">,</span> <span class="st">&quot;My Template&quot;</span><span class="op">,</span> <span class="st">&quot;Custom configuration&quot;</span><span class="op">,</span> <span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Fatal<span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="validation-usage">Validation Usage</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create validator</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>validator <span class="op">:=</span> NewConfigurationValidator<span class="op">(</span><span class="ot">true</span><span class="op">)</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Add custom validation</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>validator<span class="op">.</span>AddCustomRule<span class="op">(</span><span class="st">&quot;database.host&quot;</span><span class="op">,</span> <span class="kw">func</span><span class="op">(</span>value <span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> host<span class="op">,</span> ok <span class="op">:=</span> value<span class="op">.(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">{</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> host <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;database host cannot be empty&quot;</span><span class="op">)</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate configuration</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>result <span class="op">:=</span> validator<span class="op">.</span>Validate<span class="op">(</span>config<span class="op">)</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">!</span>result<span class="op">.</span>Valid <span class="op">{</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Configuration validation failed:&quot;</span><span class="op">)</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> err <span class="op">:=</span> <span class="kw">range</span> result<span class="op">.</span>Errors <span class="op">{</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;  %s: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> err<span class="op">.</span>Path<span class="op">,</span> err<span class="op">.</span>Message<span class="op">)</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="advanced-features">🚀 Advanced Features</h2>
+<h3 id="configuration-transformation">Configuration Transformation</h3>
+<ul>
+<li><strong>Field Mapping</strong>: Copy, move, rename configuration
+fields</li>
+<li><strong>Type Conversion</strong>: Automatic type conversion between
+fields</li>
+<li><strong>Conditional Logic</strong>: Apply transformations based on
+conditions</li>
+<li><strong>Template Substitution</strong>: Variable substitution in
+configuration values</li>
+<li><strong>Calculation</strong>: Dynamic value calculation</li>
+</ul>
+<h3 id="configuration-watchers">Configuration Watchers</h3>
+<ul>
+<li><strong>Real-time Monitoring</strong>: Monitor configuration
+changes</li>
+<li><strong>Change Notifications</strong>: Notify on configuration
+updates</li>
+<li><strong>Validation on Change</strong>: Validate changes before
+applying</li>
+<li><strong>Rollback on Error</strong>: Automatic rollback on validation
+failures</li>
+</ul>
+<h3 id="configuration-snapshots">Configuration Snapshots</h3>
+<ul>
+<li><strong>Version History</strong>: Track configuration changes over
+time</li>
+<li><strong>Named Snapshots</strong>: Create named configuration
+snapshots</li>
+<li><strong>Comparison</strong>: Compare configuration versions</li>
+<li><strong>Restore</strong>: Restore previous configurations</li>
+</ul>
+<h2 id="best-practices">📝 Best Practices</h2>
+<h3 id="configuration-design">Configuration Design</h3>
+<ol type="1">
+<li><strong>Default Values</strong>: Provide sensible defaults for all
+settings</li>
+<li><strong>Validation</strong>: Validate all configuration values</li>
+<li><strong>Migration</strong>: Support seamless configuration
+upgrades</li>
+<li><strong>Documentation</strong>: Document all configuration
+options</li>
+<li><strong>Testing</strong>: Test all configuration scenarios</li>
+</ol>
+<h3 id="security">Security</h3>
+<ol type="1">
+<li><strong>Sensitive Data</strong>: Never log passwords or API
+keys</li>
+<li><strong>Encryption</strong>: Encrypt sensitive configuration
+values</li>
+<li><strong>Access Control</strong>: Restrict configuration access</li>
+<li><strong>Audit Trail</strong>: Log all configuration changes</li>
+<li><strong>Backups</strong>: Regular configuration backups</li>
+</ol>
+<h3 id="performance">Performance</h3>
+<ol type="1">
+<li><strong>Lazy Loading</strong>: Load configuration sections on
+demand</li>
+<li><strong>Caching</strong>: Cache frequently accessed
+configuration</li>
+<li><strong>Validation</strong>: Optimize validation performance</li>
+<li><strong>Updates</strong>: Use atomic updates for consistency</li>
+<li><strong>Monitoring</strong>: Monitor configuration performance</li>
+</ol>
+<h2 id="integration">🔗 Integration</h2>
+<h3 id="api-integration">API Integration</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Configuration API endpoints</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>GET    <span class="op">/</span>api<span class="op">/</span>config              <span class="op">-</span> Get current configuration</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>config              <span class="op">-</span> Update configuration</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>PUT    <span class="op">/</span>api<span class="op">/</span>config<span class="op">/{</span>section<span class="op">}</span>   <span class="op">-</span> Update configuration section</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>DELETE  <span class="op">/</span>api<span class="op">/</span>config<span class="op">/{</span>section<span class="op">}</span>   <span class="op">-</span> Reset configuration section</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>config<span class="op">/</span>validate    <span class="op">-</span> Validate configuration</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>GET    <span class="op">/</span>api<span class="op">/</span>config<span class="op">/</span>schema       <span class="op">-</span> Get configuration schema</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>config<span class="op">/</span>backup       <span class="op">-</span> Create configuration backup</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>config<span class="op">/</span>restore      <span class="op">-</span> Restore configuration</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>GET    <span class="op">/</span>api<span class="op">/</span>config<span class="op">/</span>templates     <span class="op">-</span> List available templates</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>POST   <span class="op">/</span>api<span class="op">/</span>config<span class="op">/</span>templates     <span class="op">-</span> Apply template</span></code></pre></div>
+<h3 id="cli-integration">CLI Integration</h3>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuration CLI commands</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config show                          <span class="at">-</span> Show current configuration</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config get <span class="op">&lt;</span>key<span class="op">&gt;</span>                    - Get configuration value</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config set <span class="op">&lt;</span>key<span class="op">&gt;</span> <span class="op">&lt;</span>value<span class="op">&gt;</span>           - Set configuration value</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config reset <span class="op">&lt;</span>section<span class="op">&gt;</span>               - Reset configuration section</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config validate                       <span class="at">-</span> Validate configuration</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config backup                         <span class="at">-</span> Create backup</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config restore <span class="op">&lt;</span>file<span class="op">&gt;</span>                - Restore from backup</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config template list                 <span class="at">-</span> List templates</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config template apply <span class="op">&lt;</span>name<span class="op">&gt;</span>         - Apply template</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> config migrate <span class="op">&lt;</span>to-version<span class="op">&gt;</span>          - Migrate configuration</span></code></pre></div>
+<h2 id="references">📚 References</h2>
+<h3 id="configuration-schema">Configuration Schema</h3>
+<ul>
+<li><a href="./schema.md">Complete Schema Reference</a></li>
+<li><a href="./validation.md">Validation Rules</a></li>
+<li><a href="./migration.md">Migration Guide</a></li>
+<li><a href="./templates.md">Template Documentation</a></li>
+</ul>
+<h3 id="platform-guides">Platform Guides</h3>
+<ul>
+<li><a href="./platforms/desktop.md">Desktop Configuration
+Guide</a></li>
+<li><a href="./platforms/web.md">Web Configuration Guide</a></li>
+<li><a href="./platforms/mobile.md">Mobile Configuration Guide</a></li>
+<li><a href="./platforms/tui.md">TUI Configuration Guide</a></li>
+</ul>
+<h3 id="development">Development</h3>
+<ul>
+<li><a href="./api.md">Configuration API</a></li>
+<li><a href="./plugins.md">Plugin Development</a></li>
+<li><a href="./validation-custom.md">Custom Validation</a></li>
+<li><a href="./testing.md">Testing Configuration</a></li>
+</ul>
+<hr />
+<p>This configuration system provides a solid foundation for managing
+HelixCode across all platforms, with comprehensive features for
+validation, migration, templating, and platform optimization.</p>
+</body>
+</html>

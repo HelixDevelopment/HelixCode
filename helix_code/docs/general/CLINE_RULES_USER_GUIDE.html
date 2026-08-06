@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CLINE_RULES_USER_GUIDE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CLINE_RULES_USER_GUIDE</h1>
+</header>
+<h1 id="cline-rules-system---comprehensive-user-guide">Cline Rules
+System - Comprehensive User Guide</h1>
+<h2 id="helixcode-phase-2-feature-2">HelixCode Phase 2, Feature 2</h2>
+<p><strong>Version:</strong> 1.0 <strong>Last Updated:</strong> November
+7, 2025 <strong>Status:</strong> ✅ Complete</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#rule-file-format">Rule File Format</a></li>
+<li><a href="#pattern-matching">Pattern Matching</a></li>
+<li><a href="#rule-inheritance">Rule Inheritance</a></li>
+<li><a href="#rule-categories">Rule Categories</a></li>
+<li><a href="#rule-metadata">Rule Metadata</a></li>
+<li><a href="#advanced-features">Advanced Features</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#api-reference">API Reference</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>The Cline Rules System provides a flexible, hierarchical way to
+define project-specific guidelines, conventions, and requirements that
+LLMs should follow when generating or modifying code.</p>
+<h3 id="what-are-cline-rules">What are Cline Rules?</h3>
+<p>Cline Rules are project-level instructions stored in
+<code>.clinerules</code> files that tell HelixCode how to handle
+different files in your project. They can specify:</p>
+<ul>
+<li><strong>Code style conventions</strong> (formatting, naming,
+structure)</li>
+<li><strong>Architecture guidelines</strong> (patterns, dependencies,
+organization)</li>
+<li><strong>Security requirements</strong> (authentication, validation,
+encryption)</li>
+<li><strong>Testing standards</strong> (coverage, frameworks,
+patterns)</li>
+<li><strong>Documentation requirements</strong> (comments, docstrings,
+READMEs)</li>
+<li><strong>Performance guidelines</strong> (optimization, caching,
+algorithms)</li>
+</ul>
+<h3 id="key-features">Key Features</h3>
+<ul>
+<li><strong>3-Level Hierarchy</strong>: Workspace → Project →
+File-specific rules</li>
+<li><strong>Pattern Matching</strong>: Glob, regex, exact, and wildcard
+patterns</li>
+<li><strong>Priority-Based</strong>: Rules are scored and applied by
+priority</li>
+<li><strong>Flexible Format</strong>: Simple YAML-like syntax</li>
+<li><strong>Auto-Detection</strong>: Pattern types detected
+automatically</li>
+<li><strong>Thread-Safe</strong>: Concurrent access support</li>
+<li><strong>Extensible</strong>: Custom metadata and categories</li>
+</ul>
+<h3 id="why-use-cline-rules">Why Use Cline Rules?</h3>
+<ol type="1">
+<li><strong>Consistency</strong>: Ensure all generated code follows
+project conventions</li>
+<li><strong>Quality</strong>: Enforce best practices and standards
+automatically</li>
+<li><strong>Documentation</strong>: Centralize project guidelines in one
+place</li>
+<li><strong>Flexibility</strong>: Different rules for different parts of
+codebase</li>
+<li><strong>Inheritance</strong>: Share common rules, override when
+needed</li>
+<li><strong>Automation</strong>: LLMs automatically follow project
+standards</li>
+</ol>
+<hr />
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="creating-your-first-rule-file">Creating Your First Rule
+File</h3>
+<p>Create a <code>.clinerules</code> file in your project root:</p>
+<pre><code># Project-level rules for MyProject
+
+[Go Style]
+pattern: *.go
+description: Go code style guidelines
+category: style
+priority: 5
+
+Follow these Go conventions:
+- Use gofmt for formatting
+- Error handling: always check errors, never ignore
+- Naming: use camelCase for unexported, PascalCase for exported
+- Comments: every exported function must have a doc comment
+
+[Test Requirements]
+pattern: *_test.go
+description: Testing standards
+category: testing
+priority: 10
+
+All test files must:
+- Use table-driven tests for multiple cases
+- Include both positive and negative test cases
+- Achieve at least 80% code coverage
+- Use testify for assertions</code></pre>
+<h3 id="using-rules-programmatically">Using Rules Programmatically</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;dev.helix.code/internal/rules&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a rule manager</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    manager <span class="op">:=</span> rules<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load rules from project directory</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> manager<span class="op">.</span>LoadFromDirectory<span class="op">(</span><span class="st">&quot;.&quot;</span><span class="op">)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">panic</span><span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get rules for a specific file</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    matches <span class="op">:=</span> manager<span class="op">.</span>GetRulesForFile<span class="op">(</span><span class="st">&quot;internal/server/handler.go&quot;</span><span class="op">)</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Format rules as a prompt for LLM</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    prompt <span class="op">:=</span> manager<span class="op">.</span>FormatRulesForFile<span class="op">(</span><span class="st">&quot;internal/server/handler.go&quot;</span><span class="op">)</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span>prompt<span class="op">)</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="directory-structure">Directory Structure</h3>
+<pre><code>myproject/
+├── .helix/
+│   └── .clinerules          # Workspace-level rules (highest scope)
+├── .clinerules              # Project-level rules
+├── src/
+│   ├── api/
+│   │   └── api.clinerules   # File-specific rules for API module
+│   └── utils/
+│       └── utils.clinerules # File-specific rules for utilities
+└── README.md</code></pre>
+<hr />
+<h2 id="rule-file-format">Rule File Format</h2>
+<h3 id="basic-structure">Basic Structure</h3>
+<p>A <code>.clinerules</code> file consists of rules, each with a name,
+optional metadata, and content:</p>
+<pre><code>[Rule Name]
+key: value
+another_key: value
+
+Rule content goes here.
+Multiple lines are supported.</code></pre>
+<h3 id="rule-components">Rule Components</h3>
+<p>Each rule has:</p>
+<ol type="1">
+<li><strong>Name</strong> (required): Enclosed in
+<code>[brackets]</code></li>
+<li><strong>Metadata</strong> (optional): Key-value pairs</li>
+<li><strong>Content</strong> (required): The actual guideline text</li>
+</ol>
+<h3 id="supported-metadata-keys">Supported Metadata Keys</h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pattern</code></td>
+<td>string</td>
+<td>File matching pattern</td>
+<td><code>*.go</code>, <code>src/**/*.js</code></td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>Rule description</td>
+<td><code>Code style for Go</code></td>
+</tr>
+<tr>
+<td><code>priority</code></td>
+<td>integer</td>
+<td>Rule priority (1-100)</td>
+<td><code>10</code></td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>string</td>
+<td>Rule category</td>
+<td><code>style</code>, <code>security</code></td>
+</tr>
+<tr>
+<td><code>scope</code></td>
+<td>string</td>
+<td>Application scope</td>
+<td><code>global</code>, <code>directory</code>, <code>file</code></td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td>comma-separated</td>
+<td>Tags for filtering</td>
+<td><code>backend, critical</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="comments">Comments</h3>
+<p>Lines starting with <code>#</code> are comments:</p>
+<pre><code># This is a comment
+[Rule Name]
+# This is also a comment
+pattern: *.go</code></pre>
+<h3 id="complete-example">Complete Example</h3>
+<pre><code># Backend API Guidelines
+
+[API Structure]
+pattern: src/api/**/*.go
+description: REST API endpoint structure
+priority: 10
+category: architecture
+scope: directory
+tags: api, backend, http
+
+All API endpoints must:
+1. Use the Gin framework
+2. Implement proper error handling with HTTP status codes
+3. Validate all input parameters
+4. Return JSON responses in standard format:
+   {
+     &quot;success&quot;: true|false,
+     &quot;data&quot;: {...},
+     &quot;error&quot;: &quot;error message if applicable&quot;
+   }
+
+[Authentication]
+pattern: src/api/*/handler.go
+description: Authentication requirements
+priority: 20
+category: security
+tags: security, auth, critical
+
+Every handler must:
+- Check authentication using the auth middleware
+- Verify user permissions for the operation
+- Log all access attempts with user ID
+- Use JWT tokens for authentication</code></pre>
+<hr />
+<h2 id="pattern-matching">Pattern Matching</h2>
+<h3 id="pattern-types">Pattern Types</h3>
+<p>HelixCode supports four pattern types, which are
+<strong>auto-detected</strong> from the pattern syntax:</p>
+<h4 id="glob-pattern-default">1. Glob Pattern (Default)</h4>
+<p><strong>Syntax:</strong> Contains <code>*</code> or <code>?</code>
+wildcards</p>
+<p><strong>Examples:</strong></p>
+<pre><code>pattern: *.go              # Matches all Go files
+pattern: *_test.go         # Matches all test files
+pattern: config.*.yaml     # Matches config.dev.yaml, config.prod.yaml
+pattern: src/**/*.js       # Matches all JS files under src/ at any depth</code></pre>
+<p><strong>Glob Wildcards:</strong> - <code>*</code> - Matches any
+characters except <code>/</code> - <code>**</code> - Matches zero or
+more directory levels - <code>?</code> - Matches exactly one
+character</p>
+<p><strong>Examples:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Matches</th>
+<th>Doesn’t Match</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*.go</code></td>
+<td><code>main.go</code>, <code>test.go</code></td>
+<td><code>main.js</code>, <code>dir/file.go</code></td>
+</tr>
+<tr>
+<td><code>src/**/*.go</code></td>
+<td><code>src/main.go</code>, <code>src/api/handler.go</code></td>
+<td><code>test/main.go</code></td>
+</tr>
+<tr>
+<td><code>test_?.go</code></td>
+<td><code>test_1.go</code>, <code>test_a.go</code></td>
+<td><code>test_10.go</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="regex-pattern">2. Regex Pattern</h4>
+<p><strong>Syntax:</strong> Enclosed in <code>/slashes/</code></p>
+<p><strong>Examples:</strong></p>
+<pre><code>pattern: /.*\.go$/                    # All files ending in .go
+pattern: /^src\/.*_handler\.go$/      # Handlers in src directory
+pattern: /test_[0-9]+\.go$/          # Numbered test files</code></pre>
+<p><strong>Use Cases:</strong> - Complex pattern matching - Character
+classes and ranges - Lookaheads and lookbehinds - Capturing groups (for
+metadata)</p>
+<h4 id="exact-pattern">3. Exact Pattern</h4>
+<p><strong>Syntax:</strong> No wildcards, no slashes</p>
+<p><strong>Examples:</strong></p>
+<pre><code>pattern: src/main.go              # Only matches this exact file
+pattern: config/production.yaml   # Only this specific config</code></pre>
+<p><strong>Use Cases:</strong> - File-specific rules - Critical files
+requiring special handling - Override rules for specific files</p>
+<h4 id="any-pattern">4. Any Pattern</h4>
+<p><strong>Syntax:</strong> <code>*</code> or <code>**</code> alone</p>
+<p><strong>Examples:</strong></p>
+<pre><code>pattern: *                        # Matches all files
+pattern: **                       # Matches all files (same as *)</code></pre>
+<p><strong>Use Cases:</strong> - Default rules - Workspace-level
+guidelines - Fallback patterns</p>
+<h3 id="pattern-matching-examples">Pattern Matching Examples</h3>
+<pre><code>[Backend Go Files]
+pattern: src/**/*.go
+# Matches:
+#   src/main.go
+#   src/api/handler.go
+#   src/api/middleware/auth.go
+
+[Test Files Only]
+pattern: *_test.go
+# Matches:
+#   handler_test.go
+#   utils_test.go
+# Doesn&#39;t match:
+#   api/handler_test.go (not in root)
+
+[Specific Config]
+pattern: config/production.yaml
+# Matches only:
+#   config/production.yaml
+
+[All TypeScript React]
+pattern: /.*\.(tsx|ts)$/
+# Matches:
+#   App.tsx
+#   utils.ts
+#   components/Button.tsx</code></pre>
+<h3 id="pattern-priority">Pattern Priority</h3>
+<p>When multiple patterns match a file, rules are scored and sorted
+by:</p>
+<ol type="1">
+<li><strong>Pattern specificity</strong> (exact &gt; glob &gt; regex
+&gt; any)</li>
+<li><strong>Rule priority</strong> (explicit priority value)</li>
+<li><strong>Scope</strong> (file &gt; directory &gt; global)</li>
+<li><strong>Inheritance level</strong> (file-specific &gt; project &gt;
+workspace)</li>
+</ol>
+<hr />
+<h2 id="rule-inheritance">Rule Inheritance</h2>
+<h3 id="three-level-hierarchy">Three-Level Hierarchy</h3>
+<p>Rules are inherited and merged across three levels:</p>
+<pre><code>Workspace (.helix/.clinerules)    # Lowest priority, broadest scope
+    ↓
+Project (.clinerules)             # Medium priority
+    ↓
+File-specific (*.clinerules)      # Highest priority, most specific</code></pre>
+<h3 id="how-inheritance-works">How Inheritance Works</h3>
+<ol type="1">
+<li><strong>All matching rules are collected</strong> from all three
+levels</li>
+<li><strong>Rules are scored</strong> based on:
+<ul>
+<li>Pattern specificity</li>
+<li>Explicit priority</li>
+<li>Scope</li>
+<li>Inheritance level (file +3000, project +2000, workspace +1000)</li>
+</ul></li>
+<li><strong>Rules are sorted</strong> by score (highest first)</li>
+<li><strong>LLM receives all matching rules</strong> in priority
+order</li>
+</ol>
+<h3 id="inheritance-example">Inheritance Example</h3>
+<p><strong>Workspace Rule</strong>
+(<code>.helix/.clinerules</code>):</p>
+<pre><code>[General Style]
+pattern: *
+priority: 1
+
+Use consistent formatting and naming conventions.</code></pre>
+<p><strong>Project Rule</strong> (<code>.clinerules</code>):</p>
+<pre><code>[Go Style]
+pattern: *.go
+priority: 5
+
+Follow Go conventions:
+- Use gofmt
+- Document exported symbols</code></pre>
+<p><strong>File Rule</strong> (<code>api/api.clinerules</code>):</p>
+<pre><code>[API Handlers]
+pattern: *_handler.go
+priority: 10
+
+API handlers must:
+- Validate input
+- Return standard JSON format</code></pre>
+<p><strong>For file <code>api/user_handler.go</code></strong>, all three
+rules apply, in this order: 1. API Handlers (file-specific, priority 10,
+score ~3010) 2. Go Style (project-level, priority 5, score ~2005) 3.
+General Style (workspace-level, priority 1, score ~1001)</p>
+<h3 id="overriding-rules">Overriding Rules</h3>
+<p>File-specific rules can override project or workspace rules by:</p>
+<ol type="1">
+<li><strong>Using same rule name</strong> (latest wins)</li>
+<li><strong>Higher priority value</strong> (explicit override)</li>
+<li><strong>More specific pattern</strong> (automatic priority)</li>
+</ol>
+<p>Example override:</p>
+<p><strong>Project</strong> (<code>.clinerules</code>):</p>
+<pre><code>[Error Handling]
+pattern: *.go
+priority: 5
+
+Always return errors explicitly.</code></pre>
+<p><strong>File</strong> (<code>legacy/legacy.clinerules</code>):</p>
+<pre><code>[Error Handling]
+pattern: *.go
+priority: 10
+
+Legacy code: panic() is acceptable for critical errors.</code></pre>
+<p>For files in <code>legacy/</code>, the file-specific rule takes
+precedence.</p>
+<hr />
+<h2 id="rule-categories">Rule Categories</h2>
+<h3 id="built-in-categories">Built-in Categories</h3>
+<p>HelixCode provides standard categories for organizing rules:</p>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 31%" />
+<col style="width: 34%" />
+</colgroup>
+<thead>
+<tr>
+<th>Category</th>
+<th>Purpose</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>style</code></td>
+<td>Code formatting and conventions</td>
+<td>Indentation, naming, structure</td>
+</tr>
+<tr>
+<td><code>architecture</code></td>
+<td>System design and patterns</td>
+<td>MVC, layering, dependencies</td>
+</tr>
+<tr>
+<td><code>security</code></td>
+<td>Security requirements</td>
+<td>Auth, validation, encryption</td>
+</tr>
+<tr>
+<td><code>testing</code></td>
+<td>Testing standards</td>
+<td>Coverage, frameworks, patterns</td>
+</tr>
+<tr>
+<td><code>documentation</code></td>
+<td>Documentation requirements</td>
+<td>Comments, READMEs, API docs</td>
+</tr>
+<tr>
+<td><code>performance</code></td>
+<td>Performance guidelines</td>
+<td>Caching, algorithms, optimization</td>
+</tr>
+<tr>
+<td><code>general</code></td>
+<td>General guidelines</td>
+<td>Default category</td>
+</tr>
+</tbody>
+</table>
+<h3 id="using-categories">Using Categories</h3>
+<p><strong>In rule files:</strong></p>
+<pre><code>[Auth Security]
+category: security
+pattern: src/auth/**/*.go
+
+All authentication code must:
+- Use bcrypt for password hashing
+- Implement rate limiting
+- Log all authentication attempts</code></pre>
+<p><strong>In code:</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get all security rules</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>securityRules <span class="op">:=</span> manager<span class="op">.</span>GetRulesByCategory<span class="op">(</span>rules<span class="op">.</span>RuleCategorySecurity<span class="op">)</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if critical security rules apply</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> rule <span class="op">:=</span> <span class="kw">range</span> securityRules <span class="op">{</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> hasTag<span class="op">(</span>rule<span class="op">,</span> <span class="st">&quot;critical&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Enforce strictly</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="custom-categories">Custom Categories</h3>
+<p>You can define custom categories:</p>
+<pre><code>[Database Schema]
+category: database
+pattern: migrations/*.sql
+
+All migrations must:
+- Be reversible (include DOWN migration)
+- Include transaction wrappers
+- Update version tracking</code></pre>
+<hr />
+<h2 id="rule-metadata">Rule Metadata</h2>
+<h3 id="priority">Priority</h3>
+<p>Priority determines rule importance (1-100, default: 1).</p>
+<pre><code>[Critical Security]
+priority: 100
+pattern: src/auth/**/*.go
+
+[Code Style]
+priority: 5
+pattern: *.go
+
+[General Guidelines]
+priority: 1
+pattern: *</code></pre>
+<p>Higher priority rules appear first when multiple rules match.</p>
+<h3 id="scope">Scope</h3>
+<p>Scope defines where a rule applies:</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Description</th>
+<th>Example Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>global</code></td>
+<td>Entire project</td>
+<td>General code style</td>
+</tr>
+<tr>
+<td><code>directory</code></td>
+<td>Specific directory tree</td>
+<td>Module-specific conventions</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>Individual files</td>
+<td>Special file requirements</td>
+</tr>
+</tbody>
+</table>
+<pre><code>[Project Standards]
+scope: global
+pattern: *
+
+[API Module Standards]
+scope: directory
+pattern: src/api/**/*
+
+[Main Entry Point]
+scope: file
+pattern: src/main.go</code></pre>
+<h3 id="tags">Tags</h3>
+<p>Tags enable filtering and grouping:</p>
+<pre><code>[Authentication]
+tags: security, backend, critical
+pattern: src/auth/**/*.go
+
+[Frontend Style]
+tags: frontend, react, style
+pattern: src/components/**/*.tsx</code></pre>
+<p><strong>Querying by tags:</strong></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get all critical rules</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>criticalRules <span class="op">:=</span> manager<span class="op">.</span>GetRulesByTag<span class="op">(</span><span class="st">&quot;critical&quot;</span><span class="op">)</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Get all backend security rules</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>backendSecurity <span class="op">:=</span> filterByTags<span class="op">(</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>GetRulesByCategory<span class="op">(</span>rules<span class="op">.</span>RuleCategorySecurity<span class="op">),</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;backend&quot;</span><span class="op">,</span> <span class="st">&quot;critical&quot;</span><span class="op">},</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="custom-metadata">Custom Metadata</h3>
+<p>Add any custom key-value pairs:</p>
+<pre><code>[API Versioning]
+pattern: src/api/v*/**/*.go
+api_version: v2
+deprecated: false
+owner: backend-team
+review_required: true
+
+API endpoints must follow v2 standards.</code></pre>
+<p><strong>Accessing custom metadata:</strong></p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> match <span class="op">:=</span> <span class="kw">range</span> matches <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> match<span class="op">.</span>Rule<span class="op">.</span>Metadata<span class="op">[</span><span class="st">&quot;review_required&quot;</span><span class="op">]</span> <span class="op">==</span> <span class="st">&quot;true&quot;</span> <span class="op">{</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Flag for manual review</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="advanced-features">Advanced Features</h2>
+<h3 id="multi-file-rules">Multi-File Rules</h3>
+<p>A single <code>.clinerules</code> file can contain rules for multiple
+file patterns:</p>
+<pre><code>[Go Files]
+pattern: *.go
+Use Go conventions.
+
+[Test Files]
+pattern: *_test.go
+Use table-driven tests.
+
+[Config Files]
+pattern: *.yaml
+Use YAML best practices.</code></pre>
+<h3 id="dynamic-rule-loading">Dynamic Rule Loading</h3>
+<p>Load rules at runtime:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> rules<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Load from directory (finds all .clinerules)</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>LoadFromDirectory<span class="op">(</span><span class="st">&quot;./myproject&quot;</span><span class="op">)</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Load specific rule files</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>LoadWorkspaceRules<span class="op">(</span><span class="st">&quot;.helix/.clinerules&quot;</span><span class="op">)</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>LoadProjectRules<span class="op">(</span><span class="st">&quot;.clinerules&quot;</span><span class="op">)</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>LoadFileRules<span class="op">(</span><span class="st">&quot;api&quot;</span><span class="op">,</span> <span class="st">&quot;api/api.clinerules&quot;</span><span class="op">)</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Add rules programmatically</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>rule <span class="op">:=</span> <span class="op">&amp;</span>rules<span class="op">.</span>Rule<span class="op">{</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>    ID<span class="op">:</span>          <span class="st">&quot;dynamic-rule-1&quot;</span><span class="op">,</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span>        <span class="st">&quot;Dynamic Rule&quot;</span><span class="op">,</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    Pattern<span class="op">:</span>     <span class="st">&quot;*.go&quot;</span><span class="op">,</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    PatternType<span class="op">:</span> rules<span class="op">.</span>PatternTypeGlob<span class="op">,</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    Content<span class="op">:</span>     <span class="st">&quot;Dynamic content&quot;</span><span class="op">,</span></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    Priority<span class="op">:</span>    <span class="dv">10</span><span class="op">,</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>AddProjectRule<span class="op">(</span>rule<span class="op">)</span></span></code></pre></div>
+<h3 id="rule-export-and-import">Rule Export and Import</h3>
+<p>Export all rules to a single file:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Export</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>combined <span class="op">:=</span> manager<span class="op">.</span>Export<span class="op">()</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>content <span class="op">:=</span> rules<span class="op">.</span>Format<span class="op">(</span>combined<span class="op">)</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>os<span class="op">.</span>WriteFile<span class="op">(</span><span class="st">&quot;all-rules.clinerules&quot;</span><span class="op">,</span> <span class="op">[]</span><span class="dt">byte</span><span class="op">(</span>content<span class="op">),</span> <span class="bn">0644</span><span class="op">)</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Import</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>parser <span class="op">:=</span> rules<span class="op">.</span>NewParser<span class="op">(</span><span class="st">&quot;all-rules.clinerules&quot;</span><span class="op">)</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>ruleSet<span class="op">,</span> _ <span class="op">:=</span> parser<span class="op">.</span>Parse<span class="op">()</span></span></code></pre></div>
+<h3 id="rule-validation">Rule Validation</h3>
+<p>Validate rules before applying:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>rule <span class="op">:=</span> <span class="op">&amp;</span>rules<span class="op">.</span>Rule<span class="op">{</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span>        <span class="st">&quot;Test Rule&quot;</span><span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    Pattern<span class="op">:</span>     <span class="st">&quot;[invalid(regex&quot;</span><span class="op">,</span>  <span class="co">// Invalid regex</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    PatternType<span class="op">:</span> rules<span class="op">.</span>PatternTypeRegex<span class="op">,</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    Content<span class="op">:</span>     <span class="st">&quot;Content&quot;</span><span class="op">,</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> rule<span class="op">.</span>Validate<span class="op">();</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Invalid rule: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Output: Invalid rule: invalid regex pattern: ...</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="thread-safe-operations">Thread-Safe Operations</h3>
+<p>All manager operations are thread-safe:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> rules<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Safe concurrent access</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>AddWorkspaceRule<span class="op">(</span>rule1<span class="op">)</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    matches <span class="op">:=</span> manager<span class="op">.</span>GetRulesForFile<span class="op">(</span><span class="st">&quot;main.go&quot;</span><span class="op">)</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="cf">go</span> <span class="kw">func</span><span class="op">()</span> <span class="op">{</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    count <span class="op">:=</span> manager<span class="op">.</span>Count<span class="op">()</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="op">}()</span></span></code></pre></div>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="organize-by-hierarchy">1. Organize by Hierarchy</h3>
+<p>Use the three-level hierarchy effectively:</p>
+<ul>
+<li><strong>Workspace</strong>: Organization-wide standards</li>
+<li><strong>Project</strong>: Project-specific conventions</li>
+<li><strong>File</strong>: Module or component-specific rules</li>
+</ul>
+<h3 id="use-appropriate-priorities">2. Use Appropriate Priorities</h3>
+<p>Reserve priority ranges for different needs:</p>
+<ul>
+<li><strong>1-20</strong>: General guidelines</li>
+<li><strong>21-50</strong>: Important conventions</li>
+<li><strong>51-80</strong>: Critical requirements</li>
+<li><strong>81-100</strong>: Security and safety rules</li>
+</ul>
+<h3 id="be-specific">3. Be Specific</h3>
+<p>Write clear, actionable rules:</p>
+<p><strong>❌ Bad:</strong></p>
+<pre><code>[Code Quality]
+pattern: *
+Write good code.</code></pre>
+<p><strong>✅ Good:</strong></p>
+<pre><code>[Error Handling]
+pattern: src/**/*.go
+priority: 40
+category: architecture
+
+Error handling requirements:
+1. Always check errors returned from functions
+2. Wrap errors with context using fmt.Errorf(&quot;context: %w&quot;, err)
+3. Return errors up the call stack
+4. Only handle errors at boundaries (HTTP handlers, main)
+5. Never use panic() except for truly unrecoverable errors</code></pre>
+<h3 id="use-categories-and-tags">4. Use Categories and Tags</h3>
+<p>Organize rules for easy filtering:</p>
+<pre><code>[SQL Injection Prevention]
+category: security
+tags: database, security, critical
+pattern: src/**/*.go
+
+Prevent SQL injection:
+- Use parameterized queries
+- Never concatenate user input into SQL
+- Use prepared statements</code></pre>
+<h3 id="version-your-rules">5. Version Your Rules</h3>
+<p>Track rule changes in version control:</p>
+<pre><code># .clinerules
+# Version: 2.1
+# Last updated: 2025-11-07
+# Changes: Added security requirements for auth module
+
+[Authentication]
+# Added in version 2.1
+pattern: src/auth/**/*.go
+...</code></pre>
+<h3 id="test-your-patterns">6. Test Your Patterns</h3>
+<p>Verify patterns match expected files:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>rule <span class="op">:=</span> <span class="op">&amp;</span>rules<span class="op">.</span>Rule<span class="op">{</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    Pattern<span class="op">:</span>     <span class="st">&quot;src/**/*.go&quot;</span><span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    PatternType<span class="op">:</span> rules<span class="op">.</span>PatternTypeGlob<span class="op">,</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>testCases <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    path    <span class="dt">string</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    matches <span class="dt">bool</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a><span class="op">}{</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;src/main.go&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">},</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;src/api/handler.go&quot;</span><span class="op">,</span> <span class="ot">true</span><span class="op">},</span></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span><span class="st">&quot;test/main.go&quot;</span><span class="op">,</span> <span class="ot">false</span><span class="op">},</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> tc <span class="op">:=</span> <span class="kw">range</span> testCases <span class="op">{</span></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> rule<span class="op">.</span>Matches<span class="op">(</span>tc<span class="op">.</span>path<span class="op">)</span> <span class="op">!=</span> tc<span class="op">.</span>matches <span class="op">{</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Pattern failed for %s&quot;</span><span class="op">,</span> tc<span class="op">.</span>path<span class="op">)</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="document-rule-intent">7. Document Rule Intent</h3>
+<p>Explain why rules exist:</p>
+<pre><code>[No Direct Database Access in Handlers]
+pattern: src/api/*/handler.go
+priority: 60
+category: architecture
+
+DO NOT access the database directly from HTTP handlers.
+
+Rationale:
+- Separates concerns (handler = HTTP, service = business logic)
+- Makes code testable (can mock service layer)
+- Enables transaction management at service level
+- Allows reuse of business logic from other entry points
+
+Instead, inject a service and call its methods:
+✅ service.GetUser(id)
+❌ db.Query(&quot;SELECT * FROM users WHERE id = ?&quot;, id)</code></pre>
+<h3 id="regular-review">8. Regular Review</h3>
+<p>Schedule regular rule reviews:</p>
+<ul>
+<li>Quarterly: Review all rules for relevance</li>
+<li>Monthly: Update rules based on new learnings</li>
+<li>Weekly: Add rules for newly discovered patterns</li>
+<li>On incidents: Create rules to prevent recurrence</li>
+</ul>
+<hr />
+<h2 id="examples">Examples</h2>
+<h3 id="example-1-microservices-project">Example 1: Microservices
+Project</h3>
+<pre><code># Microservices Architecture Rules
+
+[Service Structure]
+pattern: services/*/
+priority: 50
+category: architecture
+tags: microservices, structure
+
+Each service must be self-contained:
+- Own database schema
+- Independent deployment
+- API versioning (v1, v2, etc.)
+- Health check endpoint at /health
+- Metrics endpoint at /metrics
+
+[Service Communication]
+pattern: services/*/client/*.go
+priority: 60
+category: architecture
+tags: microservices, communication
+
+Inter-service communication:
+- Use HTTP/JSON for synchronous calls
+- Use message queue (RabbitMQ) for async
+- Implement circuit breaker pattern
+- Add request tracing with OpenTelemetry
+- Timeout all external calls (default: 30s)
+
+[Service Tests]
+pattern: services/*/**/*_test.go
+priority: 40
+category: testing
+tags: microservices, testing
+
+Integration tests must:
+- Use testcontainers for dependencies
+- Test against real database
+- Mock external service calls
+- Test failure scenarios
+- Achieve 80% coverage minimum</code></pre>
+<h3 id="example-2-react-frontend">Example 2: React Frontend</h3>
+<pre><code># React Frontend Guidelines
+
+[Component Structure]
+pattern: src/components/**/*.tsx
+priority: 30
+category: architecture
+tags: frontend, react, components
+
+React component structure:
+1. Use functional components with hooks
+2. One component per file
+3. Export component as default
+4. Props interface defined above component
+5. Styled-components for styling
+
+Example:
+interface ButtonProps {
+  onClick: () =&gt; void;
+  label: string;
+  variant?: &#39;primary&#39; | &#39;secondary&#39;;
+}
+
+export default function Button({ onClick, label, variant = &#39;primary&#39; }: ButtonProps) {
+  return &lt;StyledButton variant={variant} onClick={onClick}&gt;{label}&lt;/StyledButton&gt;;
+}
+
+[State Management]
+pattern: src/**/*.tsx
+priority: 40
+category: architecture
+tags: frontend, react, state
+
+State management rules:
+- Use useState for local component state
+- Use useContext for shared state (theme, user, etc.)
+- Use React Query for server state
+- Never prop drill more than 2 levels
+- Avoid Redux unless absolutely necessary
+
+[Component Testing]
+pattern: src/**/*.test.tsx
+priority: 35
+category: testing
+tags: frontend, react, testing
+
+Component tests must:
+- Use React Testing Library
+- Test user interactions, not implementation
+- Mock API calls with MSW
+- Test loading and error states
+- Achieve 90% coverage for components</code></pre>
+<h3 id="example-3-security-critical-application">Example 3:
+Security-Critical Application</h3>
+<pre><code># Security-Critical Application Rules
+
+[Input Validation]
+pattern: src/**/*.go
+priority: 90
+category: security
+tags: security, validation, critical
+
+ALL user input must be validated:
+1. Type validation (string, int, email, etc.)
+2. Length limits (prevent buffer overflow)
+3. Format validation (regex for email, phone, etc.)
+4. Whitelist allowed characters
+5. Sanitize HTML content
+
+Use validator library:
+import &quot;github.com/go-playground/validator/v10&quot;
+
+[Authentication]
+pattern: src/auth/**/*.go
+priority: 100
+category: security
+tags: security, auth, critical
+
+Authentication requirements:
+- Use bcrypt with cost factor 12 for passwords
+- Implement rate limiting (5 attempts per 15 minutes)
+- Use JWT with RS256 (not HS256)
+- Rotate JWT secrets every 90 days
+- Log all authentication attempts
+- Implement 2FA for admin accounts
+
+[Data Protection]
+pattern: src/**/*.go
+priority: 95
+category: security
+tags: security, data, critical, gdpr
+
+Data protection (GDPR compliance):
+- Encrypt all PII at rest (AES-256)
+- Use TLS 1.3 for data in transit
+- Never log sensitive data (passwords, tokens, PII)
+- Implement right to deletion (data purging)
+- Implement data export functionality
+- Audit all access to sensitive data
+
+[Dependency Security]
+pattern: go.mod
+priority: 85
+category: security
+tags: security, dependencies
+
+Dependency management:
+- Run `go mod tidy` before commits
+- Use `govulncheck` in CI pipeline
+- Update dependencies monthly
+- No dependencies with known CVEs
+- Pin versions (no floating versions)</code></pre>
+<h3 id="example-4-legacy-code-migration">Example 4: Legacy Code
+Migration</h3>
+<pre><code># Legacy Code Migration Rules
+
+[Legacy Code]
+pattern: legacy/**/*.go
+priority: 20
+tags: legacy, technical-debt
+
+Legacy code guidelines:
+- DO NOT refactor unless fixing a bug
+- Add TODO comments for future improvements
+- New features go in modern codebase
+- Plan for eventual deprecation
+
+[Modern Code]
+pattern: src/**/*.go
+priority: 40
+tags: modern, best-practices
+
+Modern codebase standards:
+- Use interfaces for dependencies
+- Dependency injection via constructors
+- Unit tests for all new code
+- Follow SOLID principles
+- Use context for cancellation
+
+[Migration Path]
+pattern: src/adapter/**/*.go
+priority: 50
+category: architecture
+tags: migration, adapter
+
+Adapters between legacy and modern:
+- Implement adapter pattern
+- Translate legacy structs to modern types
+- Add integration tests for adapters
+- Document translation logic
+- Plan for adapter removal</code></pre>
+<hr />
+<h2 id="api-reference">API Reference</h2>
+<h3 id="core-types">Core Types</h3>
+<div class="sourceCode" id="cb42"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Rule represents a project rule</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Rule <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    ID          <span class="dt">string</span>            <span class="co">// Unique identifier</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    Name        <span class="dt">string</span>            <span class="co">// Human-readable name</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    Description <span class="dt">string</span>            <span class="co">// Rule description</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    Pattern     <span class="dt">string</span>            <span class="co">// File pattern</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    PatternType PatternType       <span class="co">// Pattern type (glob/regex/exact/any)</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>    Content     <span class="dt">string</span>            <span class="co">// Rule content/guidelines</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>    Priority    <span class="dt">int</span>               <span class="co">// Priority (higher = more important)</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>    Category    RuleCategory      <span class="co">// Rule category</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>    Scope       RuleScope         <span class="co">// Application scope</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>    Tags        <span class="op">[]</span><span class="dt">string</span>          <span class="co">// Tags for filtering</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>    Metadata    <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span> <span class="co">// Custom metadata</span></span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Manager manages rules with inheritance</span></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Manager <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Private fields</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a><span class="co">// RuleSet represents a collection of rules</span></span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> RuleSet <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>    Name        <span class="dt">string</span></span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a>    Description <span class="dt">string</span></span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a>    Rules       <span class="op">[]*</span>Rule</span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a>    Metadata    <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span></span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a><span class="co">// MatchResult represents a rule match</span></span>
+<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> MatchResult <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a>    Matches  <span class="dt">bool</span></span>
+<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>    Score    <span class="dt">int</span></span>
+<span id="cb42-33"><a href="#cb42-33" aria-hidden="true" tabindex="-1"></a>    Rule     <span class="op">*</span>Rule</span>
+<span id="cb42-34"><a href="#cb42-34" aria-hidden="true" tabindex="-1"></a>    FilePath <span class="dt">string</span></span>
+<span id="cb42-35"><a href="#cb42-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="pattern-types-1">Pattern Types</h3>
+<div class="sourceCode" id="cb43"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    PatternTypeGlob  PatternType <span class="op">=</span> <span class="st">&quot;glob&quot;</span>  <span class="co">// Glob pattern (*.go)</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    PatternTypeRegex PatternType <span class="op">=</span> <span class="st">&quot;regex&quot;</span> <span class="co">// Regular expression</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    PatternTypeExact PatternType <span class="op">=</span> <span class="st">&quot;exact&quot;</span> <span class="co">// Exact file path</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    PatternTypeAny   PatternType <span class="op">=</span> <span class="st">&quot;any&quot;</span>   <span class="co">// Matches any file</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="categories">Categories</h3>
+<div class="sourceCode" id="cb44"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    RuleCategoryStyle         RuleCategory <span class="op">=</span> <span class="st">&quot;style&quot;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    RuleCategoryArchitecture  RuleCategory <span class="op">=</span> <span class="st">&quot;architecture&quot;</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    RuleCategorySecurity      RuleCategory <span class="op">=</span> <span class="st">&quot;security&quot;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    RuleCategoryTesting       RuleCategory <span class="op">=</span> <span class="st">&quot;testing&quot;</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    RuleCategoryDocumentation RuleCategory <span class="op">=</span> <span class="st">&quot;documentation&quot;</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    RuleCategoryPerformance   RuleCategory <span class="op">=</span> <span class="st">&quot;performance&quot;</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    RuleCategoryGeneral       RuleCategory <span class="op">=</span> <span class="st">&quot;general&quot;</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="scopes">Scopes</h3>
+<div class="sourceCode" id="cb45"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    RuleScopeGlobal    RuleScope <span class="op">=</span> <span class="st">&quot;global&quot;</span>    <span class="co">// Entire project</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    RuleScopeDirectory RuleScope <span class="op">=</span> <span class="st">&quot;directory&quot;</span> <span class="co">// Specific directory</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    RuleScopeFile      RuleScope <span class="op">=</span> <span class="st">&quot;file&quot;</span>      <span class="co">// Specific file</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="manager-methods">Manager Methods</h3>
+<div class="sourceCode" id="cb46"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create a new manager</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewManager<span class="op">()</span> <span class="op">*</span>Manager</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Load rules from directory (finds all .clinerules files)</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> LoadFromDirectory<span class="op">(</span>dir <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Load workspace rules</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> LoadWorkspaceRules<span class="op">(</span>path <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Load project rules</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> LoadProjectRules<span class="op">(</span>path <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Load file-specific rules</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> LoadFileRules<span class="op">(</span>fileKey<span class="op">,</span> path <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Get all rules matching a file (with inheritance)</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetRulesForFile<span class="op">(</span>filePath <span class="dt">string</span><span class="op">)</span> <span class="op">[]*</span>MatchResult</span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Get all rules from all levels</span></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetAllRules<span class="op">()</span> <span class="op">[]*</span>Rule</span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a><span class="co">// Get rules by category</span></span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetRulesByCategory<span class="op">(</span>category RuleCategory<span class="op">)</span> <span class="op">[]*</span>Rule</span>
+<span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-25"><a href="#cb46-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Get rules by tag</span></span>
+<span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> GetRulesByTag<span class="op">(</span>tag <span class="dt">string</span><span class="op">)</span> <span class="op">[]*</span>Rule</span>
+<span id="cb46-27"><a href="#cb46-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-28"><a href="#cb46-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Format rules as LLM prompt</span></span>
+<span id="cb46-29"><a href="#cb46-29" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> FormatRulesForFile<span class="op">(</span>filePath <span class="dt">string</span><span class="op">)</span> <span class="dt">string</span></span>
+<span id="cb46-30"><a href="#cb46-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-31"><a href="#cb46-31" aria-hidden="true" tabindex="-1"></a><span class="co">// Add rule to workspace level</span></span>
+<span id="cb46-32"><a href="#cb46-32" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> AddWorkspaceRule<span class="op">(</span>rule <span class="op">*</span>Rule<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-33"><a href="#cb46-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-34"><a href="#cb46-34" aria-hidden="true" tabindex="-1"></a><span class="co">// Add rule to project level</span></span>
+<span id="cb46-35"><a href="#cb46-35" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> AddProjectRule<span class="op">(</span>rule <span class="op">*</span>Rule<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-36"><a href="#cb46-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-37"><a href="#cb46-37" aria-hidden="true" tabindex="-1"></a><span class="co">// Remove rule by ID</span></span>
+<span id="cb46-38"><a href="#cb46-38" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> RemoveRule<span class="op">(</span>id <span class="dt">string</span><span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb46-39"><a href="#cb46-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-40"><a href="#cb46-40" aria-hidden="true" tabindex="-1"></a><span class="co">// Clear all rules</span></span>
+<span id="cb46-41"><a href="#cb46-41" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> Clear<span class="op">()</span></span>
+<span id="cb46-42"><a href="#cb46-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-43"><a href="#cb46-43" aria-hidden="true" tabindex="-1"></a><span class="co">// Count total rules</span></span>
+<span id="cb46-44"><a href="#cb46-44" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> Count<span class="op">()</span> <span class="dt">int</span></span>
+<span id="cb46-45"><a href="#cb46-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-46"><a href="#cb46-46" aria-hidden="true" tabindex="-1"></a><span class="co">// Export all rules to single RuleSet</span></span>
+<span id="cb46-47"><a href="#cb46-47" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> Export<span class="op">()</span> <span class="op">*</span>RuleSet</span>
+<span id="cb46-48"><a href="#cb46-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-49"><a href="#cb46-49" aria-hidden="true" tabindex="-1"></a><span class="co">// Save rules to file</span></span>
+<span id="cb46-50"><a href="#cb46-50" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> SaveWorkspaceRules<span class="op">(</span>path <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb46-51"><a href="#cb46-51" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>m <span class="op">*</span>Manager<span class="op">)</span> SaveProjectRules<span class="op">(</span>path <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span></code></pre></div>
+<h3 id="rule-methods">Rule Methods</h3>
+<div class="sourceCode" id="cb47"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check if rule matches file path</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Rule<span class="op">)</span> Matches<span class="op">(</span>filePath <span class="dt">string</span><span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Calculate match score</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Rule<span class="op">)</span> MatchScore<span class="op">(</span>filePath <span class="dt">string</span><span class="op">)</span> <span class="dt">int</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate rule</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Rule<span class="op">)</span> Validate<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Clone rule (deep copy)</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Rule<span class="op">)</span> Clone<span class="op">()</span> <span class="op">*</span>Rule</span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a><span class="co">// String representation</span></span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>r <span class="op">*</span>Rule<span class="op">)</span> String<span class="op">()</span> <span class="dt">string</span></span></code></pre></div>
+<h3 id="parser-functions">Parser Functions</h3>
+<div class="sourceCode" id="cb48"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Create new parser for file</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewParser<span class="op">(</span>filePath <span class="dt">string</span><span class="op">)</span> <span class="op">*</span>Parser</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Parse .clinerules file</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>p <span class="op">*</span>Parser<span class="op">)</span> Parse<span class="op">()</span> <span class="op">(*</span>RuleSet<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Parse rules from string</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> ParseString<span class="op">(</span>content <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>RuleSet<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Format RuleSet back to .clinerules format</span></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> Format<span class="op">(</span>ruleSet <span class="op">*</span>RuleSet<span class="op">)</span> <span class="dt">string</span></span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<h4 id="issue-1-rules-not-matching-files">Issue 1: Rules Not Matching
+Files</h4>
+<p><strong>Symptoms:</strong> <code>GetRulesForFile()</code> returns
+empty array</p>
+<p><strong>Causes:</strong> - Pattern doesn’t match file path -
+PatternType not set (defaults to empty string) - Rule validation
+failed</p>
+<p><strong>Solutions:</strong></p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. Check pattern matches</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>rule <span class="op">:=</span> <span class="op">&amp;</span>rules<span class="op">.</span>Rule<span class="op">{</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    Pattern<span class="op">:</span>     <span class="st">&quot;src/**/*.go&quot;</span><span class="op">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    PatternType<span class="op">:</span> rules<span class="op">.</span>PatternTypeGlob<span class="op">,</span> <span class="co">// REQUIRED!</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>matches <span class="op">:=</span> rule<span class="op">.</span>Matches<span class="op">(</span><span class="st">&quot;src/api/handler.go&quot;</span><span class="op">)</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Matches: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> matches<span class="op">)</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. Validate rule</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> rule<span class="op">.</span>Validate<span class="op">();</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Validation error: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. Check rule loading</span></span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> rules<span class="op">.</span>NewManager<span class="op">()</span></span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> manager<span class="op">.</span>LoadFromDirectory<span class="op">(</span><span class="st">&quot;.&quot;</span><span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Load error: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb49-19"><a href="#cb49-19" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Loaded %d rules</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> manager<span class="op">.</span>Count<span class="op">())</span></span></code></pre></div>
+<h4 id="issue-2-wrong-rule-priority">Issue 2: Wrong Rule Priority</h4>
+<p><strong>Symptoms:</strong> Lower priority rule appears first</p>
+<p><strong>Causes:</strong> - Inheritance scoring overrides explicit
+priority - Pattern specificity affects score</p>
+<p><strong>Solutions:</strong></p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check match scores</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>matches <span class="op">:=</span> manager<span class="op">.</span>GetRulesForFile<span class="op">(</span><span class="st">&quot;main.go&quot;</span><span class="op">)</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> match <span class="op">:=</span> <span class="kw">range</span> matches <span class="op">{</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;%s: score=%d, priority=%d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>        match<span class="op">.</span>Rule<span class="op">.</span>Name<span class="op">,</span> match<span class="op">.</span>Score<span class="op">,</span> match<span class="op">.</span>Rule<span class="op">.</span>Priority<span class="op">)</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Use higher priority for important rules</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a>rule <span class="op">:=</span> <span class="op">&amp;</span>rules<span class="op">.</span>Rule<span class="op">{</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span>     <span class="st">&quot;Critical Rule&quot;</span><span class="op">,</span></span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a>    Priority<span class="op">:</span> <span class="dv">100</span><span class="op">,</span> <span class="co">// Very high priority</span></span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="issue-3-pattern-not-matching-expected-files">Issue 3: Pattern
+Not Matching Expected Files</h4>
+<p><strong>Symptoms:</strong> Glob pattern doesn’t match files</p>
+<p><strong>Causes:</strong> - Misunderstanding of glob wildcards -
+Directory separators on Windows</p>
+<p><strong>Solutions:</strong></p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Test pattern matching</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>testFiles <span class="op">:=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/main.go&quot;</span><span class="op">,</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;src/api/handler.go&quot;</span><span class="op">,</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;test/main.go&quot;</span><span class="op">,</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> file <span class="op">:=</span> <span class="kw">range</span> testFiles <span class="op">{</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>    matches <span class="op">:=</span> rule<span class="op">.</span>Matches<span class="op">(</span>file<span class="op">)</span></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;%s: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> file<span class="op">,</span> matches<span class="op">)</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Use ** for directory depth</span></span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>pattern<span class="op">:</span> src<span class="co">/**/</span><span class="op">*.</span><span class="cf">go</span>    <span class="co">// Matches all .go files under src/</span></span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a>pattern<span class="op">:</span> <span class="op">*.</span><span class="cf">go</span>           <span class="co">// Matches .go files in current directory only</span></span></code></pre></div>
+<h4 id="issue-4-rule-parse-errors">Issue 4: Rule Parse Errors</h4>
+<p><strong>Symptoms:</strong> <code>Parse()</code> returns error</p>
+<p><strong>Causes:</strong> - Invalid rule format - Missing required
+fields - Invalid regex pattern</p>
+<p><strong>Solutions:</strong></p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>parser <span class="op">:=</span> rules<span class="op">.</span>NewParser<span class="op">(</span><span class="st">&quot;.clinerules&quot;</span><span class="op">)</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>ruleSet<span class="op">,</span> err <span class="op">:=</span> parser<span class="op">.</span>Parse<span class="op">()</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Parse error: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check file syntax</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate each rule</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> rule <span class="op">:=</span> <span class="kw">range</span> ruleSet<span class="op">.</span>Rules <span class="op">{</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> rule<span class="op">.</span>Validate<span class="op">();</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Rule &#39;%s&#39; invalid: %v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> rule<span class="op">.</span>Name<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="debug-mode">Debug Mode</h3>
+<p>Enable verbose logging:</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Log all rule matches</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>matches <span class="op">:=</span> manager<span class="op">.</span>GetRulesForFile<span class="op">(</span>filePath<span class="op">)</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Found %d matching rules for %s:</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>matches<span class="op">),</span> filePath<span class="op">)</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i<span class="op">,</span> match <span class="op">:=</span> <span class="kw">range</span> matches <span class="op">{</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;  %d. %s (score: %d, priority: %d)</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>        i<span class="op">+</span><span class="dv">1</span><span class="op">,</span> match<span class="op">.</span>Rule<span class="op">.</span>Name<span class="op">,</span> match<span class="op">.</span>Score<span class="op">,</span> match<span class="op">.</span>Rule<span class="op">.</span>Priority<span class="op">)</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Log all loaded rules</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>allRules <span class="op">:=</span> manager<span class="op">.</span>GetAllRules<span class="op">()</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Total rules loaded: %d</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>allRules<span class="op">))</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> rule <span class="op">:=</span> <span class="kw">range</span> allRules <span class="op">{</span></span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;  - %s: pattern=%s, type=%s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>        rule<span class="op">.</span>Name<span class="op">,</span> rule<span class="op">.</span>Pattern<span class="op">,</span> rule<span class="op">.</span>PatternType<span class="op">)</span></span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="faq">FAQ</h2>
+<h3 id="general-questions">General Questions</h3>
+<p><strong>Q: What’s the difference between Cline Rules and
+linters?</strong></p>
+<p>A: Linters check code syntax and style after it’s written. Cline
+Rules guide LLMs <em>while generating code</em>, ensuring it follows
+project conventions from the start. They work together: rules guide
+generation, linters verify compliance.</p>
+<p><strong>Q: Can I use Cline Rules without LLMs?</strong></p>
+<p>A: Yes! Rules can be used for: - Documentation (centralized project
+guidelines) - Code review checklists - Onboarding new developers - Style
+guide reference</p>
+<p><strong>Q: How many rules should I have?</strong></p>
+<p>A: Start with 5-10 essential rules, then grow organically. Too many
+rules can overwhelm developers and LLMs. Focus on: - Critical security
+requirements - Common mistake prevention - Project-specific patterns</p>
+<p><strong>Q: Do rules slow down code generation?</strong></p>
+<p>A: Minimal impact. Rule loading is fast (&lt;100ms for typical
+projects), and matching is optimized. The quality improvement far
+outweighs any performance cost.</p>
+<h3 id="pattern-matching-1">Pattern Matching</h3>
+<p><strong>Q: What’s the difference between <code>*</code> and
+<code>**</code>?</strong></p>
+<p>A: - <code>*</code> matches files in current directory:
+<code>*.go</code> → <code>main.go</code> ✓, <code>api/main.go</code> ✗ -
+<code>**</code> matches at any depth: <code>**/*.go</code> →
+<code>main.go</code> ✓, <code>api/main.go</code> ✓</p>
+<p><strong>Q: How do I match files in subdirectories?</strong></p>
+<p>A: Use <code>**/</code>:</p>
+<pre><code>pattern: src/**/*.go      # All .go files under src/
+pattern: **/test/*.go     # All .go files in any test/ directory
+pattern: **/*_test.go     # All test files anywhere</code></pre>
+<p><strong>Q: Can I combine multiple patterns?</strong></p>
+<p>A: No, but you can create multiple rules:</p>
+<pre><code>[Go Files]
+pattern: *.go
+Content for Go files
+
+[Go Test Files]
+pattern: *_test.go
+Content for test files (inherits from Go Files)</code></pre>
+<p><strong>Q: Do patterns support OR logic?</strong></p>
+<p>A: Use regex patterns:</p>
+<pre><code>pattern: /.*\.(go|js|ts)$/    # Matches .go, .js, or .ts files</code></pre>
+<h3 id="inheritance">Inheritance</h3>
+<p><strong>Q: Can file-specific rules completely replace project
+rules?</strong></p>
+<p>A: No, all matching rules are applied. File rules are <em>added</em>
+with higher priority, not replacing. To override, use the same rule name
+with higher priority.</p>
+<p><strong>Q: What if I don’t want inheritance?</strong></p>
+<p>A: Use very specific patterns in lower levels:</p>
+<pre><code># Project rule
+[General Go]
+pattern: *.go
+priority: 1
+
+# File rule (overrides by higher priority)
+[Special Go]
+pattern: api/*.go
+priority: 100  # Much higher, effectively replaces</code></pre>
+<p><strong>Q: How do I share rules across multiple
+projects?</strong></p>
+<p>A: Use workspace-level rules in <code>.helix/.clinerules</code>:</p>
+<pre><code>myworkspace/
+├── .helix/
+│   └── .clinerules       # Shared across all projects
+├── project1/
+│   └── .clinerules       # Project-specific
+└── project2/
+    └── .clinerules       # Project-specific</code></pre>
+<h3 id="best-practices-1">Best Practices</h3>
+<p><strong>Q: Should I commit <code>.clinerules</code> to
+git?</strong></p>
+<p>A: <strong>Yes!</strong> Rules are part of your project’s definition,
+like linter configs or style guides. Team members and CI should use the
+same rules.</p>
+<p><strong>Q: How often should I update rules?</strong></p>
+<p>A: Update rules when: - New patterns or requirements emerge - Common
+mistakes are discovered - Architecture or conventions change -
+Post-incident analysis reveals gaps</p>
+<p><strong>Q: Can rules be too strict?</strong></p>
+<p>A: Yes. Signs of over-strict rules: - Developers constantly asking
+for exceptions - Rules conflict with each other - LLMs produce overly
+verbose code - Development slows significantly</p>
+<p>Balance is key. Start permissive, tighten as needed.</p>
+<p><strong>Q: Should every file have rules?</strong></p>
+<p>A: No. Focus rules on: - Critical code (security, payments, data
+handling) - Complex patterns (architecture, integrations) - Common
+mistakes (error handling, validation)</p>
+<p>Generic files (utilities, helpers) often don’t need specific
+rules.</p>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The Cline Rules System provides a powerful, flexible way to ensure
+consistent, high-quality code generation across your project. By using
+the three-level hierarchy, pattern matching, and priority system, you
+can create precise guidelines that LLMs automatically follow.</p>
+<h3 id="key-takeaways">Key Takeaways</h3>
+<ol type="1">
+<li><strong>Start Simple</strong>: Begin with a few essential rules,
+expand as needed</li>
+<li><strong>Use Hierarchy</strong>: Workspace → Project → File for
+proper organization</li>
+<li><strong>Be Specific</strong>: Clear, actionable rules produce better
+results</li>
+<li><strong>Test Patterns</strong>: Verify patterns match expected
+files</li>
+<li><strong>Iterate</strong>: Update rules based on real-world
+usage</li>
+</ol>
+<h3 id="next-steps">Next Steps</h3>
+<ol type="1">
+<li>Create your first <code>.clinerules</code> file</li>
+<li>Define 3-5 essential rules for your project</li>
+<li>Test with LLM code generation</li>
+<li>Refine based on results</li>
+<li>Expand coverage to critical areas</li>
+</ol>
+<h3 id="resources">Resources</h3>
+<ul>
+<li><strong>GitHub</strong>: <a href="https://github.com/helix-code/helixcode">HelixCode
+Repository</a></li>
+<li><strong>Documentation</strong>: <a href="https://helix.codes/docs">Full API Docs</a></li>
+<li><strong>Examples</strong>: <a href="https://github.com/helix-code/helixcode/tree/main/examples/rules">Example
+Rules</a></li>
+<li><strong>Community</strong>: <a href="https://discord.gg/helixcode">Discord Server</a></li>
+</ul>
+<hr />
+<p><strong>Document Version:</strong> 1.0 <strong>Last Updated:</strong>
+November 7, 2025 <strong>Next Feature:</strong> Focus Chain System
+(Phase 2, Feature 3)</p>
+<hr />
+<p><em>End of Cline Rules System User Guide</em></p>
+</body>
+</html>

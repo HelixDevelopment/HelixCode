@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>AUDIT_IMPLEMENTATION_PLAN</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">AUDIT_IMPLEMENTATION_PLAN</h1>
+</header>
+<h1 id="helixcode-audit-implementation-plan">HelixCode Audit
+Implementation Plan</h1>
+<p><strong>Created</strong>: 2026-01-09 <strong>Status</strong>: IN
+PROGRESS <strong>Last Updated</strong>: 2026-01-09</p>
+<p>This document tracks the implementation of fixes identified in the
+Comprehensive Audit Report.</p>
+<hr />
+<h2 id="progress-tracking">Progress Tracking</h2>
+<h3 id="overall-status">Overall Status</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Status</th>
+<th>Progress</th>
+<th>Blockers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0 Critical - Mock Data</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>None</td>
+</tr>
+<tr>
+<td>P0 Critical - Dependencies</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>None</td>
+</tr>
+<tr>
+<td>P0 Critical - Security</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>None</td>
+</tr>
+<tr>
+<td>P1 High - Stubs</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>Depends on P0</td>
+</tr>
+<tr>
+<td>P1 High - Coverage</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>Depends on P0</td>
+</tr>
+<tr>
+<td>P2 Medium - Apps</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>Depends on P1</td>
+</tr>
+<tr>
+<td>P2 Medium - Docs</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>None</td>
+</tr>
+<tr>
+<td>P3 Low - Remaining</td>
+<td>NOT STARTED</td>
+<td>0%</td>
+<td>Depends on P2</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="phase-0-critical-fixes">Phase 0: CRITICAL Fixes</h2>
+<h3 id="task-p0-1-remove-mock-data-from-handlers.go">Task P0-1: Remove
+Mock Data from handlers.go</h3>
+<p><strong>File</strong>: <code>internal/server/handlers.go</code>
+<strong>Priority</strong>: P0 - CRITICAL <strong>Estimated
+Effort</strong>: 8 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P0-1.1</strong> Fix
+<code>createTask()</code> (lines 392-405)</label>
+<ul>
+<li>Replace placeholder ID with proper error response</li>
+<li>Return HTTP 503 when database unavailable</li>
+<li>Add test for this behavior</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-1.2</strong> Fix
+<code>getTask()</code> (lines 429-442)</label>
+<ul>
+<li>Remove “Sample Task” hardcoded data</li>
+<li>Return HTTP 503 or 404 appropriately</li>
+<li>Add test for database unavailable scenario</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-1.3</strong> Fix
+<code>updateTask()</code> (lines 507-521)</label>
+<ul>
+<li>Remove placeholder data return</li>
+<li>Return proper error when database unavailable</li>
+<li>Add test coverage</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-1.4</strong> Fix
+<code>updateProject()</code> (lines 287-302)</label>
+<ul>
+<li>Remove hardcoded “/path/to/project”</li>
+<li>Implement actual project update logic</li>
+<li>Add test coverage</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-1.5</strong> Fix
+<code>deleteProject()</code> (lines 305-311)</label>
+<ul>
+<li>Implement actual deletion logic</li>
+<li>Return error if delete fails</li>
+<li>Add test coverage</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-1.6</strong> Fix
+<code>getWorker()</code> (lines 593-605)</label>
+<ul>
+<li>Remove hardcoded “localhost”</li>
+<li>Return proper error when worker not found</li>
+<li>Add test coverage</li>
+</ul></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] All tests pass - [ ] No
+placeholder data in responses - [ ] Coverage increased</p>
+<hr />
+<h3 id="task-p0-2-fix-authentication-bypass">Task P0-2: Fix
+Authentication Bypass</h3>
+<p><strong>Files</strong>: - <code>internal/server/handlers.go</code> -
+<code>internal/project/manager_db.go</code></p>
+<p><strong>Priority</strong>: P0 - CRITICAL <strong>Estimated
+Effort</strong>: 4 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-1">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P0-2.1</strong> Remove
+<code>&quot;default-user&quot;</code> fallback in <code>listProjects()</code>
+(handlers.go:18-22)</label>
+<ul>
+<li>Return HTTP 401 Unauthorized when user_id missing</li>
+<li>Add proper authentication middleware check</li>
+<li>Add test for unauthorized access</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-2.2</strong> Fix
+<code>CreateProject()</code> (manager_db.go:134-135)</label>
+<ul>
+<li>Remove hardcoded “default-user”</li>
+<li>Require user ID parameter</li>
+<li>Update all callers</li>
+<li>Add test coverage</li>
+</ul></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] No hardcoded user IDs - [ ]
+Proper 401 responses for unauthenticated requests - [ ] Tests cover auth
+scenarios</p>
+<hr />
+<h3 id="task-p0-3-fix-confirmationpermission-bypass">Task P0-3: Fix
+Confirmation/Permission Bypass</h3>
+<p><strong>Files</strong>: -
+<code>internal/tools/confirmation/prompter.go</code> -
+<code>internal/workflow/autonomy/permission.go</code></p>
+<p><strong>Priority</strong>: P0 - CRITICAL <strong>Estimated
+Effort</strong>: 6 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-2">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P0-3.1</strong> Fix
+auto-allow in prompter (prompter.go:179-185)</label>
+<ul>
+<li>Remove automatic <code>ChoiceAllow</code> return</li>
+<li>Require actual input source</li>
+<li>Return error when no input available</li>
+<li>Add test for this behavior</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-3.2</strong> Fix mock
+confirmation (permission.go:232-242)</label>
+<ul>
+<li>Implement actual confirmation flow</li>
+<li>Block until user responds or timeout</li>
+<li>Add test coverage</li>
+</ul></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] No automatic permission grants -
+[ ] Confirmation required for sensitive actions - [ ] Tests verify
+blocking behavior</p>
+<hr />
+<h3 id="task-p0-4-security-dependency-updates">Task P0-4: Security
+Dependency Updates</h3>
+<p><strong>File</strong>: <code>go.mod</code> <strong>Priority</strong>:
+P0 - CRITICAL <strong>Estimated Effort</strong>: 4 hours
+<strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-3">Subtasks</h4>
+<ul class="task-list">
+<li><p><label><input type="checkbox"></input><strong>P0-4.1</strong> Remove
+deprecated Redis v8</label></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> mod edit <span class="at">-droprequire</span> github.com/go-redis/redis/v8</span></code></pre></div>
+<ul>
+<li>Update all imports to use v9</li>
+<li>Verify no v8 references remain</li>
+</ul></li>
+<li><p><label><input type="checkbox"></input><strong>P0-4.2</strong> Update
+Redis v9</label></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> get github.com/redis/go-redis/v9@v9.17.2</span></code></pre></div>
+<ul>
+<li>Test Redis functionality</li>
+</ul></li>
+<li><p><label><input type="checkbox"></input><strong>P0-4.3</strong> Update
+golang.org/x/crypto</label></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> get golang.org/x/crypto@v0.46.0</span></code></pre></div>
+<ul>
+<li>Run security tests</li>
+</ul></li>
+<li><p><label><input type="checkbox"></input><strong>P0-4.4</strong> Replace
+nfnt/resize</label></p>
+<ul>
+<li>Find modern image resize library</li>
+<li>Update all usages</li>
+<li>Add deprecation tests</li>
+</ul></li>
+<li><p><label><input type="checkbox"></input><strong>P0-4.5</strong> Replace
+golang.org/x/freetype</label></p>
+<ul>
+<li>Find modern font library</li>
+<li>Update all usages</li>
+</ul></li>
+<li><p><label><input type="checkbox"></input><strong>P0-4.6</strong> Run
+<code>go mod tidy</code></label></p>
+<ul>
+<li>Verify build passes</li>
+<li>Run full test suite</li>
+</ul></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] <code>go mod graph</code> shows
+no deprecated deps - [ ] All tests pass - [ ] Security scan clean</p>
+<hr />
+<h3 id="task-p0-5-implement-network-isolation">Task P0-5: Implement
+Network Isolation</h3>
+<p><strong>File</strong>: <code>internal/tools/shell/sandbox.go</code>
+<strong>Priority</strong>: P0 - CRITICAL <strong>Estimated
+Effort</strong>: 8 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-4">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P0-5.1</strong> Design
+network isolation approach</label>
+<ul>
+<li>Research Linux network namespaces</li>
+<li>Document implementation strategy</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-5.2</strong> Implement
+for Linux (lines 190-196)</label>
+<ul>
+<li>Create network namespace</li>
+<li>Apply firewall rules</li>
+<li>Test isolation</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-5.3</strong> Add fallback
+for other platforms</label>
+<ul>
+<li>Return error on unsupported platforms</li>
+<li>Document limitations</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P0-5.4</strong> Add
+comprehensive tests</label>
+<ul>
+<li>Test network is isolated</li>
+<li>Test fallback behavior</li>
+</ul></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] Network isolated in sandbox - [
+] Tests verify isolation - [ ] Documentation updated</p>
+<hr />
+<h2 id="phase-1-high-priority-fixes">Phase 1: HIGH Priority Fixes</h2>
+<h3 id="task-p1-1-implement-ai-provider-wrappers">Task P1-1: Implement
+AI Provider Wrappers</h3>
+<p><strong>File</strong>:
+<code>internal/providers/ai_integration.go</code>
+<strong>Priority</strong>: P1 - HIGH <strong>Estimated Effort</strong>:
+16 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-5">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P1-1.1</strong> Implement
+OpenAI wrapper (line 1326)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.2</strong> Implement
+Anthropic wrapper (line 1329)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.3</strong> Implement
+Cohere wrapper (line 1332)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.4</strong> Implement
+HuggingFace wrapper (line 1335)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.5</strong> Implement
+Mistral wrapper (line 1338)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.6</strong> Implement
+Gemini wrapper (line 1341)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.7</strong> Implement
+Gemma wrapper (line 1344)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.8</strong> Implement
+LlamaIndex wrapper (line 1347)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.9</strong> Implement
+MemGPT wrapper (line 1350)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.10</strong> Implement
+CrewAI wrapper (line 1353)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.11</strong> Implement
+CharacterAI wrapper (line 1356)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.12</strong> Implement
+Repika wrapper (line 1359)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.13</strong> Implement
+Anima wrapper (line 1362)</label></li>
+<li><label><input type="checkbox"></input><strong>P1-1.14</strong> Add tests
+for all wrappers</label></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] No
+<code>NotImplementedProvider</code> returns - [ ] All wrappers
+functional - [ ] Tests pass</p>
+<hr />
+<h3 id="task-p1-2-complete-zep-provider">Task P1-2: Complete Zep
+Provider</h3>
+<p><strong>File</strong>:
+<code>internal/memory/providers/zep_provider.go</code>
+<strong>Priority</strong>: P1 - HIGH <strong>Estimated Effort</strong>:
+6 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-6">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P1-2.1</strong> Implement
+<code>Retrieve()</code> (line 207)</label>
+<ul>
+<li>Research Zep API for ID retrieval</li>
+<li>Implement proper retrieval</li>
+<li>Add tests</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P1-2.2</strong> Implement
+<code>Update()</code> (line 213)</label>
+<ul>
+<li>Research Zep API for updates</li>
+<li>Implement proper update</li>
+<li>Add tests</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P1-2.3</strong> Implement
+<code>Delete()</code> (line 221)</label>
+<ul>
+<li>Research Zep API for deletion</li>
+<li>Implement proper deletion</li>
+<li>Add tests</li>
+</ul></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] CRUD operations work - [ ] No
+stub warnings logged - [ ] Tests pass</p>
+<hr />
+<h3 id="task-p1-3-implement-tree-sitter-parser">Task P1-3: Implement
+Tree-Sitter Parser</h3>
+<p><strong>File</strong>:
+<code>internal/tools/mapping/treesitter.go</code>
+<strong>Priority</strong>: P1 - HIGH <strong>Estimated Effort</strong>:
+8 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-7">Subtasks</h4>
+<ul class="task-list">
+<li><p><label><input type="checkbox"></input><strong>P1-3.1</strong> Add
+tree-sitter dependency</label></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> get github.com/smacker/go-tree-sitter</span></code></pre></div></li>
+<li><p><label><input type="checkbox"></input><strong>P1-3.2</strong> Implement
+Go parser</label></p></li>
+<li><p><label><input type="checkbox"></input><strong>P1-3.3</strong> Implement
+Python parser</label></p></li>
+<li><p><label><input type="checkbox"></input><strong>P1-3.4</strong> Implement
+JavaScript/TypeScript parser</label></p></li>
+<li><p><label><input type="checkbox"></input><strong>P1-3.5</strong> Implement
+fallback for unsupported languages</label></p></li>
+<li><p><label><input type="checkbox"></input><strong>P1-3.6</strong> Add
+comprehensive tests</label></p></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] AST parsing works for supported
+languages - [ ] Tests pass - [ ] Documentation updated</p>
+<hr />
+<h3 id="task-p1-4-increase-test-coverage-critical-packages">Task P1-4:
+Increase Test Coverage (Critical Packages)</h3>
+<p><strong>Priority</strong>: P1 - HIGH <strong>Estimated
+Effort</strong>: 60 hours <strong>Assigned To</strong>: TBD (multiple
+developers)</p>
+<h4 id="coverage-targets">Coverage Targets</h4>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Current</th>
+<th>Target</th>
+<th>Tests Needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>internal/tools/browser</td>
+<td>20.5%</td>
+<td>80%</td>
+<td>~50</td>
+</tr>
+<tr>
+<td>internal/memory/providers</td>
+<td>28.2%</td>
+<td>80%</td>
+<td>~80</td>
+</tr>
+<tr>
+<td>internal/workflow/planmode</td>
+<td>31.0%</td>
+<td>80%</td>
+<td>~30</td>
+</tr>
+<tr>
+<td>internal/llm</td>
+<td>42.0%</td>
+<td>80%</td>
+<td>~100</td>
+</tr>
+<tr>
+<td>internal/server</td>
+<td>56.4%</td>
+<td>80%</td>
+<td>~30</td>
+</tr>
+</tbody>
+</table>
+<h4 id="subtasks-8">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P1-4.1</strong> Browser
+package tests</label></li>
+<li><label><input type="checkbox"></input><strong>P1-4.2</strong> Memory
+providers tests</label></li>
+<li><label><input type="checkbox"></input><strong>P1-4.3</strong> Workflow
+planmode tests</label></li>
+<li><label><input type="checkbox"></input><strong>P1-4.4</strong> LLM package
+tests</label></li>
+<li><label><input type="checkbox"></input><strong>P1-4.5</strong> Server
+package tests</label></li>
+</ul>
+<p><strong>Verification</strong>: - [ ] Coverage reports show 80%+ - [ ]
+All tests pass - [ ] No flaky tests</p>
+<hr />
+<h2 id="phase-2-medium-priority">Phase 2: MEDIUM Priority</h2>
+<h3 id="task-p2-1-application-test-coverage">Task P2-1: Application Test
+Coverage</h3>
+<p><strong>Priority</strong>: P2 - MEDIUM <strong>Estimated
+Effort</strong>: 40 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-9">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P2-1.1</strong> Desktop
+application tests (target 60%)</label></li>
+<li><label><input type="checkbox"></input><strong>P2-1.2</strong> Terminal UI
+tests (target 60%)</label></li>
+<li><label><input type="checkbox"></input><strong>P2-1.3</strong> Aurora OS
+tests (target 60%)</label></li>
+<li><label><input type="checkbox"></input><strong>P2-1.4</strong> Harmony OS
+tests (target 60%)</label></li>
+<li><label><input type="checkbox"></input><strong>P2-1.5</strong> Mobile
+binding tests (target 50%)</label></li>
+</ul>
+<hr />
+<h3 id="task-p2-2-documentation-updates">Task P2-2: Documentation
+Updates</h3>
+<p><strong>Priority</strong>: P2 - MEDIUM <strong>Estimated
+Effort</strong>: 16 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-10">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P2-2.1</strong> Update
+CLAUDE.md with accurate info</label>
+<ul>
+<li>Fix checkpoint interval documentation</li>
+<li>Document MCP transport status</li>
+<li>Update fallback documentation</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P2-2.2</strong> Add missing
+READMEs</label>
+<ul>
+<li>cmd/config_test/README.md</li>
+<li>cmd/helix_config/README.md</li>
+<li>cmd/security_fix/README.md</li>
+<li>applications/android/README.md</li>
+<li>applications/ios/README.md</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P2-2.3</strong> Update API
+documentation</label>
+<ul>
+<li>Document error responses</li>
+<li>Remove references to placeholder data</li>
+</ul></li>
+<li><label><input type="checkbox"></input><strong>P2-2.4</strong> Update user
+manuals</label>
+<ul>
+<li>Add troubleshooting for database unavailable</li>
+<li>Document authentication requirements</li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="phase-3-low-priority">Phase 3: LOW Priority</h2>
+<h3 id="task-p3-1-complete-remaining-coverage">Task P3-1: Complete
+Remaining Coverage</h3>
+<p><strong>Priority</strong>: P3 - LOW <strong>Estimated
+Effort</strong>: 40 hours <strong>Assigned To</strong>: TBD</p>
+<p>Target: 100% coverage for all packages</p>
+<hr />
+<h3 id="task-p3-2-enhancement-features">Task P3-2: Enhancement
+Features</h3>
+<p><strong>Priority</strong>: P3 - LOW <strong>Estimated
+Effort</strong>: 24 hours <strong>Assigned To</strong>: TBD</p>
+<h4 id="subtasks-11">Subtasks</h4>
+<ul class="task-list">
+<li><label><input type="checkbox"></input><strong>P3-2.1</strong> Multi-Edit
+Git integration</label></li>
+<li><label><input type="checkbox"></input><strong>P3-2.2</strong> Multi-Edit
+rename operation</label></li>
+<li><label><input type="checkbox"></input><strong>P3-2.3</strong> FAISS real
+compression</label></li>
+<li><label><input type="checkbox"></input><strong>P3-2.4</strong> MCP stdio
+transport (if needed)</label></li>
+</ul>
+<hr />
+<h2 id="verification-checklist-template">Verification Checklist
+Template</h2>
+<p>Use this checklist for each completed task:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">### Task [ID] Verification</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>**Developer**:</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>**Review Date**:</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>**Reviewer**:</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Code Quality</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Code follows project style guide</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> No new linting warnings</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> No hardcoded values</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Error handling complete</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Testing</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Unit tests written</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Integration tests written (if applicable)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Tests pass locally</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Tests pass in CI</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Coverage target met</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Documentation</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Code comments added</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> README updated (if applicable)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> API docs updated (if applicable)</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Security</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> No security vulnerabilities introduced</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> No mock data in production paths</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Authentication/authorization correct</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="fu">#### Review</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Self-review completed</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Peer review completed</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> All review comments addressed</span></code></pre></div>
+<hr />
+<h2 id="how-to-resume">How to Resume</h2>
+<p>This plan is designed to be pausable and resumable:</p>
+<ol type="1">
+<li><strong>Check Current Status</strong>: Review the checkboxes above
+to see what’s completed</li>
+<li><strong>Pick Next Task</strong>: Start with the lowest numbered
+incomplete task in the current phase</li>
+<li><strong>Update Progress</strong>: Check off subtasks as you complete
+them</li>
+<li><strong>Verify</strong>: Use the verification checklist before
+marking a task complete</li>
+<li><strong>Update Status</strong>: Update the overall status table at
+the top</li>
+</ol>
+<h3 id="commands-for-progress-check">Commands for Progress Check</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check current coverage</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /run/media/milosvasic/DATA4TB/Projects/HelixCode/HelixCode</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-cover</span> ./...</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific package tests</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-v</span> <span class="at">-cover</span> ./internal/server/...</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate coverage report</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> test <span class="at">-coverprofile</span><span class="op">=</span>coverage.out ./...</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="ex">go</span> tool cover <span class="at">-html</span><span class="op">=</span>coverage.out <span class="at">-o</span> coverage.html</span></code></pre></div>
+<hr />
+<h2 id="metrics-to-track">Metrics to Track</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Baseline</th>
+<th>Current</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Total Coverage</td>
+<td>47.5%</td>
+<td>47.5%</td>
+<td>100%</td>
+</tr>
+<tr>
+<td>Critical Issues</td>
+<td>15</td>
+<td>15</td>
+<td>0</td>
+</tr>
+<tr>
+<td>High Issues</td>
+<td>23</td>
+<td>23</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Mock Data Instances</td>
+<td>12</td>
+<td>12</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Deprecated Dependencies</td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Document Version</strong>: 1.0 <strong>Next Review
+Date</strong>: TBD</p>
+</body>
+</html>

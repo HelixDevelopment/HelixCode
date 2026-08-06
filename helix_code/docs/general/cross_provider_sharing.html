@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>cross_provider_sharing</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">cross_provider_sharing</h1>
+</header>
+<h1 id="cross-provider-model-sharing-guide">Cross-Provider Model Sharing
+Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>The HelixCode LLM system provides comprehensive cross-provider model
+sharing functionality that enables:</p>
+<ul>
+<li><strong>Universal Model Access</strong>: Download a model once and
+use it across all compatible providers</li>
+<li><strong>Automatic Format Conversion</strong>: Convert models between
+formats (GGUF, GPTQ, AWQ, HF, etc.)</li>
+<li><strong>Provider Optimization</strong>: Optimize models specifically
+for target providers</li>
+<li><strong>Intelligent Compatibility</strong>: Automatic detection of
+provider-model compatibility</li>
+<li><strong>Seamless Integration</strong>: All providers work together
+without manual configuration</li>
+</ul>
+<h2 id="supported-providers">Supported Providers</h2>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 12%" />
+<col style="width: 16%" />
+<col style="width: 20%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Type</th>
+<th>Formats</th>
+<th>Use Case</th>
+<th>Optimization Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>VLLM</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, AWQ, HF, FP16, BF16</td>
+<td>High-throughput GPU inference</td>
+<td></td>
+</tr>
+<tr>
+<td>Llama.cpp</td>
+<td>Custom</td>
+<td>GGUF</td>
+<td>CPU/GPU universal inference</td>
+<td></td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>OpenAI-compatible</td>
+<td>GGUF</td>
+<td>User-friendly model management</td>
+<td></td>
+</tr>
+<tr>
+<td>LocalAI</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, AWQ, HF</td>
+<td>Drop-in OpenAI replacement</td>
+<td></td>
+</tr>
+<tr>
+<td>FastChat</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, HF</td>
+<td>Training and serving platform</td>
+<td></td>
+</tr>
+<tr>
+<td>TextGen</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, HF</td>
+<td>Popular Gradio interface</td>
+<td></td>
+</tr>
+<tr>
+<td>LM Studio</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, HF</td>
+<td>User-friendly desktop app</td>
+<td></td>
+</tr>
+<tr>
+<td>Jan AI</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, HF</td>
+<td>Open-source AI assistant</td>
+<td></td>
+</tr>
+<tr>
+<td>KoboldAI</td>
+<td>Custom API</td>
+<td>GGUF</td>
+<td>Writing-focused interface</td>
+<td></td>
+</tr>
+<tr>
+<td>GPT4All</td>
+<td>OpenAI-compatible</td>
+<td>GGUF</td>
+<td>CPU-focused inference</td>
+<td></td>
+</tr>
+<tr>
+<td>TabbyAPI</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, HF</td>
+<td>High-performance server</td>
+<td></td>
+</tr>
+<tr>
+<td>MLX</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, HF</td>
+<td>Apple Silicon optimization</td>
+<td></td>
+</tr>
+<tr>
+<td>MistralRS</td>
+<td>OpenAI-compatible</td>
+<td>GGUF, GPTQ, HF, BF16, FP16</td>
+<td>Rust-based high performance</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="key-features">Key Features</h2>
+<h3 id="universal-model-registry">1. Universal Model Registry</h3>
+<p>Centralized registry tracks all models and their compatibility:</p>
+<ul>
+<li><strong>Model Metadata</strong>: Size, context, capabilities,
+requirements</li>
+<li><strong>Format Support</strong>: Which formats each provider
+supports</li>
+<li><strong>Conversion Paths</strong>: Available conversion methods
+between formats</li>
+<li><strong>Performance Characteristics</strong>: Throughput, latency,
+memory usage</li>
+<li><strong>Hardware Requirements</strong>: CPU/GPU needs, RAM/VRAM
+requirements</li>
+</ul>
+<h3 id="intelligent-compatibility-checking">2. Intelligent Compatibility
+Checking</h3>
+<p>Automatically determines if a model can work with a provider:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check compatibility before downloading</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm models download llama-3-8b-instruct <span class="at">--provider</span> vllm</span></code></pre></div>
+<h3 id="cross-provider-model-sharing">3. Cross-Provider Model
+Sharing</h3>
+<p>Share models across all compatible providers:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Share a downloaded model with all providers</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm share ./models/llama-3-8b.gguf</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Share with specific provider only</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm share ./models/llama-3-8b.gguf <span class="at">--provider</span> vllm</span></code></pre></div>
+<h3 id="universal-model-download">4. Universal Model Download</h3>
+<p>Download once, use everywhere:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download and share with all compatible providers</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm download-all llama-3-8b-instruct</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Download in specific format</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm download-all mistral-7b-instruct <span class="at">--format</span> gguf</span></code></pre></div>
+<h3 id="provider-specific-optimization">5. Provider-Specific
+Optimization</h3>
+<p>Optimize models for maximum performance:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize for VLLM (GPU performance)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.gguf <span class="at">--provider</span> vllm</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize for Llama.cpp (CPU compatibility)</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.hf <span class="at">--provider</span> llamacpp</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize for MLX (Apple Silicon)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.gguf <span class="at">--provider</span> mlx</span></code></pre></div>
+<h3 id="full-synchronization">6. Full Synchronization</h3>
+<p>Synchronize all models across all providers:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sync all downloaded models</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm sync</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># This will:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># - Scan all provider directories</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># - Share compatible models</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># - Convert incompatible models when possible</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># - Report any issues</span></span></code></pre></div>
+<h2 id="format-support-matrix">Format Support Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>From  To</th>
+<th>GGUF</th>
+<th>GPTQ</th>
+<th>AWQ</th>
+<th>HF</th>
+<th>FP16</th>
+<th>BF16</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HF</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>FP16</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>BF16</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>GGUF</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>GPTQ</td>
+<td>❌</td>
+<td>✅</td>
+<td>⚠️</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>AWQ</td>
+<td>❌</td>
+<td>⚠️</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Legend:</strong> - ✅ Direct support - ⚠️ Conversion required
+(quality loss possible) - ❌ Not supported</p>
+<h2 id="conversion-tools">Conversion Tools</h2>
+<h3 id="gguf-conversion">GGUF Conversion</h3>
+<ul>
+<li><strong>Tool</strong>: llama.cpp</li>
+<li><strong>Source Formats</strong>: HF, FP16, BF16</li>
+<li><strong>Optimization</strong>: CPU/GPU universal</li>
+<li><strong>Use Case</strong>: Maximum compatibility</li>
+</ul>
+<h3 id="gptq-conversion">GPTQ Conversion</h3>
+<ul>
+<li><strong>Tool</strong>: AutoGPTQ</li>
+<li><strong>Source Formats</strong>: HF, FP16, BF16</li>
+<li><strong>Optimization</strong>: NVIDIA GPU</li>
+<li><strong>Use Case</strong>: High-performance GPU inference</li>
+</ul>
+<h3 id="awq-conversion">AWQ Conversion</h3>
+<ul>
+<li><strong>Tool</strong>: AutoAWQ</li>
+<li><strong>Source Formats</strong>: HF, FP16, BF16</li>
+<li><strong>Optimization</strong>: GPU</li>
+<li><strong>Use Case</strong>: Balanced performance/quality</li>
+</ul>
+<h2 id="hardware-optimization">Hardware Optimization</h2>
+<h3 id="cpu-optimization">CPU Optimization</h3>
+<p>Providers: Llama.cpp, Ollama, GPT4All</p>
+<ul>
+<li><strong>Format</strong>: GGUF</li>
+<li><strong>Quantization</strong>: Q4_K_M, Q5_K_M</li>
+<li><strong>Features</strong>: CPU-specific optimizations, low memory
+usage</li>
+</ul>
+<h3 id="gpu-optimization">GPU Optimization</h3>
+<p>Providers: VLLM, FastChat, TabbyAPI</p>
+<ul>
+<li><strong>Format</strong>: GPTQ, AWQ, GGUF</li>
+<li><strong>Quantization</strong>: Q4, Q8</li>
+<li><strong>Features</strong>: CUDA/ROCm support, batch processing</li>
+</ul>
+<h3 id="apple-silicon-optimization">Apple Silicon Optimization</h3>
+<p>Providers: MLX, VLLM (with Metal)</p>
+<ul>
+<li><strong>Format</strong>: GGUF, FP16</li>
+<li><strong>Quantization</strong>: Q4_K_M, Q8_0</li>
+<li><strong>Features</strong>: Metal acceleration, unified memory</li>
+</ul>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="basic-workflow">Basic Workflow</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Initialize all providers</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm init</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Start providers</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm start</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Download a model for all providers</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm download-all llama-3-8b-instruct</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Check status</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm status</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. List shared models</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm list-shared</span></code></pre></div>
+<h3 id="advanced-workflow">Advanced Workflow</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Download specific model</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm models download codellama-7b-instruct <span class="at">--format</span> hf</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Convert to optimal format</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm models convert ./codellama-7b.hf <span class="at">--format</span> gguf <span class="at">--quantize</span> q4_k_m</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Share across providers</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm share ./codellama-7b.gguf</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Optimize for high-performance provider</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./codellama-7b.gguf <span class="at">--provider</span> vllm</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Sync everything</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm sync</span></code></pre></div>
+<h3 id="provider-specific-usage">Provider-Specific Usage</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># VLLM (High-throughput GPU)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm start vllm</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.gguf <span class="at">--provider</span> vllm</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Llama.cpp (CPU/GPU universal)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm start llamacpp</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm share ./model.gguf <span class="at">--provider</span> llamacpp</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Ollama (User-friendly)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm start ollama</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm download-all mistral-7b-instruct <span class="at">--format</span> gguf</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># MLX (Apple Silicon)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm start mlx</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.hf <span class="at">--provider</span> mlx</span></code></pre></div>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<h4 id="model-not-compatible">1. Model Not Compatible</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Error:</span> format gptq is not compatible with provider llamacpp</span></code></pre></div>
+<p><strong>Solution</strong>: Convert to compatible format:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.gptq <span class="at">--provider</span> llamacpp</span></code></pre></div>
+<h4 id="conversion-failed">2. Conversion Failed</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Error:</span> conversion failed: insufficient memory</span></code></pre></div>
+<p><strong>Solution</strong>: Use lighter quantization:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm convert ./model.hf <span class="at">--format</span> gguf <span class="at">--quantize</span> q4_0</span></code></pre></div>
+<h4 id="provider-not-starting">3. Provider Not Starting</h4>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Error:</span> provider failed to start: port already in use</span></code></pre></div>
+<p><strong>Solution</strong>: Check ports and stop conflicting
+providers:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm stop</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm status</span></code></pre></div>
+<h3 id="performance-optimization">Performance Optimization</h3>
+<h4 id="reduce-memory-usage">1. Reduce Memory Usage</h4>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use more aggressive quantization</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm convert ./model.hf <span class="at">--format</span> gguf <span class="at">--quantize</span> q3_k_m</span></code></pre></div>
+<h4 id="increase-speed">2. Increase Speed</h4>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimize for specific provider</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm optimize ./model.gguf <span class="at">--provider</span> vllm</span></code></pre></div>
+<h4 id="improve-quality">3. Improve Quality</h4>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use higher quality quantization</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> local-llm convert ./model.hf <span class="at">--format</span> gptq <span class="at">--quantize</span> q8_0</span></code></pre></div>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="model-management">1. Model Management</h3>
+<ul>
+<li><strong>Use GGUF for maximum compatibility</strong> across
+providers</li>
+<li><strong>Download once, share everywhere</strong> to save
+bandwidth</li>
+<li><strong>Regular sync</strong> to ensure all providers have latest
+models</li>
+<li><strong>Provider-specific optimization</strong> for best
+performance</li>
+</ul>
+<h3 id="hardware-utilization">2. Hardware Utilization</h3>
+<ul>
+<li><strong>Match provider to hardware</strong>: VLLM for NVIDIA, MLX
+for Apple, Llama.cpp for CPU</li>
+<li><strong>Optimize quantization</strong> based on available
+memory</li>
+<li><strong>Use GPU providers</strong> for high-throughput
+scenarios</li>
+<li><strong>Use CPU providers</strong> for broad compatibility</li>
+</ul>
+<h3 id="workflow-optimization">3. Workflow Optimization</h3>
+<ul>
+<li><strong>Initialize once</strong>: <code>helix local-llm init</code>
+sets up everything</li>
+<li><strong>Batch operations</strong>: Use <code>download-all</code> for
+multiple models</li>
+<li><strong>Regular maintenance</strong>: Use <code>sync</code> to keep
+everything updated</li>
+<li><strong>Monitor status</strong>: Use <code>status</code> to track
+provider health</li>
+</ul>
+<h2 id="api-integration">API Integration</h2>
+<h3 id="programmatic-usage">Programmatic Usage</h3>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;fmt&quot;</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;dev.helix.code/internal/llm&quot;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    ctx <span class="op">:=</span> context<span class="op">.</span>Background<span class="op">()</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Initialize manager</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    manager <span class="op">:=</span> llm<span class="op">.</span>NewLocalLLMManager<span class="op">(</span><span class="st">&quot;/path/to/local-llm&quot;</span><span class="op">)</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    manager<span class="op">.</span>Initialize<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Download and share model</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    err <span class="op">:=</span> manager<span class="op">.</span>DownloadModelForAllProviders<span class="op">(</span>ctx<span class="op">,</span> <span class="st">&quot;llama-3-8b-instruct&quot;</span><span class="op">,</span> llm<span class="op">.</span>FormatGGUF<span class="op">)</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>        <span class="bu">panic</span><span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get shared models</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    shared<span class="op">,</span> err <span class="op">:=</span> manager<span class="op">.</span>GetSharedModels<span class="op">(</span>ctx<span class="op">)</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        <span class="bu">panic</span><span class="op">(</span>err<span class="op">)</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Shared models: %+v</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> shared<span class="op">)</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="integration-with-helixcode">Integration with HelixCode</h3>
+<p>The cross-provider system integrates seamlessly with HelixCode:</p>
+<ul>
+<li><strong>Automatic provider selection</strong> based on task
+requirements</li>
+<li><strong>Dynamic model loading</strong> from optimal provider</li>
+<li><strong>Fallback mechanisms</strong> if providers are
+unavailable</li>
+<li><strong>Performance monitoring</strong> and automatic
+optimization</li>
+</ul>
+<h2 id="future-enhancements">Future Enhancements</h2>
+<h3 id="planned-features">Planned Features</h3>
+<ul>
+<li><strong>Distributed model sharing</strong> across multiple
+machines</li>
+<li><strong>Automatic model updates</strong> from sources</li>
+<li><strong>Performance benchmarking</strong> across providers</li>
+<li><strong>Cost optimization</strong> for cloud deployments</li>
+<li><strong>Advanced caching</strong> strategies</li>
+<li><strong>Model versioning</strong> and rollback</li>
+</ul>
+<h3 id="community-contributions">Community Contributions</h3>
+<ul>
+<li><strong>New provider integrations</strong> welcomed</li>
+<li><strong>Conversion tool improvements</strong> encouraged</li>
+<li><strong>Performance optimizations</strong> appreciated</li>
+<li><strong>Documentation enhancements</strong> valued</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>The HelixCode cross-provider model sharing system provides:</p>
+<ul>
+<li><strong>Universal Access</strong>: Any model, any provider</li>
+<li><strong>Automatic Optimization</strong>: Best performance without
+manual intervention</li>
+<li><strong>Intelligent Management</strong>: Smart compatibility and
+conversion</li>
+<li><strong>Seamless Integration</strong>: Works with existing HelixCode
+workflows</li>
+<li><strong>Future-Proof Design</strong>: Extensible architecture for
+new providers</li>
+</ul>
+<p>This eliminates the traditional silos between LLM providers and
+enables a truly unified model ecosystem.</p>
+</body>
+</html>

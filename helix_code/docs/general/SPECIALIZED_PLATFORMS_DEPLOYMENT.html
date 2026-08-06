@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SPECIALIZED_PLATFORMS_DEPLOYMENT</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SPECIALIZED_PLATFORMS_DEPLOYMENT</h1>
+</header>
+<h1 id="specialized-platforms-deployment-guide">Specialized Platforms
+Deployment Guide</h1>
+<h2 id="overview">Overview</h2>
+<p>This guide covers deployment of HelixCode on specialized platforms:
+Aurora OS (Russian Federation) and Harmony OS (China/Global). These
+platforms offer unique features and require specific deployment
+considerations.</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#deployment-methods">Deployment Methods</a></li>
+<li><a href="#aurora-os-deployment">Aurora OS Deployment</a></li>
+<li><a href="#harmony-os-deployment">Harmony OS Deployment</a></li>
+<li><a href="#combined-deployment">Combined Deployment</a></li>
+<li><a href="#production-configuration">Production
+Configuration</a></li>
+<li><a href="#high-availability-setup">High Availability Setup</a></li>
+<li><a href="#monitoring-and-maintenance">Monitoring and
+Maintenance</a></li>
+<li><a href="#security-hardening">Security Hardening</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+<hr />
+<h2 id="prerequisites">Prerequisites</h2>
+<h3 id="system-requirements">System Requirements</h3>
+<h4 id="aurora-os">Aurora OS</h4>
+<ul>
+<li><strong>OS Version</strong>: Aurora OS 4.0 or later</li>
+<li><strong>Architecture</strong>: x86_64 or aarch64</li>
+<li><strong>RAM</strong>: 4 GB minimum (8 GB recommended)</li>
+<li><strong>Storage</strong>: 500 MB free space</li>
+<li><strong>Database</strong>: PostgreSQL 13+</li>
+<li><strong>Optional</strong>: Redis 6.0+ for caching</li>
+</ul>
+<h4 id="harmony-os">Harmony OS</h4>
+<ul>
+<li><strong>OS Version</strong>: Harmony OS 3.0+ (4.0+ recommended)</li>
+<li><strong>Architecture</strong>: aarch64 (Kirin chipsets)</li>
+<li><strong>RAM</strong>: 4 GB minimum (8 GB recommended for distributed
+computing)</li>
+<li><strong>Storage</strong>: 1 GB free space</li>
+<li><strong>Database</strong>: PostgreSQL 13+</li>
+<li><strong>Redis</strong>: Recommended for distributed features</li>
+<li><strong>NPU</strong>: Kirin 990+ for AI acceleration (optional)</li>
+</ul>
+<h3 id="software-requirements">Software Requirements</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PostgreSQL</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql</span> <span class="op">&gt;</span>= 13.0</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Redis (optional but recommended for Harmony OS)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">redis</span> <span class="op">&gt;</span>= 6.0</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># System utilities</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd</span> <span class="er">(</span><span class="cf">for</span> service <span class="ex">management</span><span class="kw">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> <span class="er">(</span><span class="cf">for</span> certificate <span class="ex">generation</span><span class="kw">)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="er">(</span><span class="cf">for</span> health <span class="ex">checks</span><span class="kw">)</span></span></code></pre></div>
+<h3 id="network-requirements">Network Requirements</h3>
+<h4 id="aurora-os-1">Aurora OS</h4>
+<ul>
+<li>Port 8080: HTTP API (configurable)</li>
+<li>Port 5432: PostgreSQL (if external)</li>
+<li>Port 6379: Redis (if external)</li>
+</ul>
+<h4 id="harmony-os-1">Harmony OS</h4>
+<ul>
+<li>Port 8080: HTTP API (configurable)</li>
+<li>Port 8081: Peer discovery</li>
+<li>Port 8082: Data transfer</li>
+<li>Port 5432: PostgreSQL (if external)</li>
+<li>Port 6379: Redis (if external)</li>
+</ul>
+<hr />
+<h2 id="deployment-methods">Deployment Methods</h2>
+<h3 id="method-1-automated-deployment-recommended">Method 1: Automated
+Deployment (Recommended)</h3>
+<p>Using the provided deployment scripts for quick, production-ready
+deployments.</p>
+<p><strong>Pros</strong>: - Fast and automated - Consistent
+configuration - Production-ready defaults - Service management
+included</p>
+<p><strong>Cons</strong>: - Less control over details - May require
+customization post-deployment</p>
+<h3 id="method-2-manual-deployment">Method 2: Manual Deployment</h3>
+<p>Step-by-step manual installation for custom requirements.</p>
+<p><strong>Pros</strong>: - Full control - Custom configurations -
+Better understanding of components</p>
+<p><strong>Cons</strong>: - More time-consuming - Higher chance of
+misconfiguration</p>
+<h3 id="method-3-containerized-deployment">Method 3: Containerized
+Deployment</h3>
+<p>Using Docker or similar container technology (future
+implementation).</p>
+<p><strong>Pros</strong>: - Isolated environment - Reproducible
+deployments - Easy scaling</p>
+<p><strong>Cons</strong>: - Requires container runtime - Additional
+complexity</p>
+<hr />
+<h2 id="aurora-os-deployment">Aurora OS Deployment</h2>
+<h3 id="automated-deployment">Automated Deployment</h3>
+<h4 id="step-1-build-binary">Step 1: Build Binary</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> aurora-os</span></code></pre></div>
+<p>Verify the binary:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> bin/aurora-os</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">file</span> bin/aurora-os</span></code></pre></div>
+<h4 id="step-2-run-deployment-script">Step 2: Run Deployment Script</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./scripts/deploy-aurora-os.sh</span></code></pre></div>
+<p>The script performs: 1. Root privilege verification 2. Aurora OS
+detection 3. Binary verification 4. Dependency checks 5. User and
+directory creation 6. Binary installation 7. Configuration file creation
+8. Systemd service setup 9. Permission configuration</p>
+<h4 id="step-3-configure-environment">Step 3: Configure Environment</h4>
+<p>Edit <code>/etc/helixcode/aurora.env</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Database credentials</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_PASSWORD</span><span class="op">=</span>your_secure_password_here</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># JWT secret for authentication</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTH_JWT_SECRET</span><span class="op">=</span><span class="va">$(</span><span class="ex">openssl</span> rand <span class="at">-hex</span> 32<span class="va">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: Redis password</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_PASSWORD</span><span class="op">=</span>your_redis_password</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Aurora OS specific</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="va">AURORA_SECURITY_LEVEL</span><span class="op">=</span>enhanced</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="va">AURORA_MONITORING_ENABLED</span><span class="op">=</span>true</span></code></pre></div>
+<h4 id="step-4-database-setup">Step 4: Database Setup</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create database and user</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres createdb helixcode</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres createuser helixcode</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Set password</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres psql <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="st">ALTER USER helixcode WITH PASSWORD &#39;your_secure_password_here&#39;;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="st">GRANT ALL PRIVILEGES ON DATABASE helixcode TO helixcode;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Test connection</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="at">-h</span> localhost <span class="at">-U</span> helixcode <span class="at">-d</span> helixcode <span class="at">-c</span> <span class="st">&quot;SELECT version();&quot;</span></span></code></pre></div>
+<h4 id="step-5-start-service">Step 5: Start Service</h4>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Start the service</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start helixcode-aurora</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable auto-start on boot</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable helixcode-aurora</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check status</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status helixcode-aurora</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># View logs</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> helixcode-aurora <span class="at">-f</span></span></code></pre></div>
+<h4 id="step-6-verify-deployment">Step 6: Verify Deployment</h4>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Health check</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8080/health</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># API test</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8080/api/version</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check process</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> aurora-os</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Check listening ports</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ss <span class="at">-tlnp</span> <span class="kw">|</span> <span class="fu">grep</span> 8080</span></code></pre></div>
+<h3 id="manual-deployment">Manual Deployment</h3>
+<h4 id="step-1-create-user-and-directories">Step 1: Create User and
+Directories</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create system user</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-r</span> <span class="at">-s</span> /bin/false <span class="at">-d</span> /var/lib/helixcode helixcode</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create directories</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /opt/helixcode</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/helixcode</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/log/helixcode</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/helixcode</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Set ownership</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> helixcode:helixcode /opt/helixcode</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> helixcode:helixcode /etc/helixcode</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> helixcode:helixcode /var/log/helixcode</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> helixcode:helixcode /var/lib/helixcode</span></code></pre></div>
+<h4 id="step-2-install-binary">Step 2: Install Binary</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy binary</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp bin/aurora-os /opt/helixcode/</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod +x /opt/helixcode/aurora-os</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create symlink</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /opt/helixcode/aurora-os /usr/local/bin/helixcode-aurora</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="ex">/usr/local/bin/helixcode-aurora</span> <span class="at">--version</span></span></code></pre></div>
+<h4 id="step-3-create-configuration">Step 3: Create Configuration</h4>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /etc/helixcode/aurora-config.yaml <span class="op">&gt;</span> /dev/null <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="st">server:</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="st">  address: &quot;0.0.0.0&quot;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">  port: 8080</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="st">  tls_enabled: false</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="st">database:</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="st">  host: &quot;localhost&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="st">  port: 5432</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="st">  user: &quot;helixcode&quot;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="st">  dbname: &quot;helixcode&quot;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="st">  sslmode: &quot;prefer&quot;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="st">redis:</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="st">  enabled: false</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="st">  host: &quot;localhost&quot;</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="st">  port: 6379</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="st">auth:</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="st">  token_expiry: 86400</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="st">  session_expiry: 604800</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="st">aurora:</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="st">  enable_security_features: true</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="st">  enable_system_monitoring: true</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="st">  enable_native_integration: true</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="st">  security_level: &quot;enhanced&quot;</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="st">workers:</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="st">  health_check_interval: 30</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="st">  max_concurrent_tasks: 10</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a><span class="st">logging:</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a><span class="st">  level: &quot;info&quot;</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a><span class="st">  file: &quot;/var/log/helixcode/aurora-os.log&quot;</span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Set permissions</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /etc/helixcode/aurora-config.yaml</span></code></pre></div>
+<h4 id="step-4-create-systemd-service">Step 4: Create Systemd
+Service</h4>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tee /etc/systemd/system/helixcode-aurora.service <span class="op">&gt;</span> /dev/null <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">[Unit]</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">Description=HelixCode Aurora OS Client</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">After=network.target postgresql.service</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="st">Wants=postgresql.service</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="st">[Service]</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="st">Type=simple</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="st">User=helixcode</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="st">Group=helixcode</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="st">WorkingDirectory=/opt/helixcode</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="st">ExecStart=/opt/helixcode/aurora-os</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="st">Restart=always</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="st">RestartSec=10</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="st">StandardOutput=journal</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="st">StandardError=journal</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="st"># Environment</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="st">Environment=&quot;HELIX_CONFIG_PATH=/etc/helixcode/aurora-config.yaml&quot;</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="st">EnvironmentFile=-/etc/helixcode/aurora.env</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="st"># Security hardening</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="st">NoNewPrivileges=true</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="st">PrivateTmp=true</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="st">ProtectSystem=strict</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="st">ProtectHome=true</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="st">ReadWritePaths=/var/log/helixcode /var/lib/helixcode</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="st">[Install]</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a><span class="st">WantedBy=multi-user.target</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Reload systemd</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span></code></pre></div>
+<hr />
+<h2 id="harmony-os-deployment">Harmony OS Deployment</h2>
+<h3 id="automated-deployment-1">Automated Deployment</h3>
+<h4 id="step-1-build-binary-1">Step 1: Build Binary</h4>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> HelixCode</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> harmony-os</span></code></pre></div>
+<p>Verify:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> bin/harmony-os</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">file</span> bin/harmony-os</span></code></pre></div>
+<h4 id="step-2-run-deployment-script-1">Step 2: Run Deployment
+Script</h4>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./scripts/deploy-harmony-os.sh</span></code></pre></div>
+<p>The script performs: 1. Root privilege verification 2. Harmony OS
+detection (checks for hdc, harmonyos-release) 3. Binary verification 4.
+Dependency checks (systemd or init.d) 5. User and directory creation
+(including distributed directories) 6. Binary installation 7.
+Configuration file creation 8. Service setup (systemd or init.d) 9.
+Permission configuration</p>
+<h4 id="step-3-configure-environment-1">Step 3: Configure
+Environment</h4>
+<p>Edit <code>/etc/helixcode/harmony.env</code>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Database credentials</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_DATABASE_PASSWORD</span><span class="op">=</span>your_secure_password_here</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Redis credentials (required for distributed features)</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_REDIS_PASSWORD</span><span class="op">=</span>your_redis_password_here</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># JWT secret</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="va">HELIX_AUTH_JWT_SECRET</span><span class="op">=</span><span class="va">$(</span><span class="ex">openssl</span> rand <span class="at">-hex</span> 32<span class="va">)</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Harmony OS specific</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="va">HARMONY_DEVICE_ID</span><span class="op">=</span>auto</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="va">HARMONY_SUPER_DEVICE_ENABLED</span><span class="op">=</span>true</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="va">HARMONY_NPU_ENABLED</span><span class="op">=</span>true</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="va">HARMONY_GPU_ENABLED</span><span class="op">=</span>true</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="va">HARMONY_DISTRIBUTED_ENABLED</span><span class="op">=</span>true</span></code></pre></div>
+<h4 id="step-4-database-and-redis-setup">Step 4: Database and Redis
+Setup</h4>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PostgreSQL</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres createdb helixcode</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres createuser helixcode</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres psql <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="st">ALTER USER helixcode WITH PASSWORD &#39;your_secure_password_here&#39;;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="st">GRANT ALL PRIVILEGES ON DATABASE helixcode TO helixcode;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Redis (if not already installed)</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install redis-server</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable redis-server</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start redis-server</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure Redis password</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> redis-cli CONFIG SET requirepass <span class="st">&quot;your_redis_password_here&quot;</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> redis-cli CONFIG REWRITE</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Test Redis</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="ex">redis-cli</span> <span class="at">-a</span> <span class="st">&quot;your_redis_password_here&quot;</span> PING</span></code></pre></div>
+<h4 id="step-5-start-service-1">Step 5: Start Service</h4>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For systemd</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start helixcode-harmony</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable helixcode-harmony</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status helixcode-harmony</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># For init.d</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /etc/init.d/helixcode-harmony start</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /etc/init.d/helixcode-harmony status</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># View logs</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> helixcode-harmony <span class="at">-f</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co"># or</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tail <span class="at">-f</span> /var/log/helixcode/harmony-os.log</span></code></pre></div>
+<h4 id="step-6-verify-deployment-1">Step 6: Verify Deployment</h4>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Health check</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:8080/health</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Distributed engine status</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode-harmony</span> distributed status</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Device status (NPU/GPU)</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode-harmony</span> device list</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Check process</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> harmony-os</span></code></pre></div>
+<h3 id="manual-deployment-1">Manual Deployment</h3>
+<p>Similar to Aurora OS manual deployment, with these additions:</p>
+<h4 id="additional-directories">Additional Directories</h4>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/helixcode/distributed</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/helixcode/services</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> helixcode:helixcode /var/lib/helixcode</span></code></pre></div>
+<h4 id="harmony-os-configuration">Harmony OS Configuration</h4>
+<div class="sourceCode" id="cb21"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">harmony</span><span class="kw">:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # Distributed computing</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_distributed_computing</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_cross_device_sync</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">sync_interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">  # Resource management</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_resource_optimization</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_ai_acceleration</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">gpu_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">npu_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co">  # System integration</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_system_monitoring</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_multi_screen</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enable_super_device</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="co">  # Service coordination</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">service_discovery_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">service_failover_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">health_check_interval</span><span class="kw">:</span><span class="at"> </span><span class="dv">15</span></span></code></pre></div>
+<hr />
+<h2 id="combined-deployment">Combined Deployment</h2>
+<h3 id="deploy-both-platforms">Deploy Both Platforms</h3>
+<p>Use the combined deployment script:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build both</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> aurora-harmony</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Deploy both (interactive mode)</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./scripts/deploy-specialized-platforms.sh</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Or specify both explicitly</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./scripts/deploy-specialized-platforms.sh <span class="at">--platform</span> both</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># With build and clean options</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ./scripts/deploy-specialized-platforms.sh <span class="dt">\</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--platform</span> both <span class="dt">\</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--build</span> <span class="dt">\</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--clean</span></span></code></pre></div>
+<h3 id="port-configuration-for-co-location">Port Configuration for
+Co-Location</h3>
+<p>When running both on the same server:</p>
+<p><strong>Aurora OS</strong>
+(<code>/etc/helixcode/aurora-config.yaml</code>):</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">server</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8080</span></span></code></pre></div>
+<p><strong>Harmony OS</strong>
+(<code>/etc/helixcode/harmony-config.yaml</code>):</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">server</span><span class="kw">:</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8081</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">harmony</span><span class="kw">:</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">distributed</span><span class="kw">:</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">peer_discovery_port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8091</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">data_transfer_port</span><span class="kw">:</span><span class="at"> </span><span class="dv">8092</span></span></code></pre></div>
+<h3 id="managing-both-services">Managing Both Services</h3>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Start both</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start helixcode-aurora helixcode-harmony</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Stop both</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl stop helixcode-aurora helixcode-harmony</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Restart both</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart helixcode-aurora helixcode-harmony</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable both on boot</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable helixcode-aurora helixcode-harmony</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Status of both</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status helixcode-aurora helixcode-harmony</span></code></pre></div>
+<hr />
+<h2 id="production-configuration">Production Configuration</h2>
+<h3 id="tlsssl-configuration">TLS/SSL Configuration</h3>
+<h4 id="generate-certificates">Generate Certificates</h4>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Self-signed certificate (for testing)</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> openssl req <span class="at">-x509</span> <span class="at">-nodes</span> <span class="at">-days</span> 365 <span class="at">-newkey</span> rsa:2048 <span class="dt">\</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-keyout</span> /etc/helixcode/key.pem <span class="dt">\</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-out</span> /etc/helixcode/cert.pem <span class="dt">\</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-subj</span> <span class="st">&quot;/CN=helixcode.local&quot;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Set permissions</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 600 /etc/helixcode/key.pem</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /etc/helixcode/cert.pem</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown helixcode:helixcode /etc/helixcode/<span class="pp">*</span>.pem</span></code></pre></div>
+<h4 id="enable-tls">Enable TLS</h4>
+<div class="sourceCode" id="cb27"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">server</span><span class="kw">:</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tls_enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tls_cert</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/etc/helixcode/cert.pem&quot;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tls_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/etc/helixcode/key.pem&quot;</span></span></code></pre></div>
+<h3 id="database-optimization">Database Optimization</h3>
+<h4 id="postgresql-configuration">PostgreSQL Configuration</h4>
+<div class="sourceCode" id="cb28"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Connection pooling</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> max_connections <span class="op">=</span> <span class="dv">200</span>;</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> shared_buffers <span class="op">=</span> <span class="st">&#39;256MB&#39;</span>;</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> effective_cache_size <span class="op">=</span> <span class="st">&#39;1GB&#39;</span>;</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> maintenance_work_mem <span class="op">=</span> <span class="st">&#39;64MB&#39;</span>;</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> checkpoint_completion_target <span class="op">=</span> <span class="fl">0.9</span>;</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> wal_buffers <span class="op">=</span> <span class="st">&#39;16MB&#39;</span>;</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> default_statistics_target <span class="op">=</span> <span class="dv">100</span>;</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> random_page_cost <span class="op">=</span> <span class="fl">1.1</span>;</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">SYSTEM</span> <span class="kw">SET</span> effective_io_concurrency <span class="op">=</span> <span class="dv">200</span>;</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- Reload configuration</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_reload_conf();</span></code></pre></div>
+<h4 id="connection-pooling">Connection Pooling</h4>
+<div class="sourceCode" id="cb29"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">database</span><span class="kw">:</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_open_conns</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_idle_conns</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">conn_max_lifetime</span><span class="kw">:</span><span class="at"> </span><span class="dv">3600</span></span></code></pre></div>
+<h3 id="redis-configuration">Redis Configuration</h3>
+<div class="sourceCode" id="cb30"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">redis</span><span class="kw">:</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">pool_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">min_idle_conns</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_conn_age</span><span class="kw">:</span><span class="at"> </span><span class="dv">3600</span></span></code></pre></div>
+<h3 id="log-rotation">Log Rotation</h3>
+<p>Create <code>/etc/logrotate.d/helixcode</code>:</p>
+<pre><code>/var/log/helixcode/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 helixcode helixcode
+    sharedscripts
+    postrotate
+        systemctl reload helixcode-aurora 2&gt;/dev/null || true
+        systemctl reload helixcode-harmony 2&gt;/dev/null || true
+    endscript
+}</code></pre>
+<hr />
+<h2 id="high-availability-setup">High Availability Setup</h2>
+<h3 id="load-balancer-configuration">Load Balancer Configuration</h3>
+<h4 id="haproxy-example">HAProxy Example</h4>
+<pre class="haproxy"><code>frontend helixcode_front
+    bind *:80
+    default_backend helixcode_backend
+
+backend helixcode_backend
+    balance roundrobin
+    option httpchk GET /health
+    http-check expect status 200
+    server aurora1 aurora1.local:8080 check
+    server harmony1 harmony1.local:8081 check
+    server aurora2 aurora2.local:8080 check backup</code></pre>
+<h3 id="database-replication">Database Replication</h3>
+<h4 id="primary-replica-setup">Primary-Replica Setup</h4>
+<p><strong>Primary</strong> (<code>postgresql.conf</code>):</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">wal_level </span><span class="ot">=</span><span class="st"> replica</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="dt">max_wal_senders </span><span class="ot">=</span><span class="st"> </span><span class="dv">5</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="dt">wal_keep_size </span><span class="ot">=</span><span class="st"> </span><span class="dv">64</span></span></code></pre></div>
+<p><strong>Replica</strong>:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_basebackup</span> <span class="at">-h</span> primary.local <span class="at">-D</span> /var/lib/postgresql/data <span class="dt">\</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-U</span> replication <span class="at">-P</span> <span class="at">-v</span> <span class="at">-R</span> <span class="at">-X</span> stream</span></code></pre></div>
+<h3 id="redis-sentinel">Redis Sentinel</h3>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sentinel configuration</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="ex">sentinel</span> monitor helixcode redis-master 6379 2</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="ex">sentinel</span> auth-pass helixcode your_redis_password</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="ex">sentinel</span> down-after-milliseconds helixcode 5000</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="ex">sentinel</span> parallel-syncs helixcode 1</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="ex">sentinel</span> failover-timeout helixcode 10000</span></code></pre></div>
+<hr />
+<h2 id="monitoring-and-maintenance">Monitoring and Maintenance</h2>
+<h3 id="health-checks">Health Checks</h3>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co"># health-check.sh</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="fu">check_aurora()</span> <span class="kw">{</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">curl</span> <span class="at">-f</span> http://localhost:8080/health <span class="kw">||</span> <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="fu">check_harmony()</span> <span class="kw">{</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="ex">curl</span> <span class="at">-f</span> http://localhost:8081/health <span class="kw">||</span> <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="fu">check_postgres()</span> <span class="kw">{</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="ex">pg_isready</span> <span class="at">-h</span> localhost <span class="at">-p</span> 5432 <span class="at">-U</span> helixcode <span class="kw">||</span> <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="fu">check_redis()</span> <span class="kw">{</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">redis-cli</span> <span class="at">-a</span> <span class="st">&quot;</span><span class="va">$REDIS_PASSWORD</span><span class="st">&quot;</span> PING <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-q</span> PONG <span class="kw">||</span> <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Run checks</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a><span class="ex">check_aurora</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;Aurora: OK&quot;</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;Aurora: FAIL&quot;</span></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a><span class="ex">check_harmony</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;Harmony: OK&quot;</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;Harmony: FAIL&quot;</span></span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a><span class="ex">check_postgres</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;PostgreSQL: OK&quot;</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;PostgreSQL: FAIL&quot;</span></span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a><span class="ex">check_redis</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">&quot;Redis: OK&quot;</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">&quot;Redis: FAIL&quot;</span></span></code></pre></div>
+<h3 id="backup-strategy">Backup Strategy</h3>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="co"># backup.sh</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="va">BACKUP_DIR</span><span class="op">=</span><span class="st">&quot;/backup/helixcode&quot;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="va">DATE</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%Y%m%d_%H%M%S<span class="va">)</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Database backup</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pg_dump</span> helixcode <span class="kw">|</span> <span class="fu">gzip</span> <span class="op">&gt;</span> <span class="st">&quot;</span><span class="va">$BACKUP_DIR</span><span class="st">/db_</span><span class="va">$DATE</span><span class="st">.sql.gz&quot;</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuration backup</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-czf</span> <span class="st">&quot;</span><span class="va">$BACKUP_DIR</span><span class="st">/config_</span><span class="va">$DATE</span><span class="st">.tar.gz&quot;</span> /etc/helixcode/</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Data backup</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-czf</span> <span class="st">&quot;</span><span class="va">$BACKUP_DIR</span><span class="st">/data_</span><span class="va">$DATE</span><span class="st">.tar.gz&quot;</span> /var/lib/helixcode/</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleanup old backups (keep 7 days)</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> <span class="st">&quot;</span><span class="va">$BACKUP_DIR</span><span class="st">&quot;</span> <span class="at">-name</span> <span class="st">&quot;*.gz&quot;</span> <span class="at">-mtime</span> +7 <span class="at">-delete</span></span></code></pre></div>
+<h3 id="monitoring-integration">Monitoring Integration</h3>
+<h4 id="prometheus-metrics">Prometheus Metrics</h4>
+<div class="sourceCode" id="cb38"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">monitoring</span><span class="kw">:</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">prometheus</span><span class="kw">:</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">endpoint</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;/metrics&quot;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">port</span><span class="kw">:</span><span class="at"> </span><span class="dv">9090</span></span></code></pre></div>
+<h4 id="grafana-dashboard">Grafana Dashboard</h4>
+<p>Import dashboard from
+<code>scripts/monitoring/helixcode-dashboard.json</code></p>
+<hr />
+<h2 id="security-hardening">Security Hardening</h2>
+<h3 id="firewall-configuration">Firewall Configuration</h3>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Aurora OS</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--add-port</span><span class="op">=</span>8080/tcp</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--reload</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Harmony OS</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--add-port</span><span class="op">=</span>8081/tcp</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--add-port</span><span class="op">=</span>8091/tcp</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--add-port</span><span class="op">=</span>8092/tcp</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--reload</span></span></code></pre></div>
+<h3 id="selinux-configuration">SELinux Configuration</h3>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow network connections</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> setsebool <span class="at">-P</span> httpd_can_network_connect 1</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow database connections</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> setsebool <span class="at">-P</span> httpd_can_network_connect_db 1</span></code></pre></div>
+<h3 id="file-permissions">File Permissions</h3>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Binary</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 755 /opt/helixcode/aurora-os</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 755 /opt/helixcode/harmony-os</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuration</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 640 /etc/helixcode/<span class="pp">*</span>.yaml</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 600 /etc/helixcode/<span class="pp">*</span>.env</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Logs</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 755 /var/log/helixcode</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /var/log/helixcode/<span class="pp">*</span>.log</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Data</span></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 750 /var/lib/helixcode</span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<h4 id="service-fails-to-start">Service Fails to Start</h4>
+<p><strong>Symptoms</strong>: Service immediately exits after start</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check logs</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> helixcode-aurora <span class="at">-n</span> 50</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> helixcode-harmony <span class="at">-n</span> 50</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check configuration</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode-aurora</span> <span class="at">--config</span> /etc/helixcode/aurora-config.yaml <span class="at">--validate</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode-harmony</span> <span class="at">--config</span> /etc/helixcode/harmony-config.yaml <span class="at">--validate</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Check permissions</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> /opt/helixcode/</span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> /etc/helixcode/</span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> /var/log/helixcode/</span></code></pre></div>
+<p><strong>Solutions</strong>: - Fix configuration syntax errors -
+Verify database connectivity - Check file permissions - Ensure
+environment variables are set</p>
+<h4 id="database-connection-failed">Database Connection Failed</h4>
+<p><strong>Symptoms</strong>: “connection refused” or “authentication
+failed”</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Test connection</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span> <span class="at">-h</span> localhost <span class="at">-U</span> helixcode <span class="at">-d</span> helixcode</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check PostgreSQL status</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status postgresql</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check pg_hba.conf</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /etc/postgresql/<span class="pp">*</span>/main/pg_hba.conf</span></code></pre></div>
+<p><strong>Solutions</strong>: - Verify database password in environment
+file - Check PostgreSQL is running - Update pg_hba.conf to allow
+connections - Restart PostgreSQL:
+<code>sudo systemctl restart postgresql</code></p>
+<h4 id="port-already-in-use">Port Already in Use</h4>
+<p><strong>Symptoms</strong>: “bind: address already in use”</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check what&#39;s using the port</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lsof <span class="at">-i</span> :8080</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ss <span class="at">-tlnp</span> <span class="kw">|</span> <span class="fu">grep</span> 8080</span></code></pre></div>
+<p><strong>Solutions</strong>: - Change port in configuration - Stop
+conflicting service - Kill process using the port (if safe)</p>
+<h4 id="high-memory-usage">High Memory Usage</h4>
+<p><strong>Symptoms</strong>: System running out of memory</p>
+<p><strong>Diagnosis</strong>:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check memory usage</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">free</span> <span class="at">-h</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="at">--sort</span><span class="op">=</span>-%mem <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Check HelixCode memory</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">&quot;aurora-os|harmony-os&quot;</span></span></code></pre></div>
+<p><strong>Solutions</strong>:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reduce concurrent tasks</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">workers</span><span class="kw">:</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">max_concurrent_tasks</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable resource limits</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="fu">harmony</span><span class="kw">:</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">resource_manager</span><span class="kw">:</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_memory</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2GB&quot;</span></span></code></pre></div>
+<h3 id="platform-specific-issues">Platform-Specific Issues</h3>
+<h4 id="aurora-os-security-features-not-working">Aurora OS: Security
+Features Not Working</h4>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check Aurora OS version</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /etc/aurora-release</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify security module</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode-aurora</span> security diagnose</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check logs</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-f</span> /var/log/helixcode/security.log</span></code></pre></div>
+<h4 id="harmony-os-npu-not-detected">Harmony OS: NPU Not Detected</h4>
+<div class="sourceCode" id="cb48"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check NPU device</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> /dev/davinci<span class="pp">*</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify drivers</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="fu">lsmod</span> <span class="kw">|</span> <span class="fu">grep</span> davinci</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check Harmony OS version</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /etc/harmonyos-release</span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Test NPU</span></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a><span class="ex">helixcode-harmony</span> device npu-test</span></code></pre></div>
+<hr />
+<h2 id="maintenance-tasks">Maintenance Tasks</h2>
+<h3 id="regular-maintenance">Regular Maintenance</h3>
+<p><strong>Daily</strong>: - Check service status - Review error logs -
+Monitor disk space</p>
+<p><strong>Weekly</strong>: - Review performance metrics - Check backup
+integrity - Update system packages</p>
+<p><strong>Monthly</strong>: - Database maintenance (VACUUM, REINDEX) -
+Log rotation verification - Security updates</p>
+<h3 id="maintenance-commands">Maintenance Commands</h3>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Database maintenance</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres psql helixcode <span class="at">-c</span> <span class="st">&quot;VACUUM ANALYZE;&quot;</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> <span class="at">-u</span> postgres psql helixcode <span class="at">-c</span> <span class="st">&quot;REINDEX DATABASE helixcode;&quot;</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Clear old logs</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> find /var/log/helixcode/ <span class="at">-name</span> <span class="st">&quot;*.log.*&quot;</span> <span class="at">-mtime</span> +30 <span class="at">-delete</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Check disk usage</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-sh</span> /var/lib/helixcode/<span class="pp">*</span></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="fu">du</span> <span class="at">-sh</span> /var/log/helixcode/<span class="pp">*</span></span></code></pre></div>
+<hr />
+<h2 id="support-and-resources">Support and Resources</h2>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><a href="AURORA_OS_GUIDE.md">Aurora OS Guide</a></li>
+<li><a href="HARMONY_OS_GUIDE.md">Harmony OS Guide</a></li>
+<li><a href="SPECIALIZED_PLATFORMS_QUICKSTART.md">Quick Start
+Guide</a></li>
+<li><a href="CONFIG_REFERENCE.md">Configuration Reference</a></li>
+</ul>
+<h3 id="scripts">Scripts</h3>
+<ul>
+<li><code>scripts/deploy-aurora-os.sh</code></li>
+<li><code>scripts/deploy-harmony-os.sh</code></li>
+<li><code>scripts/deploy-specialized-platforms.sh</code></li>
+</ul>
+<h3 id="community">Community</h3>
+<ul>
+<li>GitHub Issues: https://github.com/helixcode/helixcode/issues</li>
+<li>Documentation: https://docs.helixcode.dev</li>
+<li>Forum: https://forum.helixcode.dev</li>
+</ul>
+<hr />
+<p><strong>Document Version</strong>: 1.0.0 <strong>Last
+Updated</strong>: 2025-11-07 <strong>Platforms</strong>: Aurora OS,
+Harmony OS</p>
+</body>
+</html>

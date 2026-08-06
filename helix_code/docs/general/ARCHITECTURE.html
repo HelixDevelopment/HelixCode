@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>ARCHITECTURE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">ARCHITECTURE</h1>
+</header>
+<h1 id="helixcode-architecture-documentation">🏗️ HelixCode Architecture
+Documentation</h1>
+<h2 id="system-overview">System Overview</h2>
+<p>HelixCode is a distributed AI development platform designed for
+enterprise-grade scalability and reliability. The architecture follows
+microservices principles with clear separation of concerns and robust
+distributed computing capabilities.</p>
+<h2 id="core-architecture-components">Core Architecture Components</h2>
+<h3 id="distributed-worker-network">1. Distributed Worker Network</h3>
+<h4 id="ssh-based-worker-pool">SSH-Based Worker Pool</h4>
+<ul>
+<li><strong>SSHWorkerPool</strong>: Manages SSH-accessible worker
+nodes</li>
+<li><strong>Worker Registration</strong>: Automatic discovery and
+registration</li>
+<li><strong>Health Monitoring</strong>: Real-time worker health
+checks</li>
+<li><strong>Capability Detection</strong>: Automatic hardware and
+software capability detection</li>
+<li><strong>Auto-Install</strong>: Automatic Helix CLI installation on
+worker nodes</li>
+</ul>
+<h4 id="worker-management">Worker Management</h4>
+<ul>
+<li><strong>WorkerManager</strong>: Central worker lifecycle
+management</li>
+<li><strong>Resource Allocation</strong>: Dynamic resource allocation
+based on capabilities</li>
+<li><strong>Load Balancing</strong>: Intelligent task distribution
+across workers</li>
+<li><strong>Failure Recovery</strong>: Automatic worker recovery and
+task reassignment</li>
+</ul>
+<h3 id="advanced-llm-integration">2. Advanced LLM Integration</h3>
+<h4 id="provider-architecture">Provider Architecture</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LLMProvider <span class="kw">interface</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    Generate<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>LLMRequest<span class="op">)</span> <span class="op">(*</span>LLMResponse<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    GenerateStream<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> req <span class="op">*</span>LLMRequest<span class="op">,</span> ch <span class="kw">chan</span><span class="op">&lt;-</span> LLMResponse<span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    GetModels<span class="op">()</span> <span class="op">[]</span>Model</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    GetCapabilities<span class="op">()</span> <span class="op">[]</span>ModelCapability</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    GetHealth<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">(*</span>ProviderHealth<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    IsAvailable<span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="dt">bool</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Close<span class="op">()</span> <span class="dt">error</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="supported-providers">Supported Providers</h4>
+<ul>
+<li><strong>Local Models</strong>:
+<ul>
+<li>Llama.cpp: Direct local inference</li>
+<li>Ollama: Streamlined local model management</li>
+</ul></li>
+<li><strong>Cloud Providers</strong>:
+<ul>
+<li><strong>Anthropic Claude</strong>: Extended thinking, prompt
+caching, tool caching, 200K context</li>
+<li><strong>Google Gemini</strong>: 2M token context, function calling,
+safety settings</li>
+<li><strong>OpenAI</strong>: GPT-4, GPT-3.5-turbo with function
+calling</li>
+<li><strong>xAI</strong>: Grok models with reasoning capabilities</li>
+<li><strong>Qwen</strong>: Chinese language models with OAuth2</li>
+</ul></li>
+<li><strong>Aggregators</strong>:
+<ul>
+<li><strong>OpenRouter</strong>: Multi-provider access with unified
+API</li>
+<li><strong>GitHub Copilot</strong>: GitHub integration for multiple
+models</li>
+</ul></li>
+</ul>
+<h4 id="advanced-features">Advanced Features</h4>
+<ul>
+<li><strong>Extended Thinking</strong>: Automatic reasoning mode for
+complex tasks (Anthropic)
+<ul>
+<li>Keyword-based detection</li>
+<li>80% token budget allocation</li>
+<li>Transparent thinking process</li>
+</ul></li>
+<li><strong>Prompt Caching</strong>: Multi-layer caching for cost
+optimization (Anthropic)
+<ul>
+<li>System message caching (5-minute TTL)</li>
+<li>Conversation history caching</li>
+<li>Tool definition caching</li>
+<li>Up to 90% cost reduction</li>
+</ul></li>
+<li><strong>Massive Context</strong>: 2M token context windows (Gemini)
+<ul>
+<li>Full codebase analysis</li>
+<li>Long-form documentation processing</li>
+<li>Complex multi-file reasoning</li>
+</ul></li>
+<li><strong>Function Calling</strong>: Structured tool integration
+<ul>
+<li>AUTO mode: Automatic tool selection</li>
+<li>ANY mode: Force tool usage</li>
+<li>NONE mode: Disable tools</li>
+</ul></li>
+<li><strong>Vision Capabilities</strong>: Image understanding
+(Anthropic, Gemini)
+<ul>
+<li>Code screenshot analysis</li>
+<li>Diagram interpretation</li>
+<li>UI/UX review</li>
+</ul></li>
+<li><strong>Streaming</strong>: Real-time response generation
+<ul>
+<li>Server-Sent Events (SSE)</li>
+<li>Chunk-based updates</li>
+<li>Progress indicators</li>
+</ul></li>
+</ul>
+<h4 id="reasoning-engine">Reasoning Engine</h4>
+<ul>
+<li><strong>Chain-of-Thought</strong>: Step-by-step reasoning with
+intermediate results</li>
+<li><strong>Tree-of-Thoughts</strong>: Multiple reasoning paths with
+selection</li>
+<li><strong>Self-Reflection</strong>: Error correction and improvement
+cycles</li>
+<li><strong>Progressive Reasoning</strong>: Incremental reasoning with
+tool integration</li>
+<li><strong>Extended Thinking</strong>: Deep reasoning with transparent
+thought process</li>
+</ul>
+<h3 id="mcp-model-context-protocol-integration">3. MCP (Model Context
+Protocol) Integration</h3>
+<h4 id="protocol-support">Protocol Support</h4>
+<ul>
+<li><strong>Stdio Transport</strong>: Process-based communication</li>
+<li><strong>SSE Transport</strong>: Server-Sent Events for real-time
+updates</li>
+<li><strong>HTTP Transport</strong>: RESTful API communication</li>
+<li><strong>WebSocket Transport</strong>: Bidirectional real-time
+communication</li>
+</ul>
+<h4 id="tool-discovery-management">Tool Discovery &amp; Management</h4>
+<ul>
+<li><strong>Dynamic Tool Registration</strong>: Runtime tool
+discovery</li>
+<li><strong>Multi-Server Support</strong>: Concurrent MCP server
+management</li>
+<li><strong>Authentication</strong>: OAuth2 and API key support</li>
+<li><strong>Resource Management</strong>: Efficient resource allocation
+and sampling</li>
+</ul>
+<h3 id="multi-client-architecture">4. Multi-Client Architecture</h3>
+<h4 id="client-types">Client Types</h4>
+<ul>
+<li><strong>REST API</strong>: Comprehensive HTTP API with OpenAPI
+specification</li>
+<li><strong>Terminal UI</strong>: Rich interactive terminal
+interface</li>
+<li><strong>CLI</strong>: Command-line interface for scripting and
+automation</li>
+<li><strong>Mobile Apps</strong>: Native iOS and Android
+applications</li>
+</ul>
+<h4 id="communication-protocols">Communication Protocols</h4>
+<ul>
+<li><strong>HTTP/REST</strong>: Standard RESTful API</li>
+<li><strong>WebSocket</strong>: Real-time bidirectional
+communication</li>
+<li><strong>SSH</strong>: Secure shell for worker communication</li>
+<li><strong>MCP</strong>: Model Context Protocol for tool
+integration</li>
+</ul>
+<h3 id="notification-system">5. Notification System</h3>
+<h4 id="multi-channel-support">Multi-Channel Support</h4>
+<ul>
+<li><strong>Slack</strong>: Webhook and bot integration</li>
+<li><strong>Discord</strong>: Bot API with rich embeds</li>
+<li><strong>Telegram</strong>: Bot API with media support</li>
+<li><strong>Email</strong>: SMTP with HTML templates</li>
+<li><strong>Yandex Messenger</strong>: Russian platform integration</li>
+<li><strong>Max</strong>: Enterprise communication platform</li>
+</ul>
+<h4 id="notification-engine">Notification Engine</h4>
+<ul>
+<li><strong>Rule-Based Routing</strong>: Configurable notification
+rules</li>
+<li><strong>Template System</strong>: Customizable message
+templates</li>
+<li><strong>Priority System</strong>: Priority-based delivery</li>
+<li><strong>Fallback Strategies</strong>: Multi-channel fallback</li>
+</ul>
+<h2 id="database-architecture">Database Architecture</h2>
+<h3 id="postgresql-schema">PostgreSQL Schema</h3>
+<h4 id="core-tables">Core Tables</h4>
+<ul>
+<li><strong>users</strong>: User authentication and profiles</li>
+<li><strong>user_sessions</strong>: Active user sessions</li>
+<li><strong>workers</strong>: Distributed worker nodes</li>
+<li><strong>worker_metrics</strong>: Performance metrics collection</li>
+<li><strong>distributed_tasks</strong>: Task management with work
+preservation</li>
+<li><strong>task_checkpoints</strong>: Automatic checkpointing
+system</li>
+<li><strong>projects</strong>: Project management</li>
+<li><strong>sessions</strong>: Development sessions</li>
+<li><strong>notifications</strong>: Notification system</li>
+<li><strong>mcp_servers</strong>: MCP server configurations</li>
+<li><strong>llm_models</strong>: LLM model management</li>
+</ul>
+<h4 id="work-preservation-features">Work Preservation Features</h4>
+<ul>
+<li><strong>Automatic Checkpointing</strong>: Periodic task state
+saving</li>
+<li><strong>Dependency Management</strong>: Task dependency
+tracking</li>
+<li><strong>Criticality Levels</strong>: Task importance
+classification</li>
+<li><strong>Rollback System</strong>: Automatic rollback on
+failures</li>
+<li><strong>Graceful Degradation</strong>: System stability during
+failures</li>
+</ul>
+<h2 id="security-architecture">Security Architecture</h2>
+<h3 id="authentication-authorization">Authentication &amp;
+Authorization</h3>
+<ul>
+<li><strong>JWT-Based Authentication</strong>: Secure token-based
+authentication</li>
+<li><strong>Role-Based Access Control</strong>: Fine-grained permission
+system</li>
+<li><strong>Multi-Factor Authentication</strong>: Enhanced security
+options</li>
+<li><strong>Session Management</strong>: Secure session handling</li>
+</ul>
+<h3 id="encryption-security">Encryption &amp; Security</h3>
+<ul>
+<li><strong>End-to-End Encryption</strong>: All communications
+encrypted</li>
+<li><strong>Secure Key Management</strong>: Proper key rotation and
+storage</li>
+<li><strong>Input Validation</strong>: Comprehensive input
+sanitization</li>
+<li><strong>Security Headers</strong>: HTTP security headers</li>
+</ul>
+<h2 id="performance-scalability">Performance &amp; Scalability</h2>
+<h3 id="performance-targets">Performance Targets</h3>
+<ul>
+<li><strong>Response Time</strong>: &lt;500ms for all operations</li>
+<li><strong>Resource Efficiency</strong>: &gt;85% hardware
+utilization</li>
+<li><strong>Scalability</strong>: Support for 100+ concurrent
+workers</li>
+<li><strong>Availability</strong>: 99.9% uptime for core features</li>
+</ul>
+<h3 id="scalability-features">Scalability Features</h3>
+<ul>
+<li><strong>Horizontal Scaling</strong>: Worker pool expansion</li>
+<li><strong>Load Balancing</strong>: Intelligent task distribution</li>
+<li><strong>Distributed Caching</strong>: Efficient state
+management</li>
+<li><strong>Resource Optimization</strong>: Dynamic resource
+allocation</li>
+</ul>
+<h2 id="deployment-architecture">Deployment Architecture</h2>
+<h3 id="container-based-deployment">Container-Based Deployment</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">helixcode-server</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> helixcode/server:latest</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> DATABASE_URL=postgres://user:pass@db:5432/helixcode</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> REDIS_URL=redis://redis:6379</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;8080:8080&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">worker-node-1</span><span class="kw">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">image</span><span class="kw">:</span><span class="at"> helixcode/worker:latest</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> HELIX_SERVER_URL=http://helixcode-server:8080</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> WORKER_CAPABILITIES=llm-inference,code-generation</span></span></code></pre></div>
+<h3 id="high-availability-setup">High Availability Setup</h3>
+<ul>
+<li><strong>Database Replication</strong>: PostgreSQL streaming
+replication</li>
+<li><strong>Load Balancer</strong>: Round-robin worker distribution</li>
+<li><strong>Health Checks</strong>: Comprehensive system monitoring</li>
+<li><strong>Backup Strategy</strong>: Automated backup and recovery</li>
+</ul>
+<h2 id="monitoring-observability">Monitoring &amp; Observability</h2>
+<h3 id="metrics-collection">Metrics Collection</h3>
+<ul>
+<li><strong>System Metrics</strong>: CPU, memory, disk usage</li>
+<li><strong>Application Metrics</strong>: Request rates, error rates,
+response times</li>
+<li><strong>Business Metrics</strong>: User activity, task completion
+rates</li>
+<li><strong>Worker Metrics</strong>: Health status, performance
+metrics</li>
+</ul>
+<h3 id="logging-strategy">Logging Strategy</h3>
+<ul>
+<li><strong>Structured Logging</strong>: JSON-formatted logs</li>
+<li><strong>Log Levels</strong>: Debug, Info, Warn, Error</li>
+<li><strong>Log Aggregation</strong>: Centralized log collection</li>
+<li><strong>Audit Logging</strong>: Security and compliance logging</li>
+</ul>
+<h2 id="development-workflows">Development Workflows</h2>
+<h3 id="distributed-development-modes">Distributed Development
+Modes</h3>
+<h4 id="planning-mode">Planning Mode</h4>
+<ul>
+<li>Distributed project analysis</li>
+<li>Multi-source technology research</li>
+<li>Architecture design with collaborative input</li>
+<li>Resource requirement calculation</li>
+</ul>
+<h4 id="building-mode">Building Mode</h4>
+<ul>
+<li>Distributed compilation and building</li>
+<li>Parallel code generation</li>
+<li>Build artifact caching</li>
+<li>Cross-platform build support</li>
+</ul>
+<h4 id="testing-mode">Testing Mode</h4>
+<ul>
+<li>Distributed test execution</li>
+<li>Parallel test suites</li>
+<li>Comprehensive quality scanning</li>
+<li>Performance testing across workers</li>
+</ul>
+<h4 id="refactoring-mode">Refactoring Mode</h4>
+<ul>
+<li>Distributed refactoring operations</li>
+<li>Cross-file refactoring coordination</li>
+<li>Safety validation and rollback</li>
+<li>Collaborative refactoring sessions</li>
+</ul>
+<h2 id="integration-patterns">Integration Patterns</h2>
+<h3 id="external-service-integration">External Service Integration</h3>
+<ul>
+<li><strong>LLM Providers</strong>:
+<ul>
+<li>Local: Llama.cpp, Ollama</li>
+<li>Cloud: Anthropic Claude, Google Gemini, OpenAI, xAI, Qwen</li>
+<li>Aggregators: OpenRouter, GitHub Copilot</li>
+</ul></li>
+<li><strong>Version Control</strong>: Git integration</li>
+<li><strong>CI/CD Systems</strong>: Jenkins, GitHub Actions</li>
+<li><strong>Monitoring Tools</strong>: Prometheus, Grafana</li>
+</ul>
+<h3 id="plugin-system">Plugin System</h3>
+<ul>
+<li><strong>Extension Points</strong>: Well-defined extension
+interfaces</li>
+<li><strong>Hot Reloading</strong>: Runtime plugin loading</li>
+<li><strong>Dependency Management</strong>: Plugin dependency
+resolution</li>
+<li><strong>Security Sandboxing</strong>: Secure plugin execution</li>
+</ul>
+<h2 id="future-architecture-evolution">Future Architecture
+Evolution</h2>
+<h3 id="planned-enhancements">Planned Enhancements</h3>
+<ul>
+<li><strong>Edge Computing</strong>: Edge device integration</li>
+<li><strong>Federated Learning</strong>: Distributed model training</li>
+<li><strong>Blockchain Integration</strong>: Immutable task
+tracking</li>
+<li><strong>Quantum Computing</strong>: Quantum algorithm support</li>
+</ul>
+<h3 id="scalability-roadmap">Scalability Roadmap</h3>
+<ul>
+<li><strong>Microservices</strong>: Further service decomposition</li>
+<li><strong>Event-Driven Architecture</strong>: Event sourcing
+implementation</li>
+<li><strong>Service Mesh</strong>: Advanced service communication</li>
+<li><strong>Multi-Region Deployment</strong>: Global distribution</li>
+</ul>
+<hr />
+<p><strong>Architecture Version</strong>: 1.1.0 <strong>Last
+Updated</strong>: 2025-11-05 <strong>Compatibility</strong>: Go 1.26+,
+PostgreSQL 15+, Redis 7+</p>
+<h2 id="recent-architecture-changes-v1.1.0">🆕 Recent Architecture
+Changes (v1.1.0)</h2>
+<h3 id="new-llm-provider-integrations">New LLM Provider
+Integrations</h3>
+<ul>
+<li><strong>Anthropic Claude Provider</strong>: Full API implementation
+with advanced features
+<ul>
+<li>Extended thinking with automatic detection</li>
+<li>Multi-layer prompt caching (system/messages/tools)</li>
+<li>Tool caching for repeated operations</li>
+<li>Vision support for image analysis</li>
+<li>Streaming with Server-Sent Events</li>
+</ul></li>
+<li><strong>Google Gemini Provider</strong>: Complete API integration
+with massive context support
+<ul>
+<li>2M token context windows (Gemini 2.5 Pro, 1.5 Pro)</li>
+<li>Function calling with AUTO/ANY/NONE modes</li>
+<li>Configurable safety settings</li>
+<li>System instruction separation</li>
+<li>Vision and multimodal capabilities</li>
+</ul></li>
+</ul>
+<h3 id="enhanced-provider-architecture">Enhanced Provider
+Architecture</h3>
+<ul>
+<li>Unified provider interface for all LLM backends</li>
+<li>Health monitoring and availability checks</li>
+<li>Model capability introspection</li>
+<li>Streaming support across all providers</li>
+<li>Error handling with context-aware retries</li>
+</ul>
+</body>
+</html>

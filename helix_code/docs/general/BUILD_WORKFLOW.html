@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>BUILD_WORKFLOW</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">BUILD_WORKFLOW</h1>
+</header>
+<h1 id="helixcode-build-workflow-documentation">HelixCode Build Workflow
+Documentation</h1>
+<h2 id="complete-build-system-architecture">Complete Build System
+Architecture</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                         Developer Actions                            │
+└───────────────┬─────────────────────────────────────────────────────┘
+                │
+    ┌───────────┴───────────┐
+    │                       │
+    ▼                       ▼
+┌─────────┐           ┌──────────┐
+│  Edit   │           │   Git    │
+│  Docs   │           │  Commit  │
+└────┬────┘           └─────┬────┘
+     │                      │
+     │                      ├─────────────────┐
+     │                      │                 │
+     ▼                      ▼                 ▼
+┌─────────────────┐   ┌──────────┐   ┌──────────────┐
+│  make           │   │ Pre-     │   │  make        │
+│  sync-manual    │   │ commit   │   │  release     │
+└────────┬────────┘   │ Hook     │   └──────┬───────┘
+         │            └─────┬────┘          │
+         │                  │               │
+         └──────────┬───────┘               │
+                    │                       │
+                    ▼                       ▼
+         ┌──────────────────────┐  ┌────────────────┐
+         │  sync-manual.sh      │  │  Full Build    │
+         │  - Update timestamps │  │  Pipeline      │
+         │  - Convert to HTML   │  └────────┬───────┘
+         │  - Copy to website   │           │
+         │  - Generate CSS      │           │
+         └──────────┬───────────┘           │
+                    │                       │
+                    ▼                       ▼
+         ┌──────────────────────┐  ┌────────────────┐
+         │  website/manual/     │  │  1. Clean      │
+         │  - index.html        │  │  2. assets     │
+         │  - USER_MANUAL.html  │  │  3. Docs       │
+         │  - style.css         │  │  4. Build      │
+         │  - .metadata.json    │  │  5. Test       │
+         └──────────────────────┘  └────────┬───────┘
+                                             │
+                                             ▼
+                                  ┌──────────────────┐
+                                  │  Artifacts       │
+                                  │  - bin/          │
+                                  │  - website/      │
+                                  │  - BUILD_INFO    │
+                                  └──────────────────┘</code></pre>
+<h2 id="documentation-update-flow">Documentation Update Flow</h2>
+<pre><code>┌──────────────┐
+│ Source Files │
+│ docs/*.md    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────────────┐
+│  update-docs.sh      │
+│                      │
+│  Step 1: Timestamps  │◄──── Updates Last Updated dates
+│  Step 2: HTML        │◄──── Converts MD → HTML (pandoc)
+│  Step 3: Sync        │◄──── Calls sync-manual.sh
+│  Step 4: PDF         │◄──── Optional: MD → PDF
+│  Step 5: Changelog   │◄──── Optional: Updates CHANGELOG
+│  Step 6: Metadata    │◄──── Generates .doc-metadata.json
+└──────────┬───────────┘
+           │
+           ▼
+    ┌──────────────┐
+    │  website/    │
+    │  ├─ manual/  │
+    │  ├─ guides/  │
+    │  └─ pdf/     │
+    └──────────────┘</code></pre>
+<h2 id="make-target-dependencies">Make Target Dependencies</h2>
+<pre><code>make release
+    │
+    ├─► make clean
+    │       └─► rm -rf bin/ dist/
+    │
+    ├─► make logo-assets
+    │       └─► go run scripts/logo/generate_assets.go
+    │
+    ├─► make docs
+    │       ├─► make manual-html
+    │       │       └─► pandoc USER_MANUAL.md → HTML
+    │       │
+    │       └─► make sync-manual
+    │               └─► scripts/sync-manual.sh
+    │                       ├─► Copy Markdown
+    │                       ├─► Update timestamps
+    │                       ├─► Generate HTML
+    │                       ├─► Create index.html
+    │                       ├─► Create style.css
+    │                       └─► Generate metadata
+    │
+    ├─► make build
+    │       └─► go build → bin/helixcode
+    │
+    └─► make test
+            └─► go test ./...</code></pre>
+<h2 id="developer-workflows">Developer Workflows</h2>
+<h3 id="workflow-1-quick-documentation-update">Workflow 1: Quick
+Documentation Update</h3>
+<pre><code>Edit docs/USER_MANUAL.md
+          ↓
+   make sync-manual
+          ↓
+Review website/manual/index.html
+          ↓
+    git add docs/ website/
+          ↓
+git commit -m &quot;docs: update&quot;
+          ↓
+      git push</code></pre>
+<h3 id="workflow-2-full-documentation-update">Workflow 2: Full
+Documentation Update</h3>
+<pre><code>Edit docs/*.md
+      ↓
+./scripts/update-docs.sh --pdf --changelog
+      ↓
+Review all changes
+      ↓
+git add docs/ website/ CHANGELOG.md
+      ↓
+git commit -m &quot;docs: comprehensive update&quot;
+      ↓
+git push</code></pre>
+<h3 id="workflow-3-release-build">Workflow 3: Release Build</h3>
+<pre><code>Update version in Makefile
+          ↓
+./scripts/update-docs.sh --pdf --changelog
+          ↓
+    make release
+          ↓
+Verify bin/ and website/
+          ↓
+git add .
+          ↓
+git commit -m &quot;release: vX.Y.Z&quot;
+          ↓
+git tag vX.Y.Z
+          ↓
+git push --tags</code></pre>
+<h3 id="workflow-4-with-pre-commit-hook">Workflow 4: With Pre-Commit
+Hook</h3>
+<pre><code>Install hook (one-time):
+cp scripts/pre-commit.template .git/hooks/pre-commit
+          ↓
+Edit docs/USER_MANUAL.md
+          ↓
+git add docs/USER_MANUAL.md
+          ↓
+git commit -m &quot;docs: update&quot;
+          ↓
+    [Hook runs automatically]
+          ├─► Updates timestamps
+          ├─► Regenerates HTML
+          └─► Stages website/
+          ↓
+    Commit proceeds
+          ↓
+      git push</code></pre>
+<h2 id="script-execution-flow">Script Execution Flow</h2>
+<h3 id="sync-manual.sh-execution">sync-manual.sh Execution</h3>
+<pre><code>START
+  │
+  ├─► Check prerequisites
+  │   ├─► Does USER_MANUAL.md exist?
+  │   └─► Is pandoc available?
+  │
+  ├─► Create directories
+  │   └─► mkdir -p website/manual
+  │
+  ├─► Copy Markdown
+  │   └─► cp docs/USER_MANUAL.md → website/manual/
+  │
+  ├─► Update timestamp
+  │   └─► sed &quot;s/Last Updated.../$(date)/&quot;
+  │
+  ├─► Convert to HTML (if pandoc)
+  │   └─► pandoc → USER_MANUAL.html
+  │
+  ├─► Generate index.html
+  │   └─► Create landing page with links
+  │
+  ├─► Generate style.css
+  │   └─► Create stylesheet
+  │
+  └─► Generate metadata
+      └─► Create .sync-metadata.json
+  │
+END (Success)</code></pre>
+<h3 id="update-docs.sh-execution">update-docs.sh Execution</h3>
+<pre><code>START
+  │
+  ├─► Parse arguments (--pdf, --changelog, --verbose)
+  │
+  ├─► Step 1/6: Update timestamps
+  │   └─► For each Markdown file:
+  │       └─► sed &quot;s/Last Updated.../$(date)/&quot;
+  │
+  ├─► Step 2/6: Convert to HTML
+  │   ├─► USER_MANUAL.md → HTML
+  │   ├─► USER_GUIDE.md → HTML
+  │   └─► API_REFERENCE.md → HTML
+  │
+  ├─► Step 3/6: Sync to website
+  │   └─► Execute sync-manual.sh
+  │
+  ├─► Step 4/6: Generate PDF (optional)
+  │   └─► If --pdf flag:
+  │       └─► pandoc → HelixCode_User_Manual.pdf
+  │
+  ├─► Step 5/6: Update changelog (optional)
+  │   └─► If --changelog flag:
+  │       └─► Prepend entry to CHANGELOG.md
+  │
+  └─► Step 6/6: Generate metadata
+      └─► Create .doc-metadata.json
+  │
+END (Success)</code></pre>
+<h3 id="build.sh-execution">build.sh Execution</h3>
+<pre><code>START
+  │
+  ├─► Parse arguments
+  │   ├─► --no-docs
+  │   ├─► --with-tests
+  │   └─► --platform [linux|darwin|windows|all]
+  │
+  ├─► Step 1/6: Check prerequisites
+  │   ├─► Go installed?
+  │   └─► pandoc installed? (if docs enabled)
+  │
+  ├─► Step 2/6: Generate assets
+  │   └─► go run scripts/logo/generate_assets.go
+  │
+  ├─► Step 3/6: Build documentation (if enabled)
+  │   └─► Execute sync-manual.sh
+  │
+  ├─► Step 4/6: Build application
+  │   └─► For each platform:
+  │       └─► go build → bin/helixcode-[platform]
+  │
+  ├─► Step 5/6: Run tests (if --with-tests)
+  │   └─► go test ./...
+  │
+  └─► Step 6/6: Generate build info
+      └─► Create bin/BUILD_INFO.json
+  │
+END (Success)</code></pre>
+<h2 id="file-generation-timeline">File Generation Timeline</h2>
+<h3 id="on-make-sync-manual">On <code>make sync-manual</code>:</h3>
+<pre><code>Time  Action                    Output
+──────────────────────────────────────────────────
+0s    Start script
+1s    Copy Markdown             website/manual/USER_MANUAL.md
+2s    Update timestamp          (modified in place)
+3s    Convert to HTML           website/manual/USER_MANUAL.html
+4s    Generate index            website/manual/index.html
+4s    Generate CSS              website/manual/style.css
+5s    Generate metadata         website/manual/.sync-metadata.json
+5s    Complete</code></pre>
+<h3 id="on-.scriptsupdate-docs.sh---pdf">On
+<code>./scripts/update-docs.sh --pdf</code>:</h3>
+<pre><code>Time  Action                    Output
+──────────────────────────────────────────────────
+0s    Start script
+1s    Update timestamps         docs/*.md (modified)
+2s    Convert USER_MANUAL       website/manual/USER_MANUAL.html
+3s    Convert USER_GUIDE        website/guides/USER_GUIDE.html
+4s    Convert API_REFERENCE     website/guides/API_REFERENCE.html
+5s    Execute sync-manual.sh    (see above timeline)
+10s   Generate PDF              website/pdf/HelixCode_User_Manual.pdf
+15s   Generate metadata         website/.doc-metadata.json
+15s   Complete</code></pre>
+<h3 id="on-make-release">On <code>make release</code>:</h3>
+<pre><code>Time  Action                    Output
+──────────────────────────────────────────────────
+0s    make clean                rm -rf bin/ dist/
+1s    make logo-assets          assets/logo/*
+2s    make docs                 website/* (see above)
+7s    make build                bin/helixcode*
+10s   make test                 (test output)
+30s   Complete</code></pre>
+<h2 id="integration-points">Integration Points</h2>
+<h3 id="makefile-integration">1. Makefile Integration</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode makefile"><code class="sourceCode makefile"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Direct targets</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>sync-manual → scripts/sync-manual.sh</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>manual-html → pandoc conversion only</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>docs        → manual-html + sync-manual</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Composite targets</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>assets  → logo-assets + sync-manual</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>release → clean + logo-assets + docs + build + test</span></code></pre></div>
+<h3 id="git-hook-integration">2. Git Hook Integration</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pre-commit hook triggers on:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> add docs/<span class="pp">*</span>.md</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Hook execution:</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">.git/hooks/pre-commit</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">├─►</span> Detect changed docs</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">├─►</span> Update timestamps</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="ex">├─►</span> Run sync-manual.sh</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└─►</span> Stage website/</span></code></pre></div>
+<h3 id="cicd-integration">3. CI/CD Integration</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GitHub Actions example</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build Docs</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span><span class="at"> make docs</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Build App</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span><span class="at"> make build</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Release</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">run</span><span class="kw">:</span><span class="at"> make release</span></span></code></pre></div>
+<h2 id="command-comparison">Command Comparison</h2>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 26%" />
+<col style="width: 30%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Task</th>
+<th>Make Command</th>
+<th>Script Command</th>
+<th>Pre-commit Hook</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Quick sync</td>
+<td><code>make sync-manual</code></td>
+<td><code>./scripts/sync-manual.sh</code></td>
+<td>Auto on commit</td>
+</tr>
+<tr>
+<td>HTML only</td>
+<td><code>make manual-html</code></td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Full docs</td>
+<td><code>make docs</code></td>
+<td><code>./scripts/update-docs.sh</code></td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>With PDF</td>
+<td>N/A</td>
+<td><code>./scripts/update-docs.sh --pdf</code></td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>Release</td>
+<td><code>make release</code></td>
+<td><code>./scripts/build.sh --with-tests</code></td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<h2 id="output-directory-structure">Output Directory Structure</h2>
+<pre><code>website/
+├── manual/
+│   ├── index.html              ← Landing page
+│   ├── USER_MANUAL.html        ← HTML version
+│   ├── USER_MANUAL.md          ← Markdown copy
+│   ├── style.css               ← Stylesheet
+│   └── .sync-metadata.json     ← Sync info
+├── guides/
+│   ├── USER_GUIDE.html
+│   └── API_REFERENCE.html
+├── pdf/
+│   └── HelixCode_User_Manual.pdf
+└── .doc-metadata.json          ← Global metadata</code></pre>
+<h2 id="error-handling-flow">Error Handling Flow</h2>
+<pre><code>Script Start
+     │
+     ▼
+Check Prerequisites
+     │
+     ├─► Missing Go? → ERROR: &quot;Go not installed&quot;
+     ├─► Missing pandoc? → WARN: &quot;Limited features&quot;
+     └─► Source file missing? → ERROR: &quot;Source not found&quot;
+     │
+     ▼
+Execute Steps
+     │
+     ├─► Step fails? → ERROR: &quot;Step X failed&quot;
+     └─► Warning? → WARN: Continue
+     │
+     ▼
+Generate Output
+     │
+     ├─► Can&#39;t write? → ERROR: &quot;Permission denied&quot;
+     └─► Success? → SUCCESS
+     │
+     ▼
+   Complete</code></pre>
+<h2 id="performance-metrics">Performance Metrics</h2>
+<h3 id="typical-execution-times">Typical Execution Times</h3>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Time</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make sync-manual</code></td>
+<td>5s</td>
+<td>With pandoc</td>
+</tr>
+<tr>
+<td><code>make docs</code></td>
+<td>15s</td>
+<td>All documentation</td>
+</tr>
+<tr>
+<td><code>./scripts/update-docs.sh</code></td>
+<td>15s</td>
+<td>Without PDF</td>
+</tr>
+<tr>
+<td><code>./scripts/update-docs.sh --pdf</code></td>
+<td>45s</td>
+<td>With PDF (requires LaTeX)</td>
+</tr>
+<tr>
+<td><code>make build</code></td>
+<td>30s</td>
+<td>Single platform</td>
+</tr>
+<tr>
+<td><code>make release</code></td>
+<td>60s</td>
+<td>Full release with tests</td>
+</tr>
+</tbody>
+</table>
+<h3 id="file-sizes">File Sizes</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Size</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USER_MANUAL.md</td>
+<td>~50KB</td>
+<td>Source Markdown</td>
+</tr>
+<tr>
+<td>USER_MANUAL.html</td>
+<td>~75KB</td>
+<td>HTML with CSS</td>
+</tr>
+<tr>
+<td>USER_MANUAL.pdf</td>
+<td>~150KB</td>
+<td>PDF version</td>
+</tr>
+<tr>
+<td>style.css</td>
+<td>~3KB</td>
+<td>Stylesheet</td>
+</tr>
+<tr>
+<td>index.html</td>
+<td>~2KB</td>
+<td>Landing page</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Version</strong>: 1.0.0 <strong>Last Updated</strong>:
+2025-11-06 <strong>Status</strong>: Production Ready</p>
+</body>
+</html>

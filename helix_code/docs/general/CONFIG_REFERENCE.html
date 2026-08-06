@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONFIG_REFERENCE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONFIG_REFERENCE</h1>
+</header>
+<h1 id="helixcode-notification-configuration-reference">HelixCode
+Notification Configuration Reference</h1>
+<h2 id="overview">Overview</h2>
+<p>This document provides a complete reference for configuring the
+HelixCode notification system, including all channels, reliability
+features, and integration options.</p>
+<hr />
+<h2 id="configuration-methods">Configuration Methods</h2>
+<p>The notification system supports multiple configuration methods:</p>
+<ol type="1">
+<li><strong>Programmatic</strong> - Direct configuration in Go code</li>
+<li><strong>Environment Variables</strong> - For sensitive
+credentials</li>
+<li><strong>YAML Configuration</strong> - For structured settings</li>
+<li><strong>JSON Configuration</strong> - Alternative structured
+format</li>
+</ol>
+<hr />
+<h2 id="notification-channels">Notification Channels</h2>
+<h3 id="slack-channel">Slack Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewSlackChannel<span class="op">(</span>webhookURL<span class="op">,</span> channelName<span class="op">,</span> username<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>webhookURL</code> (string,
+required): Slack webhook URL from Incoming Webhooks integration -
+<code>channelName</code> (string, optional): Channel to post to (e.g.,
+“#alerts”, “<span class="citation" data-cites="user">@user</span>”) -
+<code>username</code> (string, optional): Bot display name</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">SLACK_WEBHOOK_URL</span><span class="op">=</span>https://hooks.slack.com/services/YOUR/WEBHOOK/URL</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="va">SLACK_CHANNEL</span><span class="op">=</span>#alerts</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">SLACK_USERNAME</span><span class="op">=</span>HelixBot</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">slack</span><span class="kw">:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${SLACK_WEBHOOK_URL}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#alerts&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">username</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixBot&quot;</span></span></code></pre></div>
+<p><strong>Rate Limit:</strong> 1 message per second (Slack API
+limit)</p>
+<hr />
+<h3 id="discord-channel">Discord Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewDiscordChannel<span class="op">(</span>webhookURL<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>webhookURL</code> (string,
+required): Discord webhook URL from channel integrations</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">DISCORD_WEBHOOK_URL</span><span class="op">=</span>https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${DISCORD_WEBHOOK_URL}</span></span></code></pre></div>
+<p><strong>Rate Limit:</strong> 5 messages per 5 seconds (Discord API
+limit)</p>
+<hr />
+<h3 id="telegram-channel">Telegram Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewTelegramChannel<span class="op">(</span>botToken<span class="op">,</span> chatID<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>botToken</code> (string,
+required): Bot token from <span class="citation" data-cites="BotFather">@BotFather</span> - <code>chatID</code> (string,
+required): Chat ID to send messages to</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">TELEGRAM_BOT_TOKEN</span><span class="op">=</span>123456789:ABCdefGHIjklMNOpqrsTUVwxyz</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">TELEGRAM_CHAT_ID</span><span class="op">=</span>-1001234567890</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">telegram</span><span class="kw">:</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">bot_token</span><span class="kw">:</span><span class="at"> ${TELEGRAM_BOT_TOKEN}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chat_id</span><span class="kw">:</span><span class="at"> ${TELEGRAM_CHAT_ID}</span></span></code></pre></div>
+<p><strong>Rate Limit:</strong> 30 messages per second (Telegram API
+limit)</p>
+<p><strong>Getting Chat ID:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Send a message to your bot, then:</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://api.telegram.org/bot<span class="op">&lt;</span>TOKEN<span class="op">&gt;</span>/getUpdates</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Look for &quot;chat&quot;:{&quot;id&quot;: YOUR_CHAT_ID}</span></span></code></pre></div>
+<hr />
+<h3 id="email-channel">Email Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewEmailChannel<span class="op">(</span>smtpServer<span class="op">,</span> port<span class="op">,</span> username<span class="op">,</span> password<span class="op">,</span> fromAddr<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>smtpServer</code> (string,
+required): SMTP server address (e.g., “smtp.gmail.com”) -
+<code>port</code> (int, required): SMTP port (587 for TLS, 465 for SSL)
+- <code>username</code> (string, required): SMTP authentication username
+- <code>password</code> (string, required): SMTP authentication password
+- <code>fromAddr</code> (string, required): From email address</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.gmail.com</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_USERNAME</span><span class="op">=</span>your-email@gmail.com</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_PASSWORD</span><span class="op">=</span>your-app-password</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_FROM</span><span class="op">=</span>notifications@yourcompany.com</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp_server</span><span class="kw">:</span><span class="at"> ${EMAIL_SMTP_SERVER}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp_port</span><span class="kw">:</span><span class="at"> </span><span class="dv">587</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">username</span><span class="kw">:</span><span class="at"> ${EMAIL_USERNAME}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">password</span><span class="kw">:</span><span class="at"> ${EMAIL_PASSWORD}</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">from</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;notifications@yourcompany.com&quot;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">use_tls</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<p><strong>Rate Limit:</strong> 10 messages per minute (recommended)</p>
+<p><strong>Gmail Configuration:</strong> - Enable 2FA - Generate App
+Password at https://myaccount.google.com/apppasswords - Use app password
+instead of regular password</p>
+<hr />
+<h3 id="generic-webhook-channel">Generic Webhook Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>headers <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Authorization&quot;</span><span class="op">:</span> <span class="st">&quot;Bearer YOUR_TOKEN&quot;</span><span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;X-Custom-Header&quot;</span><span class="op">:</span> <span class="st">&quot;value&quot;</span><span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewWebhookChannel<span class="op">(</span>url<span class="op">,</span> headers<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>url</code> (string, required):
+Webhook endpoint URL - <code>headers</code> (map[string]string,
+optional): Custom HTTP headers</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">WEBHOOK_URL</span><span class="op">=</span>https://your-service.com/webhooks/notifications</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="va">WEBHOOK_AUTH_TOKEN</span><span class="op">=</span>your-bearer-token</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">webhook</span><span class="kw">:</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">url</span><span class="kw">:</span><span class="at"> ${WEBHOOK_URL}</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">method</span><span class="kw">:</span><span class="at"> POST</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">headers</span><span class="kw">:</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">Authorization</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Bearer ${WEBHOOK_AUTH_TOKEN}&quot;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">Content-Type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;application/json&quot;</span></span></code></pre></div>
+<p><strong>Payload Format:</strong></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="st">&quot;Notification Title&quot;</span><span class="fu">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;message&quot;</span><span class="fu">:</span> <span class="st">&quot;Notification message body&quot;</span><span class="fu">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;error&quot;</span><span class="fu">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;priority&quot;</span><span class="fu">:</span> <span class="st">&quot;high&quot;</span><span class="fu">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;custom_field&quot;</span><span class="fu">:</span> <span class="st">&quot;value&quot;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Rate Limit:</strong> 100 messages per minute (default)</p>
+<hr />
+<h3 id="microsoft-teams-channel">Microsoft Teams Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewTeamsChannel<span class="op">(</span>webhookURL<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>webhookURL</code> (string,
+required): Teams incoming webhook URL</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="va">TEAMS_WEBHOOK_URL</span><span class="op">=</span>https://outlook.office.com/webhook/YOUR_WEBHOOK_ID</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">teams</span><span class="kw">:</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${TEAMS_WEBHOOK_URL}</span></span></code></pre></div>
+<p><strong>Creating Webhook:</strong> 1. Go to Teams channel 2. Click
+“…” → Connectors → Incoming Webhook 3. Configure and copy webhook
+URL</p>
+<p><strong>Rate Limit:</strong> Same as generic webhook (100/min)</p>
+<hr />
+<h3 id="pagerduty-channel">PagerDuty Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewPagerDutyChannel<span class="op">(</span>integrationKey<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>integrationKey</code> (string,
+required): PagerDuty Events API v2 integration key</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="va">PAGERDUTY_INTEGRATION_KEY</span><span class="op">=</span>your-integration-key</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">pagerduty</span><span class="kw">:</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">integration_key</span><span class="kw">:</span><span class="at"> ${PAGERDUTY_INTEGRATION_KEY}</span></span></code></pre></div>
+<p><strong>Getting Integration Key:</strong> 1. Go to Services → Your
+Service → Integrations 2. Add “Events API V2” integration 3. Copy
+integration key</p>
+<p><strong>Severity Mapping:</strong> - <code>alert</code> →
+<code>critical</code> - <code>error</code> → <code>error</code> -
+<code>warning</code> → <code>warning</code> -
+<code>info</code>/<code>success</code> → <code>info</code></p>
+<hr />
+<h3 id="jira-channel">Jira Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewJiraChannel<span class="op">(</span>baseURL<span class="op">,</span> email<span class="op">,</span> apiToken<span class="op">,</span> projectKey<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>baseURL</code> (string,
+required): Jira instance URL (e.g., “https://yourcompany.atlassian.net”)
+- <code>email</code> (string, required): Jira account email -
+<code>apiToken</code> (string, required): Jira API token -
+<code>projectKey</code> (string, required): Project key (e.g.,
+“HELIX”)</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_BASE_URL</span><span class="op">=</span>https://yourcompany.atlassian.net</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_EMAIL</span><span class="op">=</span>your-email@company.com</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_API_TOKEN</span><span class="op">=</span>your-api-token</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_PROJECT_KEY</span><span class="op">=</span>HELIX</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">jira</span><span class="kw">:</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> ${JIRA_BASE_URL}</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">email</span><span class="kw">:</span><span class="at"> ${JIRA_EMAIL}</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_token</span><span class="kw">:</span><span class="at"> ${JIRA_API_TOKEN}</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">project_key</span><span class="kw">:</span><span class="at"> ${JIRA_PROJECT_KEY}</span></span></code></pre></div>
+<p><strong>Creating API Token:</strong> 1. Go to
+https://id.atlassian.com/manage-profile/security/api-tokens 2. Create
+API token 3. Copy and store securely</p>
+<p><strong>Priority Mapping:</strong> - <code>urgent</code> →
+<code>Highest</code> - <code>high</code> → <code>High</code> -
+<code>medium</code> → <code>Medium</code> - <code>low</code> →
+<code>Low</code></p>
+<p><strong>Issue Type:</strong> Always creates as “Task” (can be
+customized in code)</p>
+<hr />
+<h3 id="github-issues-channel">GitHub Issues Channel</h3>
+<p><strong>Constructor:</strong></p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>channel <span class="op">:=</span> notification<span class="op">.</span>NewGitHubIssuesChannel<span class="op">(</span>token<span class="op">,</span> owner<span class="op">,</span> repo<span class="op">)</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>token</code> (string, required):
+GitHub personal access token - <code>owner</code> (string, required):
+Repository owner - <code>repo</code> (string, required): Repository
+name</p>
+<p><strong>Environment Variables:</strong></p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="va">GITHUB_TOKEN</span><span class="op">=</span>ghp_your_personal_access_token</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="va">GITHUB_OWNER</span><span class="op">=</span>yourcompany</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="va">GITHUB_REPO</span><span class="op">=</span>helixcode</span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">github</span><span class="kw">:</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token</span><span class="kw">:</span><span class="at"> ${GITHUB_TOKEN}</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">owner</span><span class="kw">:</span><span class="at"> ${GITHUB_OWNER}</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> ${GITHUB_REPO}</span></span></code></pre></div>
+<p><strong>Creating Token:</strong> 1. Go to Settings → Developer
+settings → Personal access tokens 2. Generate token with
+<code>repo</code> scope 3. Copy token</p>
+<p><strong>Labels:</strong> Automatically adds notification type as
+label (info, error, warning, etc.)</p>
+<hr />
+<h2 id="retry-configuration">Retry Configuration</h2>
+<p><strong>Default Configuration:</strong></p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> notification<span class="op">.</span>DefaultRetryConfig<span class="op">()</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns:</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">// MaxRetries: 3</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co">// InitialBackoff: 1 second</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co">// MaxBackoff: 60 seconds</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co">// BackoffFactor: 2.0 (exponential)</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Enabled: true</span></span></code></pre></div>
+<p><strong>Custom Configuration:</strong></p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> notification<span class="op">.</span>RetryConfig<span class="op">{</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    MaxRetries<span class="op">:</span>     <span class="dv">5</span><span class="op">,</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    InitialBackoff<span class="op">:</span> <span class="dv">2</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    MaxBackoff<span class="op">:</span>     <span class="dv">120</span> <span class="op">*</span> time<span class="op">.</span>Second<span class="op">,</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    BackoffFactor<span class="op">:</span>  <span class="fl">2.5</span><span class="op">,</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    Enabled<span class="op">:</span>        <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>retryableChannel <span class="op">:=</span> notification<span class="op">.</span>NewRetryableChannel<span class="op">(</span>baseChannel<span class="op">,</span> config<span class="op">)</span></span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">initial_backoff</span><span class="kw">:</span><span class="at"> 2s</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_backoff</span><span class="kw">:</span><span class="at"> 120s</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">backoff_factor</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.5</span></span></code></pre></div>
+<p><strong>Backoff Calculation:</strong></p>
+<pre><code>backoff = min(initial_backoff * (backoff_factor ^ attempt), max_backoff)
+
+Examples with defaults:
+- Attempt 1: 1s * 2^0 = 1s
+- Attempt 2: 1s * 2^1 = 2s
+- Attempt 3: 1s * 2^2 = 4s
+- Attempt 4: 1s * 2^3 = 8s</code></pre>
+<p><strong>Best Practices:</strong> - Enable for all production channels
+- Use higher max retries for critical notifications - Adjust backoff
+factor based on API rate limits - Set max backoff to prevent excessive
+delays</p>
+<hr />
+<h2 id="rate-limiting-configuration">Rate Limiting Configuration</h2>
+<p><strong>Default Rate Limits:</strong></p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Predefined limits matching API restrictions</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>slack<span class="op">:</span>    <span class="dv">1</span> request per second</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>discord<span class="op">:</span>  <span class="dv">5</span> requests per <span class="dv">5</span> seconds</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>telegram<span class="op">:</span> <span class="dv">30</span> requests per second</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>email<span class="op">:</span>    <span class="dv">10</span> requests per minute</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>webhook<span class="op">:</span>  <span class="dv">100</span> requests per minute</span></code></pre></div>
+<p><strong>Getting Default Limiter:</strong></p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>limiter <span class="op">:=</span> notification<span class="op">.</span>GetDefaultRateLimiter<span class="op">(</span><span class="st">&quot;slack&quot;</span><span class="op">)</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>rateLimitedChannel <span class="op">:=</span> notification<span class="op">.</span>NewRateLimitedChannel<span class="op">(</span>channel<span class="op">,</span> limiter<span class="op">)</span></span></code></pre></div>
+<p><strong>Custom Rate Limiter:</strong></p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 10 requests per second</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>limiter <span class="op">:=</span> notification<span class="op">.</span>NewRateLimiter<span class="op">(</span><span class="dv">10</span><span class="op">,</span> <span class="dv">1</span><span class="op">*</span>time<span class="op">.</span>Second<span class="op">)</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>rateLimitedChannel <span class="op">:=</span> notification<span class="op">.</span>NewRateLimitedChannel<span class="op">(</span>channel<span class="op">,</span> limiter<span class="op">)</span></span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rate_limiting</span><span class="kw">:</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">limits</span><span class="kw">:</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">slack</span><span class="kw">:</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">telegram</span><span class="kw">:</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1m</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook</span><span class="kw">:</span></span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">100</span></span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1m</span></span></code></pre></div>
+<p><strong>Algorithm:</strong> Token bucket with automatic refill</p>
+<p><strong>Best Practices:</strong> - Always use rate limiting for
+external APIs - Set limits slightly below API maximums - Monitor rate
+limit hits in metrics - Combine with queuing for burst handling</p>
+<hr />
+<h2 id="notification-queue-configuration">Notification Queue
+Configuration</h2>
+<p><strong>Creating Queue:</strong></p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>queue <span class="op">:=</span> notification<span class="op">.</span>NewNotificationQueue<span class="op">(</span>engine<span class="op">,</span> workers<span class="op">,</span> maxSize<span class="op">)</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>queue<span class="op">.</span>Start<span class="op">()</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> queue<span class="op">.</span>Stop<span class="op">()</span></span></code></pre></div>
+<p><strong>Parameters:</strong> - <code>engine</code>
+(*NotificationEngine, required): Notification engine instance -
+<code>workers</code> (int, required): Number of concurrent workers -
+<code>maxSize</code> (int, required): Maximum queue size</p>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">queue</span><span class="kw">:</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">workers</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">processing_timeout</span><span class="kw">:</span><span class="at"> 30s</span></span></code></pre></div>
+<p><strong>Enqueuing Notifications:</strong></p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> queue<span class="op">.</span>Enqueue<span class="op">(</span>notification<span class="op">,</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;slack&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">},</span> maxRetries<span class="op">)</span></span></code></pre></div>
+<p><strong>Queue Stats:</strong></p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>stats <span class="op">:=</span> queue<span class="op">.</span>GetStats<span class="op">()</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns QueueStats with:</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="co">// - Enqueued: Total enqueued</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="co">// - Dequeued: Total dequeued</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="co">// - Succeeded: Successfully sent</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="co">// - Failed: Failed to send</span></span></code></pre></div>
+<p><strong>Worker Recommendations:</strong> - Development: 2-3 workers -
+Production: 5-10 workers - High volume: 10-20 workers - Adjust based on
+channel response times</p>
+<p><strong>Queue Size Recommendations:</strong> - Small deployments:
+100-500 - Medium deployments: 500-2000 - Large deployments:
+2000-10000</p>
+<p><strong>Best Practices:</strong> - Use queuing for all async
+notifications - Monitor queue size to prevent overflow - Adjust workers
+based on throughput needs - Set appropriate timeouts for processing</p>
+<hr />
+<h2 id="event-bus-configuration">Event Bus Configuration</h2>
+<p><strong>Creating Event Bus:</strong></p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>bus <span class="op">:=</span> event<span class="op">.</span>NewEventBus<span class="op">()</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>bus<span class="op">.</span>SetAsync<span class="op">(</span><span class="ot">true</span><span class="op">)</span> <span class="co">// Enable async mode</span></span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">async</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">buffer_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">error_logging</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<p><strong>Subscribing to Events:</strong></p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>bus<span class="op">.</span>Subscribe<span class="op">(</span>event<span class="op">.</span>EventTaskFailed<span class="op">,</span> <span class="kw">func</span><span class="op">(</span>ctx context<span class="op">.</span>Context<span class="op">,</span> evt event<span class="op">.</span>Event<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Handle event</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>Event Types:</strong></p>
+<p><strong>Task Events:</strong> - <code>EventTaskCreated</code> -
+<code>EventTaskAssigned</code> - <code>EventTaskStarted</code> -
+<code>EventTaskCompleted</code> - <code>EventTaskFailed</code> -
+<code>EventTaskPaused</code> - <code>EventTaskResumed</code> -
+<code>EventTaskCancelled</code></p>
+<p><strong>Workflow Events:</strong> - <code>EventWorkflowStarted</code>
+- <code>EventWorkflowCompleted</code> - <code>EventWorkflowFailed</code>
+- <code>EventStepCompleted</code> - <code>EventStepFailed</code></p>
+<p><strong>Worker Events:</strong> - <code>EventWorkerConnected</code> -
+<code>EventWorkerDisconnected</code> -
+<code>EventWorkerHealthDegraded</code> -
+<code>EventWorkerHeartbeatMissed</code></p>
+<p><strong>System Events:</strong> - <code>EventSystemStartup</code> -
+<code>EventSystemShutdown</code> - <code>EventSystemError</code></p>
+<p><strong>Best Practices:</strong> - Use async mode for better
+performance - Subscribe only to needed event types - Handle errors in
+event handlers - Use global bus for system-wide events</p>
+<hr />
+<h2 id="notification-rules-configuration">Notification Rules
+Configuration</h2>
+<p><strong>Adding Rules:</strong></p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>engine<span class="op">.</span>AddRule<span class="op">(</span>notification<span class="op">.</span>NotificationRule<span class="op">{</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    Name<span class="op">:</span>      <span class="st">&quot;Critical Errors&quot;</span><span class="op">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    Condition<span class="op">:</span> <span class="st">&quot;type==error &amp;&amp; priority==urgent&quot;</span><span class="op">,</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    Channels<span class="op">:</span>  <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;slack&quot;</span><span class="op">,</span> <span class="st">&quot;pagerduty&quot;</span><span class="op">,</span> <span class="st">&quot;email&quot;</span><span class="op">},</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    Priority<span class="op">:</span>  notification<span class="op">.</span>NotificationPriorityUrgent<span class="op">,</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    Enabled<span class="op">:</span>   <span class="ot">true</span><span class="op">,</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Critical Errors&quot;</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==error &amp;&amp; priority==urgent&quot;</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pagerduty&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;email&quot;</span><span class="kw">]</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;urgent&quot;</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Task Failures&quot;</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==error &amp;&amp; source==task_manager&quot;</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">]</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;high&quot;</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Worker Health Issues&quot;</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==warning &amp;&amp; source==worker_pool&quot;</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;email&quot;</span><span class="kw">]</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;medium&quot;</span></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Build Successes&quot;</span></span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==success &amp;&amp; source==build&quot;</span></span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;discord&quot;</span><span class="kw">]</span></span>
+<span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;low&quot;</span></span>
+<span id="cb46-25"><a href="#cb46-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<p><strong>Condition Syntax:</strong> - <code>type==error</code>: Match
+notification type - <code>priority==urgent</code>: Match priority -
+<code>source==task_manager</code>: Match event source - Combine with
+<code>&amp;&amp;</code> (AND), <code>||</code> (OR)</p>
+<p><strong>Priority Levels:</strong> - <code>urgent</code>: Critical,
+immediate attention - <code>high</code>: Important, timely attention -
+<code>medium</code>: Normal priority - <code>low</code>:
+Informational</p>
+<hr />
+<h2 id="metrics-configuration">Metrics Configuration</h2>
+<p><strong>Creating Metrics:</strong></p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">:=</span> notification<span class="op">.</span>NewMetrics<span class="op">()</span></span></code></pre></div>
+<p><strong>Recording Metrics:</strong></p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordSent<span class="op">(</span><span class="st">&quot;slack&quot;</span><span class="op">,</span> duration<span class="op">)</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordFailed<span class="op">(</span><span class="st">&quot;email&quot;</span><span class="op">)</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordRetry<span class="op">(</span><span class="st">&quot;discord&quot;</span><span class="op">)</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordQueued<span class="op">()</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordRateLimited<span class="op">(</span><span class="st">&quot;telegram&quot;</span><span class="op">)</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordEventProcessed<span class="op">()</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">.</span>RecordEventIgnored<span class="op">()</span></span></code></pre></div>
+<p><strong>Getting Metrics:</strong></p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>current <span class="op">:=</span> metrics<span class="op">.</span>GetMetrics<span class="op">()</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>successRate <span class="op">:=</span> metrics<span class="op">.</span>GetSuccessRate<span class="op">()</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>channelRate <span class="op">:=</span> metrics<span class="op">.</span>GetChannelSuccessRate<span class="op">(</span><span class="st">&quot;slack&quot;</span><span class="op">)</span></span></code></pre></div>
+<p><strong>YAML Configuration:</strong></p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">metrics</span><span class="kw">:</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">retention_period</span><span class="kw">:</span><span class="at"> 24h</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">export_interval</span><span class="kw">:</span><span class="at"> 1m</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">exporters</span><span class="kw">:</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;prometheus&quot;</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">endpoint</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;:9090/metrics&quot;</span></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;statsd&quot;</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">host</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;localhost:8125&quot;</span></span></code></pre></div>
+<p><strong>Available Metrics:</strong> - <code>TotalSent</code>: Total
+notifications sent - <code>TotalFailed</code>: Total failures -
+<code>TotalRetries</code>: Total retry attempts -
+<code>TotalQueued</code>: Total queued notifications -
+<code>TotalRateLimited</code>: Total rate-limited -
+<code>AverageResponseTime</code>: Average send time -
+<code>MinResponseTime</code>: Fastest send -
+<code>MaxResponseTime</code>: Slowest send -
+<code>EventsProcessed</code>: Events processed -
+<code>EventsIgnored</code>: Events ignored</p>
+<p><strong>Per-Channel Metrics:</strong> - <code>Sent</code>:
+Notifications sent - <code>Failed</code>: Failures -
+<code>Retries</code>: Retry attempts - <code>RateLimited</code>: Rate
+limit hits - <code>AvgTime</code>: Average response time</p>
+<hr />
+<h2 id="complete-configuration-example">Complete Configuration
+Example</h2>
+<p><strong>YAML (config.yaml):</strong></p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # Channels</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">channels</span><span class="kw">:</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">slack</span><span class="kw">:</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${SLACK_WEBHOOK_URL}</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channel</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;#alerts&quot;</span></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">username</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HelixBot&quot;</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">webhook_url</span><span class="kw">:</span><span class="at"> ${DISCORD_WEBHOOK_URL}</span></span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">telegram</span><span class="kw">:</span></span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">bot_token</span><span class="kw">:</span><span class="at"> ${TELEGRAM_BOT_TOKEN}</span></span>
+<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">chat_id</span><span class="kw">:</span><span class="at"> ${TELEGRAM_CHAT_ID}</span></span>
+<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp_server</span><span class="kw">:</span><span class="at"> ${EMAIL_SMTP_SERVER}</span></span>
+<span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">smtp_port</span><span class="kw">:</span><span class="at"> </span><span class="dv">587</span></span>
+<span id="cb51-23"><a href="#cb51-23" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">username</span><span class="kw">:</span><span class="at"> ${EMAIL_USERNAME}</span></span>
+<span id="cb51-24"><a href="#cb51-24" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">password</span><span class="kw">:</span><span class="at"> ${EMAIL_PASSWORD}</span></span>
+<span id="cb51-25"><a href="#cb51-25" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">from</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;notifications@company.com&quot;</span></span>
+<span id="cb51-26"><a href="#cb51-26" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">use_tls</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-27"><a href="#cb51-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-28"><a href="#cb51-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">pagerduty</span><span class="kw">:</span></span>
+<span id="cb51-29"><a href="#cb51-29" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-30"><a href="#cb51-30" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">integration_key</span><span class="kw">:</span><span class="at"> ${PAGERDUTY_INTEGRATION_KEY}</span></span>
+<span id="cb51-31"><a href="#cb51-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-32"><a href="#cb51-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">jira</span><span class="kw">:</span></span>
+<span id="cb51-33"><a href="#cb51-33" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-34"><a href="#cb51-34" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">base_url</span><span class="kw">:</span><span class="at"> ${JIRA_BASE_URL}</span></span>
+<span id="cb51-35"><a href="#cb51-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">email</span><span class="kw">:</span><span class="at"> ${JIRA_EMAIL}</span></span>
+<span id="cb51-36"><a href="#cb51-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">api_token</span><span class="kw">:</span><span class="at"> ${JIRA_API_TOKEN}</span></span>
+<span id="cb51-37"><a href="#cb51-37" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">project_key</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;HELIX&quot;</span></span>
+<span id="cb51-38"><a href="#cb51-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-39"><a href="#cb51-39" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">github</span><span class="kw">:</span></span>
+<span id="cb51-40"><a href="#cb51-40" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb51-41"><a href="#cb51-41" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">token</span><span class="kw">:</span><span class="at"> ${GITHUB_TOKEN}</span></span>
+<span id="cb51-42"><a href="#cb51-42" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">owner</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;yourcompany&quot;</span></span>
+<span id="cb51-43"><a href="#cb51-43" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;helixcode&quot;</span></span>
+<span id="cb51-44"><a href="#cb51-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-45"><a href="#cb51-45" aria-hidden="true" tabindex="-1"></a><span class="co">  # Retry configuration</span></span>
+<span id="cb51-46"><a href="#cb51-46" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb51-47"><a href="#cb51-47" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-48"><a href="#cb51-48" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb51-49"><a href="#cb51-49" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">initial_backoff</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb51-50"><a href="#cb51-50" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_backoff</span><span class="kw">:</span><span class="at"> 60s</span></span>
+<span id="cb51-51"><a href="#cb51-51" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">backoff_factor</span><span class="kw">:</span><span class="at"> </span><span class="fl">2.0</span></span>
+<span id="cb51-52"><a href="#cb51-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-53"><a href="#cb51-53" aria-hidden="true" tabindex="-1"></a><span class="co">  # Rate limiting</span></span>
+<span id="cb51-54"><a href="#cb51-54" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rate_limiting</span><span class="kw">:</span></span>
+<span id="cb51-55"><a href="#cb51-55" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-56"><a href="#cb51-56" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">limits</span><span class="kw">:</span></span>
+<span id="cb51-57"><a href="#cb51-57" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">slack</span><span class="kw">:</span></span>
+<span id="cb51-58"><a href="#cb51-58" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb51-59"><a href="#cb51-59" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb51-60"><a href="#cb51-60" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">discord</span><span class="kw">:</span></span>
+<span id="cb51-61"><a href="#cb51-61" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb51-62"><a href="#cb51-62" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb51-63"><a href="#cb51-63" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">telegram</span><span class="kw">:</span></span>
+<span id="cb51-64"><a href="#cb51-64" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">30</span></span>
+<span id="cb51-65"><a href="#cb51-65" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1s</span></span>
+<span id="cb51-66"><a href="#cb51-66" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">email</span><span class="kw">:</span></span>
+<span id="cb51-67"><a href="#cb51-67" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">max_requests</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb51-68"><a href="#cb51-68" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">window</span><span class="kw">:</span><span class="at"> 1m</span></span>
+<span id="cb51-69"><a href="#cb51-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-70"><a href="#cb51-70" aria-hidden="true" tabindex="-1"></a><span class="co">  # Queue configuration</span></span>
+<span id="cb51-71"><a href="#cb51-71" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">queue</span><span class="kw">:</span></span>
+<span id="cb51-72"><a href="#cb51-72" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-73"><a href="#cb51-73" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">workers</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb51-74"><a href="#cb51-74" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb51-75"><a href="#cb51-75" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">processing_timeout</span><span class="kw">:</span><span class="at"> 30s</span></span>
+<span id="cb51-76"><a href="#cb51-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-77"><a href="#cb51-77" aria-hidden="true" tabindex="-1"></a><span class="co">  # Event bus</span></span>
+<span id="cb51-78"><a href="#cb51-78" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb51-79"><a href="#cb51-79" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-80"><a href="#cb51-80" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">async</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-81"><a href="#cb51-81" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">buffer_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">1000</span></span>
+<span id="cb51-82"><a href="#cb51-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-83"><a href="#cb51-83" aria-hidden="true" tabindex="-1"></a><span class="co">  # Notification rules</span></span>
+<span id="cb51-84"><a href="#cb51-84" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rules</span><span class="kw">:</span></span>
+<span id="cb51-85"><a href="#cb51-85" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Critical Errors&quot;</span></span>
+<span id="cb51-86"><a href="#cb51-86" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==error &amp;&amp; priority==urgent&quot;</span></span>
+<span id="cb51-87"><a href="#cb51-87" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;pagerduty&quot;</span><span class="kw">,</span><span class="at"> </span><span class="st">&quot;email&quot;</span><span class="kw">]</span></span>
+<span id="cb51-88"><a href="#cb51-88" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;urgent&quot;</span></span>
+<span id="cb51-89"><a href="#cb51-89" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-90"><a href="#cb51-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-91"><a href="#cb51-91" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Task Failures&quot;</span></span>
+<span id="cb51-92"><a href="#cb51-92" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==error&quot;</span></span>
+<span id="cb51-93"><a href="#cb51-93" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">]</span></span>
+<span id="cb51-94"><a href="#cb51-94" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;high&quot;</span></span>
+<span id="cb51-95"><a href="#cb51-95" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-96"><a href="#cb51-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-97"><a href="#cb51-97" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Worker Issues&quot;</span></span>
+<span id="cb51-98"><a href="#cb51-98" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;type==warning&quot;</span></span>
+<span id="cb51-99"><a href="#cb51-99" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">channels</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;slack&quot;</span><span class="kw">]</span></span>
+<span id="cb51-100"><a href="#cb51-100" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">priority</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;medium&quot;</span></span>
+<span id="cb51-101"><a href="#cb51-101" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-102"><a href="#cb51-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-103"><a href="#cb51-103" aria-hidden="true" tabindex="-1"></a><span class="co">  # Metrics</span></span>
+<span id="cb51-104"><a href="#cb51-104" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">metrics</span><span class="kw">:</span></span>
+<span id="cb51-105"><a href="#cb51-105" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb51-106"><a href="#cb51-106" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">retention_period</span><span class="kw">:</span><span class="at"> 24h</span></span></code></pre></div>
+<p><strong>Environment Variables (.env):</strong></p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Slack</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="va">SLACK_WEBHOOK_URL</span><span class="op">=</span>https://hooks.slack.com/services/YOUR/WEBHOOK/URL</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Discord</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="va">DISCORD_WEBHOOK_URL</span><span class="op">=</span>https://discord.com/api/webhooks/ID/TOKEN</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Telegram</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a><span class="va">TELEGRAM_BOT_TOKEN</span><span class="op">=</span>123456789:ABCdefGHIjklMNOpqrsTUVwxyz</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="va">TELEGRAM_CHAT_ID</span><span class="op">=</span>-1001234567890</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Email</span></span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_SMTP_SERVER</span><span class="op">=</span>smtp.gmail.com</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_SMTP_PORT</span><span class="op">=</span>587</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_USERNAME</span><span class="op">=</span>your-email@gmail.com</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a><span class="va">EMAIL_PASSWORD</span><span class="op">=</span>your-app-password</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-17"><a href="#cb52-17" aria-hidden="true" tabindex="-1"></a><span class="co"># PagerDuty</span></span>
+<span id="cb52-18"><a href="#cb52-18" aria-hidden="true" tabindex="-1"></a><span class="va">PAGERDUTY_INTEGRATION_KEY</span><span class="op">=</span>your-integration-key</span>
+<span id="cb52-19"><a href="#cb52-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-20"><a href="#cb52-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Jira</span></span>
+<span id="cb52-21"><a href="#cb52-21" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_BASE_URL</span><span class="op">=</span>https://yourcompany.atlassian.net</span>
+<span id="cb52-22"><a href="#cb52-22" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_EMAIL</span><span class="op">=</span>your-email@company.com</span>
+<span id="cb52-23"><a href="#cb52-23" aria-hidden="true" tabindex="-1"></a><span class="va">JIRA_API_TOKEN</span><span class="op">=</span>your-api-token</span>
+<span id="cb52-24"><a href="#cb52-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-25"><a href="#cb52-25" aria-hidden="true" tabindex="-1"></a><span class="co"># GitHub</span></span>
+<span id="cb52-26"><a href="#cb52-26" aria-hidden="true" tabindex="-1"></a><span class="va">GITHUB_TOKEN</span><span class="op">=</span>ghp_your_token</span></code></pre></div>
+<hr />
+<h2 id="security-best-practices">Security Best Practices</h2>
+<ol type="1">
+<li><strong>Never commit credentials</strong> - Use environment
+variables</li>
+<li><strong>Use app-specific passwords</strong> - For email
+services</li>
+<li><strong>Rotate tokens regularly</strong> - Especially API
+tokens</li>
+<li><strong>Restrict permissions</strong> - Use minimum required
+scopes</li>
+<li><strong>Use HTTPS</strong> - For all webhook URLs</li>
+<li><strong>Validate webhook sources</strong> - Check webhook
+signatures</li>
+<li><strong>Encrypt sensitive data</strong> - In configuration
+files</li>
+<li><strong>Use secrets management</strong> - HashiCorp Vault, AWS
+Secrets Manager</li>
+<li><strong>Monitor access logs</strong> - Track notification usage</li>
+<li><strong>Implement rate limiting</strong> - Prevent abuse</li>
+</ol>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="channel-not-sending">Channel Not Sending</h3>
+<p><strong>Check:</strong> 1. Channel enabled:
+<code>channel.IsEnabled()</code> returns true 2. Valid credentials: No
+masked values in production 3. Network connectivity: Can reach API
+endpoints 4. Rate limits: Check metrics for rate limit hits 5. Error
+logs: Review error messages</p>
+<h3 id="rate-limiting-issues">Rate Limiting Issues</h3>
+<p><strong>Solutions:</strong> 1. Increase window duration 2. Decrease
+max requests 3. Enable queuing to buffer bursts 4. Use multiple channels
+for high volume</p>
+<h3 id="queue-overflow">Queue Overflow</h3>
+<p><strong>Solutions:</strong> 1. Increase queue size 2. Add more
+workers 3. Optimize channel response times 4. Implement priority
+queuing</p>
+<h3 id="slow-notifications">Slow Notifications</h3>
+<p><strong>Check:</strong> 1. Network latency to APIs 2. Number of
+retries configured 3. Worker pool size 4. Channel response times in
+metrics</p>
+<hr />
+<h2 id="performance-tuning">Performance Tuning</h2>
+<h3 id="high-volume-scenarios">High Volume Scenarios</h3>
+<p><strong>Configuration:</strong></p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">queue</span><span class="kw">:</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">workers</span><span class="kw">:</span><span class="at"> </span><span class="dv">20</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">10000</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rate_limiting</span><span class="kw">:</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="co">    # Use burst-friendly limits</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">2</span><span class="co">  # Reduce for faster failure</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">initial_backoff</span><span class="kw">:</span><span class="at"> 500ms</span></span></code></pre></div>
+<h3 id="low-latency-requirements">Low Latency Requirements</h3>
+<p><strong>Configuration:</strong></p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">queue</span><span class="kw">:</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">workers</span><span class="kw">:</span><span class="at"> </span><span class="dv">10</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">processing_timeout</span><span class="kw">:</span><span class="at"> 5s</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="co">  # Direct send, no retries</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rate_limiting</span><span class="kw">:</span></span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="co">  # Remove rate limiting overhead</span></span></code></pre></div>
+<h3 id="reliability-priority">Reliability Priority</h3>
+<p><strong>Configuration:</strong></p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">notifications</span><span class="kw">:</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">queue</span><span class="kw">:</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">workers</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_size</span><span class="kw">:</span><span class="at"> </span><span class="dv">5000</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">retry</span><span class="kw">:</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_retries</span><span class="kw">:</span><span class="at"> </span><span class="dv">5</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">max_backoff</span><span class="kw">:</span><span class="at"> 300s</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">rate_limiting</span><span class="kw">:</span></span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">enabled</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span></code></pre></div>
+<hr />
+<h2 id="monitoring-recommendations">Monitoring Recommendations</h2>
+<p><strong>Key Metrics to Monitor:</strong> 1. Success rate (target:
+&gt;99%) 2. Average response time (target: &lt;1s) 3. Queue size (alert
+if &gt;80% full) 4. Rate limit hits (alert if frequent) 5. Retry rate
+(alert if &gt;10%) 6. Channel-specific success rates</p>
+<p><strong>Alerting Rules:</strong></p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">alerts</span><span class="kw">:</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Low Success Rate&quot;</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> success_rate &lt; 95%</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warning</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Queue Near Full&quot;</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> queue_size &gt; 800</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warning</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;High Retry Rate&quot;</span></span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">condition</span><span class="kw">:</span><span class="at"> retry_rate &gt; 15%</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">severity</span><span class="kw">:</span><span class="at"> warning</span></span></code></pre></div>
+<hr />
+<p>For more information, see: - <a href="./API_REFERENCE.md">API
+Reference</a> - <a href="./TESTING.md">Testing Guide</a> - <a href="./EVENT_INTEGRATION.md">Event Integration Guide</a></p>
+</body>
+</html>

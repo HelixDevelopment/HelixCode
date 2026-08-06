@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>MODEL_ALIASES_USER_GUIDE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">MODEL_ALIASES_USER_GUIDE</h1>
+</header>
+<h1 id="model-aliases-user-guide">Model Aliases User Guide</h1>
+<h2 id="helixcode-model-name-shortcuts">HelixCode Model Name
+Shortcuts</h2>
+<p><strong>Version:</strong> 1.0 <strong>Last Updated:</strong> November
+7, 2025 <strong>Feature Status:</strong> ✅ Production Ready</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#quick-start">Quick Start</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#using-aliases">Using Aliases</a></li>
+<li><a href="#fuzzy-matching">Fuzzy Matching</a></li>
+<li><a href="#managing-aliases">Managing Aliases</a></li>
+<li><a href="#advanced-features">Advanced Features</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>Model Aliases allow you to create short, memorable names for LLM
+models instead of typing long model identifiers. Instead of
+<code>gpt-4-turbo-preview</code> or <code>claude-3-opus-20240229</code>,
+you can simply use <code>gpt4-turbo</code> or
+<code>claude-opus</code>.</p>
+<h3 id="benefits">Benefits</h3>
+<ul>
+<li><strong>Convenience:</strong> Type less, work faster</li>
+<li><strong>Memorability:</strong> Easy-to-remember names</li>
+<li><strong>Flexibility:</strong> Create aliases that match your
+workflow</li>
+<li><strong>Fuzzy Matching:</strong> Tolerates typos and variations</li>
+<li><strong>Multi-Provider:</strong> Works with all 13 supported LLM
+providers</li>
+</ul>
+<h3 id="supported-providers">Supported Providers</h3>
+<p>Model aliases work with all HelixCode LLM providers:</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Example Models</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td>gpt-4, gpt-3.5-turbo, gpt-4-turbo-preview</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>claude-3-opus, claude-3-sonnet, claude-3-haiku</td>
+</tr>
+<tr>
+<td>Google</td>
+<td>gemini-pro, gemini-ultra, gemini-pro-vision</td>
+</tr>
+<tr>
+<td>Ollama</td>
+<td>llama-3-8b, mistral-7b, codestral-22b</td>
+</tr>
+<tr>
+<td>Qwen</td>
+<td>qwen-turbo, qwen-plus, qwen-max</td>
+</tr>
+<tr>
+<td>xAI</td>
+<td>grok-beta</td>
+</tr>
+<tr>
+<td>Llama.cpp</td>
+<td>(local models)</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>(aggregated models)</td>
+</tr>
+<tr>
+<td>AWS Bedrock</td>
+<td>(AWS models)</td>
+</tr>
+<tr>
+<td>Azure OpenAI</td>
+<td>(Azure models)</td>
+</tr>
+<tr>
+<td>Vertex AI</td>
+<td>(Google Cloud models)</td>
+</tr>
+<tr>
+<td>Groq</td>
+<td>(Groq models)</td>
+</tr>
+<tr>
+<td>Copilot</td>
+<td>(GitHub Copilot models)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="using-built-in-aliases">Using Built-in Aliases</h3>
+<p>HelixCode comes with sensible default aliases:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instead of this:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt-4-turbo-preview <span class="st">&quot;Generate code&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Use this:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt4-turbo <span class="st">&quot;Generate code&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Or even simpler:</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt4 <span class="st">&quot;Generate code&quot;</span></span></code></pre></div>
+<h3 id="common-aliases">Common Aliases</h3>
+<table>
+<thead>
+<tr>
+<th>Alias</th>
+<th>Target Model</th>
+<th>Provider</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gpt4</code></td>
+<td>gpt-4</td>
+<td>OpenAI</td>
+<td>Most capable</td>
+</tr>
+<tr>
+<td><code>gpt3</code></td>
+<td>gpt-3.5-turbo</td>
+<td>OpenAI</td>
+<td>Fast and cheap</td>
+</tr>
+<tr>
+<td><code>claude</code></td>
+<td>claude-3-opus</td>
+<td>Anthropic</td>
+<td>Large context</td>
+</tr>
+<tr>
+<td><code>gemini</code></td>
+<td>gemini-pro</td>
+<td>Google</td>
+<td>Multimodal</td>
+</tr>
+<tr>
+<td><code>llama</code></td>
+<td>llama-3-8b</td>
+<td>Ollama</td>
+<td>Local/privacy</td>
+</tr>
+<tr>
+<td><code>fast</code></td>
+<td>gpt-3.5-turbo</td>
+<td>OpenAI</td>
+<td>Quick tasks</td>
+</tr>
+<tr>
+<td><code>smart</code></td>
+<td>gpt-4</td>
+<td>OpenAI</td>
+<td>Complex tasks</td>
+</tr>
+<tr>
+<td><code>local</code></td>
+<td>llama-3-8b</td>
+<td>Ollama</td>
+<td>Offline work</td>
+</tr>
+<tr>
+<td><code>coding</code></td>
+<td>codestral-22b</td>
+<td>Ollama</td>
+<td>Code generation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="configuration">Configuration</h2>
+<h3 id="configuration-files">Configuration Files</h3>
+<p>Aliases are loaded from these locations (in order):</p>
+<ol type="1">
+<li><strong>Workspace:</strong>
+<code>.helix/model-aliases.yaml</code></li>
+<li><strong>User:</strong>
+<code>~/.config/helixcode/model-aliases.yaml</code></li>
+<li><strong>System:</strong>
+<code>/etc/helixcode/model-aliases.yaml</code> (Linux)</li>
+</ol>
+<p>Later files override earlier ones.</p>
+<h3 id="basic-configuration-format">Basic Configuration Format</h3>
+<p>Create <code>.helix/model-aliases.yaml</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fuzzy_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.7</span><span class="co">  # 70% similarity for fuzzy matching</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> gpt4</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> GPT-4 (latest)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">openai</span><span class="kw">,</span><span class="at"> gpt</span><span class="kw">,</span><span class="at"> large</span><span class="kw">]</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> fast</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-3.5-turbo</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Fast and cheap</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">fast</span><span class="kw">,</span><span class="at"> cheap</span><span class="kw">]</span></span></code></pre></div>
+<h3 id="field-reference">Field Reference</h3>
+<p><strong>Required Fields:</strong> - <code>alias</code>: The short
+name you’ll use - <code>target_model</code>: The actual model identifier
+- <code>provider</code>: LLM provider name</p>
+<p><strong>Optional Fields:</strong> - <code>description</code>:
+Human-readable description - <code>tags</code>: Array of tags for
+searching/categorization</p>
+<h3 id="example-configuration">Example Configuration</h3>
+<p>See <code>config/model-aliases.example.yaml</code> for a complete
+example with 30+ pre-configured aliases.</p>
+<hr />
+<h2 id="using-aliases">Using Aliases</h2>
+<h3 id="command-line">Command Line</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use alias in command line</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt4 <span class="st">&quot;Write a function&quot;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Use alias in interactive mode</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> Use <span class="ex">model:</span> gpt4</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">&gt;</span> Generate <span class="ex">a</span> REST API</span></code></pre></div>
+<h3 id="api">API</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Resolve alias in code</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>manager<span class="op">,</span> _ <span class="op">:=</span> llm<span class="op">.</span>LoadAliasManagerFromStandardPaths<span class="op">()</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>targetModel<span class="op">,</span> provider<span class="op">,</span> resolved <span class="op">:=</span> manager<span class="op">.</span>Resolve<span class="op">(</span><span class="st">&quot;gpt4&quot;</span><span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// targetModel = &quot;gpt-4&quot;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">// provider = &quot;openai&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">// resolved = true</span></span></code></pre></div>
+<h3 id="chat-interface">Chat Interface</h3>
+<pre><code># In chat, specify model with alias
+@model gpt4
+Please review this code...</code></pre>
+<hr />
+<h2 id="fuzzy-matching">Fuzzy Matching</h2>
+<p>Fuzzy matching allows typos and variations in alias names.</p>
+<h3 id="how-it-works">How It Works</h3>
+<p>The fuzzy matcher calculates similarity using: 1. <strong>Exact
+match:</strong> <code>gpt4</code> matches <code>gpt4</code> (100%) 2.
+<strong>Contains match:</strong> <code>gpt</code> matches
+<code>gpt4-turbo</code> (60%) 3. <strong>Levenshtein distance:</strong>
+<code>gpt4turbo</code> matches <code>gpt4-turbo</code> (92%)</p>
+<h3 id="threshold">Threshold</h3>
+<p>Default threshold: <strong>0.7 (70% similarity)</strong></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fuzzy_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.7</span><span class="co">  # Adjust between 0.0 - 1.0</span></span></code></pre></div>
+<p><strong>Lower threshold</strong> = more lenient (more matches,
+including incorrect) <strong>Higher threshold</strong> = more strict
+(fewer matches, more accurate)</p>
+<h3 id="examples">Examples</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># These all match &quot;gpt4-turbo&quot; (with default 0.7 threshold):</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt4turbo      <span class="co"># ✓ 92% similarity</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt-4-turbo    <span class="co"># ✓ Exact match</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt4turb       <span class="co"># ✓ 85% similarity</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt4trbo       <span class="co"># ✓ 75% similarity (typo)</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># These don&#39;t match:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> gpt            <span class="co"># ✗ Too short, ambiguous</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> turbo          <span class="co"># ✗ Different word</span></span></code></pre></div>
+<h3 id="disabling-fuzzy-matching">Disabling Fuzzy Matching</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fuzzy_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">1.0</span><span class="co">  # Require exact match</span></span></code></pre></div>
+<hr />
+<h2 id="managing-aliases">Managing Aliases</h2>
+<h3 id="adding-aliases">Adding Aliases</h3>
+<p><strong>Via Configuration File:</strong></p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> my-model</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> My preferred model</span></span></code></pre></div>
+<p><strong>Via API:</strong></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>manager <span class="op">:=</span> llm<span class="op">.</span>NewAliasManager<span class="op">(</span><span class="fl">0.7</span><span class="op">)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> manager<span class="op">.</span>AddAlias<span class="op">(&amp;</span>llm<span class="op">.</span>ModelAlias<span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    Alias<span class="op">:</span>       <span class="st">&quot;my-model&quot;</span><span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    TargetModel<span class="op">:</span> <span class="st">&quot;gpt-4&quot;</span><span class="op">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    Provider<span class="op">:</span>    <span class="st">&quot;openai&quot;</span><span class="op">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div>
+<h3 id="removing-aliases">Removing Aliases</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> manager<span class="op">.</span>RemoveAlias<span class="op">(</span><span class="st">&quot;my-model&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="listing-aliases">Listing Aliases</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List all aliases</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> aliases list</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># List by provider</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> aliases list <span class="at">--provider</span> openai</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Search by tag</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> aliases search fast</span></code></pre></div>
+<p><strong>API:</strong></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// List all</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>aliases <span class="op">:=</span> manager<span class="op">.</span>ListAliases<span class="op">()</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// List by provider</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>openaiAliases <span class="op">:=</span> manager<span class="op">.</span>ListAliasesByProvider<span class="op">(</span><span class="st">&quot;openai&quot;</span><span class="op">)</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Search</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>matches <span class="op">:=</span> manager<span class="op">.</span>SearchAliases<span class="op">(</span><span class="st">&quot;fast&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="importexport">Import/Export</h3>
+<p><strong>Export aliases:</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> aliases export <span class="op">&gt;</span> my-aliases.yaml</span></code></pre></div>
+<p><strong>Import aliases:</strong></p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> aliases import my-aliases.yaml <span class="at">--overwrite</span></span></code></pre></div>
+<p><strong>API:</strong></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Export</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>aliases <span class="op">:=</span> manager<span class="op">.</span>ExportAliases<span class="op">()</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Import</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>err <span class="op">:=</span> manager<span class="op">.</span>ImportAliases<span class="op">(</span>aliases<span class="op">,</span> overwrite<span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="advanced-features">Advanced Features</h2>
+<h3 id="autocomplete">Autocomplete</h3>
+<p>Get alias suggestions:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>matches <span class="op">:=</span> manager<span class="op">.</span>Autocomplete<span class="op">(</span><span class="st">&quot;gpt&quot;</span><span class="op">)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns: [&quot;gpt4&quot;, &quot;gpt3&quot;, &quot;gpt4-turbo&quot;, &quot;gpt3-16k&quot;]</span></span></code></pre></div>
+<h3 id="provider-specific-resolution">Provider-Specific Resolution</h3>
+<p>When you have similar alias names, specify provider:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// If you have both &quot;fast-openai&quot; and &quot;fast-anthropic&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>model<span class="op">,</span> provider<span class="op">,</span> _ <span class="op">:=</span> manager<span class="op">.</span>ResolveWithProvider<span class="op">(</span><span class="st">&quot;fast-openai&quot;</span><span class="op">,</span> <span class="st">&quot;openai&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="tag-based-search">Tag-Based Search</h3>
+<p>Find aliases by tags:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> cheap-fast</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">cheap</span><span class="kw">,</span><span class="at"> fast</span><span class="kw">,</span><span class="at"> openai</span><span class="kw">]</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> smart-slow</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">smart</span><span class="kw">,</span><span class="at"> expensive</span><span class="kw">,</span><span class="at"> openai</span><span class="kw">]</span></span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Find all &quot;fast&quot; models</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>fastModels <span class="op">:=</span> manager<span class="op">.</span>SearchAliases<span class="op">(</span><span class="st">&quot;fast&quot;</span><span class="op">)</span></span></code></pre></div>
+<h3 id="dynamic-threshold-adjustment">Dynamic Threshold Adjustment</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Start strict</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>SetFuzzyThreshold<span class="op">(</span><span class="fl">0.9</span><span class="op">)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Relax for user input</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>manager<span class="op">.</span>SetFuzzyThreshold<span class="op">(</span><span class="fl">0.6</span><span class="op">)</span></span></code></pre></div>
+<hr />
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="use-descriptive-aliases">1. Use Descriptive Aliases</h3>
+<p><strong>Good:</strong></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> gpt4-turbo</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> claude-opus</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> llama-local</span></span></code></pre></div>
+<p><strong>Avoid:</strong></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> m1</span><span class="co">  # Not descriptive</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> a</span><span class="co">   # Too short</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> x</span><span class="co">   # Unclear</span></span></code></pre></div>
+<h3 id="follow-naming-conventions">2. Follow Naming Conventions</h3>
+<p><strong>Recommended patterns:</strong> -
+<code>&lt;provider&gt;&lt;version&gt;</code>: <code>gpt4</code>,
+<code>claude3</code> - <code>&lt;provider&gt;-&lt;variant&gt;</code>:
+<code>gpt-turbo</code>, <code>claude-opus</code> -
+<code>&lt;purpose&gt;</code>: <code>fast</code>, <code>smart</code>,
+<code>coding</code>, <code>local</code> -
+<code>&lt;purpose&gt;-&lt;provider&gt;</code>: <code>fast-openai</code>,
+<code>coding-local</code></p>
+<h3 id="add-descriptions-and-tags">3. Add Descriptions and Tags</h3>
+<div class="sourceCode" id="cb24"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> coding</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> codestral-22b</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> ollama</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Best model for code generation</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">coding</span><span class="kw">,</span><span class="at"> local</span><span class="kw">,</span><span class="at"> mistral</span><span class="kw">,</span><span class="at"> specialized</span><span class="kw">]</span></span></code></pre></div>
+<p>This makes aliases searchable and self-documenting.</p>
+<h3 id="use-workspace-specific-aliases">4. Use Workspace-Specific
+Aliases</h3>
+<p>Create <code>.helix/model-aliases.yaml</code> in your project for
+project-specific models:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Backend project</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> backend</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Model for backend development</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Frontend project</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> frontend</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> claude-3-sonnet</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Model for frontend work</span></span></code></pre></div>
+<h3 id="set-appropriate-fuzzy-threshold">5. Set Appropriate Fuzzy
+Threshold</h3>
+<ul>
+<li><strong>0.9-1.0:</strong> Strict (production, scripts)</li>
+<li><strong>0.7-0.8:</strong> Balanced (default, interactive use)</li>
+<li><strong>0.5-0.6:</strong> Lenient (exploration, learning)</li>
+</ul>
+<h3 id="organize-by-use-case">6. Organize by Use Case</h3>
+<div class="sourceCode" id="cb26"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fast models</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> fast</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> quick</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> cheap</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Capable models</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> smart</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> capable</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> powerful</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Local models</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> local</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> offline</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> private</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Specialized</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> coding</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> vision</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> long-context</span></span></code></pre></div>
+<hr />
+<h2 id="examples-1">Examples</h2>
+<h3 id="example-1-personal-workflow">Example 1: Personal Workflow</h3>
+<div class="sourceCode" id="cb27"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.config/helixcode/model-aliases.yaml</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">fuzzy_threshold</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.7</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co">  # My daily drivers</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> work</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> My work model</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">work</span><span class="kw">,</span><span class="at"> daily</span><span class="kw">]</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> home</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> llama-3-8b</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> ollama</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Home/offline model</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">home</span><span class="kw">,</span><span class="at"> local</span><span class="kw">,</span><span class="at"> privacy</span><span class="kw">]</span></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a><span class="co">  # Quick tasks</span></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> quick</span></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-3.5-turbo</span></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">fast</span><span class="kw">,</span><span class="at"> cheap</span><span class="kw">]</span></span></code></pre></div>
+<p>Usage:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> work <span class="st">&quot;Review the PR&quot;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> home <span class="st">&quot;Private conversation&quot;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> quick <span class="st">&quot;Quick question&quot;</span></span></code></pre></div>
+<h3 id="example-2-team-configuration">Example 2: Team Configuration</h3>
+<div class="sourceCode" id="cb29"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Project: .helix/model-aliases.yaml</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;1.0&quot;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="co">  # Team standards</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> review</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> claude-3-opus</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> anthropic</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Model for code reviews (large context)</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> generate</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4-turbo-preview</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Model for code generation</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> test</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-3.5-turbo</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">description</span><span class="kw">:</span><span class="at"> Model for testing (cheap)</span></span></code></pre></div>
+<p>Team usage:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> review <span class="st">&quot;Review the authentication module&quot;</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> generate <span class="st">&quot;Generate API endpoints&quot;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="ex">helix</span> <span class="at">--model</span> test <span class="st">&quot;Generate test cases&quot;</span></span></code></pre></div>
+<h3 id="example-3-multi-provider-setup">Example 3: Multi-Provider
+Setup</h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # OpenAI tiers</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> openai-best</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> openai-fast</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-3.5-turbo</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a><span class="co">  # Anthropic tiers</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> anthropic-best</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> claude-3-opus</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> anthropic</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> anthropic-fast</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> claude-3-haiku</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> anthropic</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="co">  # Google</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> google-best</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gemini-pro</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> gemini</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a><span class="co">  # Local</span></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> local-best</span></span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> llama-3-70b</span></span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> ollama</span></span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> local-fast</span></span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> llama-3-8b</span></span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> ollama</span></span></code></pre></div>
+<h3 id="example-4-use-case-based">Example 4: Use-Case Based</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">aliases</span><span class="kw">:</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co">  # By capability</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> reasoning</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-4</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">reasoning</span><span class="kw">,</span><span class="at"> logic</span><span class="kw">]</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> creative</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> claude-3-opus</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> anthropic</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">creative</span><span class="kw">,</span><span class="at"> writing</span><span class="kw">]</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> coding</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> codestral-22b</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> ollama</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">coding</span><span class="kw">,</span><span class="at"> programming</span><span class="kw">]</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> vision</span></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gemini-pro-vision</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> gemini</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">tags</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="at">vision</span><span class="kw">,</span><span class="at"> multimodal</span><span class="kw">]</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="co">  # By context size</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> long-context</span></span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> claude-3-opus</span><span class="co">  # 200k tokens</span></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> anthropic</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">alias</span><span class="kw">:</span><span class="at"> short-context</span></span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">target_model</span><span class="kw">:</span><span class="at"> gpt-3.5-turbo</span><span class="co">  # 4k tokens</span></span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">provider</span><span class="kw">:</span><span class="at"> openai</span></span></code></pre></div>
+<hr />
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="alias-not-found">Alias Not Found</h3>
+<p><strong>Problem:</strong></p>
+<pre><code>Error: alias &#39;mymodel&#39; not found</code></pre>
+<p><strong>Solutions:</strong> 1. Check spelling:
+<code>helix aliases list</code> 2. Try fuzzy match: Use partial name 3.
+Add the alias to your config file</p>
+<h3 id="wrong-model-resolved">Wrong Model Resolved</h3>
+<p><strong>Problem:</strong> Fuzzy match returns incorrect model</p>
+<p><strong>Solutions:</strong> 1. Increase threshold:
+<code>fuzzy_threshold: 0.9</code> 2. Use more specific alias name 3.
+Check for duplicate/similar aliases</p>
+<h3 id="configuration-not-loaded">Configuration Not Loaded</h3>
+<p><strong>Problem:</strong> Aliases from config file not working</p>
+<p><strong>Solutions:</strong> 1. Check file location:
+<code>.helix/model-aliases.yaml</code> 2. Validate YAML syntax:
+<code>yamllint model-aliases.yaml</code> 3. Check file permissions:
+<code>chmod 644 model-aliases.yaml</code> 4. Verify HelixCode is looking
+in correct directory</p>
+<h3 id="duplicate-alias-error">Duplicate Alias Error</h3>
+<p><strong>Problem:</strong></p>
+<pre><code>Error: alias &#39;gpt4&#39; already exists</code></pre>
+<p><strong>Solutions:</strong> 1. Use different alias name:
+<code>gpt4-custom</code> 2. Remove existing alias first 3. Use
+<code>--overwrite</code> flag when importing</p>
+<h3 id="provider-mismatch">Provider Mismatch</h3>
+<p><strong>Problem:</strong> Alias resolves to wrong provider</p>
+<p><strong>Solutions:</strong> 1. Specify provider in alias name:
+<code>fast-openai</code>, <code>fast-anthropic</code> 2. Use
+provider-specific resolution: <code>ResolveWithProvider()</code> 3.
+Check alias configuration has correct provider field</p>
+<hr />
+<h2 id="faq">FAQ</h2>
+<p><strong>Q: Can I use the same alias name for different
+providers?</strong> A: No, alias names must be unique globally. Use
+provider suffixes like <code>fast-openai</code> and
+<code>fast-anthropic</code>.</p>
+<p><strong>Q: What happens if I don’t specify an alias?</strong> A: The
+model name is used as-is. Aliases are optional.</p>
+<p><strong>Q: Can I use aliases in API calls?</strong> A: Yes, resolve
+the alias first, then use the target model in your API call.</p>
+<p><strong>Q: How does fuzzy matching handle capitalization?</strong> A:
+Matching is case-insensitive. <code>GPT4</code>, <code>gpt4</code>, and
+<code>Gpt4</code> are all equivalent.</p>
+<p><strong>Q: Can I create aliases for non-existent models?</strong> A:
+Yes, but the model must exist when you try to use it.</p>
+<p><strong>Q: What’s the performance impact of fuzzy matching?</strong>
+A: Minimal. Fuzzy matching adds &lt;1ms for typical alias lists (&lt;100
+aliases).</p>
+<p><strong>Q: Can I disable fuzzy matching entirely?</strong> A: Yes,
+set <code>fuzzy_threshold: 1.0</code> for exact matches only.</p>
+<p><strong>Q: How do I share aliases with my team?</strong> A: Commit
+<code>.helix/model-aliases.yaml</code> to your repository.</p>
+<p><strong>Q: Can I have aliases in multiple files?</strong> A: Yes,
+HelixCode merges aliases from workspace, user, and system configs.</p>
+<p><strong>Q: What happens if there are duplicate aliases in different
+config files?</strong> A: Workspace config overrides user config, which
+overrides system config.</p>
+<p><strong>Q: Can I export aliases to share with others?</strong> A:
+Yes, use <code>helix aliases export</code> or copy your YAML file.</p>
+<p><strong>Q: How many aliases can I have?</strong> A: No hard limit,
+but keep it reasonable (&lt;200) for performance.</p>
+<hr />
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="./MENTIONS_USER_GUIDE.md">@ Mentions User Guide</a></li>
+<li><a href="./SLASH_COMMANDS_USER_GUIDE.md">Slash Commands User
+Guide</a></li>
+<li><a href="./LLM_PROVIDERS.md">LLM Provider Configuration</a></li>
+<li><a href="./CONFIGURATION.md">HelixCode Configuration Guide</a></li>
+</ul>
+<hr />
+<p><strong>Document Version:</strong> 1.0 <strong>Last Updated:</strong>
+November 7, 2025 <strong>Feedback:</strong> <a href="https://github.com/user/helixcode/issues">GitHub Issues</a></p>
+</body>
+</html>

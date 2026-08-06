@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REASONING_MODELS</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">REASONING_MODELS</h1>
+</header>
+<h1 id="reasoning-models-guide">Reasoning Models Guide</h1>
+<p>This guide explains how to use reasoning models in HelixCode for
+advanced problem-solving and analysis tasks.</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#supported-models">Supported Models</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#usage-examples">Usage Examples</a></li>
+<li><a href="#thinking-budget-recommendations">Thinking Budget
+Recommendations</a></li>
+<li><a href="#cost-considerations">Cost Considerations</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+<li><a href="#api-reference">API Reference</a></li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>Reasoning models are specialized LLMs that perform explicit
+step-by-step thinking before producing their final output. Unlike
+standard models, reasoning models:</p>
+<ul>
+<li>Show their internal thought process</li>
+<li>Break down complex problems into steps</li>
+<li>Verify their reasoning before providing answers</li>
+<li>Can self-correct during the reasoning process</li>
+</ul>
+<p>HelixCode provides comprehensive support for reasoning models,
+including:</p>
+<ul>
+<li>Automatic thinking extraction and separation</li>
+<li>Token budget management for thinking tokens</li>
+<li>Cost calculation for reasoning operations</li>
+<li>Model-specific prompt formatting</li>
+<li>Configurable reasoning effort levels</li>
+</ul>
+<h2 id="supported-models">Supported Models</h2>
+<h3 id="openai-o-series">OpenAI o-series</h3>
+<p><strong>OpenAI o1, o1-preview, o1-mini</strong> - Provider: OpenAI -
+Thinking Tags: <code>&lt;thinking&gt;</code> - Default Budget: 10,000
+tokens - Pricing: $15/1M input, $60/1M output - Best For: Complex
+reasoning, mathematics, coding problems</p>
+<p><strong>OpenAI o3</strong> (Future) - Provider: OpenAI - Estimated
+Budget: 10,000 tokens - Estimated Pricing: $20/1M input, $80/1M output -
+Best For: Advanced reasoning tasks</p>
+<p><strong>OpenAI o4</strong> (Future) - Provider: OpenAI - Estimated
+Budget: 10,000 tokens - Estimated Pricing: $25/1M input, $100/1M output
+- Best For: Highly complex reasoning</p>
+<h3 id="claude-models">Claude Models</h3>
+<p><strong>Claude Opus (Extended Thinking)</strong> - Provider:
+Anthropic - Thinking Tags: <code>&lt;thinking&gt;</code> - Default
+Budget: 5,000 tokens - Pricing: $15/1M input, $75/1M output - Best For:
+Deep analysis, research, comprehensive problem-solving</p>
+<p><strong>Claude Sonnet (Extended Thinking)</strong> - Provider:
+Anthropic - Thinking Tags: <code>&lt;thinking&gt;</code> - Default
+Budget: 5,000 tokens - Pricing: $3/1M input, $15/1M output - Best For:
+Balanced reasoning and cost-effectiveness</p>
+<h3 id="deepseek-models">DeepSeek Models</h3>
+<p><strong>DeepSeek R1</strong> - Provider: DeepSeek - Thinking Tags:
+<code>&lt;think&gt;</code> - Default Budget: 8,000 tokens - Pricing:
+$2.19/1M input, $8.19/1M output - Best For: Cost-effective reasoning,
+research applications</p>
+<p><strong>DeepSeek Reasoner</strong> - Provider: DeepSeek - Thinking
+Tags: <code>&lt;think&gt;</code> - Default Budget: 8,000 tokens -
+Pricing: $2.19/1M input, $8.19/1M output - Best For: Specialized
+reasoning tasks</p>
+<h3 id="qwq-models">QwQ Models</h3>
+<p><strong>QwQ-32B</strong> - Provider: Alibaba Cloud - Thinking Tags:
+<code>&lt;thinking&gt;</code> - Default Budget: 7,000 tokens - Pricing:
+$0.50/1M input, $1.50/1M output (varies by provider) - Best For:
+Budget-conscious reasoning applications</p>
+<h2 id="configuration">Configuration</h2>
+<h3 id="basic-configuration">Basic Configuration</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="st">&quot;dev.helix.code/HelixCode/internal/llm&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Create a default reasoning config</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> llm<span class="op">.</span>DefaultReasoningConfig<span class="op">()</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>Enabled <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingBudget <span class="op">=</span> <span class="dv">5000</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ReasoningEffort <span class="op">=</span> <span class="st">&quot;medium&quot;</span></span></code></pre></div>
+<h3 id="model-specific-configuration">Model-Specific Configuration</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// OpenAI o1 configuration</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>o1Config <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelOpenAI_O1<span class="op">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Claude Opus configuration</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>claudeConfig <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelClaude_Opus<span class="op">)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">// DeepSeek R1 configuration</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>deepseekConfig <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelDeepSeek_R1<span class="op">)</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// QwQ-32B configuration</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>qwqConfig <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelQwQ_32B<span class="op">)</span></span></code></pre></div>
+<h3 id="configuration-options">Configuration Options</h3>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 16%" />
+<col style="width: 36%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Option</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Enabled</code></td>
+<td>bool</td>
+<td>Enable reasoning mode</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>ExtractThinking</code></td>
+<td>bool</td>
+<td>Extract thinking blocks</td>
+<td>true</td>
+</tr>
+<tr>
+<td><code>HideFromUser</code></td>
+<td>bool</td>
+<td>Hide thinking from end users</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>ThinkingTags</code></td>
+<td>string</td>
+<td>XML tags for thinking blocks</td>
+<td>“thinking”</td>
+</tr>
+<tr>
+<td><code>ThinkingBudget</code></td>
+<td>int</td>
+<td>Token budget for thinking (0=unlimited)</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>ReasoningEffort</code></td>
+<td>string</td>
+<td>Effort level: “low”, “medium”, “high”</td>
+<td>“medium”</td>
+</tr>
+<tr>
+<td><code>ModelType</code></td>
+<td>ReasoningModelType</td>
+<td>Specific model type</td>
+<td>generic</td>
+</tr>
+</tbody>
+</table>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="example-1-basic-reasoning-request">Example 1: Basic Reasoning
+Request</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> main</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="op">(</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;context&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;fmt&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;dev.helix.code/HelixCode/internal/llm&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create reasoning config for Claude Opus</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    config <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelClaude_Opus<span class="op">)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Format prompt for reasoning</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    prompt <span class="op">:=</span> <span class="st">&quot;Solve the equation: 2x + 5 = 15&quot;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    formattedPrompt <span class="op">:=</span> llm<span class="op">.</span>FormatReasoningPrompt<span class="op">(</span>prompt<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Make LLM request (pseudo-code)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    response <span class="op">:=</span> makeRequest<span class="op">(</span>formattedPrompt<span class="op">)</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract reasoning trace</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Thinking Process:&quot;</span><span class="op">)</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i<span class="op">,</span> thinking <span class="op">:=</span> <span class="kw">range</span> trace<span class="op">.</span>ThinkingContent <span class="op">{</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Step %d: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> i<span class="op">+</span><span class="dv">1</span><span class="op">,</span> thinking<span class="op">)</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;</span><span class="ch">\n</span><span class="st">Final Answer:&quot;</span><span class="op">)</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span>trace<span class="op">.</span>OutputContent<span class="op">)</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;</span><span class="ch">\n</span><span class="st">Token Usage: %d thinking + %d output = %d total</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        trace<span class="op">.</span>ThinkingTokens<span class="op">,</span> trace<span class="op">.</span>OutputTokens<span class="op">,</span> trace<span class="op">.</span>TotalTokens<span class="op">)</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="example-2-budget-management">Example 2: Budget Management</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Get recommended budget for use case</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>budget <span class="op">:=</span> llm<span class="op">.</span>GetReasoningBudgetRecommendation<span class="op">(</span><span class="st">&quot;complex&quot;</span><span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Create config with budget</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelOpenAI_O1<span class="op">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingBudget <span class="op">=</span> budget</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Apply budget enforcement</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>budgetedTrace <span class="op">:=</span> llm<span class="op">.</span>ApplyReasoningBudget<span class="op">(</span>trace<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> budgetedTrace<span class="op">.</span>ThinkingTokens <span class="op">&lt;</span> trace<span class="op">.</span>ThinkingTokens <span class="op">{</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Warning: Thinking was truncated to fit budget&quot;</span><span class="op">)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="example-3-cost-calculation">Example 3: Cost Calculation</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Calculate cost for reasoning operation</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>thinkingCost<span class="op">,</span> outputCost<span class="op">,</span> totalCost <span class="op">:=</span> llm<span class="op">.</span>CalculateReasoningCost<span class="op">(</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    trace<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    config<span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    llm<span class="op">.</span>ReasoningModelClaude_Sonnet<span class="op">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Cost Breakdown:</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;  Thinking: $%.6f</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> thinkingCost<span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;  Output:   $%.6f</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> outputCost<span class="op">)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;  Total:    $%.6f</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> totalCost<span class="op">)</span></span></code></pre></div>
+<h3 id="example-4-model-detection">Example 4: Model Detection</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Automatically detect reasoning models</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>modelName <span class="op">:=</span> <span class="st">&quot;o1-preview&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>isReasoning<span class="op">,</span> modelType <span class="op">:=</span> llm<span class="op">.</span>IsReasoningModel<span class="op">(</span>modelName<span class="op">)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> isReasoning <span class="op">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    config <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>modelType<span class="op">)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Using reasoning model: %s</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> modelType<span class="op">)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Using standard model&quot;</span><span class="op">)</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="example-5-custom-thinking-tags">Example 5: Custom Thinking
+Tags</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// DeepSeek uses &lt;think&gt; tags</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> llm<span class="op">.</span>DefaultReasoningConfig<span class="op">()</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>Enabled <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingTags <span class="op">=</span> <span class="st">&quot;think&quot;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Support multiple tag types</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingTags <span class="op">=</span> <span class="st">&quot;thinking,think,internal_thoughts&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span></code></pre></div>
+<h3 id="example-6-effort-levels">Example 6: Effort Levels</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Low effort - quick analysis</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>configLow <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelClaude_Sonnet<span class="op">)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>configLow<span class="op">.</span>ReasoningEffort <span class="op">=</span> <span class="st">&quot;low&quot;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// High effort - comprehensive analysis</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>configHigh <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelClaude_Opus<span class="op">)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>configHigh<span class="op">.</span>ReasoningEffort <span class="op">=</span> <span class="st">&quot;high&quot;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Optimize config automatically</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>optimized <span class="op">:=</span> llm<span class="op">.</span>OptimizeReasoningConfig<span class="op">(</span>configHigh<span class="op">,</span> context<span class="op">.</span>Background<span class="op">())</span></span></code></pre></div>
+<h3 id="example-7-config-merging">Example 7: Config Merging</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Base configuration</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>baseConfig <span class="op">:=</span> llm<span class="op">.</span>DefaultReasoningConfig<span class="op">()</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>baseConfig<span class="op">.</span>Enabled <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>baseConfig<span class="op">.</span>ThinkingBudget <span class="op">=</span> <span class="dv">5000</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">// User overrides</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>userConfig <span class="op">:=</span> <span class="op">&amp;</span>llm<span class="op">.</span>ReasoningConfig<span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    ReasoningEffort<span class="op">:</span> <span class="st">&quot;high&quot;</span><span class="op">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    ThinkingBudget<span class="op">:</span>  <span class="dv">10000</span><span class="op">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Merge configurations</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>finalConfig <span class="op">:=</span> llm<span class="op">.</span>MergeReasoningConfigs<span class="op">(</span>baseConfig<span class="op">,</span> userConfig<span class="op">)</span></span></code></pre></div>
+<h2 id="thinking-budget-recommendations">Thinking Budget
+Recommendations</h2>
+<p>Choose an appropriate thinking budget based on your use case:</p>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 45%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Recommended Budget</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Simple</strong></td>
+<td>2,000 tokens</td>
+<td>Quick queries, basic calculations</td>
+</tr>
+<tr>
+<td><strong>Standard</strong></td>
+<td>5,000 tokens</td>
+<td>General reasoning, moderate complexity</td>
+</tr>
+<tr>
+<td><strong>Complex</strong></td>
+<td>10,000 tokens</td>
+<td>Advanced problems, multi-step reasoning</td>
+</tr>
+<tr>
+<td><strong>Research</strong></td>
+<td>20,000 tokens</td>
+<td>Deep analysis, comprehensive research</td>
+</tr>
+</tbody>
+</table>
+<h3 id="budget-guidelines">Budget Guidelines</h3>
+<ul>
+<li><strong>Low Effort</strong>: 3,000 tokens - Brief analysis</li>
+<li><strong>Medium Effort</strong>: 7,000 tokens - Thorough
+analysis</li>
+<li><strong>High Effort</strong>: 15,000 tokens - Comprehensive,
+detailed analysis</li>
+</ul>
+<h3 id="budget-considerations">Budget Considerations</h3>
+<ol type="1">
+<li><strong>Model Capabilities</strong>: Different models use thinking
+tokens differently</li>
+<li><strong>Task Complexity</strong>: More complex tasks require more
+thinking tokens</li>
+<li><strong>Cost Management</strong>: Higher budgets increase costs
+proportionally</li>
+<li><strong>Quality Trade-offs</strong>: Very low budgets may truncate
+important reasoning</li>
+</ol>
+<h2 id="cost-considerations">Cost Considerations</h2>
+<h3 id="pricing-comparison-per-1m-tokens">Pricing Comparison (per 1M
+tokens)</h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Thinking/Input Cost</th>
+<th>Output Cost</th>
+<th>Cost-Effectiveness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI o1</td>
+<td>$15</td>
+<td>$60</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td>OpenAI o3</td>
+<td>$20 (est.)</td>
+<td>$80 (est.)</td>
+<td>Lower</td>
+</tr>
+<tr>
+<td>OpenAI o4</td>
+<td>$25 (est.)</td>
+<td>$100 (est.)</td>
+<td>Lower</td>
+</tr>
+<tr>
+<td>Claude Opus</td>
+<td>$15</td>
+<td>$75</td>
+<td>Moderate</td>
+</tr>
+<tr>
+<td>Claude Sonnet</td>
+<td>$3</td>
+<td>$15</td>
+<td>High</td>
+</tr>
+<tr>
+<td>DeepSeek R1</td>
+<td>$2.19</td>
+<td>$8.19</td>
+<td>Very High</td>
+</tr>
+<tr>
+<td>QwQ-32B</td>
+<td>$0.50</td>
+<td>$1.50</td>
+<td>Extremely High</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cost-examples">Cost Examples</h3>
+<p><strong>Example 1: Simple Query with Claude Sonnet</strong> -
+Thinking: 1,000 tokens → $0.003 - Output: 500 tokens → $0.0075 -
+<strong>Total: $0.0105</strong></p>
+<p><strong>Example 2: Complex Analysis with OpenAI o1</strong> -
+Thinking: 5,000 tokens → $0.075 - Output: 2,000 tokens → $0.12 -
+<strong>Total: $0.195</strong></p>
+<p><strong>Example 3: Research Task with DeepSeek R1</strong> -
+Thinking: 10,000 tokens → $0.0219 - Output: 3,000 tokens → $0.0246 -
+<strong>Total: $0.0465</strong></p>
+<h3 id="cost-optimization-strategies">Cost Optimization Strategies</h3>
+<ol type="1">
+<li><strong>Choose the Right Model</strong>
+<ul>
+<li>Use DeepSeek or QwQ for cost-sensitive applications</li>
+<li>Use Claude Sonnet for balanced cost/performance</li>
+<li>Reserve OpenAI o1/Opus for critical tasks</li>
+</ul></li>
+<li><strong>Set Appropriate Budgets</strong>
+<ul>
+<li>Don’t over-provision thinking tokens</li>
+<li>Use recommended budgets as starting points</li>
+<li>Monitor actual usage and adjust</li>
+</ul></li>
+<li><strong>Cache When Possible</strong>
+<ul>
+<li>Reuse reasoning for similar queries</li>
+<li>Cache expensive reasoning operations</li>
+<li>Consider prompt caching for large contexts</li>
+</ul></li>
+<li><strong>Effort Level Management</strong>
+<ul>
+<li>Use “low” effort for simple queries</li>
+<li>Reserve “high” effort for complex problems</li>
+<li>Default to “medium” for general use</li>
+</ul></li>
+</ol>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="model-selection">1. Model Selection</h3>
+<p><strong>Use OpenAI o1 when:</strong> - Solving complex mathematical
+problems - Working on advanced coding challenges - Requiring high
+accuracy on reasoning tasks - Budget allows for premium pricing</p>
+<p><strong>Use Claude Opus when:</strong> - Performing deep analysis or
+research - Generating comprehensive reports - Needing extensive context
+understanding - Balance of quality and cost matters</p>
+<p><strong>Use Claude Sonnet when:</strong> - Cost-effectiveness is
+important - Standard reasoning complexity - High-volume reasoning
+operations - Production environments with budget constraints</p>
+<p><strong>Use DeepSeek R1 when:</strong> - Minimizing costs is critical
+- Research or experimental applications - High-volume reasoning with
+budget limits - Acceptable to use newer/less proven models</p>
+<p><strong>Use QwQ-32B when:</strong> - Extremely cost-sensitive
+applications - Testing or development environments - Local or
+self-hosted deployments available - Lower stakes reasoning tasks</p>
+<h3 id="thinking-extraction">2. Thinking Extraction</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Always extract and log thinking for debugging</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Log thinking for analysis</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i<span class="op">,</span> thinking <span class="op">:=</span> <span class="kw">range</span> trace<span class="op">.</span>ThinkingContent <span class="op">{</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Reasoning Step %d: %s&quot;</span><span class="op">,</span> i<span class="op">+</span><span class="dv">1</span><span class="op">,</span> thinking<span class="op">)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Hide thinking from users when appropriate</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> config<span class="op">.</span>HideFromUser <span class="op">{</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> trace<span class="op">.</span>OutputContent</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="budget-management">3. Budget Management</h3>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Set budgets based on use case</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>budget <span class="op">:=</span> llm<span class="op">.</span>GetReasoningBudgetRecommendation<span class="op">(</span>useCase<span class="op">)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingBudget <span class="op">=</span> budget</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Always apply budget enforcement</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>budgetedTrace <span class="op">:=</span> llm<span class="op">.</span>ApplyReasoningBudget<span class="op">(</span>trace<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Monitor and log budget utilization</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>utilizationPct <span class="op">:=</span> <span class="dt">float64</span><span class="op">(</span>budgetedTrace<span class="op">.</span>ThinkingTokens<span class="op">)</span> <span class="op">/</span> <span class="dt">float64</span><span class="op">(</span>config<span class="op">.</span>ThinkingBudget<span class="op">)</span> <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Budget utilization: %.1f%%&quot;</span><span class="op">,</span> utilizationPct<span class="op">)</span></span></code></pre></div>
+<h3 id="error-handling">4. Error Handling</h3>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate configuration</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>effort<span class="op">,</span> err <span class="op">:=</span> llm<span class="op">.</span>ValidateReasoningEffort<span class="op">(</span>config<span class="op">.</span>ReasoningEffort<span class="op">)</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Invalid effort level: %v&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>ReasoningEffort <span class="op">=</span> <span class="st">&quot;medium&quot;</span> <span class="co">// fallback</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Handle extraction failures gracefully</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>trace<span class="op">.</span>ThinkingContent<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Warning: No thinking blocks found&quot;</span><span class="op">)</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="performance-monitoring">5. Performance Monitoring</h3>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Track costs over time</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>thinkingCost<span class="op">,</span> outputCost<span class="op">,</span> totalCost <span class="op">:=</span> llm<span class="op">.</span>CalculateReasoningCost<span class="op">(</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    trace<span class="op">,</span> config<span class="op">,</span> modelType<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Log for cost analysis</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;Request cost: $%.6f (thinking: $%.6f, output: $%.6f)&quot;</span><span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    totalCost<span class="op">,</span> thinkingCost<span class="op">,</span> outputCost<span class="op">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Set up alerts for high costs</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> totalCost <span class="op">&gt;</span> <span class="fl">0.10</span> <span class="op">{</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Printf<span class="op">(</span><span class="st">&quot;High cost alert: $%.6f&quot;</span><span class="op">,</span> totalCost<span class="op">)</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="prompt-optimization">6. Prompt Optimization</h3>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Use model-appropriate prompts</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>formattedPrompt <span class="op">:=</span> llm<span class="op">.</span>FormatReasoningPrompt<span class="op">(</span>originalPrompt<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Customize prompts for specific needs</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> needsDetailed <span class="op">{</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>ReasoningEffort <span class="op">=</span> <span class="st">&quot;high&quot;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    formattedPrompt <span class="op">=</span> llm<span class="op">.</span>FormatReasoningPrompt<span class="op">(</span>originalPrompt<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Keep prompts focused</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">// ✓ Good: &quot;Calculate the optimal route between A and B&quot;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">// ✗ Bad: &quot;Tell me everything about routing and then calculate...&quot;</span></span></code></pre></div>
+<h3 id="testing-and-validation">7. Testing and Validation</h3>
+<div class="sourceCode" id="cb15"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Test with multiple models</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>models <span class="op">:=</span> <span class="op">[]</span>llm<span class="op">.</span>ReasoningModelType<span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    llm<span class="op">.</span>ReasoningModelClaude_Sonnet<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    llm<span class="op">.</span>ReasoningModelDeepSeek_R1<span class="op">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> modelType <span class="op">:=</span> <span class="kw">range</span> models <span class="op">{</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    config <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>modelType<span class="op">)</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Test reasoning quality and cost</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Validate reasoning quality</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>trace<span class="op">.</span>ThinkingContent<span class="op">)</span> <span class="op">&lt;</span> <span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    log<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Warning: Minimal reasoning detected&quot;</span><span class="op">)</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="api-reference">API Reference</h2>
+<h3 id="types">Types</h3>
+<h4 id="reasoningconfig">ReasoningConfig</h4>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ReasoningConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    Enabled         <span class="dt">bool</span>   <span class="co">// Enable reasoning mode</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    ExtractThinking <span class="dt">bool</span>   <span class="co">// Extract thinking blocks</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    HideFromUser    <span class="dt">bool</span>   <span class="co">// Hide thinking from users</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    ThinkingTags    <span class="dt">string</span> <span class="co">// XML tags for thinking</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    ThinkingBudget  <span class="dt">int</span>    <span class="co">// Token budget (0=unlimited)</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    ReasoningEffort <span class="dt">string</span> <span class="co">// &quot;low&quot;, &quot;medium&quot;, &quot;high&quot;</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    ModelType       ReasoningModelType</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="reasoningtrace">ReasoningTrace</h4>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ReasoningTrace <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    ThinkingContent <span class="op">[]</span><span class="dt">string</span> <span class="co">// Extracted thinking blocks</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    OutputContent   <span class="dt">string</span>   <span class="co">// Final output</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    ThinkingTokens  <span class="dt">int</span>      <span class="co">// Tokens used for thinking</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    OutputTokens    <span class="dt">int</span>      <span class="co">// Tokens used for output</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    TotalTokens     <span class="dt">int</span>      <span class="co">// Total tokens</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h4 id="reasoningmodeltype">ReasoningModelType</h4>
+<div class="sourceCode" id="cb18"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> <span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    ReasoningModelOpenAI_O1           <span class="co">// OpenAI o1</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    ReasoningModelOpenAI_O3           <span class="co">// OpenAI o3</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    ReasoningModelOpenAI_O4           <span class="co">// OpenAI o4</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    ReasoningModelClaude_Opus         <span class="co">// Claude Opus</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    ReasoningModelClaude_Sonnet       <span class="co">// Claude Sonnet</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    ReasoningModelDeepSeek_R1         <span class="co">// DeepSeek R1</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    ReasoningModelDeepSeek_Reasoner   <span class="co">// DeepSeek Reasoner</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    ReasoningModelQwQ_32B             <span class="co">// QwQ-32B</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    ReasoningModelGeneric             <span class="co">// Generic reasoning</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div>
+<h3 id="functions">Functions</h3>
+<h4 id="configuration-functions">Configuration Functions</h4>
+<div class="sourceCode" id="cb19"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">// DefaultReasoningConfig returns default configuration</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> DefaultReasoningConfig<span class="op">()</span> <span class="op">*</span>ReasoningConfig</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">// NewReasoningConfig creates model-specific configuration</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> NewReasoningConfig<span class="op">(</span>modelType ReasoningModelType<span class="op">)</span> <span class="op">*</span>ReasoningConfig</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co">// MergeReasoningConfigs merges two configs (override takes precedence)</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> MergeReasoningConfigs<span class="op">(</span>base<span class="op">,</span> override <span class="op">*</span>ReasoningConfig<span class="op">)</span> <span class="op">*</span>ReasoningConfig</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co">// OptimizeReasoningConfig optimizes config based on context</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> OptimizeReasoningConfig<span class="op">(</span>config <span class="op">*</span>ReasoningConfig<span class="op">,</span> ctx context<span class="op">.</span>Context<span class="op">)</span> <span class="op">*</span>ReasoningConfig</span></code></pre></div>
+<h4 id="reasoning-functions">Reasoning Functions</h4>
+<div class="sourceCode" id="cb20"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ExtractReasoningTrace extracts thinking blocks from response</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> ExtractReasoningTrace<span class="op">(</span>content <span class="dt">string</span><span class="op">,</span> config <span class="op">*</span>ReasoningConfig<span class="op">)</span> <span class="op">*</span>ReasoningTrace</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ApplyReasoningBudget enforces token budget constraints</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> ApplyReasoningBudget<span class="op">(</span>trace <span class="op">*</span>ReasoningTrace<span class="op">,</span> config <span class="op">*</span>ReasoningConfig<span class="op">)</span> <span class="op">*</span>ReasoningTrace</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="co">// FormatReasoningPrompt formats prompt for reasoning models</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> FormatReasoningPrompt<span class="op">(</span>prompt <span class="dt">string</span><span class="op">,</span> config <span class="op">*</span>ReasoningConfig<span class="op">)</span> <span class="dt">string</span></span></code></pre></div>
+<h4 id="validation-functions">Validation Functions</h4>
+<div class="sourceCode" id="cb21"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// ValidateReasoningEffort validates effort level</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> ValidateReasoningEffort<span class="op">(</span>effort <span class="dt">string</span><span class="op">)</span> <span class="op">(</span>ReasoningEffortLevel<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">// IsReasoningModel checks if model name indicates reasoning model</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> IsReasoningModel<span class="op">(</span>modelName <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> ReasoningModelType<span class="op">)</span></span></code></pre></div>
+<h4 id="cost-functions">Cost Functions</h4>
+<div class="sourceCode" id="cb22"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// CalculateReasoningCost calculates costs for reasoning operation</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns (thinkingCost, outputCost, totalCost)</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> CalculateReasoningCost<span class="op">(</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    trace <span class="op">*</span>ReasoningTrace<span class="op">,</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    config <span class="op">*</span>ReasoningConfig<span class="op">,</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    modelType ReasoningModelType<span class="op">,</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">(</span><span class="dt">float64</span><span class="op">,</span> <span class="dt">float64</span><span class="op">,</span> <span class="dt">float64</span><span class="op">)</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co">// GetReasoningBudgetRecommendation returns recommended token budget</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> GetReasoningBudgetRecommendation<span class="op">(</span>useCase <span class="dt">string</span><span class="op">)</span> <span class="dt">int</span></span></code></pre></div>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="issue-no-thinking-blocks-extracted">Issue: No thinking blocks
+extracted</h3>
+<p><strong>Cause</strong>: Model may not be using the expected thinking
+tags.</p>
+<p><strong>Solution</strong>:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Check response format</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Println<span class="op">(</span><span class="st">&quot;Raw response:&quot;</span><span class="op">,</span> response<span class="op">)</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Try different tags</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingTags <span class="op">=</span> <span class="st">&quot;thinking,think,thoughts,reasoning&quot;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>trace <span class="op">:=</span> llm<span class="op">.</span>ExtractReasoningTrace<span class="op">(</span>response<span class="op">,</span> config<span class="op">)</span></span></code></pre></div>
+<h3 id="issue-high-costs">Issue: High costs</h3>
+<p><strong>Cause</strong>: Thinking budget too high or wrong model
+selected.</p>
+<p><strong>Solution</strong>:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Use cost-effective model</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>config <span class="op">:=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelDeepSeek_R1<span class="op">)</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Set appropriate budget</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingBudget <span class="op">=</span> llm<span class="op">.</span>GetReasoningBudgetRecommendation<span class="op">(</span><span class="st">&quot;simple&quot;</span><span class="op">)</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Monitor costs</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>thinkingCost<span class="op">,</span> outputCost<span class="op">,</span> totalCost <span class="op">:=</span> llm<span class="op">.</span>CalculateReasoningCost<span class="op">(</span>trace<span class="op">,</span> config<span class="op">,</span> modelType<span class="op">)</span></span></code></pre></div>
+<h3 id="issue-truncated-reasoning">Issue: Truncated reasoning</h3>
+<p><strong>Cause</strong>: Budget too restrictive.</p>
+<p><strong>Solution</strong>:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Increase budget</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingBudget <span class="op">=</span> llm<span class="op">.</span>GetReasoningBudgetRecommendation<span class="op">(</span><span class="st">&quot;complex&quot;</span><span class="op">)</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Or use unlimited budget</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ThinkingBudget <span class="op">=</span> <span class="dv">0</span></span></code></pre></div>
+<h3 id="issue-poor-reasoning-quality">Issue: Poor reasoning quality</h3>
+<p><strong>Cause</strong>: Effort level too low or model not
+suitable.</p>
+<p><strong>Solution</strong>:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Increase effort level</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>config<span class="op">.</span>ReasoningEffort <span class="op">=</span> <span class="st">&quot;high&quot;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Use more capable model</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>config <span class="op">=</span> llm<span class="op">.</span>NewReasoningConfig<span class="op">(</span>llm<span class="op">.</span>ReasoningModelClaude_Opus<span class="op">)</span></span></code></pre></div>
+<h2 id="additional-resources">Additional Resources</h2>
+<ul>
+<li><a href="https://openai.com/o1">OpenAI o1 Documentation</a></li>
+<li><a href="https://docs.anthropic.com/claude/docs/extended-thinking">Claude
+Extended Thinking</a></li>
+<li><a href="https://github.com/deepseek-ai/DeepSeek-R1">DeepSeek R1
+Paper</a></li>
+<li><a href="API_REFERENCE.md">HelixCode API Reference</a></li>
+<li><a href="PERFORMANCE.md">Cost Optimization Guide</a></li>
+</ul>
+<h2 id="support">Support</h2>
+<p>For questions or issues with reasoning models:</p>
+<ol type="1">
+<li>Check this documentation</li>
+<li>Review the API reference</li>
+<li>Check the <a href="#troubleshooting">troubleshooting
+section</a></li>
+<li>Open an issue on GitHub</li>
+<li>Contact HelixCode support</li>
+</ol>
+<hr />
+<p><strong>Last Updated</strong>: 2025-01-06 <strong>Version</strong>:
+1.0.0</p>
+</body>
+</html>

@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>SECURE_COMMUNICATION_AND_PROTOCOL_ARCHITECTURE</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">SECURE_COMMUNICATION_AND_PROTOCOL_ARCHITECTURE</h1>
+</header>
+<h1 id="secure-communication-modern-protocol-architecture">Secure
+Communication &amp; Modern Protocol Architecture</h1>
+<p><strong>Version</strong>: 1.0<br />
+<strong>Date</strong>: 2025-11-07<br />
+<strong>Status</strong>: Design &amp; Implementation Phase<br />
+<strong>Security Level</strong>: Enterprise-Grade, Unhackable</p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#executive-summary">Executive Summary</a></li>
+<li><a href="#security-requirements">Security Requirements</a></li>
+<li><a href="#modern-protocol-stack">Modern Protocol Stack</a></li>
+<li><a href="#service-discovery-integration">Service Discovery
+Integration</a></li>
+<li><a href="#secure-communication-protocol">Secure Communication
+Protocol</a></li>
+<li><a href="#third-party-api-compatibility">Third-Party API
+Compatibility</a></li>
+<li><a href="#implementation-strategy">Implementation Strategy</a></li>
+<li><a href="#testing-strategy">Testing Strategy</a></li>
+<li><a href="#documentation--training">Documentation &amp;
+Training</a></li>
+</ol>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>HelixCode implements enterprise-grade secure communication with
+modern protocol support (HTTP/3, QUIC, CRONET) while maintaining
+backward compatibility. The system uses service discovery as the primary
+connection mechanism with multi-layered security that makes it virtually
+unhackable.</p>
+<h3 id="key-features">Key Features</h3>
+<ul>
+<li><strong>Zero-Trust Architecture</strong>: Every connection verified,
+authenticated, encrypted</li>
+<li><strong>Modern Protocols</strong>: HTTP/3, QUIC, CRONET with
+automatic detection</li>
+<li><strong>Service Discovery First</strong>: All services connect via
+discovery mechanism</li>
+<li><strong>Protocol Negotiation</strong>: Automatic upgrade to best
+available protocol</li>
+<li><strong>Certificate Pinning</strong>: Prevents MITM attacks</li>
+<li><strong>Mutual TLS (mTLS)</strong>: Bidirectional
+authentication</li>
+<li><strong>End-to-End Encryption</strong>: Data encrypted at rest and
+in transit</li>
+<li><strong>Perfect Forward Secrecy</strong>: Session keys rotated, past
+sessions protected</li>
+<li><strong>Intrusion Detection</strong>: Real-time threat
+monitoring</li>
+<li><strong>Comprehensive Auditing</strong>: All communications logged
+and monitored</li>
+</ul>
+<hr />
+<h2 id="security-requirements">Security Requirements</h2>
+<h3 id="authentication-authorization">1. Authentication &amp;
+Authorization</h3>
+<p><strong>Requirements</strong>: - ✅ Mutual TLS (mTLS) for all
+inter-service communication - ✅ JWT tokens with short TTL (5 minutes)
+for API authentication - ✅ Refresh tokens with rotation (24 hours) - ✅
+Service-to-service authentication with client certificates - ✅ API key
+authentication for third-party integrations - ✅ OAuth 2.0 / OIDC for
+user authentication</p>
+<p><strong>Implementation</strong>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AuthManager <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    mTLSConfig     <span class="op">*</span>tls<span class="op">.</span>Config</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    jwtValidator   <span class="op">*</span>jwt<span class="op">.</span>Validator</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    certManager    <span class="op">*</span>CertificateManager</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    tokenRotation  <span class="op">*</span>TokenRotationService</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    auditLogger    <span class="op">*</span>AuditLogger</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="encryption-standards">2. Encryption Standards</h3>
+<p><strong>At-Rest Encryption</strong>: - AES-256-GCM for database
+encryption - Encrypted file storage with per-file keys - Hardware
+Security Module (HSM) integration for key management</p>
+<p><strong>In-Transit Encryption</strong>: - TLS 1.3 minimum (TLS 1.2
+disabled) - Strong cipher suites only (ECDHE-RSA-AES256-GCM-SHA384,
+ChaCha20-Poly1305) - Certificate pinning to prevent MITM - Perfect
+Forward Secrecy (PFS) required</p>
+<p><strong>Key Management</strong>: - Automatic key rotation every 30
+days - Keys stored in HSM or encrypted key vault - Zero-knowledge
+architecture (server never sees plaintext keys)</p>
+<h3 id="network-security">3. Network Security</h3>
+<p><strong>Defense in Depth</strong>: 1. <strong>Perimeter</strong>:
+Firewall rules, DDoS protection 2. <strong>Network</strong>: VPC
+isolation, private subnets 3. <strong>Transport</strong>: TLS 1.3,
+certificate pinning 4. <strong>Application</strong>: Input validation,
+rate limiting 5. <strong>Data</strong>: Encryption, access control</p>
+<p><strong>Intrusion Detection</strong>: - Real-time traffic analysis -
+Anomaly detection with ML - Automatic threat response - SIEM
+integration</p>
+<hr />
+<h2 id="modern-protocol-stack">Modern Protocol Stack</h2>
+<h3 id="http3-quic-support">HTTP/3 &amp; QUIC Support</h3>
+<p><strong>Why HTTP/3?</strong> - <strong>Faster</strong>: 0-RTT
+connection establishment - <strong>More Reliable</strong>: Built on UDP,
+no head-of-line blocking - <strong>Better Performance</strong>:
+Multiplexing without TCP constraints - <strong>Modern</strong>: Latest
+IETF standard (RFC 9114)</p>
+<p><strong>Implementation Stack</strong>:</p>
+<pre><code>┌─────────────────────────────────────────┐
+│         Application Layer                │
+│    (HelixCode Services &amp; APIs)          │
+└─────────────────────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────┐
+│         Protocol Layer                   │
+│  HTTP/3 │ HTTP/2 │ HTTP/1.1 │ gRPC     │
+└─────────────────────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────┐
+│         Transport Layer                  │
+│      QUIC │ TLS 1.3 │ TCP              │
+└─────────────────────────────────────────┘
+                  ▼
+┌─────────────────────────────────────────┐
+│         Network Layer                    │
+│         UDP │ TCP │ SCTP                │
+└─────────────────────────────────────────┘</code></pre>
+<h3 id="cronet-integration">CRONET Integration</h3>
+<p><strong>What is CRONET?</strong> - Chrome’s networking stack -
+Optimized for mobile (Android/iOS) - Supports HTTP/3, QUIC out of the
+box - Better battery life, faster connections</p>
+<p><strong>Use Cases</strong>: - Mobile applications (HelixCode Mobile)
+- Desktop clients (Electron apps) - Embedded systems (Aurora OS, Harmony
+OS)</p>
+<h3 id="protocol-detection-negotiation">Protocol Detection &amp;
+Negotiation</h3>
+<p><strong>Auto-Detection Flow</strong>:</p>
+<pre><code>1. Client Connects
+   ↓
+2. ALPN Negotiation (TLS)
+   ↓
+3. Server Advertises: [h3, h2, http/1.1]
+   ↓
+4. Client Selects Best Available
+   ↓
+5. Connection Established on Selected Protocol
+   ↓
+6. If Upgrade Available → Negotiate Upgrade</code></pre>
+<p><strong>Fallback Strategy</strong>:</p>
+<pre><code>HTTP/3 (QUIC)
+   ↓ (if not supported)
+HTTP/2 (TLS 1.3)
+   ↓ (if not supported)
+HTTP/1.1 (TLS 1.3)
+   ↓ (if not supported)
+HTTPS (TLS 1.2) ← Minimum supported</code></pre>
+<hr />
+<h2 id="service-discovery-integration">Service Discovery
+Integration</h2>
+<h3 id="discovery-first-architecture">Discovery-First Architecture</h3>
+<p><strong>All</strong> service-to-service communication
+<strong>MUST</strong> use service discovery:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// OLD WAY (hardcoded, insecure):</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>conn<span class="op">,</span> err <span class="op">:=</span> sql<span class="op">.</span>Open<span class="op">(</span><span class="st">&quot;postgres&quot;</span><span class="op">,</span> <span class="st">&quot;postgres://localhost:5432/db&quot;</span><span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">// NEW WAY (discovery-based, secure):</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>endpoint<span class="op">,</span> err <span class="op">:=</span> discovery<span class="op">.</span>Discover<span class="op">(</span><span class="st">&quot;postgres-primary&quot;</span><span class="op">,</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    discovery<span class="op">.</span>WithTLS<span class="op">(</span><span class="ot">true</span><span class="op">),</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    discovery<span class="op">.</span>WithmTLS<span class="op">(</span><span class="ot">true</span><span class="op">),</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    discovery<span class="op">.</span>WithProtocol<span class="op">(</span><span class="st">&quot;http3&quot;</span><span class="op">),</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>conn<span class="op">,</span> err <span class="op">:=</span> endpoint<span class="op">.</span>Connect<span class="op">()</span></span></code></pre></div>
+<h3 id="secure-service-registration">Secure Service Registration</h3>
+<p><strong>Registration Protocol</strong>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;service&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;id&quot;</span><span class="fu">:</span> <span class="st">&quot;postgres-primary-abc123&quot;</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="st">&quot;postgres-primary&quot;</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;host&quot;</span><span class="fu">:</span> <span class="st">&quot;10.0.1.100&quot;</span><span class="fu">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;port&quot;</span><span class="fu">:</span> <span class="dv">5434</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;protocol&quot;</span><span class="fu">:</span> <span class="st">&quot;tcp&quot;</span><span class="fu">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;tls&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;enabled&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;1.3&quot;</span><span class="fu">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;cert_fingerprint&quot;</span><span class="fu">:</span> <span class="st">&quot;sha256:abcd1234...&quot;</span><span class="fu">,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;mutual&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;pinned&quot;</span><span class="fu">:</span> <span class="kw">true</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">},</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;http_version&quot;</span><span class="fu">:</span> <span class="st">&quot;h3&quot;</span><span class="fu">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;capabilities&quot;</span><span class="fu">:</span> <span class="ot">[</span><span class="st">&quot;http3&quot;</span><span class="ot">,</span> <span class="st">&quot;quic&quot;</span><span class="ot">,</span> <span class="st">&quot;grpc&quot;</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;metadata&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;database&quot;</span><span class="fu">:</span> <span class="st">&quot;helixcode&quot;</span><span class="fu">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;version&quot;</span><span class="fu">:</span> <span class="st">&quot;16.0&quot;</span><span class="fu">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;encryption&quot;</span><span class="fu">:</span> <span class="st">&quot;AES-256-GCM&quot;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;auth&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;method&quot;</span><span class="fu">:</span> <span class="st">&quot;mtls&quot;</span><span class="fu">,</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;client_cert_required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;jwt_required&quot;</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;algorithm&quot;</span><span class="fu">:</span> <span class="st">&quot;Ed25519&quot;</span><span class="fu">,</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;public_key&quot;</span><span class="fu">:</span> <span class="st">&quot;base64_encoded_key&quot;</span><span class="fu">,</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;signature&quot;</span><span class="fu">:</span> <span class="st">&quot;base64_encoded_signature&quot;</span><span class="fu">,</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;timestamp&quot;</span><span class="fu">:</span> <span class="st">&quot;2025-11-07T12:00:00Z&quot;</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p><strong>Registration Security</strong>: 1. <strong>Signature
+Verification</strong>: Ed25519 signatures prevent tampering 2.
+<strong>Certificate Validation</strong>: Only services with valid certs
+can register 3. <strong>Rate Limiting</strong>: Prevent registration
+flooding attacks 4. <strong>TTL-based Expiration</strong>: Stale
+services auto-removed 5. <strong>Audit Logging</strong>: All
+registrations logged for security analysis</p>
+<h3 id="encrypted-service-discovery">Encrypted Service Discovery</h3>
+<p><strong>Broadcast Encryption</strong>: - AES-256-GCM encrypted
+broadcasts - Pre-shared key or certificate-based encryption - Replay
+attack prevention (nonce + timestamp)</p>
+<p><strong>Registry Encryption</strong>: - TLS 1.3 for all registry API
+calls - mTLS required for write operations (register/deregister) - Read
+operations can use JWT authentication</p>
+<hr />
+<h2 id="secure-communication-protocol">Secure Communication
+Protocol</h2>
+<h3 id="helixcode-secure-protocol-hsp">HelixCode Secure Protocol
+(HSP)</h3>
+<p><strong>Protocol Specification</strong>:</p>
+<pre><code>HSP Frame Structure:
+┌────────────────────────────────────────────────────────┐
+│ Version (1) │ Type (1) │ Flags (2) │ Length (4)        │
+├────────────────────────────────────────────────────────┤
+│ Sequence Number (8)                                    │
+├────────────────────────────────────────────────────────┤
+│ Timestamp (8)                                          │
+├────────────────────────────────────────────────────────┤
+│ Signature (64) - Ed25519                               │
+├────────────────────────────────────────────────────────┤
+│ Nonce (12)                                             │
+├────────────────────────────────────────────────────────┤
+│ Encrypted Payload (variable)                           │
+├────────────────────────────────────────────────────────┤
+│ Authentication Tag (16) - GCM                          │
+└────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Security Properties</strong>: -
+<strong>Confidentiality</strong>: AES-256-GCM encryption -
+<strong>Integrity</strong>: Ed25519 signatures + GCM authentication -
+<strong>Authenticity</strong>: Mutual authentication via certificates -
+<strong>Non-Repudiation</strong>: Signatures prove message origin -
+<strong>Replay Protection</strong>: Sequence numbers + timestamps -
+<strong>Forward Secrecy</strong>: Ephemeral keys per session</p>
+<h3 id="implementation">Implementation</h3>
+<p><strong>Location</strong>:
+<code>internal/discovery/protocol/</code></p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/discovery/protocol/secure_protocol.go</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> protocol</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> SecureProtocol <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    version       <span class="dt">uint8</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    encryptor     <span class="op">*</span>AESGCMEncryptor</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    signer        <span class="op">*</span>Ed25519Signer</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    sequenceTrack <span class="op">*</span>SequenceTracker</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    replayGuard   <span class="op">*</span>ReplayProtection</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>sp <span class="op">*</span>SecureProtocol<span class="op">)</span> EncryptMessage<span class="op">(</span>msg <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="op">([]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Generate nonce</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    nonce <span class="op">:=</span> sp<span class="op">.</span>generateNonce<span class="op">()</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Encrypt payload with AES-256-GCM</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    encrypted<span class="op">,</span> authTag<span class="op">,</span> err <span class="op">:=</span> sp<span class="op">.</span>encryptor<span class="op">.</span>Encrypt<span class="op">(</span>msg<span class="op">,</span> nonce<span class="op">)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Create frame header</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    header <span class="op">:=</span> sp<span class="op">.</span>buildHeader<span class="op">(</span><span class="bu">len</span><span class="op">(</span>encrypted<span class="op">))</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Sign the frame</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    signature<span class="op">,</span> err <span class="op">:=</span> sp<span class="op">.</span>signer<span class="op">.</span>Sign<span class="op">(</span><span class="bu">append</span><span class="op">(</span>header<span class="op">,</span> encrypted<span class="op">...))</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Assemble complete frame</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    frame <span class="op">:=</span> <span class="bu">append</span><span class="op">(</span>header<span class="op">,</span> signature<span class="op">...)</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    frame <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>frame<span class="op">,</span> nonce<span class="op">...)</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    frame <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>frame<span class="op">,</span> encrypted<span class="op">...)</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    frame <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>frame<span class="op">,</span> authTag<span class="op">...)</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> frame<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>sp <span class="op">*</span>SecureProtocol<span class="op">)</span> DecryptMessage<span class="op">(</span>frame <span class="op">[]</span><span class="dt">byte</span><span class="op">)</span> <span class="op">([]</span><span class="dt">byte</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Parse frame</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    header<span class="op">,</span> signature<span class="op">,</span> nonce<span class="op">,</span> encrypted<span class="op">,</span> authTag<span class="op">,</span> err <span class="op">:=</span> sp<span class="op">.</span>parseFrame<span class="op">(</span>frame<span class="op">)</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Verify signature</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>sp<span class="op">.</span>signer<span class="op">.</span>Verify<span class="op">(</span><span class="bu">append</span><span class="op">(</span>header<span class="op">,</span> encrypted<span class="op">...),</span> signature<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;signature verification failed&quot;</span><span class="op">)</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Check sequence number (replay protection)</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>sp<span class="op">.</span>sequenceTrack<span class="op">.</span>IsValid<span class="op">(</span>header<span class="op">.</span>SequenceNumber<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;replay attack detected&quot;</span><span class="op">)</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Check timestamp (message freshness)</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> time<span class="op">.</span>Since<span class="op">(</span>header<span class="op">.</span>Timestamp<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">5</span><span class="op">*</span>time<span class="op">.</span>Minute <span class="op">{</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;message too old&quot;</span><span class="op">)</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. Decrypt payload</span></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    plaintext<span class="op">,</span> err <span class="op">:=</span> sp<span class="op">.</span>encryptor<span class="op">.</span>Decrypt<span class="op">(</span>encrypted<span class="op">,</span> nonce<span class="op">,</span> authTag<span class="op">)</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err</span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> plaintext<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="third-party-api-compatibility">Third-Party API
+Compatibility</h2>
+<h3 id="protocol-detection-service">Protocol Detection Service</h3>
+<p><strong>Purpose</strong>: Automatically detect if third-party APIs
+support modern protocols</p>
+<p><strong>Detection Flow</strong>:</p>
+<pre><code>1. Attempt HTTP/3 (QUIC) Connection
+   ↓
+2. If Successful → Use HTTP/3
+   ↓ (if fails)
+3. Attempt HTTP/2 Connection
+   ↓
+4. If Successful → Use HTTP/2
+   ↓ (if fails)
+5. Fallback to HTTP/1.1 (HTTPS)
+   ↓
+6. Cache Result for Future Connections</code></pre>
+<p><strong>Implementation</strong>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/discovery/protocol/detector.go</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> protocol</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProtocolDetector <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    cache     <span class="op">*</span>ProtocolCache</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    timeout   time<span class="op">.</span>Duration</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    userAgent <span class="dt">string</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ProtocolCapabilities <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    HTTP3Supported   <span class="dt">bool</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    HTTP2Supported   <span class="dt">bool</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    QUICSupported    <span class="dt">bool</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    CRONETCompatible <span class="dt">bool</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    TLSVersion       <span class="dt">string</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    CipherSuites     <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    ALPNProtocols    <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pd <span class="op">*</span>ProtocolDetector<span class="op">)</span> DetectCapabilities<span class="op">(</span>endpoint <span class="dt">string</span><span class="op">)</span> <span class="op">(*</span>ProtocolCapabilities<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check cache first</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cached<span class="op">,</span> exists <span class="op">:=</span> pd<span class="op">.</span>cache<span class="op">.</span>Get<span class="op">(</span>endpoint<span class="op">);</span> exists <span class="op">{</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> cached<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    caps <span class="op">:=</span> <span class="op">&amp;</span>ProtocolCapabilities<span class="op">{}</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1. Try HTTP/3</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pd<span class="op">.</span>testHTTP3<span class="op">(</span>endpoint<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>        caps<span class="op">.</span>HTTP3Supported <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>        caps<span class="op">.</span>QUICSupported <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Try HTTP/2</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pd<span class="op">.</span>testHTTP2<span class="op">(</span>endpoint<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>        caps<span class="op">.</span>HTTP2Supported <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3. Detect TLS version</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    caps<span class="op">.</span>TLSVersion <span class="op">=</span> pd<span class="op">.</span>detectTLSVersion<span class="op">(</span>endpoint<span class="op">)</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 4. Check ALPN support</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    caps<span class="op">.</span>ALPNProtocols <span class="op">=</span> pd<span class="op">.</span>getALPNProtocols<span class="op">(</span>endpoint<span class="op">)</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 5. CRONET compatibility check</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    caps<span class="op">.</span>CRONETCompatible <span class="op">=</span> caps<span class="op">.</span>HTTP3Supported <span class="op">||</span> caps<span class="op">.</span>HTTP2Supported</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache result</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>    pd<span class="op">.</span>cache<span class="op">.</span>Set<span class="op">(</span>endpoint<span class="op">,</span> caps<span class="op">,</span> <span class="dv">24</span><span class="op">*</span>time<span class="op">.</span>Hour<span class="op">)</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> caps<span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>pd <span class="op">*</span>ProtocolDetector<span class="op">)</span> testHTTP3<span class="op">(</span>endpoint <span class="dt">string</span><span class="op">)</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Attempt QUIC connection</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    conn<span class="op">,</span> err <span class="op">:=</span> quic<span class="op">.</span>DialAddr<span class="op">(</span>endpoint<span class="op">,</span> <span class="op">&amp;</span>quic<span class="op">.</span>Config<span class="op">{</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>        HandshakeIdleTimeout<span class="op">:</span> pd<span class="op">.</span>timeout<span class="op">,</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="ot">nil</span><span class="op">)</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">false</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> conn<span class="op">.</span>CloseWithError<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">)</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Try HTTP/3 request</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>    client <span class="op">:=</span> <span class="op">&amp;</span>http<span class="op">.</span>Client<span class="op">{</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>        Transport<span class="op">:</span> <span class="op">&amp;</span>http3<span class="op">.</span>RoundTripper<span class="op">{},</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>        Timeout<span class="op">:</span>   pd<span class="op">.</span>timeout<span class="op">,</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    resp<span class="op">,</span> err <span class="op">:=</span> client<span class="op">.</span>Get<span class="op">(</span><span class="st">&quot;https://&quot;</span> <span class="op">+</span> endpoint<span class="op">)</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">false</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">defer</span> resp<span class="op">.</span>Body<span class="op">.</span>Close<span class="op">()</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> resp<span class="op">.</span>Proto <span class="op">==</span> <span class="st">&quot;HTTP/3.0&quot;</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="third-party-api-client">Third-Party API Client</h3>
+<p><strong>Adaptive Client</strong>:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// internal/api/client.go</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">package</span> api</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> AdaptiveClient <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    detector     <span class="op">*</span>protocol<span class="op">.</span>ProtocolDetector</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    http3Client  <span class="op">*</span>http3<span class="op">.</span>Client</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    http2Client  <span class="op">*</span>http<span class="op">.</span>Client</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    http1Client  <span class="op">*</span>http<span class="op">.</span>Client</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    metrics      <span class="op">*</span>ClientMetrics</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>ac <span class="op">*</span>AdaptiveClient<span class="op">)</span> Request<span class="op">(</span>endpoint <span class="dt">string</span><span class="op">,</span> req <span class="op">*</span>Request<span class="op">)</span> <span class="op">(*</span>Response<span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Detect capabilities</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    caps<span class="op">,</span> err <span class="op">:=</span> ac<span class="op">.</span>detector<span class="op">.</span>DetectCapabilities<span class="op">(</span>endpoint<span class="op">)</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span><span class="op">,</span> err</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use best available protocol</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> caps<span class="op">.</span>HTTP3Supported <span class="op">{</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Info<span class="op">(</span><span class="st">&quot;Using HTTP/3 for&quot;</span><span class="op">,</span> endpoint<span class="op">)</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ac<span class="op">.</span>http3Client<span class="op">.</span>Do<span class="op">(</span>req<span class="op">)</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> caps<span class="op">.</span>HTTP2Supported <span class="op">{</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Info<span class="op">(</span><span class="st">&quot;Using HTTP/2 for&quot;</span><span class="op">,</span> endpoint<span class="op">)</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ac<span class="op">.</span>http2Client<span class="op">.</span>Do<span class="op">(</span>req<span class="op">)</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>        log<span class="op">.</span>Warn<span class="op">(</span><span class="st">&quot;Falling back to HTTP/1.1 for&quot;</span><span class="op">,</span> endpoint<span class="op">)</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ac<span class="op">.</span>http1Client<span class="op">.</span>Do<span class="op">(</span>req<span class="op">)</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="supported-third-party-apis">Supported Third-Party APIs</h3>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>HTTP/3</th>
+<th>HTTP/2</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI</td>
+<td>✅ Yes</td>
+<td>✅ Yes</td>
+<td>Full support</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>⚠️ Partial</td>
+<td>✅ Yes</td>
+<td>HTTP/3 in beta</td>
+</tr>
+<tr>
+<td>Google (Gemini)</td>
+<td>✅ Yes</td>
+<td>✅ Yes</td>
+<td>Full support</td>
+</tr>
+<tr>
+<td>Slack</td>
+<td>❌ No</td>
+<td>✅ Yes</td>
+<td>HTTP/2 only</td>
+</tr>
+<tr>
+<td>Discord</td>
+<td>❌ No</td>
+<td>✅ Yes</td>
+<td>HTTP/2 only</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td>✅ Yes</td>
+<td>✅ Yes</td>
+<td>Full support</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="implementation-strategy">Implementation Strategy</h2>
+<h3 id="phase-1-security-foundation-week-1-2">Phase 1: Security
+Foundation (Week 1-2)</h3>
+<p><strong>Deliverables</strong>: - [ ] Certificate management service -
+[ ] mTLS implementation for inter-service communication - [ ] JWT token
+service with rotation - [ ] Secure storage for keys and certificates - [
+] Basic audit logging</p>
+<p><strong>Files</strong>: -
+<code>internal/discovery/security/cert_manager.go</code> -
+<code>internal/discovery/security/mtls.go</code> -
+<code>internal/discovery/security/jwt_service.go</code> -
+<code>internal/discovery/security/key_vault.go</code> -
+<code>internal/discovery/security/audit_logger.go</code></p>
+<h3 id="phase-2-modern-protocol-support-week-3-4">Phase 2: Modern
+Protocol Support (Week 3-4)</h3>
+<p><strong>Deliverables</strong>: - [ ] HTTP/3 server implementation - [
+] QUIC transport layer - [ ] Protocol detection service - [ ] Adaptive
+client with fallback - [ ] CRONET integration (mobile)</p>
+<p><strong>Files</strong>: -
+<code>internal/discovery/protocol/http3_server.go</code> -
+<code>internal/discovery/protocol/quic_transport.go</code> -
+<code>internal/discovery/protocol/detector.go</code> -
+<code>internal/discovery/protocol/adaptive_client.go</code> -
+<code>mobile/cronet/cronet_adapter.go</code></p>
+<h3 id="phase-3-secure-communication-protocol-week-5">Phase 3: Secure
+Communication Protocol (Week 5)</h3>
+<p><strong>Deliverables</strong>: - [ ] HSP protocol implementation - [
+] Frame encoding/decoding - [ ] Signature verification - [ ] Replay
+protection - [ ] Integration with service discovery</p>
+<p><strong>Files</strong>: -
+<code>internal/discovery/protocol/secure_protocol.go</code> -
+<code>internal/discovery/protocol/frame.go</code> -
+<code>internal/discovery/protocol/signer.go</code> -
+<code>internal/discovery/protocol/replay_guard.go</code></p>
+<h3 id="phase-4-service-discovery-security-week-6">Phase 4: Service
+Discovery Security (Week 6)</h3>
+<p><strong>Deliverables</strong>: - [ ] Encrypted service registration -
+[ ] Signed service announcements - [ ] Secure broadcast mechanism - [ ]
+mTLS for registry API - [ ] Access control lists</p>
+<p><strong>Files</strong>: -
+<code>internal/discovery/registry_secure.go</code> -
+<code>internal/discovery/broadcast_encrypted.go</code> -
+<code>internal/discovery/acl.go</code></p>
+<h3 id="phase-5-testing-hardening-week-7-8">Phase 5: Testing &amp;
+Hardening (Week 7-8)</h3>
+<p><strong>Deliverables</strong>: - [ ] Penetration testing - [ ]
+Fuzzing tests - [ ] Load testing with encryption - [ ] Security audit -
+[ ] Performance optimization</p>
+<hr />
+<h2 id="testing-strategy">Testing Strategy</h2>
+<h3 id="unit-tests">1. Unit Tests</h3>
+<p><strong>Security Tests</strong>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestCertificateValidation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestmTLSHandshake<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSignatureVerification<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestReplayProtection<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestKeyRotation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<p><strong>Protocol Tests</strong>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestHTTP3Connection<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestQUICTransport<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProtocolNegotiation<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProtocolFallback<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h3 id="integration-tests">2. Integration Tests</h3>
+<p><strong>End-to-End Security</strong>:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestSecureServiceDiscovery<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestEncryptedCommunication<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestThirdPartyAPIDetection<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> TestProtocolUpgrade<span class="op">(</span>t <span class="op">*</span>testing<span class="op">.</span>T<span class="op">)</span></span></code></pre></div>
+<h3 id="security-tests">3. Security Tests</h3>
+<p><strong>Penetration Tests</strong>: - MITM attack prevention - Replay
+attack detection - Certificate spoofing prevention - DDoS resilience -
+Encryption brute-force resistance</p>
+<p><strong>Fuzzing</strong>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">go-fuzz</span> <span class="at">-func</span><span class="op">=</span>FuzzSecureProtocol</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">go-fuzz</span> <span class="at">-func</span><span class="op">=</span>FuzzCertificateValidation</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">go-fuzz</span> <span class="at">-func</span><span class="op">=</span>FuzzProtocolNegotiation</span></code></pre></div>
+<h3 id="performance-tests">4. Performance Tests</h3>
+<p><strong>Benchmarks</strong>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkHTTP3vsHTTP2<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkEncryption<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkSignatureVerification<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> BenchmarkProtocolDetection<span class="op">(</span>b <span class="op">*</span>testing<span class="op">.</span>B<span class="op">)</span></span></code></pre></div>
+<p><strong>Expected Performance</strong>: | Operation | Latency (p50) |
+Latency (p99) | Throughput | |———–|—————|—————|————| | mTLS Handshake |
+&lt; 50ms | &lt; 100ms | 1,000 conn/sec | | HTTP/3 Request | &lt; 10ms |
+&lt; 30ms | 10,000 req/sec | | Protocol Detection | &lt; 100ms | &lt;
+200ms | 500 detections/sec | | Message Encryption | &lt; 1ms | &lt; 5ms
+| 50,000 ops/sec |</p>
+<hr />
+<h2 id="documentation-training">Documentation &amp; Training</h2>
+<h3 id="technical-documentation">1. Technical Documentation</h3>
+<p><strong>Architecture Docs</strong>: - ✅
+<code>SECURE_COMMUNICATION_AND_PROTOCOL_ARCHITECTURE.md</code> (this
+file) - ✅ <code>DYNAMIC_PORT_BINDING_AND_SERVICE_DISCOVERY.md</code> -
+[ ] <code>CERTIFICATE_MANAGEMENT_GUIDE.md</code> - [ ]
+<code>HTTP3_IMPLEMENTATION_GUIDE.md</code> - [ ]
+<code>SECURITY_BEST_PRACTICES.md</code></p>
+<p><strong>API Documentation</strong>: - [ ]
+<code>API_SECURITY_REFERENCE.md</code> - [ ]
+<code>PROTOCOL_API_REFERENCE.md</code> - [ ]
+<code>SERVICE_DISCOVERY_API.md</code></p>
+<h3 id="user-manuals">2. User Manuals</h3>
+<p><strong>Administrator Guides</strong>: - [ ] <strong>Certificate
+Setup Guide</strong>: How to generate and install certificates - [ ]
+<strong>Security Configuration Guide</strong>: Configuring mTLS,
+encryption, etc. - [ ] <strong>Monitoring &amp; Auditing Guide</strong>:
+Security monitoring best practices - [ ] <strong>Incident Response
+Guide</strong>: Handling security incidents</p>
+<p><strong>Developer Guides</strong>: - [ ] <strong>Secure Service
+Integration</strong>: Connecting services securely - [ ]
+<strong>Third-Party API Integration</strong>: Using the adaptive client
+- [ ] <strong>Protocol Selection Guide</strong>: When to use HTTP/3 vs
+HTTP/2 - [ ] <strong>Testing Secure Communications</strong>: Writing
+security tests</p>
+<h3 id="tutorials">3. Tutorials</h3>
+<p><strong>Beginner</strong>: 1. <strong>“Hello Secure World”</strong>:
+First secure service connection 2. <strong>“Understanding
+mTLS”</strong>: Certificate-based authentication 3. <strong>“Service
+Discovery Basics”</strong>: Finding and connecting to services</p>
+<p><strong>Intermediate</strong>: 4. <strong>“HTTP/3 Deep
+Dive”</strong>: Modern protocol implementation 5. <strong>“Securing Your
+API”</strong>: Best practices for API security 6. <strong>“Protocol
+Detection”</strong>: Automatic compatibility detection</p>
+<p><strong>Advanced</strong>: 7. <strong>“Custom Security
+Policies”</strong>: Advanced access control 8. <strong>“Performance
+Tuning”</strong>: Optimizing secure communications 9.
+<strong>“Multi-Region Security”</strong>: Distributed system
+security</p>
+<h3 id="video-course-materials">4. Video Course Materials</h3>
+<p><strong>Course Structure</strong> (12 modules, ~8 hours total):</p>
+<p><strong>Module 1: Introduction to Secure Communication</strong> (30
+min) - Why security matters - Threat landscape - HelixCode security
+overview</p>
+<p><strong>Module 2: Service Discovery Security</strong> (45 min) -
+Discovery-first architecture - Secure registration - Encrypted
+broadcasts - Demo: Setting up secure discovery</p>
+<p><strong>Module 3: TLS &amp; mTLS Deep Dive</strong> (60 min) - TLS
+1.3 overview - Certificate management - Mutual authentication - Lab:
+Implementing mTLS</p>
+<p><strong>Module 4: Modern Protocol Stack</strong> (60 min) - HTTP/3
+&amp; QUIC explained - CRONET integration - Protocol detection - Demo:
+HTTP/3 in action</p>
+<p><strong>Module 5: Secure Communication Protocol</strong> (45 min) -
+HSP protocol design - Encryption &amp; signatures - Replay protection -
+Lab: Building secure messages</p>
+<p><strong>Module 6: Third-Party API Integration</strong> (45 min) -
+Adaptive client - Protocol fallback - Best practices - Demo: Integrating
+OpenAI API</p>
+<p><strong>Module 7: Testing Secure Systems</strong> (45 min) - Unit
+testing security - Penetration testing - Fuzzing - Lab: Writing security
+tests</p>
+<p><strong>Module 8: Performance &amp; Optimization</strong> (45 min) -
+Benchmarking - Caching strategies - Connection pooling - Demo:
+Optimizing throughput</p>
+<p><strong>Module 9: Monitoring &amp; Auditing</strong> (45 min) -
+Security metrics - Audit logging - SIEM integration - Lab: Setting up
+monitoring</p>
+<p><strong>Module 10: Incident Response</strong> (30 min) - Detecting
+breaches - Response procedures - Recovery strategies - Case study</p>
+<p><strong>Module 11: Advanced Topics</strong> (45 min) - Custom
+security policies - Zero-trust architecture - Hardware security modules
+- Demo: Advanced configurations</p>
+<p><strong>Module 12: Production Deployment</strong> (45 min) -
+Pre-launch checklist - Deployment strategies - Disaster recovery - Best
+practices</p>
+<p><strong>Video Production Plan</strong>: - [ ] Script all modules - [
+] Create slide decks - [ ] Record screencasts - [ ] Add closed captions
+- [ ] Create companion workbooks - [ ] Set up video hosting platform - [
+] Create certificate of completion system</p>
+<p><strong>Interactive Elements</strong>: - Quizzes after each module -
+Hands-on labs with auto-grading - Live Q&amp;A sessions (monthly) -
+Community forum - Project-based final assessment</p>
+<hr />
+<h2 id="appendix-a-cipher-suite-configuration">Appendix A: Cipher Suite
+Configuration</h2>
+<p><strong>Recommended Cipher Suites</strong> (in order of
+preference):</p>
+<ol type="1">
+<li><code>TLS_AES_256_GCM_SHA384</code> (TLS 1.3)</li>
+<li><code>TLS_CHACHA20_POLY1305_SHA256</code> (TLS 1.3)</li>
+<li><code>TLS_AES_128_GCM_SHA256</code> (TLS 1.3)</li>
+<li><code>TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384</code> (TLS 1.2,
+fallback only)</li>
+<li><code>TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256</code> (TLS 1.2,
+fallback only)</li>
+</ol>
+<p><strong>Disabled Cipher Suites</strong> (insecure): - All CBC mode
+ciphers (vulnerable to padding oracle attacks) - All RC4 ciphers
+(broken) - All MD5-based ciphers (broken) - All export-grade ciphers
+(weak)</p>
+<hr />
+<h2 id="appendix-b-certificate-pinning">Appendix B: Certificate
+Pinning</h2>
+<p><strong>Implementation</strong>:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pin certificate fingerprints</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>pinnedCerts <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">string</span><span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;api.helixcode.dev&quot;</span><span class="op">:</span>       <span class="st">&quot;sha256:abcd1234...&quot;</span><span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;registry.helixcode.dev&quot;</span><span class="op">:</span>  <span class="st">&quot;sha256:efgh5678...&quot;</span><span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;discovery.helixcode.dev&quot;</span><span class="op">:</span> <span class="st">&quot;sha256:ijkl9012...&quot;</span><span class="op">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Custom verification function</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> verifyCertPin<span class="op">(</span>rawCerts <span class="op">[][]</span><span class="dt">byte</span><span class="op">,</span> verifiedChains <span class="op">[][]*</span>x509<span class="op">.</span>Certificate<span class="op">)</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> cert <span class="op">:=</span> <span class="kw">range</span> rawCerts <span class="op">{</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        fingerprint <span class="op">:=</span> sha256<span class="op">.</span>Sum256<span class="op">(</span>cert<span class="op">)</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        expected<span class="op">,</span> exists <span class="op">:=</span> pinnedCerts<span class="op">[</span>serverName<span class="op">]</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">!</span>exists <span class="op">{</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;certificate pinning not configured&quot;</span><span class="op">)</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> hex<span class="op">.</span>EncodeToString<span class="op">(</span>fingerprint<span class="op">[:])</span> <span class="op">!=</span> expected <span class="op">{</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> errors<span class="op">.</span>New<span class="op">(</span><span class="st">&quot;certificate pinning validation failed&quot;</span><span class="op">)</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<p><strong>Document Version</strong>: 1.0<br />
+<strong>Last Updated</strong>: 2025-11-07<br />
+<strong>Authors</strong>: HelixCode Security Team<br />
+<strong>Status</strong>: Design Phase - Ready for Implementation<br />
+<strong>Security Clearance</strong>: Internal Use - Encryption Details
+Redacted for Public Version</p>
+</body>
+</html>
