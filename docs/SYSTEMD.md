@@ -1,7 +1,7 @@
 # Helix Platform — systemd Boot Integration
 
-**Revision:** 2
-**Last modified:** 2026-07-28
+**Revision:** 3
+**Last modified:** 2026-08-06
 **Maintainer:** HelixCode platform
 
 The whole Helix platform — HelixCode, HelixAgent, HelixLLM and their
@@ -72,6 +72,23 @@ Dependency strength is deliberate per service:
 guarantee; re-probe before relying on it. All six units `active`, `enabled`,
 `NRestarts=0`; 14 containers running on the host, 11 healthy, 0 unhealthy; each
 of the four HTTP health routes in the Quick reference returned `200`.
+
+**Full stop/start cycle executed 2026-08-06** (evidence:
+`docs/qa/live_systemd_boot_20260806T145857Z/`) — the first pass in which the
+platform was actually torn down and cold-booted rather than observed running.
+Teardown was clean (all six `inactive`, none `failed`, 0 containers, all 18
+documented ports closed). The cold boot converged to all six `active`, 12
+containers, all 18 ports open, and all four health routes `200` — but **not
+cleanly**, and the two headline results below are only visible on a cold boot:
+
+- `helixagent` **hard-failed once and finished with `NRestarts=1`** — the Cognee
+  readiness race, now tracked as HXC-228 (see *Gotchas*).
+- `helixllm-gateway` took **37 minutes** (22:24:54→23:01:52) from `ExecStart` to
+  `server listening addr=0.0.0.0:8443`, reporting `active (running)` throughout —
+  tracked as HXC-231.
+
+A boot that is judged only after it has settled looks perfect; both defects are
+invisible unless the boot itself is watched.
 
 ### Port map
 
@@ -232,6 +249,14 @@ a native user service, and they never announce themselves.
 `active (running)` while `:8443` refuses connections. On a first boot after a
 model-cache wipe that window is **several minutes** long.
 
+**Measured 2026-08-06: 37 minutes** — `ExecStart` 22:24:54, `server listening`
+23:01:52. A `curl` at 22:55 returned `HTTP 000` (connection refused) while
+`systemctl` reported `active (running)` and `ss -ltn` showed nothing on 8443.
+The window is bounded by an *external* dependency (HuggingFace download speed),
+not by anything local: on that run the second model aborted after ~30 minutes
+with `context deadline exceeded`, and had the site been unreachable the gateway
+would arguably never have bound at all. Tracked as HXC-231.
+
 So a green `systemctl --user status` during that window is accurate and
 useless. Probe the port, not the unit state (§11.4.108):
 
@@ -243,6 +268,52 @@ journalctl --user -u helixllm-gateway -f          # watch the download progress
 Raising `TimeoutStartSec` does not help here: the unit is `Type=simple`, so
 systemd considers it started the moment the process forks — it is not waiting
 on readiness at all.
+
+### Every cold boot fails `helixagent` once — the infra oneshot lies about readiness
+
+`helixcode-infra` is `Type=oneshot` running `podman compose up -d`, which returns
+when the containers have been **created**, not when they are **serving**.
+`helixagent` declares `Requires=`/`After=helixcode-infra.service`, so systemd
+considers the dependency satisfied and starts it seconds later — into a window
+where Cognee's port is already forwarded by `rootlessport` but the app behind it
+is not yet accepting. HelixAgent's dependency check is strict and fatal, so it
+exits 1:
+
+```
+❌ DEPENDENCY FAILED  dependency=Cognee
+   error="... read tcp 127.0.0.1:43606->127.0.0.1:8000: read: connection reset by peer"
+level=fatal msg="Application failed" ... BOOT BLOCKED: 1 of 4 mandatory dependencies failed
+helixagent.service: Failed with result 'exit-code'.
+```
+
+`Restart=` recovers it ~16 s later and the retry passes all four checks, so the
+settled state looks perfect. Reproduced identically on 2026-07-27 and on the
+2026-08-06 cold boot. The tell is `NRestarts=1`:
+
+```bash
+systemctl --user show helixagent -p NRestarts   # expect 0; a cold boot gives 1
+```
+
+This self-heals *by luck* — it depends on Cognee winning a race against the
+restart budget. Tracked as HXC-228; the fix is for the infra unit to wait for
+container health rather than for `compose up` to return.
+
+### `systemctl stop helix.target` returns long before the platform is down
+
+All six services declare `PartOf=helix.target`, so stopping the target genuinely
+does propagate — the doc's "bring it all down" is correct in outcome. But the
+propagated stops are **separate jobs that `systemctl` does not wait for**. On
+2026-08-06 `systemctl --user stop helix.target` returned `exit 0` in **11 ms**
+while `helixllm-coder` and `helixllm-gateway` were still `deactivating` and 7
+containers were still running; full quiescence took up to ~2 minutes.
+
+Do not treat the command's exit as teardown-complete — poll for it:
+
+```bash
+systemctl --user stop helix.target
+until [ "$(podman ps -q | wc -l)" -eq 0 ] \
+      && ! systemctl --user is-active --quiet helixagent; do sleep 1; done
+```
 
 ### `podman ps` is not a reachability oracle
 
@@ -302,40 +373,87 @@ ss -ltnp | grep ':<port>'
 
 Recorded honestly rather than papered over (§11.4.6):
 
-- **`distributed_locks` table has no schema.** HelixAgent references it from
-  three Go files but no migration or `.sql` file defines it, so it logs
-  `Error cleaning locks: ERROR: relation "distributed_locks" does not exist
-  (SQLSTATE 42P01)` every 60 s. Still present on 2026-07-28 (15 occurrences in
-  a 30-minute journal window). Non-fatal — the service runs normally. Needs a
-  migration authored by someone who can specify the intended columns; not
-  invented here.
-- **The gateway's tracked unit template is behind its installed copy.**
-  Verified 2026-07-28: the two `Environment=` fixes described under *Gotchas*
-  (`HELIX_REDIS_HOST`/`PORT`, `HELIX_MODELS_DIR`) are present in the installed
-  `~/.config/systemd/user/helixllm-gateway.service` but **absent** from the
-  tracked template `scripts/systemd/helixllm-gateway.service`, which still
-  carries the inert `HELIX_CACHE_REDIS_*` names. The next
-  `scripts/install_systemd_units.sh` run therefore silently reverts both fixes,
-  and a fresh clone never had them — the exact loss the *Unit templating*
-  section warns about. Until the template is updated, the running platform and
-  the repository disagree:
+- **`distributed_locks` and `agent_instances` tables have no schema.** HelixAgent
+  references `distributed_locks` from three Go files but no migration or `.sql`
+  file defines it, so it logs `Error cleaning locks: ERROR: relation
+  "distributed_locks" does not exist (SQLSTATE 42P01)` every 60 s.
+  **Re-verified 2026-08-06 directly against the databases rather than only from
+  the log** — neither table exists in *any* of the three (`postgres`,
+  `helixcode_test`, `helixagent_db`):
 
   ```bash
-  # shows the drift
-  diff <(sed "s|@HELIX_ROOT@|$PWD|g; s|@HELIXLLM_BIN@|$HOME/.local/bin/helixllm|g" \
-          scripts/systemd/helixllm-gateway.service) \
-       ~/.config/systemd/user/helixllm-gateway.service
+  for db in postgres helixcode_test helixagent_db; do
+    podman exec helixcode-infra-postgres psql -U helixcode -d "$db" \
+      -tAc "select to_regclass('public.distributed_locks');"   # → empty in all three
+  done
   ```
 
+  Rate is exactly 60 occurrences per 60 minutes. `agent_instances` is the same
+  class, surfaced once during HelixAgent boot (`relation "agent_instances" does
+  not exist`). Non-fatal — the service runs normally — but the locking feature
+  these tables back is silently inert. Tracked as HXC-232. Still needs a
+  migration authored by someone who can specify the intended columns; not
+  invented here.
 - **`helixllm-gateway` lists no models** — `GET /v1/models` returns
-  `{"object":"list","data":null}` (re-confirmed 2026-07-28) until provider API
+  `{"object":"list","data":null}` (re-confirmed 2026-08-06) until provider API
   keys are configured in `.env`. The API itself works; use `/internal/health`
-  for readiness.
+  for readiness. Note this is now *doubly* explained: no provider keys **and**
+  no local model server (next item).
+- **`llama-server` is not installed on this host at all.** The gateway logs
+  `Failed to start embedded llama-server ... executable file not found in $PATH`
+  on every start. Verified 2026-08-06 that this is **not** a `PATH` problem —
+  no file named `llama-server` exists anywhere under `/usr/local/bin`,
+  `/usr/bin`, `/bin`, `~/.local/bin`, `/opt` or `$HOME`. The gateway
+  nevertheless spends the 37-minute download window fetching a model for it, so
+  the downloaded `.gguf` sits on disk unusable. Tracked as HXC-233.
+- **HelixAgent's MCP plug-in servers fail to build and never start.** On each
+  boot HelixAgent runs `podman-compose ... docker-compose.mcp-servers.yml up -d`,
+  which fails at `RUN pnpm install ... && pnpm -r run build` (and the
+  `@supabase/mcp-server-supabase` build) with `exit status 1`. HelixAgent
+  downgrades this to `Failed to start some MCP servers (local mode)` and
+  continues, so the platform looks healthy while every MCP-provided capability
+  is absent. Observed twice in the 2026-08-06 boot; each attempt also re-pulls
+  `node:22-bookworm-slim`, lengthening every startup. Tracked as HXC-234.
+- **RAG silently degrades to a non-semantic embedder.** The gateway warns that
+  `HELIX_EMBEDDING_PROVIDER` is unset so it is using the `HashEmbedder`, which
+  by its own warning text does "NOT capture semantic similarity". Retrieval
+  keeps answering rather than failing, so degraded results are indistinguishable
+  from good ones at the call site. Tracked as HXC-235.
+- **The gateway runs Gin in `debug` mode** under systemd
+  (`[WARNING] Running in "debug" mode. Switch to "release" mode in production.`).
+  Tracked as HXC-229.
 - **QUIC receive-buffer warning** from `helixllm-gateway`
-  (`failed to sufficiently increase receive buffer size`) — a host sysctl
-  tuning matter (`net.core.rmem_max`), not a service defect. Carried over from
-  an earlier captured run; **not re-observed in the 2026-07-28 pass**, so treat
-  its current presence as unconfirmed.
+  (`failed to sufficiently increase receive buffer size (was: 208 kiB, wanted:
+  7168 kiB, got: 416 kiB)`) — a host sysctl tuning matter (`net.core.rmem_max`),
+  not a service defect. Revision 2 recorded this as *not re-observed* and
+  therefore unconfirmed; it **was re-observed on the 2026-08-06 boot**, so it is
+  now confirmed present.
+
+### Resolved since Revision 2
+
+- **The gateway's tracked unit template has caught up with its installed copy.**
+  Revision 2 recorded that the two `Environment=` fixes (`HELIX_REDIS_HOST`/
+  `PORT`, `HELIX_MODELS_DIR`) were present only in the installed unit and would
+  be silently reverted by the next `install_systemd_units.sh` run. **That gap is
+  closed** — verified 2026-08-06 that the tracked template now carries all nine
+  `Environment=` lines identically, including `HELIX_REDIS_PORT=6380` and
+  `HELIX_MODELS_DIR=%h/models`, and that the inert `HELIX_CACHE_REDIS_*` names
+  are gone. The remaining diff is comment wording only; the units are
+  functionally identical, and all five other units are byte-identical:
+
+  ```bash
+  diff <(sed "s|@HELIX_ROOT@|$PWD|g; s|@HELIXLLM_BIN@|$HOME/.local/bin/helixllm|g" \
+          scripts/systemd/helixllm-gateway.service | grep -vE '^\s*#|^\s*$') \
+       <(grep -vE '^\s*#|^\s*$' ~/.config/systemd/user/helixllm-gateway.service)
+  # → no output
+  ```
+
+  The `Environment=`-name-mismatch fixes described under *Gotchas* are therefore
+  now reproducible from a fresh clone.
+- **Redis reaches the gateway.** Following from the above, the 2026-08-06 boot
+  logged `KV cache: Redis connected` rather than Revision 2's
+  `dial tcp 127.0.0.1:6379: connect: connection refused` / `falling back to
+  in-memory`. The `HELIX_REDIS_PORT=6380` fix is confirmed working at runtime.
 
 ### Resolved since Revision 1
 
@@ -350,6 +468,53 @@ Recorded honestly rather than papered over (§11.4.6):
   configured.
 
 ---
+
+## Sources verified 2026-08-06 (Revision 3)
+
+PRIMARILY INTERNALLY DERIVED, as in Revision 2. What distinguishes this pass:
+Revision 2 explicitly declined to execute any `systemctl` start/stop, so its
+enable/disable and start-ordering claims were read from unit files rather than
+observed. **Revision 3 executed a full stop/start cycle** and every claim added
+above is from that captured run. Verified in this pass:
+
+- **Target propagation, both directions**, by executing
+  `systemctl --user start helix.target` (target went `inactive`→`active` with
+  services already up) then `stop` (all six `PartOf=` members went `inactive`,
+  0 containers, all 18 ports closed) then `start` again from cold.
+- **`PartOf=helix.target` on all six services**, by `systemctl --user show -p
+  PartOf` — this is what makes the documented "stop brings it all down" true,
+  and `WantedBy=` alone would not.
+- **The cold-boot `helixagent` failure**, from the boot-window journal
+  (`--after-cursor`) showing the fatal Cognee check, the systemd restart, and
+  the passing retry, corroborated by `NRestarts=1`.
+- **The 37-minute gateway listener gap**, from its journal timestamps
+  (`ExecStart` → `server listening`) cross-checked against a `curl` returning
+  `HTTP 000` mid-window and `ss -ltn` showing 8443 closed at that moment.
+- **The missing tables**, by `to_regclass()` against all three databases
+  directly, not merely from the error text.
+- **`llama-server` absence**, by `command -v` plus a bounded `find` over the
+  unit's `PATH` directories and `$HOME`.
+- **Template drift closure**, by expanding all six templates and diffing them
+  against the installed copies.
+- **Runtime serving**, by HTTP GETs to all four documented health routes plus
+  `/v1/models` and `/v1/hardware`, a live `psql` query, a Redis
+  `PING`/`SET`/`GET`/`DEL` round-trip, and six infra HTTP probes — all `200` or
+  their protocol equivalent.
+
+Honest boundary (§11.4.6 / §11.4.99(B)): (1) the upstream systemd manual pages
+were again NOT re-fetched, so generic systemd semantics still carry no
+external-currency claim — but the propagation and job-ordering behaviour
+described above is now observed rather than inferred; (2) `enable`/`disable`
+were still not exercised (the units were already enabled and deliberately left
+that way), so those commands remain documented from `[Install]` sections;
+(3) boot-at-host-boot via linger was not tested — that needs a host reboot,
+which is forbidden under CONST-033 / §11.4.133, so the linger chain is verified
+only as far as `Linger=yes` and the two symlink sets; (4) the three postgres
+`FATAL: role/database does not exist` lines in the 2026-08-06 journal are the
+verifying agent's own mis-typed `psql` probes at 23:26/23:37/23:47 local, not
+platform defects, and are excluded from the findings above.
+
+Evidence: `docs/qa/live_systemd_boot_20260806T145857Z/`.
 
 ## Sources verified 2026-07-28 (Revision 2)
 
