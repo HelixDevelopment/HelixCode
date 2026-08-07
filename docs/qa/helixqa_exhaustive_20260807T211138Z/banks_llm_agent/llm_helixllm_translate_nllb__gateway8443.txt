@@ -1,0 +1,16 @@
+### BANK: banks/helixllm_translate_nllb.yaml
+### TARGET: https://127.0.0.1:8443 (HelixLLM gateway, HTTPS self-signed)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixllm_translate_nllb.yaml -base-url https://127.0.0.1:8443 -verbose
+### RUN-UTC: 2026-08-07T21:16:24Z
+---
+    [FAIL] TRA-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject mismatched facts (raw FAIL), case succeeds via --expect-fail inversion: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  TRA-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched facts against the SAME live translation MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] TRA-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when facts genuinely match a real live translation: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  TRA-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct facts against a genuine live translation PASS — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] TRA-UNDERSTAND-001/POST source+langs to the live NLLB shim and fact-match + not-identity check the forward translation: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  TRA-UNDERSTAND-001 NLLB correctly translates en->de and produces a genuine, non-identity forward translation — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] TRA-UNDERSTAND-002/POST source+langs to the live NLLB shim and fact-match + not-identity check the forward translation: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  TRA-UNDERSTAND-002 NLLB correctly translates en->fr and produces a genuine, non-identity forward translation — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/translate": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url https://127.0.0.1:8443)
+### EXIT_CODE=1

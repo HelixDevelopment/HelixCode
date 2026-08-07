@@ -1,0 +1,16 @@
+### BANK: banks/helixllm_rag.yaml
+### TARGET: https://127.0.0.1:8443 (HelixLLM gateway, HTTPS self-signed)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixllm_rag.yaml -base-url https://127.0.0.1:8443 -verbose
+### RUN-UTC: 2026-08-07T21:16:24Z
+---
+    [FAIL] RAG-Q1-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  RAG-Q1-001     RAG retrieves the right doc and grounds the coder to answer with the invented codename — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] RAG-Q2-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  RAG-Q2-001     RAG retrieves the right doc and grounds the coder to answer with the invented sidecar name — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] RAG-SELF-VALIDATE-001-BAD/Golden-bad: no-context RED — analyzer must report the invented token ABSENT (raw FAIL), case succeeds via --expect-fail inversion: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  RAG-SELF-VALIDATE-001-BAD Self-validation golden-bad: no-context RED means the coder cannot produce the invented token — MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] RAG-SELF-VALIDATE-001-GOOD/Golden-good: grounded pipeline must PASS (retrieval correct + invented token present): http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  RAG-SELF-VALIDATE-001-GOOD Self-validation golden-good: full grounded pipeline PASSes — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url https://127.0.0.1:8443)
+### EXIT_CODE=1

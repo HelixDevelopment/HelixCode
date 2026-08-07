@@ -1,0 +1,14 @@
+### BANK: banks/helixllm_embeddings.yaml
+### TARGET: https://127.0.0.1:8443 (HelixLLM gateway, HTTPS self-signed)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixllm_embeddings.yaml -base-url https://127.0.0.1:8443 -verbose
+### RUN-UTC: 2026-08-07T21:16:24Z
+---
+    [FAIL] EMB-MARGIN-001/POST the sentence triple to the live TEI endpoint; assert semantic-order cosine margin: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  EMB-MARGIN-001 TEI serves real embeddings whose related-pair cosine out-scores an unrelated pair — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] EMB-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject the inverted ordering (raw FAIL), case succeeds via --expect-fail inversion: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  EMB-SELF-VALIDATE-001-BAD Self-validation golden-bad: swapped (inverted-ordering) triple MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] EMB-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when the semantic ordering is correct: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  EMB-SELF-VALIDATE-001-GOOD Self-validation golden-good: correctly-ordered triple against real embeddings PASS — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/embeddings": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+HTTP bank summary: 3 cases — 0 PASS, 3 FAIL, 0 SKIP  (base-url https://127.0.0.1:8443)
+### EXIT_CODE=1

@@ -1,0 +1,21 @@
+### CONTROL RUN — isolates URL-mangling from TLS
+### BANK: banks/helixllm_coder.yaml
+### TARGET: http://127.0.0.1:18434 (llama-server coder, PLAIN HTTP — no TLS in the path)
+### PURPOSE: if failures persist with plain HTTP, TLS is NOT the only cause
+### RUN-UTC: 2026-08-07T21:16:43Z
+---
+    [ok]   COD-GEN-NONCE-001/POST /v1/chat/completions with a nonce prompt — the response MUST contain the exact nonce string and differ from the prompt: http: POST /http://localhost:18434/v1/chat/completions → 404 (74B)
+PASS  COD-GEN-NONCE-001 Coder /v1/chat/completions returns a genuine completion containing the expected nonce (1/1 http steps)
+    [ok]   COD-GEN-SELF-VALIDATE-001-BAD/Golden-bad: analyzer MUST reject mismatched nonce (raw FAIL), case succeeds via --expect-fail inversion: http: POST /http://localhost:18434/v1/chat/completions → 404 (74B)
+PASS  COD-GEN-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched nonce against the SAME live coder answer MUST FAIL raw, case succeeds via --expect-fail (1/1 http steps)
+    [ok]   COD-GEN-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when the nonce genuinely matches the real coder response: http: POST /http://localhost:18434/v1/chat/completions → 404 (74B)
+PASS  COD-GEN-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct nonce against a genuine live coder answer PASS (1/1 http steps)
+    [ok]   COD-LIST-MODELS-001/GET /v1/models — the response MUST list the real deployed model id as a substring match to --expect: http: GET /http://localhost:18434/v1/models → 404 (74B)
+PASS  COD-LIST-MODELS-001 Coder /v1/models returns the real deployed model list (1/1 http steps)
+    [ok]   COD-RED-NOAUTH-SKIP-001/POST /v1/chat/completions with NO Authorization header — MUST return 200 with the nonce in content: http: POST /http://localhost:18434/v1/chat/completions → 404 (74B)
+PASS  COD-RED-NOAUTH-SKIP-001 A request with NO auth to the coder (auth is N/A — local loopback) succeeds and returns real content (1/1 http steps)
+    [ok]   COD-RED-UNREACHABLE-001/Attempt to connect to :18433 (no service listening) — MUST fail: http: POST /http://localhost:18433/v1/chat/completions → 404 (74B)
+PASS  COD-RED-UNREACHABLE-001 A request to the coder's port :18433 (nothing listening) MUST fail with connection refused or timeout (1/1 http steps)
+
+HTTP bank summary: 6 cases — 6 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:18434)
+### EXIT_CODE=0

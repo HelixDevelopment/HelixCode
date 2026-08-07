@@ -1,0 +1,13 @@
+### BANK: banks/helixagent-agentic-subagents.yaml
+### TARGET: http://127.0.0.1:7061 (HelixAgent, plain HTTP)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixagent-agentic-subagents.yaml -base-url http://127.0.0.1:7061 -verbose
+### RUN-UTC: 2026-08-07T21:16:33Z
+---
+    [FAIL] HXC-AGS-001/POST /v1/chat/completions decompose-and-execute prompt: http: POST /v1/chat/completions → status 502, expected 200 (body: {"error":{"code":"PROVIDER_ERROR","message":"Provider unknown failed","type":"provider_error"}})
+FAIL  HXC-AGS-001    Live agentic execute flow returns agents_spawned>=2 + 7 canonical stages — 1/1 http steps failed: http: POST /v1/chat/completions → status 502, expected 200 (body: {"error":{"code":"PROVIDER_ERROR","message":"Provider unknown failed","type":"provider_error"}})
+SKIP  HXC-AGS-002    TUI/ensemble recording: agentic execute metadata (mode=execute + stages + agents_spawned) rendered on screen (no http: steps)
+    [FAIL] HXC-AGS-003/POST /v1/chat/completions reason/debate prompt: http: POST /v1/chat/completions → status 502, expected 200 (body: {"error":{"code":"PROVIDER_ERROR","message":"Provider unknown failed","type":"provider_error"}})
+FAIL  HXC-AGS-003    NEGATIVE: a reason/debate response (0 agents, no execute stages) MUST NOT satisfy the execute predicate — 1/1 http steps failed: http: POST /v1/chat/completions → status 502, expected 200 (body: {"error":{"code":"PROVIDER_ERROR","message":"Provider unknown failed","type":"provider_error"}})
+
+HTTP bank summary: 3 cases — 0 PASS, 2 FAIL, 1 SKIP  (base-url http://127.0.0.1:7061)
+### EXIT_CODE=1

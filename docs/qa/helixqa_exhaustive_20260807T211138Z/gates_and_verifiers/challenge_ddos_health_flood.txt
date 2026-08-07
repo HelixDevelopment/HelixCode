@@ -1,0 +1,28 @@
+=== HelixQA DDoS Health-Flood Challenge (anti-bluff per CONST-035) ===
+  target health URL:  http://localhost:8081/health
+  total requests:     500
+  concurrency:        50
+  pass threshold:     ≥95%
+
+[1/5] Pre-flood probe — HelixQA must be reachable...
+  PASS: pre-flood probe HTTP 200
+
+[2/5] Schema sanity — real body, not empty 200...
+  PASS: pre-flood body has valid status field
+
+[3/5] Flooding http://localhost:8081/health with 500 reqs at concurrency 50...
+  total:    500
+  HTTP 200: 500
+  pass:     100% (threshold ≥95%)
+  non-200:  none
+  wall:     0.320s
+  p50/p95/p99: 0.000393s / 0.000645s / 0.000767s
+
+[4/5] Threshold gate...
+  PASS: pass rate 100% ≥ 95%
+
+[5/5] Post-flood liveness probe...
+  PASS: post-flood HTTP 200 — service stable
+
+=== HelixQA DDoS Challenge: PASSED ===
+  evidence: reqs=500 ok=500 pct=100% wall=0.320s p50=0.000393s p95=0.000645s p99=0.000767s

@@ -1,0 +1,16 @@
+### BANK: banks/helixllm_tesseract.yaml
+### TARGET: https://127.0.0.1:8443 (HelixLLM gateway, HTTPS self-signed)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixllm_tesseract.yaml -base-url https://127.0.0.1:8443 -verbose
+### RUN-UTC: 2026-08-07T21:16:24Z
+---
+    [FAIL] OCR-GOOD-001/Render known text -> OCR the rendered PNG -> token-match + confidence-floor the recognized text: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  OCR-GOOD-001   Tesseract genuinely recovers a known rendered label (fixture 1) — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] OCR-GOOD-002/Render known text -> OCR the rendered PNG -> token-match + confidence-floor the recognized text: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  OCR-GOOD-002   Tesseract genuinely recovers a known rendered label (fixture 2) — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] OCR-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject mismatched tokens (raw FAIL), case succeeds via --expect-fail inversion: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  OCR-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched tokens against the SAME live OCR result MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] OCR-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when tokens genuinely match a real OCR result: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  OCR-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct tokens against a genuine live OCR result PASS — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/render": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url https://127.0.0.1:8443)
+### EXIT_CODE=1

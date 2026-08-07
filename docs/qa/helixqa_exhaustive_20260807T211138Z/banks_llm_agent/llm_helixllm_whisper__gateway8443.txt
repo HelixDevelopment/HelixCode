@@ -1,0 +1,16 @@
+### BANK: banks/helixllm_whisper.yaml
+### TARGET: https://127.0.0.1:8443 (HelixLLM gateway, HTTPS self-signed)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixllm_whisper.yaml -base-url https://127.0.0.1:8443 -verbose
+### RUN-UTC: 2026-08-07T21:16:24Z
+---
+    [FAIL] STT-FOX-001/POST fox.wav to the live Whisper STT endpoint and word-match the transcript: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  STT-FOX-001    Whisper correctly recovers the known 'fox' sentence from synthesized audio — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] STT-HELLOWORLD-001/POST helloworld.wav to the live Whisper STT endpoint and word-match (digit/number-word canonicalized): http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  STT-HELLOWORLD-001 Whisper correctly recovers the known 'hello world' + spoken-number sentence — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] STT-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject mismatched words (raw FAIL), case succeeds via --expect-fail inversion: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  STT-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched words against the SAME live transcript MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] STT-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when words genuinely match a real live transcript: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  STT-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct words against a genuine live transcript PASS — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/audio/transcriptions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url https://127.0.0.1:8443)
+### EXIT_CODE=1

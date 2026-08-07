@@ -1,0 +1,12 @@
+    [ok]   HXC-MCP-001/GET /api/v1/server/info mcp_enabled: http: GET /api/v1/server/info → 200 (375B)
+PASS  HXC-MCP-001    Server info advertises an mcp_enabled feature flag (1/1 http steps)
+    [FAIL] HXC-MCP-002/GET /ws without Upgrade headers: http: GET /ws → status 401, expected 400 (body: {"error":{"message":"missing or invalid API key: provide 'Authorization: Bearer \u003ckey\u003e' or 'x-api-key: \u003ckey\u003e' before opening the /ws connection","type":"authentication_error"}})
+FAIL  HXC-MCP-002    MCP WebSocket route /ws rejects a non-upgrade GET with 400 — 1/1 http steps failed: http: GET /ws → status 401, expected 400 (body: {"error":{"message":"missing or invalid API key: provide 'Authorization: Bearer \u003ckey\u003e' or 'x-api-key: \u003ckey\u003e' before opening the /ws connection","type":"authentication_error"}})
+    [FAIL] HXC-MCP-003/GET /ws is a registered route: http: GET /ws → status 401, expected 400 (body: {"error":{"message":"missing or invalid API key: provide 'Authorization: Bearer \u003ckey\u003e' or 'x-api-key: \u003ckey\u003e' before opening the /ws connection","type":"authentication_error"}})
+FAIL  HXC-MCP-003    MCP route is mounted (not a 404) — 1/1 http steps failed: http: GET /ws → status 401, expected 400 (body: {"error":{"message":"missing or invalid API key: provide 'Authorization: Bearer \u003ckey\u003e' or 'x-api-key: \u003ckey\u003e' before opening the /ws connection","type":"authentication_error"}})
+    [ok]   HXC-MCP-004/GET /ws_does_not_exist: http: GET /wsnonexistent_mcp_route → 404 (18B)
+PASS  HXC-MCP-004    Unknown websocket-style route still 404s (route table is honest) (1/1 http steps)
+SKIP  HXC-MCP-005    Full MCP JSON-RPC protocol handshake over WebSocket (no http: steps)
+SKIP  HXC-MCP-006    MCP tool invocation produces a real tool result (not simulated) (no http: steps)
+
+HTTP bank summary: 6 cases — 2 PASS, 2 FAIL, 2 SKIP  (base-url http://127.0.0.1:8081)

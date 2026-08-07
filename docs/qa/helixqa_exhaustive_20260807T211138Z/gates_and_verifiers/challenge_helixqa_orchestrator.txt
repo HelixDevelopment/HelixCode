@@ -1,0 +1,34 @@
+=== helixqa_orchestrator_challenge (anti-bluff per CONST-035 + §11.4) ===
+  root:    /home/milos/Factory/projects/tools_and_research/helix_code/submodules/helix_qa
+  workdir: /tmp/.private/milos/helixqa_orchestrator_challenge.j1pYDT
+
+[1/8] helixqa binary builds + subcommands present
+  [PASS] subcommand advertised: run
+  [PASS] subcommand advertised: list
+  [PASS] subcommand advertised: report
+  [PASS] subcommand advertised: version
+  [PASS] subcommand advertised: autonomous
+
+[2/8] helixqa version returns non-empty string
+  [PASS] version output: helixqa v0.2.0
+
+[3/8] helixqa list against real banks/ — floor 30
+  [PASS] list parsed; YAML inventory floor: 129 banks on disk
+
+[4/8] paired-mutation — malformed bank YAML MUST be surfaced
+  [PASS] broken YAML surfaced (rc=1; evidence captured)
+
+[5/8] report round-trip — PASS + FAIL must both appear
+  [SKIP-OK: report-subcommand-not-implemented] report exited rc=1 — subcommand not yet wired
+
+[6/8] i18n round-trip — registered strings resolve
+  [SKIP-OK: i18n-yaml-count-low] found 0 keys (under round-214 floor of 20-25)
+
+[7/8] anti-bluff vocab scan — cmd/helixqa/*.go (non-_test)
+  [PASS] no forbidden-vocab hits in production cmd/helixqa/ source
+
+[8/8] secret-leak gate — cmd/helixqa/ tree (CONST-042)
+  [PASS] no API-token-shape literals in cmd/helixqa/
+
+=== helixqa_orchestrator_challenge summary ===
+  ALL 8 PHASES PASSED (or honest SKIP-OK with reason)

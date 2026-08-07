@@ -1,0 +1,18 @@
+### BANK: banks/helixllm_coder_memory.yaml
+### TARGET: https://127.0.0.1:8443 (HelixLLM gateway, HTTPS self-signed)
+### CMD: env GOMAXPROCS=9 ./bin/helixqa http -bank banks/helixllm_coder_memory.yaml -base-url https://127.0.0.1:8443 -verbose
+### RUN-UTC: 2026-08-07T21:16:24Z
+---
+    [FAIL] MEMORY-GC-001/Send 200 sequential POST /v1/chat/completions; sample RSS every 10 requests; assert GC-stability: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  MEMORY-GC-001  200 sequential coder requests — RSS stable in second half (GC-point stability) — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] MEMORY-MONO-001/Send 200 sequential POST /v1/chat/completions; sample RSS every 10 requests; assert monotonic-no-leak: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  MEMORY-MONO-001 200 sequential coder requests — final RSS within 15% of initial (no monotonic leak) — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] MEMORY-SELF-VALIDATE-001-BAD/Golden-bad: -1% leak-pct ensures MONOTONIC-NO-LEAK is FALSE — analyzer correctly reports pass=false: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  MEMORY-SELF-VALIDATE-001-BAD Self-validation golden-bad: negative leak-pct (-1%) — MONOTONIC always fails, case_result OK via --expect-fail — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] MEMORY-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when all three assertions pass against a healthy coder: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  MEMORY-SELF-VALIDATE-001-GOOD Self-validation golden-good: moderate soak (20 req, 5 interval) against healthy coder PASS — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+    [FAIL] MEMORY-STEADY-001/Send 200 sequential POST /v1/chat/completions; sample RSS every 10 requests; assert RSS plateau: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+FAIL  MEMORY-STEADY-001 200 sequential coder requests — RSS plateaus in final 5 samples (steady state) — 1/1 http steps failed: http: request failed: Post "https://127.0.0.1:8443/v1/chat/completions": tls: failed to verify certificate: x509: certificate signed by unknown authority
+
+HTTP bank summary: 5 cases — 0 PASS, 5 FAIL, 0 SKIP  (base-url https://127.0.0.1:8443)
+### EXIT_CODE=1
