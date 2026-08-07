@@ -1,8 +1,123 @@
 # RESUME — HelixCode Session Handoff
 
-**Revision:** 11
+**Revision:** 12
 **Created:** 2026-07-08
-**Last modified:** 2026-08-01T00:05Z (rev 11 — everything committed and published; safe to leave)
+**Last modified:** 2026-08-07T19:20Z (rev 12 — live-boot cycle done, 5 defects fixed, 4 decisions taken)
+
+---
+
+## ▶ START HERE (Revision 12) — paste this into a fresh session
+
+> Read `RESUME.md` (this file) then `git fetch --all --prune`. Main repo is at
+> `7997a66b`, **0 unpushed**, tree clean apart from 3 submodule pointers.
+> The platform is **UP and healthy** — 6/6 systemd units, 12 containers,
+> `helixagent NRestarts=0`. Continue the burn-down: **43 open, 0 Critical**.
+> Four operator decisions were taken this session and three are half-executed —
+> **resume those first** (see "In flight" below). The release tag stays blocked
+> on §11.4.185 manual QA and two credential rotations, both operator-only.
+
+### Verified state at close
+
+| | |
+|---|---|
+| main repo | `7997a66b` — 0 unpushed, all 4 remotes MATCH |
+| tracker | **432 items, 43 open** — 0 Critical, 7 High, 13 Medium, 16 Low, 0 unset |
+| platform | 6/6 units active, 12 containers, gateway + agent both HTTP 200 |
+| `submodules/containers` | HEAD `11280cc`, **1 unpushed**, clean; merge aborted |
+| `submodules/helix_agent` | `e81a474a`, published |
+
+### In flight — resume these first
+
+1. **containers merge (operator chose "merge upstream, then bump").** 136 commits
+   behind. A merge was opened and **aborted cleanly** — HEAD `11280cc` equals its
+   §9.2 backup `refs/backup/hxc218_premerge_20260807T150350Z`, so nothing was
+   lost. **The hard part is already known:** upstream fixed the SAME IPv6 defect
+   concurrently using `net.JoinHostPort(unbracketHost(host), ep.Port)`, which
+   brackets on ANY colon and turns a scheme-bearing Host into
+   `[https://secure.local]:8080`. Ours (`netaddr.BracketHost`) brackets only what
+   `net.ParseIP` confirms and also handles zones and v4-mapped. Resolve toward
+   ours. The `go` directive did NOT move (still `go 1.25.0`) — HXC-236 intact.
+
+   **The 136 commits are surveyed — read this before resolving.** 312 files,
+   +36,573/−1,861. **125 of 136 (92%) are `fix`/`hardening` against shipped
+   code**, not features — a defect-remediation campaign, so treat behaviour
+   changes as intentional. `go.mod`/`go.sum`: **zero changes**. `internal/`:
+   untouched. The two commits that collide with ours are
+   `6158d9b` ("bracketed IPv6 host no longer double-wrapped + IsLocalEndpoint
+   recognizes `[::1]`") and `f810e6d` ("IPv6 host:port + scheme agreement +
+   additive Validate") — so upstream solved the same problem, less completely.
+   **Consumer-visible behaviour changes to expect:** `CheckHTTP` now treats 4xx
+   as UNHEALTHY (`d21f0d8` — a 401/403/404/429 health endpoint will flip);
+   `Timeout<=0` clamped to 5s instead of an always-expired context (`bc48e52`);
+   redirects no longer silently followed (`672e65d`); `serviceregistry.Discover`
+   returns a **copy**, breaking any caller relying on pointer aliasing
+   (`ab146b4`); `envconfig` surfaces invalid-but-set values as errors instead of
+   defaulting (`90cb2f9`); scheduler tie-breaks now deterministic. One rename
+   risk: `upstreams/{GitHub,GitLab,VasicDigitalGitHub,VasicDigitalGitLab}.sh` →
+   lowercase (`df980b3`, R100) — grep the parent tree for literal old paths.
+2. **Doc export (operator chose "export everything, no exclusions").** Work set
+   309 docs (Tier A 1, B 205, C 103) — frozen snapshot at `scratchpad/tierB.txt`.
+   **Open question for the operator:** a further **131 gaps under `helix_code/`
+   at depth ≥2** (78 `internal/`, 28 `tests/`, 8 `scratchpad/`) were in no tier;
+   under "no exclusions" they arguably belong. Not folded in silently.
+   A content verifier with a control-needle self-test exists: `ba6dcd19`.
+3. **HXC-225 GitMCP (operator chose "investigate first").** Part 1 committed
+   (`4664e384`). Established: verbatim vendored copy of upstream `idosal/git-mcp`;
+   **we already consume the same upstream properly** as submodule
+   `cli_agents/git-mcp`; **not reachable** from anything we ship; its Dockerfile
+   was **never written** (11 of 12 `mcp-servers/*` services are identically
+   unbuildable). Remaining: advisory breakdown by package/severity, then a
+   recommendation. Working direction is remove-the-duplicate, but §11.4.122
+   requires the operator's explicit yes before any removal.
+4. **HXC-234 fix not yet applied.** Root cause fully established: Dockerfiles use
+   `corepack prepare pnpm@latest --activate` — **unpinned** — and pnpm 11.20.0
+   makes `ERR_PNPM_IGNORED_BUILDS` fatal at install. Fix is ours to make
+   (`docker/mcp/Dockerfile.mcp-{supabase,context7}`), never the third-party
+   submodules. Pin pnpm, or add a non-interactive allow-list.
+
+### What this session actually proved
+
+- **HXC-228 verified live**: full-target cold boot after installing the units —
+  **all six units `NRestarts=0`**, where the baseline was a guaranteed crash
+  every boot. Evidence `6d8a4920`.
+- **HXC-229 verified live**: gateway now release-mode — 0 `GIN-debug` lines
+  (was 84) AND still serving `200` on `https://localhost:8443/internal/health`.
+- **4 items closed on re-verified evidence** (HXC-221/222/223/228); every guard
+  gave *different* results at the two polarities, so none is blind.
+- **4 closures REFUSED**, and two of those refusals found real defects:
+  HXC-218's pinned submodule **does not contain the fix** (guards pass only via
+  a `replace` directive to the local worktree — a fresh clone builds pre-fix
+  code); HXC-217's **shipped binary predates its own guard by 10 days** and
+  returns exit 0 where source returns exit 1. Filed as **HXC-237 (High)**.
+
+### Traps this session paid for — do not re-learn
+
+- **`url.Parse` behaves differently per module.** `helix_code` (go 1.26) rejects
+  unbracketed IPv6; `submodules/containers` (go 1.25.0) accepts it. Same
+  toolchain, same input. A measurement is only valid in the module you ran it in.
+- **My GOMAXPROCS root cause for agent stalls was WRONG** and is corrected in
+  `918f969c`. Transcript size *inversely* predicted death; all stalls occurred
+  mid-sentence, never mid-command. The cgroup finding itself is real (8.6 CPUs vs
+  `nproc` 64) and the Makefile fix stays — it just does not explain the stalls.
+  What mitigates them is respawn-with-preserved-work per §11.4.147.
+- **A stalled agent usually died with real work done.** HXC-229's had traced the
+  root cause, chosen the fix layer, applied it and captured RED — only the last
+  verification was missing. Finish the sentence; do not restart.
+- Postgres creds are **`helixcode` / `helixcode_test`**. Gateway is **HTTPS** on
+  `:8443`. `helixllm-coder` holds a **30B model — do not restart it**.
+- `stop helix.target` returns **exit 0 in under a second** while teardown
+  continues; genuine quiescence took 20s. Wait on observed state, not the code.
+
+### Release blockers — both operator-only
+
+1. **§11.4.185 manual QA** — cannot be self-certified.
+2. **Two published credentials**: HXC-227 (live provider API key, 48 days on four
+   remotes) and HXC-168 (DB password, 271 days). Operator chose *document and
+   defer*. The guard against NEW secrets **already exists and works** — I proved
+   it blocks both a random `sk-` value and the real content. Rotation remains the
+   only action that withdraws the existing two.
+
+---
 **Status:** active
 **Maintainer:** CLI-agent main work stream
 **Authority:** §11.4.131 Session-resumption file — point a fresh agent here. Composes §11.4.127 / §12.10 / §11.4.65 / §11.4.44.
