@@ -1,0 +1,61 @@
+# DDL-vs-code column reconciliation (the decisive check)
+date: 2026-08-07T17:01:20Z
+
+## distributed_locks: committed DDL MATCHES code exactly
+DDL source: internal/database/migrations/015_ensemble_synchronization.sql
+CREATE TABLE IF NOT EXISTS distributed_locks (
+    -- Lock name; caller-supplied identifier. PK because of ON CONFLICT (name).
+    name        VARCHAR(255) PRIMARY KEY,
+
+    -- Fencing token: "<node_id>-<UnixNano>" (manager.go:98). Release (:168) and
+    -- renew (:371) both match on it so a node cannot release/renew a lock that
+    -- was reclaimed by another node after expiry.
+    owner       VARCHAR(255) NOT NULL,
+
+    -- Owning node. Arbitrary string, see note above.
+    node_id     VARCHAR(255) NOT NULL,
+
+    -- Set to NOW() by both the INSERT and the ON CONFLICT DO UPDATE branch.
+    acquired_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    -- TTL horizon; compared against NOW() by the acquire, list, and cleanup
+    -- paths, and rewritten by the renewal goroutine (manager.go:375-410).
+    expires_at  TIMESTAMP WITH TIME ZONE NOT NULL
+);
+code INSERT columns (manager.go:104): name, owner, node_id, expires_at, acquired_at
+PK on name  -> required by ON CONFLICT (name). PRESENT.
+VERDICT: DDL is correct and safe to apply. No invention needed.
+
+## agent_instances: NO valid DDL EXISTS
+-- search for a CREATE TABLE named agent_instances:
+   NONE FOUND (repo-wide)
+
+-- nearest artefact is a DIFFERENT table, sql/001_cli_agents_fusion.sql:
+CREATE TABLE cli_agent_instances (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type VARCHAR(50) NOT NULL, -- aider, claude_code, codex, cline, openhands, kiro, continue
+    status VARCHAR(20) NOT NULL DEFAULT 'idle',
+    config JSONB NOT NULL DEFAULT '{}',
+    session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_heartbeat TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}'
+);
+
+-- columns the LIVE code requires (INSERT :544 and SELECT :583, identical set):
+   id, agent_type, instance_name, status, config, provider_config,
+   max_memory_mb, max_cpu_percent, current_session_id, current_task_id,
+   health_status, requests_processed, errors_count, total_execution_time_ms,
+   created_at, updated_at          (16 columns; ON CONFLICT (id) => PK on id)
+
+-- overlap with cli_agent_instances: id, status, config, created_at, updated_at (5 of 16)
+-- MISSING from every committed artefact (11): agent_type, instance_name,
+   provider_config, max_memory_mb, max_cpu_percent, current_session_id,
+   current_task_id, health_status, requests_processed, errors_count,
+   total_execution_time_ms
+
+VERDICT: applying 001_cli_agents_fusion.sql would create cli_agent_instances
+and fix NOTHING. Authoring an agent_instances DDL would be INVENTING schema
+for a feature whose persistence layer was never authored. DO NOT GUESS.

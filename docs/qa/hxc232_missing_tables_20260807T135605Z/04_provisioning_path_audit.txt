@@ -1,0 +1,45 @@
+# Provisioning-path audit: every candidate is unwired
+date: 2026-08-07T16:19:43Z
+
+## 1. RunMigration() production callers
+.cleanup-backups/database-compat-backup.go:229:func RunMigration(db *PostgresDB, migrations []string) error {
+internal/adapters/database/compat.go:235:func RunMigration(db *PostgresDB, migrations []string) error {
+internal/database/db.go:229:func RunMigration(db *PostgresDB, migrations []string) error {
+-> all hits are DEFINITIONS. Zero call sites.
+
+## 2. go:embed for helix_agent's own migrations
+MCP/submodules/registry/internal/database/migrate.go:17://go:embed migrations/*.sql
+-> only MCP/submodules/registry (nested vendor module). helix_agent core: none.
+
+## 3. internal/database/migrations/*.sql on disk
+001_initial_schema.sql
+002_modelsdev_integration.sql
+003_protocol_support.sql
+011_background_tasks.sql
+012_performance_indexes.sql
+013_materialized_views.sql
+014_debate_logs.sql
+015_ensemble_synchronization.sql
+-> 015_ensemble_synchronization.sql defines distributed_locks; never executed.
+
+## 4. sql/001_cli_agents_fusion.sql (defines agent_instances)
+scripts/rebuild_and_test.sh:257:        "sql/001_cli_agents_fusion.sql"
+-> sole reference is an existence check in step9_docs (REQUIRED_DOCS), not an apply.
+
+## 5. COMPLETE_SQL_SCHEMA.sql (shape matches live helixagent_db)
+CREATE TABLE count: 20
+contains distributed_locks/agent_instances: 0
+referenced by (non-doc):
+docs/archive/status-history/COMPLETION_PLAN_README.md
+docs/archive/status-history/CURRENT_STATUS_AND_NEXT_STEPS.md
+docs/superpowers/plans/2026-04-14-comprehensive-audit-completion-optimization.md
+specs/001-project-comprehensive-audit/plan.md
+
+## 6. Consumers
+NewSyncManager production callers:
+internal/ensemble/synchronization/manager.go:65:func NewSyncManager(db *sql.DB, logger *log.Logger, nodeID string) *SyncManager {
+-> definition only. SyncManager NEVER constructed => whole lock API unreachable.
+NewInstanceManager production callers:
+internal/router/router.go:1286:		ensembleInstanceMgr, ensembleInstanceMgrErr := clis.NewInstanceManager(ensembleSQLDB, nil)
+internal/clis/instance_manager.go:59:func NewInstanceManager(db *sql.DB, logger *log.Logger) (*InstanceManager, error) {
+-> router.go:1286 => InstanceManager IS live.
