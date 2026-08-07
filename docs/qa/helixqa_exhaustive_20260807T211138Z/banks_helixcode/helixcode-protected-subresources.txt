@@ -1,0 +1,14 @@
+    [ok]   HXC-SUB-001/GET /api/v1/tasks/:id/checkpoints without auth: http: GET /api/v1/tasks/00000000-0000-0000-0000-000000000000/checkpoints → 401 (60B)
+PASS  HXC-SUB-001    Task checkpoints list requires auth (401) (1/1 http steps)
+    [ok]   HXC-SUB-002/GET /api/v1/projects/:id/sessions without auth: http: GET /api/v1/projects/00000000-0000-0000-0000-000000000000/sessions → 401 (60B)
+PASS  HXC-SUB-002    Project sessions list requires auth (401) (1/1 http steps)
+    [ok]   HXC-SUB-003/GET task checkpoints with malformed Authorization: http: GET /api/v1/tasks/00000000-0000-0000-0000-000000000000/checkpoints → 401 (66B)
+PASS  HXC-SUB-003    Bad auth header format on task checkpoints returns 401 (1/1 http steps)
+    [ok]   HXC-SUB-004/GET project sessions with a bogus bearer token: http: GET /api/v1/projects/00000000-0000-0000-0000-000000000000/sessions → 401 (110B)
+PASS  HXC-SUB-004    Invalid bearer token on project sessions returns 401 (1/1 http steps)
+    [FAIL] HXC-SUB-005/GET /api/v1/tasks/:unknown/checkpoints as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-SUB-005    Authenticated task checkpoints on unknown id (booted+seeded server) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+    [FAIL] HXC-SUB-006/GET /api/v1/projects/:unknown/sessions as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-SUB-006    Authenticated project sessions on unknown id (booted+seeded server) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+
+HTTP bank summary: 6 cases — 4 PASS, 2 FAIL, 0 SKIP  (base-url http://127.0.0.1:8081)

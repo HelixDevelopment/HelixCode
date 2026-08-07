@@ -1,0 +1,13 @@
+    [ok]   HXC-STATIC-001/GET an unregistered top-level path: http: GET /this_top_level_path_does_not_exist_hxc_static → 404 (18B)
+PASS  HXC-STATIC-001 Unknown top-level path returns 404 (route table is honest) (1/1 http steps)
+    [ok]   HXC-STATIC-002/GET a nonexistent static asset: http: GET /static/this_asset_does_not_exist_hxc.js → 404 (0B)
+PASS  HXC-STATIC-002 Unknown path under /static returns 404 (1/1 http steps)
+    [ok]   HXC-STATIC-003/GET /health (coexists with StaticFile /): http: GET /health → 200 (83B)
+PASS  HXC-STATIC-003 Root health endpoint is reachable alongside the static index route (1/1 http steps)
+    [ok]   HXC-STATIC-004/GET an unknown path under /api/v1/llm: http: GET /api/v1/llm/this_subroute_does_not_exist_hxc → 404 (18B)
+PASS  HXC-STATIC-004 Unknown deep API path under a real group still 404s (1/1 http steps)
+    [FAIL] HXC-STATIC-005/GET /ws without Upgrade headers: http: GET /ws → status 401, expected 400 (body: {"error":{"message":"missing or invalid API key: provide 'Authorization: Bearer \u003ckey\u003e' or 'x-api-key: \u003ckey\u003e' before opening the /ws connection","type":"authentication_error"}})
+FAIL  HXC-STATIC-005 WebSocket route /ws is registered (non-upgrade GET is not a 404) — 1/1 http steps failed: http: GET /ws → status 401, expected 400 (body: {"error":{"message":"missing or invalid API key: provide 'Authorization: Bearer \u003ckey\u003e' or 'x-api-key: \u003ckey\u003e' before opening the /ws connection","type":"authentication_error"}})
+SKIP  HXC-STATIC-006 Favicon route is registered, not an arbitrary 404 catch-all (no http: steps)
+
+HTTP bank summary: 6 cases — 4 PASS, 1 FAIL, 1 SKIP  (base-url http://127.0.0.1:8081)

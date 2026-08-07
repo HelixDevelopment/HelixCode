@@ -1,0 +1,24 @@
+    [ok]   HXC-QASS-001/POST /api/v1/qa/session without auth: http: POST /api/v1/qa/session → 401 (60B)
+PASS  HXC-QASS-001   Start QA session requires auth (401) (1/1 http steps)
+    [ok]   HXC-QASS-002/GET /api/v1/qa/session/:id/status without auth: http: GET /api/v1/qa/session/00000000-0000-0000-0000-000000000000/status → 401 (60B)
+PASS  HXC-QASS-002   QA session status requires auth (401) (1/1 http steps)
+    [ok]   HXC-QASS-003/GET /api/v1/qa/session/:id/report without auth: http: GET /api/v1/qa/session/00000000-0000-0000-0000-000000000000/report → 401 (60B)
+PASS  HXC-QASS-003   QA session report requires auth (401) (1/1 http steps)
+    [ok]   HXC-QASS-004/GET /api/v1/qa/session/:id/screenshot/:name without auth: http: GET /api/v1/qa/session/00000000-0000-0000-0000-000000000000/screenshot/dashboard → 401 (60B)
+PASS  HXC-QASS-004   QA session screenshot requires auth (401) (1/1 http steps)
+    [ok]   HXC-QASS-005/DELETE /api/v1/qa/session/:id without auth: http: DELETE /api/v1/qa/session/00000000-0000-0000-0000-000000000000 → 401 (60B)
+PASS  HXC-QASS-005   Cancel QA session requires auth (401) (1/1 http steps)
+    [ok]   HXC-QASS-006/GET /api/v1/screenshot/:platform without auth: http: GET /api/v1/screenshot/linux → 401 (60B)
+PASS  HXC-QASS-006   Standalone screenshot capture requires auth (401) (1/1 http steps)
+    [FAIL] HXC-QASS-007/GET /api/v1/screenshot/engines as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-QASS-007   Authenticated screenshot engines list (booted server, engine enabled) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+    [FAIL] HXC-QASS-008/GET /api/v1/qa/sessions as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-QASS-008   Authenticated QA sessions list (booted server, engine enabled) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+    [FAIL] HXC-QASS-009/GET /api/v1/qa/session/:unknown/status as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-QASS-009   Authenticated status of an unknown QA session returns 404 (booted server) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+    [FAIL] HXC-QASS-010/POST /api/v1/qa/session as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-QASS-010   Authenticated start QA session creates a session (booted server, engine enabled) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+    [FAIL] HXC-QASS-011/POST /api/v1/qa/session with no banks as admin: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+FAIL  HXC-QASS-011   Authenticated start QA session with empty banks returns 400 (booted server) — 1/1 http steps failed: http: auth failed: login failed status=401 body={"error":"invalid credentials","message":"Login failed","status":"error"}
+
+HTTP bank summary: 11 cases — 6 PASS, 5 FAIL, 0 SKIP  (base-url http://127.0.0.1:8081)
