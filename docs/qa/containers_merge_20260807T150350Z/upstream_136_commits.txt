@@ -1,0 +1,136 @@
+e50b5b3 Merge remote-tracking branch 'origin/main'
+4661bce docs(1.2.1-dev): add PRE_INTEGRATION_MATERIALS.md before 1.2.X QA rebuild (operator commit-everything directive 2026-07-27)
+746efe3 feat(emulator): LVA-014 durable device-gate fixes — baked-AVD resolution, WaitForBoot container liveness, per-api image template
+feeba3f feat: QEMU e2e integration test — QMP capability negotiation, query-version, clean exit per OTA-071
+1ae03df chore: GEMINI.md governance mirror backfill (operator ruling 2026-07-22: §11.4.157 applies to owned submodules)
+9da662f govern: carry universal covenant anchors §11.4.66/67/69/85 (inherited from HelixConstitution)
+6800059 hardening(lifecycle): SW6-1 — contain a panicking onIdle() callback in IdleShutdown.fire with recover() (parity with pkg/event/subscriber.go: a consumer onIdle panic on the AfterFunc timer goroutine would crash the whole daemon, no recover on that stack) — anti-tautology GENUINE, independent RED->GREEN (stash idle.go -> panic escapes fire() FAIL)
+939617f hardening(emulator): Wave-21 SW2-2 — WaitForBoot timeout error wraps the discarded authorizeADB failure (MED §11.4.108: adb-authorization root cause was diagnostic-blind, reproducing the 2026-06-23 blocker) — anti-tautology GENUINE, independent RED→GREEN verified
+047fbfc hardening(vm,monitor,volume): Wave-21 cross-cutting sweep — SW1-1 Upload/Download honor ctx.Done() (HIGH: wedged guest hung matrix worker past deadline), SW2-1 monitor CPU/mem/disk probe-failure not silent-0 (HIGH §11.4.108: disk>90% page never fired on broken statfs), SW3-1 volume Sync MountSyncing reservation guard (MED: 2 concurrent rsync last-writer-wins) — anti-tautology 3/3 GENUINE, independent RED->GREEN verified
+a028b4c hardening(brokertest,vm): Wave-20 SITE-10-ARGSWEEP LOW batch — `--` before the run image + escape commas in the qemu -drive path (defense-in-depth; anti-tautology 2/2 GENUINE)
+2862ec0 hardening(ctop): Wave-20 CT3-SITE6-ARGSWEEP — shell-quote host.Runtime in the remote ps + stats commands (HIGH §11.4.108 injection; anti-tautology 2/2 GENUINE)
+a7e08a9 hardening(distribution): §11.4.120 reconcile DIST-1 gate to the SITE-4 shell-quoted runtime form
+3c1dc01 hardening(distribution): Wave-20 DI3-SITE4-ARGSWEEP — shell-quote host.Runtime in BOTH remote command builders (HIGH §11.4.108 injection; anti-tautology 2/2 GENUINE)
+b745208 hardening(vm): Wave-20 VM3-ARGSWEEP — neutralise guest-shell + argv flag-injection across the VM cluster (RCE class; anti-tautology 4/4 GENUINE)
+14e73b5 hardening(remote): Wave-20 RM3-ARGSWEEP — refuse leading-dash ssh/scp destinations + shell-escape the remote runtime token (HIGH ProxyCommand-RCE; anti-tautology 2/2 GENUINE)
+317dee2 hardening(orchestrator): Wave-20 OR3-1 — StartService tracks a remote-started entity before the health gate so StopAll can reap it (MED §11.4.14; anti-tautology GENUINE)
+8e16441 hardening(distribution): Wave-20 DI3-DEEP — Undistribute/relocate tear down a StateMigrating container, not just StateRunning (HIGH §11.4.69; anti-tautology GENUINE)
+26a1009 hardening(applesim): Wave-20 SIM2 — simctl leading-dash argv refuse + BootAndWait confirms booted state (anti-tautology 2/2 GENUINE)
+9b8d6f5 hardening(boot): Wave-20 BOOT2-1 — rollback tears down distributed remote endpoints, not just compose (HIGH resource-leak §11.4.69; anti-tautology GENUINE)
+fbff142 hardening(cuttlefish): Wave-20 CF2 — default NetworkHost=true + image behind -- end-of-options (anti-tautology 2/2 GENUINE)
+ddc4b45 hardening(emulator): Wave-20 EMU2-1 — container run image ref behind -- end-of-options (argv flag-injection; anti-tautology GENUINE)
+9ce673b hardening(vm): Wave-20 VM2 — deterministic+complete QMP screendump JSON escaping + target.ID path-traversal guard (anti-tautology 2/2 GENUINE)
+c76d4f5 hardening(genymotion): Wave-20 GENY2-1 — Start/Stop refuse a leading-dash device name (argv-injection; anti-tautology GENUINE)
+e94211f hardening(brokertest): Wave-20 BROK2-1 — pinned-host-port path fast-fails on an exited container (anti-tautology GENUINE)
+4884191 hardening(crossbuild): Wave-20 XBUILD2 — empty-dir artifact bluff + image-ref argv flag-injection (x2 builders) + nested-FIFO copy-hang DoS (anti-tautology 3/3 GENUINE + §120 reconcile)
+d293baa hardening(envconfig): Wave-20 ENV2-1 — quoted dotenv value with trailing inline comment no longer corrupts the credential (HIGH §11.4.10; anti-tautology GENUINE)
+6158d9b hardening(endpoint): Wave-20 EP2 — bracketed IPv6 host no longer double-wrapped + IsLocalEndpoint recognizes [::1] (anti-tautology 2/2 GENUINE)
+bc48e52 hardening(health): Wave-20 HEALTH2-1 — HelixServiceHealthChecker clamps Timeout<=0 to a default (no false-UNHEALTHY on a live service; anti-tautology GENUINE)
+5627348 hardening(network): Wave-20 NET3-1 — ssh tunnel destination refuses leading-dash (arg-injection RCE; anti-tautology GENUINE)
+3a52825 hardening(egress): Wave-20 EG2 — ssh arg-injection guard (leading-dash destination) + sub-second ConnectTimeout floor (anti-tautology 2/2 GENUINE)
+c6d401c hardening(lifecycle): Wave-20 LIFE2-1 — Stop during in-flight Start no longer resurrects a torn-down service to running (HIGH §11.4.108; anti-tautology GENUINE)
+37c1c1d hardening(remoteexec): Wave-20 RX2-1 — resolveDir default branch enforces the absolute-path contract (HIGH §11.4.108; anti-tautology GENUINE)
+9ef37fc hardening(compose): Wave-20 COMP2-1 — docker native --wait emits caller WaitTimeout as --wait-timeout (anti-tautology GENUINE)
+2132211 hardening(volume): Wave-20 VOL2 — rsync user@host shell-quote + Sync rejects non-rsync mount type (anti-tautology 2/2 GENUINE)
+2b704ca hardening(metrics): Wave-20 MET2-1 — sanitize invalid-UTF-8 label values so the record path never panics (HIGH crash-DoS; anti-tautology GENUINE)
+f44a57f hardening(serviceregistry): Wave-20 SR2-DEEP — DiscoveredAt preserved on re-register + Loaded-count excludes dropped nulls (anti-tautology 2/2 GENUINE)
+55555e9 hardening(event): Wave-20 EV2-1 — Subscribe rejects nil handler (anti-tautology GENUINE)
+c9c5a4e hardening(cache): Wave-20 CACHE2-1 — durably fsync the corrupt-blob os.Remove fallback branch in Verify (anti-tautology GENUINE)
+e6b6169 hardening(policy): Wave-20 POL2-DEEP-1 — drift detector inherits mem/memswap defaults like apply_caps.py make_cap (anti-tautology GENUINE + neg-control)
+b5ef038 hardening(monitor): Wave-20 MON2 — no negative CPU% on partial counter rollback + nil-local not phantom-counted in cluster HostCount (anti-tautology 2/2 GENUINE)
+bdf77f1 hardening(network): Wave-20 NET2-6 — tunnel ssh BatchMode=yes prevents indefinite interactive-prompt hang (anti-tautology GENUINE)
+70a9084 hardening(remote): Wave-20 RM2 — remote-compose command injection (HIGH) + ControlMaster cross-user socket collision (anti-tautology 6-site + reconcile GENUINE)
+c889ef8 hardening(discovery): Wave-20 DISC — negative Timeout no longer falsely reports resolvable host/listener unreachable (anti-tautology 2/2 GENUINE)
+f0349a8 hardening(scheduler): Wave-20 SC2 — gpu-affinity fitting-zero-score false-negative + deterministic tie-breaks across all 5 strategies (anti-tautology 6/6 GENUINE)
+c7cd749 hardening(runtime): Wave-20 RT-DOCKER — populate ContainerInfo.Created + Ports in docker/nerdctl List (anti-tautology 2/2 GENUINE)
+e97636e hardening(orchestrator): Wave-20 OR2-HARD — remote-compose RCE + 6 teardown/health/discovery defects (anti-tautology 6/7 GENUINE incl HIGH RCE)
+b14cc2c hardening(distribution): Wave-20 DI2-HARD — wired tunnels/volumes + 3 honesty/orphan defects + failover-state (anti-tautology ALL-GENUINE)
+91f3d00 hardening(compose): Wave-20 CO2-HARD — podman-shim detection + service-scoped wait + §6.R credential-env (anti-tautology ALL-GENUINE)
+7120937 hardening(cache): Wave-20 CA2-HARD — Verify TOCTOU lock + quarantine durability + orphan-sweep + versioned-corrupt (anti-tautology ALL-GENUINE)
+a551ffd hardening(serviceregistry): Wave-20 SR2-HARD — 2 HIGH persistence/crash defects + port-safety + test-isolation (anti-tautology ALL-GENUINE)
+031d305 hardening(event): Wave-20 EV2-HARD — Close-hang + zero-buffer doc honesty + Subscribe-after-close leak (anti-tautology ALL-GENUINE)
+69df446 hardening(crossbuild): Wave-20 XB3-HARD — HIGH artifact-copy exfil + ImageExists hang + 3 (security, RED/GREEN verified)
+686da3c hardening(ctop): Wave-20 CT3-HARD — 4 residual defects fixed + 1 documented (anti-tautology ALL-GENUINE)
+672e65d hardening(health): Wave-20 HE2-HARD — 5 checker defects (ctx-dial, drain-reuse, redirect-honesty, §6.R env, backoff-clamp; anti-tautology ALL-GENUINE)
+aa867c5 hardening(ctop): Wave-20 CT2-HARD — 4 HIGH TUI defects + remote-failure honesty (anti-tautology GENUINE)
+d9eece1 hardening(remote): Wave-20 REMOTE3-HARD — 3 residual pool/scp MEDs (anti-tautology ALL-GENUINE)
+b325a83 hardening(runtime): Wave-20 RT-HARD — 3 runtime defects fixed + 2 honestly assessed (anti-tautology ALL-GENUINE)
+356eacb hardening(volume): Wave-20 VOL2-HARD — 6 HIGH mount-correctness defects + ctx-timeout (RED/GREEN, §11.4.120-reconciled)
+7fb77a0 hardening(remote): Wave-20 REMOTE2-HARD — SSH-handshake ctx-deadline (VM2-1 sibling) + 3 pool/timeout defects
+5835301 hardening(network): Wave-20 NET2-HARD — 5 tunnel/overlay/allocator defects (RED/GREEN + anti-tautology ALL-GENUINE)
+5048adf fix(policy): Wave-20 POL2-HARD — Match glob-syntax validation + parseSize overflow guard + real YAML drift-gate
+c2a11dc fix(orchestrator): Wave-20 ORCH-HARD — dup-name failure-scoping + rollback timeout + startRemote ctx bound
+dd393ea fix(emulator): Wave-20 EMU-2 — per-invocation Emulator instance (concurrent teardown acts on own container) + EMU-3
+e71631d fix(vm): Wave-20 VM2-HARD — QMP conn deadlines + Boot diagnostics + async-event-aware QMP parse + SCP size guard
+a4b9834 fix(crossbuild): Wave-20 XBUILD2-HARD — timeout-honoring runners + symlink-escape refusal + partial-debris cleanup + Selector race
+1ec51e7 fix(emulator): Wave-20 EMU-HARD — deadline-bounded waits (5 sites) + adb-key temp-dir reap
+5e38856 fix(cuttlefish): Wave-20 CF-HARD — deadline-bounded WaitForReady + Launch-failure ownership + wired StopGracePeriod
+822a6d1 fix(applesim): Wave-20 SIM-HARD — full-timeout BootAndWait + detached recorder + deterministic Resolve + honest Detect
+b77b879 test(discovery): Wave-20 DISC-HARD — regression guards for not-found vs indeterminate (§11.4.135)
+a900f3a fix(brokertest): Wave-20 BROK-HARD — startup-timeout + run-error cleanup + protocol readiness + exited fail-fast
+793d402 fix(genymotion): Wave-20 GENY-HARD — deadline-bounded wait + boot-readiness probe + parse retention
+f810e6d fix(endpoint): Wave-20 EP-HARD — IPv6 host:port + scheme agreement + additive Validate
+fc25fc8 fix(boot): CT-HARDEN-BOOT-HARD — distributor-failure attribution + partial-boot rollback + Shutdown undistribute + Phase-3 dedup + re-runnable BootAll (Wave-20)
+90cb2f9 fix(envconfig): CT-HARDEN-ENV-HARD — surface SET-but-invalid env values as errors instead of silently defaulting (Wave-20)
+d48d6a6 docs(discovery): CT-HARDEN-DISC-HARD — reachability-not-liveness doc-honesty (§11.4.108) + timeout-const de-dup (§6.R) (Wave-20)
+1ba5f6f fix(compose): CT-HARDEN-COMP-HARD — shared-slice append aliasing + timeout-bounded probes (Wave-20)
+c2c58f1 fix(metrics): CT-HARDEN-MET-HARD — non-fatal duplicate-registration + label-cardinality eviction + negative-duration clamp (Wave-20)
+e273fd2 fix(egress): CT-HARDEN-EG-HARD — TunnelUp child-death surfacing + IP-echo status/IP validation + keep-alive leak + idempotent Down (Wave-20)
+992552e fix(scheduler): CT-HARDEN-SCHED-HARD — within-batch over-commit + probe-presence gating for RR/spread + log-outside-lock (Wave-20)
+c1eb75c fix(lifecycle): CT-HARDEN-LIFE-HARD — dead-lease-on-teardown + coalesced-Start outcome propagation (incl leader-panic) + lazy-boot poison-retry + Shutdown doc honesty (Wave-20)
+e352f51 fix(distribution): CT-HARDEN-DIST-HARD — Undistribute actually tears down + relocate-reconcile + honest local-deploy + ctx-cancel (Wave-20)
+bebb7a2 fix(monitor): CT-HARDEN-MON-HARD — CPU counter-backwards guard + MemAvailable-absent fallback + probe-error surfacing (Wave-20)
+d07e410 fix(remoteexec): CT-HARDEN-RX-HARD — honest linger-durability verification + absolute-Dir enforcement + FetchLog truncation-not-masked (Wave-20)
+f41f33a fix(lazyservice): CT-HARDEN-LZSVC-HARD — teardown-on-health-fail + ctx threading + status liveness + immediate health probe (Wave-20)
+06e9872 fix(serviceregistry): atomic persist snapshot + Clear/persist coordination + surfaced persist errors (CT-HARDEN-SR-HARD)
+bfd8fd3 fix(network): surface dead-on-arrival tunnels as TunnelFailed instead of silent success (CT-HARDEN-NET-HARD)
+686db32 fix(cache): fsync-before-rename durability + Verify quarantines drifted blobs (CT-HARDEN-CACHE-HARD C-1/C-2)
+d5302b6 fix(volume): atomic Mount name-reservation + rsync-flags copy + valid NFS -o ro (CT-HARDEN-EGVOL-1/2/3)
+da4c3b8 fix(event): idempotent requestStop so a self-unsubscribing handler can't deadlock (CT-HARDEN-EVHD-1)
+618f9e4 fix(policy): whitespace-safe parseSize + reject oom_score_adj>1000 (CT-HARDEN-LZPOL-1/2)
+8263d16 fix(health): clamp negative RetryPolicy.MaxRetries so CheckWithRetry never returns nil (CT-HARDEN-EVHD-2)
+4431a31 fix(vm): serialize shared SSH/QMP guest ops + authenticate network-shaping (Wave-18 VM-1/VM-2)
+cc4281a fix(crossbuild): reject artifact path-traversal + symlink exfil + stale-artifact bluff (Wave-18 XBUILD-1/2 + review F1/F3)
+808e034 fix(remote): idempotent streamReader.Close + ConnectTimeout=0 no pre-cancel (Wave-18 REMOTE-1/REMOTE-2)
+162ba54 fix(cache): Refresh must not destroy a verified blob before re-fetch + FindByID nil guard (Wave-18 CACHE-1/CACHE-2)
+2dfeeea fix(compose): nil-receiver guards on HelixComposeProject (Wave-18 COMPOSE-1)
+7924625 fix(distribution): nil-HostManager guard + Undistribute/HealthCheckAll race (Wave-18 DIST-1/DIST-2)
+b4bba5a fix(scheduler): harden GPU scoring — numeric compute-capability compare + non-positive VRAM/Count guards (Wave-18 CT-HARDEN-SCHED-1/2/3)
+e2f3c44 fix(serviceregistry): Discover never returns (nil,nil) when a service is unregistered mid-discovery (Wave-18 CT-HARDEN-SR-DISCOVER)
+2f66d3f fix(monitor): guard DefaultSystemCollector CPU-delta race + nil remote-host deref (Wave-18 CT-HARDEN-MON-1/2)
+d21f0d8 fix(health): treat 4xx as UNHEALTHY in CheckHTTP, accept only 2xx-3xx (Wave-18 CT-HARDEN-60)
+406e7b9 fix(lazyservice): detect dependency cycles in StartService instead of stack-overflowing (Wave-18 CT-HARDEN-70)
+2f3c0b1 fix(event): contain subscriber-handler panics per delivery, surface honestly (Wave-18 CT-HARDEN-49)
+552be2c fix(emulator,cuttlefish): scope process-kill to OUR device, remove host-wide reap fallbacks (§11.4.174 Wave-18)
+8c2aa75 fix(remote): guard nil .State.Health in RemoteRuntime.Status inspect template (Wave-18 CT-HARDEN-42)
+59fd881 fix(lazyservice): release lo.mu before the blocking compose Down in StopService (Wave-18 CT-HARDEN-71)
+7463a2a fix(volume): return MountInfo value copy from Status, not the live internal pointer (Wave-18b CT-HARDEN-33)
+9470007 fix(lifecycle): eliminate ReleaseFunc double-release race + idle-vs-lease reclaim (Wave-16 LIFE-a/LIFE-b)
+4b89cda fix(distribution): shell-quote registry-controlled Name/Image in remote deploy (ATM-C056 RCE)
+4774eda fix(emulator): target adb transport port, not console port, for network shaping + failure screenshot (Wave-18c FB-2)
+65d549d fix(runtime): decode real podman stats string-array output (Wave-18b RT-F1)
+ef3ad5e fix(ctop): schema-tolerant decoding of real podman/docker output (Wave-18)
+ca83bd7 fix(remoteexec): honest durable-job transport + sentinel reporting (Wave-17)
+8633e44 fix(cache): validate+normalize SHA256 before any blob-path splice (Wave-17)
+9799321 fix(serviceregistry): deep-copy Labels in every accessor return (Wave-17)
+7f7649a fix(remote): shell-escape every caller value spliced into remote commands (Wave-17)
+b016349 fix(lifecycle): revive lazy service on Acquire after idle shutdown (Wave-17)
+7c228f8 fix(network): reap dead SSH tunnels + reject port collisions (Wave-17)
+340e3fa fix(remoteexec): surface transport failures + clear stale artifacts + honor Runner contract (Wave-17)
+c8178cd feat(orchestrator): dependency-ordered startup in topological waves (Wave-16 finding 2)
+9576679 fix(orchestrator): boot rollback + lock-scope reduction + de-tautologized start test (Wave-16)
+f676994 fix(lifecycle): unhealthy service must fail Start regardless of error message (Wave-16)
+1032c2a fix(network): release leaked tunnel port on Start failure + honest overlay docs (Wave-16)
+7fea08f fix(serviceregistry): I/O out of lock + atomic write + loud corrupt handling (Wave-16)
+cf52b5f fix(volume): shell-injection defense + honest unmount lifecycle (Wave-16)
+9e92e51 fix(runtime): lxd Status resolves the exact-named container + AutoDetect honours RuntimePriority + crio List applies the caller's filter
+b690442 fix(scheduler): honour required labels on the local host + never emit Score==0 for a selected host + per-instance round-robin counter + Release decrements placements
+69c372d fix(remote): unblock pool mutex across ssh dial + evict dead sockets + stop freezing compose fallback guess
+0bd1d66 fix(vm): QEMUVM authenticates before guest interaction + Teardown closes ssh (matrix exec path was 100% broken)
+9548c36 fix(lazyservice): StopService resets the lazy booter so a restart genuinely re-boots
+f25228f fix(network,scheduler,event): three concurrency defects — two map races + one deadlock
+ab146b4 fix(serviceregistry): Discover fast path returns a copy, not the internal *Service pointer
+a9c660d fix(lifecycle): 3 concurrency bugs — LazyBooter panic-recover + DefaultManager data-race + TOCTOU double-boot
+1a526ab fix(lifecycle): idle-shutdown stale-fire race — lastTouch guard + clock seam
+367d39d style: gofmt canonicalization sweep (formatting-only, no logic change)
+df980b3 chore: lowercase upstream scripts per §11.4.29

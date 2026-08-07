@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDING</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDING</h1>
+</header>
+<h1 id="agent-stall-root-cause-my-gomaxprocs-attribution-was-wrong">Agent
+stall root cause — my GOMAXPROCS attribution was WRONG</h1>
+<p>Captured 2026-08-07T10:10:12Z</p>
+<h2 id="what-i-claimed">What I claimed</h2>
+<p>In commit 40c8d5ce and in ~8 agent briefs I stated the
+cgroup/GOMAXPROCS oversubscription was why agents overran the 600s
+stream watchdog, and told agents ‘this should materially reduce your
+chance of being killed’.</p>
+<h2 id="evidence-1-transcript-size-inversely-predicts-death">Evidence 1
+— transcript size INVERSELY predicts death</h2>
+<p>STALLED : 270, 470, 502, 552 KB mean ~449 COMPLETED: 499, 583, 685,
+707, 806 KB mean ~656 Starvation predicts heavier work dies MORE. The
+opposite holds: the agents that did the most work completed. Size does
+not predict death.</p>
+<h2 id="evidence-2-deaths-do-not-cluster-in-time">Evidence 2 — deaths do
+not cluster in time</h2>
+<p>stalls 2026-08-05 16:18, 17:17, 19:43, 08-06 16:58, 08-07 02:59
+completes 2026-08-06 18:50, 21:03, 23:43, 08-07 05:57, 11:06
+Interleaved, no clean separation, no common host condition at those
+moments.</p>
+<h2 id="evidence-3-the-decisive-one-where-they-died">Evidence 3 — the
+decisive one: WHERE they died</h2>
+<p>All four stalled agents’ final text is an INCOMPLETE SENTENCE,
+composed just before issuing a tool call: HXC-229 ‘I’ll start by
+investigating the current state of the systemd unit’ HXC-218 ‘url.Parse
+is lenient here … let me check that recorded output’ HXC-217 ‘Now I have
+the full picture. Let me parallelize: dispatch’ HXC-221 ‘Fixing the
+fixture to be genuinely stateful:’</p>
+<p>The watchdog measures STREAM output. A CPU-starved agent still emits
+tokens, only slower, and would die DURING a long command with that
+command as its last action. These died while COMPOSING TEXT — the token
+stream stopped mid-generation and never resumed. That is an
+API/stream-layer condition, not a host-resource one.</p>
+<h2 id="corrected-conclusion">Corrected conclusion</h2>
+<p>The cgroup finding is REAL and stands on its own: cpu.max
+860000/100000 = 8.6 CPUs vs nproc 64, 50.3% of periods throttled, 75.5h
+frozen, GOMAXPROCS=8 beat 64 on a trivial build. The Makefile fix is
+correct and worth keeping.</p>
+<p>But it does NOT explain the stalls, and I asserted that it did
+without testing it. Two separate facts got welded into one causal story
+because they appeared in the same investigation.</p>
+<h2 id="what-actually-mitigates-stalls">What actually mitigates
+stalls</h2>
+<p>Respawn-on-stall with preserved partial work — which is what
+SS11.4.147 already prescribes and what has in fact recovered every
+stalled agent today. Not a tuning knob. The mitigation was already
+correct; my explanation was not.</p>
+<h2 id="honest-boundary">Honest boundary</h2>
+<p>I cannot fix an upstream token-stream interruption from here. What I
+can do, and have done, is stop telling agents a CPU setting will protect
+them.</p>
+</body>
+</html>

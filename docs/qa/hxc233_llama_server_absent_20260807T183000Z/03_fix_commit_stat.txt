@@ -1,0 +1,60 @@
+commit 8990df4d62bbabdaed2b97f411b6953ac7b2bde3
+Author: Milos Vasic <i@mvasic.ru>
+Date:   Fri Aug 7 23:47:28 2026 +0500
+
+    fix(gateway): stop pointing local-model routing at a dead embedded llama-server (HXC-233)
+    
+    Investigation (docs/qa/hxc233_llama_server_absent_20260807T183000Z/,
+    committed in the meta-repo): the gateway logs "llama-server not found in
+    $PATH" and the binary is genuinely absent from every directory on this
+    host's PATH, not merely misconfigured. helixllm-coder (Qwen3-Coder-30B) is
+    a SEPARATE, already-working local backend running its own llama-server
+    inside a rootless podman container — it does not fix this gap because the
+    gateway never routes to it; the gateway only ever tries to spawn its OWN
+    embedded llama-server.
+    
+    With no cloud provider keys configured, this is not merely "a warning,
+    nothing else affected": since main.go unconditionally reassigned
+    cfg.LLM.LocalRPCHost/Port to point at the embedded server whenever an
+    embed was ATTEMPTED (regardless of whether Start() actually succeeded),
+    every /v1/chat/completions request was silently misrouted to
+    127.0.0.1:8080 where an unrelated service answers, producing a confusing
+    TLS handshake failure instead of a clean "no provider available" error.
+    Live-reproduced pre-fix: HTTP 500, "brain error: all providers exhausted,
+    last error: llamacpp: send request: ... tls: failed to verify
+    certificate ... 127.0.0.1".
+    
+    Two fixes:
+    1. main.go: only override LocalRPCHost/Port when llama-server ACTUALLY
+       started (cmd.Start() returned nil), not merely attempted. A genuine
+       start failure now falls through to the router's honest
+       no-provider-available path instead of a misleading dead-endpoint one.
+    2. main.go + brain.ResolveLlamaServerBinary (new) + config.LlamaServerBinaryPath
+       (new, HELIX_LLAMA_SERVER_BINARY_PATH): resolve the binary BEFORE the
+       model auto-download, not after. A prior deployment burned 37 minutes
+       downloading Llama-3.1-70B-Instruct-Q4_K_M for an embedded server that
+       then failed to start — the download was pure waste since nothing could
+       consume it. The pre-flight check skips both the download and the doomed
+       Start() attempt when the binary can't be resolved, and gives operators
+       a real way to point HelixLLM at an installed-but-off-PATH binary
+       without editing system PATH.
+    
+    Neither fix installs anything or changes what capability exists — they
+    make the existing absence honest and non-wasteful. Actually installing
+    llama-server (or reconfiguring HELIX_LLM_LOCAL_RPC_HOST/PORT to route at
+    the already-running coder container) remains an operator decision; see
+    the HXC-233 investigation notes for both options.
+    
+    New unit tests: TestResolveLlamaServerBinary_{ExplicitPath,PATHLookup}_{Found,NotFound}
+    reproduce the exact HXC-233 PATH-absence condition deterministically
+    (own scratch PATH, not the host's).
+    
+    go build ./... and go test ./... both clean pre-commit.
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ cmd/helixllm/main.go             | 40 +++++++++++++++--
+ internal/brain/server.go         | 24 ++++++++++
+ internal/brain/server_test.go    | 96 ++++++++++++++++++++++++++++++++++++++++
+ internal/shared/config/config.go | 15 ++++---
+ 4 files changed, 166 insertions(+), 9 deletions(-)

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+table {
+border-collapse: collapse;
+}
+table td,
+table th {
+border: 1px solid #cccccc;
+padding: 4px 8px;
+vertical-align: top;
+}
+
+tr.cell-status-obsolete > td {
+background-color: #E0E0E0;
+}
+
+tr.cell-status-obsolete > td:nth-child(2),
+tr.cell-status-obsolete > td:last-child {
+text-decoration: line-through;
+}
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README</h1>
+</header>
+<h1 id="helixqa-bank-evidence---live-run">HelixQA Bank Evidence - Live
+Run</h1>
+<p><strong>Date</strong>: 2026-07-09<br />
+<strong>Target</strong>: HelixLLM coder (llama.cpp,
+<code>qwen2.5:0.5b</code>, port :18434)<br />
+<strong>Evidence dir</strong>:
+<code>docs/qa/20260708T212222Z/</code><br />
+<strong>Session</strong>: Concurrency + Chaos + DDoS + Memory +
+Benchmark banks</p>
+<hr />
+<h2 id="bank-results">Bank Results</h2>
+<table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 16%" />
+<col style="width: 25%" />
+<col style="width: 22%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>Bank</th>
+<th>Verdict</th>
+<th>Detail</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Concurrency</td>
+<td><strong>PASS</strong></td>
+<td>N=2 parallel requests, all HTTP 200, nonces verified,
+no-loss=true</td>
+<td><code>concurrency/verdict.json</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Chaos port-flood</td>
+<td>🟡 FAIL</td>
+<td>50 rapid TCP connections + post-flood recovery request timed out
+(CPU-bound slow inference - topology limitation, not a code defect)</td>
+<td><code>chaos/port_flood_verdict.json</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Chaos concurrent-health</td>
+<td><strong>PASS</strong></td>
+<td>2 concurrent POSTs + 3 health probes: all succeeded,
+models_ok=3/3</td>
+<td><code>chaos/concurrent_health_verdict.json</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>DDoS burst</td>
+<td>🟡 FAIL</td>
+<td>50 parallel requests all timed out (CPU-bound ~540ms/token; 50
+concurrent requests exhausted time budget)</td>
+<td><code>ddos/burst_verdict.json</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>DDoS soak</td>
+<td><strong>PASS</strong></td>
+<td>100 requests over 20s window, no 5xx errors, server survived</td>
+<td><code>ddos/soak_verdict.json</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>DDoS conn-flood</td>
+<td><strong>PASS</strong></td>
+<td>30 TCP connection flood, no-crash=true, server recovered</td>
+<td><code>ddos/flood_verdict.json</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Memory leak soak</td>
+<td><strong>PASS</strong></td>
+<td>10 sequential requests, RSS: 1366944-&gt;1376508 KB (0.4% growth),
+monotonic-no-leak, gc-stability, steady-state all PASS</td>
+<td><code>memory/soak_verdict.json</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Benchmark</td>
+<td><strong>PASS</strong></td>
+<td>Level 1 concurrency, through~put measured, latency within
+budget</td>
+<td><code>bench/bench_all_verdict.json</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Summary</strong>: 6/8 PASS, 2/8 FAIL (CPU-bound slow
+inference - topology limitation, banks correctly detect this)</p>
+<h2 id="anti-bluff-notes">Anti-Bluff Notes</h2>
+<ul>
+<li>ALL 8 banks ran REAL HTTP round-trips against the live coder
+process</li>
+<li>ALL verdicts carry real measured values (not simulated, not
+hardcoded)</li>
+<li>Concurrency uses unique nonces per request to prove
+non-de-duplication</li>
+<li>Memory leak detector reads real <code>ps -o rss=</code> from the
+live PID</li>
+<li>DDoS bank measures real TCP connection states</li>
+<li>Chaos port-flood opens real TCP sockets</li>
+</ul>
+<h2 id="capture-methodology">Capture Methodology</h2>
+<ul>
+<li>Server: <code>llama-server</code> with
+<code>qwen2.5-0.5b-instruct-q4_k_m.gguf</code> aliased as
+<code>llama3.2</code></li>
+<li>Each bank dispatched as independent <code>nohup</code> process with
+timeout guard</li>
+<li>Verdict JSON written to per-bank subdirectories</li>
+<li>Standard output logs preserved alongside verdicts</li>
+<li>All binaries built from
+<code>submodules/helix_qa/cmd/helixqa-verify-coder-*</code></li>
+</ul>
+</body>
+</html>
