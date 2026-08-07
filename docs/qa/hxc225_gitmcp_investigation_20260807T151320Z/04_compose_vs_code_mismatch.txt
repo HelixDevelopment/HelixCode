@@ -1,0 +1,64 @@
+### Does GitMCP source know anything about REPOS_DIR / MCP_SERVER_NAME (the compose env)?
+NONE — compose env vars are unknown to the vendored code
+
+### GitMCP entrypoint src/index.ts (first 60 lines)
+import { McpAgent } from "agents/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { getMcpTools } from "./api/tools";
+import { createRequestHandler } from "react-router";
+import {
+  generateBadgeResponse,
+  getRepoViewCount,
+  withViewTracking,
+} from "./api/utils/badge";
+import { getRepoData } from "./shared/repoData";
+import { handleR2TestSetup } from "./api/test-setup";
+
+export { ViewCounterDO } from "./api/utils/ViewCounterDO";
+
+declare global {
+  interface CloudflareEnvironment extends Env {
+    CLOUDFLARE_ANALYTICS?: any;
+    OPENAI_API_KEY?: string;
+    ANTHROPIC_API_KEY?: string;
+    XAI_API_KEY?: string;
+  }
+}
+
+declare module "react-router" {
+  export interface AppLoadContext {
+    cloudflare: {
+      env: CloudflareEnvironment;
+      ctx: ExecutionContext;
+    };
+  }
+}
+
+const requestHandler = createRequestHandler(
+  () => import("virtual:react-router/server-build"),
+  import.meta.env.MODE,
+);
+
+// Create CORS preflight response
+const handleCorsPreflightRequest = (): Response => {
+  return new Response(null, {
+    status: 204, // No content
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Max-Age": "86400", // 24 hours
+    },
+  });
+};
+
+// Handle badge request for repository
+async function handleBadgeRequest(
+  request: Request,
+  env: CloudflareEnvironment,
+  owner: string,
+  repo: string,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const color = url.searchParams.get("color") || "aquamarine";

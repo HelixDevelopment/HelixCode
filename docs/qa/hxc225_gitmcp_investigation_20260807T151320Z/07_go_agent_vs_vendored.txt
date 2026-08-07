@@ -1,0 +1,35 @@
+### Does the Go gitmcp agent reference the vendored dir, node, or any JS entrypoint?
+NONE — Go agent has zero reference to mcp-servers/GitMCP or any JS runtime
+
+### What the Go agent actually execs:
+18:// gitBinary is the git executable looked up on PATH.
+21:const gitBinary = "git"
+117:	path, err := exec.LookPath(gitBinary)
+130:	cmd := exec.CommandContext(ctx, bin, args...)
+196:	_, err := exec.LookPath(gitBinary)
+
+### main.go spawn paths (all JS entrypoints spawned by the shipped binary):
+99:	useLocalMCPServers = flag.Bool("use-local-mcp-servers", false, "Use local Docker-based MCP servers on TCP ports (requires running start-mcp-servers.sh)")
+384:// Uses docker-compose.mcp-servers.yml to build and run 32 MCP servers
+401:		"docker-compose.mcp-servers.yml",
+2814:// Based on: https://opencode.ai/docs/mcp-servers
+2881:// TCP servers run on ports 9101-9999 via socat - requires start-mcp-servers.sh
+2899:			Command: []string{"node", helixHome + "/plugins/mcp-server/dist/index.js", "--endpoint", baseURL},
+2995:			Command: []string{"node", helixHome + "/plugins/mcp-server/dist/index.js", "--endpoint", baseURL},
+3547:		InstallDir:  fmt.Sprintf("%s/.helixagent/mcp-servers", homeDir),
+3617:		InstallDir:  fmt.Sprintf("%s/.helixagent/mcp-servers", homeDir),
+4248:		"helixagent": {Type: "local", Command: []string{"node", helixHome + "/plugins/mcp-server/dist/index.js", "--endpoint", baseURL}, Enabled: true},
+4942:  -use-local-mcp-servers
+4944:        Requires: ./scripts/mcp/start-mcp-servers.sh --start
+
+### Does ANY Go source reference the mcp-servers/GitMCP path?
+cmd/helixagent/main.go:99:	useLocalMCPServers = flag.Bool("use-local-mcp-servers", false, "Use local Docker-based MCP servers on TCP ports (requires running start-mcp-servers.sh)")
+cmd/helixagent/main.go:3547:		InstallDir:  fmt.Sprintf("%s/.helixagent/mcp-servers", homeDir),
+cmd/helixagent/main.go:3617:		InstallDir:  fmt.Sprintf("%s/.helixagent/mcp-servers", homeDir),
+tests/integration/mcp_servers_test.go:155:	mcpDir := filepath.Join(projectRoot, "external/mcp-servers")
+tests/integration/mcp_servers_test.go:179:	if !strings.Contains(string(output), "helixagent-mcp-servers") {
+tests/integration/mcp_servers_test.go:184:	cmd = exec.Command(runtime, "exec", "helixagent-mcp-servers", "/app/scripts/health-check.sh")
+internal/agents/registry.go:271:		Features:       []string{"mcp-servers", "built-in-tools", "aws-integration", "knowledge-base"},
+internal/mcp/preinstaller.go:122:		config.InstallDir = filepath.Join(homeDir, ".helixagent", "mcp-servers")
+internal/mcp/server_registry_test.go:14:	registry := NewServerRegistry("/tmp/mcp-servers")
+internal/mcp/server_registry_test.go:17:	assert.Equal(t, "/tmp/mcp-servers", registry.serversDir)
