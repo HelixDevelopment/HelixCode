@@ -1,0 +1,33 @@
+### health probes 2026-08-07T08:02:51Z
+helixagent           http://localhost:7061/health               200  {"service":"helixagent","status":"healthy"}
+helixcode-server     http://localhost:8081/health               200  {"status":"healthy","timestamp":"2026-08-07T08:02:51.982662464Z","version":"1.0.0"}
+gateway              http://localhost:8443/internal/health      400  Client sent an HTTP request to an HTTPS server.
+
+### infra round-trips
+### containers: 12
+### corrected probes 2026-08-07T08:13:16Z
+gateway (https)        200  {"status":"healthy","components":[],"timestamp":"2026-08-07T13:13:16.371804114+05:00"}
+
+### actual container names
+helixllm-coder
+helixcode-infra-postgres
+helixcode-infra-redis
+helixcode-infra-memcached
+helixcode-infra-ollama
+helixcode-infra-selenium
+helixcode-infra-chromedp
+helixcode-infra-weaviate
+helixcode-infra-chromadb
+helixcode-infra-qdrant
+helixcode-infra-multicast
+helixcode-infra-cognee
+### infra round-trip 2026-08-07T08:13:16Z
+postgres(helixcode-infra-postgres): psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: FATAL:  role "helix" does not exist
+redis(helixcode-infra-redis): PONG
+### postgres round-trip (corrected creds) 2026-08-07T08:23:55Z
+PG_LIVE 16.14
+
+### NOTE — two probe failures above were MY errors, not platform defects:
+###   1. gateway 400: I used http:// against an HTTPS listener. Corrected -> 200 healthy.
+###   2. postgres FATAL role 'helix': wrong username in my probe, not a missing role.
+### Recorded so a future reader does not mistake them for findings.
