@@ -1,0 +1,37 @@
+# Proof: distributed locking is structurally unfinished, not merely unused
+date: 2026-08-07T18:03:03Z
+
+## The wiring seam EXISTS and is wired with nil
+-- router.go:1290 (the only Coordinator construction in production):
+		ensembleCoordinator := multi_instance.NewCoordinator(ensembleSQLDB, nil, ensembleInstanceMgr, nil)
+-- NewCoordinator's 4th parameter is syncMgr:
+func NewCoordinator(
+	db *sql.DB,
+	logger *log.Logger,
+	instanceMgr *clis.InstanceManager,
+	syncMgr *synchronization.SyncManager,
+) *Coordinator {
+	ctx, cancel := context.WithCancel(context.Background())
+   => the 4th argument passed is literally 'nil'.
+
+## The field is stored but NEVER READ
+-- every occurrence of syncMgr in coordinator.go:
+39:	syncMgr     *synchronization.SyncManager
+221:	syncMgr *synchronization.SyncManager,
+232:		syncMgr:       syncMgr,
+   line 39  = struct field declaration
+   line 221 = constructor parameter
+   line 232 = assignment
+   => zero dereferences. The field is written once and never read.
+
+## Consequences
+1. No nil-panic risk: nothing dereferences the nil syncMgr.
+2. No lock is ever acquired, renewed, or released in production.
+3. Therefore NO mutual exclusion is silently lost by the missing table.
+4. AcquireLock also fails CLOSED (manager.go:115-120): a missing relation
+   returns an error; it can never report a lock it did not take.
+
+## Classification per §11.4.124
+This is NEVER-COMPLETED WIRING, not a deleted call site and not a regression.
+git log -S 'AcquireLock(' shows call sites only in test commits, never prod.
+=> DO NOT DELETE. Track as unfinished feature; wire or retire by decision.
