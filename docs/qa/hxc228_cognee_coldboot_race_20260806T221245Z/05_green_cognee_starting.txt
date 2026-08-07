@@ -1,0 +1,25 @@
+=== HXC-228 GREEN: same scenario as RED-1, post-fix artifact ===
+binary md5: 0d1240d2394c766e5139c1f1d7a1ef28
+mark: 2026-08-07 07:13:54
+
+--- restart cognee, then IMMEDIATELY cold-start helixagent (identical to RED-1) ---
+  cognee probe at t=0: HTTP 000 curl_rc=56 (56=reset, i.e. STARTING)
+  systemctl restart returned at 02:13:54Z
+
+--- unit state 45s later ---
+NRestarts=0
+ExecMainStatus=0
+ActiveState=active
+SubState=running
+
+--- journal: dependency verification ---
+2026-08-07T07:13:55+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:13:55+05:00" level=info msg="Waiting up to this long for slow-starting dependencies" wait_budget=2m0s
+2026-08-07T07:13:55+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:13:55+05:00" level=info msg="✅ DEPENDENCY OK" dependency=PostgreSQL description="Primary database for storing configuration, sessions, and metadata"
+2026-08-07T07:13:55+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:13:55+05:00" level=info msg="✅ DEPENDENCY OK" dependency=Redis description="Cache layer for sessions, rate limiting, and response caching"
+2026-08-07T07:13:55+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:13:55+05:00" level=warning msg="⏳ DEPENDENCY NOT READY — waiting" attempt=1 deadline_in=2m0s dependency=Cognee error="cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:50324->127.0.0.1:8000: read: connection reset by peer" retry_in=1s state="STILL STARTING"
+2026-08-07T07:13:56+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:13:56+05:00" level=warning msg="⏳ DEPENDENCY NOT READY — waiting" attempt=2 deadline_in=1m59s dependency=Cognee error="cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:50332->127.0.0.1:8000: read: connection reset by peer" retry_in=2s state="STILL STARTING"
+2026-08-07T07:13:58+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:13:58+05:00" level=warning msg="⏳ DEPENDENCY NOT READY — waiting" attempt=3 deadline_in=1m56s dependency=Cognee error="cannot connect to Cognee: cannot connect: Get \"http://localhost:8000/\": read tcp 127.0.0.1:50344->127.0.0.1:8000: read: connection reset by peer" retry_in=4s state="STILL STARTING"
+2026-08-07T07:14:04+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:14:04+05:00" level=info msg="✅ DEPENDENCY OK" attempts=4 dependency=Cognee description="Knowledge graph and RAG integration for AI memory and reasoning" waited=9s
+2026-08-07T07:14:04+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:14:04+05:00" level=info msg="✅ DEPENDENCY OK" dependency=ChromaDB description="Vector database for embeddings and semantic search"
+2026-08-07T07:14:04+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:14:04+05:00" level=info msg="Dependency verification summary" failed=0 passed=4 total=4
+2026-08-07T07:14:04+05:00 the-factory helixagent[3041139]: time="2026-08-07T07:14:04+05:00" level=info msg="Provider verification summary" api_key_providers=0 failed=0 free_providers=0 oauth_providers=0 skipped=0 total_providers=0 verified=0

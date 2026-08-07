@@ -11,6 +11,26 @@ RemainAfterExit=yes
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 WorkingDirectory=@HELIX_ROOT@
 ExecStart=/usr/bin/podman compose -f compose.helixcode-infra.yml up -d
+
+# ExecStartPost is load-bearing for ORDERING, not a nicety (HXC-228).
+#
+# `podman compose up -d` returns as soon as the containers are CREATED, long
+# before they serve. Without this wait, a consumer's After=helixcode-infra.service
+# orders it after container *creation* only — so systemd considers this unit
+# "started" while Postgres, Cognee et al. are still initialising, and the
+# ordering relationship consumers rely on is a lie.
+#
+# Observed on a real cold boot
+# (docs/qa/live_systemd_boot_20260806T145857Z/11_helixagent_coldboot_race.txt):
+# helixagent started, probed Cognee and exited fatally all within the SAME
+# second this unit reported success, because Cognee — whose compose entry waits
+# on postgres+redis being healthy, making it one of the last to serve — was
+# still coming up. The identical probe passed 15 s later.
+#
+# The script is read-only (podman inspect only), scoped to helixcode-infra-*
+# containers, and bounded well inside TimeoutStartSec below.
+ExecStartPost=@HELIX_ROOT@/scripts/systemd/wait-infra-ready.sh
+
 ExecStop=/usr/bin/podman compose -f compose.helixcode-infra.yml down
 
 # KillMode=process is load-bearing, not cosmetic.

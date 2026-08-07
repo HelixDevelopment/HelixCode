@@ -1,0 +1,20 @@
+=== HXC-228 RED-1: Cognee STARTING (listener up, not serving) -> helixagent cold start ===
+Reproduces the committed evidence signature on the CURRENT (pre-fix) artifact.
+2026-08-06T22:23:05Z
+journal cursor mark: 2026-08-07 03:23:05
+
+--- restarting ONLY helixcode-infra-cognee (ours; §11.4.174) ---
+helixcode-infra-cognee
+restart rc=0
+cognee probe immediately after restart:
+  GET / -> HTTP 000 curl_rc=56
+  curl failed (rc=56)
+
+--- immediately cold-starting helixagent.service ---
+systemctl restart returned rc=0 at 22:23:06Z
+
+--- unit state 12s after start ---
+NRestarts=0
+ExecMainStatus=1
+ActiveState=activating
+SubState=auto-restart

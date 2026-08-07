@@ -1,0 +1,28 @@
+=== HXC-228 GREEN anti-bluff: absent Cognee MUST still block boot ===
+Default budget (120s) — the shipping configuration, not a test-only value.
+  cognee state: exited
+  cognee probe: curl_rc=7 (7=refused => ABSENT)
+  EXIT CODE = 1   (MUST be non-zero: boot blocked)
+  elapsed = 120s   (MUST be bounded ~120s, not a hang)
+
+  --- classification + remedy actually shown to the operator ---
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+UnicodeDecodeError: 'unicodeescape' codec can't decode byte 0x5c in position 171: \ at end of string
+decoding with 'unicode_escape' codec failed
+
+  --- restoring cognee ---
+  start rc=0
+
+  --- (re-extracted) operator message for the ABSENT case ---
+cannot connect to Cognee: cannot connect: Get "http://localhost:8000/": dial tcp 127.0.0.1:8000: connect: connection refused
+
+  --- (re-extracted) FATAL operator message, ABSENT case ---
+FATAL: Integration dependency verification failed: BOOT BLOCKED: 1 of 4 mandatory dependencies failed after waiting up to 2m0s:
+  1. Cognee [NOT RUNNING after 19 attempt(s)]: cannot connect to Cognee: cannot connect: Get "http://localhost:8000/": dial tcp 127.0.0.1:8000: connect: connection refused
+
+HelixAgent REQUIRES all integration components to be running.
+
+NOT RUNNING — nothing is listening on these endpoints. The dependency
+stack is not up (or is bound to different ports than configured).
+Start it with: make docker-start

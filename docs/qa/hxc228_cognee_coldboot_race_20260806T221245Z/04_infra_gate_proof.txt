@@ -1,0 +1,25 @@
+=== wait-infra-ready.sh: proof the gate is NOT a no-op ===
+
+--- health template distinguishes healthchecked vs not ---
+  helixcode-infra-cognee         running|healthy
+  helixcode-infra-chromedp       running|none
+
+--- NEGATIVE: cognee stopped -> gate MUST fail (exit 1) ---
+[wait-infra-ready] waiting up to 6s for 11 container(s) to become ready
+[wait-infra-ready] still waiting (1 not running, 0 not healthy) — 6s left
+[wait-infra-ready] still waiting (1 not running, 0 not healthy) — 4s left
+[wait-infra-ready] still waiting (1 not running, 0 not healthy) — 1s left
+[wait-infra-ready] FAILED after 6s — container(s) NOT RUNNING: helixcode-infra-cognee (exited)
+  exit code = 1  (MUST be 1)
+
+--- POSITIVE: cognee restarted -> gate WAITS then passes (exit 0) ---
+  cognee state immediately after start: running|starting
+[wait-infra-ready] waiting up to 180s for 11 container(s) to become ready
+[wait-infra-ready] still waiting (0 not running, 1 not healthy) — 180s left
+[wait-infra-ready] still waiting (0 not running, 1 not healthy) — 177s left
+[wait-infra-ready] still waiting (0 not running, 1 not healthy) — 175s left
+[wait-infra-ready] still waiting (0 not running, 1 not healthy) — 172s left
+[wait-infra-ready] still waiting (0 not running, 1 not healthy) — 170s left
+[wait-infra-ready] READY: all 11 container(s) running and healthy
+  exit code = 0  (MUST be 0), waited 12s for cognee to go healthy
+  cognee state now: running|healthy

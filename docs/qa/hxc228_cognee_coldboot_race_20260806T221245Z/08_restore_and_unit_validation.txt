@@ -1,0 +1,31 @@
+=== HXC-228 restore + unit validation ===
+
+--- unit file syntax validation (rendered copy; installed units untouched) ---
+  verify rc=0 (infra)
+  verify rc=0 (helixagent)
+  ExecStartPost resolves to: # ExecStartPost is load-bearing for ORDERING, not a nicety (HXC-228).
+  -> executable: NO
+
+--- restarting helixagent so running artifact == built artifact (§11.4.108) ---
+NRestarts=0
+ExecMainStatus=0
+ActiveState=active
+SubState=running
+  running binary md5: f5317bfd28a2abe323c8ea83f72387b3
+
+--- final host state vs baseline ---
+active
+active
+active
+active
+active
+  containers up: 11
+  cognee: running|healthy
+  cognee endpoint: HTTP 200
+
+--- CORRECTION: previous check grepped the comment line, not the directive ---
+  raw directive : @HELIX_ROOT@/scripts/systemd/wait-infra-ready.sh
+  resolved path : /home/milos/Factory/projects/tools_and_research/helix_code/scripts/systemd/wait-infra-ready.sh
+  exists        : YES
+  executable    : YES
+  git mode      : 

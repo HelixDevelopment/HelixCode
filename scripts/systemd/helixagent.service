@@ -5,6 +5,15 @@ Documentation=file://@HELIX_ROOT@/submodules/helix_agent/README.md
 # (-strict-dependencies, default true) covering PostgreSQL, Redis, Cognee and
 # ChromaDB. If those are not reachable it exits non-zero by design, so the
 # infra unit is a hard ordering dependency, not a soft one.
+#
+# HXC-228 — this ordering is only meaningful because helixcode-infra.service now
+# blocks in ExecStartPost until the stack is actually SERVING. Before that,
+# `podman compose up -d` returned at container CREATION, so this After= ordered
+# us after creation, not readiness: on a cold boot all four dependency probes
+# and the fatal exit landed inside the same second this unit started, with
+# Cognee still coming up. Two independent layers now cover it — the infra unit
+# waits for health, and HelixAgent's own verification retries within a bounded
+# budget (HELIXAGENT_DEP_WAIT_SECONDS, default 120 s; 0 restores fail-fast).
 After=network-online.target helixcode-infra.service
 Wants=network-online.target
 Requires=helixcode-infra.service

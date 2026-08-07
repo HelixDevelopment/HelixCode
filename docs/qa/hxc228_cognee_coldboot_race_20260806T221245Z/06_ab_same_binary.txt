@@ -1,0 +1,16 @@
+=== HXC-228 A/B on ONE binary (md5 f5317bfd28a2abe323c8ea83f72387b3) ===
+Only HELIXAGENT_DEP_WAIT_SECONDS differs between arms => isolates the fix
+from the ~10 days of unrelated commits also present in this rebuild.
+
+######## ARM A: budget=0 (pre-fix single-attempt), Cognee STARTING ########
+  cognee at t=0: curl_rc=56 (56=reset => STARTING)
+  EXIT CODE = 1  <-- non-zero == boot blocked (pre-fix behaviour reproduced)
+  classified: Cognee [STILL STARTING after 1 attempt(s)]
+
+######## ARM B: default budget, Cognee STARTING (identical condition) ########
+  cognee at t=0: curl_rc=56 (56=reset => STARTING)
+  EXIT CODE = 124  <-- 124 == still running at timeout (booted past verification)
+  retries logged: 3
+  msg="Dependency verification summary" failed=0 passed=4 total=4
+  DEPENDENCY OK" attempts=4 dependency=Cognee
+  BOOT BLOCKED occurrences: 0
