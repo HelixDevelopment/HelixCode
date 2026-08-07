@@ -234,11 +234,11 @@ graph TB
     subgraph UserExperience["User Interaction (Minimal)"]
         Launch[🚀 Launch HelixCode]
         Generate[🤖 Generate with AI]
-        Status[📊 Check Status (Optional)]
+        Status["📊 Check Status (Optional)"]
         Exit[❌ Exit HelixCode]
     end
     
-    AutoTasks -.-> UserExperience: Background automation
+    AutoTasks -.->|Background automation| UserExperience
 ```
 
 ## 🏗️ System Components in Detail
@@ -378,10 +378,10 @@ graph TB
     end
     
     subgraph Controls["User Controls (Minimal)"]
-        StartStop[▶️ Start/Stop (Optional)]
-        Configuration[⚙️ Configuration (Optional)]
-        Monitoring[📊 Monitoring (Optional)]
-        Diagnostics[🔧 Diagnostics (Optional)]
+        StartStop["▶️ Start/Stop (Optional)"]
+        Configuration["⚙️ Configuration (Optional)"]
+        Monitoring["📊 Monitoring (Optional)"]
+        Diagnostics["🔧 Diagnostics (Optional)"]
     end
     
     UserInterfaces --> StatusDisplay
@@ -516,7 +516,7 @@ graph TB
 ```mermaid
 flowchart TD
     Start([🚀 Start]) --> Download[📥 Download HelixCode]
-    Download --> Install[📦 Install (Simple)]
+    Download --> Install["📦 Install (Simple)"]
     Install --> Launch[🚀 Launch HelixCode]
     Launch --> Background{Background Auto-Management}
     Background --> AutoSetup[🔧 Auto-Setup All Providers]
