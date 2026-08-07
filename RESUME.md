@@ -26,6 +26,31 @@
 | `submodules/containers` | HEAD `11280cc`, **1 unpushed**, clean; merge aborted |
 | `submodules/helix_agent` | `e81a474a`, published |
 
+### Dispatched at session close — 4 agents, may not have finished
+
+Launched just before handoff on three operator directives ("do all the testing
+you can with HelixQA", "keep working", "fork GitMCP as our submodule and fix
+it"). Check `docs/qa/` for their evidence directories and `git log` for their
+commits before re-dispatching — **a stalled agent here usually died with real
+work done; finish it rather than restart it.**
+
+1. **HelixQA exhaustive testing** — run the real bank/session machinery
+   (`submodules/helix_qa` at `88ef057`: `cmd/helixqa-bank-session`, `banks/`,
+   `pkg/testbank`, `pkg/session`) against the live platform, human-like depth.
+   Told NOT to re-file the three already-known live defects (HXC-233/234/235).
+   Evidence → `docs/qa/helixqa_exhaustive_<UTC>/`.
+2. **HXC-225 consolidation** — operator chose KEEP-AS-OUR-FORK, not remove.
+   We already own `cli_agents/git-mcp` → `git@github.com:vasic-digital/caf-git-mcp.git`
+   at `c487a29`. Task: characterise drift vs the 169-file vendored copy, bring
+   across anything worth keeping, upgrade the fork's vulnerable deps, make it
+   buildable (write the Dockerfile that never existed), THEN delete the
+   duplicate + the phantom `mcp-gitmcp` compose entry as its own §11.4.124
+   commit, and prove the advisory count actually drops.
+3. **HXC-234** — pin pnpm (`pnpm@latest` → 11.20.0 made
+   `ERR_PNPM_IGNORED_BUILDS` fatal) AND make the swallowed build failure reach a
+   caller. Two separate commits requested.
+4. **HXC-235** — refuse-or-signal instead of the silent `HashEmbedder` fallback.
+
 ### In flight — resume these first
 
 1. **containers merge (operator chose "merge upstream, then bump").** 136 commits
