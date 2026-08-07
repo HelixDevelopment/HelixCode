@@ -1,0 +1,21 @@
+### DECISIVE PASS-BLUFF PROOF (§11.4 / §11.4.1 absence-of-error PASS)
+### BANK: banks/helixllm_rag.yaml (HelixLLM bank, deliberately pointed at the WRONG service)
+### TARGET: http://127.0.0.1:7061 (HelixAgent — whose completion path is PROVEN DOWN:
+###         direct probe returned HTTP 503 no_provider_available, see 03_helixagent_502_rootcause.txt)
+### THESIS: because the bank declares NO expect_status/expect_body_contains/expect_json_path,
+###         every HTTP response — 404, 503, anything — is scored PASS.
+###         If this run reports PASS, the runner cannot distinguish a working
+###         feature from a dead one => unfalsifiable test.
+### RUN-UTC: 2026-08-07T21:17:47Z
+---
+    [ok]   RAG-Q1-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: POST /v1/embeddings → 200 (78B)
+PASS  RAG-Q1-001     RAG retrieves the right doc and grounds the coder to answer with the invented codename (1/1 http steps)
+    [ok]   RAG-Q2-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: POST /v1/embeddings → 200 (78B)
+PASS  RAG-Q2-001     RAG retrieves the right doc and grounds the coder to answer with the invented sidecar name (1/1 http steps)
+    [ok]   RAG-SELF-VALIDATE-001-BAD/Golden-bad: no-context RED — analyzer must report the invented token ABSENT (raw FAIL), case succeeds via --expect-fail inversion: http: POST /v1/chat/completions → 400 (87B)
+PASS  RAG-SELF-VALIDATE-001-BAD Self-validation golden-bad: no-context RED means the coder cannot produce the invented token — MUST FAIL raw, case succeeds via --expect-fail (1/1 http steps)
+    [ok]   RAG-SELF-VALIDATE-001-GOOD/Golden-good: grounded pipeline must PASS (retrieval correct + invented token present): http: POST /v1/embeddings → 200 (78B)
+PASS  RAG-SELF-VALIDATE-001-GOOD Self-validation golden-good: full grounded pipeline PASSes (1/1 http steps)
+
+HTTP bank summary: 4 cases — 4 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+### EXIT_CODE=0

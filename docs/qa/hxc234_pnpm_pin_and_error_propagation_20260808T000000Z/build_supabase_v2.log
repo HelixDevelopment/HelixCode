@@ -1,0 +1,159 @@
+[1/2] STEP 1/6: FROM node:22-bookworm-slim AS builder
+[1/2] STEP 2/6: WORKDIR /app
+--> Using cache 002bc6952470a03c21700d34f9b8c6ec22c2f9a3757f05a8a2f3f35b94cb60a7
+--> 002bc6952470
+[1/2] STEP 3/6: RUN apt-get update && apt-get install -y --no-install-recommends git     && rm -rf /var/lib/apt/lists/*
+--> Using cache 12585268762653bba0f7d009427f4690ba124f15ee1ff558c795c7c1245a951b
+--> 125852687626
+[1/2] STEP 4/6: RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
+--> Using cache fd121c1e402cc839f6d1f37d2cb9775cb4b821f3be2a9c086631b328388448bf
+--> fd121c1e402c
+[1/2] STEP 5/6: COPY . .
+--> Using cache 7e030a198b21282d7a88c4bb85d0be481daf10483d4715ae2c877eff3cf05b1c
+--> 7e030a198b21
+[1/2] STEP 6/6: RUN find . -name node_modules -type d -prune -exec rm -rf {} + &&     pnpm install --frozen-lockfile=false --no-strict-peer-dependencies &&     pnpm --filter @supabase/mcp-utils --filter @supabase/mcp-server-supabase build
+Scope: all 4 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +385
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   ╭───────────────────────────────────────────────╮
+   │                                               │
+   │     Update available! 10.34.5 → 11.20.0.      │
+   │     Changelog: https://pnpm.io/v/11.20.0      │
+   │   To update, run: corepack use pnpm@11.20.0   │
+   │                                               │
+   ╰───────────────────────────────────────────────╯
+
+Progress: resolved 385, reused 0, downloaded 141, added 141
+Progress: resolved 385, reused 0, downloaded 270, added 270
+Progress: resolved 385, reused 0, downloaded 356, added 356
+Progress: resolved 385, reused 0, downloaded 373, added 373
+Progress: resolved 385, reused 0, downloaded 379, added 379
+Progress: resolved 385, reused 0, downloaded 380, added 379
+Progress: resolved 385, reused 0, downloaded 381, added 381
+Progress: resolved 385, reused 0, downloaded 384, added 384
+Progress: resolved 385, reused 0, downloaded 385, added 384
+Progress: resolved 385, reused 0, downloaded 385, added 385, done
+ WARN  Failed to create bin at /app/node_modules/.pnpm/supabase@2.34.3/node_modules/supabase/node_modules/.bin/supabase. ENOENT: no such file or directory, open '/app/node_modules/.pnpm/supabase@2.34.3/node_modules/supabase/bin/supabase'
+.../node_modules/supabase postinstall$ node scripts/postinstall.js
+.../node_modules/supabase postinstall: Downloading https://github.com/supabase/cli/releases/download/v2.34.3/supabase_2.34.3_checksums.txt
+.../node_modules/supabase postinstall: Downloading https://github.com/supabase/cli/releases/download/v2.34.3/supabase_linux_amd64.tar.gz
+.../node_modules/supabase postinstall: Checksum verified.
+.../node_modules/supabase postinstall: Installed Supabase CLI successfully
+.../node_modules/supabase postinstall: Done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ pkg-pr-new 0.0.68
++ supabase 2.34.3
+
+Done in 18.9s using pnpm v10.34.5
+Scope: 2 of 4 workspace projects
+packages/mcp-utils prebuild$ pnpm typecheck
+packages/mcp-utils prebuild: > @supabase/mcp-utils@0.5.1 typecheck /app/packages/mcp-utils
+packages/mcp-utils prebuild: > tsc --noEmit
+packages/mcp-utils prebuild: Done
+packages/mcp-utils build$ tsup --clean
+packages/mcp-utils build: CLI Building entry: src/index.ts
+packages/mcp-utils build: CLI Using tsconfig: tsconfig.json
+packages/mcp-utils build: CLI tsup v8.5.0
+packages/mcp-utils build: CLI Using tsup config: /app/packages/mcp-utils/tsup.config.ts
+packages/mcp-utils build: CLI Target: es2022
+packages/mcp-utils build: CLI Cleaning output folder
+packages/mcp-utils build: CJS Build start
+packages/mcp-utils build: ESM Build start
+packages/mcp-utils build: ESM dist/index.js     4.84 KB
+packages/mcp-utils build: ESM dist/index.js.map 27.29 KB
+packages/mcp-utils build: ESM ⚡️ Build success in 52ms
+packages/mcp-utils build: CJS dist/index.cjs     6.02 KB
+packages/mcp-utils build: CJS dist/index.cjs.map 18.00 KB
+packages/mcp-utils build: CJS ⚡️ Build success in 53ms
+packages/mcp-utils build: DTS Build start
+packages/mcp-utils build: DTS ⚡️ Build success in 843ms
+packages/mcp-utils build: DTS dist/index.d.cts 9.16 KB
+packages/mcp-utils build: DTS dist/index.d.ts  9.16 KB
+packages/mcp-utils build: Done
+packages/mcp-server-supabase prebuild$ pnpm typecheck
+packages/mcp-server-supabase prebuild: > @supabase/mcp-server-supabase@0.8.2 typecheck /app/packages/mcp-server-supabase
+packages/mcp-server-supabase prebuild: > tsc --noEmit
+packages/mcp-server-supabase prebuild: Done
+packages/mcp-server-supabase build$ tsup --clean
+packages/mcp-server-supabase build: CLI Building entry: src/index.ts, src/transports/stdio.ts, src/platform/api-platform.ts, src/platform/index.ts
+packages/mcp-server-supabase build: CLI Using tsconfig: tsconfig.json
+packages/mcp-server-supabase build: CLI tsup v8.5.0
+packages/mcp-server-supabase build: CLI Using tsup config: /app/packages/mcp-server-supabase/tsup.config.ts
+packages/mcp-server-supabase build: CLI Target: es2022
+packages/mcp-server-supabase build: CLI Cleaning output folder
+packages/mcp-server-supabase build: CJS Build start
+packages/mcp-server-supabase build: ESM Build start
+packages/mcp-server-supabase build: ESM dist/index.js                     1.22 KB
+packages/mcp-server-supabase build: ESM dist/platform/index.js            723.00 B
+packages/mcp-server-supabase build: ESM dist/chunk-YTLRXTCX.js            2.78 KB
+packages/mcp-server-supabase build: ESM dist/chunk-ZMTRWYWC.js            39.87 KB
+packages/mcp-server-supabase build: ESM dist/chunk-VCRYYVOD.js            2.76 KB
+packages/mcp-server-supabase build: ESM dist/chunk-5PS6HETH.js            10.60 KB
+packages/mcp-server-supabase build: ESM dist/chunk-LU6L7C36.js            42.00 B
+packages/mcp-server-supabase build: ESM dist/transports/stdio.js          1.13 KB
+packages/mcp-server-supabase build: ESM dist/platform/api-platform.js     203.00 B
+packages/mcp-server-supabase build: ESM dist/platform/index.js.map        71.00 B
+packages/mcp-server-supabase build: ESM dist/chunk-YTLRXTCX.js.map        6.53 KB
+packages/mcp-server-supabase build: ESM dist/index.js.map                 11.15 KB
+packages/mcp-server-supabase build: ESM dist/chunk-ZMTRWYWC.js.map        115.20 KB
+packages/mcp-server-supabase build: ESM dist/chunk-VCRYYVOD.js.map        11.61 KB
+packages/mcp-server-supabase build: ESM dist/chunk-5PS6HETH.js.map        38.76 KB
+packages/mcp-server-supabase build: ESM dist/chunk-LU6L7C36.js.map        71.00 B
+packages/mcp-server-supabase build: ESM dist/transports/stdio.js.map      3.61 KB
+packages/mcp-server-supabase build: ESM dist/platform/api-platform.js.map 71.00 B
+packages/mcp-server-supabase build: ESM ⚡️ Build success in 101ms
+packages/mcp-server-supabase build: CJS dist/platform/api-platform.cjs     327.00 B
+packages/mcp-server-supabase build: CJS dist/transports/stdio.cjs          1.44 KB
+packages/mcp-server-supabase build: CJS dist/index.cjs                     2.47 KB
+packages/mcp-server-supabase build: CJS dist/platform/index.cjs            1.13 KB
+packages/mcp-server-supabase build: CJS dist/chunk-QX2UXNCU.cjs            3.54 KB
+packages/mcp-server-supabase build: CJS dist/chunk-OGTB6M46.cjs            2.91 KB
+packages/mcp-server-supabase build: CJS dist/chunk-UL3UWW45.cjs            12.64 KB
+packages/mcp-server-supabase build: CJS dist/chunk-PHWSETKC.cjs            56.00 B
+packages/mcp-server-supabase build: CJS dist/chunk-P2KUVMMH.cjs            42.83 KB
+packages/mcp-server-supabase build: CJS dist/transports/stdio.cjs.map      4.26 KB
+packages/mcp-server-supabase build: CJS dist/platform/api-platform.cjs.map 230.00 B
+packages/mcp-server-supabase build: CJS dist/platform/index.cjs.map        203.00 B
+packages/mcp-server-supabase build: CJS dist/index.cjs.map                 12.22 KB
+packages/mcp-server-supabase build: CJS dist/chunk-QX2UXNCU.cjs.map        13.93 KB
+packages/mcp-server-supabase build: CJS dist/chunk-OGTB6M46.cjs.map        6.82 KB
+packages/mcp-server-supabase build: CJS dist/chunk-UL3UWW45.cjs.map        25.31 KB
+packages/mcp-server-supabase build: CJS dist/chunk-PHWSETKC.cjs.map        181.00 B
+packages/mcp-server-supabase build: CJS dist/chunk-P2KUVMMH.cjs.map        53.62 KB
+packages/mcp-server-supabase build: CJS ⚡️ Build success in 101ms
+packages/mcp-server-supabase build: DTS Build start
+packages/mcp-server-supabase build: DTS ⚡️ Build success in 2751ms
+packages/mcp-server-supabase build: DTS dist/transports/stdio.d.cts      20.00 B
+packages/mcp-server-supabase build: DTS dist/platform/api-platform.d.cts 582.00 B
+packages/mcp-server-supabase build: DTS dist/index.d.cts                 65.74 KB
+packages/mcp-server-supabase build: DTS dist/platform/index.d.cts        10.39 KB
+packages/mcp-server-supabase build: DTS dist/transports/stdio.d.ts       20.00 B
+packages/mcp-server-supabase build: DTS dist/platform/api-platform.d.ts  581.00 B
+packages/mcp-server-supabase build: DTS dist/index.d.ts                  65.74 KB
+packages/mcp-server-supabase build: DTS dist/platform/index.d.ts         10.39 KB
+packages/mcp-server-supabase build: Done
+--> 35ef5fc8733d
+[2/2] STEP 1/7: FROM node:22-bookworm-slim
+[2/2] STEP 2/7: RUN apt-get update && apt-get install -y --no-install-recommends socat netcat-openbsd     && rm -rf /var/lib/apt/lists/*
+--> Using cache b829447246da1fdd2f3f43a72ff1ad7e482f49331f1c0d2c01dae12120ece3ca
+--> b829447246da
+[2/2] STEP 3/7: WORKDIR /app
+--> Using cache 9fd4734d919bf3f8ff211e623721f5f353cf15e2a4119774c4e2b816c343cfd0
+--> 9fd4734d919b
+[2/2] STEP 4/7: COPY --from=builder /app /app
+--> 06192adbaaa5
+[2/2] STEP 5/7: EXPOSE 9000
+--> d5696ce3131b
+[2/2] STEP 6/7: RUN echo '#!/bin/sh' > /entrypoint.sh &&     echo 'set -e' >> /entrypoint.sh &&     echo 'echo "Starting supabase-mcp (stdio→TCP wrapped)"' >> /entrypoint.sh &&     echo 'echo "Listening on TCP port 9000..."' >> /entrypoint.sh &&     echo 'exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node /app/packages/mcp-server-supabase/dist/transports/stdio.js"'         >> /entrypoint.sh &&     chmod +x /entrypoint.sh
+--> 52fe218ff392
+[2/2] STEP 7/7: CMD ["/entrypoint.sh"]
+[2/2] COMMIT hxc234-verify/mcp-supabase:pinned
+--> f6bf9c7371d9
+Successfully tagged localhost/hxc234-verify/mcp-supabase:pinned
+f6bf9c7371d988dadf71c9c07c6cd35069e1cb7f88a2c96e9e8a001061a57b8e
+SUPABASE_BUILD_EXIT=0

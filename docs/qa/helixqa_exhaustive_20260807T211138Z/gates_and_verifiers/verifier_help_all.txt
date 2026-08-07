@@ -1,0 +1,415 @@
+##################### rag #####################
+Usage of ./bin/helixqa-verify-rag:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -chat-endpoint string
+    	coder /v1/chat/completions endpoint (default "http://localhost:18434/v1/chat/completions")
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -corpus-file string
+    	optional JSON file [{id,text},...] overriding the built-in fixture corpus
+  -embed-endpoint string
+    	TEI /v1/embeddings endpoint (default "http://localhost:18435/v1/embeddings")
+  -expect-doc string
+    	the corpus doc id retrieval top-1 must equal (required unless --no-context)
+  -expect-fail
+    	invert case-level exit code — for the golden-bad self-validation fixture
+  -expect-token string
+    	the invented fact token the grounded answer must contain (required)
+  -no-context
+    	skip retrieval; ask the bare question (RED scenario — the coder cannot know the invented fact)
+  -out string
+    	path to write the verdict JSON (required)
+  -query string
+    	the question to ask (required)
+  -timeout duration
+    	per-request timeout (default 2m0s)
+  -top-k int
+    	number of retrieved docs to stuff into the grounded prompt (default 2)
+--HELP_EXIT=0
+##################### embeddings #####################
+Usage of ./bin/helixqa-verify-embeddings:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	TEI /v1/embeddings endpoint (default "http://localhost:18435/v1/embeddings")
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -margin-floor float
+    	minimum required cos(A,A')-cos(A,U) margin (default 0.15)
+  -out string
+    	path to write the verdict JSON (required)
+  -text-a string
+    	anchor sentence (default "The cat sat on the mat.")
+  -text-a-prime string
+    	related/paraphrase sentence (default "A feline rested on the rug.")
+  -text-u string
+    	unrelated sentence (default "Quarterly revenue rose four percent.")
+  -timeout duration
+    	request timeout (default 1m0s)
+--HELP_EXIT=0
+##################### mcp-gateway #####################
+Usage of ./bin/helixqa-verify-mcp-gateway:
+  -bearer string
+    	Bearer token (§11.4.10 — never logged verbatim; required for toolslist/generate/listmodels)
+  -case string
+    	unauth401 | toolslist | generate | listmodels (required)
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	MCP gateway Streamable-HTTP endpoint (default "http://localhost:18444")
+  -expect string
+    	comma-separated required fact tokens (case-insensitive substring match)
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -max-tokens int
+    	max_tokens argument for --case generate (default 16)
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt for --case generate
+  -timeout duration
+    	request timeout (default 1m0s)
+--HELP_EXIT=0
+##################### a2a #####################
+Usage of ./bin/helixqa-verify-a2a:
+  -bearer string
+    	optional Bearer token (§11.4.10 — never logged verbatim)
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	A2A JSON-RPC dispatch endpoint (default "http://localhost:18441/a2a")
+  -expect string
+    	comma-separated required fact tokens (case-insensitive substring match, required)
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -forbid string
+    	comma-separated forbidden fact tokens
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	the user prompt to send in the A2A Task (required)
+  -timeout duration
+    	request timeout (code generation is not instantaneous) (default 5m0s)
+--HELP_EXIT=0
+##################### netprov #####################
+Usage of ./bin/helixqa-verify-netprov:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	network-provider chat/completions endpoint (LAN IP expected) (default "http://localhost:18434/v1/chat/completions")
+  -expect string
+    	comma-separated required fact tokens (case-insensitive substring match)
+  -expect-fail
+    	invert the case-level exit code — for golden-bad self-validation fixtures (mirrors cmd/helixqa-verify-vision: the RAW verdict ("pass") is still recorded honestly; "case_result" is what the bank's RequiredEvidence gates on)
+  -forbid string
+    	comma-separated forbidden fact tokens (presence forces hallucinated=true)
+  -max-tokens int
+    	max_tokens for the completion request (default 16)
+  -model string
+    	model id to request (default "/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf")
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt to send (required)
+  -require-lan
+    	fail the LAN check (and thus pass=false) when the resolved endpoint host is loopback/localhost (default true)
+  -timeout duration
+    	request timeout (default 30s)
+--HELP_EXIT=0
+##################### vision #####################
+Usage of ./bin/helixqa-verify-vision:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	vision chat/completions endpoint (default "http://localhost:18439/v1/chat/completions")
+  -expect string
+    	comma-separated required fact tokens (case-insensitive substring match)
+  -expect-fail
+    	invert the case-level exit code — for golden-bad self-validation fixtures (mirrors the panoptic-validate-recording --expect-fail bank convention: the RAW fact-match verdict ("pass") is still recorded honestly; "case_result" is what the bank's RequiredEvidence gates on)
+  -forbid string
+    	comma-separated forbidden fact tokens (presence forces hallucinated=true)
+  -image string
+    	path to the ground-truth image (required)
+  -max-tokens int
+    	max_tokens for the completion request (default 150)
+  -model string
+    	model id to request (default "vision")
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt to send alongside the image (required)
+  -timeout duration
+    	request timeout (default 1m0s)
+--HELP_EXIT=0
+##################### whisper #####################
+Usage of ./bin/helixqa-verify-whisper:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	Whisper STT /v1/audio/transcriptions endpoint (default "http://localhost:18437/v1/audio/transcriptions")
+  -expect string
+    	comma-separated required words (case-insensitive, canonicalized)
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -out string
+    	path to write the verdict JSON (required)
+  -timeout duration
+    	request timeout (default 1m0s)
+  -wav string
+    	path to the WAV fixture (required)
+--HELP_EXIT=0
+##################### tesseract #####################
+Usage of ./bin/helixqa-verify-tesseract:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -conf-floor float
+    	minimum mean_conf required for pass (calibrated from this capability's own data, §11.4.107(13)) (default 60)
+  -endpoint string
+    	Tesseract OCR shim base URL (default "http://localhost:18438")
+  -expect string
+    	comma-separated required tokens (case-insensitive substring match against full_text)
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -image string
+    	pre-rendered image to OCR directly (skips the /v1/render step — for golden-bad blank/noise fixtures)
+  -known-text string
+    	known text string to render then OCR (required unless --image is given)
+  -mode string
+    	render mode: label|blank|noise (default "label")
+  -out string
+    	path to write the verdict JSON (required)
+  -timeout duration
+    	request timeout (default 1m0s)
+--HELP_EXIT=0
+##################### translate-nllb #####################
+Usage of ./bin/helixqa-verify-translate-nllb:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	NLLB shim /translate endpoint (default "http://localhost:18436/translate")
+  -expect string
+    	comma-separated required fact tokens (case-insensitive substring match)
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -forbid string
+    	comma-separated forbidden fact tokens
+  -out string
+    	path to write the verdict JSON (required)
+  -source string
+    	source sentence to translate (required)
+  -source-lang string
+    	FLORES-200 source language code (default "eng_Latn")
+  -target-lang string
+    	FLORES-200 target language code (required)
+  -timeout duration
+    	request timeout (default 1m0s)
+--HELP_EXIT=0
+##################### coder-bench #####################
+Usage of ./bin/helixqa-verify-coder-bench:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	coder /v1/chat/completions endpoint (default "http://localhost:18434/v1/chat/completions")
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -latency-p99-max int
+    	max acceptable p99 latency in ms (0 = skip assertion)
+  -level int
+    	concurrency level(s) — repeat for multiple (e.g. --level 1 --level 10 --level 50 --level 100) (default 10)
+  -model string
+    	model name (default "llama3.2")
+  -n-per-level int
+    	number of requests per concurrency level (default 20)
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt to send to every request (default "Write a short poem about a robot learning to paint. Maximum 5 lines.")
+  -throughput-min float
+    	min acceptable throughput in req/sec (0 = skip assertion)
+  -timeout duration
+    	per-request timeout (default 2m0s)
+  -ttft
+    	measure time-to-first-token using streaming (stream:true)
+  -ttft-p95-max int
+    	max acceptable TTFT p95 in ms (0 = skip assertion; requires --ttft)
+--HELP_EXIT=0
+##################### coder-chaos #####################
+Usage of ./bin/helixqa-verify-coder-chaos:
+  -burst-size int
+    	port-flood: concurrent burst connections (default 10)
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	coder base URL (default "http://localhost:18434")
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -mode string
+    	chaos mode: port-flood | oversized-prompt | concurrent-health (default "port-flood")
+  -n int
+    	port-flood: total connections; concurrent-health: concurrent POSTs (default 50)
+  -n-health int
+    	concurrent-health: health probes during load (default 3)
+  -out string
+    	path to write the verdict JSON (required)
+  -oversized-k int
+    	oversized-prompt: prompt size in KiB (default 200)
+  -port int
+    	coder port (for port-flood direct TCP) (default 18434)
+  -timeout duration
+    	per-request timeout (default 2m0s)
+--HELP_EXIT=0
+##################### coder-concurrency #####################
+Usage of ./bin/helixqa-verify-coder-concurrency:
+  -all-ok
+    	assert every response is HTTP 200
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -consistent
+    	assert all responses are identical (trimmed)
+  -endpoint string
+    	coder /v1/chat/completions endpoint (default "http://localhost:18434/v1/chat/completions")
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -model string
+    	model name (default "llama3.2")
+  -n int
+    	number of concurrent requests (default 10)
+  -no-loss
+    	assert exactly N responses received
+  -nonce
+    	embed unique nonce per request and verify
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt to send to every request (default "Count from 1 to 10.")
+  -timeout duration
+    	per-request timeout (default 2m0s)
+--HELP_EXIT=0
+##################### coder-ddos #####################
+Usage of ./bin/helixqa-verify-coder-ddos:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -duration duration
+    	duration for soak mode (default 30s)
+  -endpoint string
+    	coder /v1/chat/completions endpoint (default "http://localhost:18434/v1/chat/completions")
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -expect-no-5xx
+    	assert zero 5xx errors
+  -expect-no-crash
+    	assert coder process alive after flood
+  -expect-no-loss
+    	assert exactly N responses received (zero dropped)
+  -mode string
+    	operation mode: burst | soak | conn-flood (default "burst")
+  -model string
+    	model name (default "llama3.2")
+  -n int
+    	number of requests (burst/soak/flood) (default 200)
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt to send; <idx> is replaced with unique nonce when --expect-no-loss is set (default "Count to 5. NONCE:<idx>")
+  -timeout duration
+    	per-request timeout (default 2m0s)
+--HELP_EXIT=0
+##################### coder-memory #####################
+Usage of ./bin/helixqa-verify-coder-memory:
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	coder /v1/chat/completions endpoint (derived from --port if empty)
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -gc-stability
+    	assert GC-point stability (RSS second-half within threshold)
+  -interval int
+    	sample RSS every N requests (default 10)
+  -leak-pct float
+    	max allowed RSS growth from start, as percentage (default 15)
+  -model string
+    	model name (default "llama3.2")
+  -monotonic
+    	assert no monotonic leak (final RSS <= initial + leak-pct%)
+  -n int
+    	number of sequential requests (default 200)
+  -out string
+    	path to write the verdict JSON (required)
+  -port int
+    	coder port (default 18434)
+  -prompt string
+    	prompt to send to every request (default "Count from 1 to 5.")
+  -steady
+    	assert steady-state (last N samples within narrow band)
+  -steady-band float
+    	max allowed RSS variance in trailing samples, as percentage (default 5)
+  -steady-n int
+    	number of trailing samples for steady-state check (default 5)
+  -timeout duration
+    	per-request timeout (default 2m0s)
+--HELP_EXIT=0
+##################### coder-race-llm #####################
+Usage of ./bin/helixqa-verify-coder-race-llm:
+  -assert-all-ok
+    	assert every response is HTTP 200
+  -assert-deterministic
+    	assert all responses extract to the same integer (identical mode)
+  -assert-no-cross-contam
+    	assert no response contains another request's nonce (distinct mode / selftest)
+  -assert-no-duplicate
+    	assert no two responses are byte-identical (distinct mode)
+  -assert-no-loss
+    	assert exactly N responses received
+  -assert-own-nonce
+    	assert every response contains its own nonce (distinct mode)
+  -challenge-id string
+    	challenge id for conduit events (defaults to --out basename)
+  -conduit-dir string
+    	optional conduit JSONL event dir (§11.4.116)
+  -endpoint string
+    	coder /v1/chat/completions endpoint (default "http://localhost:18434/v1/chat/completions")
+  -expect-fail
+    	invert case-level exit code — for golden-bad self-validation fixtures
+  -fixture string
+    	selftest-crosscontam fixture: clean | contaminated (default "clean")
+  -mode string
+    	race mode: distinct | identical | selftest-crosscontam (default "distinct")
+  -model string
+    	model name (default "llama3.2")
+  -n int
+    	number of concurrent requests (distinct/identical modes) (default 8)
+  -out string
+    	path to write the verdict JSON (required)
+  -prompt string
+    	prompt for identical mode (default "What is 6 * 7? Respond with ONLY the numeric result.")
+  -timeout duration
+    	per-request timeout (default 2m0s)
+--HELP_EXIT=0
