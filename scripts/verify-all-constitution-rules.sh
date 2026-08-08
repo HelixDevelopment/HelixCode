@@ -1064,6 +1064,35 @@ if want_gate G28; then
 fi
 
 # ---------------------------------------------------------------------------
+# G29 — HXC-237: the SHIPPED workable-items binary carries the closure-evidence
+# invariant. The validator everyone runs is a TRACKED PREBUILT binary; on
+# 2026-08-06 a new invariant landed in its SOURCE and the artifact was never
+# rebuilt, so `validate` reported OK on records the source would have rejected
+# (measured 2026-08-08: shipped exit 0 / from-source exit 1 on one identical
+# corrupted copy). This gate asserts the REAL condition — the artifact's
+# BEHAVIOUR on a golden-bad fixture — rather than an mtime proxy a `touch`
+# would satisfy (§11.4.201), with a golden-good fixture as the
+# false-positive guard (§11.4.201(1)) and a durable §11.4.115 RED that runs
+# the actual pre-fix binary blob from git.
+# ---------------------------------------------------------------------------
+if want_gate G29; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G29 — HXC-237 workable-items binary freshness (CM-WORKABLE-ITEMS-BINARY-FRESH)"
+    RED_MODE=0 bash "$ROOT/scripts/gates/hxc237_workable_items_binary_freshness_gate.sh" \
+        >/tmp/g29-wi-binary-fresh.out 2>&1
+    g29_rc=$?
+    if [[ "$g29_rc" -eq 0 ]]; then
+        gate_pass G29 "shipped constitution/scripts/workable-items/bin/workable-items behaviourally carries the closure-evidence-resolvability invariant — reports it on the golden-bad fixture, stays silent on the golden-good one (see /tmp/g29-wi-binary-fresh.out)"
+    elif [[ "$g29_rc" -eq 2 ]]; then
+        gate_fail G29 "binary-freshness guard could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing; this is NOT a detected regression (see /tmp/g29-wi-binary-fresh.out)" \
+            "resolve the environment blocker (sqlite3 on PATH, schema.sql present, bin/workable-items present+executable), then re-run"
+    else
+        gate_fail G29 "the shipped workable-items binary is STALE relative to its source — it does not carry an invariant its source defines (see /tmp/g29-wi-binary-fresh.out)" \
+            "cd constitution/scripts/workable-items && go build -o bin/workable-items ./cmd/workable-items"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
