@@ -1,0 +1,25 @@
+### HXC-243 BATCH-2 ASSERTION SELF-VALIDATION (§11.4.107(10) golden-good / golden-bad)
+### The 8 batch-2 services are DOWN, so real-service GREEN is not provable today.
+### This proves the next-best load-bearing property: the assertions are
+### SATISFIABLE (not always-red) AND DISCRIMINATING (they reject the exact
+### 200-with-error-envelope bluff shape that :7061 exhibits).
+### THIS IS NOT A CLAIM THAT THE REAL SERVICES WORK. Fixture only.
+### RUN-UTC: 2026-08-08T08:31:21Z
+
+--- MODE=good  (contract-shaped responses)  REQUIREMENT: every bank EXIT=0 ---
+  BANK=helixllm_rag.yaml EXIT=0  4 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:18991)
+  BANK=helixllm_embeddings.yaml EXIT=0  3 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:18991)
+  BANK=helixllm_tesseract.yaml EXIT=0  4 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:18991)
+  BANK=helixllm_translate_nllb.yaml EXIT=0  4 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:18991)
+  BANK=helixllm_vision.yaml EXIT=0  6 PASS, 0 FAIL, 1 SKIP  (base-url http://127.0.0.1:18991)
+  BANK=helixllm_a2a.yaml EXIT=0  3 PASS, 0 FAIL, 0 SKIP  (base-url http://127.0.0.1:18991)
+  BANK=helixllm_mcp_gateway.yaml EXIT=0  1 PASS, 0 FAIL, 5 SKIP  (base-url http://127.0.0.1:18991)
+
+--- MODE=bad   (HTTP 200 + error envelope)  REQUIREMENT: every bank EXIT=1 ---
+  BANK=helixllm_rag.yaml EXIT=1  0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:18992)
+  BANK=helixllm_embeddings.yaml EXIT=1  0 PASS, 3 FAIL, 0 SKIP  (base-url http://127.0.0.1:18992)
+  BANK=helixllm_tesseract.yaml EXIT=1  0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:18992)
+  BANK=helixllm_translate_nllb.yaml EXIT=1  0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:18992)
+  BANK=helixllm_vision.yaml EXIT=1  0 PASS, 6 FAIL, 1 SKIP  (base-url http://127.0.0.1:18992)
+  BANK=helixllm_a2a.yaml EXIT=1  0 PASS, 3 FAIL, 0 SKIP  (base-url http://127.0.0.1:18992)
+  BANK=helixllm_mcp_gateway.yaml EXIT=1  0 PASS, 1 FAIL, 5 SKIP  (base-url http://127.0.0.1:18992)

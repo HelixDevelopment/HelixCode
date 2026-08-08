@@ -1,0 +1,18 @@
+### HXC-243 REGRESSION PROOF — the ORIGINAL control experiment, re-run
+### Same bank, same wrong target as
+### docs/qa/helixqa_exhaustive_20260807T211138Z/banks_llm_agent/
+###   CONTROL_passbluff_proof__helixllm_rag_vs_agent7061.txt
+### which reported: 4 cases — 4 PASS, 0 FAIL, 0 SKIP  /  EXIT_CODE=0
+### RUN-UTC: 2026-08-08T08:31:55Z
+---
+    [FAIL] RAG-Q1-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: json_path "$.data[0].embedding" not found in response
+FAIL  RAG-Q1-001     RAG retrieves the right doc and grounds the coder to answer with the invented codename — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    [FAIL] RAG-Q2-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: json_path "$.data[0].embedding" not found in response
+FAIL  RAG-Q2-001     RAG retrieves the right doc and grounds the coder to answer with the invented sidecar name — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    [FAIL] RAG-SELF-VALIDATE-001-BAD/Golden-bad: no-context RED — analyzer must report the invented token ABSENT (raw FAIL), case succeeds via --expect-fail inversion: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+FAIL  RAG-SELF-VALIDATE-001-BAD Self-validation golden-bad: no-context RED means the coder cannot produce the invented token — MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    [FAIL] RAG-SELF-VALIDATE-001-GOOD/Golden-good: grounded pipeline must PASS (retrieval correct + invented token present): http: json_path "$.data[0].embedding" not found in response
+FAIL  RAG-SELF-VALIDATE-001-GOOD Self-validation golden-good: full grounded pipeline PASSes — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+
+HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+### EXIT_CODE=1

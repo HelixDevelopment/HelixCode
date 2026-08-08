@@ -1,0 +1,28 @@
+### HXC-243 GROUND-TRUTH PROBES (§11.4.6 — assertions derived from MEASURED responses, never guessed)
+### RUN-UTC: 2026-08-08T08:27:30Z
+
+=== :18434 llama.cpp coder — CORRECT target for the 7 helixllm coder banks ===
+--- POST /v1/chat/completions (minimal real request) ---
+HTTP=200 time=0.052250s
+{"choices":[{"finish_reason":"stop","index":0,"message":{"role":"assistant","content":"PONG"}}],"created":1786177650,"model":"/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf","system_fingerprint":"b1-3b4fca1","object":"chat.completion","usage":{"completion_to
+  json_path $.choices[0].message.content => 'PONG'
+--- GET /v1/models ---
+HTTP=200
+  top-level keys = ['models', 'object', 'data']
+  json_path $.models[0].name => '/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf'
+
+=== :8081 helixcode-server — CORRECT target for helixcode_coder_race ===
+HTTP=200
+  top-level keys = ['count', 'last_updated', 'providers', 'source', 'status']
+  json_path $.providers[0].id => 'openai'
+
+=== :7061 HelixAgent — the KNOWN-BROKEN control target ===
+--- POST /v1/chat/completions (same body) ---
+HTTP=404
+{"error":{"code":404,"message":"model 'local' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not_found"}}
+--- GET /v1/models  <-- NOTE: answers 200, so a status-only assertion would NOT catch it ---
+HTTP=200
+  top-level keys = ['object', 'data'] -> NO "models" key => $.models[0].name ABSENT => FAIL
+--- GET /api/v1/llm/providers ---
+HTTP=404
+404 page not found

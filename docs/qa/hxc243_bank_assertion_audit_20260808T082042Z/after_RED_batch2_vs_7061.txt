@@ -1,0 +1,81 @@
+### HXC-243 BATCH-2 RED PROOF — patched banks vs the known-broken target
+### TARGET: http://127.0.0.1:7061 (HelixAgent)
+### HONEST BOUNDARY (§11.4.6): these 8 banks' own services (:18435-:18444) are
+### DOWN, so only the RED polarity is empirically proven here. GREEN is grounded
+### in each bank's paired analyzer source and is an OPEN verification gap.
+### RUN-UTC: 2026-08-08T08:30:32Z
+---
+BANK=helixllm_rag.yaml EXIT=1
+    FAIL  RAG-Q1-001     RAG retrieves the right doc and grounds the coder to answer with the invented codename — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    FAIL  RAG-Q2-001     RAG retrieves the right doc and grounds the coder to answer with the invented sidecar name — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    FAIL  RAG-SELF-VALIDATE-001-BAD Self-validation golden-bad: no-context RED means the coder cannot produce the invented token — MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    FAIL  RAG-SELF-VALIDATE-001-GOOD Self-validation golden-good: full grounded pipeline PASSes — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] RAG-Q1-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: json_path "$.data[0].embedding" not found in response
+    evidence:     [FAIL] RAG-Q2-001/Embed corpus+query on TEI -> real-cosine top-1 -> ground coder -> assert invented token present: http: json_path "$.data[0].embedding" not found in response
+
+BANK=helixllm_embeddings.yaml EXIT=1
+    FAIL  EMB-MARGIN-001 TEI serves real embeddings whose related-pair cosine out-scores an unrelated pair — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    FAIL  EMB-SELF-VALIDATE-001-BAD Self-validation golden-bad: swapped (inverted-ordering) triple MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    FAIL  EMB-SELF-VALIDATE-001-GOOD Self-validation golden-good: correctly-ordered triple against real embeddings PASS — 1/1 http steps failed: http: json_path "$.data[0].embedding" not found in response
+    HTTP bank summary: 3 cases — 0 PASS, 3 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] EMB-MARGIN-001/POST the sentence triple to the live TEI endpoint; assert semantic-order cosine margin: http: json_path "$.data[0].embedding" not found in response
+    evidence:     [FAIL] EMB-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject the inverted ordering (raw FAIL), case succeeds via --expect-fail inversion: http: json_path "$.data[0].embedding" not found in response
+
+BANK=helixllm_tesseract.yaml EXIT=1
+    FAIL  OCR-GOOD-001   Tesseract genuinely recovers a known rendered label (fixture 1) — 1/1 http steps failed: http: POST /v1/render → status 404, expected 200 (body: 404 page not found)
+    FAIL  OCR-GOOD-002   Tesseract genuinely recovers a known rendered label (fixture 2) — 1/1 http steps failed: http: POST /v1/render → status 404, expected 200 (body: 404 page not found)
+    FAIL  OCR-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched tokens against the SAME live OCR result MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: POST /v1/render → status 404, expected 200 (body: 404 page not found)
+    FAIL  OCR-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct tokens against a genuine live OCR result PASS — 1/1 http steps failed: http: POST /v1/render → status 404, expected 200 (body: 404 page not found)
+    HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] OCR-GOOD-001/Render known text -> OCR the rendered PNG -> token-match + confidence-floor the recognized text: http: POST /v1/render → status 404, expected 200 (body: 404 page not found)
+    evidence:     [FAIL] OCR-GOOD-002/Render known text -> OCR the rendered PNG -> token-match + confidence-floor the recognized text: http: POST /v1/render → status 404, expected 200 (body: 404 page not found)
+
+BANK=helixllm_translate_nllb.yaml EXIT=1
+    FAIL  TRA-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched facts against the SAME live translation MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: POST /translate → status 404, expected 200 (body: 404 page not found)
+    FAIL  TRA-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct facts against a genuine live translation PASS — 1/1 http steps failed: http: POST /translate → status 404, expected 200 (body: 404 page not found)
+    FAIL  TRA-UNDERSTAND-001 NLLB correctly translates en->de and produces a genuine, non-identity forward translation — 1/1 http steps failed: http: POST /translate → status 404, expected 200 (body: 404 page not found)
+    FAIL  TRA-UNDERSTAND-002 NLLB correctly translates en->fr and produces a genuine, non-identity forward translation — 1/1 http steps failed: http: POST /translate → status 404, expected 200 (body: 404 page not found)
+    HTTP bank summary: 4 cases — 0 PASS, 4 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] TRA-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject mismatched facts (raw FAIL), case succeeds via --expect-fail inversion: http: POST /translate → status 404, expected 200 (body: 404 page not found)
+    evidence:     [FAIL] TRA-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when facts genuinely match a real live translation: http: POST /translate → status 404, expected 200 (body: 404 page not found)
+
+BANK=helixllm_whisper.yaml EXIT=0
+    SKIP  STT-FOX-001    Whisper correctly recovers the known 'fox' sentence from synthesized audio (1 http steps skipped)
+    SKIP  STT-HELLOWORLD-001 Whisper correctly recovers the known 'hello world' + spoken-number sentence (1 http steps skipped)
+    SKIP  STT-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched words against the SAME live transcript MUST FAIL raw, case succeeds via --expect-fail (1 http steps skipped)
+    SKIP  STT-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct words against a genuine live transcript PASS (1 http steps skipped)
+    HTTP bank summary: 4 cases — 0 PASS, 0 FAIL, 4 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [skip] STT-FOX-001/POST fox.wav to the live Whisper STT endpoint and word-match the transcript: http: step skipped — SKIP-OK: HXC-243/§11.4.3: endpoint requires multipart/form-data (WAV upload); the http-step schema cannot express a multipart body, so no honest expectation exists. Asserted instead by bin/helixqa-verify-whisper (dispatches_to).
+    evidence:     [skip] STT-HELLOWORLD-001/POST helloworld.wav to the live Whisper STT endpoint and word-match (digit/number-word canonicalized): http: step skipped — SKIP-OK: HXC-243/§11.4.3: endpoint requires multipart/form-data (WAV upload); the http-step schema cannot express a multipart body, so no honest expectation exists. Asserted instead by bin/helixqa-verify-whisper (dispatches_to).
+
+BANK=helixllm_vision.yaml EXIT=1
+    FAIL  VIS-COUNT-001  VLM correctly counts a small number of same-colored shapes — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    SKIP  VIS-LIVENESS-001 Live-screen description: window-scoped capture + freeze-detection before the VLM judges it (no http: steps)
+    FAIL  VIS-OCR-READ-001 VLM correctly reads a single rendered word inside the image — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    FAIL  VIS-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched facts against the SAME image MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    FAIL  VIS-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct facts against a known image PASS — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    FAIL  VIS-SPATIAL-001 VLM correctly answers a left/right spatial-relation question — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    FAIL  VIS-UNDERSTAND-001 VLM correctly identifies shape + color of a known ground-truth image — 1/1 http steps failed: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    HTTP bank summary: 7 cases — 0 PASS, 6 FAIL, 1 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] VIS-COUNT-001/POST a 3-blue-circle image + counting prompt; assert the digit 3 in the response: http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+    evidence:     [FAIL] VIS-OCR-READ-001/POST a rendered-text image + reading prompt; assert the exact word (case-insensitive): http: POST /v1/chat/completions → status 404, expected 200 (body: {"error":{"code":404,"message":"model 'coder' is not supported by any registered provider: see GET /v1/models for the canonical model list, or use helixagent-debate / helixagent-llm","type":"model_not...)
+
+BANK=helixllm_a2a.yaml EXIT=1
+    FAIL  A2A-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched facts against the SAME live Task answer MUST FAIL raw, case succeeds via --expect-fail — 1/1 http steps failed: http: POST /a2a → status 404, expected 200 (body: 404 page not found)
+    FAIL  A2A-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct facts against a genuine live Task answer PASS — 1/1 http steps failed: http: POST /a2a → status 404, expected 200 (body: 404 page not found)
+    FAIL  A2A-UNDERSTAND-001 A2A message/send routes a real Task to the live coder and returns a completed, genuine, non-identity answer — 1/1 http steps failed: http: POST /a2a → status 404, expected 200 (body: 404 page not found)
+    HTTP bank summary: 3 cases — 0 PASS, 3 FAIL, 0 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] A2A-SELF-VALIDATE-001-BAD/Golden-bad: analyzer must reject mismatched facts (raw FAIL), case succeeds via --expect-fail inversion: http: POST /a2a → status 404, expected 200 (body: 404 page not found)
+    evidence:     [FAIL] A2A-SELF-VALIDATE-001-GOOD/Golden-good: analyzer must PASS when facts genuinely match a real live Task answer: http: POST /a2a → status 404, expected 200 (body: 404 page not found)
+
+BANK=helixllm_mcp_gateway.yaml EXIT=1
+    SKIP  MCP-GENERATE-SELF-VALIDATE-001-BAD Self-validation golden-bad: mismatched facts against the SAME live tools/call answer MUST FAIL raw, case succeeds via --expect-fail (no http: steps)
+    SKIP  MCP-GENERATE-SELF-VALIDATE-001-GOOD Self-validation golden-good: correct facts against a genuine live tools/call answer PASS (no http: steps)
+    SKIP  MCP-GW-GENERATE-001 MCP gateway tools/call helixllm_generate proxies to the live coder and returns a genuine, non-identity completion (no http: steps)
+    SKIP  MCP-GW-LISTMODELS-001 MCP gateway tools/call helixllm_list_models proxies to the live coder and returns the real served model list (no http: steps)
+    SKIP  MCP-GW-TOOLSLIST-001 MCP gateway tools/list (with valid Bearer) registers both real tools (no http: steps)
+    FAIL  MCP-GW-UNAUTH-401 MCP gateway rejects a request with no Bearer token with HTTP 401 — 1/1 http steps failed: http: POST / → status 404, expected 401 (body: 404 page not found)
+    HTTP bank summary: 6 cases — 0 PASS, 1 FAIL, 5 SKIP  (base-url http://127.0.0.1:7061)
+    evidence:     [FAIL] MCP-GW-UNAUTH-401/Raw JSON-RPC POST with no Authorization header MUST be rejected with HTTP 401: http: POST / → status 404, expected 401 (body: 404 page not found)
+
