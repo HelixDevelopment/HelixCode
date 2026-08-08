@@ -1,0 +1,27 @@
+# Independent code review (11.4.142 / 11.4.125 / 11.4.194) — VERDICT
+captured_utc: 2026-08-08T09:31:01Z
+reviewer: independent subagent (Fable), structurally separate from author
+TIMING CAVEAT (11.4.6): the reviewer did not return before the commit was made;
+  the commit was landed under 11.4.101 (reversible, unpushed, evidence-determined)
+  and the GO verdict arrived immediately AFTER. Recorded honestly, not backdated.
+
+VERDICT: GO
+
+Independently re-verified by the reviewer:
+  1. direction/distance re-measured for 4 of 7 (8/0, 32/0, 95/0, 3/0) -- VERIFIED,
+     with correction: 'all 9 strictly forward' overstated (see 02_drift_direction.txt).
+  2. provenance (1f8b31f intent / 9e74070 flip / 66e490d merge took remote gitlinks) -- VERIFIED
+  3. LOAD-BEARING: both recorded pins unreachable -- VERIFIED (422 + live fetch 'not our ref' exit 128)
+  4. replacement pins upstream + ancestors of main (302 / 781 behind) -- VERIFIED
+  5. restore-not-bump for the 7 -- CORRECT
+  6. staged change minimal, 2 gitlinks, no commits inside third-party repos -- VERIFIED
+  7. no work lost; OC-REF-004 already failing and unaltered; strictly improved
+     (pre-remediation a fresh clone could not check skyvern out at all)
+
+Non-blocking observations from the reviewer:
+  - claim-1 framing corrected (done, above)
+  - docs/opensource-references.md stale -> separate workable item (see file 08)
+  - recurrence risk: the Auto-commit source machine may re-push the bad pins;
+    revert rationale is documented in the commit body (74298bc)
+  - reviewer suggested a parent-repo gitlink bump; NOT DONE -- operator explicitly
+    instructed 'do NOT bump the parent pointer, do NOT push'. Left for the operator.

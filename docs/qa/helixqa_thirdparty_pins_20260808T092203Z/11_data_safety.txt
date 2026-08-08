@@ -1,0 +1,17 @@
+# Data-safety check: does re-recording signoz/skyvern LOSE anything?
+captured_utc: 2026-08-08T09:27:20Z
+
+The two pins being dropped (5c20711 signoz, 6e4cebc skyvern) are NOT present
+in this checkout's object store at all — they were never fetched here, and
+upstream refuses to serve them ('not our ref'). Confirm:
+--- signoz 5c20711310793012e6935feb6065d0b381da8bf8
+      fatal: git cat-file: could not get object info
+--- skyvern 6e4cebc4c4911f40392ebe8654433eb91ecc2a22
+      fatal: git cat-file: could not get object info
+
+Therefore this change destroys NO local work in THIS checkout: there is no
+object to destroy. Per 1f8b31f those commits were authored locally in another
+checkout (Milos Vasic, 2026-07-11/12) and remain in that checkout untouched;
+this change only stops HelixQA's main from PINNING a commit that no clone can
+fetch. If that local work matters it needs the operator decision 1f8b31f already
+flagged (fork upstream, or drop the local commits) — unchanged by this commit.

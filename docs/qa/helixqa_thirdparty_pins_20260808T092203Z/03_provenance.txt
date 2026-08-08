@@ -1,0 +1,109 @@
+# Provenance: why the 9 pointers are dirty
+captured_utc: 2026-08-08T09:22:27Z
+
+## helix_qa HEAD is a MERGE
+66e490d21814fa6d8d46ae12c0e02a7d15b66296  2026-08-08 13:45:50 +0500
+  subject: Merge remote-tracking branch 'origin/main'
+  parents: d05d8251be218b99b3e76fef0400af7a85be854a 9e7407048cec4586c7685bbc2e4dcdacbf95b86e
+  local parent  d05d825 = 'fix(banks): HXC-243 batch 2 ...'
+  remote parent 9e74070 = 'Auto-commit' (came in via origin/main)
+
+## Gitlink value across the decisive commits
+--- a729b51  2026-07-13 05:25:22 +0500 | chore: update nested tools/opensource submodules after merge
+      allure2            945706fc0f29
+      appium             4e93a63ac532
+      browser-use        cf2c921d7df9
+      docker-android     64dc5076b73a
+      midscene           31a516f12e83
+      signoz             ef9b8eec8a2b
+      skyvern            085c7187120f
+      stagehand          007e0f6da482
+      ui-tars-desktop    c2ad42e3eb9b
+--- 1f8b31f  2026-08-05 15:42:02 +0500 | chore(submodules): record upstream-verified third-party pins (7 of 18)
+      allure2            db2dbd8166fc
+      appium             0e4ecc49d6ae
+      browser-use        c8e6e8f0fe61
+      docker-android     28478f3bce03
+      midscene           4d37b88b2fe7
+      signoz             ef9b8eec8a2b
+      skyvern            085c7187120f
+      stagehand          7224376585d6
+      ui-tars-desktop    e9f3387288da
+--- 9e74070  2026-08-05 22:21:06 +0500 | Auto-commit
+      allure2            db2dbd8166fc
+      appium             0e4ecc49d6ae
+      browser-use        c8e6e8f0fe61
+      docker-android     28478f3bce03
+      midscene           4d37b88b2fe7
+      signoz             5c2071131079
+      skyvern            6e4cebc4c491
+      stagehand          7224376585d6
+      ui-tars-desktop    e9f3387288da
+--- d05d825  2026-08-08 13:32:28 +0500 | fix(banks): HXC-243 batch 2 — remaining 8 unfalsifiable banks, incl. the control
+      allure2            945706fc0f29
+      appium             4e93a63ac532
+      browser-use        cf2c921d7df9
+      docker-android     64dc5076b73a
+      midscene           31a516f12e83
+      signoz             ef9b8eec8a2b
+      skyvern            085c7187120f
+      stagehand          007e0f6da482
+      ui-tars-desktop    c2ad42e3eb9b
+--- 66e490d  2026-08-08 13:45:50 +0500 | Merge remote-tracking branch 'origin/main'
+      allure2            db2dbd8166fc
+      appium             0e4ecc49d6ae
+      browser-use        c8e6e8f0fe61
+      docker-android     28478f3bce03
+      midscene           4d37b88b2fe7
+      signoz             5c2071131079
+      skyvern            6e4cebc4c491
+      stagehand          7224376585d6
+      ui-tars-desktop    e9f3387288da
+
+## The commit that deliberately set 7 of the pins (1f8b31f)
+1f8b31f61cda0d426b3d06bab843a873c5cdca2a
+ author=Milos Vasic date=2026-08-05 15:42:02 +0500
+
+chore(submodules): record upstream-verified third-party pins (7 of 18)
+
+Clone-safety (operator mandate: a fresh clone must contain every part needed
+to build). These nested third-party pointers had moved in the worktree but
+were never recorded.
+
+RECORDED (7) -- each new pin VERIFIED reachable from its upstream
+remote-tracking branch AND authored by the genuine upstream maintainer/bot,
+so a fresh clone can fetch every one:
+  allure2         db2dbd8  origin/main    (dependabot[bot])
+  appium          0e4ecc4  origin/master  (Mykola Mokhnach)
+  browser-use     c8e6e8f  origin/main    (Saurav Panda)
+  docker-android  28478f3  origin/master  (budtmo)
+  midscene        4d37b88  origin/main    (fishear)
+  stagehand       7224376  origin/main    (github-actions[bot])
+  ui-tars-desktop e9f3387  origin/main    (Charles)
+
+DELIBERATELY NOT RECORDED (9) -- chroma, docling, kiwi-tcms, llama-index,
+marker, mem0, perfetto, signoz, skyvern. Their worktree HEADs are commits
+authored LOCALLY (Milos Vasic, 2026-07-11/12) inside third-party repos we
+have no push right to, and they are reachable from NO upstream branch.
+Recording them would pin commits that exist only on one machine and would
+BREAK a fresh clone -- the exact failure this change set exists to prevent.
+The previously-committed pins for those 9 remain upstream-reachable, so the
+repo stays clone-safe. Left for an operator decision (fork upstream, or drop
+the local commits); the local work is untouched, not discarded.
+
+NOT RECORDED (2, no-op) -- ui-tars, unstructured: pointer UNCHANGED, dirty
+nested content only; nothing to record.
+
+We do not push to the third-party repos themselves; we only record which
+commit we pin.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+
+## The Auto-commit that set the other 2 (9e74070)
+9e7407048cec4586c7685bbc2e4dcdacbf95b86e
+ author=Milos Vasic date=2026-08-05 22:21:06 +0500
+ subject=Auto-commit
+ tools/opensource/signoz  | 2 +-
+ tools/opensource/skyvern | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)

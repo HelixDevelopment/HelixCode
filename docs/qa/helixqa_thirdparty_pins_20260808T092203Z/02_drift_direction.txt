@@ -1,0 +1,22 @@
+# Drift direction + distance (recorded -> current)
+captured_utc: 2026-08-08T09:22:15Z
+
+TOOL               AHEAD      BEHIND     RECORDED_DATE            CURRENT_DATE            
+allure2            8          0          2026-06-26T15:31:20+01:00 2026-07-01T14:16:21Z    
+appium             32         0          2026-06-27T22:18:18+02:00 2026-07-08T09:46:27Z    
+browser-use        95         0          2026-06-26T12:35:36+08:00 2026-07-07T17:18:50-07:00
+docker-android     3          0          2026-06-24T03:52:39+02:00 2026-07-06T06:39:43+02:00
+midscene           20         0          2026-06-26T17:28:44+08:00 2026-07-03T03:33:18Z    
+signoz             n/a        n/a        RECORDED-OBJECT-ABSENT-LOCALLY 2026-07-03T14:29:16Z    
+skyvern            n/a        n/a        RECORDED-OBJECT-ABSENT-LOCALLY 2026-07-04T01:35:09-07:00
+stagehand          13         0          2026-06-26T18:08:54-07:00 2026-07-03T08:54:50-07:00
+ui-tars-desktop    1          0          2026-05-18T10:55:46+08:00 2026-07-01T11:03:17+08:00
+
+## Interpretation
+AHEAD = commits the WORKTREE has that the RECORDED pin does not.
+BEHIND = 0 for the 7 MEASURABLE tools -> no divergent lines; worktree strictly forward.
+CORRECTION (independent review, 11.4.6): "all 9 strictly forward" would be OVERSTATED --
+for signoz + skyvern the recorded object is absent locally AND unfetchable upstream, so
+rev-list cannot be run against it at all. Their case rests on reachability (file 04/06),
+not on direction/distance.
+signoz + skyvern: recorded object not present locally at all -> cannot be diffed, cannot be checked out.

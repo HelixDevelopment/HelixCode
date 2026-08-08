@@ -1,0 +1,33 @@
+# Are the 9 vendored tools actually USED by the QA banks?
+# Method: git grep across helix_qa with pathspec ':(exclude)tools/opensource/' so a tool
+# referencing itself inside its own vendored tree does not count as usage.
+# Result: NONE of the 9 vendored TREES is executed or imported. Two have real runtime
+# usage, but exclusively against INDEPENDENTLY-INSTALLED copies (PATH binary / Docker Hub
+# image), never the vendored source.
+
+TOOL             REFERENCED_OUTSIDE_TREE  STRONGEST_CLASS                       TARGET_OF_REFERENCE
+allure2          yes (as `allure`)        EXECUTED (dead code, no callers)      PATH binary `allure`, NOT vendored
+appium           yes, heavily             EXECUTED (prod + banks)               Appium server :4723 / PATH `appium`, NOT vendored
+browser-use      yes                      DOCUMENTED-ONLY (port source)         comments cite vendored path; sidecar is a namesake
+docker-android   yes                      EXECUTED (opt-in integration test)    Docker Hub budtmo/docker-android image, NOT vendored
+midscene         yes                      CONFIGURED (unconsumed struct)        external HTTP endpoint :3000, NOT vendored
+signoz           no (.gitmodules + .md)   DOCUMENTED-ONLY                       -
+skyvern          yes                      CONFIGURED (audit) - enforced NON-use vendored path, as a quarantine grep target
+stagehand        yes                      DOCUMENTED-ONLY (port source)         comments cite vendored path
+ui-tars-desktop  yes                      CONFIGURED (licence/SHA audit)        vendored path, audit subject only
+
+Key evidence paths:
+  pkg/nexus/mobile/appium.go            - HelixQA's OWN Appium 2.0 W3C HTTP client (no vendored code)
+  pkg/nexus/mobile/integration_test.go  - uses docker.io/budtmo/docker-android image (registry, not vendored)
+  pkg/bridges/allure/bridge.go          - execs PATH `allure`; NO production caller
+  pkg/nexus/agent/doc.go                - "ported as a pattern from browser-use" (comment only)
+  pkg/nexus/primitives/doc.go           - "no Stagehand source is linked into" HelixQA
+  pkg/vision/core/config.go             - MidsceneConfig struct defined but never read
+  banks/openclawing2-phase1-references.yaml OC-REF-002 - asserts ZERO skyvern usage (AGPL quarantine)
+  pkg/opensource/registry.go            - generic audit sweep over tools/opensource/ (per-dir, not per-tool)
+  helix-deps.yaml                       - does NOT mention any of the 9 (own-org Go modules only)
+
+Consequence for this remediation: because no vendored tree is in the build graph or executed,
+checking any of them out at its recorded pin carries no functional risk to HelixQA. The only
+consumers are (a) the generic licence/documented-name audit and (b) SHA-pin doc assertions -
+see 08_finding_ocref004_docdrift.txt.

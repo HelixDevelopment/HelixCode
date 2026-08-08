@@ -1,0 +1,19 @@
+# FINDING (pre-existing, NOT caused by this remediation): OC-REF-004 doc/pin mismatch
+captured_utc: 2026-08-08T09:25:27Z
+
+Bank banks/openclawing2-phase1-references.yaml OC-REF-004 asserts:
+  'For each OpenClawing2 submodule, compare git rev-parse HEAD to the Pinned SHA column'
+  expected: 'Each SHA equals the value documented in docs/opensource-references.md'
+
+TOOL                     DOC_PINNED_SHA                             RECORDED_GITLINK                           WORKTREE_HEAD                              MATCH
+browser-use              702b7352c3dc1d39ab8daef2f076dfe7adcfa1c3   c8e6e8f0fe617564687895702c2338967293b309   c8e6e8f0fe617564687895702c2338967293b309   MISMATCH
+skyvern                  e13f34b996685a0b65a5c629cfcc09ee1cd726da   6e4cebc4c4911f40392ebe8654433eb91ecc2a22   085c7187120f24ee75e46ad7c8df172aec425782   MISMATCH
+stagehand                20b601dc8779a1bacf66abb68ebdf276a238e5db   7224376585d6b2cc52e7a76b7035a7a5e0779320   7224376585d6b2cc52e7a76b7035a7a5e0779320   MISMATCH
+ui-tars                  582f3a7ea5d285ee8ed9e2e84048d1ab01453c49   582f3a7ea5d285ee8ed9e2e84048d1ab01453c49   582f3a7ea5d285ee8ed9e2e84048d1ab01453c49   doc==worktree
+ui-tars-desktop          7986f5aea500c4535c0e55dc5c5d0cda73767c45   e9f3387288da4af2ad99972da2ac916cdabce093   e9f3387288da4af2ad99972da2ac916cdabce093   MISMATCH
+anthropic-quickstarts    4b2549e8093a6dee1c394bdd8fcf83cb914a271a   f37f1685e256d61b2982b8ae69c857b51efe11bf   f37f1685e256d61b2982b8ae69c857b51efe11bf   MISMATCH
+
+Conclusion: the documented Pinned SHA column matches NEITHER the recorded gitlink NOR the
+worktree for these entries, both BEFORE and AFTER this remediation. OC-REF-004 was already
+failing and remains failing; this remediation neither causes nor fixes it. Reported as a
+separate defect (docs/opensource-references.md is stale) per 11.4.118 discovery pressure.
