@@ -1,0 +1,93 @@
+=== COUNTERFACTUAL: would resolving toward UPSTREAM have reverted our fix? ===
+Tree: PURE upstream origin/main (e50b5b3) — internal/netaddr absent —
+with OUR unmodified HXC-218 guard dropped in. Any FAIL here is a defect
+upstream's own fix does NOT cover, i.e. a silent revert we would have shipped.
+
+=== RUN   TestHXC218_ResolveHostPort
+=== RUN   TestHXC218_ResolveHostPort/ipv4_unchanged
+=== RUN   TestHXC218_ResolveHostPort/hostname_unchanged
+=== RUN   TestHXC218_ResolveHostPort/empty_host_defaults_to_localhost
+=== RUN   TestHXC218_ResolveHostPort/empty_port_returns_bare_host
+=== RUN   TestHXC218_ResolveHostPort/ipv6_bracketed
+=== RUN   TestHXC218_ResolveHostPort/ipv6_already_bracketed_not_doubled
+--- PASS: TestHXC218_ResolveHostPort (0.00s)
+    --- PASS: TestHXC218_ResolveHostPort/ipv4_unchanged (0.00s)
+    --- PASS: TestHXC218_ResolveHostPort/hostname_unchanged (0.00s)
+    --- PASS: TestHXC218_ResolveHostPort/empty_host_defaults_to_localhost (0.00s)
+    --- PASS: TestHXC218_ResolveHostPort/empty_port_returns_bare_host (0.00s)
+    --- PASS: TestHXC218_ResolveHostPort/ipv6_bracketed (0.00s)
+    --- PASS: TestHXC218_ResolveHostPort/ipv6_already_bracketed_not_doubled (0.00s)
+=== RUN   TestHXC218_ResolveHostPort_IPv6IsResolvable
+--- PASS: TestHXC218_ResolveHostPort_IPv6IsResolvable (0.00s)
+=== RUN   TestHXC218_ResolvedURL
+=== RUN   TestHXC218_ResolvedURL/explicit_url_verbatim
+=== RUN   TestHXC218_ResolvedURL/ipv4_unchanged
+=== RUN   TestHXC218_ResolvedURL/hostname_unchanged
+=== RUN   TestHXC218_ResolvedURL/ipv6_with_port_bracketed
+=== RUN   TestHXC218_ResolvedURL/ipv6_without_port_bracketed
+    hxc218_ipv6_addr_test.go:169: ResolvedURL(Host="2001:db8::1", Port="", URL="") = "http://2001:db8::1", want "http://[2001:db8::1]" — the no-port branch is equally malformed: url.Parse reads the final group of an unbracketed literal as a port
+--- FAIL: TestHXC218_ResolvedURL (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/explicit_url_verbatim (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/ipv4_unchanged (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/hostname_unchanged (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/ipv6_with_port_bracketed (0.00s)
+    --- FAIL: TestHXC218_ResolvedURL/ipv6_without_port_bracketed (0.00s)
+=== RUN   TestHXC218_ResolveHealthURL_IPv6
+--- PASS: TestHXC218_ResolveHealthURL_IPv6 (0.00s)
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/ipv6_loopback_is_local
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/ipv4_loopback_is_local
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/localhost_is_local
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/empty_host_is_local
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/remote_flag_wins
+=== RUN   TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/routable_ipv6_is_not_local
+--- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing (0.00s)
+    --- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/ipv6_loopback_is_local (0.00s)
+    --- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/ipv4_loopback_is_local (0.00s)
+    --- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/localhost_is_local (0.00s)
+    --- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/empty_host_is_local (0.00s)
+    --- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/remote_flag_wins (0.00s)
+    --- PASS: TestHXC218_IsLocalEndpoint_UnaffectedByBracketing/routable_ipv6_is_not_local (0.00s)
+=== RUN   TestHXC218_ResolveHostPort_DoesNotMutateHost
+--- PASS: TestHXC218_ResolveHostPort_DoesNotMutateHost (0.00s)
+FAIL
+FAIL	digital.vasic.containers/pkg/endpoint	0.005s
+FAIL
+COUNTERFACTUAL_EXIT=1 (non-zero == upstream alone WOULD have reverted our fix)
+
+=== PROBE 2: upstream ResolveHostPort vs a scheme-bearing Host ===
+(ad-hoc probe, throwaway worktree only — not committed to either repo)
+
+=== RUN   TestProbe_UpstreamResolveHostPort_SchemeBearingHost
+    zz_scheme_probe_test.go:20: MEASURED: ResolveHostPort(Host="https://secure.local", Port="8080") = "[https://secure.local]:8080"
+    zz_scheme_probe_test.go:23: CORRUPTED: got "[https://secure.local]:8080", want "https://secure.local:8080" — the scheme-bearing host was bracketed as if it were an IPv6 literal
+    zz_scheme_probe_test.go:20: MEASURED: ResolveHostPort(Host="http://plain.local", Port="80") = "[http://plain.local]:80"
+    zz_scheme_probe_test.go:23: CORRUPTED: got "[http://plain.local]:80", want "http://plain.local:80" — the scheme-bearing host was bracketed as if it were an IPv6 literal
+--- FAIL: TestProbe_UpstreamResolveHostPort_SchemeBearingHost (0.00s)
+FAIL
+FAIL	digital.vasic.containers/pkg/endpoint	0.004s
+FAIL
+PROBE2_EXIT=1
+
+=== PROBE 3: the SAME two probes against the MERGED tree (83275f8) ===
+Same guard, same probe, merged artifact. Both must now PASS.
+
+=== RUN   TestHXC218_ResolvedURL
+=== RUN   TestHXC218_ResolvedURL/explicit_url_verbatim
+=== RUN   TestHXC218_ResolvedURL/ipv4_unchanged
+=== RUN   TestHXC218_ResolvedURL/hostname_unchanged
+=== RUN   TestHXC218_ResolvedURL/ipv6_with_port_bracketed
+=== RUN   TestHXC218_ResolvedURL/ipv6_without_port_bracketed
+--- PASS: TestHXC218_ResolvedURL (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/explicit_url_verbatim (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/ipv4_unchanged (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/hostname_unchanged (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/ipv6_with_port_bracketed (0.00s)
+    --- PASS: TestHXC218_ResolvedURL/ipv6_without_port_bracketed (0.00s)
+=== RUN   TestProbe_UpstreamResolveHostPort_SchemeBearingHost
+    zz_scheme_probe_test.go:20: MEASURED: ResolveHostPort(Host="https://secure.local", Port="8080") = "https://secure.local:8080"
+    zz_scheme_probe_test.go:20: MEASURED: ResolveHostPort(Host="http://plain.local", Port="80") = "http://plain.local:80"
+--- PASS: TestProbe_UpstreamResolveHostPort_SchemeBearingHost (0.00s)
+PASS
+ok  	digital.vasic.containers/pkg/endpoint	0.005s
+PROBE3_MERGED_EXIT=0 (0 == both defects absent on the merged tree)
