@@ -62,6 +62,25 @@ Environment=HELIX_LLM_VERIFIER_URL=http://localhost:8100
 # Deliberately placed BEFORE EnvironmentFile= so an operator can still override
 # it to "debug" in .env for a debugging session (later assignments win).
 Environment=GIN_MODE=release
+
+# HXC-233 (routing half). The local provider is the gateway's ONLY completion
+# path when no cloud keys are configured — the "local safety net" in main.go.
+# Its target defaults to 127.0.0.1:50052 (internal/shared/config/config.go:49),
+# a port NOTHING on this host serves. Measured 2026-08-08:
+#
+#   :50052  nothing listening   -> every completion returned HTTP 500
+#                                  "all providers exhausted ... connection refused"
+#   :18434  LISTENING           -> answers "2 + 2 = 4" from Qwen3-Coder-30B
+#
+# So the capability was present the whole time and the ROUTING pointed past it.
+# 50052 is a code default that matches no service in this deployment, not a
+# considered choice for it; helixllm-coder.service serves the local model on
+# 18434 and is part of the same helixllm unit family.
+#
+# Placed BEFORE EnvironmentFile= (like GIN_MODE above) so an operator .env can
+# still override — e.g. to point at a different local backend.
+Environment=HELIX_LLM_LOCAL_RPC_HOST=127.0.0.1
+Environment=HELIX_LLM_LOCAL_RPC_PORT=18434
 EnvironmentFile=-@HELIX_ROOT@/.env
 WorkingDirectory=@HELIX_ROOT@/submodules/helix_llm
 ExecStart=@HELIXLLM_BIN@
