@@ -1,0 +1,38 @@
+=== CONSUMER-SIDE: inner module (dev.helix.code) vs the MERGED submodule ===
+replace: replace digital.vasic.containers => ../submodules/containers
+submodule HEAD now: 83275f8bdca3d0ea504a640c483433034d039884
+
+--- build the packages that consume containers ---
+CONSUMER_BUILD_EXIT=0
+
+--- CONSUMER-SIDE HXC-218 / HXC-202 IPv6 guards (cmd/security_scan) ---
+These run in the PARENT module against the MERGED submodule: the
+end-to-end proof that the fix survives at the consumer surface.
+
+=== RUN   TestHXC202_SonarqubeHealthURL_IPv6IsBracketed
+--- PASS: TestHXC202_SonarqubeHealthURL_IPv6IsBracketed (0.00s)
+=== RUN   TestHXC202_SonarqubeStatusTarget_ProbesTheReportedURL
+--- PASS: TestHXC202_SonarqubeStatusTarget_ProbesTheReportedURL (0.00s)
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/default_localhost_unchanged
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/ipv4_literal_unchanged
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/hostname_unchanged
+=== RUN   TestHXC202_SonarqubeHealthURL_NegativeCases/already_bracketed_not_double_bracketed
+--- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/default_localhost_unchanged (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/ipv4_literal_unchanged (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/hostname_unchanged (0.00s)
+    --- PASS: TestHXC202_SonarqubeHealthURL_NegativeCases/already_bracketed_not_double_bracketed (0.00s)
+=== RUN   TestHXC218_StartPath_IPv6HealthCheckAll
+--- PASS: TestHXC218_StartPath_IPv6HealthCheckAll (0.00s)
+=== RUN   TestHXC218_StartPath_IPv4AndHostnameUnaffected
+=== RUN   TestHXC218_StartPath_IPv4AndHostnameUnaffected/127.0.0.1
+=== RUN   TestHXC218_StartPath_IPv4AndHostnameUnaffected/localhost
+--- PASS: TestHXC218_StartPath_IPv4AndHostnameUnaffected (0.00s)
+    --- PASS: TestHXC218_StartPath_IPv4AndHostnameUnaffected/127.0.0.1 (0.00s)
+    --- PASS: TestHXC218_StartPath_IPv4AndHostnameUnaffected/localhost (0.00s)
+=== RUN   TestHXC218_StatusPath_StillWorks
+--- PASS: TestHXC218_StatusPath_StillWorks (0.00s)
+PASS
+ok  	dev.helix.code/cmd/security_scan	0.009s
+CONSUMER_GUARDS_EXIT=0
