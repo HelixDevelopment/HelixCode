@@ -1,0 +1,36 @@
+# Falsifiable test evidence — captured 2026-08-08T09:23:07Z
+# submodule HEAD at capture: e68fcdcab3c467c6a6708adc52f2404604d2d449
+
+===== RED_MODE=1 (default): reproduce the defects on the CURRENT artifact =====
+=== RUN   TestFilterByVRAM_ExcludesCPUOnlyModels
+--- PASS: TestFilterByVRAM_ExcludesCPUOnlyModels (0.00s)
+=== RUN   TestFilterByVRAM_MatchesLiveGatewaySelection
+--- PASS: TestFilterByVRAM_MatchesLiveGatewaySelection (0.00s)
+=== RUN   TestFilterByVRAM_GuardIsLoadBearing
+    catalog_cpu_guard_test.go:84: guard suppresses 2 CPU-only model(s) that the old predicate admitted: [deepseek-v4-flash deepseek-v4-pro]
+--- PASS: TestFilterByVRAM_GuardIsLoadBearing (0.00s)
+=== RUN   TestCatalog_FilterByVRAM
+--- PASS: TestCatalog_FilterByVRAM (0.00s)
+PASS
+ok  	github.com/HelixDevelopment/HelixLLM/internal/brain/models	0.006s
+=== RUN   TestDetectL3Cache_SumsAllInstances
+    profiler_cpu_detect_test.go:87: RED reproduced: detectL3Cache()=32768 KB but true L3 total is 131072 KB across 4 equally-sized instances
+--- PASS: TestDetectL3Cache_SumsAllInstances (0.01s)
+=== RUN   TestEstimateMemoryBandwidth_ReadsMemTotal
+    profiler_cpu_detect_test.go:146: RED reproduced: host has 263401968 KB RAM (want 76800 MB/s) but estimateMemoryBandwidth()=25000 because MemTotal: is scanned in /proc/cpuinfo, where it never appears
+--- PASS: TestEstimateMemoryBandwidth_ReadsMemTotal (0.00s)
+PASS
+ok  	github.com/HelixDevelopment/HelixLLM/internal/shared/hardware	0.016s
+RED_MODE=1 exit=0
+
+===== RED_MODE=0 (§1.1 falsifiability): MUST FAIL until fixed =====
+=== RUN   TestDetectL3Cache_SumsAllInstances
+    profiler_cpu_detect_test.go:93: detectL3Cache()=32768 KB; want 131072 KB (sum of 4 distinct L3 instances)
+--- FAIL: TestDetectL3Cache_SumsAllInstances (0.01s)
+=== RUN   TestEstimateMemoryBandwidth_ReadsMemTotal
+    profiler_cpu_detect_test.go:152: estimateMemoryBandwidth()=25000; want 76800 for a host with 263401968 KB RAM
+--- FAIL: TestEstimateMemoryBandwidth_ReadsMemTotal (0.00s)
+FAIL
+FAIL	github.com/HelixDevelopment/HelixLLM/internal/shared/hardware	0.018s
+FAIL
+RED_MODE=0 exit=1 (non-zero is the expected, correct result)

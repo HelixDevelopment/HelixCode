@@ -1,0 +1,25 @@
+# Artifact layer (§11.4.108 L2) — deployed binary /home/milos/.local/bin/helixllm
+8a1bab4645a5aac2b155c1ccd87a36dc  /home/milos/.local/bin/helixllm
+
+## CPU env-var struct tags compiled into the artifact
+env:"HELIX_CPU_THREADS" default:"0"
+env:"HELIX_INFERENCE_MODE" default:"auto"
+env:"HELIX_MLOCK_ENABLED" default:"false"
+env:"HELIX_MMAP_ENABLED" default:"true"
+env:"HELIX_NUMA_ENABLED" default:"false"
+
+## llama-server CPU flags present in artifact
+--numa: PRESENT
+--mlock: PRESENT
+--no-kv-offload: PRESENT
+--mmap: PRESENT
+
+## DeepSeek V4 catalog entries present in artifact
+deepseek-v4-flash: PRESENT
+deepseek-v4-pro: PRESENT
+unsloth/DeepSeek-V4-Flash-GGUF: PRESENT
+unsloth/DeepSeek-V4-Pro-GGUF: PRESENT
+
+## NOTE: an exact-line probe (grep -qx) reports all of the above ABSENT.
+## Go stores struct tags as concatenated blobs; substring matching is the correct probe.
+## The -qx false negative was caught and corrected during this validation (§11.4.201).
