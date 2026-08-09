@@ -38,20 +38,170 @@
 #
 # POLARITY (§11.4.115): RED_MODE=1 asserts the pre-fix shape (debug mode
 # present). It MUST fail on a fixed artifact.
+#
+# EXIT CONTRACT — ABSENT IS NOT DEFECTIVE  (§11.4.201 / §11.4.3)
+# --------------------------------------------------------------
+#   0  GREEN — a LIVE process was interrogated and carries the invariant
+#   1  FAIL  — a LIVE process was interrogated and VIOLATES the invariant
+#   2  SKIP  — there was no live process to interrogate; the guard certified
+#              nothing and says so (`SKIP(env):` on stderr, matching the
+#              scripts/gates/ convention)
+#
+# The earlier revision exited 1 when the unit was merely stopped or not
+# installed. That is the §11.4.201 false-positive refusal: it reports "the
+# gateway is serving in debug mode" on a host where the gateway is not serving
+# at all, which is exactly as false as passing a broken one. A sweep wired to
+# that guard goes red on every machine that does not happen to be running the
+# stack, and a gate that cries wolf gets muted — losing the real signal.
+#
+# The SKIP path is deliberately NARROW so it cannot fail open (§11.4.69
+# CM-NO-FAIL-OPEN-SKIP). It fires ONLY when there is provably no process to
+# read: no systemd user manager, unit never installed (LoadState=not-found),
+# unit installed but stopped-by-choice (inactive/activating), no MainPID, an
+# unreadable /proc/<pid>/environ, or a journal window carrying no startup marker
+# and therefore incapable of proving anything either way. Once a live process
+# exists, is readable, and its window contains a startup, the only outcomes are
+# PASS and FAIL.
+#
+# CRUCIALLY, ActiveState=failed is NOT in that set — it FAILs. An independent
+# review demonstrated the original hole: a deployed gateway that crash-looped
+# into `failed` was read as "absent" and SKIPped, and because the sibling HTTP
+# guards SKIP on connection-refused, a completely dead gateway produced three
+# SKIPs and a green sweep. Deployed-and-crashed is the loudest defect there is;
+# it must never be filed under "not deployed".
 set -uo pipefail
 
 UNIT="${HXC229_UNIT:-helixllm-gateway}"
 RED_MODE="${RED_MODE:-0}"
 fail() { echo "GUARD FAILED (HXC-229): $*" >&2; exit 1; }
+skip_env() { echo "SKIP(env): HXC-229 — $*" >&2; exit 2; }
 
 # --- locate the running process -------------------------------------------
+# Absence checks run BEFORE any assertion, in both polarities: a defect cannot
+# be reproduced (RED) nor proven absent (GREEN) on a subject that is not there.
+command -v systemctl >/dev/null 2>&1 || skip_env \
+  "systemctl is not on PATH — there is no systemd user manager to interrogate, \
+so no running gateway can be located. Not a regression."
+
+systemctl --user show "$UNIT" -p LoadState --value >/dev/null 2>&1 || skip_env \
+  "cannot query the systemd user manager for '$UNIT' (no user session bus?). \
+The guard could not look; it is not reporting what it saw."
+
+LOAD_STATE="$(systemctl --user show "$UNIT" -p LoadState --value 2>/dev/null)"
+[ "$LOAD_STATE" != "not-found" ] || skip_env \
+  "unit '$UNIT' is not installed on this host (LoadState=not-found). The \
+gateway is absent, which is not the same as the gateway being in debug mode."
+
+ACTIVE_STATE="$(systemctl --user show "$UNIT" -p ActiveState --value 2>/dev/null)"
+SUB_STATE="$(systemctl --user show "$UNIT" -p SubState --value 2>/dev/null)"
+NRESTARTS="$(systemctl --user show "$UNIT" -p NRestarts --value 2>/dev/null)"
+# DEPLOYED-AND-CRASHED IS A DEFECT, NOT AN ABSENCE — and "crashed" is not only
+# ActiveState=failed (independent review, F2 then B1).
+#
+# The first revision SKIPped on any non-active state, so a crash-looping gateway
+# read as "not deployed"; combined with the HTTP guards SKIPping on
+# connection-refused, a completely dead gateway produced three SKIPs and a green
+# sweep (§11.4.69). The second revision FAILed on `failed` — correct but
+# insufficient, and the review proved why by reading the REAL unit's config:
+#
+#   Restart=on-failure  RestartUSec=10s  StartLimitBurst=5  StartLimitIntervalUSec=10s
+#
+# At most one start can occur per 10s limit interval, so the burst of 5 is
+# structurally unexceedable and `failed` is UNREACHABLE for this unit. A gateway
+# crashing every 10s forever sits in ActiveState=activating / SubState=auto-restart
+# indefinitely. Measured over three restart cycles with that exact config: every
+# sample read activating/auto-restart, and the guard SKIPped each time, calling a
+# continuously-crashing service "stopped by choice". That is the round-1 hole
+# surviving in the one state the deployed unit actually presents.
+#
+#   LoadState=not-found                       -> never installed     -> SKIP
+#   inactive                                  -> stopped by choice   -> SKIP
+#   activating + start/start-pre, NRestarts static -> genuinely starting -> SKIP
+#   activating + auto-restart (either read), or NRestarts RISING between
+#   two reads 2.5s apart                      -> CRASH-LOOPING       -> FAIL
+#   failed                                    -> crashed, gave up    -> FAIL
+#
+# Note the crash-loop test is on a LIVE signal, never the cumulative NRestarts
+# alone — that counter is stale after recovery and would false-FAIL a healthy
+# unit sampled mid-restart (see the branch itself for the measurement).
+case "$ACTIVE_STATE" in
+    active) ;;
+    failed)
+        fail "unit '$UNIT' is installed (LoadState=$LOAD_STATE) but ActiveState=failed \
+— the gateway is DEPLOYED AND CRASHED, which is a defect, not an absence. \
+$(systemctl --user show "$UNIT" -p Result -p NRestarts --value 2>/dev/null | tr '\n' ' ')"
+        ;;
+    activating|deactivating|reloading)
+        # Distinguishing a crash LOOP from a genuine transition needs a LIVE
+        # signal, not a cumulative one. NRestarts is cumulative and STALE:
+        # measured on a probe unit that failed once and then recovered, it reads
+        # NRestarts=1 while ActiveState=active/SubState=running — forever. So
+        # "NRestarts > 0" would FAIL a perfectly healthy gateway that an operator
+        # restarted by hand, if the sweep happened to sample it mid-restart,
+        # after any historical blip. That is the §11.4.201 false positive this
+        # whole change exists to remove, reintroduced through the back door.
+        #
+        # Two unambiguous live signals instead:
+        #   SubState=auto-restart      — systemd is restarting it BECAUSE it failed
+        #   NRestarts RISING right now — it is failing again while we watch
+        # A genuine `systemctl restart` shows SubState=start/start-pre and a
+        # static NRestarts, so it SKIPs as a transition, which is correct.
+        # NO ${:-0} default here. Defaulting an ABSENT first read to 0 makes the
+        # [ -n ] guard below dead code for that read, so an unreadable first read
+        # paired with a stale nonzero second read "proves" a rise that was never
+        # observed — a fabricated FAIL (§11.4.6). Keep it empty and let the guard
+        # decline to compare.
+        _nr_before="$NRESTARTS"
+        [ "$SUB_STATE" = "auto-restart" ] && _looping=1 || _looping=0
+        if [ "$_looping" -eq 0 ]; then
+            sleep 2.5    # spans RestartSec=1..2; the real unit uses RestartUSec=10s
+            _nr_after="$(systemctl --user show "$UNIT" -p NRestarts --value 2>/dev/null)"
+            _sub_after="$(systemctl --user show "$UNIT" -p SubState --value 2>/dev/null)"
+            # BOTH reads must be present AND numeric before any comparison.
+            # An empty string does not match *[!0-9]* — it would slip through and
+            # be rescued only by the ${:-0} defaults, which is a coincidence, not
+            # a guard. And an unreadable first read paired with a nonzero second
+            # would otherwise "prove" a rise that was never observed (§11.4.6).
+            if [ -n "$_nr_before" ] && [ -n "$_nr_after" ]; then
+                case "$_nr_before$_nr_after" in
+                    *[!0-9]*) : ;;   # non-numeric on either read: no claim
+                    *) [ "$_nr_after" -gt "$_nr_before" ] && _looping=1 ;;
+                esac
+            fi
+            [ "$_sub_after" = "auto-restart" ] && _looping=1
+        fi
+        if [ "$_looping" -eq 1 ]; then
+            fail "unit '$UNIT' is CRASH-LOOPING (ActiveState=$ACTIVE_STATE \
+SubState=$SUB_STATE NRestarts=${NRESTARTS:-0}) — systemd is restarting it on a \
+timer, so it never reaches ActiveState=failed. A service that cannot stay up is \
+a defect, not an absence, and nothing is serving while it flaps."
+        fi
+        skip_env "unit '$UNIT' is mid-transition (ActiveState=$ACTIVE_STATE \
+SubState=$SUB_STATE, NRestarts=${NRESTARTS:-0} and not rising) — a genuine \
+start/stop in progress, not a crash loop. Uncertifiable at this instant, not \
+defective."
+        ;;
+    *)  skip_env \
+          "unit '$UNIT' is installed but not running (ActiveState=$ACTIVE_STATE \
+SubState=$SUB_STATE). A stopped-by-choice unit is uncertifiable, not defective \
+— note neither a 'failed' state nor a crash loop reaches this branch; both FAIL \
+above."
+        ;;
+esac
+
 PID="$(systemctl --user show "$UNIT" -p MainPID --value 2>/dev/null)"
-[ -n "$PID" ] && [ "$PID" != "0" ] || fail \
-  "unit '$UNIT' has no running MainPID. This guard asserts the RUNNING process; \
-a stopped unit cannot be proven release-mode. Start it, or SKIP with reason."
+[ -n "$PID" ] && [ "$PID" != "0" ] || skip_env \
+  "unit '$UNIT' is active but exposes no MainPID — there is no process whose \
+environment could be read."
+
+[ -r "/proc/$PID/environ" ] || skip_env \
+  "/proc/$PID/environ is not readable (process gone, or a permission boundary). \
+An unreadable environment is an absent measurement, never a failed one — \
+reporting GIN_MODE 'unset' from a file we could not open would be a fabricated \
+finding (§11.4.6)."
 
 ACTIVE_SINCE="$(systemctl --user show "$UNIT" -p ActiveEnterTimestamp --value 2>/dev/null | sed 's/^[A-Za-z]* //')"
-[ -n "$ACTIVE_SINCE" ] || fail "could not read ActiveEnterTimestamp for '$UNIT'"
+[ -n "$ACTIVE_SINCE" ] || skip_env "could not read ActiveEnterTimestamp for '$UNIT' — the journal window cannot be scoped, so the scan would be unbounded (see the scoping trap above)"
 
 # --- check 1: the RUNNING process carries GIN_MODE=release -----------------
 if ! tr '\0' '\n' < "/proc/$PID/environ" 2>/dev/null | grep -qx 'GIN_MODE=release'; then
@@ -63,12 +213,43 @@ fi
 
 # --- check 2 (anti-vacuity): the window contains a real startup ------------
 WINDOW="$(journalctl --user -u "$UNIT" --since "$ACTIVE_SINCE" --no-pager 2>/dev/null)"
-LINES="$(printf '%s\n' "$WINDOW" | grep -c . || true)"
+# journalctl prints a "-- No entries --" banner (and "-- Boot ... --" separators)
+# for an empty selection. Counting those as content makes the SKIP message below
+# report "holds 1 line(s)" for a window that is genuinely empty (review N2), so
+# they are excluded from the content count.
+LINES="$(printf '%s\n' "$WINDOW" | grep -cvE '^\s*(--.*--\s*)?$' || true)"
 STARTUPS="$(printf '%s\n' "$WINDOW" | grep -cE 'Starting|Listening|listen' || true)"
-[ "$STARTUPS" -ge 1 ] || fail \
-  "window since '$ACTIVE_SINCE' holds $LINES lines but NO startup marker. \
-A clean scan of a window with no startup proves nothing — a debug-mode gateway \
-dumps its routes only at startup, so this window could not have caught it."
+
+# AN UNPROVABLE WINDOW IS UNCERTIFIABLE, NOT DEFECTIVE (independent review, F7).
+#
+# The original anti-vacuity rule was right that a window with no startup in it
+# proves nothing — a debug-mode gateway dumps its routes only at startup, so a
+# clean scan of such a window is worthless. It drew the wrong conclusion from
+# that, though: it FAILed. But "this window could not have caught the defect"
+# is precisely the definition of no-evidence, and no-evidence is §11.4.3 SKIP,
+# never a detected regression. journald rotation and vacuuming retire old
+# output on their own schedule, so a healthy gateway running for weeks can lose
+# its startup line and start reporting "serving in debug mode" — the §11.4.201
+# false-positive refusal, arriving on a timer.
+#
+# A first attempt narrowed this to the window going fully EMPTY, but that case
+# proved unreachable in practice: systemd's own unit records survive even with
+# StandardOutput=null and LogLevelMax=emerg (measured — the window never drops
+# below 1 line), so the mitigation would have been dead code while the real
+# partial-vacuum case still false-FAILed. Treating the whole unprovable class
+# as SKIP is both reachable and correct.
+#
+# This does NOT reintroduce the vacuous pass the original rule guarded against:
+# an unprovable window yields SKIP, never PASS. Check 1 above — GIN_MODE=release
+# read from the live process's own /proc/<pid>/environ — has already run, so the
+# guard is not blind here; it simply declines to certify on a cross-check it
+# cannot perform. And a window that DOES contain GIN-debug lines still FAILs
+# below regardless, because that is positive evidence of the defect.
+[ "$STARTUPS" -ge 1 ] || skip_env \
+  "the journal window since '$ACTIVE_SINCE' holds $LINES line(s) but NO startup \
+marker for '$UNIT' (rotated, vacuumed, or journald unavailable). A debug-mode \
+gateway dumps its routes only at startup, so this window could not have caught \
+the defect — it certifies nothing either way, which is a SKIP, not a finding."
 
 # --- check 3: zero GIN-debug in the CURRENT process's own output -----------
 DEBUG="$(printf '%s\n' "$WINDOW" | grep -c 'GIN-debug' || true)"

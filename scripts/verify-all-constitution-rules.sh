@@ -1093,6 +1093,128 @@ if want_gate G29; then
 fi
 
 # ---------------------------------------------------------------------------
+# G30-G32 — the live-service standing guards (§11.4.135)
+#
+# WHY THESE THREE ARRIVE TOGETHER
+# -------------------------------
+# Measured 2026-08-08, and the reason this block exists: this sweep invoked 21
+# entries under scripts/gates/ and ZERO of the three scripts/testing/guard_hxc*
+# guards. There is no auto-discovery glob here — a guard is executed if and only
+# if some caller names it — so all three had been written, reviewed, and left
+# unreferenced by anything. HXC-244 was closed against a guard that had never
+# run in any suite.
+#
+# That is precisely the §11.4.226 finding: registration is not coverage, and a
+# guard nothing executes cannot fail. It is also the §11.4.135 forensic anchor
+# in its purest form — a defect "fixed" with one-off runtime evidence and no
+# standing check, so the next recurrence is silent. Wiring them here is what
+# converts three inert files into a regression barrier.
+#
+# THE EXIT CONTRACT THESE THREE SHARE  (§11.4.201 / §11.4.3)
+# -----------------------------------------------------------
+#   0  GREEN — a LIVE subject was interrogated and carries the invariant
+#   1  FAIL  — a LIVE subject was interrogated and VIOLATES it (a regression)
+#   2  SKIP  — the subject was ABSENT; the guard certified nothing and says so
+#
+# Exit 2 is handled DIFFERENTLY here than in G21-G29, deliberately. There, exit
+# 2 means an in-tree dependency was missing, which is itself a defect, so those
+# gates call gate_fail. These three interrogate a RUNNING SERVICE, which is
+# legitimately not deployed on every host that runs this sweep. Failing because
+# the gateway is not started would be the §11.4.201 false-positive refusal — as
+# forbidden as a false pass, and worse in practice, because a gate that is red
+# on every developer machine gets muted and takes the real signal with it. So
+# exit 2 records SKIP (the G14 docs_chain precedent): never counted as PASS,
+# always printed with its reason, never counted as a failure.
+#
+# The SKIP branch is built not to fail open (§11.4.69 CM-NO-FAIL-OPEN-SKIP):
+# each guard keys SKIP to provable absence only — curl exit 6/7 for the HTTP
+# guards (with the proxy bypassed, so 7 is a fact about the TARGET), and an
+# uninstalled or stopped-by-choice unit for the systemd one. A unit that is
+# installed and CRASHED (ActiveState=failed) FAILs. Anything that answers,
+# however badly (500, TLS failure, hang, reset, 200 with an error envelope),
+# FAILs.
+#
+# That claim is not asserted here in prose — it is RE-RUNNABLE:
+#
+#     bash scripts/testing/guard_live_service_falsification.sh
+#
+# The battery constructs its own subjects (HTTP-200 stubs, transient systemd
+# units, a deliberately crashed analyzer) and asserts the full three-way
+# contract per guard, including regression cases for three holes an independent
+# review found in the first revision of this wiring: a leaked proxy variable
+# turning a LIVE subject into SKIP, a deployed-and-crashed unit reading as
+# absence, and a crashed analyzer reporting "RED confirmed". An earlier revision
+# of this comment stated a bare "Verified ... 9 FAIL, 0 SKIP" with no artifact
+# behind it — exactly the uncited-claim class this block's own §11.4.226
+# rationale argues against.
+#
+# The env vars that select each guard's SUBJECT are pinned below alongside
+# RED_MODE. Without that, an exported HXC233_URL or HXC229_UNIT in a caller's
+# environment silently retargets a release-wired gate at a stub — a gate that
+# passes judgement on the wrong subject is not a gate.
+# ---------------------------------------------------------------------------
+if want_gate G30; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G30 — HXC-229 gateway serves in Gin RELEASE mode (live process)"
+    RED_MODE=0 HXC229_UNIT=helixllm-gateway \
+        bash "$ROOT/scripts/testing/guard_hxc229_gateway_release_mode.sh" \
+        >/tmp/g30-hxc229-release-mode.out 2>&1
+    g30_rc=$?
+    if [[ "$g30_rc" -eq 0 ]]; then
+        gate_pass G30 "$(head -1 /tmp/g30-hxc229-release-mode.out)"
+    elif [[ "$g30_rc" -eq 2 ]]; then
+        # Carry the guard's OWN reason into the durable row. A canned string here
+        # asserts world-state the guard never established — an earlier revision
+        # printed "not running on this host" for every SKIP cause alike.
+        GATE_RESULTS+=("G30|SKIP|$(head -1 /tmp/g30-hxc229-release-mode.out) — SKIP-OK: §11.4.3")
+        [[ "$QUIET" -eq 0 ]] && echo "  SKIP (G30): $(head -1 /tmp/g30-hxc229-release-mode.out) — certified nothing; this is NOT a detected regression. SKIP-OK: §11.4.3"
+    else
+        # Carry the guard's own line here too, not a canned sentence: this gate
+        # now FAILs for release-mode recurrence AND for a crashed / crash-looping
+        # unit, so a fixed string would misdescribe two of the three causes.
+        gate_fail G30 "$(head -1 /tmp/g30-hxc229-release-mode.out)" \
+            "if debug-mode: check GIN_MODE in the rendered unit AND in any operator .env that EnvironmentFile= loads after it, then systemctl --user daemon-reload && systemctl --user restart helixllm-gateway. If crashed/crash-looping: journalctl --user -u helixllm-gateway -n 100"
+    fi
+fi
+
+if want_gate G31; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G31 — HXC-233 completion path returns a REAL generation (live end-to-end)"
+    RED_MODE=0 HXC233_URL=https://localhost:8443/v1/chat/completions \
+        HXC233_MODEL=qwen HXC233_TIMEOUT=90 \
+        bash "$ROOT/scripts/testing/guard_hxc233_completion_path_live.sh" \
+        >/tmp/g31-hxc233-completion.out 2>&1
+    g31_rc=$?
+    if [[ "$g31_rc" -eq 0 ]]; then
+        gate_pass G31 "$(head -1 /tmp/g31-hxc233-completion.out)"
+    elif [[ "$g31_rc" -eq 2 ]]; then
+        GATE_RESULTS+=("G31|SKIP|$(head -1 /tmp/g31-hxc233-completion.out) — SKIP-OK: §11.4.3")
+        [[ "$QUIET" -eq 0 ]] && echo "  SKIP (G31): $(head -1 /tmp/g31-hxc233-completion.out) — certified nothing; this is NOT a detected regression. SKIP-OK: §11.4.3"
+    else
+        gate_fail G31 "the product's primary capability is dead or degraded — the completion endpoint answered, but not with a real generation (see /tmp/g31-hxc233-completion.out)" \
+            "verify HELIX_LLM_LOCAL_RPC_HOST/PORT in the unit point at the port the model actually serves (the default 50052 is NOT it), then restart the gateway"
+    fi
+fi
+
+if want_gate G32; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G32 — HXC-244 health endpoint names the components it checked"
+    RED_MODE=0 HXC244_URL=https://localhost:8443/internal/health HXC244_TIMEOUT=15 \
+        bash "$ROOT/scripts/testing/guard_hxc244_health_components_registered.sh" \
+        >/tmp/g32-hxc244-health.out 2>&1
+    g32_rc=$?
+    if [[ "$g32_rc" -eq 0 ]]; then
+        gate_pass G32 "$(head -1 /tmp/g32-hxc244-health.out)"
+    elif [[ "$g32_rc" -eq 2 ]]; then
+        GATE_RESULTS+=("G32|SKIP|$(head -1 /tmp/g32-hxc244-health.out) — SKIP-OK: §11.4.3")
+        [[ "$QUIET" -eq 0 ]] && echo "  SKIP (G32): $(head -1 /tmp/g32-hxc244-health.out) — certified nothing; this is NOT a detected regression. SKIP-OK: §11.4.3"
+    else
+        gate_fail G32 "/internal/health reports a verdict it never earned — the component list is empty or unnamed, so the endpoint answers 'healthy' no matter what is broken (see /tmp/g32-hxc244-health.out)" \
+            "register the real dependency checks on the health.Checker in helix_llm cmd/helixllm/main.go (see commit 8260cf8), rebuild, and restart the gateway"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo

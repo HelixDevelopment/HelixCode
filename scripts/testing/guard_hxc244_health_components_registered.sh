@@ -32,22 +32,73 @@
 # the fix's design, and over-specifying would make this guard brittle against a
 # correct implementation that names them differently.
 #
-# POLARITY (§11.4.115): RED_MODE=1 (default) asserts the CURRENT broken shape —
-# an empty component list. It reproduces the defect on the pre-fix artifact and
-# MUST start failing the moment the fix lands. RED_MODE=0 is the standing guard.
+# POLARITY (§11.4.115): RED_MODE=1 asserts the pre-fix broken shape — an empty
+# component list — and MUST fail once the fix lands. RED_MODE=0 is the standing
+# guard and is now the DEFAULT.
+#
+# THE DEFAULT FLIPPED 2026-08-09, AND WHY
+# ---------------------------------------
+# This guard shipped with RED_MODE=1 as its default because it was authored
+# against the broken build, and its own header instructed: "flip this guard to
+# RED_MODE=0 and register it in the standing suite" once the fix landed. The
+# fix has landed — helix_llm commit 8260cf8 ("make /internal/health actually
+# check the gateway's dependencies") registers the checks at
+# cmd/helixllm/main.go:422, and the live endpoint measured 2026-08-09 names
+# four real components (llm_providers, kv_cache_redis, vector_store_qdrant,
+# llms_verifier). Leaving the default at 1 would mean a bare invocation FAILs
+# on a CORRECT tree, which is itself the §11.4.201 false-positive refusal. The
+# RED reproduction is not lost, only un-defaulted: RED_MODE=1 still replays the
+# defect against a pre-fix deployment (§11.4.115).
+#
+# EXIT CONTRACT — ABSENT IS NOT DEFECTIVE  (§11.4.201 / §11.4.3)
+# --------------------------------------------------------------
+#   0  GREEN — a LIVE report was read and it names the components it checked
+#   1  FAIL  — a LIVE report was read and it names nothing (or nothing named)
+#   2  SKIP  — nothing was listening; the guard certified nothing and says so
+#
+# SKIP is keyed to curl exit 6 (unresolvable host) and 7 (connection refused)
+# ONLY — the two outcomes that mean there is no service. Every other outcome
+# implies a listener answered badly and stays a FAIL: 28 (timeout — a closed
+# loopback port refuses instantly, so a hang means a listener wedged), 35/60
+# (TLS failure), 56/52 (connection established then reset or empty — an
+# independent review MEASURED 56, not the 52 an earlier revision of this
+# comment claimed), and any HTTP response including a 500. The defect this
+# guard exists to catch — a gateway that answers 200 healthy while checking
+# nothing — necessarily connects, so it can never reach SKIP (§11.4.69
+# CM-NO-FAIL-OPEN-SKIP).
+#
+# This holds only because the request bypasses any proxy (see --noproxy below);
+# without that, exit 7 could describe the proxy rather than the target.
 set -uo pipefail
 
 URL="${HXC244_URL:-https://localhost:8443/internal/health}"
 TIMEOUT="${HXC244_TIMEOUT:-15}"
-RED_MODE="${RED_MODE:-1}"
+RED_MODE="${RED_MODE:-0}"
 fail() { echo "GUARD FAILED (HXC-244): $*" >&2; exit 1; }
+skip_env() { echo "SKIP(env): HXC-244 — $*" >&2; exit 2; }
 
-BODY="$(curl -sk -m "$TIMEOUT" "$URL" 2>/dev/null)"
+# --noproxy '*' is load-bearing (independent review, F1): curl honours
+# https_proxy/HTTPS_PROXY, so a proxy variable leaked into the caller's
+# environment makes exit 7 mean "could not reach the PROXY" rather than
+# "nothing is listening at the target". The reviewer demonstrated a SKIP against
+# the LIVE, healthy gateway that way. Bypassing the proxy is what makes rc=7 a
+# fact about the TARGET, which the SKIP branch below depends on entirely.
+BODY="$(curl -sk --noproxy '*' -m "$TIMEOUT" "$URL" 2>/dev/null)"
 CURL_RC=$?   # straight off curl, never after a pipe (§11.4.6)
 
+# Absence first, in BOTH polarities: an absent endpoint neither reproduces the
+# defect nor proves it gone.
+if [ "$CURL_RC" -eq 6 ] || [ "$CURL_RC" -eq 7 ]; then
+    skip_env "nothing is listening at $URL (curl rc=$CURL_RC — $([ "$CURL_RC" -eq 6 ] \
+&& echo 'host does not resolve' || echo 'connection refused')). The gateway is \
+not deployed here; an absent health endpoint has not regressed. Start the \
+stack to enforce this guard."
+fi
+
 if [ "$CURL_RC" -ne 0 ] || [ -z "$BODY" ]; then
-    fail "health endpoint unreachable (curl rc=$CURL_RC) at $URL. This guard \
-asserts a LIVE report; an unreachable endpoint is a FAIL, never a silent skip."
+    fail "the health endpoint is REACHABLE but returned no usable body \
+(curl rc=$CURL_RC, $(printf '%s' "$BODY" | wc -c) bytes). Something accepted \
+the connection and failed to answer — a live defect, not an absent service."
 fi
 
 VERDICT="$(printf '%s' "$BODY" | python3 -c '

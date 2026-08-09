@@ -34,6 +34,37 @@
 #
 # POLARITY (§11.4.115): RED_MODE=1 asserts the pre-fix shape (completions fail).
 # It MUST fail on a fixed deployment.
+#
+# EXIT CONTRACT — ABSENT IS NOT DEFECTIVE  (§11.4.201 / §11.4.3)
+# --------------------------------------------------------------
+#   0  GREEN — a LIVE endpoint answered and the answer is a real generation
+#   1  FAIL  — a LIVE endpoint answered and the answer is not one
+#   2  SKIP  — nothing was listening; the guard certified nothing and says so
+#
+# The earlier revision exited 1 on an unreachable endpoint, reasoning that "an
+# unreachable endpoint is a FAIL, never a silent skip". The instinct is right —
+# a silent skip WOULD be a bluff — but the conclusion overshoots: a gateway that
+# is not deployed has not regressed, and reporting a dead completion path on a
+# host where no gateway was ever started is the §11.4.201 false-positive
+# refusal. The honest report is SKIP-with-reason, which is loud, not silent:
+# it prints its reason and the sweep records SKIP, never PASS.
+#
+# WHY THE SKIP CANNOT FAIL OPEN  (§11.4.69 CM-NO-FAIL-OPEN-SKIP)
+# ---------------------------------------------------------------
+# SKIP is keyed to two curl exit codes ONLY:
+#     6  — could not resolve host      → nothing to connect to
+#     7  — failed to connect           → nothing listening on the port
+# Every other outcome means something IS there and answered badly, so it stays
+# a FAIL: 28 (timeout — on a loopback target a closed port refuses instantly,
+# so a timeout means a listener accepted and then wedged), 35/60 (TLS handshake
+# or certificate failure — a server is present and misconfigured), 56/52
+# (connection established then reset or empty — an independent review MEASURED
+# 56, not the 52 an earlier revision of this comment claimed), and any HTTP
+# response at all, including a 500. A dead-but-listening gateway — the precise
+# HXC-233 defect — connects, so it can never reach the SKIP branch.
+#
+# This holds only because the request bypasses any proxy (see --noproxy below);
+# without that, exit 7 could describe the proxy rather than the target.
 set -uo pipefail
 
 URL="${HXC233_URL:-https://localhost:8443/v1/chat/completions}"
@@ -41,18 +72,40 @@ MODEL="${HXC233_MODEL:-qwen}"
 TIMEOUT="${HXC233_TIMEOUT:-90}"
 RED_MODE="${RED_MODE:-0}"
 fail() { echo "GUARD FAILED (HXC-233): $*" >&2; exit 1; }
+skip_env() { echo "SKIP(env): HXC-233 — $*" >&2; exit 2; }
 
-BODY="$(curl -sk -m "$TIMEOUT" -X POST "$URL" \
+# --noproxy '*' is load-bearing, not decoration (independent review, F1). curl
+# honours https_proxy/HTTPS_PROXY, so with a proxy variable set in the caller's
+# environment — a classic CI/shell leak — a failure to reach the PROXY also
+# returns exit 7. That made "rc=7 means nothing is listening at the target" a
+# false statement: the reviewer pointed this guard at the LIVE, healthy gateway
+# with https_proxy=http://127.0.0.1:59999 and got SKIP, seconds after the same
+# guard had PASSed. Bypassing the proxy restores the invariant that rc=7 is a
+# fact about the TARGET, which is the whole basis of the SKIP branch below.
+# "temperature":0 pins the sampler so the arithmetic oracle is deterministic
+# across runs (§11.4.50).
+BODY="$(curl -sk --noproxy '*' -m "$TIMEOUT" -X POST "$URL" \
   -H 'Content-Type: application/json' \
-  -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"What is 2+2? Reply with just the number.\"}],\"max_tokens\":32}" \
+  -d "{\"model\":\"$MODEL\",\"temperature\":0,\"messages\":[{\"role\":\"user\",\"content\":\"What is 2+2? Reply with just the number.\"}],\"max_tokens\":32}" \
   2>/dev/null)"
 CURL_RC=$?   # captured directly off curl — never after a pipe (§11.4.6)
 
+# Absence is checked FIRST and in BOTH polarities: a defect cannot be
+# reproduced (RED) nor proven absent (GREEN) against a port nobody is serving.
+# The previous revision let RED_MODE=1 report "RED confirmed" on an unreachable
+# endpoint — a nothing-there result masquerading as a reproduced defect.
+if [ "$CURL_RC" -eq 6 ] || [ "$CURL_RC" -eq 7 ]; then
+    skip_env "nothing is listening at $URL (curl rc=$CURL_RC — $([ "$CURL_RC" -eq 6 ] \
+&& echo 'host does not resolve' || echo 'connection refused')). The gateway is \
+not deployed here; an absent service has not regressed. Start the stack to \
+enforce this guard."
+fi
+
 if [ "$CURL_RC" -ne 0 ] || [ -z "$BODY" ]; then
-    [ "$RED_MODE" = "1" ] && { echo "RED confirmed: completion endpoint unreachable (curl rc=$CURL_RC)"; exit 0; }
-    fail "endpoint unreachable (curl rc=$CURL_RC). The gateway may be down; \
-this guard asserts a LIVE completion, so an unreachable endpoint is a FAIL, \
-never a silent skip."
+    fail "the endpoint is REACHABLE but did not return a usable body \
+(curl rc=$CURL_RC, $(printf '%s' "$BODY" | wc -c) bytes). Something accepted \
+the connection and failed to answer — that is a live defect, not an absent \
+service, so it is a FAIL and not a SKIP."
 fi
 
 # Parse in one pass. python3 exits non-zero on any shape violation and prints
@@ -80,6 +133,21 @@ if "4" not in content:
 print(f"OK|{model}|{content.strip()[:60]}")
 ' 2>&1)"
 PARSE_RC=$?
+
+# The analyzer must not be able to bluff by CRASHING (independent review, F4;
+# §11.4.107(10)). Its findings are exits 2-7, deliberately starting at 2,
+# because a Python traceback exits 1 — and treating that 1 as "defect found"
+# makes a SyntaxError or a broken interpreter read as RED-confirmed against
+# every input, including a healthy one. The reviewer demonstrated exactly that
+# here with a python3 shim exiting 9: this guard printed "RED confirmed" and
+# exited 0 against the LIVE, healthy gateway, while its HXC-244 sibling — which
+# already carried this check — correctly reported a crashed analyzer. A broken
+# instrument reports nothing about the subject, so it is a hard FAIL in BOTH
+# polarities, never a verdict.
+if [ "$PARSE_RC" -ne 0 ] && { [ "$PARSE_RC" -lt 2 ] || [ "$PARSE_RC" -gt 7 ]; }; then
+    fail "ANALYZER CRASHED (exit $PARSE_RC) — this is a defect in the guard, \
+not a verdict about the completion endpoint. Output: $VERDICT"
+fi
 
 if [ "$RED_MODE" = "1" ]; then
     [ "$PARSE_RC" -ne 0 ] || fail \
