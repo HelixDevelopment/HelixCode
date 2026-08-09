@@ -7427,6 +7427,352 @@ worse. This is the seventh time in one working cycle that a correct
 change was applied in one place and not to a sibling doing the same
 thing nearby, which is worth treating as a review habit rather than
 seven separate oversights.</p>
+<h2
+id="hxc-230-helixagent-crashes-once-on-every-cold-boot-because-it-checks-cognee-before-cognee-is-ready">HXC-230
+— HelixAgent crashes once on every cold boot because it checks Cognee
+before Cognee is ready</h2>
+<p><strong>Status:</strong> Obsolete (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/live_systemd_boot_20260806T145857Z/11_helixagent_coldboot_race.txt
+<strong>Created-By:</strong> Claude <strong>Obsolete-Details:</strong>
+Since: 2026-08-06; Reason: duplicate-of; Superseding-item: HXC-228;
+Triple-check evidence:
+docs/qa/live_systemd_boot_20260806T145857Z/11_helixagent_coldboot_race.txt</p>
+<p>Every time the Helix platform is started from a fully stopped state,
+the HelixAgent service crashes on its first attempt and only succeeds on
+the automatic retry about sixteen seconds later. The cause is a timing
+problem: the infrastructure service reports that it has finished as soon
+as the container engine has been asked to create the containers, but the
+Cognee knowledge-graph container needs several more seconds before it
+can actually answer requests. HelixAgent starts in that gap, tries to
+contact Cognee, is refused, treats the refusal as a fatal error and
+shuts itself down. Systemd then restarts it and the second attempt
+works. The practical effect is that a restart of the platform always
+logs a failure and leaves a permanent restart count against the service,
+which makes genuine faults harder to spot; and if Cognee were ever
+slower than the retry allowance the platform would stay down instead of
+recovering. Reproduced live on 2026-08-06: a full stop and start of the
+platform produced the identical failure seen in an earlier run from
+2026-07-27. The fix is to make the infrastructure service wait for its
+containers to become healthy before reporting success, rather than
+reporting success as soon as they are created.</p>
+<h2
+id="hxc-221-when-secure-randomness-fails-api-key-generation-quietly-falls-back-to-a-guessable-value">HXC-221
+— When secure randomness fails, API key generation quietly falls back to
+a guessable value</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc_closure_verification_20260807T120000Z/EVIDENCE.md
+<strong>Severity:</strong> Medium (the fix already landed and is
+published — helix_agent 9a50509d, confirmed an ancestor of the
+currently-pinned submodule HEAD 0a48f8c2 on all 4 configured remotes; I
+independently read protocol_security.go and confirmed generateID now
+takes an io.Reader and returns (string, error) with no clock-based
+fallback, plus a RED test at protocol_security_hxc221_red_test.go — not
+High because no currently-shipped code path is exposed; not Low because
+it touches a live authentication code path and remains open pending the
+mandatory independent review before formal closure)
+<strong>Created-By:</strong> Claude</p>
+<p>The agent component issues API keys for callers of its protocol
+service. It builds each key from sixteen bytes of cryptographic
+randomness, which is correct. But if the system’s randomness source ever
+fails to answer, the code does not stop — it silently substitutes the
+current clock reading and hands back a key derived from the time of day.
+A key made that way is guessable by anyone who can estimate when it was
+issued, and the caller receiving it is told nothing: it looks like an
+ordinary key and is accepted as one. The function is already able to
+report a failure to its caller, so the ability to refuse safely exists
+and is simply not used. The likelihood of the randomness source failing
+is genuinely low, which is why this has gone unnoticed, but the
+consequence if it does is that the service starts issuing predictable
+credentials with no signal that anything is wrong. Failing loudly is the
+correct behaviour here: a caller that receives an error can retry or
+abort, whereas a caller that receives a weak key has no way to know it
+must. The fix is to return the error instead of the clock reading, and
+to add a test that forces the randomness source to fail and confirms no
+key is produced.</p>
+<h2
+id="hxc-222-downloaded-third-party-libraries-are-committed-into-the-agent-repository-104-megabytes-of-them">HXC-222
+— Downloaded third-party libraries are committed into the agent
+repository, 104 megabytes of them</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc_closure_verification_20260807T120000Z/EVIDENCE.md
+<strong>Severity:</strong> Low (repository-hygiene only, no security or
+user-facing behavior at stake; fix already landed and published —
+helix_agent 0a48f8c2, the currently-pinned submodule HEAD on all 4
+remotes; I independently confirmed 0 node_modules files tracked and the
+commit message documents a proven npm-ci regeneration with captured
+evidence under docs/qa/hxc222_node_modules_untrack_20260806T000000Z/,
+including that the recreated tree fixes a pre-existing dangling-symlink
+break; open only pending the mandatory independent review before formal
+closure) <strong>Created-By:</strong> Claude</p>
+<p>The agent component has two folders of downloaded third-party
+libraries committed into version control: 7,870 files under its web
+toolkit and 1,037 under its plugin service, together about 104
+megabytes. These are not our code. They are fetched automatically from a
+package registry using the manifest files that sit beside them, which
+means every one of them can be recreated on demand and none of them
+needs to be stored. Committing them makes every clone of the repository
+permanently larger and makes it hard to see our own changes among
+theirs, because any routine dependency update rewrites thousands of
+files at once. The project already has a rule against versioning
+anything that a documented mechanism can regenerate, and the ignore file
+does not currently list these folders, so nothing prevented them from
+being added. The fix is to stop tracking both folders, add them to the
+ignore file, and confirm the documented install step still reproduces
+them exactly on a fresh checkout — the last part matters, because
+removing them is only safe if the recreation path is proven to work.</p>
+<h2
+id="hxc-223-the-safety-check-that-stops-half-finished-experiments-also-blocks-the-proof-they-were-finished">HXC-223
+— The safety check that stops half-finished experiments also blocks the
+proof they were finished</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc_closure_verification_20260807T120000Z/EVIDENCE.md
+<strong>Severity:</strong> Medium (a live process defect — the precommit
+mutation-marker guard already forced its own required proof out of a
+real commit today per the ticket’s own account, and will recur on every
+future paired-mutation evidence capture across the constitution’s
+hundreds of §1.1-mandated anchors, silently degrading
+evidence-completeness; not High because no shipped code or end-user path
+is affected and the current workaround does not itself corrupt anything;
+not Low because the recurring failure mode directly undermines the
+anti-bluff evidence-capture the whole tracker depends on)
+<strong>Created-By:</strong> Claude</p>
+<p>Before every commit, a check scans the files being committed for
+markers left behind by a deliberate sabotage experiment — the kind where
+a working safeguard is temporarily broken to prove it really notices.
+Leaving such a marker in real code would be dangerous, so blocking it is
+correct. But the same experiment is required to record what it did, and
+that record necessarily quotes the sabotaged lines verbatim as its
+proof. The check cannot tell the difference between code that is still
+broken and a written account of code that was broken and then repaired,
+so it refuses the account. The two rules therefore contradict each
+other: one demands the proof be captured, the other forbids it from
+being stored. This is not hypothetical — it happened today and the proof
+file had to be left out of its own commit, which is exactly the
+situation where evidence quietly goes missing. The fix is to teach the
+check where it is looking: markers inside a recorded transcript under
+the evidence folder are a description of past work, while the same
+markers in live source are a real hazard. The check must keep refusing
+the second while permitting the first, and must be tested against both
+so it cannot drift back to refusing everything or accepting
+everything.</p>
+<h2
+id="hxc-228-the-agent-service-crashes-on-every-cold-boot-because-it-starts-before-one-of-its-dependencies">HXC-228
+— The agent service crashes on every cold boot because it starts before
+one of its dependencies</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc_closure_verification_20260807T120000Z/EVIDENCE.md
+<strong>Created-By:</strong> Claude</p>
+<p>When the whole system is started from cold, the agent service checks
+its four mandatory dependencies and finds three of them ready but the
+fourth, the knowledge-graph component, still refusing connections. It
+treats that as fatal, prints a boot-blocked message telling the operator
+to start the dependencies by hand, and exits with a failure code. The
+supervisor then restarts it fifteen seconds later, by which time the
+knowledge-graph component has finished starting, and the second attempt
+succeeds. The end state looks healthy, so the failure is easy to miss
+entirely, but every cold boot produces a genuine crash, a failure entry
+in the system log, and fifteen seconds during which the agent is
+unavailable. The cause is that the service unit does not declare that it
+must wait for the knowledge-graph component, so the supervisor is free
+to start them at the same moment and the race is decided by whichever
+finishes first. The instruction the service prints when it fails is also
+misleading: it tells the operator to start the dependencies manually,
+when in fact they are already starting and simply have not finished. The
+fix is to declare the ordering so the supervisor waits, and to make the
+dependency check tolerate a component that is still coming up rather
+than treating slow startup as permanent absence.</p>
+<h2
+id="hxc-237-the-workable-items-checker-everyone-runs-is-an-old-copy-that-silently-skips-the-closure-evidence-check">HXC-237
+— The workable-items checker everyone runs is an old copy that silently
+skips the closure-evidence check</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc237_binary_freshness_20260808T143000Z/EVIDENCE.md
+<strong>Severity:</strong> High</p>
+<p>The command the project uses to check its own work-item records,
+workable-items validate, runs from a prebuilt program file that was last
+rebuilt on 27 July. A new safety check was added to the source on 6
+August: it refuses any closed item whose proof-of-work pointer does not
+actually lead to a real file. Because the prebuilt copy was never
+rebuilt, that check is simply not present in the program people actually
+run, while the source code containing it looks correct to anyone reading
+it. Proven by running both against the same deliberately-corrupted copy
+of the records with everything else held identical: the prebuilt program
+reported everything fine and exited successfully, the same code run from
+source correctly found and described the bad record and exited with a
+failure. This matters because the checker is the thing that is supposed
+to stop unproven work from being marked finished, so every closure
+signed off using it since 6 August carries less assurance than it
+appears to. It also means the ticket that introduced the check cannot
+honestly be called done. The fix is to rebuild the program file, publish
+it, and add a check that fails when the built copy is older than its
+source so this cannot recur silently.</p>
+<h2
+id="hxc-218-container-health-checks-still-fail-for-ipv6-addresses-so-starting-the-scan-service-breaks">HXC-218
+— Container health checks still fail for IPv6 addresses, so starting the
+scan service breaks</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc218_ipv6_start_path_verify_20260808T143000Z/tests.log
+<strong>Severity:</strong> High</p>
+<p>When the security scanning tool is asked to START its supporting
+services, it checks whether each service is healthy by building a
+network address from a host and a port. For ordinary addresses this
+works, but modern IPv6 addresses contain colons of their own, so they
+must be wrapped in square brackets before a port is attached. The shared
+container code does not do that wrapping in two places, so the address
+it builds is malformed and the health check can never succeed on an IPv6
+machine. A companion fix already repaired the STATUS command, but START
+goes through a different path in the shared container library and was
+not covered, which means operators on IPv6 hosts still see startup fail
+for what looks like no reason. The obvious shortcut of pre-wrapping the
+address is unsafe, because another part of the same library compares the
+raw unwrapped form when deciding whether a service is local, and
+wrapping it would silently break that check. The benefit of fixing this
+properly is that operators running on IPv6 networks can start and
+monitor the scanner normally instead of hitting a confusing dead end.
+Success means the start command completes its health checks on an IPv6
+host exactly as it does on an IPv4 one.</p>
+<h2
+id="hxc-187-two-different-pieces-of-code-claim-the-same-identity-so-which-one-gets-used-depends-on-where-the-build-starts">HXC-187
+— Two different pieces of code claim the same identity, so which one
+gets used depends on where the build starts</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc187_module_identity_collision_20260808T143000Z/EVIDENCE.md
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude</p>
+<p>The project declares the same module identity in two places: once at
+the top level and once for the real application inside it. Because of
+that, one particular internal name refers to two completely different
+pieces of code — a five-line placeholder at the top level, and the real
+fifty-kilobyte subsystem inside. They share no files at all. Which one
+any given piece of code actually receives depends entirely on which
+directory the build was started from, which is not something a developer
+would ever expect or notice. Nothing is broken today only because the
+top-level placeholder has no users, but that is luck rather than design,
+and the first time someone adds one the behaviour will differ between
+two builds of the same source with no error to explain it. The fix is to
+give the top-level module a distinct identity so the collision cannot
+occur. Removing the placeholder is a separate decision and is
+deliberately not bundled with this.</p>
+<h2
+id="hxc-220-the-module-name-check-has-no-permanent-test-so-the-fixed-false-alarm-could-return-unnoticed">HXC-220
+— The module-name check has no permanent test, so the fixed false alarm
+could return unnoticed</h2>
+<p><strong>Status:</strong> Completed (→ Fixed.md)
+<strong>Type:</strong> Task <strong>Evidence:</strong>
+docs/qa/hxc220_module_identity_guard_verify_20260808T143000Z/EVIDENCE.md
+<strong>Severity:</strong> High</p>
+<p>A diagnostic script used to report that two parts of the project
+shared the same module name, when in fact they no longer did. The cause
+was that it looked for the shorter name inside the longer one instead of
+comparing the two names as wholes, so a rename that deliberately made
+them different was still reported as a clash. The comparison itself has
+been corrected and behaves properly today, but no permanent automated
+test was ever added to keep it correct. That matters because this exact
+kind of check is easy to rewrite carelessly during future cleanups, and
+if the loose comparison came back nobody would notice until the script
+again told an engineer that finished work was unfinished, risking
+someone undoing a correct change. The project requires every fixed
+defect to leave behind a standing test that fails if the defect returns,
+and that test is the only piece still missing here. The people who
+benefit are engineers relying on this diagnostic to tell them the true
+state of the project. Success means a registered test exists that passes
+on the current corrected code and fails if the loose name matching is
+ever reintroduced.</p>
+<h2
+id="hxc-244-the-gateways-health-check-reported-everything-healthy-without-ever-checking-anything">HXC-244
+— The gateway’s health check reported everything healthy without ever
+checking anything</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc244_health_runtime_20260808T170932Z/EVIDENCE.md
+<strong>Severity:</strong> High</p>
+<p>The gateway is the service every other part of the platform talks to
+when it needs an AI model, and it publishes a health address that
+automated systems and on-call staff poll to ask whether it is all right.
+That address always answered “healthy” with an empty list of things
+checked, and it would have answered exactly that no matter what was
+broken underneath. The cause was a single missing wiring step: the part
+that collects health verdicts was created and handed to the server, but
+nothing was ever registered with it to check, so it had no dependencies
+to consult and “healthy” was the only verdict it could produce. The fast
+in-memory cache, the vector store, the model verifier and every model
+provider could all have been dead and this address would still have
+reported the gateway fine. This matters more than a plainly missing
+feature, because a service with no health address is an honest gap
+everyone routes around, while one that asserts a state it never verified
+will be trusted - by load balancers deciding where to send traffic, by
+supervisors deciding whether to restart, and by whoever gets woken at
+night. It also concealed a second and larger problem: the corrected code
+had been written and merged earlier, but the program actually running
+was still the old build, so every check that read the source code
+reported success while the live service stayed broken. Everyone who
+depends on the platform staying available benefits, the on-call
+responder most directly, because the signal they are paged on now
+reflects reality. The outcome achieved is that the health address now
+names the four dependencies it checked and reports how long each check
+really took, and a standing guard fails whenever that list is empty
+again, so the endpoint can no longer claim a verdict it did not
+earn.</p>
+<h2
+id="hxc-199-a-check-for-a-just-fixed-problem-would-still-report-it-as-broken-because-it-matches-on-a-fragment">HXC-199
+— A check for a just-fixed problem would still report it as broken,
+because it matches on a fragment</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc199_module_identity_prefix_match_20260731T200339Z/README.md
+<strong>Severity:</strong> Medium <strong>Created-By:</strong>
+Claude</p>
+<p>A recent change gave one part of the project a distinct name so that
+two different pieces of code could stop claiming the same identity. A
+diagnostic script that checks whether that problem still exists searches
+for the old name as a fragment of text, and the new name contains the
+old one as a prefix — so the check still matches and would report the
+problem as unfixed even though it is fixed. Anyone re-running it would
+be told to redo work that is already done, and might undo the fix
+believing it had never worked. The project handbook also still describes
+the old arrangement in three places. The fix is to make the check match
+the whole name rather than a fragment, and to update the handbook so
+both agree with what the code actually does now.</p>
+<h2
+id="hxc-217-fifteen-closure-records-describe-their-proof-in-prose-instead-of-pointing-at-it">HXC-217
+— Fifteen closure records describe their proof in prose instead of
+pointing at it</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/hxc217_evidence_path_resolve_20260805T082033Z/resolve_check.py
+<strong>Severity:</strong> Low (largely resolved — I independently reran
+resolve_check.py against the live DB and got 0/0 failures across all
+three defect classes, versus the 16-row/14-ticket baseline; traced the
+fix to the real item_history.evidence_path column, e.g. HXC-165 now
+points at submodules/helix_agent/docs/qa/HXC-165/EVIDENCE.md which
+exists, and confirmed the Go validator from commit 8214bd93 is what
+‘workable-items validate’ runs today; the sole remaining acceptance
+criterion — refuse-at-record-time — is already forked into HXC-224
+(High), so no work remains uniquely owned by this ticket beyond formal
+closure) <strong>Created-By:</strong> Claude</p>
+<p>When an item is closed, the record carries a field meant to hold the
+location of the captured proof, so that anyone can go and look at it and
+so that a machine can confirm the proof genuinely exists. For fifteen
+closures that field instead contains a paragraph describing what was
+proved. The descriptions are substantive and in every case checked the
+underlying evidence does exist elsewhere on disk, so nothing is actually
+missing and no closure is unfounded. The cost is that those fifteen
+cannot be verified mechanically: a check that asks whether each closure
+points at something real will report them as pointing at nothing, which
+is indistinguishable from a closure with no proof behind it at all. That
+ambiguity is the defect, and it matters because a sweep that cannot tell
+a well-documented closure from an empty one will eventually be believed
+about the wrong one. The work is to move the narrative into the record’s
+description where it belongs, put the actual location in the location
+field, and add a check that refuses a closure whose stated location does
+not resolve.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />

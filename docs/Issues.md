@@ -198,6 +198,7 @@ ADDED ACCEPTANCE CRITERIA:
 **Status:** Queued
 **Type:** Task
 **Created-By:** Claude
+**Severity:** Medium (violates §11.4.76 — bypasses the shared containers component and has already caused one real outage per the ticket's own account; remaining error-hiding on optional service startups makes a future failed start indistinguishable from success, a live anti-bluff gap — not High because no currently-shipped user path is broken today)
 
 The script that brings up the supporting services for testing talks to the container tooling directly, rather than going through the shared containers component the organisation maintains for exactly this purpose. That component exists so every project starts services the same way, gets the same health checking, and benefits from fixes once rather than repeatedly. Bypassing it means this project carries its own copy of that logic, which drifts and has already caused one outage of its own. A related leftover is that several optional service startups still hide their errors, so a failure to start looks identical to a success. This was flagged honestly in a commit message, but a note in a commit message is not an obligation anyone will act on, which is why it is being tracked here. Closing this means routing the startup through the shared component and removing the remaining error-hiding so a failed start is visible.
 
@@ -206,13 +207,15 @@ The script that brings up the supporting services for testing talks to the conta
 **Status:** Queued
 **Type:** Bug
 **Created-By:** Claude
+**Severity:** Medium (triaged 2026-08-06: 0 of 210 live advisories are reachable-and-unmitigated in any shipped helix_agent artifact. Go: govulncheck from the 8 shipped cmd/ entrypoints reports "affected by 0 vulnerabilities"; the 3 symbol-reachable docker findings reach only internal/clis/openhands, which has 0 importers and 0 presence in the shipped dependency closure. npm/pip: 148 of 210 (incl. 3 of 4 distinct criticals) are in mcp-servers/GitMCP, whose compose service names a Dockerfile that does not exist; 25 (incl. the handlebars critical) are in sdk/web, which no release mechanism builds. Exactly 1 alert (GHSA-w48q-cv73-mx4w) touches the genuinely shipped plugins/mcp-server, and it is already mitigated in code by HXC-172/d0a53e0b with paired tests. Medium not Low because mcp-gitmcp is a wired compose service one missing file away from building 3 criticals into a running container; not High because no reachable path to a shipped artifact exists today.)
 
 When publishing the agent component, the hosting provider reported 204 outstanding security advisories affecting the libraries it depends on: 5 rated critical, 80 high, 100 moderate and 19 low. These are known, publicly documented weaknesses in third-party code the product ships and runs, so anyone who knows about them knows about them for our deployment too. Nothing here was introduced by recent work; the count has simply been accumulating and was surfaced by a routine publish. The risk is real but unquantified for us specifically, because a published advisory only matters if the affected code path is actually reachable in how we use the library. The right next step is to pull the full advisory list, separate the ones we genuinely reach from the ones we do not, and upgrade or replace the dependencies behind the critical and high findings first. Until that triage is done we cannot honestly claim the component is free of known vulnerabilities.
 
 ## HXC-168 — A database password is written directly into published setup files and has never been changed
 
-**Status:** Queued
+**Status:** Operator-blocked
 **Type:** Bug
+**Operator-Block-Details:** WHAT: Two DIFFERENT credentials are in play and the item's original framing is now partly stale. (1) The literal HXC-168 was filed about (sha8=d297e142, 9 chars) was REMOVED from every tracked executable file by commit 11861996 (2026-07-31), which sourced it from a gitignored .env and added scripts/gates/no_hardcoded_db_credential_gate.sh; that commit explicitly states it does NOT close HXC-168 because the value was never rotated. It survives only in docs/*.md|.html and one .txt. (2) The UNFIXED and more serious exposure is a SECOND literal (sha8=2087713a, 23 chars) at compose.helixcode-infra.yml:30 and again as an inline connection URL at :215 - tracked, and published on all four mirrors via commit f91d4477. Three independent reads confirm it is the LIVE database password: the tracked compose file, podman inspect of helixcode-infra-postgres .Config.Env, and the gitignored 0600 .env HELIX_DATABASE_PASSWORD - all sha8=2087713a. So the private-config mechanism exists and is wired, but the value inside it was never rotated away from the published one. Reachability is NOT localhost-only: ss -ltn shows LISTEN *:5433 (wildcard bind, LAN-reachable on 10.6.100.0/24); the host has only RFC1918 addresses, so public-internet exposure is NOT established either way (no firewall tooling on PATH to verify - honest gap per 11.4.6). Mitigating: the database is helixcode_test, user helixcode. Two defects in the guard itself: no_hardcoded_db_credential_gate.sh currently exits 1 (CHECK 1 trips on the fix's own tracked evidence transcript, a .txt its prose exclusion misses), and compose.helixcode-infra.yml is NOT in its SCOPE_FILES - which is why it reports PASS on the file that boots the live platform. The gate is also not wired into any pre-build sweep, so nothing runs it automatically. WHY: Self-resolution exhausted for the ROTATION half only; the FILE half remains agent-safe and is enumerated as choice [E]. Rotation requires ALTER ROLE helixcode PASSWORD against the LIVE helixcode-infra-postgres (POSTGRES_PASSWORD applies only at volume init, so a compose edit alone changes nothing on an existing volume), rewriting .env, and recreating the postgres container plus every consumer - with three other agents live in this checkout and a green platform (gateway :8443, helixagent :7061, helixcode-server :8081, 12 containers, NRestarts=0). That is irreversible-in-effect, high-blast-radius, and its safe choice is not determinable from captured evidence, so 11.4.101 requires a BLOCK rather than an autonomous decision; 11.4.122 additionally forbids disturbing running components without operator confirmation. Because the value is already in git history on four mirrors, 11.4.113 forbids rewriting it away - rotation is the ONLY remedy, never a history rewrite. UNBLOCK: [A] ROTATE NOW - ALTER ROLE + regenerate .env + recreate helixcode-infra-postgres and dependent services; costs seconds-to-minutes of DB downtime and WILL disrupt the three live agents and the currently-green platform. [B] ROTATE AT THE NEXT MAINTENANCE WINDOW - no disturbance now; the published-credential exposure persists until then. [C] REDUCE EXPOSURE FIRST, ROTATE LATER - rebind 5433 (and autoboot 55432, docker/ 5432) to 127.0.0.1; container-restart only, no credential change; shrinks LAN reach to loopback immediately. [D] ACCEPT AND RECORD THE ACCEPTANCE (11.4.90 Obsolete with Obsolete-Details) on the grounds that the DB is helixcode_test on an RFC1918-only host - but this CANNOT be justified as 'localhost only': the bind is *:5433 and is LAN-reachable. [E] SPLIT THE ITEM - let an agent land the file half now (compose.helixcode-infra.yml:30,215; helix_code/docker-compose.full-test.yml:24,473; helix_code/.env.full-test:15; helix_code/tests/e2e/.env.example:67; helix_code/test_programs/test_db_connection.go:15; the instruction-shaped doc copies) plus the two gate defects, with NO live impact, and keep a separate operator-owned rotation item - which is exactly how 25d41351 -> 11861996 already sequenced this work. WHO: Operator
 **Severity:** High
 **Created-By:** Claude
 
@@ -343,15 +346,6 @@ The handbook that describes this project's technology stack names a specific ver
 
 One test directory contains a duplicate of its own path nested inside itself, so the same ten files appear twice in the project at two different depths. It was created by an earlier renaming exercise that moved a tree while leaving a copy behind at the old location inside the new one. Nothing reads the nested copy, so it causes no failure today, but it means anyone searching the project finds two results for every one of those files and cannot tell which is real, and any tool that scans for duplicate declarations reports it forever. It also blocks a useful check from being switched on: a guard that detects accidentally-nested duplicates cannot be enabled while this one exists, because it would report a failure on every run. Removing it requires first confirming through the project history that the nested copy is genuinely the leftover and not the original.
 
-## HXC-199 — A check for a just-fixed problem would still report it as broken, because it matches on a fragment
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** Medium
-**Created-By:** Claude
-
-A recent change gave one part of the project a distinct name so that two different pieces of code could stop claiming the same identity. A diagnostic script that checks whether that problem still exists searches for the old name as a fragment of text, and the new name contains the old one as a prefix — so the check still matches and would report the problem as unfixed even though it is fixed. Anyone re-running it would be told to redo work that is already done, and might undo the fix believing it had never worked. The project handbook also still describes the old arrangement in three places. The fix is to make the check match the whole name rather than a fragment, and to update the handbook so both agree with what the code actually does now.
-
 ## HXC-200 — A leak detector recognises only one of the two shapes the leak can take
 
 **Status:** Queued
@@ -393,6 +387,7 @@ When a model provider record is created, its environment settings are taken from
 **Status:** Queued
 **Type:** Bug
 **Created-By:** Claude
+**Severity:** Low (test-infrastructure only — the Slack and LLM-provider mocks are e2e test doubles, never shipped to users; blocks container-level proof for those two mocks specifically, but the concrete permissive-origin fix that surfaced this gap was still fully provable and shipped at the source/process layer)
 
 Four compose entries across two end-to-end test stacks declare a build context pointing at the Slack mock and the LLM-provider mock, but neither directory contains a Dockerfile. Any attempt to build those stacks therefore fails at the build step rather than at run time, which means the containerised form of these two services has almost certainly never been exercised. This was surfaced while fixing an unrelated permissive-origin defect in the same two services: the fix could be proven at the source and test-process level but not against a running container, precisely because no container of either service can be produced. That gap matters beyond these two mocks, because a fix validated only in-process leaves the deployed-artifact layer unproven, which is exactly the class of silent failure the four-layer verification discipline exists to catch. The work is to add the missing Dockerfiles, or to remove the build entries if these services are genuinely never meant to run containerised, and then to prove the choice by building the stack.
 
@@ -401,24 +396,9 @@ Four compose entries across two end-to-end test stacks declare a build context p
 **Status:** Queued
 **Type:** Task
 **Created-By:** Claude
+**Severity:** Low (the recurrence-causing gitignore bug is already fixed — commit 7552c7bd; I confirmed only 1 untracked docs/qa/ dir remains today, not 35; remaining scope is a one-time backlog cleanup of already-closed items' historical evidence, with no bearing on any currently open or future closure)
 
 A blanket rule excluding log files from version control was also excluding captured test evidence, because evidence transcripts are written as log files. The rule has now been corrected so this cannot happen again, and the three folders backing recently closed items have been recovered and committed. Thirty-five older folders remain in the same state: the runs exist only on the machine that produced them, so anyone cloning this project sees an evidence folder that appears empty, which is indistinguishable from a test that was never run. Recovering them is not automatic, because two of the files alone account for seventy-eight megabytes and committing those into permanent history is a poor trade that deserves a deliberate decision rather than a reflex. The work is to review the thirty-five, keep what genuinely substantiates a closed item, trim or summarise the two very large ones rather than storing them whole, and record explicitly which ones are being let go and why, so the gap is visible rather than silent.
-
-## HXC-217 — Fifteen closure records describe their proof in prose instead of pointing at it
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-When an item is closed, the record carries a field meant to hold the location of the captured proof, so that anyone can go and look at it and so that a machine can confirm the proof genuinely exists. For fifteen closures that field instead contains a paragraph describing what was proved. The descriptions are substantive and in every case checked the underlying evidence does exist elsewhere on disk, so nothing is actually missing and no closure is unfounded. The cost is that those fifteen cannot be verified mechanically: a check that asks whether each closure points at something real will report them as pointing at nothing, which is indistinguishable from a closure with no proof behind it at all. That ambiguity is the defect, and it matters because a sweep that cannot tell a well-documented closure from an empty one will eventually be believed about the wrong one. The work is to move the narrative into the record's description where it belongs, put the actual location in the location field, and add a check that refuses a closure whose stated location does not resolve.
-
-## HXC-218 — Container health checks still fail for IPv6 addresses, so starting the scan service breaks
-
-**Status:** Queued
-**Type:** Bug
-**Severity:** High
-
-When the security scanning tool is asked to START its supporting services, it checks whether each service is healthy by building a network address from a host and a port. For ordinary addresses this works, but modern IPv6 addresses contain colons of their own, so they must be wrapped in square brackets before a port is attached. The shared container code does not do that wrapping in two places, so the address it builds is malformed and the health check can never succeed on an IPv6 machine. A companion fix already repaired the STATUS command, but START goes through a different path in the shared container library and was not covered, which means operators on IPv6 hosts still see startup fail for what looks like no reason. The obvious shortcut of pre-wrapping the address is unsafe, because another part of the same library compares the raw unwrapped form when deciding whether a service is local, and wrapping it would silently break that check. The benefit of fixing this properly is that operators running on IPv6 networks can start and monitor the scanner normally instead of hitting a confusing dead end. Success means the start command completes its health checks on an IPv6 host exactly as it does on an IPv4 one.
 
 ## HXC-219 — Evidence-gate handbook never explained the new citation rule, and its exported copies are stale
 
@@ -428,56 +408,14 @@ When the security scanning tool is asked to START its supporting services, it ch
 
 A recent repair changed how the release gate decides whether a piece of recorded test evidence really belongs to the change it claims to document. Evidence must now name its commit on a labelled line rather than merely happening to contain the right code somewhere in the text. That new requirement was never written down for the people who have to follow it: the guide that authors read before recording evidence says nothing about the new labelled field, so a contributor following the current instructions can produce evidence the gate will reject without understanding why. Separately, the reference page describing the gate itself has printable and web copies that were generated well before the page was last edited, so all three versions disagree with each other and with the tool they describe. Fixing this means updating the author-facing guide to describe the labelled citation field and regenerating the exported copies so every version matches. The people who benefit are contributors recording evidence and reviewers reading it, who currently have no accurate written description of the rule being enforced. Success means someone can follow the written guide and produce evidence that passes the gate on the first attempt.
 
-## HXC-220 — The module-name check has no permanent test, so the fixed false alarm could return unnoticed
-
-**Status:** Queued
-**Type:** Task
-**Severity:** High
-
-A diagnostic script used to report that two parts of the project shared the same module name, when in fact they no longer did. The cause was that it looked for the shorter name inside the longer one instead of comparing the two names as wholes, so a rename that deliberately made them different was still reported as a clash. The comparison itself has been corrected and behaves properly today, but no permanent automated test was ever added to keep it correct. That matters because this exact kind of check is easy to rewrite carelessly during future cleanups, and if the loose comparison came back nobody would notice until the script again told an engineer that finished work was unfinished, risking someone undoing a correct change. The project requires every fixed defect to leave behind a standing test that fails if the defect returns, and that test is the only piece still missing here. The people who benefit are engineers relying on this diagnostic to tell them the true state of the project. Success means a registered test exists that passes on the current corrected code and fails if the loose name matching is ever reintroduced.
-
-## HXC-221 — When secure randomness fails, API key generation quietly falls back to a guessable value
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-The agent component issues API keys for callers of its protocol service. It builds each key from sixteen bytes of cryptographic randomness, which is correct. But if the system's randomness source ever fails to answer, the code does not stop — it silently substitutes the current clock reading and hands back a key derived from the time of day. A key made that way is guessable by anyone who can estimate when it was issued, and the caller receiving it is told nothing: it looks like an ordinary key and is accepted as one. The function is already able to report a failure to its caller, so the ability to refuse safely exists and is simply not used. The likelihood of the randomness source failing is genuinely low, which is why this has gone unnoticed, but the consequence if it does is that the service starts issuing predictable credentials with no signal that anything is wrong. Failing loudly is the correct behaviour here: a caller that receives an error can retry or abort, whereas a caller that receives a weak key has no way to know it must. The fix is to return the error instead of the clock reading, and to add a test that forces the randomness source to fail and confirms no key is produced.
-
-## HXC-222 — Downloaded third-party libraries are committed into the agent repository, 104 megabytes of them
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-The agent component has two folders of downloaded third-party libraries committed into version control: 7,870 files under its web toolkit and 1,037 under its plugin service, together about 104 megabytes. These are not our code. They are fetched automatically from a package registry using the manifest files that sit beside them, which means every one of them can be recreated on demand and none of them needs to be stored. Committing them makes every clone of the repository permanently larger and makes it hard to see our own changes among theirs, because any routine dependency update rewrites thousands of files at once. The project already has a rule against versioning anything that a documented mechanism can regenerate, and the ignore file does not currently list these folders, so nothing prevented them from being added. The fix is to stop tracking both folders, add them to the ignore file, and confirm the documented install step still reproduces them exactly on a fresh checkout — the last part matters, because removing them is only safe if the recreation path is proven to work.
-
-## HXC-223 — The safety check that stops half-finished experiments also blocks the proof they were finished
-
-**Status:** Queued
-**Type:** Bug
-**Created-By:** Claude
-
-Before every commit, a check scans the files being committed for markers left behind by a deliberate sabotage experiment — the kind where a working safeguard is temporarily broken to prove it really notices. Leaving such a marker in real code would be dangerous, so blocking it is correct. But the same experiment is required to record what it did, and that record necessarily quotes the sabotaged lines verbatim as its proof. The check cannot tell the difference between code that is still broken and a written account of code that was broken and then repaired, so it refuses the account. The two rules therefore contradict each other: one demands the proof be captured, the other forbids it from being stored. This is not hypothetical — it happened today and the proof file had to be left out of its own commit, which is exactly the situation where evidence quietly goes missing. The fix is to teach the check where it is looking: markers inside a recorded transcript under the evidence folder are a description of past work, while the same markers in live source are a real hazard. The check must keep refusing the second while permitting the first, and must be tested against both so it cannot drift back to refusing everything or accepting everything.
-
 ## HXC-225 — One vendored helper server accounts for two thirds of all our reported vulnerabilities
 
 **Status:** Queued
 **Type:** Task
 **Created-By:** Claude
+**Severity:** Medium (direct sibling of HXC-171, same shape and same rating: a vendored component of unverified origin/usage inflates the headline vulnerability count — 140 of roughly 208 — burying the few that matter; not Low because an undiscussed component silently shipping or wired in unnoticed is a real provenance/supply-chain gap requiring an explicit operator decision; not High because HXC-166's independent triage already found 0 of 210 total advisories reachable-and-unmitigated in any shipped helix_agent artifact today)
 
 A single bundled helper component inside the agent project is responsible for 140 of the roughly 208 security advisories reported against the whole project — about two thirds of the total — and it entered the codebase without ever being discussed. Nobody has established what it does, whether we wrote it or copied it in, whether anything we ship actually uses it, or whether removing it would cost us anything. Until those questions are answered the headline advisory count is misleading: it reads as though the agent project carries enormous risk, when in reality the great bulk of it sits in one component that may not even be part of what we deliver. The work is to determine the component's origin and purpose, whether it is reachable from anything we build or run, and then to make a decision about it — keep and maintain, upgrade its dependencies, or remove it — and record which was chosen and why. The decision matters more than the individual advisories, because upgrading dependencies inside a component we do not need would be effort spent on nothing.
-
-## HXC-187 — Two different pieces of code claim the same identity, so which one gets used depends on where the build starts
-
-**Status:** Reopened
-**Reopened-Details:** By: AI; On: 2026-08-05; Reason: captured-evidence-contradicts; Evidence: docs/qa/hxc217_evidence_path_resolve_20260805T082033Z — HXC-217 closure-evidence resolvability audit. This item's closure record cited commit 09a086a6 (go.mod, 1 file, +1/-1) and unlogged build/vet results, with no captured artefact. A repo-wide search returns ZERO tracked paths and ZERO on-disk directories matching 'hxc187'. The commits are real and the rename may well be correct — but a commit reference is not captured runtime evidence (§11.4.5 / §11.4.123), so the closure's warrant cannot be produced on demand. Reopened to capture a real runtime signature for the module-identity invariant (§11.4.108), not to redo the rename.
-**Type:** Bug
-**Evidence:** commit 09a086a6, go.mod only (1 file, +1/-1). Root module renamed dev.helix.code -> dev.helix.code/meta; ZERO import updates were needed because the root module genuinely had no importers. TWO-METHOD verification, and method 1 alone would have produced two FALSE POSITIVES: a git ls-files sweep hit an ASCII-art string literal ('dev.helix.code v1.0.0') and prose in doc comments, neither an import. Method 2 (filesystem, sees submodules + untracked) found all 947 quoted imports under helix_code/ and zero elsewhere; sweep validity proven rather than assumed (9944 .go files under submodules/, 1909 under cli_agents/ — it had real content to see). Reversal conditions each cleared: no go.mod requires/replaces the root; scripts/audit_const046 is an independent module not a consumer; and D-7's 'no go.work exists' was imprecise — two do exist but neither names dev.helix.code. SEMANTIC PROOF the collision is gone: dev.helix.code/internal/theme now resolves ONLY from the inner module; from the root it reports 'no required module provides package'. Build/vet for the root module's own 5 packages: 0/0. The agent deliberately did NOT delete the root stub (removal is its own 11.4.124 decision) and did NOT touch skill_registry/U-12 (it cannot be fixed in isolation — reconciling it repairs helix_agent's replace but BREAKS helix_llm's currently-correct one). Gate deliberately left UNREGISTERED and unweakened: its premise 'exactly one duplicate' proved stale — 118 live modules, 8 duplicate groups, 7 surviving the rename (1 ours: a self-nested tests/e2e/orchestrator copy from refactor cc339fc0; 6 in another repo's nested submodule content). Registering a failing gate would break the sweep for all live agents, and narrowing its exclusions would destroy its ability to detect an accidentally-nested duplicate in our own tree (assertion-weakening under 11.4.120). Both refusals correct.
-**Severity:** High
-**Created-By:** Claude
-
-The project declares the same module identity in two places: once at the top level and once for the real application inside it. Because of that, one particular internal name refers to two completely different pieces of code — a five-line placeholder at the top level, and the real fifty-kilobyte subsystem inside. They share no files at all. Which one any given piece of code actually receives depends entirely on which directory the build was started from, which is not something a developer would ever expect or notice. Nothing is broken today only because the top-level placeholder has no users, but that is luck rather than design, and the first time someone adds one the behaviour will differ between two builds of the same source with no error to explain it. The fix is to give the top-level module a distinct identity so the collision cannot occur. Removing the placeholder is a separate decision and is deliberately not bundled with this.
 
 ## HXC-224 — Closure-evidence pointers are unchecked free text, so proof of completed work silently becomes unreachable
 
@@ -520,6 +458,149 @@ not resolve**. Systematically resolving every one:
 **Status:** Queued
 **Type:** Bug
 **Created-By:** Claude
+**Severity:** Medium (independently verified via GitHub GraphQL: vasic-digital/HelixAgent=210 open alerts, HelixDevelopment/HelixAgent (our submodule's own configured origin per .gitmodules)=0, identical commits; a monitoring blind spot on the copy we actually consume, not a live production vulnerability, since HXC-166's independent triage found 0 of 210 reachable-and-unmitigated in any shipped artifact today; not Low because a future genuinely dangerous CVE would land completely unnoticed on the consumed mirror until this is fixed, and any current zero-findings claim about this component is unfalsifiable)
 
 The agent project is mirrored to two hosting accounts, and automatic vulnerability alerting was only ever switched on for one of them. Queried today, one mirror reports two hundred and ten open alerts while the other reports none. The one reporting none is the one the main project is configured to pull from, so anyone who checks the security posture of the component we actually consume is shown a clean result while more than two hundred findings sit unseen on the sibling copy. Nothing is wrong with either set of code; the two mirrors hold the same commits. What differs is that only one of them is being watched. This is dangerous precisely because the answer looks reassuring: a report of zero findings is indistinguishable from a report of zero findings because nobody is looking, and the second case is what we have. The work is to switch alerting on for the mirror we pull from, confirm both then report the same figures, and add a periodic check that compares the two so a future divergence is noticed rather than trusted. Until that is done, any statement about this component's vulnerability status must name which mirror it came from.
 
+## HXC-227 — A working access key for an external service is published in a design document
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+A design document committed forty-eight days ago contains, in its API-keys section, what appears to be a genuine access key for an external model provider rather than a placeholder. The section is headed as being copied from the machine's own credentials file and described as already configured, and the value carries none of the markers a placeholder would have: it is fifty-one characters long, uses twenty-nine distinct characters, and contains no example or to-be-filled wording. The document is tracked on the main branch and has therefore been published to all four hosting mirrors since the day it was written. Anyone with read access to any mirror, and anyone holding a clone or fork made at any point in those forty-eight days, already has the value. Deleting the line now would remove it from the current revision only; the history retains it, rewriting that history is forbidden, and rewriting would in any case not reach copies already distributed. The only action that actually withdraws the key is revoking it at the provider and issuing a replacement, which requires access to the provider account and cannot be done from within the repository. Until that happens the key must be assumed compromised. Once revoked, the document should be edited to reference the credentials file by name instead of quoting its contents, and a check added that refuses any commit introducing a value of this shape.
+
+## HXC-229 — The gateway service runs in development mode when started as a production service
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The multi-provider routing gateway starts in its web framework's debug mode rather than release mode, and says so in its own startup log alongside the framework's warning that this should be switched for production use. Debug mode is not a cosmetic difference: it prints every registered route at startup, produces far more verbose logging on every request, and in this framework is documented as unsuitable for production because of the extra output and the internal detail it exposes in error responses. The service is being launched by the system supervisor as a long-running background service, which is exactly the production case the warning is about. Nothing is broken in the sense of requests failing, which is why this has gone unnoticed, but a production deployment is currently logging at development verbosity and revealing more internal structure than it should. The framework offers two ways to correct it, an environment variable or a call in the startup code, and the service unit is the natural place to set the former. The fix is to select release mode when the service runs under the supervisor, and to add a check that fails if a production unit ever starts in debug mode again.
+
+## HXC-231 — HelixLLM gateway reports itself as running for over half an hour while refusing all connections
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The HelixLLM gateway downloads large AI model files from an external website before it starts accepting network connections. During that download the operating system reports the service as running and healthy, but every attempt to reach it fails outright. Measured on 2026-08-06 this window lasted thirty-seven minutes from service start until the service actually began listening. Anyone checking the service status during that period is told everything is fine while the service is in fact unusable, and any other component that depends on the gateway will fail for the whole window. The problem is made worse because the download depends on an external site being reachable and fast: on this run one of the two downloads timed out after roughly thirty minutes and was abandoned. If that site were unreachable the gateway might never start listening at all. The fix is to start accepting connections first and download models in the background, and to report an honest not-ready state while the downloads are still in progress.
+
+## HXC-232 — Two database tables the software expects are missing, so HelixAgent logs an error every minute forever
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+HelixAgent expects two tables to exist in its database, named distributed_locks and agent_instances, but neither of them has ever been created. There is no setup script anywhere in the project that creates them. As a result HelixAgent tries to tidy up expired locks once every minute, the database refuses the request because the table does not exist, and an error is written to the log. Verified on 2026-08-06 by checking all three databases directly: neither table exists in any of them, and the error appeared sixty times in a sixty-minute period plus a further hundred and thirty times during the boot test. The service otherwise runs normally, so nothing visibly breaks, but the constant stream of errors buries genuine problems in the log and means the locking feature these tables were meant to support is silently doing nothing at all. Fixing this needs someone who knows what these tables were intended to contain to write the setup script; the columns must not be guessed.
+
+## HXC-233 — The gateway cannot start its built-in local model server because the program is not on its search path
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+When the HelixLLM gateway starts it tries to launch a bundled local model server program called llama-server, and fails immediately because that program cannot be found on the search path the service is given. The gateway records this as a warning and carries on without it, so nothing appears to be broken, but the local model serving feature it was meant to provide is simply absent for the whole life of the service. This matters because the gateway had just spent thirty-seven minutes downloading a model file specifically so that this server could serve it; the download succeeded and the model file is on disk, but nothing can use it. Observed live on 2026-08-06 during a full platform boot. The likely fix is to give the service an explicit path to the program in its startup configuration rather than relying on the search path, which is much shorter for a background service than for a person typing at a terminal.
+
+## HXC-234 — HelixAgent's plug-in tool servers fail to build on startup and never become available
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+On startup HelixAgent tries to build and launch a set of optional plug-in tool servers, known as MCP servers, using the container engine. The build fails: two of the packages inside the container fail during their dependency-install and compile step and the whole operation is abandoned. HelixAgent records a warning saying it failed to start some of these servers and then continues running normally, so the platform looks healthy and nothing obviously breaks. The real effect is that every capability those plug-in servers were meant to provide is silently missing, and because the failure is only a warning it is easy for nobody to notice. Observed live on 2026-08-06 during a full platform boot, where the build was attempted twice and failed both times after downloading and unpacking a large container image each time, which also makes every startup slower. The fix requires repairing the dependency installation inside those container build files.
+
+## HXC-235 — Search-by-meaning quietly falls back to a method that cannot understand meaning
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The HelixLLM gateway provides a feature that finds documents by meaning rather than by exact wording. On startup it reports that no real language model is configured for this purpose, so it has fallen back to a simple hashing method. The gateway's own warning states plainly that this fallback does not capture meaning at all and that retrieval quality will be significantly degraded. The important part is that the feature does not switch itself off or return an error: it keeps answering every request, just with results that are effectively arbitrary rather than relevant. Anyone using it would have no way of telling from the responses that it is not working properly. Observed live on 2026-08-06 during a full platform boot. Resolving this means pointing the relevant configuration setting at a genuine embedding provider, and deciding whether returning meaningless results silently is acceptable behaviour or whether the feature should refuse to answer instead.
+
+## HXC-236 — Address parsing behaves differently in two parts of the codebase, and will change silently on a version bump
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The standard library routine that splits a web address into a host and a port behaves differently in two parts of this codebase, using the same compiler and the same input. In the main application it rejects an address whose host is an unbracketed IPv6 literal; in the containers component it quietly accepts the same string and guesses the port from the last colon. The cause is that each component declares which language version it targets, and the newer version tightened this routine; the containers component still declares the older one, so it keeps the older, permissive behaviour. Two consequences follow. First, any reasoning about address handling is only valid for the component it was measured in, which has already caused one incorrect conclusion to be recorded during this work. Second, and more seriously, the day someone raises the containers component to the newer language version, addresses it accepts today will start being rejected, and the failure will appear as unreachable services rather than as anything pointing at the version change. The work is to make the difference explicit rather than incidental: decide deliberately which behaviour each component should have, record that decision where a reader will find it, and add a check that fails if the two drift apart again without anyone noticing.
+
+## HXC-238 — Captured proof files are trusted as harmless because of their name, not because anything stops them running
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** Low
+
+The safety check that stops half-finished experiments from being committed now makes an exception for captured proof files, which was necessary because those files can never satisfy the old exception rule and so could not be saved at all. The exception is deliberately narrow: the file must sit in the evidence folder, carry one of four harmless file types, be saved as non-runnable, and not begin with the line that marks a file as a program. Together those make the file inert in normal use. What none of them prevent is somebody deliberately pointing a program interpreter at the file and running its contents anyway, which no file property can stop. The practical risk is low, since it requires a deliberate act rather than an accident, and the alternative was leaving the project unable to save the proof it is required to keep. Recording it so the exception is understood as bounded rather than absolute, and so anyone widening it later can see what it never claimed to cover.
+
+## HXC-239 — HelixQA http runner defaults to the wrong login token field, so every authenticated test bank fails to log in
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+When HelixQA runs a test bank that needs to sign in, it reads the sign-in reply and picks out the wrong piece of it. The HelixCode server answers a successful login with two different values: a real access pass (the field named 'token') and a separate bookkeeping reference for the session (the field named 'session_token'). Only the first one is accepted as proof of identity on later requests. HelixQA is set up out of the box to grab the second one, so it hands the server a value the server does not accept and is turned away with 'Invalid or expired token'. The effect is that every test that needs to be signed in reports a failure even when the feature it is testing works perfectly. This was measured directly: the worker-management bank scored 6 passed and 4 failed with the built-in setting, and 9 passed and 1 failed when pointed at the correct field, with no change to the server. The reason nobody noticed is that HelixQA's own internal tests use a pretend server that puts the access pass in the field HelixQA expects, so the mismatch never shows up until it is run against the real product. Anyone reading the results would wrongly conclude that large parts of the product are broken.
+
+## HXC-240 — The generate-e2e test bank can only ever be run once because it registers a fixed user name that then already exists
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+One of the HelixCode test banks signs up a new account as part of its checks, but it always uses the very same account name, 'hxc_gen_e2e'. The first time the bank is run the sign-up succeeds and the check passes. Every run after that hits the same account already sitting in the database, the server correctly refuses with 'user already exists', and the check is recorded as a failure forever after. This was observed live within a single session: the first run of the bank passed that step, and a second run minutes later failed it, with the account visible in the database timestamped to the moment of the first run. The rules this project works under require that automated checks can be re-run any number of times and give the same answer, cleaning up after themselves. As written this bank breaks that rule and quietly poisons its own results, so a permanent red mark accumulates that has nothing to do with whether the product works. The fix is for the bank to use a fresh unique name each run, or to remove the account it created when it finishes.
+
+## HXC-241 — Test bank reports a fully working AI text-generation feature as broken because it matches wording with the wrong capital letters
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+The checks that confirm HelixCode can generate AI text look for an exact run of characters inside the server's reply, and that comparison treats capital and small letters as different. Two checks in the generate-e2e bank ask for wording that the server does produce but with different capitalisation, so they are marked as failures even though the product behaved correctly. The most serious case asks the AI to say hello and then searches the reply for 'hello' in small letters; the AI answered 'Hello' with a capital H, so a genuinely working feature was reported as broken. This was confirmed by hand against the live server: asking it to reply with an invented word returned that exact word back, and asking it what seventeen times three is returned fifty-one, both with believable token counts, which proves real AI generation is running and healthy. A second check searches an error reply for 'authorization' in small letters while the server writes 'Authorization' with a capital A. Expecting exact capitalisation of freely generated AI wording is unreliable by nature. The consequence is false alarms that hide real problems and waste investigation time.
+
+## HXC-242 — Screenshot and QA-session features are switched off in the running deployment so five checks cannot be exercised at all
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+Five checks covering the built-in screenshot and quality-assurance session features fail against the running HelixCode server, and every one of them fails for the same reason: the server answers 'QA engine is disabled' and reports itself temporarily unavailable. The server is being honest here rather than misbehaving, but the practical effect is that a whole advertised area of the product is switched off in this deployment and therefore cannot be used by anyone or confirmed as working by anybody. The affected areas are listing the available screenshot engines, listing quality-assurance sessions, asking for the status of a session, starting a new session, and the handling of a request to start a session with nothing to run. Because the feature is off, we have no evidence either way about whether the underlying code behind it functions. Someone needs to decide whether this feature is meant to be available, and if so switch it on and re-run these checks so the behaviour is actually proven; if it is meant to stay off, the checks should say so rather than reporting failures.
+
+## HXC-243 — Some of our own test suites cannot fail, so their passes mean nothing
+
+**Status:** Queued
+**Type:** Bug
+**Created-By:** Claude
+
+Several of the automated test collections that check our services declare no expectation about what a correct answer looks like. They send a request, receive whatever comes back, and record a pass regardless of the reply. This was demonstrated rather than argued: one collection was deliberately aimed at the wrong service, one already proven to be returning an error for every request, and it reported both of its checks as passing. A collection that passes against a service known to be broken cannot tell a working feature from a dead one, so its green result carries no information at all. This matters more than an ordinary failing test, because a suite that cannot fail is worse than no suite: it produces confidence where there is none, and it will keep producing it every time it runs. The work is to give every check an explicit expectation — the status it should return, or the content the answer must contain — and then prove each one is capable of failing by pointing it at something known to be wrong and confirming it reports a failure. A separate finding from the same run: four apparent failures in the worker collection were traced to the test harness looking for the wrong field name in the login reply, not to any fault in the product, and that mismatch should be corrected so real failures are not lost among false ones.
+
+## HXC-245 — Regenerating the tracker documents from the database silently destroys the blocked-item explanations
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** High
+
+When the workable-items tool regenerates the human-readable tracker documents from the database and then reads them back, the explanations attached to blocked items are lost. Measured on 2026-08-08: the database holds five such explanation records; after one regenerate-and-reread cycle only one survives, so four are destroyed. The cause is that the document generator never writes these explanations into the document in the first place, so when the document is read back there is nothing to restore from. This matters because those explanations are the entire reason a blocked item is actionable — they record what is blocked, what was already tried, and exactly which decision would unblock it. Losing them turns a tracked decision waiting on a person into an item nobody can act on, and it happens silently, with no warning and no error. It also breaks the guarantee that the database and the documents are two faithful views of the same data, which is the foundation the whole tracking system rests on. Anyone maintaining the project benefits: the operator keeps the context needed to make blocking decisions, and future contributors can see why an item stalled. The expected outcome is that a regenerate-and-reread cycle preserves all five explanation records, proven by a test that fails today and passes after the fix.
+
+## HXC-246 — The agent runtime's automated test suite reports 74 failures, and most look like the tests, not the product
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** High
+
+A complete run of the agent runtime's automated tests finished with 366 groups passing, 12 groups failing, and 74 individual test failures. The failures are being investigated rather than assumed, because the early evidence points at the tests and their environment rather than at the product. Three patterns account for most of them: a large group cannot reach the in-memory cache service because they look for it on the port number it uses INSIDE its container while this machine publishes it on a different one; a second group expects a running service to answer a web request and fails instantly, even though that service is up and answering correctly when asked by hand; a third group measures elapsed time against fixed limits and overshot them by about a quarter, having run while four other jobs and a service rebuild were competing for the same processor. None of that proves the product is healthy, and none of it proves the product is broken - that is exactly what four parallel investigations are now establishing, each required to produce captured evidence rather than a plausible story. This matters because a test suite that fails for environmental reasons is as damaging as one that passes while the product is broken: both teach everyone to stop trusting the result, and both hide the real defects in the noise. The operator benefits from a suite whose red means something, and future contributors get a signal they can act on. The expected outcome is every one of the 74 failures classified with evidence as a genuine product defect, a test defect, an environment coupling, or a contention artifact, each real defect fixed with a test that reproduces it first, and the suite returning to a trustworthy state.
+
+## HXC-247 — Two services both claim network port 8100, so 82 test files test the wrong program
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** High
+
+Two separate parts of the system have both been told to use the same network address, and neither knows about the other. The agent runtimes own address book - the file that decides which service gets which port number - assigns port 8100 to the agent runtime itself. But a different component, the model verifier, has its own configuration that also names port 8100, and because the verifier starts first it takes the address. Meanwhile the agent runtime is launched from a settings file that still names its old address, 7061, so it never even tries to claim the one it was allocated. The visible result is that 82 test files ask port 8100 for the agent runtime and are answered by the verifier, which does not recognise the requests and rejects them with a not-found - so those tests report the agent runtime as broken when it is running perfectly well a few numbers away. This matters because it makes a large part of the test suite structurally incapable of testing the thing it names, and because the same collision would mislead anyone deploying the system for real. Whoever operates or deploys this benefits directly: today a healthy service reads as failing, and a genuinely failing one would look exactly the same. The expected outcome is a single place that decides port allocation for every component, no two components claiming the same number, the agent runtimes own settings agreeing with that allocation, and the tests then passing or failing for reasons that are genuinely about the product.
+## HXC-248 — Test cleanup can shut down the live platform; only a coincidence prevents it today
+
+**Status:** Queued
+**Type:** Bug
+**Severity:** High
+
+A cleanup step in the automated test suite can shut down the running platform, and today the only thing preventing that is a coincidence. When the integration tests finish they try to stop any containers they started. To avoid stopping containers they did not start, they first check whether the agent service is still running - but the check is only whether *something* answers on network port 8100, with no verification of what that something is. On this machine port 8100 is held by a different component entirely, the model verifier, so the check says yes, and the shutdown is skipped. The agent service itself is running on a different port and is never actually consulted. If the verifier were ever stopped, restarted late, or moved, that same check would say no and the test cleanup would shut down the live platform out from under whoever was using it. The log line it prints while doing this is also untrue: it reports that the agent is still running on 8100 when the agent is not there at all. This matters to anyone running the test suite on a machine that also hosts a live deployment, which is the normal case here. The expected outcome is a check that confirms the identity of what is answering - not merely that the port is occupied - so the cleanup makes its decision on the real condition rather than a coincidence, and so the message it logs is true.

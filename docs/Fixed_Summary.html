@@ -192,12 +192,12 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>200</td>
+<td>210</td>
 </tr>
 <tr>
 <td>Bug</td>
 <td>Obsolete (→ Fixed.md)</td>
-<td>3</td>
+<td>4</td>
 </tr>
 <tr>
 <td>Feature</td>
@@ -207,7 +207,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Task</td>
 <td>Completed (→ Fixed.md)</td>
-<td>83</td>
+<td>84</td>
 </tr>
 <tr>
 <td>Task</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>384</strong></td>
+<td><strong>396</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1261,9 +1261,7 @@ items (§11.4.93/95)</td>
 </tr>
 <tr>
 <td>105</td>
-<td>Medium (latent: requires SetTranslator() concurrent with tr();
-existing -race tests pass because SetTranslator is boot-only in
-practice)</td>
+<td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -1386,9 +1384,7 @@ behaviour)</td>
 </tr>
 <tr>
 <td>118</td>
-<td>Medium (CONST-050(B): the llm integration suite cannot compile/run;
-masks integration regressions + blocks the new ollama integration
-stress/chaos tests from running via the normal path)</td>
+<td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -1489,9 +1485,7 @@ none remain) + Codex/Cline reference-agent ports</td>
 </tr>
 <tr>
 <td>129</td>
-<td>High (breaks <code>helix_agent</code> <code>go build ./...</code>; a
-§11.4 PASS-bluff at the build layer — tracked source does not
-compile)</td>
+<td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -1511,8 +1505,7 @@ on origin/master</td>
 </tr>
 <tr>
 <td>131</td>
-<td>High (§11.4.79 release-blocker — AI agents querying the code-graph
-get NO own-org submodule symbols; index also unbuildable)</td>
+<td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -1553,9 +1546,7 @@ CM-COVENANT-114-102-PROPAGATION enforcement gate</td>
 </tr>
 <tr>
 <td>135</td>
-<td>High (no user can register → no JWT mintable → every authenticated
-API path is undrivable; blocks the positive-path coverage of all 4
-HXC-029 API banks)</td>
+<td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -2999,9 +2990,7 @@ breaking LLM chat with MCP enabled</td>
 </tr>
 <tr>
 <td>290</td>
-<td>Critical (production/release blocker — unauthenticated real, paid
-LLM-provider generation, reachable on every interface per every shipped
-config’s server.address: “0.0.0.0”)</td>
+<td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -4225,6 +4214,27 @@ deliberate decision rather than a quiet correction.</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
+<td>HXC-187 — The project declares the same module identity in two
+places: once at the top level and once for the real application inside
+it. Because of that, one particular internal name refers to two
+completely different pieces of code — a five-line placeholder at the top
+level, and the real fifty-kilobyte subsystem inside. They share no files
+at all. Which one any given piece of code actually receives depends
+entirely on which directory the build was started from, which is not
+something a developer would ever expect or notice. Nothing is broken
+today only because the top-level placeholder has no users, but that is
+luck rather than design, and the first time someone adds one the
+behaviour will differ between two builds of the same source with no
+error to explain it. The fix is to give the top-level module a distinct
+identity so the collision cannot occur. Removing the placeholder is a
+separate decision and is deliberately not bundled with this.</td>
+</tr>
+<tr>
+<td>353</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
 <td>HXC-193 — One of the small services we ship in a container declares
 a health check that asks a web address on a specific port to confirm the
 service is alive. Three facts combine to make that impossible. The
@@ -4240,7 +4250,7 @@ advisories in the same service, which is worth noting because it means
 nobody had exercised the health check since it was written.</td>
 </tr>
 <tr>
-<td>353</td>
+<td>354</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4260,7 +4270,7 @@ leaving the actual hole open. The fix is to check the origin of incoming
 requests against a list of permitted ones and reject anything else.</td>
 </tr>
 <tr>
-<td>354</td>
+<td>355</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4280,7 +4290,7 @@ behaviour documented; leaving an inert knob in place is the worst of the
 three options.</td>
 </tr>
 <tr>
-<td>355</td>
+<td>356</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4301,7 +4311,25 @@ The remedy already exists and is proven next door, so this is a matter
 of applying it rather than designing anything.</td>
 </tr>
 <tr>
-<td>356</td>
+<td>357</td>
+<td>Medium</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-199 — A recent change gave one part of the project a distinct
+name so that two different pieces of code could stop claiming the same
+identity. A diagnostic script that checks whether that problem still
+exists searches for the old name as a fragment of text, and the new name
+contains the old one as a prefix — so the check still matches and would
+report the problem as unfixed even though it is fixed. Anyone re-running
+it would be told to redo work that is already done, and might undo the
+fix believing it had never worked. The project handbook also still
+describes the old arrangement in three places. The fix is to make the
+check match the whole name rather than a fragment, and to update the
+handbook so both agree with what the code actually does now.</td>
+</tr>
+<tr>
+<td>358</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4323,7 +4351,7 @@ root regardless of where it was built, and then to update the manuals
 and the check that currently enforces the broken form.</td>
 </tr>
 <tr>
-<td>357</td>
+<td>359</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4345,7 +4373,7 @@ thing nearby, which is worth treating as a review habit rather than
 seven separate oversights.</td>
 </tr>
 <tr>
-<td>358</td>
+<td>360</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4370,7 +4398,7 @@ a copy rather than the live collection, and separate the act of
 refreshing health from the act of reporting it.</td>
 </tr>
 <tr>
-<td>359</td>
+<td>361</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4392,7 +4420,7 @@ proven: hold the lock around the field writes only, never across process
 start, process wait, or the readiness poll.</td>
 </tr>
 <tr>
-<td>360</td>
+<td>362</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4415,7 +4443,7 @@ paths use, and to add a test proving a blocked command stays blocked
 when the background flag is set.</td>
 </tr>
 <tr>
-<td>361</td>
+<td>363</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4436,7 +4464,7 @@ a test asserting that a background command actually runs in the
 directory it was given rather than merely accepting the parameter.</td>
 </tr>
 <tr>
-<td>362</td>
+<td>364</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4459,7 +4487,7 @@ live in different files, so a reviewer re-reading the same file would
 have found nothing.</td>
 </tr>
 <tr>
-<td>363</td>
+<td>365</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4484,7 +4512,7 @@ check the origin against a configured allowlist and reject anything
 else, covering both the preflight and the ordinary request.</td>
 </tr>
 <tr>
-<td>364</td>
+<td>366</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4507,7 +4535,7 @@ away from any long-running call, and add a guard that runs under the
 race detector.</td>
 </tr>
 <tr>
-<td>365</td>
+<td>367</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4530,7 +4558,7 @@ halves with a test that fails if the returned value is ever aliased to
 the stored one.</td>
 </tr>
 <tr>
-<td>366</td>
+<td>368</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4557,7 +4585,265 @@ time it is given the same input, and to prove that by running it
 repeatedly against an unchanged tree.</td>
 </tr>
 <tr>
-<td>367</td>
+<td>369</td>
+<td>Low</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-217 — When an item is closed, the record carries a field meant
+to hold the location of the captured proof, so that anyone can go and
+look at it and so that a machine can confirm the proof genuinely exists.
+For fifteen closures that field instead contains a paragraph describing
+what was proved. The descriptions are substantive and in every case
+checked the underlying evidence does exist elsewhere on disk, so nothing
+is actually missing and no closure is unfounded. The cost is that those
+fifteen cannot be verified mechanically: a check that asks whether each
+closure points at something real will report them as pointing at
+nothing, which is indistinguishable from a closure with no proof behind
+it at all. That ambiguity is the defect, and it matters because a sweep
+that cannot tell a well-documented closure from an empty one will
+eventually be believed about the wrong one. The work is to move the
+narrative into the record’s description where it belongs, put the actual
+location in the location field, and add a check that refuses a closure
+whose stated location does not resolve.</td>
+</tr>
+<tr>
+<td>370</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-218 — When the security scanning tool is asked to START its
+supporting services, it checks whether each service is healthy by
+building a network address from a host and a port. For ordinary
+addresses this works, but modern IPv6 addresses contain colons of their
+own, so they must be wrapped in square brackets before a port is
+attached. The shared container code does not do that wrapping in two
+places, so the address it builds is malformed and the health check can
+never succeed on an IPv6 machine. A companion fix already repaired the
+STATUS command, but START goes through a different path in the shared
+container library and was not covered, which means operators on IPv6
+hosts still see startup fail for what looks like no reason. The obvious
+shortcut of pre-wrapping the address is unsafe, because another part of
+the same library compares the raw unwrapped form when deciding whether a
+service is local, and wrapping it would silently break that check. The
+benefit of fixing this properly is that operators running on IPv6
+networks can start and monitor the scanner normally instead of hitting a
+confusing dead end. Success means the start command completes its health
+checks on an IPv6 host exactly as it does on an IPv4 one.</td>
+</tr>
+<tr>
+<td>371</td>
+<td>High</td>
+<td>Completed (→ Fixed.md)</td>
+<td>Task</td>
+<td>—</td>
+<td>HXC-220 — A diagnostic script used to report that two parts of the
+project shared the same module name, when in fact they no longer did.
+The cause was that it looked for the shorter name inside the longer one
+instead of comparing the two names as wholes, so a rename that
+deliberately made them different was still reported as a clash. The
+comparison itself has been corrected and behaves properly today, but no
+permanent automated test was ever added to keep it correct. That matters
+because this exact kind of check is easy to rewrite carelessly during
+future cleanups, and if the loose comparison came back nobody would
+notice until the script again told an engineer that finished work was
+unfinished, risking someone undoing a correct change. The project
+requires every fixed defect to leave behind a standing test that fails
+if the defect returns, and that test is the only piece still missing
+here. The people who benefit are engineers relying on this diagnostic to
+tell them the true state of the project. Success means a registered test
+exists that passes on the current corrected code and fails if the loose
+name matching is ever reintroduced.</td>
+</tr>
+<tr>
+<td>372</td>
+<td>Medium</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-221 — The agent component issues API keys for callers of its
+protocol service. It builds each key from sixteen bytes of cryptographic
+randomness, which is correct. But if the system’s randomness source ever
+fails to answer, the code does not stop — it silently substitutes the
+current clock reading and hands back a key derived from the time of day.
+A key made that way is guessable by anyone who can estimate when it was
+issued, and the caller receiving it is told nothing: it looks like an
+ordinary key and is accepted as one. The function is already able to
+report a failure to its caller, so the ability to refuse safely exists
+and is simply not used. The likelihood of the randomness source failing
+is genuinely low, which is why this has gone unnoticed, but the
+consequence if it does is that the service starts issuing predictable
+credentials with no signal that anything is wrong. Failing loudly is the
+correct behaviour here: a caller that receives an error can retry or
+abort, whereas a caller that receives a weak key has no way to know it
+must. The fix is to return the error instead of the clock reading, and
+to add a test that forces the randomness source to fail and confirms no
+key is produced.</td>
+</tr>
+<tr>
+<td>373</td>
+<td>Low</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-222 — The agent component has two folders of downloaded
+third-party libraries committed into version control: 7,870 files under
+its web toolkit and 1,037 under its plugin service, together about 104
+megabytes. These are not our code. They are fetched automatically from a
+package registry using the manifest files that sit beside them, which
+means every one of them can be recreated on demand and none of them
+needs to be stored. Committing them makes every clone of the repository
+permanently larger and makes it hard to see our own changes among
+theirs, because any routine dependency update rewrites thousands of
+files at once. The project already has a rule against versioning
+anything that a documented mechanism can regenerate, and the ignore file
+does not currently list these folders, so nothing prevented them from
+being added. The fix is to stop tracking both folders, add them to the
+ignore file, and confirm the documented install step still reproduces
+them exactly on a fresh checkout — the last part matters, because
+removing them is only safe if the recreation path is proven to
+work.</td>
+</tr>
+<tr>
+<td>374</td>
+<td>Medium</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-223 — Before every commit, a check scans the files being
+committed for markers left behind by a deliberate sabotage experiment —
+the kind where a working safeguard is temporarily broken to prove it
+really notices. Leaving such a marker in real code would be dangerous,
+so blocking it is correct. But the same experiment is required to record
+what it did, and that record necessarily quotes the sabotaged lines
+verbatim as its proof. The check cannot tell the difference between code
+that is still broken and a written account of code that was broken and
+then repaired, so it refuses the account. The two rules therefore
+contradict each other: one demands the proof be captured, the other
+forbids it from being stored. This is not hypothetical — it happened
+today and the proof file had to be left out of its own commit, which is
+exactly the situation where evidence quietly goes missing. The fix is to
+teach the check where it is looking: markers inside a recorded
+transcript under the evidence folder are a description of past work,
+while the same markers in live source are a real hazard. The check must
+keep refusing the second while permitting the first, and must be tested
+against both so it cannot drift back to refusing everything or accepting
+everything.</td>
+</tr>
+<tr>
+<td>375</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-228 — When the whole system is started from cold, the agent
+service checks its four mandatory dependencies and finds three of them
+ready but the fourth, the knowledge-graph component, still refusing
+connections. It treats that as fatal, prints a boot-blocked message
+telling the operator to start the dependencies by hand, and exits with a
+failure code. The supervisor then restarts it fifteen seconds later, by
+which time the knowledge-graph component has finished starting, and the
+second attempt succeeds. The end state looks healthy, so the failure is
+easy to miss entirely, but every cold boot produces a genuine crash, a
+failure entry in the system log, and fifteen seconds during which the
+agent is unavailable. The cause is that the service unit does not
+declare that it must wait for the knowledge-graph component, so the
+supervisor is free to start them at the same moment and the race is
+decided by whichever finishes first. The instruction the service prints
+when it fails is also misleading: it tells the operator to start the
+dependencies manually, when in fact they are already starting and simply
+have not finished. The fix is to declare the ordering so the supervisor
+waits, and to make the dependency check tolerate a component that is
+still coming up rather than treating slow startup as permanent
+absence.</td>
+</tr>
+<tr>
+<td>376</td>
+<td>—</td>
+<td>Obsolete (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-230 — Every time the Helix platform is started from a fully
+stopped state, the HelixAgent service crashes on its first attempt and
+only succeeds on the automatic retry about sixteen seconds later. The
+cause is a timing problem: the infrastructure service reports that it
+has finished as soon as the container engine has been asked to create
+the containers, but the Cognee knowledge-graph container needs several
+more seconds before it can actually answer requests. HelixAgent starts
+in that gap, tries to contact Cognee, is refused, treats the refusal as
+a fatal error and shuts itself down. Systemd then restarts it and the
+second attempt works. The practical effect is that a restart of the
+platform always logs a failure and leaves a permanent restart count
+against the service, which makes genuine faults harder to spot; and if
+Cognee were ever slower than the retry allowance the platform would stay
+down instead of recovering. Reproduced live on 2026-08-06: a full stop
+and start of the platform produced the identical failure seen in an
+earlier run from 2026-07-27. The fix is to make the infrastructure
+service wait for its containers to become healthy before reporting
+success, rather than reporting success as soon as they are created.</td>
+</tr>
+<tr>
+<td>377</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-237 — The command the project uses to check its own work-item
+records, workable-items validate, runs from a prebuilt program file that
+was last rebuilt on 27 July. A new safety check was added to the source
+on 6 August: it refuses any closed item whose proof-of-work pointer does
+not actually lead to a real file. Because the prebuilt copy was never
+rebuilt, that check is simply not present in the program people actually
+run, while the source code containing it looks correct to anyone reading
+it. Proven by running both against the same deliberately-corrupted copy
+of the records with everything else held identical: the prebuilt program
+reported everything fine and exited successfully, the same code run from
+source correctly found and described the bad record and exited with a
+failure. This matters because the checker is the thing that is supposed
+to stop unproven work from being marked finished, so every closure
+signed off using it since 6 August carries less assurance than it
+appears to. It also means the ticket that introduced the check cannot
+honestly be called done. The fix is to rebuild the program file, publish
+it, and add a check that fails when the built copy is older than its
+source so this cannot recur silently.</td>
+</tr>
+<tr>
+<td>378</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-244 — The gateway is the service every other part of the
+platform talks to when it needs an AI model, and it publishes a health
+address that automated systems and on-call staff poll to ask whether it
+is all right. That address always answered “healthy” with an empty list
+of things checked, and it would have answered exactly that no matter
+what was broken underneath. The cause was a single missing wiring step:
+the part that collects health verdicts was created and handed to the
+server, but nothing was ever registered with it to check, so it had no
+dependencies to consult and “healthy” was the only verdict it could
+produce. The fast in-memory cache, the vector store, the model verifier
+and every model provider could all have been dead and this address would
+still have reported the gateway fine. This matters more than a plainly
+missing feature, because a service with no health address is an honest
+gap everyone routes around, while one that asserts a state it never
+verified will be trusted - by load balancers deciding where to send
+traffic, by supervisors deciding whether to restart, and by whoever gets
+woken at night. It also concealed a second and larger problem: the
+corrected code had been written and merged earlier, but the program
+actually running was still the old build, so every check that read the
+source code reported success while the live service stayed broken.
+Everyone who depends on the platform staying available benefits, the
+on-call responder most directly, because the signal they are paged on
+now reflects reality. The outcome achieved is that the health address
+now names the four dependencies it checked and reports how long each
+check really took, and a standing guard fails whenever that list is
+empty again, so the endpoint can no longer claim a verdict it did not
+earn.</td>
+</tr>
+<tr>
+<td>379</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4567,7 +4853,7 @@ repeatedly against an unchanged tree.</td>
 path</td>
 </tr>
 <tr>
-<td>368</td>
+<td>380</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4576,7 +4862,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>369</td>
+<td>381</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4585,7 +4871,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>370</td>
+<td>382</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4593,7 +4879,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>371</td>
+<td>383</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4602,7 +4888,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>372</td>
+<td>384</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4611,7 +4897,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>373</td>
+<td>385</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4621,7 +4907,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>374</td>
+<td>386</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4630,7 +4916,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>375</td>
+<td>387</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4639,7 +4925,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>376</td>
+<td>388</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4648,7 +4934,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>377</td>
+<td>389</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4658,7 +4944,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>378</td>
+<td>390</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4667,7 +4953,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>379</td>
+<td>391</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4677,7 +4963,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>380</td>
+<td>392</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4687,7 +4973,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>381</td>
+<td>393</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4696,7 +4982,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>382</td>
+<td>394</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -4705,7 +4991,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>383</td>
+<td>395</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4715,7 +5001,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>384</td>
+<td>396</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
