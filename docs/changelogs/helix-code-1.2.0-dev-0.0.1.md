@@ -1,25 +1,39 @@
 # HelixCode Release Changelog — helix-code-1.2.0-dev-0.0.1
 
-**Revision:** 2
-**Last modified:** 2026-07-28T15:21:59Z
+**Revision:** 3
+**Last modified:** 2026-08-09T12:38:49Z
 **Maintainer:** HelixCode release engineering (documentation draft, AI-agent authored; independently reviewed per §11.4.142/§11.4.194 — see "Independent review" section below)
 
 ---
 
 > **DRAFT — pinned to a stated HEAD, this is not a cut tag.** No git tag has been
 > created by this document. Everything below was derived by reading real git
-> history (`git log`, `git show`) on 2026-07-28 at approximately 13:11 UTC.
+> history (`git log`, `git show`) — revision 1–2 content on 2026-07-28, the
+> revision 3 content on 2026-08-09 at 12:38 UTC.
 > Multiple background work streams were actively landing commits in this repo
 > and its submodules while this draft was written (constitution §11.4.103 /
 > §11.4.192 continuous multi-track work), so HEAD will have moved by the time
 > this is read. **Re-derive the commit ranges below before treating any of this
 > as final** — do not copy the SHAs or counts forward without checking.
 >
-> | Repo | Stated HEAD (this draft) | Relative to its configured remotes |
+> | Repo | Stated HEAD (revision 3) | Relative to its configured remotes |
 > |---|---|---|
-> | main (this repo) | `c29e1dcc9fad029f64a8836148d8d5ddfc32f0fb` | 8 commits ahead, 0 behind — **not pushed** |
-> | `submodules/helix_agent` | `69a5ab8dc2469f73ddf3afa0bced01103df8b656` | 2 commits ahead of its remotes; working tree dirty (14 modified, 4 untracked) |
-> | `submodules/tool_schema` | `8cec90baadad281eb26a5671b792921f03eb7386` | 1 commit ahead of its remotes; working tree clean |
+> | main (this repo) | `5725ee068c965dabf2720ff6063acf3753a6c232` | 3 ahead, 0 behind on **all four** remotes (github/gitlab/origin/upstream) — measured *after* a real `git fetch --all --prune`, not from stale tracking refs (§11.4.6) |
+> | `constitution` (pin) | `177f2b05545f2fe73fbb432ad0de3a6bed7edcf4` | clean; carries §11.4.236/§11.4.237/§11.4.238 |
+> | `submodules/helix_llm` (pin) | `3d789cb888a09cfecdd2f0007a08a96d91caf5e9` | clean; **verified to contain `8260cf8`**, the HXC-244 health fix, so a fresh clone gets it |
+> | `submodules/helix_agent` (pin) | `66a3c1c6133a0ebdfeaa2ca4f1231588467cd145` | working checkout is at `d6856cc9` and **differs from the recorded pin** (`git submodule status` shows `+`); three other agents were actively editing this submodule and it was deliberately not touched by revision 3 |
+> | `submodules/tool_schema` (pin) | `8cec90baadad281eb26a5671b792921f03eb7386` | clean |
+>
+> **Revision 3 scope.** Revisions 1–2 documented `5ab97d8c..c29e1dcc`. Revision 3
+> re-derives from `c29e1dcc..5725ee06` — a further **231 commits** spanning
+> 2026-07-28 → 2026-08-09, of which exactly **2** are the literal `Auto-commit`
+> message and 229 are substantive; **0 merges** anywhere in the release range.
+> Total since the last tag `helix-code-1.1.0-dev-0.0.3` (`5ab97d8c`): **249
+> commits** (18 + 231, and `git rev-list --count 5ab97d8c..HEAD` independently
+> returns 249). The revision 1–2 content below is **preserved, not rewritten** —
+> it was independently reviewed and its claims re-verified; revision 3 adds the
+> new range, corrects one counting error revision 2 introduced (see "Independent
+> review"), and refreshes every pin and remote position.
 >
 > **Format note:** `docs/changelogs/` did not exist in this repository before this
 > draft — it was created now. The repository's existing root `CHANGELOG.md` uses
@@ -140,13 +154,103 @@ re-litigated or treated as unexplained drift.
 | `0a4eb8d0` | main | Corrects stale live-state anchors in `RESUME.md` after the above push — the exact "stale handoff doc" trap the project's own governance warns about, caught and fixed in the same session. |
 | `56f7edf7` | main | Message is the literal `Auto-commit` (no descriptive body). Diffstat shows real, substantive content: nil-request guards for the Replicate and Together LLM providers, a malformed-URL guard for the llamacpp provider, a `security_scan` tool rewrite, and an overhaul of `verify_qa_evidence.sh` / `verify-governance-cascade.sh` / `obsolete_details_gate.sh` / `summary_sync_gate.sh`, plus a `helix_agent` pointer bump. See Known gaps. |
 
+## Revision 3 — the `c29e1dcc..5725ee06` range (231 commits, 2026-07-28 → 2026-08-09)
+
+Everything from here to "Per-repo commit inventory" was derived on 2026-08-09.
+Commit-type histogram over the 229 substantive commits: 87 `docs`, 74 `fix`,
+27 `chore`, 15 `test`, 9 `feat`, 7 `items`, 3 `track`, 2 `governance`, 1 `probe`,
+1 `docs+test`. 72 distinct HXC ids are named in commit subjects (HXC-151…HXC-248).
+
+### Summary — what changed for a user in this range
+
+- **The gateway's primary capability was dead and now works.** Every completion
+  returned HTTP 500 "all providers exhausted": with no cloud keys configured the
+  local provider was the only completion path, and it was pointed at port 50052
+  — a default matching no service in the deployment, while the local model is
+  served on 18434. Completions now return 200 with real model output.
+- **The health endpoint no longer reports a verdict it never earned.** It
+  returned `{"status":"healthy","components":[]}` and could return nothing else.
+  It now names four checked dependencies, each with a measured round-trip
+  duration.
+- **You can now tell semantic search from a hash fallback.** The embeddings
+  response previously carried no signal at all about which pipeline served it.
+- **The desktop application no longer corrupts its own UI state under load** —
+  265 data races eliminated, root-caused to a *false* code comment claiming a
+  widget setter was goroutine-safe when the toolkit's own source says the
+  opposite.
+- **Streaming-with-tools no longer deadlocks** — a guaranteed (not racy) hang,
+  plus a family of provider send-leaks that stranded a goroutine and an open
+  HTTP body whenever a client disconnected.
+- **Infrastructure "started" now means "serving", not "created"** — the boot
+  path previously reported success once containers existed, before anything
+  answered.
+- **Two credential exposures were found and handled**, one of which had been
+  published on all four mirrors for 48 days.
+- **Test suites that could not fail were made falsifiable** — 16 HelixQA banks
+  covering 72 steps declared no assertions at all and scored PASS against a
+  dead target; 238 steps now carry explicit expectations.
+
+### Fixed (revision 3 range)
+
+| SHA | Repo | Summary |
+|---|---|---|
+| `15f00801` | main | **HXC-233** — completions were returning HTTP 500 "all providers exhausted" on every request. `LocalRPCPort` defaults to `50052` and the live process had the env var unset, so the gateway dialled a port no service listens on while `helixllm-coder.service` served the model on `18434`. Fixed with two `Environment=` lines placed *before* `EnvironmentFile=` so an operator `.env` can still override. Verified: `:50052` connection refused → after fix, HTTPS 200 naming the real `.gguf`. Findable only because HXC-235's deploy an hour earlier replaced a misleading TLS error with an honest one. |
+| `fee7e1bc` | main | **HXC-233 guard** — `scripts/testing/guard_hxc233_completion_path_live.sh`, asserting a *real* assistant message and a model id, not a status code. Its load-bearing proof is Mutation B: a stub returning HTTP 200 with an error envelope makes the guard exit 1, which a status-only assertion would have passed. |
+| `70cb8821` | main | **HXC-244 RED baseline** — establishes as fact that `cmd/helixllm/main.go:148` builds `health.NewChecker()` and registers nothing; of the 41 `.Register(` call sites in the tree, zero are on the health checker. The guard deliberately asserts the **component list**, not `status=="healthy"` — that assertion passed on the broken build for the wrong reason. Two defects in the guard itself were caught by its own golden-good/golden-bad fixtures (§11.4.107(10)): an invalid f-string made the analyzer crash on every input, and the crash's exit 1 read as "defect found", so revision 1 reported RED-confirmed against a *healthy* fixture. Fixed structurally — analyzer findings start at exit 2, and any exit outside {0} ∪ {2..6} is a broken instrument and hard-fails in both polarities. |
+| `262a44ad` | main | **HXC-244 closed at the RUNTIME layer.** The source fix (`helix_llm 8260cf8`, 969 insertions across 9 files with tests) had merged but never reached production: the running binary's mtime predated it and `go tool nm \| grep -c registerHealthChecks` returned **0**. Closed by rebuild + redeploy of the gateway only — §9.2 backup first, artifact verified *before* install (`registerHealthChecks` 6, `Ping` values 4), `NRestarts` stayed 0. After: `llm_providers`, `kv_cache_redis`, `vector_store_qdrant`, `llms_verifier`, each carrying a measured `duration` — the evidence of a real round-trip that distinguishes this from a hardcoded list. |
+| `f2e12570` | main | **HXC-235 deployed** — the deployed binary was **15 days stale**, containing `semantic_embeddings` zero times, so four `helix_llm` commits (HXC-233's fix among them) were not live either. The process-start time had suggested a 13-hour gap; `strings` on `/proc/<pid>/exe` gave the real answer in one command. Post-deploy the key appears with value `false`, which is *correct* (`HELIX_EMBEDDING_PROVIDER` is unset, so the pipeline genuinely is the HashEmbedder) — the defect was that a caller could not tell. |
+| `724d2bb0` | main | **HXC-229** — the gateway ran in its web framework's debug mode under systemd. `Environment=GIN_MODE=release` added to the unit; verified on the running process via `/proc/<pid>/environ`, with 0 debug lines in a window provably containing a real startup. |
+| `e879702c` | main | **265 data races** eliminated in `applications/desktop`. Root cause: a code comment asserting `(*widget.Entry).SetText` is goroutine-safe, which the toolkit's own `thread.go` has contradicted verbatim since v2.6. RED 265 `WARNING: DATA RACE` exit 1 → GREEN 0 races exit 0 at `-count=3`. |
+| `905a0b0a` | main | A **guaranteed** `StreamWithTools` deadlock (not a race): `GenerateStream` was inlined at both call sites writing into a 100-buffered channel nobody drained. Plus six provider files with unguarded sends leaking a goroutine and an open HTTP body on client disconnect. |
+| `dd3c0c3b` | main | Third confirmed "unprioritized `select`" race — `autoSaveLoop` could fire one more `SaveAll()` after `DisableAutoSave()` had closed `stop`. 2488/5000 forced-race hits pre-fix, 0/5000 post-fix. *(Documented in revision 2 but filed under the wrong range — see "Independent review".)* |
+| `0bcd2e98` + `6d8a4920` | main | **HXC-228** — infra "started" now means "serving" rather than "created"; verified by a full-target cold boot with zero restarts. |
+| `11861996` | main | **HXC-168 / CONST-042** — a database password carried as a literal in shipped setup and container files published to all four mirrors. Reachability was *established, not assumed*: two compose files published Postgres on all interfaces, and the autoboot one boots by default. Explicitly does **not** close the item — rotation is outstanding. |
+| `be599c10` + `ce5ecc04` | main | **HXC-167** — transcript redaction was fail-open and allowlist-only; three further fail-opens found, one of them *inside the guard itself*. |
+| `e6118f99` | main | Dropped inverted `docs_chain` derive edges that would have destroyed **156 tracked items**. |
+
+### Added / Changed (revision 3 range)
+
+| SHA | Repo | Summary |
+|---|---|---|
+| `ae218ee3` | main | Cascades **§11.4.236** (QA-deploy-readiness gate — no manual-QA hand-off until the mandated validation produced a candidate-fingerprinted PASS verdict; a blocker must bind to a seam, never prose) and **§11.4.237** (mandatory exhaustive context-and-spirit-aware translation review — accuracy necessary, never sufficient) into all six consumer carriers, closing a measured §11.4.157 lockstep gap (canon at .237, consumers at .235). Verified byte-identical across all six (md5 `df2cb867668b82e66e2d25235cd1dec5`). |
+| `74f24528` | main | Cascades **§11.4.238** (automated QA must be the DISCOVERER: manual QA finds nothing new, and anything it finds is a coverage escape) into all six carriers **and** bumps the constitution pin to `177f2b0` in the same commit per CONST-049 step 7, after verifying the head published on all 8 constitution remotes. §11.4.238's forensic anchor is *this project*: every defect closed that day — the health endpoint, the dead completion port, the two unfetchable pins, both hardware-profiler defects — was found by an agent reading source or probing by hand, while HelixQA reported green throughout. |
+| `f0dd7069` | main | Bumps four submodule pointers so a **fresh clone actually gets the fixes** — every fix lived in a submodule while the parent still pinned a commit predating it. Every old pointer verified an ancestor of its new head (FF-safe ×4, no force), every head verified published. Notable §11.4.6 datum: `git rev-list --count HEAD..@{u}` reported behind=0 *before* the fetch; after `fetch --all`, behind=3 — remote state is not knowable without fetching. |
+| `204bc7b4` | main | Two third-party pins recorded on main that **no clone can fetch**. The dispatching premise was wrong and the correction is the finding: 7 of 9 suspected pins were fine. The real defect is that `signoz` and `skyvern` were explicitly listed as deliberately-not-recorded, then recorded anyway by an `Auto-commit`. Two independent oracles agree neither exists upstream (GitHub REST 422; live `upload-pack` "not our ref"). |
+| `33ee0670` | main | **HXC-243** — of 129 HelixQA banks / 243 http steps, **16 banks / 72 steps declared no assertions at all** and the executor compares a field only when declared, so they scored PASS on any response. Baseline measured: 16/16 banks PASS against a dead target, exit 0. Now 238 steps carry an explicit expectation, 5 an explicit skip+reason, 0 assertion-free. Key finding: `expect_status` alone would **not** have fixed it — the wrong port answers 200 with a JSON-RPC error envelope. |
+| `d8e46001` | main | A HelixQA agent **proved a PASS-bluff in our own test banks by construction** — it pointed a bank at the wrong service (a completion path already proven dead with HTTP 503) and wrote its thesis before running. Both cases reported PASS. |
+| `9f8fdd27` | main | **HXC-227** — a live provider key published in a tracked design doc, committed 2026-06-19 and present on all four mirrors for **48 days**, under a heading reading "already configured". The discovering agent's handling is recorded as correct: it recognised that exporting the doc would copy the key into two *new* tracked files, removed the artifacts and quarantined the source rather than attempting a scrub. Only rotation withdraws it. |
+| `09a086a6` | main | **HXC-187 / D-7** — renames the thin root module to `dev.helix.code/meta` so the root and inner modules stop claiming the same identity. |
+| `1dab3e06` + `40c8d5ce` | main | Tune test parallelism from the **binding cgroup quota**, not `nproc`. Paired with `918f969c`, which explicitly corrects its own earlier root cause ("GOMAXPROCS does not explain the agent stalls"). |
+| `732320c8` | main | Untracks **104 MB** of vendored `node_modules` from the agent repository. |
+| `ee39ea30`, `9f68ed04`, `cf4eb22a`, `e9a1ecb6`, `69772e56` | main | §11.4.65 sibling-export backfill (101 root docs, 73 inner docs, 62 under `docs/**`, script companions, 4 missing `.pdf`). These account for the bulk of the range's 458k inserted lines. |
+
+### Tracker / workable-items (revision 3 range)
+
+| SHA | Repo | Summary |
+|---|---|---|
+| `ac9e9e4d`, `38d8f641` | main | Closed verified items in two passes; High severity 8 → 4, Critical 0. `38d8f641` also caught that the shipped `workable-items` binary was **ten days older than the invariant its own source defines**, so `validate` reported OK on records the source rejects. |
+| `8214bd93`, `e84e5b4c` | main | **HXC-217** — 15 closure records described their proof in prose instead of pointing at it, which is mechanically indistinguishable from having no proof. Narratives preserved verbatim in a new `item_history.note` column; a resolvability validator added that refuses a closure whose stated location does not resolve. |
+| `679e2e2e` + `825e1c3c` | main | **HXC-245** filed, then its own filed root cause **retracted as wrong, refuted by the code** — the correction is the artifact worth reading. |
+| `79939789` | main | **HXC-246** — the agent test suite reports 74 failures, filed with classification *deliberately open*. Three signatures, none yet proven a product defect and none yet cleared: 22 test files hardcode a cache port that is closed on this host (the container publishes it elsewhere); a cluster failing in 0.00s while the service under test is provably healthy; wall-clock assertions overshooting ~26% under measured contention. The commit withdraws one of its own guesses explicitly. |
+| `b48d235e` | main | **HXC-247** — two owned, individually-correct components both claim port 8100. The agent's port allocator assigns it 8100 while its shipped config still pins 7061, so the verifier takes 8100 first; **82 test files** address 8100 expecting the agent, receive the verifier's 404, and report the agent broken while it is healthy. Root cause of HXC-246's 0.00s cluster. Contains a self-correction retracting an earlier "8090" claim with measurements. |
+| `d706f8cc` | main | **HXC-248** — integration-test cleanup decides whether to tear down the stack by checking only that *something* answers on port 8100. That something is the verifier, not the agent, so teardown is skipped and **the live platform survives by coincidence**; stop or move the verifier and the same check would tear down a running deployment. The log line it prints is also false. |
+| `1f177495` | main | **HXC-244 filed** — the defect was found, fixed, deployed and verified, but no tracker entry was ever created; HXC-243 and HXC-245 existed and 244 was a genuine gap. Filed directly as `Fixed (→ Fixed.md)` against the runtime evidence above. |
+| `7bd80ff6` | main | Swept all 48 non-terminal items against `git log --all -i --grep=<ID>`; closed **HXC-199** and **HXC-217** on re-verified evidence and deliberately left 46 open. Records a systemic finding: `verify-all-constitution-rules.sh` invokes 21 `scripts/gates/` entries and **zero** of the three `scripts/testing/guard_hxc*.sh` guards written this cycle — a guard nothing runs cannot fail (§11.4.135). |
+| `5725ee06` | main | Normalises 16 severity values that held entire triage paragraphs where a closed-set token belongs. 10 were safe to reduce because the rationale already rendered from `body_md`; **6 were not** — the column was their only copy, so the rationale was first written into `body_md` and only then reduced. Prose 16 → 0, valid 230 → 246, with all 16 rationales proven to survive a full regeneration. |
+
 ## Per-repo commit inventory
 
-### main (this repo) — 19 commits since `helix-code-1.1.0-dev-0.0.3` (`5ab97d8c`)
+### main (this repo) — 18 commits in `5ab97d8c..c29e1dcc` (revisions 1–2 range)
 
-*(Revision 2: corrected from 18 to 19 — `dd3c0c3b` was omitted from the original
-draft despite being this changelog's own direct parent commit. See "Independent
-review" below.)*
+*(**Revision 3 correction.** Revision 2 changed this figure from 18 to 19 on the
+grounds that `dd3c0c3b` had been omitted. The omission was real; the count change
+was not. `git rev-list --count 5ab97d8c..c29e1dcc` returns **18**, and
+`git merge-base --is-ancestor c29e1dcc dd3c0c3b` succeeds — `dd3c0c3b` is dated
+2026-07-28 18:13 and lies **after** `c29e1dcc`, i.e. in the revision 3 range, not
+this one. Revision 2 correctly added the missing commit to the Fixed table but
+attributed it to the wrong range and inflated this count to match. Restored to
+the measured 18; `dd3c0c3b` is carried in the revision 3 range above. The two
+figures now reconcile: 18 + 231 = 249 = `git rev-list --count 5ab97d8c..HEAD`.)*
 
 ```
 dd3c0c3b fix(persistence): close unprioritized-select race in autoSaveLoop (3rd instance)
@@ -291,6 +395,59 @@ underlying work is. None of these were papered over.
     as the current unpinned tip; re-derive `submodules/helix_agent`'s actual
     `HEAD` before citing it, per this document's own opening warning.
 
+### Known gaps added or re-measured in revision 3
+
+Gaps 1–10 above were written against the revision 1–2 range. Re-checked on
+2026-08-09; the following supersede or extend them.
+
+11. **Three standing guards written this cycle are registered in no runner.**
+    Measured: `scripts/verify-all-constitution-rules.sh` invokes **21**
+    `scripts/gates/` entries and **0** `scripts/testing/guard_hxc*.sh`. There is
+    no auto-discovery glob. So `guard_hxc229_gateway_release_mode.sh`,
+    `guard_hxc233_completion_path_live.sh` and
+    `guard_hxc244_health_components_registered.sh` all exist, are individually
+    falsifiable, and **never execute**. §11.4.135 asks for a standing suite;
+    these are standing files. This is the direct reason HXC-229 was left open
+    rather than closed in `7bd80ff6`.
+
+12. **`db-to-md` silently drops two items.** `workable-items validate` reports
+    HXC-247 and HXC-248 have no `doc_segments` row, and a regeneration to a
+    scratch path confirms it empirically: both appear **0** times in the
+    regenerated `Issues.md`, while every other item appears. 2 of 442 items.
+    Pre-existing — reproduced identically against a pre-change backup — and
+    deliberately **not** silently repaired, because synthesising the missing
+    segments is adjacent to HXC-245's failure mode and deserves its own item.
+
+13. **13 open items carry no severity, so §11.4.132 risk-ordering cannot rank
+    them.** 196 rows have an empty severity, but 183 of those are already
+    closed, where severity ranks nothing. The actionable set is the 13 open
+    ones: HXC-227, 229, 231, 232, 233, 234, 235, 236, 239, 240, 241, 242, 243.
+    No rule exists in this repository to derive a severity — the schema itself
+    says *"informational only; not closed-set"*, with no CHECK and no default —
+    so these were left alone rather than invented (§11.4.6).
+
+14. **`submodules/helix_agent`'s recorded pin and its working checkout
+    disagree.** `git submodule status` shows a `+` prefix: the pin is
+    `66a3c1c6`, the checkout is `d6856cc9`. Three other agents were actively
+    editing that submodule while revision 3 was written, so it was not entered
+    and the delta is **not characterised here**. HXC-234 could not be resolved
+    past ambiguous for the same reason — its fix lives inside that submodule.
+
+15. **The release position is 3 ahead / 0 behind on all four remotes**, measured
+    *after* a real `git fetch --all --prune`. Supersedes gap 7's "8 ahead". The
+    three local commits are revision 3's own tracker work (`1f177495`,
+    `7bd80ff6`, `5725ee06`). Nothing was pushed and no tag was cut.
+
+16. **Two further `Auto-commit` commits** landed in the revision 3 range
+    (`c209bff2`, `29696107`), extending gap 8. Additionally the pinned
+    `helix_llm` head `3d789cb` itself carries the literal message `Auto-commit`
+    — it was verified by content (it contains `8260cf8`), not by its subject.
+
+17. **§11.4.185 manual QA-team confirmation is still not given** — unchanged
+    from gap 1, and now load-bearing for §11.4.238, which this range cascaded:
+    manual QA is a confirmation step that must find nothing new, and it has not
+    been run at all for this scope.
+
 ## Independent review
 
 Per constitution §11.4.142 (every change gets an independent review, no
@@ -329,7 +486,53 @@ sibling fix (Known gap 10).
 **Verdict:** no invented history was found anywhere in this document — every
 other cited SHA, quantitative claim, and Known-gaps disclosure checked out
 exactly as stated. With the one finding above corrected, this document is
-independently confirmed accurate as of this revision (2026-07-28T15:21:59Z).
+independently confirmed accurate as of that revision (2026-07-28T15:21:59Z).
+
+### Revision 3 (2026-08-09)
+
+**Why it was needed:** the document was pinned to a HEAD 11 days and 231 commits
+stale, and covered none of the work in that range.
+
+**Method:** the range was re-derived from `git log` / `git show`, never from
+memory or from any prior project artifact. Every short SHA newly cited above was
+checked to exist and to carry the subject attributed to it — **51 main-repo SHAs
+verified present via `git cat-file -e`, 0 missing**, plus `helix_llm` `3d789cb`
+and `8260cf8` and `constitution` `177f2b0` in their own repositories. The two
+`helix_agent` values (`66a3c1c6`, `d6856cc9`) are quoted from main-repo data
+only — `git ls-tree HEAD` and `git submodule status` — precisely because that
+submodule was not entered. Counts are pasted command output, not estimates: 231 commits in
+`c29e1dcc..HEAD`, 2 of them the literal `Auto-commit`, 0 merges, 249 since the
+tag. Remote positions were measured **after** an actual `git fetch --all --prune`
+rather than from tracking refs, because this range contains a commit
+(`f0dd7069`) whose own message documents a tracking ref reporting behind=0 before
+a fetch and behind=3 after.
+
+**Finding 1 (corrected here): revision 2 introduced a counting error while
+fixing a real omission.** It raised "commits since the last tag" from 18 to 19 to
+account for `dd3c0c3b`. `git rev-list --count 5ab97d8c..c29e1dcc` returns 18, and
+`dd3c0c3b` is provably *after* `c29e1dcc` — it belongs to the revision 3 range.
+The commit did need adding to the Fixed table; the count did not need changing.
+Both are now correct and reconcile: 18 + 231 = 249.
+
+**Finding 2: a claim in the revision 1–2 pin table could not have been true as
+written and is superseded.** It described `submodules/helix_agent` as pinned at
+`69a5ab8d`. The pin recorded in `HEAD`'s tree today is `66a3c1c6`, and the
+working checkout is a third value, `d6856cc9`. Rather than reconcile a stale
+figure, revision 3 states all three positions and marks the delta uncharacterised
+(Known gap 14), because the submodule was deliberately not entered.
+
+**Verified rather than assumed:** that the pinned `helix_llm` (`3d789cb`)
+actually contains `8260cf8`, the HXC-244 health fix — `git merge-base
+--is-ancestor` confirms it, so a fresh clone gets the fix. This mattered because
+this same range contains two separate incidents (`f0dd7069`, `204bc7b4`) of
+pins that did not carry the fixes attributed to them.
+
+**Honest boundary (§11.4.6):** revision 3 has itself had **no** independent
+review — it is authored by the same agent that produced the tracker commits it
+describes. Its factual claims are individually re-derivable from the commands
+cited, but the §11.4.142 independent-reviewer seam has not been crossed for this
+revision. Treat the revision 3 sections as verified-by-construction, not
+peer-reviewed.
 
 ## Sources verified
 
@@ -340,3 +543,18 @@ this repository, `submodules/helix_agent`, and `submodules/tool_schema` via
 `go build` invocation on 2026-07-28. No claim in the Fixed / Added / Changed
 tables above is unsourced from a real commit; anything that could not be
 traced to a commit was left out rather than inferred.
+
+**Revision 3 (2026-08-09).** The `c29e1dcc..5725ee06` range was derived with
+`git rev-list --count`, `git log --oneline/--format`, `git show --stat`,
+`git log -1 --format=%B` on every commit cited, `git merge-base --is-ancestor`
+for the ancestry claims, `git ls-tree HEAD <path>` and `git submodule status`
+for the pins, `git fetch --all --prune` followed by
+`git rev-list --count refs/remotes/<r>/main..HEAD` for the remote positions,
+`git ls-files` to confirm cited evidence directories are actually **tracked**
+rather than merely present on disk, and `sqlite3 -readonly` plus
+`workable-items validate` / `sync db-to-md` for every tracker figure. The
+constitution anchors were read from `constitution/Constitution.md` at the pinned
+commit and confirmed to be genuine `### ` block-openers, not incidental
+mentions. File sizes were taken with `wc -c`, not `stat`, which misreports on
+this host. Nothing in the revision 3 sections is carried over from a prior
+document without re-derivation.
