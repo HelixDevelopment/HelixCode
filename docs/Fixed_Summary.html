@@ -192,7 +192,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>213</td>
+<td>215</td>
 </tr>
 <tr>
 <td>Bug</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>399</strong></td>
+<td><strong>401</strong></td>
 </tr>
 </tbody>
 </table>
@@ -4761,6 +4761,31 @@ absence.</td>
 <tr>
 <td>376</td>
 <td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-229 — The multi-provider routing gateway starts in its web
+framework’s debug mode rather than release mode, and says so in its own
+startup log alongside the framework’s warning that this should be
+switched for production use. Debug mode is not a cosmetic difference: it
+prints every registered route at startup, produces far more verbose
+logging on every request, and in this framework is documented as
+unsuitable for production because of the extra output and the internal
+detail it exposes in error responses. The service is being launched by
+the system supervisor as a long-running background service, which is
+exactly the production case the warning is about. Nothing is broken in
+the sense of requests failing, which is why this has gone unnoticed, but
+a production deployment is currently logging at development verbosity
+and revealing more internal structure than it should. The framework
+offers two ways to correct it, an environment variable or a call in the
+startup code, and the service unit is the natural place to set the
+former. The fix is to select release mode when the service runs under
+the supervisor, and to add a check that fails if a production unit ever
+starts in debug mode again.</td>
+</tr>
+<tr>
+<td>377</td>
+<td>—</td>
 <td>Obsolete (→ Fixed.md)</td>
 <td>Bug</td>
 <td>—</td>
@@ -4784,7 +4809,31 @@ service wait for its containers to become healthy before reporting
 success, rather than reporting success as soon as they are created.</td>
 </tr>
 <tr>
-<td>377</td>
+<td>378</td>
+<td>—</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-233 — When the HelixLLM gateway starts it tries to launch a
+bundled local model server program called llama-server and fails because
+the program cannot be found. Searching the machine confirms the
+situation is worse than a misconfigured search path: no file called
+llama-server exists anywhere on the host, so this is not something that
+can be fixed by pointing the service at the right directory. The gateway
+records the failure as a warning and carries on without it, so nothing
+appears broken, but the local model serving feature is absent for the
+entire life of the service. This is particularly wasteful because the
+gateway had just spent thirty-seven minutes downloading a large model
+file specifically so this server could serve it; the download succeeded
+and the file sits on disk unused. Observed live on 2026-08-06 during a
+full platform boot. Fixing this requires actually obtaining and
+installing the program, then making sure the service can find it; it
+also raises the question of whether the gateway should be downloading
+models at all when the program that would consume them is not
+present.</td>
+</tr>
+<tr>
+<td>379</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4809,7 +4858,7 @@ it, and add a check that fails when the built copy is older than its
 source so this cannot recur silently.</td>
 </tr>
 <tr>
-<td>378</td>
+<td>380</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4843,7 +4892,7 @@ empty again, so the endpoint can no longer claim a verdict it did not
 earn.</td>
 </tr>
 <tr>
-<td>379</td>
+<td>381</td>
 <td>Critical</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4877,7 +4926,7 @@ genuine server, and a run that validates nothing can no longer report
 success.</td>
 </tr>
 <tr>
-<td>380</td>
+<td>382</td>
 <td>High</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4905,7 +4954,7 @@ the database - so that following the tool’s own advice repairs the
 disagreement instead of causing data loss.</td>
 </tr>
 <tr>
-<td>381</td>
+<td>383</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4935,7 +4984,7 @@ someone runs the sweep, which is a real improvement but is not the same
 as unattended enforcement.</td>
 </tr>
 <tr>
-<td>382</td>
+<td>384</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4945,7 +4994,7 @@ as unattended enforcement.</td>
 path</td>
 </tr>
 <tr>
-<td>383</td>
+<td>385</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4954,7 +5003,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>384</td>
+<td>386</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4963,7 +5012,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>385</td>
+<td>387</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4971,7 +5020,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>386</td>
+<td>388</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4980,7 +5029,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>387</td>
+<td>389</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4989,7 +5038,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>388</td>
+<td>390</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4999,7 +5048,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>389</td>
+<td>391</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5008,7 +5057,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>390</td>
+<td>392</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5017,7 +5066,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>391</td>
+<td>393</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5026,7 +5075,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>392</td>
+<td>394</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5036,7 +5085,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>393</td>
+<td>395</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5045,7 +5094,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>394</td>
+<td>396</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5055,7 +5104,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>395</td>
+<td>397</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5065,7 +5114,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>396</td>
+<td>398</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -5074,7 +5123,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>397</td>
+<td>399</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -5083,7 +5132,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>398</td>
+<td>400</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5093,7 +5142,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>399</td>
+<td>401</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>

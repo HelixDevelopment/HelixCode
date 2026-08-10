@@ -1,0 +1,58 @@
+instrument self-test: real assert() scored 3 agreements ok, 3 divergences caught (incl. SKIP-where-FAIL-expected)
+=== REACHABLE BUT DEFECTIVE — every one served over HTTP 200 (must FAIL) ===
+  ok    244: components:[] (the pre-fix defect shape)        FAIL(1)
+  ok    244: components present but unnamed                  FAIL(1)
+  ok    233: 200 carrying an error envelope                  FAIL(1)
+  ok    233: 200 with an empty choices array                 FAIL(1)
+  ok    233: 200, fluent content, wrong answer               FAIL(1)
+  ok    233: 200, right answer, no model id                  FAIL(1)
+=== RUNNING BUT DEFECTIVE — live processes (must FAIL) ===
+  ok    229: live process lacks GIN_MODE=release             FAIL(1)
+  ok    229: process emits GIN-debug route dumps             FAIL(1)
+  ok    229: unprovable window -> PASS-with-caveat           PASS(0)
+  ok    229: unprovable window + GIN-debug still FAILs       FAIL(1)
+  ok    229: unprovable window + no GIN_MODE still FAILs     FAIL(1)
+=== R2 REGRESSION — deployed AND CRASHED must FAIL, never SKIP ===
+  ok    229: unit loaded but ActiveState=failed              FAIL(1)
+=== R4 REGRESSION — crash-LOOPING under the production Restart policy ===
+    (production timing: ActiveState=activating SubState=auto-restart NRestarts=0 — never-'failed', counter static)
+  ok    229: crash-loop @ production RestartSec=10 (auto-restart path) FAIL(1)
+  ok    229: crash-loop @ RestartSec=1 (rising-counter path) FAIL(1)
+=== SKIP-CONTRACT NEGATIVE SPACE — reachable-but-broken must FAIL, never SKIP ===
+--- each subject's rc is MEASURED before its verdict is asserted ---
+  ok    wedge stub really yields rc28 (timeout)              curl rc=28
+  ok    empty stub really yields rc52 (empty reply)          curl rc=52
+  ok    reset stub really yields rc56 (peer reset)           curl rc=56
+  ok    plaintext listener really yields rc35 (TLS)          curl rc=35
+  ok    233: rc28 timeout (listener accepted, then wedged)   FAIL(1)
+  ok    244: rc28 timeout (listener accepted, then wedged)   FAIL(1)
+  ok    233: rc52 empty reply (read, then zero bytes)        FAIL(1)
+  ok    244: rc52 empty reply (read, then zero bytes)        FAIL(1)
+  ok    233: rc56 peer reset (closed with request unread)    FAIL(1)
+  ok    244: rc56 peer reset (closed with request unread)    FAIL(1)
+  ok    233: rc35 TLS handshake vs plaintext listener        FAIL(1)
+  ok    244: rc35 TLS handshake vs plaintext listener        FAIL(1)
+  ok    233: rc60 TLS cert -> FAIL (vs a CLOSED port)        FAIL(1)
+  ok    244: rc60 TLS cert -> FAIL (vs a CLOSED port)        FAIL(1)
+  ok    233: rc6 unresolvable -> SKIP (vs a LIVE stub)       SKIP(2)
+  ok    244: rc6 unresolvable -> SKIP (vs a LIVE stub)       SKIP(2)
+=== PROVABLY ABSENT (must SKIP — and must not swallow anything above) ===
+  ok    229: unit never installed (not-found)                SKIP(2)
+  ok    233: connection refused                              SKIP(2)
+  ok    244: connection refused                              SKIP(2)
+  ok    233: absence under RED_MODE=1 too                    SKIP(2)
+=== R3 REGRESSION — a crashed ANALYZER must FAIL, never 'RED confirmed' ===
+  ok    233: analyzer exits 9 (RED polarity)                 FAIL(1)
+  ok    244: analyzer exits 9 (RED polarity)                 FAIL(1)
+=== LIVE STACK — golden-good controls + R1 proxy regression ===
+  ok    244: live gateway (must PASS, never SKIP)            PASS(0)
+  ok    233: live gateway (must PASS, never SKIP)            PASS(0)
+  ok    244: PASSes with a dead https_proxy set              PASS(0)
+  ok    233: PASSes with a dead https_proxy set              PASS(0)
+  ok    244: RED_MODE=1 does not reproduce on fixed          FAIL(1)
+  ok    233: RED_MODE=1 does not reproduce on fixed          FAIL(1)
+
+=== falsification battery: 42 ok, 0 not ok ===
+every guard FAILs on a reachable/running defect, SKIPs only on provable absence,
+and no reviewed regression (proxy-SKIP, crashed-unit-SKIP, analyzer-crash-PASS) returned.
+BATTERY_EXIT=0

@@ -197,7 +197,7 @@ SQLite single-source-of-truth (§11.4.12).</p>
 <tr>
 <td>Bug</td>
 <td>Queued</td>
-<td>41</td>
+<td>42</td>
 </tr>
 <tr>
 <td>Task</td>
@@ -212,7 +212,7 @@ SQLite single-source-of-truth (§11.4.12).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>56</strong></td>
+<td><strong>57</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1060,30 +1060,6 @@ instead of quoting its contents, and a check added that refuses any
 commit introducing a value of this shape.</td>
 </tr>
 <tr>
-<td>HXC-229</td>
-<td>Bug</td>
-<td>Queued</td>
-<td>—</td>
-<td>The multi-provider routing gateway starts in its web framework’s
-debug mode rather than release mode, and says so in its own startup log
-alongside the framework’s warning that this should be switched for
-production use. Debug mode is not a cosmetic difference: it prints every
-registered route at startup, produces far more verbose logging on every
-request, and in this framework is documented as unsuitable for
-production because of the extra output and the internal detail it
-exposes in error responses. The service is being launched by the system
-supervisor as a long-running background service, which is exactly the
-production case the warning is about. Nothing is broken in the sense of
-requests failing, which is why this has gone unnoticed, but a production
-deployment is currently logging at development verbosity and revealing
-more internal structure than it should. The framework offers two ways to
-correct it, an environment variable or a call in the startup code, and
-the service unit is the natural place to set the former. The fix is to
-select release mode when the service runs under the supervisor, and to
-add a check that fails if a production unit ever starts in debug mode
-again.</td>
-</tr>
-<tr>
 <td>HXC-231</td>
 <td>Bug</td>
 <td>Queued</td>
@@ -1124,28 +1100,6 @@ locking feature these tables were meant to support is silently doing
 nothing at all. Fixing this needs someone who knows what these tables
 were intended to contain to write the setup script; the columns must not
 be guessed.</td>
-</tr>
-<tr>
-<td>HXC-233</td>
-<td>Bug</td>
-<td>Queued</td>
-<td>—</td>
-<td>When the HelixLLM gateway starts it tries to launch a bundled local
-model server program called llama-server and fails because the program
-cannot be found. Searching the machine confirms the situation is worse
-than a misconfigured search path: no file called llama-server exists
-anywhere on the host, so this is not something that can be fixed by
-pointing the service at the right directory. The gateway records the
-failure as a warning and carries on without it, so nothing appears
-broken, but the local model serving feature is absent for the entire
-life of the service. This is particularly wasteful because the gateway
-had just spent thirty-seven minutes downloading a large model file
-specifically so this server could serve it; the download succeeded and
-the file sits on disk unused. Observed live on 2026-08-06 during a full
-platform boot. Fixing this requires actually obtaining and installing
-the program, then making sure the service can find it; it also raises
-the question of whether the gateway should be downloading models at all
-when the program that would consume them is not present.</td>
 </tr>
 <tr>
 <td>HXC-234</td>
@@ -1815,6 +1769,88 @@ that same guard with RED_MODE=0 reports zero PASSED assertions against a
 proven-free port with every probe SKIPPED and SKIP-OK tagged, and the
 challenge still records a genuine PASSED assertion when a real gRPC
 server is listening on the registry port.</td>
+</tr>
+<tr>
+<td>HXC-262</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>The project keeps a battery of tests whose whole job is to prove its
+safety checks actually catch problems, by deliberately breaking things
+and confirming each check notices. One assertion in that battery — the
+one covering a service stuck in a restart loop — occasionally reports a
+problem when nothing is wrong. It was seen once across thirteen
+consecutive runs, and ran correctly six times out of six when run on its
+own, so it is intermittent rather than consistently broken. The cause is
+a timing flaw inside the safety check itself: it asks the system two
+separate questions, whether the service is running and which process is
+running it, and between those two questions a fast-restarting service
+can move on, so the two answers describe different moments and disagree.
+When that happens the check cannot find a process to examine and reports
+that it could not verify anything. The practical harm is not a missed
+defect but a false alarm: work gets blocked on a condition that is not
+present, and worse, people who see a check cry wolf learn to ignore it,
+which quietly erodes the value of the one battery specifically built to
+be trustworthy. The fix is to read both pieces of information in a
+single query so they always describe the same instant. This was
+deliberately left unfixed by the reviewer who found it because it
+changes the sampling behaviour of a check that was itself under review
+at the time, and such a change deserves its own review rather than being
+folded into someone else’s batch.</td>
+</tr>
+<tr>
+<td>HXC-263</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>The project keeps a folder of tests whose purpose is to verify that
+its safety checks genuinely work, by deliberately introducing a fault
+and confirming the corresponding check reports a failure. A test like
+that only has value if something actually runs it. Counting the
+invocations at the current revision, only two of the fourteen files in
+that folder are ever executed by anything; the remaining twelve are
+written, maintained, and never run. This is the same problem the project
+already found and fixed once before, when three safety checks turned out
+to exist but be executed by nothing, and it matters for the same reason:
+a check nobody runs cannot fail, so it certifies nothing while appearing
+to provide coverage. The presence of these files is actively misleading,
+because anyone counting test files sees protection that is not being
+exercised. A careless count makes it look better than it is — five of
+the files are mentioned somewhere, but three of those mentions are a
+comment, an entry in a skip list, and a line of prose in a status
+document, none of which run anything. Resolving this means deciding for
+each of the twelve whether to wire it into the release sweep so it runs,
+or to retire it honestly, and then making the choice visible rather than
+leaving the file sitting there implying coverage it does not
+deliver.</td>
+</tr>
+<tr>
+<td>HXC-264</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Low</td>
+<td>A single entry in the project’s work tracker manages to describe the
+same problem three different ways in three different fields, and the
+three descriptions do not agree. One field says a required program is
+not installed on the machine at all, another says the program exists but
+cannot be found because of where the service looks for it, and a third
+says no such file exists anywhere on the system. Those are materially
+different problems with different fixes, so a reader cannot tell from
+the entry what was actually wrong. The entry also proposes a remedy,
+giving the service a direct path to the missing program, which is not
+what was eventually done: the capability was restored by routing
+requests to a different service that was already running, and the
+originally-named program is still absent from the machine today. This
+matters because the tracker is the permanent record of what was reported
+and why, and an entry that contradicts itself cannot serve that purpose
+for anyone reviewing the history later. It is not a case of the
+documents drifting out of step with the database, which is a problem the
+project already guards against; the rendered documents faithfully
+reproduce what the database holds, and the inconsistency is inside the
+database entry itself. Resolving it means reconciling the three fields
+into one accurate account that records both what was originally observed
+and how it was actually resolved, without erasing the original
+report.</td>
 </tr>
 </tbody>
 </table>

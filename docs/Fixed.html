@@ -7870,6 +7870,56 @@ for a long time. The expected outcome is that the message names the
 correct direction - regenerate the documents from the database - so that
 following the tool’s own advice repairs the disagreement instead of
 causing data loss.</p>
+<h2
+id="hxc-229-the-gateway-service-runs-in-development-mode-when-started-as-a-production-service">HXC-229
+— The gateway service runs in development mode when started as a
+production service</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+/home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/closure_custody_hxc229_233_235_20260810T215500Z/EVIDENCE.md
+<strong>Created-By:</strong> Claude</p>
+<p>The multi-provider routing gateway starts in its web framework’s
+debug mode rather than release mode, and says so in its own startup log
+alongside the framework’s warning that this should be switched for
+production use. Debug mode is not a cosmetic difference: it prints every
+registered route at startup, produces far more verbose logging on every
+request, and in this framework is documented as unsuitable for
+production because of the extra output and the internal detail it
+exposes in error responses. The service is being launched by the system
+supervisor as a long-running background service, which is exactly the
+production case the warning is about. Nothing is broken in the sense of
+requests failing, which is why this has gone unnoticed, but a production
+deployment is currently logging at development verbosity and revealing
+more internal structure than it should. The framework offers two ways to
+correct it, an environment variable or a call in the startup code, and
+the service unit is the natural place to set the former. The fix is to
+select release mode when the service runs under the supervisor, and to
+add a check that fails if a production unit ever starts in debug mode
+again.</p>
+<h2
+id="hxc-233-the-gateways-built-in-local-model-server-program-is-not-installed-on-the-machine-at-all">HXC-233
+— The gateway’s built-in local model server program is not installed on
+the machine at all</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+/home/milos/Factory/projects/tools_and_research/helix_code/docs/qa/closure_custody_hxc229_233_235_20260810T215500Z/EVIDENCE.md
+<strong>Created-By:</strong> Claude</p>
+<p>When the HelixLLM gateway starts it tries to launch a bundled local
+model server program called llama-server and fails because the program
+cannot be found. Searching the machine confirms the situation is worse
+than a misconfigured search path: no file called llama-server exists
+anywhere on the host, so this is not something that can be fixed by
+pointing the service at the right directory. The gateway records the
+failure as a warning and carries on without it, so nothing appears
+broken, but the local model serving feature is absent for the entire
+life of the service. This is particularly wasteful because the gateway
+had just spent thirty-seven minutes downloading a large model file
+specifically so this server could serve it; the download succeeded and
+the file sits on disk unused. Observed live on 2026-08-06 during a full
+platform boot. Fixing this requires actually obtaining and installing
+the program, then making sure the service can find it; it also raises
+the question of whether the gateway should be downloading models at all
+when the program that would consume them is not present.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
