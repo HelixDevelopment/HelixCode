@@ -14,6 +14,24 @@ messages cannot be edited without a history rewrite, which is forbidden outright
 supersedes the commit-message text it contradicts.** Where the two disagree,
 this file is right and the commit message is wrong.
 
+> ### ⚠ PARTIALLY SUPERSEDED BY THE ROUND-5 RECORD
+>
+> A round-5 independent review found that two classes of figure in THIS file are
+> themselves wrong, and both are corrected in place below (search for
+> "ROUND-5 CORRECTION"):
+>
+> 1. **the rc named for the `empty` stub.** It is **56**, not 52. The stub closed
+>    without reading the request, which forces RST rather than FIN. Every
+>    "rc52" label in the MEDIUM-1 section below described a subject that was
+>    actually producing 56.
+> 2. **the battery assertion counts.** The `27 ok / 2 not ok` and `29 ok /
+>    2 not ok` figures below were captured on INTERMEDIATE trees and do not
+>    describe the committed battery, which carried 32 assertions at `f10c9a1e`.
+>
+> Both are corrected inline. The remediation that fixes the underlying defects
+> is recorded in `docs/qa/r5_review_remediation_20260811T024500Z/EVIDENCE.md`,
+> which supersedes this file wherever they disagree.
+
 ---
 
 ## HIGH — the sync gate's advice was a §9.2 data-destruction trap (HXC-252)
@@ -146,6 +164,27 @@ construction and can never legitimately reach the SKIP branch:
   ok    244: rc35 TLS handshake vs plaintext listener        FAIL(1)
 ```
 
+> **ROUND-5 CORRECTION — the two "rc52" lines above exercised rc 56, not 52.**
+> The `empty` stub called `close()` without first `recv()`ing the request.
+> Discarding data still sitting in the receive queue obliges the kernel to send
+> RST instead of FIN, so curl returned **56** (peer reset), not 52 (empty
+> reply). Measured 3/3 directly against the stub as committed; the guards' own
+> diagnostic line printed `curl rc=56` throughout.
+>
+> The assertions were still *correct* — the guards FAIL on both — but nothing in
+> the battery could tell 52 from 56, because `assert 1` only records the
+> guard's verdict and the verdict is identical for every non-6/7 rc. So the
+> label drifted from the wire with every assertion green.
+>
+> This mattered beyond the label: **rc 52 was the one declared member still
+> fail-open.** Re-running mutation N1 with the SKIP set broadened to include
+> only rc 52 left the battery fully green (32 ok, 0 not ok, exit 0) — the exact
+> fail-open shape this section claimed to have closed, on the very rc it named.
+> Fixed in round 5: the `empty` stub now drains the request before closing
+> (genuine 52), a separate `reset` shape covers 56, rc 60 is covered through the
+> classifier, and each subject's rc is now MEASURED and pinned before its
+> verdict is asserted.
+
 ### Review mutation N1 re-run — previously NOT caught, now caught
 
 N1 broadens the SKIP set by a single rc. Applied to both guards
@@ -158,6 +197,20 @@ N1 broadens the SKIP set by a single rc. Applied to both guards
 BATTERY FAILED — a guard did not behave as its exit contract claims
 exit=1
 ```
+
+> **ROUND-5 CORRECTION — `27 ok / 2 not ok` totals 29, but the battery committed
+> at `f10c9a1e` carries 32 assertions.** This capture was taken on an
+> intermediate tree, before the R4 crash-loop and vacuous-window probes landed,
+> so it certifies a tree that was never committed. Re-run against the committed
+> battery, the same mutation yields **30 ok / 2 not ok**. The qualitative claim
+> — N1 is now caught, and was not before — holds unchanged; only the pasted
+> figures were stale.
+>
+> This is a RECURRENCE of the "22 ok → 23" defect that this very session filed
+> and corrected as LOW a below: a count pasted from a run that predates the
+> final artifact. Two instances in one batch make it a pattern rather than a
+> slip — the counts were being copied forward from earlier runs instead of
+> re-measured against the tree actually being committed.
 
 Guards restored; `git diff` empty for both. Before this change the same mutation
 produced a fully green battery — a wedged or TLS-broken gateway would have been
@@ -313,6 +366,14 @@ session's first run: 29 ok after adding exactly 6 SKIP-contract assertions.
 harmless — it understates — but it is exactly the uncited-count class
 (§11.4.226) that `be5d56be` itself prosecutes, so it is recorded rather than
 waved through. Current count after this remediation: **32 ok, 0 not ok.**
+
+> **ROUND-5 CORRECTION — the subtraction above is itself built on a stale
+> figure.** "29 ok after adding exactly 6 SKIP-contract assertions" describes an
+> intermediate tree, not the committed one. The final count for `f10c9a1e` —
+> **32 ok, 0 not ok** — is correct as stated in the last sentence, and is the
+> figure a re-review reproduces. After the round-5 remediation the battery
+> carries **42 ok, 0 not ok** (10 assertions added: 4 rc pins, 2 for the new
+> rc56 `reset` subject, 2 for rc60, 2 for rc6).
 
 ---
 

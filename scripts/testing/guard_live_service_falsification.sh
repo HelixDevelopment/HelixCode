@@ -89,12 +89,21 @@ fi
 RUN="$$"
 # Port base stays inside an unprivileged, rarely-used band and is derived from
 # the PID so parallel runs occupy disjoint ranges.
-PORT_BASE=$(( 19000 + (RUN % 400) * 10 ))
+#
+# THE STRIDE MUST EXCEED THE NUMBER OF PORTS USED. At stride 10 with indices
+# 1..9 the range was exactly full, so adding a tenth subject would have handed
+# index 10 to the NEXT pid's index 0 — reintroducing, silently, the very
+# cross-run collision the PID scoping exists to prevent (§11.4.119). The stride
+# is 16 for 11 indices, leaving headroom for the next subject; the whole band
+# (19000-25399) stays below the default ip_local_port_range floor of 32768, so
+# it cannot collide with an ephemeral port either.
+PORT_BASE=$(( 19000 + (RUN % 400) * 16 ))
 P_H_EMPTY=$((PORT_BASE+1)); P_H_UNNAMED=$((PORT_BASE+2))
 P_C_ERR=$((PORT_BASE+3));   P_C_NOCH=$((PORT_BASE+4))
 P_C_WRONG=$((PORT_BASE+5)); P_C_NOMODEL=$((PORT_BASE+6))
 P_WEDGE=$((PORT_BASE+7));   P_EMPTY=$((PORT_BASE+8))
 P_CLOSED=$((PORT_BASE+9))   # deliberately never bound — the absence subject
+P_RESET=$((PORT_BASE+10))
 
 cleanup() {  # §11.4.14: reap every child, always, even on early exit
     # Stubs are reaped BY PID, never by `pkill -f <pattern>`: a cmdline pattern
@@ -341,8 +350,37 @@ assert 1 "229: crash-loop @ RestartSec=1 (rising-counter path)"           env RE
 # Each subject below is a REAL listener that accepts the connection and then
 # misbehaves, so it is reachable by construction and can never legitimately
 # reach the SKIP branch (a closed port is already covered further down).
+#
+# THE VERDICT ASSERTION CANNOT PIN THE rc  (independent review round 5, F2)
+# ------------------------------------------------------------------------
+# `assert 1 ...` says the guard FAILed. It does NOT say which rc produced that
+# FAIL, because the guards FAIL identically on 28, 35, 52, 56 and 60 — so a
+# comment naming the wrong one survives forever with every assertion green.
+# It did: the `empty` stub closed WITHOUT reading the request, which discards
+# pending data and obliges the kernel to send RST, so it yielded rc 56 while the
+# stub comment, the commit message and the evidence all said 52. The declared
+# member that was actually being exercised (56) was already covered by the rc35
+# case's sibling, and 52 — the one the batch reported as closed — remained
+# fail-open: broadening the SKIP set to include ONLY rc 52 left the battery
+# fully green, which is the N1 shape on the very rc the fix claimed.
+#
+# So each subject's rc is now MEASURED and pinned by assert_rc() before its
+# verdict is asserted. The label and the wire can no longer drift apart
+# silently: if a stub stops producing what it claims, the pin fails by name
+# (§11.4.201 — a claim nothing measures is not an assertion).
+assert_rc() {  # assert_rc <expected-curl-rc> <label> <url> [timeout]
+    local want="$1" label="$2" url="$3" tmo="${4:-5}"
+    # Same flags the guards use, so this measures THEIR view of the subject.
+    curl -sk --noproxy '*' -m "$tmo" "$url" >/dev/null 2>&1; local got=$?
+    if [ "$got" = "$want" ]; then
+        PASSES=$((PASSES + 1)); printf '  ok    %-52s curl rc=%s\n' "$label" "$got"
+    else
+        FAILS=$((FAILS + 1))
+        printf '  NOT OK %-51s expected curl rc=%s, got rc=%s\n' "$label" "$want" "$got"
+    fi
+}
 cat > "$TMP/tcpstub.py" <<'PY'
-import socket, sys, time
+import select, socket, sys, time
 SHAPE = sys.argv[1]; PORT = int(sys.argv[2])
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -354,8 +392,29 @@ while True:
         # A closed port refuses INSTANTLY on loopback, so a timeout here proves
         # a listener took the connection and then hung — a live defect.
         time.sleep(3600)
+    elif SHAPE == "reset":
+        # WAIT for the request to arrive, then close WITHOUT reading it.
+        # Discarding data that is already sitting in the receive queue is what
+        # obliges the kernel to send RST instead of FIN, so curl reports rc 56
+        # (recv failure: connection reset by peer).
+        #
+        # The select() is load-bearing and was added after a measured flake: a
+        # bare close() races the client's send, and when the server wins there
+        # is nothing unread, the close is a clean FIN, and curl reports 52 —
+        # which is the exact 52/56 confusion this shape exists to distinguish.
+        # Observed once in ~40 runs under load before the wait was added.
+        select.select([c], [], [], 5.0)
+        c.close()
     elif SHAPE == "empty":
-        # Accept then close with zero bytes: curl gives rc 52 (empty reply).
+        # Drain the request FIRST, then close: nothing is left unread, so the
+        # close is a clean FIN and curl reports rc 52 (empty reply from server).
+        # The recv is what distinguishes this shape from `reset` above; without
+        # it this stub silently produces 56 while claiming 52 (review round 5).
+        try:
+            c.settimeout(2.0)
+            c.recv(65535)
+        except OSError:
+            pass
         c.close()
 PY
 
@@ -378,20 +437,60 @@ subject that was never constructed." >&2
 }
 
 echo "=== SKIP-CONTRACT NEGATIVE SPACE — reachable-but-broken must FAIL, never SKIP ==="
-tcpstub wedge "$P_WEDGE"; tcpstub empty "$P_EMPTY"
+tcpstub wedge "$P_WEDGE"; tcpstub empty "$P_EMPTY"; tcpstub reset "$P_RESET"
+
+echo "--- each subject's rc is MEASURED before its verdict is asserted ---"
+assert_rc 28 "wedge stub really yields rc28 (timeout)"        "http://127.0.0.1:$P_WEDGE/h" 3
+assert_rc 52 "empty stub really yields rc52 (empty reply)"    "http://127.0.0.1:$P_EMPTY/h"
+assert_rc 56 "reset stub really yields rc56 (peer reset)"     "http://127.0.0.1:$P_RESET/h"
+assert_rc 35 "plaintext listener really yields rc35 (TLS)"    "https://127.0.0.1:$P_H_EMPTY/h"
+
 # rc 28 — accepted then hung. The timeout is short so the assertion is quick;
 # the guards' own default (90s) would make this case dominate the battery.
 assert 1 "233: rc28 timeout (listener accepted, then wedged)" env RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_WEDGE/v1 HXC233_TIMEOUT=3 bash "$G233"
 assert 1 "244: rc28 timeout (listener accepted, then wedged)" env RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_WEDGE/h  HXC244_TIMEOUT=3 bash "$G244"
-# rc 52 — connection established, then closed with no reply.
-assert 1 "233: rc52 empty reply (connected, zero bytes)"      env RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_EMPTY/v1 HXC233_TIMEOUT=5 bash "$G233"
-assert 1 "244: rc52 empty reply (connected, zero bytes)"      env RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_EMPTY/h  HXC244_TIMEOUT=5 bash "$G244"
+# rc 52 — request READ, then closed with no reply (clean FIN).
+assert 1 "233: rc52 empty reply (read, then zero bytes)"      env RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_EMPTY/v1 HXC233_TIMEOUT=5 bash "$G233"
+assert 1 "244: rc52 empty reply (read, then zero bytes)"      env RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_EMPTY/h  HXC244_TIMEOUT=5 bash "$G244"
+# rc 56 — closed with the request unread, so the peer resets the connection.
+assert 1 "233: rc56 peer reset (closed with request unread)"  env RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_RESET/v1 HXC233_TIMEOUT=5 bash "$G233"
+assert 1 "244: rc56 peer reset (closed with request unread)"  env RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_RESET/h  HXC244_TIMEOUT=5 bash "$G244"
 # rc 35 — TLS handshake against a plaintext listener: a server IS present and
 # misconfigured, which is the misconfigured-gateway shape, not an absent one.
 # Note both guards pass -k, so this is a genuine handshake failure and not a
 # certificate-trust complaint that -k would have waived.
 assert 1 "233: rc35 TLS handshake vs plaintext listener"      env RED_MODE=0 HXC233_URL=https://127.0.0.1:$P_C_ERR/v1 HXC233_TIMEOUT=5 bash "$G233"
 assert 1 "244: rc35 TLS handshake vs plaintext listener"      env RED_MODE=0 HXC244_URL=https://127.0.0.1:$P_H_EMPTY/h HXC244_TIMEOUT=5 bash "$G244"
+
+# rc 60 — THE LAST DECLARED MEMBER, AND IT HAS NO NETWORK SUBJECT.
+# ---------------------------------------------------------------
+# rc 60 is "peer certificate cannot be authenticated". Both guards pass -k,
+# which waives peer verification outright, so no TLS listener can make THEM see
+# 60. Measured against a self-signed listener: with -k curl returns 0, without
+# -k it returns 60 — the guards' own flags put this rc out of reach, which is a
+# §11.4.112 structural fact, not a missing fixture. Constructing an elaborate
+# TLS subject and asserting FAIL would prove nothing about 60; it would silently
+# re-measure some other rc, which is exactly the mislabel this section fixes.
+#
+# What IS testable — and is what the closed set actually claims — is the
+# CLASSIFIER: "SKIP iff rc is 6 or 7, every other rc FAILs". So drive the
+# classifier directly with a curl stub that exits a chosen code. Same technique
+# the R3 case below already uses for the analyzer.
+#
+# THE INJECTION IS SELF-VALIDATING, which matters more than the injection.
+# Each case is aimed at a subject whose REAL rc yields the OPPOSITE verdict:
+#   rc60 is asserted against a CLOSED port  — real curl gives 7 -> SKIP(2),
+#        so observing FAIL(1) proves the stub, not curl, was executed;
+#   rc6  is asserted against a LIVE stub    — real curl gives 52 -> FAIL(1),
+#        so observing SKIP(2) proves the same in the other direction.
+# A PATH injection that silently failed to take would flip both to the real
+# verdict and both assertions would go NOT OK (§11.4.201).
+mkdir -p "$TMP/curlbin"
+printf '#!/bin/sh\nexit ${FAKE_CURL_RC:-0}\n' > "$TMP/curlbin/curl"; chmod +x "$TMP/curlbin/curl"
+assert 1 "233: rc60 TLS cert -> FAIL (vs a CLOSED port)"      env PATH="$TMP/curlbin:$PATH" FAKE_CURL_RC=60 RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_CLOSED/v1 bash "$G233"
+assert 1 "244: rc60 TLS cert -> FAIL (vs a CLOSED port)"      env PATH="$TMP/curlbin:$PATH" FAKE_CURL_RC=60 RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_CLOSED/h  bash "$G244"
+assert 2 "233: rc6 unresolvable -> SKIP (vs a LIVE stub)"     env PATH="$TMP/curlbin:$PATH" FAKE_CURL_RC=6  RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_EMPTY/v1  bash "$G233"
+assert 2 "244: rc6 unresolvable -> SKIP (vs a LIVE stub)"     env PATH="$TMP/curlbin:$PATH" FAKE_CURL_RC=6  RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_EMPTY/h   bash "$G244"
 
 echo "=== PROVABLY ABSENT (must SKIP — and must not swallow anything above) ==="
 assert 2 "229: unit never installed (not-found)"         env RED_MODE=0 HXC229_UNIT=gfals-$RUN-absent-unit bash "$G229"

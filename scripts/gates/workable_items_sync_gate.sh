@@ -14,8 +14,21 @@
 #      floor, no duplicate atm_id);
 #   2. md→db→md round-trip of the live Issues.md/Fixed.md is byte-identical modulo
 #      trailing whitespace (the docs are self-consistent for the binary);
-#   3. the committed DB's item set matches a fresh md→db of the live docs (the
-#      tracked DB is not stale relative to the md).
+#   3. the md projection of docs/workable_items.db (db→md) is byte-identical to
+#      the live Issues.md/Fixed.md modulo trailing whitespace — i.e. the two
+#      sides AGREE.
+#
+# Invariant 3 states AGREEMENT and deliberately makes no staleness claim. An
+# earlier revision of this line read "the tracked DB is not stale relative to
+# the md", which asserts a DIRECTION that `diff -q` cannot compute — the exact
+# claim the (3) branch 60 lines below now refuses to make (HXC-252), so the
+# header was still asserting what the code had stopped asserting. That revision
+# also described the check as a comparison against "a fresh md→db of the live
+# docs"; that is invariant 2's mechanism, not this one's.
+#
+# ("the committed DB" in invariants 1-2 is imprecise for a separate reason —
+# the temp copy is taken from the WORKING TREE, not from the index — and is
+# tracked as HXC-257. Invariant 3 names the file by path to avoid restating it.)
 #
 # Exit 0 = in sync; non-zero = drift (release-gate blocking).
 #

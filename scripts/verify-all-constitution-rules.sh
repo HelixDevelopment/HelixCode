@@ -40,6 +40,10 @@
 #   G11 §11.4.93/95 workable-items   — docs/workable_items.db validates + is
 #                                    byte-identically in sync with Issues.md/
 #                                    Fixed.md (workable_items_sync_gate.sh; HXC-026)
+#                                    AND that gate's drift ADVICE stays
+#                                    direction-neutral, so following it cannot
+#                                    delete the SSoT (HXC-252, §9.2;
+#                                    sync_gate_direction_neutrality_meta_test.sh)
 #   G12 §11.4.12/53 summary freshness — docs/Issues_Summary.md + Fixed_Summary.md
 #                                    are a fresh mechanical projection of the
 #                                    §11.4.93/95 SQLite SSoT docs/workable_items.db
@@ -52,6 +56,11 @@
 #                                    coverage report; sources_verified_gate.sh;
 #                                    --enforce blocks at 100% per HXC-030)
 #   G14 §11.4.106 docs_chain verify  — governance docs tree in-sync
+#                                    (md→html→pdf hashes checked by the
+#                                    docs_chain engine via `verify --all`);
+#                                    SKIP-with-reason if engine absent;
+#                                    uses `go run` fallback so no pre-built
+#                                    binary required
 #   G30 §11.4.135 HXC-229 guard      — gateway serves in Gin RELEASE mode (live process)
 #   G31 §11.4.135 HXC-233 guard      — completion path returns a REAL generation (live e2e)
 #   G32 §11.4.135 HXC-244 guard      — health endpoint names the components it checked
@@ -65,11 +74,12 @@
 # not exist. Rather than re-sync by hand and re-drift next time, --explain now
 # diffs itself against the live gate set and names what it cannot describe.
 # G15-G29 remain undescribed and are reported as such on every invocation.
-#                                    (md→html→pdf hashes checked by the
-#                                    docs_chain engine via `verify --all`);
-#                                    SKIP-with-reason if engine absent;
-#                                    uses `go run` fallback so no pre-built
-#                                    binary required
+#
+# (The G30-G32 entries were first inserted BETWEEN G14's heading and its own
+# continuation lines, orphaning four lines of G14's description behind this
+# paragraph — harmless to --explain, which greps `^#   G[0-9]`, but wrong for
+# every human reader. Restored above: continuation lines belong to the heading
+# they continue.)
 #
 # Per CONST-055 anti-bluff: this sweep MUST be paired with a meta-test
 # that plants a known violation per gate and asserts the sweep reports
@@ -481,11 +491,39 @@ fi
 if want_gate G11; then
     GATES_RUN=$((GATES_RUN + 1))
     gate_header "G11 — §11.4.93/95 workable-items md↔db sync (HXC-026)"
-    if bash "$ROOT/scripts/gates/workable_items_sync_gate.sh" >/tmp/g11-wi.out 2>&1; then
-        gate_pass G11 "$(tail -1 /tmp/g11-wi.out | sed 's/^CM-WORKABLE-ITEMS-MD-DB-IN-SYNC: //')"
-    else
+    bash "$ROOT/scripts/gates/workable_items_sync_gate.sh" >/tmp/g11-wi.out 2>&1
+    g11_sync=$?
+
+    # HXC-252 DRIFT-ADVICE GUARD, co-located here on purpose.
+    #
+    # The sync gate's DETECTION was never wrong; its ADVICE was. It asserted a
+    # staleness DIRECTION that a symmetric `diff -q` cannot compute and
+    # prescribed the remedy that follows from it, which in the DB-newer case
+    # overwrites the §11.4.95 SSoT with a stale document. The guard for that is
+    # a §11.4.115 polarity test that was shipped with a standing-guard header
+    # and ZERO invocation sites — a §11.4.135 standing guard that nothing runs
+    # is not standing (independent review round 5, F3). This is the invocation.
+    #
+    # It runs UNCONDITIONALLY, not only on the sync-pass path: the advice is
+    # static text, and it is most load-bearing exactly when drift EXISTS and a
+    # maintainer is about to act on it.
+    #
+    # Reported ahead of drift because a wrong-direction prescription is a §9.2
+    # data-destruction defect, while drift is a hygiene defect.
+    bash "$ROOT/scripts/tests/sync_gate_direction_neutrality_meta_test.sh" >/tmp/g11-advice.out 2>&1
+    g11_adv=$?
+
+    if [[ "$g11_adv" -eq 2 ]]; then
+        gate_fail G11 "the drift-advice guard could not RUN (exit 2, §11.4.3 environment SKIP) — it certified nothing, so the gate's advice is unverified; this is NOT a detected regression (see /tmp/g11-advice.out)" \
+            "$(tail -2 /tmp/g11-advice.out)"
+    elif [[ "$g11_adv" -ne 0 ]]; then
+        gate_fail G11 "the sync gate's DRIFT ADVICE again prescribes a direction it never computed — a maintainer who follows it while the DB is the newer side DELETES items from the §11.4.95 SSoT (HXC-252, §9.2; see /tmp/g11-advice.out)" \
+            "$(grep 'NOT OK' /tmp/g11-advice.out | head -4)"
+    elif [[ "$g11_sync" -ne 0 ]]; then
         gate_fail G11 "docs/workable_items.db drifted from Issues.md/Fixed.md (see /tmp/g11-wi.out)" \
             "$(tail -3 /tmp/g11-wi.out)"
+    else
+        gate_pass G11 "$(tail -1 /tmp/g11-wi.out | sed 's/^CM-WORKABLE-ITEMS-MD-DB-IN-SYNC: //') + drift advice direction-neutral ($(grep -c '^  ok ' /tmp/g11-advice.out) assertions)"
     fi
 fi
 

@@ -21,9 +21,13 @@
 # WHAT THIS ASSERTS
 # -----------------
 # That the gate's drift messages do not assert a direction the gate never
-# computed, and that both remedies are enumerated with the condition under
-# which each applies — so the reader determines direction from evidence rather
-# than from an assertion (§11.4.6).
+# computed, that both remedies are enumerated with the condition under which
+# each applies — so the reader determines direction from evidence rather than
+# from an assertion (§11.4.6) — and that each remedy is BOUND to the right
+# condition, with the data-loss warning on the destructive one.
+#
+# The binding half was added after an independent review (round 5) showed the
+# presence half is not sufficient: see the "(4) ASSOCIATION" block below.
 #
 # It asserts on the MESSAGE TEXT deliberately. The message IS the defect: the
 # gate's detection logic was never wrong, only its advice, and advice is the
@@ -151,14 +155,98 @@ already carries the fix — run RED against a pre-fix revision." >&2
     exit 1
 fi
 
+# (4) ASSOCIATION, not merely PRESENCE  (independent review round 5, F1)
+# ----------------------------------------------------------------------
+# Checks (1)-(3) are TOKEN-PRESENCE checks, and presence is not advice. A review
+# mutation SWAPPED the two remedies inside drift_remedy() — leaving "(a) if the
+# DB is the newer side ... run 'sync md-to-db'", which is the DESTRUCTIVE
+# prescription bound to the exact condition under which it deletes the SSoT,
+# with the WARNING now pointing at the safe remedy — and this test reported
+# 4 ok / 0 not ok. Every token it looked for was still present; only the
+# BINDINGS had inverted. The pairing IS the advice, and the pairing is what the
+# original HIGH was about, so presence checks alone guard the pre-fix STRING
+# SHAPE rather than the defect class.
+#
+# Bind them mechanically instead. The message is flattened to the sentence a
+# maintainer actually reads (source line-wrapping is not part of the advice),
+# then each anchor is resolved to the remedy it governs the way the PROSE reads,
+# not by raw distance:
+#   selects(cond)   = the first remedy AFTER the condition ("if X ... run R"),
+#                     falling back to the nearest preceding one if a message
+#                     puts the remedy first ("run R if X").
+#   attaches(warn)  = the last remedy BEFORE the warning, since a warning
+#                     back-refers ("... run R. WARNING: R overwrites ..."),
+#                     falling back to the first following one.
+# Then:
+#   A  the overwrite WARNING must attach to md-to-db  (the destructive remedy)
+#   B  the DB-is-newer condition must select db-to-md (the safe one)
+#   C  the doc-is-newer condition must select md-to-db
+# Order-independent by construction, so re-ordering or re-lettering the clauses
+# does not fail a message that is still correct — but swapping either the
+# REMEDIES or the CONDITIONS inverts at least two of the three.
+#
+# Raw nearest-neighbour was tried first and is weaker: a condition sitting at
+# the START of its clause can be closer to the PREVIOUS clause's remedy token
+# than to its own, so a condition-swap scored one check as satisfied purely on
+# distance. Reading forward from the condition is both more faithful to the
+# sentence and strictly more sensitive (§11.4.201: measured, not assumed).
+FLAT="$(printf '%s\n' "$DRIFT_MSGS" | sed 's/\\[[:space:]]*$//' | tr '\n' ' ' | tr -s '[:space:]' ' ')"
+_ASSOC="$(printf '%s\n' "$FLAT" | awk '
+function selects(p) {
+    if (o_safe > p && o_dest > p) return (o_safe < o_dest) ? "safe" : "dest"
+    if (o_safe > p) return "safe"
+    if (o_dest > p) return "dest"
+    return (o_safe > o_dest) ? "safe" : "dest"
+}
+function attaches(p) {
+    if (o_safe < p && o_dest < p) return (o_safe > o_dest) ? "safe" : "dest"
+    if (o_safe < p) return "safe"
+    if (o_dest < p) return "dest"
+    return (o_safe < o_dest) ? "safe" : "dest"
+}
+{
+    t = tolower($0)
+    o_safe = index(t, "db-to-md")
+    o_dest = index(t, "md-to-db")
+    o_warn = match(t, /overwrit|destroy|data.loss/)
+    o_dbn  = match(t, /db is (the )?newer/)
+    o_docn = match(t, /carries newer|docs? (is|are) (the )?newer/)
+    miss = ""
+    if (!o_safe) miss = miss " db-to-md"
+    if (!o_dest) miss = miss " md-to-db"
+    if (!o_warn) miss = miss " overwrite-warning"
+    if (!o_dbn)  miss = miss " DB-is-newer-condition"
+    if (!o_docn) miss = miss " doc-is-newer-condition"
+    if (miss != "") { print "MISSING" miss; exit }
+    printf "%d %d %d\n", (attaches(o_warn) == "dest"), \
+                         (selects(o_dbn)   == "safe"), \
+                         (selects(o_docn)  == "dest")
+}')"
+# A missing anchor means the association is UNVERIFIABLE, which must be loud.
+# Scoring it as a silent pass is the §11.4.201 shape this whole file argues
+# against: a check that matched nothing would report clean for the same reason a
+# satisfied one does.
+if [ "${_ASSOC%% *}" = "MISSING" ]; then
+    echo "GUARD FAILED (HXC-252): cannot verify remedy/condition BINDING — the \
+drift message no longer contains these anchors:${_ASSOC#MISSING}. Either the \
+message dropped a remedy or a condition, or it was reworded past this test's \
+locators. Refusing to certify a binding that was never located." >&2
+    exit 1
+fi
+read -r ASSOC_WARN ASSOC_DBNEW ASSOC_DOCNEW <<<"$_ASSOC"
+
 echo "=== HXC-252 direction-neutrality guard (RED_MODE=0: defect must be ABSENT) ==="
 ck "no bare 'is STALE vs' directional assertion"        "$([ "$HAS_STALE_CLAIM" -ne 0 ] && echo 0 || echo 1)"
 ck "names the db-to-md remedy (DB newer -> regen docs)" "$HAS_DBTOMD"
 ck "names the md-to-db remedy (docs newer)"             "$HAS_MDTODB"
 ck "warns that one remedy overwrites the SSoT"          "$HAS_WARNING"
+ck "the overwrite warning binds to md-to-db, not db-to-md"   "$([ "$ASSOC_WARN"   = 1 ] && echo 0 || echo 1)"
+ck "'DB is newer' selects db-to-md (the SAFE remedy)"        "$([ "$ASSOC_DBNEW"  = 1 ] && echo 0 || echo 1)"
+ck "'doc is newer' selects md-to-db (the DESTRUCTIVE one)"   "$([ "$ASSOC_DOCNEW" = 1 ] && echo 0 || echo 1)"
 
 echo "--- $PASSES ok, $FAILS not ok"
 [ "$FAILS" -eq 0 ] || { echo "GUARD FAILED (HXC-252): the sync gate prescribes a \
 direction it never computed — following it can delete the SSoT (§9.2)." >&2; exit 1; }
 echo "GREEN (HXC-252): the drift message states what was detected, enumerates both \
-remedies with their conditions, and warns which one is destructive."
+remedies, BINDS each to the condition under which it is correct, and puts the \
+data-loss warning on the destructive one."
