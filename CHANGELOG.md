@@ -2,7 +2,117 @@
 
 All notable changes to HelixCode are recorded here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Release tags are
-**helixcode-prefixed semver**: `helixcode-vX.Y.Z`.
+**project-prefixed** per §11.4.151, resolved from `.env` `HELIX_RELEASE_PREFIX`
+(currently `helix-code`): `helix-code-X.Y.Z-dev-N.N.N`. Two legacy unprefixed
+`helixcode-vX.Y.Z` tags predate that scheme and are retained as historical
+artifacts, not as an active naming convention — see
+`docs/changelogs/helix-code-1.2.0-dev-0.0.1.md` §"§11.4.151 release-tag prefix
+compliance" for the full finding.
+
+## [helix-code-1.2.0-dev-0.0.1] — DRAFT, not yet tagged (documentation prepared 2026-08-10/11)
+
+**No git tag exists for this entry yet.** Full per-commit citations, SHA-level
+detail, tracker-item status cross-checked against `docs/workable_items.db`,
+and an honest "Known gaps" ledger live in
+`docs/changelogs/helix-code-1.2.0-dev-0.0.1.md` — this entry is a summary of
+that document, not a replacement for it. The full document covers **256
+commits** in the main repo since the last tag (`helix-code-1.1.0-dev-0.0.3`)
+plus the entirety of `submodules/helix_agent`'s unpushed history (24 commits);
+this summary highlights only the user-visible headline items.
+
+### Added
+
+- **The whole platform installs and boots as systemd units** via `./setup.sh`
+  — HelixCode server, HelixAgent, HelixLLM gateway + coder, infra
+  (Postgres/Redis/Weaviate/Qdrant/ChromaDB/Cognee/Ollama), and LLMsVerifier —
+  with real HTTP health checks and a verified stop/start cycle.
+- **LLMsVerifier is wired to real provider data**, publishing genuine
+  verification scores instead of an empty `{}`; the gateway now routes on
+  measured scores instead of always falling back to its static table.
+- **Hyper provider discovery, registry, and verifier types** land in
+  `submodules/helix_agent`.
+
+### Fixed
+
+- **Model identity is honest end-to-end.** A client requesting an alias
+  (e.g. `"model":"default"`) now gets back the model that actually served the
+  request, on both the OpenAI- and Anthropic-compatible wires, streaming and
+  non-streaming — not the alias echoed back.
+- **The gateway's primary completion path, which was returning HTTP 500 on
+  every request with no cloud key configured, is restored** — the local
+  provider was pointed at a port matching no running service.
+- **The health endpoint no longer reports "healthy" without checking
+  anything** — it now names four real dependencies with measured round-trip
+  durations, and the fix required a redeploy of a stale-by-15-days binary,
+  not just a source change (§11.4.108).
+- **A large, misleading class of HelixAgent integration-test failures is
+  fixed at the root.** Roughly a hundred failing assertions across several
+  packages traced to test guards checking mere port-reachability instead of
+  service *identity* — a different local service (LLMsVerifier) or a
+  container (Weaviate) squatting on a well-known port was being blamed for
+  HelixAgent regressions it had nothing to do with. Every affected guard now
+  verifies identity, not reachability.
+- **HelixAgent's gRPC server can start alongside HelixAgent's own
+  infrastructure** — it previously hardcoded the same port
+  (`:50051`) this project's own Weaviate container publishes and could not
+  bind. Re-derived the server, its startup banner, its docs, its Kubernetes
+  manifests, and a protocol-compliance challenge script from one port-registry
+  source. **Landed in source; not yet verified against a rebuilt, redeployed
+  artifact — see the per-release changelog's Known gaps.**
+- **Generated CLI-agent config files pointed 46 of 48 downstream assistants
+  at the wrong port.** Fixed via the same single-resolver pattern.
+  **Landed in source for every currently-wired call site; one additional,
+  currently-unwired call site inside `submodules/helix_agent` was found
+  during this documentation pass and is flagged, not fixed, in the per-release
+  changelog — treat this fix as source-complete, not verification-complete.**
+- **265 data races eliminated** in the desktop application, root-caused to a
+  code comment falsely claiming a widget setter was goroutine-safe.
+- **A guaranteed streaming-with-tools deadlock is closed**, along with a
+  family of provider goroutine/HTTP-body leaks on client disconnect.
+- **265 data races aside, three separate "unprioritized `select`" races** are
+  closed across persistence, LLM provider, and database cleanup code.
+- **`go.mod`/`go.sum` tidied** — 30 stale dependency hashes and 2
+  structurally incomplete entries, undetected by `go build`/`go vet` but a
+  real `go mod tidy -diff` failure.
+- **The project's own release-validation scripts could report "all tests
+  passed" without running a single test** — fixed to discover the real
+  server address by identity and treat zero-tests-executed as a hard failure.
+- **Two credential/security exposures were found, traced, and handled** (one
+  published on all four mirrors for 48 days); rotation remains outstanding
+  and is tracked, not silently closed.
+
+### Changed
+
+- **The project's own workable-items tracker was re-derived from its
+  database of record** after `docs/Issues.md` drifted 18 open items and
+  several days stale — surfacing and fixing a hidden governance-gate
+  violation in the process.
+- **Three standing regression guards, written earlier and never wired into
+  any suite, are now part of the release-gate sweep** (32 gates, up from 29),
+  after three independent review rounds found and closed further
+  false-positive/false-negative failure modes in the guards themselves.
+- Root module renamed `dev.helix.code` → `dev.helix.code/meta` (HXC-187/D-7)
+  so the meta-repo and inner Go module stop sharing an identity.
+
+### Known gaps (NOT closed by this documentation pass)
+
+- **§11.4.185 manual QA-team confirmation has not been given** for any of the
+  above — automated-green is necessary but not sufficient per this project's
+  own governance.
+- **The gRPC and CLI-agent-config port fan-outs are landed in source, not
+  confirmed against a rebuilt/redeployed artifact** (see "Fixed" above and
+  the per-release changelog's Known gaps 19–20).
+- **A 32-commit stretch of `submodules/helix_agent` history
+  (`a345c551..66a3c1c6`), already published on all four of its remotes, was
+  found never itemized in any prior changelog revision.** Out of scope for
+  this pass (it predates the unpushed work this task documents); flagged as a
+  follow-up documentation task.
+- **This version has not been tagged, pushed, or built for this entry.**
+  Documentation and version metadata only — see the per-release changelog for
+  the full, itemized "Known gaps" ledger.
+- Mobile clients and GUI desktop builds continue to require simulator/device/
+  display access not available in this documentation pass (carried over,
+  unchanged, from the `helixcode-v1.0.0` entry below).
 
 ## [helix-code-1.1.0-dev-0.0.3] — 2026-07-24
 

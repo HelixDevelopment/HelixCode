@@ -2,14 +2,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>CHANGELOG</title>
   <style>
 
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 
 ul.task-list[class]{list-style: none;}
@@ -49,8 +53,163 @@ text-decoration: line-through;
 <h1 id="changelog">Changelog</h1>
 <p>All notable changes to HelixCode are recorded here. Format loosely
 follows <a href="https://keepachangelog.com/">Keep a Changelog</a>.
-Release tags are <strong>helixcode-prefixed semver</strong>:
-<code>helixcode-vX.Y.Z</code>.</p>
+Release tags are <strong>project-prefixed</strong> per §11.4.151,
+resolved from <code>.env</code> <code>HELIX_RELEASE_PREFIX</code>
+(currently <code>helix-code</code>):
+<code>helix-code-X.Y.Z-dev-N.N.N</code>. Two legacy unprefixed
+<code>helixcode-vX.Y.Z</code> tags predate that scheme and are retained
+as historical artifacts, not as an active naming convention — see
+<code>docs/changelogs/helix-code-1.2.0-dev-0.0.1.md</code> §“§11.4.151
+release-tag prefix compliance” for the full finding.</p>
+<h2 id="helix-code-1.2.0-dev-0.0.1-draft-not-yet-tagged-documentation-prepared-2026-08-1011">[helix-code-1.2.0-dev-0.0.1]
+— DRAFT, not yet tagged (documentation prepared 2026-08-10/11)</h2>
+<p><strong>No git tag exists for this entry yet.</strong> Full
+per-commit citations, SHA-level detail, tracker-item status
+cross-checked against <code>docs/workable_items.db</code>, and an honest
+“Known gaps” ledger live in
+<code>docs/changelogs/helix-code-1.2.0-dev-0.0.1.md</code> — this entry
+is a summary of that document, not a replacement for it. The full
+document covers <strong>256 commits</strong> in the main repo since the
+last tag (<code>helix-code-1.1.0-dev-0.0.3</code>) plus the entirety of
+<code>submodules/helix_agent</code>’s unpushed history (24 commits);
+this summary highlights only the user-visible headline items.</p>
+<h3 id="added">Added</h3>
+<ul>
+<li><strong>The whole platform installs and boots as systemd
+units</strong> via <code>./setup.sh</code> — HelixCode server,
+HelixAgent, HelixLLM gateway + coder, infra
+(Postgres/Redis/Weaviate/Qdrant/ChromaDB/Cognee/Ollama), and
+LLMsVerifier — with real HTTP health checks and a verified stop/start
+cycle.</li>
+<li><strong>LLMsVerifier is wired to real provider data</strong>,
+publishing genuine verification scores instead of an empty
+<code>{}</code>; the gateway now routes on measured scores instead of
+always falling back to its static table.</li>
+<li><strong>Hyper provider discovery, registry, and verifier
+types</strong> land in <code>submodules/helix_agent</code>.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><strong>Model identity is honest end-to-end.</strong> A client
+requesting an alias (e.g. <code>&quot;model&quot;:&quot;default&quot;</code>) now gets back
+the model that actually served the request, on both the OpenAI- and
+Anthropic-compatible wires, streaming and non-streaming — not the alias
+echoed back.</li>
+<li><strong>The gateway’s primary completion path, which was returning
+HTTP 500 on every request with no cloud key configured, is
+restored</strong> — the local provider was pointed at a port matching no
+running service.</li>
+<li><strong>The health endpoint no longer reports “healthy” without
+checking anything</strong> — it now names four real dependencies with
+measured round-trip durations, and the fix required a redeploy of a
+stale-by-15-days binary, not just a source change (§11.4.108).</li>
+<li><strong>A large, misleading class of HelixAgent integration-test
+failures is fixed at the root.</strong> Roughly a hundred failing
+assertions across several packages traced to test guards checking mere
+port-reachability instead of service <em>identity</em> — a different
+local service (LLMsVerifier) or a container (Weaviate) squatting on a
+well-known port was being blamed for HelixAgent regressions it had
+nothing to do with. Every affected guard now verifies identity, not
+reachability.</li>
+<li><strong>HelixAgent’s gRPC server can start alongside HelixAgent’s
+own infrastructure</strong> — it previously hardcoded the same port
+(<code>:50051</code>) this project’s own Weaviate container publishes
+and could not bind. Re-derived the server, its startup banner, its docs,
+its Kubernetes manifests, and a protocol-compliance challenge script
+from one port-registry source. <strong>Landed in source; not yet
+verified against a rebuilt, redeployed artifact — see the per-release
+changelog’s Known gaps.</strong></li>
+<li><strong>Generated CLI-agent config files pointed 46 of 48 downstream
+assistants at the wrong port.</strong> Fixed via the same
+single-resolver pattern. <strong>Landed in source for every
+currently-wired call site; one additional, currently-unwired call site
+inside <code>submodules/helix_agent</code> was found during this
+documentation pass and is flagged, not fixed, in the per-release
+changelog — treat this fix as source-complete, not
+verification-complete.</strong></li>
+<li><strong>265 data races eliminated</strong> in the desktop
+application, root-caused to a code comment falsely claiming a widget
+setter was goroutine-safe.</li>
+<li><strong>A guaranteed streaming-with-tools deadlock is
+closed</strong>, along with a family of provider goroutine/HTTP-body
+leaks on client disconnect.</li>
+<li><strong>265 data races aside, three separate “unprioritized
+<code>select</code>” races</strong> are closed across persistence, LLM
+provider, and database cleanup code.</li>
+<li><strong><code>go.mod</code>/<code>go.sum</code> tidied</strong> — 30
+stale dependency hashes and 2 structurally incomplete entries,
+undetected by <code>go build</code>/<code>go vet</code> but a real
+<code>go mod tidy -diff</code> failure.</li>
+<li><strong>The project’s own release-validation scripts could report
+“all tests passed” without running a single test</strong> — fixed to
+discover the real server address by identity and treat
+zero-tests-executed as a hard failure.</li>
+<li><strong>Two credential/security exposures were found, traced, and
+handled</strong> (one published on all four mirrors for 48 days);
+rotation remains outstanding and is tracked, not silently closed.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong>The project’s own workable-items tracker was re-derived from
+its database of record</strong> after <code>docs/Issues.md</code>
+drifted 18 open items and several days stale — surfacing and fixing a
+hidden governance-gate violation in the process.</li>
+<li><strong>Three standing regression guards, written earlier and never
+wired into any suite, are now part of the release-gate sweep</strong>
+(32 gates, up from 29), after three independent review rounds found and
+closed further false-positive/false-negative failure modes in the guards
+themselves.</li>
+<li>Root module renamed <code>dev.helix.code</code> →
+<code>dev.helix.code/meta</code> (HXC-187/D-7) so the meta-repo and
+inner Go module stop sharing an identity.</li>
+</ul>
+<h3 id="known-gaps-not-closed-by-this-documentation-pass">Known gaps
+(NOT closed by this documentation pass)</h3>
+<ul>
+<li><strong>§11.4.185 manual QA-team confirmation has not been
+given</strong> for any of the above — automated-green is necessary but
+not sufficient per this project’s own governance.</li>
+<li><strong>The gRPC and CLI-agent-config port fan-outs are landed in
+source, not confirmed against a rebuilt/redeployed artifact</strong>
+(see “Fixed” above and the per-release changelog’s Known gaps
+19–20).</li>
+<li><strong>A 32-commit stretch of <code>submodules/helix_agent</code>
+history (<code>a345c551..66a3c1c6</code>), already published on all four
+of its remotes, was found never itemized in any prior changelog
+revision.</strong> Out of scope for this pass (it predates the unpushed
+work this task documents); flagged as a follow-up documentation
+task.</li>
+<li><strong>This version has not been tagged, pushed, or built for this
+entry.</strong> Documentation and version metadata only — see the
+per-release changelog for the full, itemized “Known gaps” ledger.</li>
+<li>Mobile clients and GUI desktop builds continue to require
+simulator/device/ display access not available in this documentation
+pass (carried over, unchanged, from the <code>helixcode-v1.0.0</code>
+entry below).</li>
+</ul>
+<h2 id="helix-code-1.1.0-dev-0.0.3-2026-07-24">[helix-code-1.1.0-dev-0.0.3]
+— 2026-07-24</h2>
+<h3 id="added-1">Added</h3>
+<ul>
+<li><strong>HelixLLM mode switch.</strong> The shared HelixLLM engine
+now accepts a runtime mode parameter (<code>coder</code> /
+<code>claude</code>) so the same provider backend serves both
+conversational and code-agent workloads with mode-appropriate system
+prompts and token budgets without reconfiguration.</li>
+</ul>
+<h3 id="changed-1">Changed</h3>
+<ul>
+<li><strong>HelixAgent submodule pointer bumped.</strong> Updated to the
+latest revision bringing Zen provider as the default and a generic
+provider fallback path.</li>
+</ul>
+<h3 id="fixed-1">Fixed</h3>
+<ul>
+<li><strong><code>.gitignore</code> covers build derivatives.</strong>
+Added <code>scratchpad/</code> and <code>.git-backups/</code> patterns
+to prevent 86 GB+ of build artifacts and backup copies from polluting
+<code>git status</code> and accidentally being staged.</li>
+</ul>
 <h2 id="helixcode-v1.0.0-2026-06-15">[helixcode-v1.0.0] —
 2026-06-15</h2>
 <p>First release tag.</p>
@@ -73,7 +232,7 @@ round-trips, no mocks): <code>POST /api/v1/llm/generate</code>,
 persist → restart → recall proven.</li>
 </ul>
 <p>Runtime evidence: <code>docs/qa/web-llm-e2e-20260615/</code>.</p>
-<h3 id="added">Added</h3>
+<h3 id="added-2">Added</h3>
 <ul>
 <li>Honest TUI context-window USED-% indicator — real per-session token
 accounting, omits when the model window is unknown (CONST-035)
@@ -91,7 +250,7 @@ default is preserved (HXC-099).</li>
 persist→restart→recall through the production-chosen disk store
 (HXC-106).</li>
 </ul>
-<h3 id="fixed">Fixed</h3>
+<h3 id="fixed-2">Fixed</h3>
 <ul>
 <li><code>streamLLM</code> production hang: <code>chunkChan</code> was
 never closed, so <code>[DONE]</code> was never emitted and

@@ -52,11 +52,15 @@ text-decoration: line-through;
 </header>
 <h1 id="helixcode-release-changelog-helix-code-1.2.0-dev-0.0.1">HelixCode
 Release Changelog — helix-code-1.2.0-dev-0.0.1</h1>
-<p><strong>Revision:</strong> 3 <strong>Last modified:</strong>
-2026-08-09T12:38:49Z <strong>Maintainer:</strong> HelixCode release
-engineering (documentation draft, AI-agent authored; independently
-reviewed per §11.4.142/§11.4.194 — see “Independent review” section
-below)</p>
+<p><strong>Revision:</strong> 4 <strong>Last modified:</strong>
+2026-08-10T21:21:26Z <strong>Maintainer:</strong> HelixCode release
+engineering (documentation draft, AI-agent authored; revisions 1–3
+independently reviewed per §11.4.142/§11.4.194 — see “Independent
+review” section below. Revision 4 is verified-by-construction against
+<code>git log</code>/<code>git show</code>/<code>docs/workable_items.db</code>
+but has <strong>not</strong> itself crossed a §11.4.142
+independent-reviewer seam — see the “Independent review” section’s
+revision 4 entry for the honest boundary.)</p>
 <hr />
 <blockquote>
 <p><strong>DRAFT — pinned to a stated HEAD, this is not a cut
@@ -79,45 +83,65 @@ without checking.</p>
 <thead>
 <tr>
 <th>Repo</th>
-<th>Stated HEAD (revision 3)</th>
+<th>Stated HEAD (revision 4)</th>
 <th>Relative to its configured remotes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>main (this repo)</td>
-<td><code>5725ee068c965dabf2720ff6063acf3753a6c232</code></td>
-<td>3 ahead, 0 behind on <strong>all four</strong> remotes
+<td><code>84853455bf20c940cc32687918c6a7cc42cfda81</code></td>
+<td>10 ahead, 0 behind on <strong>all four</strong> remotes
 (github/gitlab/origin/upstream) — measured <em>after</em> a real
-<code>git fetch --all --prune</code>, not from stale tracking refs
-(§11.4.6)</td>
+<code>git fetch --all --prune</code> on 2026-08-10 (§11.4.6)</td>
 </tr>
 <tr>
 <td><code>constitution</code> (pin)</td>
 <td><code>177f2b05545f2fe73fbb432ad0de3a6bed7edcf4</code></td>
-<td>clean; carries §11.4.236/§11.4.237/§11.4.238</td>
+<td>unchanged since revision 3; clean</td>
 </tr>
 <tr>
 <td><code>submodules/helix_llm</code> (pin)</td>
 <td><code>3d789cb888a09cfecdd2f0007a08a96d91caf5e9</code></td>
-<td>clean; <strong>verified to contain <code>8260cf8</code></strong>,
-the HXC-244 health fix, so a fresh clone gets it</td>
+<td>unchanged since revision 3; clean</td>
 </tr>
 <tr>
 <td><code>submodules/helix_agent</code> (pin)</td>
-<td><code>66a3c1c6133a0ebdfeaa2ca4f1231588467cd145</code></td>
-<td>working checkout is at <code>d6856cc9</code> and <strong>differs
-from the recorded pin</strong> (<code>git submodule status</code> shows
-<code>+</code>); three other agents were actively editing this submodule
-and it was deliberately not touched by revision 3</td>
+<td><code>94e2dcc828ef31930aa2926584ffae273e58a04c</code></td>
+<td><strong>resolves revision 3’s Known gap 14</strong> — the pin now
+equals the submodule’s own current <code>HEAD</code> exactly
+(<code>git submodule status</code> shows no <code>+</code>); 24 ahead, 0
+behind on <strong>all four</strong> of its own remotes, measured after a
+real fetch</td>
 </tr>
 <tr>
 <td><code>submodules/tool_schema</code> (pin)</td>
 <td><code>8cec90baadad281eb26a5671b792921f03eb7386</code></td>
-<td>clean</td>
+<td>unchanged since revision 3; clean</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Revision 4 scope.</strong> Re-derives from
+<code>5725ee06..84853455</code> in the main repo — <strong>7
+commits</strong>, of which <code>2816246e</code> is the commit that
+<em>wrote</em> revision 3 of this document (already fully
+self-describing; not re-described here) and the other <strong>6</strong>
+(<code>04f88a23</code>, <code>be5d56be</code>, <code>69573772</code>,
+<code>b947276f</code>, <code>f10c9a1e</code>, <code>84853455</code>) are
+new substantive content. It also fully characterises
+<code>submodules/helix_agent</code>’s entire <code>66a3c1c6..HEAD</code>
+range — <strong>24 commits</strong> — which revision 3 recorded only as
+a pin/checkout mismatch (Known gap 14) and explicitly declined to enter
+or describe; none of those 24 commits appear anywhere in revisions 1–3
+of this document. Total since the last tag
+<code>helix-code-1.1.0-dev-0.0.3</code> (<code>5ab97d8c</code>) in the
+main repo: <strong>256 commits</strong>
+(<code>git rev-list --count 5ab97d8c..HEAD</code> — 249 from revisions
+1–3, plus this section’s 7); <strong>0 merge commits</strong> anywhere
+in that range; <strong>0</strong> <code>Auto-commit</code>-only messages
+in the revision 4 range specifically (both repos), a positive change
+from the pattern revisions 1–3 flagged (Known gaps 8, 16). Revisions 1–3
+content below is <strong>preserved, not rewritten</strong>.</p>
 <p><strong>Revision 3 scope.</strong> Revisions 1–2 documented
 <code>5ab97d8c..c29e1dcc</code>. Revision 3 re-derives from
 <code>c29e1dcc..5725ee06</code> — a further <strong>231 commits</strong>
@@ -182,6 +206,60 @@ existing sequence. This was named explicitly by the operator as this
 release’s target tag; per instruction for this task, that is recorded
 here as an <strong>operator decision</strong>, not re-litigated or
 treated as unexplained drift.</p>
+<p><strong>Version-number determination (revision 4, re-checked from
+commit content per task instruction).</strong> Independent of the
+operator’s naming decision above, the commit content of the full
+<code>5ab97d8c..HEAD</code> range (256 commits, all three revisions
+combined) supports a minor bump on its own evidentiary merits, not
+merely a patch increment:</p>
+<ul>
+<li><strong>New user-visible capability, not just fixes.</strong>
+Revision 3’s range alone contains 9 <code>feat</code> commits landing
+genuinely new capability: the entire systemd-unit platform installer
+(<code>c4115c73</code>) standing up 5+ services from a single
+<code>./setup.sh</code>; LLMsVerifier wired in as a 7th unit with real
+provider scoring (<code>d3e2c6e7</code>, <code>98db7d79</code>); and
+Hyper provider discovery in <code>submodules/helix_agent</code>
+(<code>410afda5</code>). A restored primary capability also belongs in
+this bucket, not the patch bucket: HXC-233 (revision 3) fixed the
+gateway’s <em>only</em> completion path when no cloud key is configured
+— every completion request was returning HTTP 500 before that fix, which
+is a product-defining regression-and-restoration, not a minor
+patch-grade fix.</li>
+<li><strong>Scale.</strong> 256 commits across two repositories,
+spanning roughly two weeks (2026-07-28 → 2026-08-11), is far outside the
+size of a typical <code>-dev-0.0.N</code> patch increment in this
+project’s own tag history (the three prior <code>1.1.0-dev-0.0.N</code>
+patches were each single-digit-to-low-double-digit commit counts by
+comparison).</li>
+<li><strong>Governance/architecture-level changes</strong>, which a
+semver-conscious reading would also weigh toward minor-or-above: the
+root module rename (<code>dev.helix.code</code> →
+<code>dev.helix.code/meta</code>, HXC-187/D-7, <code>09a086a6</code>)
+and the workable-items tracker’s SQLite-backed re-architecture reaching
+its own standing-guard-wiring maturity milestone in this range
+(<code>be5d56be</code>, 32 gates up from 29).</li>
+<li><strong>Against a patch reading:</strong> the revision-4-specific
+range documented in this update (the 6 new main-repo commits plus the 24
+submodule commits) is, on its own, mostly
+<code>fix</code>/<code>test</code>/<code>docs</code>/<code>items</code>
+work with no new <code>feat</code> commit — if that range were being
+version-numbered in isolation, a patch bump would be the better fit. It
+is not being numbered in isolation: it is additional content folding
+into the same <code>1.2.0-dev-0.0.1</code> release the operator already
+named, alongside the <code>feat</code>-bearing revision 1–3 range.</li>
+</ul>
+<p><strong>Conclusion:</strong> the evidence supports keeping
+<code>1.2.0-dev-0.0.1</code> as named. This document does
+<strong>not</strong> change the version number — per the task’s explicit
+instruction, and independent of that instruction, the target file names
+(<code>docs/changelogs/helix-code-1.2.0-dev-0.0.1.{md,html,pdf}</code>)
+already reference it, so unilaterally renaming the release here would
+create exactly the kind of un-synced reference (§11.4.186) this document
+exists to prevent. If a future reviewer disagrees with the
+minor-vs-patch call, the correct fix is to rename the draft’s own files
+and every reference to them in one atomic change, not to edit the
+version string inside a file whose name still says otherwise.</p>
 <h2 id="summary-what-this-release-actually-delivers-for-a-user">Summary
 — what this release actually delivers for a user</h2>
 <ul>
@@ -1009,10 +1087,654 @@ regeneration.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="per-repo-commit-inventory">Per-repo commit inventory</h2>
-<h3 id="main-this-repo-18-commits-in-5ab97d8c..c29e1dcc-revisions-12-range">main
-(this repo) — 18 commits in <code>5ab97d8c..c29e1dcc</code> (revisions
-1–2 range)</h3>
+<h2 id="revision-4-the-5725ee06..84853455-range-6-main-commits-submoduleshelix_agents-full-66a3c1c6..head-range-24-commits-2026-08-09-2026-08-11">Revision
+4 — the <code>5725ee06..84853455</code> range (6 main commits) +
+<code>submodules/helix_agent</code>’s full <code>66a3c1c6..HEAD</code>
+range (24 commits, 2026-08-09 → 2026-08-11)</h2>
+<p>Everything in this section was derived on 2026-08-10/11 by reading
+<code>git log</code> and <code>git show</code> directly against both
+repositories, cross-checked against <code>docs/workable_items.db</code>
+(§11.4.93/§11.4.95 — the tracker’s single source of truth) for the
+status of every tracker item cited, rather than inferring status from
+commit-message prose (§11.4.6). This section also fully characterises
+<code>submodules/helix_agent</code>’s entire <code>66a3c1c6..HEAD</code>
+range, which revision 3 recorded only as a pin/checkout mismatch (Known
+gap 14) and explicitly declined to enter.</p>
+<h3 id="summary-what-changed-for-a-user-in-this-range-1">Summary — what
+changed for a user in this range</h3>
+<p>Grouped by theme (§11.4.91), not by commit order:</p>
+<ul>
+<li><strong>A whole class of false “HelixAgent is broken” test failures
+is fixed at the root, not patched symptom-by-symptom.</strong> Roughly
+74 + 20 + 13 + more integration-test failures across five separate
+packages traced back to variations of one cause: a test found
+<em>something</em> answering on a well-known port and treated that as
+proof HelixAgent was there, when the something was frequently a
+different service (LLMsVerifier squatting on <code>:8100</code>,
+Weaviate squatting on <code>:50051</code>, a stale
+<code>configs/development.yaml</code> port) or a password-protected
+Redis rejecting an unauthenticated command. Every guard in this range
+now verifies <em>identity</em> — a real
+<code>{&quot;service&quot;:&quot;helixagent&quot;}</code> payload, a completed Redis
+AUTH+PING handshake — never mere reachability. None of this is a
+HelixAgent product regression; all of it was the test suite blaming the
+product for infrastructure it never actually contacted.</li>
+<li><strong>HelixAgent’s gRPC server can now start on a host that is
+already running HelixAgent’s own infrastructure — landed in source,
+verification on a rebuilt/redeployed artifact pending.</strong> It
+previously hardcoded <code>:50051</code>, the exact port this project’s
+own Weaviate container publishes, so on a normal deployment the gRPC
+listener could not bind at all; a second-order bug then made the
+integration test client silently dial the live Weaviate instance instead
+and report 20 failures against HelixAgent, which was never actually
+reached. Fixed by registering the service in the internal port registry
+(<code>:8112</code> by default) and re-deriving every place that names
+the port — the server, the startup banner, the docs, the Kubernetes
+manifests, and a protocol-compliance challenge script — from that one
+source, across seven commits landed over two days as review rounds
+surfaced further instances of the same class (the banner not tracking
+the listener; the k8s manifests naming a dead env var and an unbound
+port; a challenge script recording success on every branch regardless of
+outcome).</li>
+<li><strong>Generated CLI-agent configuration files pointed 46 of 48
+downstream AI coding assistants at the wrong service — landed in source,
+one known-unwired residual documented below, so treat as not confirmed
+complete.</strong>
+<code>helixagent -generate-agent-config=&lt;name&gt;</code> (and the
+“generate all agents” / Crush variants) wrote
+<code>localhost:8100</code> into every emitted config regardless of the
+port the server actually bound, from a second, independent hardcode
+source beyond the one an earlier commit in this same range had already
+fixed for 2 of the 48 generators. An independent review returned this
+fix for further work twice, surfacing an unenforceable dial host that
+could resolve to the unconnectable wildcard address <code>0.0.0.0</code>
+(reachable today via a committed Docker Compose file, no mutation
+needed), a “reachability” probe that misclassified several real
+wrong-service responses as “nothing is here”, and inconsistent handling
+of malformed port values across the four generators — including, on a
+first attempt at the fix itself, the ports <code>0</code>,
+<code>-1</code>, and <code>65536</code>, all still silently accepted.
+<strong>This documentation pass independently found one further call
+site the fix does not touch</strong> — see “Known gaps”.</li>
+<li><strong>The scripts operators run to certify “the platform’s tests
+passed” could report that without running a single test.</strong>
+<code>run_complete_validation.sh</code> and
+<code>orchestrate_full_test.sh</code> accepted a 404 from the wrong
+service as “ready” (a plain <code>curl</code> without <code>-f</code>
+treats that as success), and a shell arithmetic bug
+(<code>grep -c ... || echo &quot;0&quot;</code>) turned zero-count summary fields
+into the two-character string <code>&quot;0 0&quot;</code>, which either prints
+garbage or aborts a downstream numeric comparison whose failure then
+reads as “tests ran”. Both scripts now discover the server’s real
+address by asking the kernel which port the process they started
+actually bound, verify its identity, and treat zero-tests-executed as a
+hard failure rather than a silent success.</li>
+<li><strong><code>go.mod</code>/<code>go.sum</code> were quietly out of
+tidy</strong> since a dependency bump two work sessions earlier — 30
+stale superseded-version hashes plus 2 structurally incomplete entries,
+invisible to <code>go build</code>/<code>go vet</code> but a real,
+deterministic <code>go mod tidy -diff</code> failure since the measured
+baseline.</li>
+<li><strong>The project’s own workable-items tracker had drifted from
+its database of record, and the drift was hiding a governance-gate
+violation.</strong> <code>docs/Issues.md</code> was 18 open items and 3
+days stale relative to <code>docs/workable_items.db</code>; regenerating
+it also surfaced and fixed two items that had never been indexed at all
+(a code path that bypassed the sanctioned writer), plus an obsolete-item
+record missing its required detail line, hidden because the stale
+document sorted it out of view. Three standing regression guards written
+earlier in the project’s history had never actually been invoked by
+anything — a guard that is registered but never run cannot fail — and
+are now wired into the release-gate sweep (32 gates, up from 29), after
+three independent review rounds each found and the author fixed further
+false-positive and false-negative failure modes in the guards themselves
+before they were trusted.</li>
+<li><strong>An independent review of the tracker-repair and guard-wiring
+work returned 8 findings (1 HIGH, 3 MEDIUM, 4 LOW), all individually
+dispositioned rather than bundled into a single “addressed”
+claim.</strong> The HIGH finding was itself a live data-destruction
+trap: the tracker’s own sync-consistency gate, on detecting drift,
+printed a specific repair command that — in the exact drift direction
+this range’s own repair work had just hit — would have overwritten the
+46-item database with a stale 36-item document, permanently deleting 10
+items and resurrecting 8 already closed ones. The message no longer
+asserts a direction it cannot prove; it states what was detected and
+lets the operator choose.</li>
+</ul>
+<h3 id="fixed-main-repo-revision-4-range">Fixed — main repo (revision 4
+range)</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>SHA</th>
+<th>Repo</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>04f88a23</code></td>
+<td>main</td>
+<td><code>docs/Issues.md</code> had drifted 18 open items behind
+<code>docs/workable_items.db</code> (last regenerated 3 days earlier)
+and was hiding a governance-gate violation: HXC-230, marked Obsolete,
+was missing its required <code>**Obsolete-Details:**</code> line,
+invisible because the stale document sorted a different item above it.
+Root-caused two independent causes rather than assuming one: HXC-247 and
+HXC-248 had been filed through a raw <code>INSERT</code> that skipped
+the row the renderer needs to see an item at all, and the document
+itself was simply stale. Repaired by regenerating <strong>from the
+database</strong> — the opposite of what the project’s own sync-gate
+failure message recommended at the time, which is HXC-252, fixed later
+in this same range by <code>f10c9a1e</code>.</td>
+</tr>
+<tr>
+<td><code>be5d56be</code></td>
+<td>main</td>
+<td>Three standing regression guards (<code>guard_hxc229</code>,
+<code>guard_hxc233</code>, <code>guard_hxc244</code>) existed on disk
+but were invoked by nothing anywhere in the release sweep — HXC-244 had
+been closed against a guard that had never once run in any suite. Wired
+all three in as new gates G30–G32. An independent review returned NO-GO
+on the first attempt and found three further blocking holes (a guard
+that read “cannot reach a dead HTTP proxy” as “service absent”; a guard
+that read a crash-looped systemd unit as “not installed”; an
+unfalsifiable prose claim with no re-runnable evidence behind it) plus
+four warnings, all fixed before the guards were accepted — replacing
+prose assertions with a 22-case, then 23-case falsification battery that
+builds its own live test subjects (HTTP stubs, transient systemd units,
+a deliberately crashed analyzer) and proves each PASS/FAIL/SKIP boundary
+rather than asserting it.</td>
+</tr>
+<tr>
+<td><code>69573772</code></td>
+<td>main</td>
+<td>Seven findings that existed only in earlier work-session notes were
+formally filed (HXC-249 through HXC-255) rather than left to be lost,
+each independently re-verified against the live tree before filing.
+HXC-247 (two services both claiming port 8100) was updated in place once
+its deployment intent was confirmed from a service-unit file, rather
+than duplicated as a new item.</td>
+</tr>
+<tr>
+<td><code>b947276f</code></td>
+<td>main</td>
+<td>Two further findings that had only been reported in prose in the
+prior review round were filed as tracked items: HXC-256 (the tracker’s
+<code>export</code> command silently writes to the process’s current
+working directory when <code>--out-dir</code> is omitted — the two
+sanctioned wrapper scripts always pass it explicitly, so exposure is
+bounded to direct ad-hoc invocation) and HXC-257 (a sync-gate script’s
+diagnostic message calls its comparison input “the committed database”
+when it is actually a copy of the uncommitted working-tree file —
+reproduced live: the gate printed “committed DB validates” while the
+database held seven items that had not yet been committed
+anywhere).</td>
+</tr>
+<tr>
+<td><code>f10c9a1e</code></td>
+<td>main</td>
+<td>An independent review of <code>be5d56be</code> and
+<code>04f88a23</code> returned GO with no blocking defect but 1 HIGH, 3
+MEDIUM, and 4 LOW findings; §11.4.134 requires zero findings of any
+severity before a change is accepted, so all eight were individually
+dispositioned. HIGH (HXC-252, fixed): the sync-gate’s failure message
+recommended a repair direction that, in the drift direction actually
+measured on 2026-08-09, would have overwritten the 46-item database with
+a stale 36-item document. MEDIUM (all fixed): the new guards’ SKIP/FAIL
+boundary was missing negative-space test coverage; a guard that had been
+permanently reporting SKIP on the production host (because one of its
+two checks could never be proven from the available evidence window) now
+reports PASS-with-caveat, naming which check ran and which could not,
+rather than certifying nothing forever; and two of the prior commits’
+own quantitative claims (a “row-identical” data-safety claim, and a “22
+ok” count) were found imprecise and corrected in a dedicated evidence
+file, since the original commit messages cannot be edited after the fact
+(§11.4.113). A further MEDIUM finding was root-caused rather than
+hand-patched and filed as a new item (HXC-258) instead: a
+tracker-metadata field that structurally cannot ever record the value
+its name promises, because its one writer only ever runs on the opposite
+sync direction.</td>
+</tr>
+<tr>
+<td><code>84853455</code></td>
+<td>main</td>
+<td>Files the two defects the submodule-side gRPC-port work below found
+(HXC-260 High, HXC-261 Critical) and bumps the
+<code>submodules/helix_agent</code> gitlink to the commit containing
+both fixes — the same movement that resolves this document’s Known gap
+14 (pin/checkout divergence).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="fixed-submoduleshelix_agent-revision-4-range-pinned-into-mains-gitlink-94e2dcc8">Fixed
+— submodules/helix_agent (revision 4 range, pinned into main’s gitlink
+<code>94e2dcc8</code>)</h3>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>SHA</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>16a8a1d1</code></td>
+<td>The integration suite’s largest failure cluster (74 assertions, all
+<code>expected 200, actual 404</code>) was not a HelixAgent defect:
+LLMsVerifier was squatting on the default port <code>:8100</code> while
+the real HelixAgent answered correctly on <code>:7061</code>. The guards
+used <code>if err != nil { t.Skip() }</code>, which only detects an
+<em>empty</em> port, so a live-but-wrong responder passed straight
+through undetected. Fixed by resolving the target by identity — a real
+<code>{&quot;service&quot;:&quot;helixagent&quot;}</code> health check — not by port.</td>
+</tr>
+<tr>
+<td><code>d13132e3</code></td>
+<td>A generator test hardcoded one developer’s absolute local filesystem
+path as its working directory, so it could not run on any other checkout
+— a <code>chdir: no such file or directory</code> failure carrying zero
+information about the product. Fixed to resolve the repository root at
+runtime.</td>
+</tr>
+<tr>
+<td><code>6fbf6282</code></td>
+<td>The Redis health check and the code it guards resolved
+<em>different</em> fallback ports from the same environment variable
+(<code>:6379</code> vs <code>:8110</code>), so on a host with no
+explicit Redis configuration the guard reported “available” while the
+guarded code dialled a closed port and failed. Five different fallback
+values for the same setting existed across the module; consolidated into
+one resolver. The availability probe also stopped treating any TCP
+response as “usable” — it now completes a real AUTH+PING handshake,
+since a password-protected Redis instance was previously reported
+available while every real command against it would fail.</td>
+</tr>
+<tr>
+<td><code>fe183ce4</code></td>
+<td>The AUTH+PING handshake <code>6fbf6282</code> added had no test
+coverage of the case it exists to catch — proven by weakening the check
+and watching three packages stay green while the gate accepted a
+password-rejecting Redis endpoint as usable. Added the missing
+positive/negative fixture pairs.</td>
+</tr>
+<tr>
+<td><code>34df0832</code></td>
+<td>Documents (does not silently reconcile) three call sites that
+resolve their own Redis endpoint independently of
+<code>6fbf6282</code>’s unified resolver — reconciling one of the three
+the obvious way would re-open the exact defect <code>6fbf6282</code>
+just closed. Adds a ledger test that fails if any of the three is
+quietly migrated without the ledger being updated to match, so a stale
+ledger cannot go unnoticed.</td>
+</tr>
+<tr>
+<td><code>1796a588</code></td>
+<td>The identity gate guarding roughly 30 integration test call sites
+had zero tests of its own — a one-character typo in its service-name
+check made every guarded test silently skip while <code>go test</code>
+still reported success. Added the missing self-test, and split a failure
+message that had been guessing a single cause (“another process is bound
+to this port”) for four structurally different outcomes, three of which
+were genuine HelixAgent regressions being misreported as an unrelated
+port conflict.</td>
+</tr>
+<tr>
+<td><code>32d2e8cb</code></td>
+<td>Follow-up review finding: every test exercising the “strict identity
+required” environment variable read that variable’s name from the same
+constant the product code reads, so renaming the constant would silently
+break strict mode everywhere while the test suite stayed green — the
+same self-referential-loop pattern already closed for the service-name
+check by <code>1796a588</code>. Closed with a test that writes the
+documented variable name out longhand and drives the real resolver
+through it.</td>
+</tr>
+<tr>
+<td><code>526693cd</code></td>
+<td>Documents the <code>HELIXAGENT_REQUIRED</code> strict-mode flag in
+<code>.env.example</code> (commented out; changes no default behaviour)
+and records, with evidence, why no existing <code>make</code> target is
+currently a safe place to enable it by default — the obvious candidate’s
+own infrastructure step never starts the HelixAgent server it would be
+asserting against.</td>
+</tr>
+<tr>
+<td><code>159dd839</code></td>
+<td>The shipped <code>Containerfile</code> for the MCP-servers image
+could not be built at all — a prior commit relocated the directory it
+<code>COPY</code>’d without updating the <code>COPY</code> instruction.
+Fixed with an opt-in build stage; verified end-to-end that the image now
+builds by default and its seven active MCP servers start correctly.</td>
+</tr>
+<tr>
+<td><code>816f37c2</code></td>
+<td>All 71 container-backed MCP server configs disagreed with themselves
+— a URL field derived from the current port table, and a separately
+hand-written port number from a superseded numbering scheme. A caller
+reading the port number reached nothing; a caller reading the URL
+reached the container. Fixed by deriving both fields from one
+lookup.</td>
+</tr>
+<tr>
+<td><code>70e28ead</code></td>
+<td>The OpenCode CLI provider blocked for its full configured timeout —
+measured up to 60s against a 6s budget — even after the model had
+already answered in milliseconds, then discarded the answer in favour of
+a timeout error, because it waited for the whole child process tree to
+exit rather than returning once the conversational turn closed. Also
+fixed the timeout error message, which always reported the provider’s
+own configured timeout even when a shorter caller-supplied deadline was
+the one that actually fired.</td>
+</tr>
+<tr>
+<td><code>bc26122f</code></td>
+<td>The OpenCode config generator emitted a legacy, no-longer-canonical
+model identifier and provider name (<code>Helix Agent</code>,
+<code>helix-debate</code>), so an explicit request for the multi-model
+debate ensemble sent through OpenCode could be silently downgraded to a
+single provider. Traced to a specific historical regression commit and
+fixed at the generator; the server still accepts both spellings so
+already-deployed configs keep working.</td>
+</tr>
+<tr>
+<td><code>b88dadd9</code></td>
+<td><code>go.sum</code> had been out of tidy since a dependency bump two
+work sessions earlier: 30 stale superseded-version hash lines plus 2
+entries missing their required <code>/go.mod</code> hash. Not shown to
+break today’s build, but confirmed structurally incomplete and
+deterministically un-tidy; fixed with <code>go mod tidy</code>.</td>
+</tr>
+<tr>
+<td><code>1a55c8aa</code></td>
+<td>The two scripts operators run to certify “the platform’s integration
+tests passed” could report exactly that without contacting the real
+server or running a single test — a squatting service’s 404 satisfied a
+<code>curl</code> call made without <code>-f</code>, and the guarded
+tests simply skipped against the wrong port, so <code>go test</code>
+exited 0 on 3 skips / 0 passes / 0 failures while the script logged
+success. Fixed to discover the real server address by asking the kernel
+which port the started process actually bound, verify its identity, and
+treat zero-tests-executed as a hard failure.</td>
+</tr>
+<tr>
+<td><code>604a2f49</code></td>
+<td>The <code>-generate-opencode-config</code> /
+<code>-generate-crush-config</code> generators wrote a base URL for port
+<code>:8100</code> while the server itself, by default, binds
+<code>:7061</code> — handing real users a config pointing at whichever
+different service happened to be listening on 8100. Fixed by resolving
+the port through the same configuration path the server itself binds
+from.</td>
+</tr>
+<tr>
+<td><code>886f72c0</code></td>
+<td>The validation-readiness helper <code>1a55c8aa</code> added had no
+self-test: three independent one-line mutations each silently inverted a
+user-visible pass/fail verdict with nothing in the repository failing.
+Added a golden-good/golden-bad self-test pair covering all three, each
+proven to detect its own corresponding mutation.</td>
+</tr>
+<tr>
+<td><code>ad3b5590</code></td>
+<td>The exact <code>grep -c ... \|\| echo &quot;0&quot;</code> shell arithmetic
+bug that <code>1a55c8aa</code>’s own commit message documented as a
+footgun was still live at four other call sites in the two runner
+scripts it fixed, including the very summary block that commit was about
+— rendering zero-count fields as the two-token string
+<code>&quot;0 0&quot;</code>. Fixed at all four remaining sites.</td>
+</tr>
+<tr>
+<td><code>d2d70206</code></td>
+<td>HelixAgent’s own gRPC server hardcoded <code>:50051</code> and
+refused to start whenever this project’s own Weaviate container (which
+publishes that exact port) was already running — HelixAgent’s gRPC
+service could not coexist with HelixAgent’s own infrastructure. With the
+server down, the integration test client dialled the same literal port,
+completed a real handshake with Weaviate instead, and reported 20
+failures against HelixAgent, which was never actually reached. Fixed by
+registering the service in the internal port registry
+(<code>:8112</code> by default, operator-overridable) and resolving both
+server and test client from it.</td>
+</tr>
+<tr>
+<td><code>ec95a277</code></td>
+<td><code>d2d70206</code> moved the gRPC listener to <code>:8112</code>
+but left the startup log line telling every reader to dial
+<code>:50051</code> — the exact wrong address that reaches Weaviate
+instead. Fixed so the banner reports the address actually bound rather
+than a re-stated literal; added a guard, since this exact class of drift
+had no test coverage before, which is why it survived the original fix,
+its review, and a green suite.</td>
+</tr>
+<tr>
+<td><code>14a779fe</code></td>
+<td>Ten further user-facing artifacts (READMEs, a website doc page, a
+<code>CLAUDE.md</code>, generated architecture diagrams, an env-var
+table) still told readers to dial the pre-<code>d2d70206</code> port
+<code>:50051</code>. Corrected all ten. Separately discovered that the
+override variable operators would reasonably expect
+(<code>GRPC_PORT</code>) is read by no Go code anywhere, while the one
+that actually works (<code>HELIXAGENT_PORT_GRPC</code>) had never
+appeared in any doc, <code>.yml</code>, or <code>.env</code> file before
+this commit.</td>
+</tr>
+<tr>
+<td><code>d17cee81</code></td>
+<td>The two generators <code>604a2f49</code> fixed were only 2 of 48
+CLI-agent config generators; the other 46 emitted
+<code>localhost:8100</code> from a second, independent hardcode source
+(the shared MCP-server URL list). An independent review found three
+further defects before accepting the fix: an unenforced dial host that
+could resolve to the unconnectable wildcard <code>0.0.0.0</code>
+(reachable via a committed Docker Compose file, no mutation needed); a
+“reachability” probe misclassifying several real wrong-service responses
+as “nothing here”; and inconsistent malformed-port handling across the
+four generators, including port values <code>0</code>, <code>-1</code>,
+and <code>65536</code> all still silently accepted on the first attempt.
+<strong>See “Known gaps” — one further call site was not touched by this
+fix.</strong></td>
+</tr>
+<tr>
+<td><code>76b25796</code></td>
+<td>A gRPC protocol-compliance challenge script recorded every one of
+its four checks as <code>&quot;true&quot;</code> whether the target answered or
+not, and probed a fourth, never-used port spelling (<code>:7062</code>)
+that no HelixAgent process binds — certifying “gRPC protocol healthy” on
+every run without ever contacting a gRPC server (filed as HXC-261, rated
+Critical — this was actively producing false-green results, not a merely
+latent gap). Fixed to resolve the registry port, fail closed with an
+explicit SKIP-with-reason when nothing is listening, and never report
+success for a check that was never performed.</td>
+</tr>
+<tr>
+<td><code>94e2dcc8</code></td>
+<td>The project’s Kubernetes manifests (Deployment, both Services, the
+NetworkPolicy, and a ConfigMap) published the gRPC port as
+<code>9090</code> behind a <code>GRPC_PORT</code> environment variable
+no Go code in the project reads, so editing that variable in a
+deployment would have had zero effect (filed as HXC-260). Corrected all
+four manifests to the registry’s <code>:8112</code>. Honestly documents
+that this makes the <em>declared</em> endpoint correct but still inert —
+no container in the current Deployment actually runs the gRPC server
+binary — so this is address-correctness, not a new capability.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="tracker-workable-items-revision-4-range">Tracker /
+workable-items (revision 4 range)</h3>
+<p>Status read directly from <code>docs/workable_items.db</code> at
+documentation time, not inferred from commit-message prose (§11.4.6). A
+commit landing a source-level fix does <strong>not</strong> by itself
+close the corresponding tracker item — several items below remain
+<code>Queued</code> even though the code change they describe has
+already merged, because closing requires a separate
+<code>workable-items close</code> step with its own captured evidence,
+which this documentation pass did not perform:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Item</th>
+<th>Type / Severity</th>
+<th>Status (per DB)</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HXC-244</td>
+<td>Bug / High</td>
+<td><strong>Fixed</strong></td>
+<td>Covered in revision 3; re-confirmed here.</td>
+</tr>
+<tr>
+<td>HXC-249</td>
+<td>Bug / Critical</td>
+<td><strong>Fixed</strong></td>
+<td>Validation runner false-PASS, closed this range.</td>
+</tr>
+<tr>
+<td>HXC-252</td>
+<td>Bug / High</td>
+<td><strong>Fixed</strong></td>
+<td>Sync-gate data-destruction-risk message, closed this range.</td>
+</tr>
+<tr>
+<td>HXC-253</td>
+<td>Bug / Medium</td>
+<td><strong>Fixed</strong></td>
+<td>Standing guards wired (G30–G32), closed this range.</td>
+</tr>
+<tr>
+<td>HXC-199, HXC-217</td>
+<td>Bug</td>
+<td><strong>Fixed</strong></td>
+<td>Closed in <code>7bd80ff6</code> (revision 3); re-confirmed
+here.</td>
+</tr>
+<tr>
+<td>HXC-229, HXC-233, HXC-235</td>
+<td>Bug</td>
+<td><strong>Queued</strong></td>
+<td>Source-level fixes described in revision 3 (<code>724d2bb0</code>,
+<code>15f00801</code>, <code>f2e12570</code>); tracker items
+deliberately left open pending the standing-guard evidence chain
+(revision 3 Known gap 11). <strong>Do not read revision 3’s “Fixed”
+table headers as tracker-closure claims — the DB is the status of
+record.</strong></td>
+</tr>
+<tr>
+<td>HXC-247</td>
+<td>Bug / High</td>
+<td><strong>Queued, updated in place</strong></td>
+<td>Deployment intent for the port-8100 collision confirmed; not yet
+resolved.</td>
+</tr>
+<tr>
+<td>HXC-248, HXC-250, HXC-251, HXC-254, HXC-255, HXC-256, HXC-257,
+HXC-258, HXC-259, HXC-260, HXC-261</td>
+<td>various</td>
+<td><strong>Queued</strong></td>
+<td>Newly filed or updated this range; none closed by this
+document.</td>
+</tr>
+</tbody>
+</table>
+<p>Total tracker size at documentation time: <strong>455 items</strong>
+(<code>docs/workable_items.db</code>), up from the 453 the task’s own
+briefing cited — 2 more (HXC-260, HXC-261) were filed by
+<code>84853455</code> after that briefing was written, which is itself
+evidence of the continuous-parallel-work pattern this document keeps
+warning readers about (§11.4.103/§11.4.126). Status breakdown: 216
+Fixed, 95 Implemented, 84 Completed, 54 Queued, 4 Obsolete, 2
+Operator-blocked.</p>
+<h3 id="release-tag-prefix-compliance">§11.4.151 release-tag prefix
+compliance</h3>
+<p>Checked directly against <code>git tag -l</code> in both
+repositories, not assumed:</p>
+<ul>
+<li><strong><code>.env</code>
+<code>HELIX_RELEASE_PREFIX=helix-code</code></strong> resolves the
+prefix for both the main repo and every owned submodule per §11.4.151’s
+deterministic resolution order.</li>
+<li><strong>Main repo</strong> carries four prefixed tags
+(<code>helix-code-1.0.0-dev-0.0.1</code>,
+<code>helix-code-1.1.0-dev-0.0.1/.2/.3</code>) — all §11.4.151-compliant
+— <strong>plus two legacy unprefixed tags this task’s briefing did not
+mention: <code>helixcode-v1.0.0</code> and
+<code>helixcode-v1.1.0</code></strong>, predating the project’s adoption
+of the <code>helix-code-</code> prefix scheme.</li>
+<li><strong><code>submodules/helix_agent</code></strong> carries one
+prefixed tag (<code>helix-code-1.0.0-dev-0.0.1</code>) and one legacy
+unprefixed tag, <strong><code>helixcode-v1.1.0</code></strong>, as the
+task’s briefing states.</li>
+<li><strong>Finding:</strong> the legacy-tag condition is <strong>not
+unique to the submodule</strong> — it exists on the main repo too, in
+the same <code>helixcode-v</code> naming style, at the same two version
+points (<code>v1.0.0</code>, <code>v1.1.0</code>). This is additional
+information beyond what the task asked about, reported because it bears
+directly on whether the fleet is §11.4.151-compliant as a whole.</li>
+<li><strong>Is this a violation requiring remediation?</strong>
+§11.4.151 requires every <em>newly created</em> release tag/version to
+carry the resolved prefix, identical across the main repo and every
+owned submodule in one release. It does not, on its own text,
+retroactively forbid tags created before the mandate existed — the four
+<code>helixcode-v1.0.0</code>/<code>helixcode-v1.1.0</code> tags across
+both repos predate the prefixed scheme (all four prefixed tags are dated
+after them: <code>helix-code-1.0.0-dev-0.0.1</code> is the earliest
+prefixed tag anywhere in this fleet). Treat this as a
+<strong>historical-artifact condition</strong>, not an active violation,
+<strong>conditional on two things holding, both of which do hold
+today</strong>: (a) no <em>new</em> tag has been or will be created in
+the legacy unprefixed form, and (b) the legacy tags are not being used
+as the current release pointer anywhere (they are not —
+<code>helix-code-1.1.0-dev-0.0.3</code> / submodule’s
+<code>helix-code-1.0.0-dev-0.0.1</code> are the current
+references).</li>
+<li><strong>Correct remediation (report only — nothing retagged or
+deleted by this task, per its hard constraints and per
+§11.4.113/CONST-043’s absolute no-force-push-or-destructive-history-op
+posture, which extends to tag deletion without explicit in-conversation
+operator authorization):</strong>
+<ol type="1">
+<li><strong>Do not delete or move the four legacy tags.</strong>
+Deleting a published tag is a destructive, history-altering operation on
+refs other consumers may already depend on; it requires explicit
+operator authorization per operation (§11.4.90/§9.2), which is out of
+scope for a documentation-only task and was not sought.</li>
+<li><strong>Document them as superseded</strong>, exactly as this
+section now does, so a future reader (human or gate) does not mistake
+<code>helixcode-v1.1.0</code> for a currently-maintained release
+line.</li>
+<li><strong>Never create a new tag in the unprefixed form.</strong> This
+is already true in practice — every tag created since
+<code>helix-code-1.0.0-dev-0.0.1</code> in both repositories uses the
+resolved prefix — and this document’s own “no new tag” constraint keeps
+it true through this task.</li>
+<li>If the project later wants a mechanical guard against regression,
+the natural implementation is the constitution’s own recommended
+<code>CM-RELEASE-PREFIX-NAMING</code> gate (§11.4.151) scoped to
+<em>new</em> tag creation (e.g. a pre-push or tag-creation hook), not a
+retroactive rewrite of tag history. That gate does not exist in this
+repository today (not verified further — out of this task’s scope to add
+one).</li>
+</ol></li>
+</ul>
 <p><em>(<strong>Revision 3 correction.</strong> Revision 2 changed this
 figure from 18 to 19 on the grounds that <code>dd3c0c3b</code> had been
 omitted. The omission was real; the count change was not.
@@ -1066,6 +1788,69 @@ a345c551 fix(tests/unit): wire the model source; stop reading recorder-default 2
 — 1 commit since the previously-pinned <code>cb7bf675</code>, fully
 pinned</h3>
 <pre><code>8cec90b fix(i18n): embed translation bundles so lookups work from any directory</code></pre>
+<h3 id="main-6-substantive-commits-in-5725ee06..84853455-revision-4-range">main
+— 6 substantive commits in <code>5725ee06..84853455</code> (revision 4
+range)</h3>
+<pre><code>04f88a23 items: re-derive the trackers from the DB and repair the segments that blocked it
+be5d56be gates: execute the three standing guards nothing was running (G30-G32)
+69573772 items: file the seven unfiled findings from this session (HXC-249..255) + settle HXC-247
+b947276f items: file the two intake-layer findings reported in prose last round (HXC-256, HXC-257)
+f10c9a1e review(r4): close the 8 findings from the round-4 review of be5d56be + 04f88a23
+84853455 items(grpc-ports): file the two gRPC port defects found in helix_agent (HXC-260, HXC-261)</code></pre>
+<p>(<code>2816246e</code>, the commit that wrote revision 3 of this
+document, also falls in this range and is omitted here as
+self-describing.)</p>
+<h3 id="submoduleshelix_agent-full-66a3c1c6..head-range-24-commits-now-entirely-pinned-into-mains-gitlink-94e2dcc8">submodules/helix_agent
+— full <code>66a3c1c6..HEAD</code> range, 24 commits, now entirely
+pinned into main’s gitlink (<code>94e2dcc8</code>)</h3>
+<p>This is the range revision 3 recorded only as “Known gap 14”
+(pin/checkout mismatch) and explicitly declined to enter. It is now
+fully described in the “Revision 4” section above.</p>
+<pre><code>16a8a1d1 fix(tests): stop reporting a wrong-service-on-port as a HelixAgent failure
+d13132e3 fix(tests): derive the generator work dir instead of a foreign absolute path
+6fbf6282 fix(redis): resolve one Redis endpoint everywhere — guard and subject agreed by construction
+d6856cc9 test(timing): make 5 contention-sensitive assertions measure the code, not the host
+1796a588 test(identity): make the HelixAgent identity gate falsifiable, and stop it reporting product regressions as someone else&#39;s port
+fe183ce4 test(redis): cover the AUTH+PING handshake the commit&#39;s own headline mechanism, which no fixture exercised
+34df0832 docs(redis): pin the three callers where guard and subject do NOT agree, with a gate that detects its own staleness
+159dd839 fix(mcp-servers): make the shipped Containerfile buildable again
+816f37c2 fix(mcp): derive container MCP port and URL from one lookup, not two
+70e28ead fix(zen-cli): return the answer when the turn closes, and report the real timeout budget
+bc26122f fix(opencode-config): emit canonical model ids — the generator violated the CLI-config contract, not the tests
+32d2e8cb test(identity): pin the strict-mode env var&#39;s literal name, closing the second self-referential loop
+526693cd docs(env): document HELIXAGENT_REQUIRED, and record why no make target may enable it yet
+b88dadd9 fix(deps): tidy go.sum — 30 stale hashes and 2 structurally missing /go.mod entries
+1a55c8aa fix(validation): the complete-validation runner reported PASSED on tests that never ran
+604a2f49 fix(cli-agent-configs): the generators aimed users at a different service
+886f72c0 test(validation): the readiness helper had no self-test — three mutations inverted its verdicts silently
+ad3b5590 fix(validation): `grep -c … || echo &quot;0&quot;` rendered &quot;0 0 packages&quot; — the footgun 1a55c8aa documented, still live in the file it fixed
+d2d70206 fix(grpc-server): our own gRPC server could not start while our own stack was up
+ec95a277 fix(grpc-server): the fix moved the listener but left the banner telling everyone to dial the old port
+14a779fe docs(grpc): ten artifacts still published :50051, and the override that actually works was documented nowhere
+d17cee81 fix(cli-agent-configs): the endpoint was resolved for 2 generators and hardcoded for the other 46
+76b25796 fix(grpc-challenge): both branches recorded success, so it certified gRPC healthy against a port nobody binds
+94e2dcc8 fix(k8s): the manifests pinned a dead env var and a port nothing binds, so the declared gRPC endpoint was unreachable</code></pre>
+<p><strong>Pre-existing documentation gap found, out of scope to close
+here.</strong> The <code>a345c551..66a3c1c6</code> range immediately
+preceding the 24 commits above — <strong>32 further commits</strong>,
+including two dependency-advisory batches (<code>dd8fcf4c</code>,
+<code>846282b2</code> — the latter is the root cause
+<code>b88dadd9</code>’s commit message cites for the go.sum drift this
+range fixed), several <code>HXC-1xx</code>/<code>2xx</code> security and
+boot-reliability fixes (HXC-221 API-key entropy, HXC-212 CORS allowlist,
+HXC-172 DNS-rebinding defence, HXC-228 slow-dependency boot wait,
+HXC-234 blind-guard closure), and a CRDT-based ensemble-sync schema
+addition — was <strong>never itemized in any revision of this
+document</strong> (revisions 1–3 only ever referenced the endpoints
+<code>a345c551</code> and <code>66a3c1c6</code>, never what lies between
+them). This range is <strong>already published on all four of the
+submodule’s remotes</strong>
+(<code>git merge-base --is-ancestor 66a3c1c6 refs/remotes/&lt;r&gt;/main</code>
+succeeds for all four), so it is <strong>not</strong> part of the
+“unpushed work” this task was scoped to document, and is reported here
+as a finding rather than backfilled — fully describing 32 more commits
+at this document’s established level of detail is a separate, larger
+documentation task. See “Known gaps”.</p>
 <h2 id="known-gaps-not-yet-verified">Known gaps / not yet verified</h2>
 <p>This section exists so this document does not read as more finished
 than the underlying work is. None of these were papered over.</p>
@@ -1237,6 +2022,109 @@ given</strong> — unchanged from gap 1, and now load-bearing for
 that must find nothing new, and it has not been run at all for this
 scope.</p></li>
 </ol>
+<h3 id="known-gaps-added-or-re-measured-in-revision-4">Known gaps added
+or re-measured in revision 4</h3>
+<p>Gaps 1–17 above were written against revisions 1–3. Re-checked on
+2026-08-10/11; the following supersede, resolve, or extend them.</p>
+<ol start="18" type="1">
+<li><p><strong>Gap 14 is RESOLVED.</strong>
+<code>submodules/helix_agent</code>’s recorded pin and its working
+checkout no longer disagree — main’s gitlink is <code>94e2dcc8</code>,
+which is exactly the submodule’s own current <code>HEAD</code> as of
+<code>84853455</code>. The <code>+</code> prefix
+<code>git submodule status</code> previously showed is gone.</p></li>
+<li><p><strong>The CLI-agent config port fan-out (<code>604a2f49</code>,
+<code>d17cee81</code>) is landed in source for every
+currently-<em>wired</em> call site, but is NOT confirmed complete
+against every call site that exists.</strong> <code>d17cee81</code>’s
+own commit message already flags three exported-but-currently-uncalled
+functions in the <code>llms_verifier</code> submodule
+(<code>DefaultGeneratorConfig()</code>,
+<code>DefaultMCPServers()</code>,
+<code>ContainerizedMCPServers(host)</code>, the last ignoring its own
+<code>host</code> argument for six HelixAgent URLs) as a residual
+hardcode source. <strong>This documentation pass independently verified
+a concrete, in-tree instance of exactly that risk</strong>:
+<code>submodules/helix_agent</code>’s own
+<code>internal/services/cli_agent_config_exporter.go</code>
+(<code>NewCLIAgentConfigExporter</code>) constructs its generator
+directly from <code>cliagents.DefaultGeneratorConfig()</code> — the same
+hardcoded-<code>:8100</code> default every fixed call site in this range
+now avoids — with no port resolution at all. As of this documentation
+pass, <code>CLIAgentConfigExporter</code> has <strong>no production
+caller anywhere in the tree</strong>
+(<code>grep -rl &quot;CLIAgentConfigExporter&quot; --include=&quot;*.go&quot; .</code>
+returns only its own source file and its own test file), so it does not
+affect the shipped binary <em>today</em>. It is nonetheless a landed
+liability: the moment any future commit wires that exporter into a
+running path (its name and doc comment both suggest it was written to be
+wired in), it will silently reproduce the exact wrong-port defect this
+entire range of work exists to fix, and no test in this range would
+catch it, because no test in this range exercises that file. <strong>Do
+not describe the port fan-out as “fixed” without this caveat — it is
+fixed for the paths proven reachable and enumerated in this range’s
+evidence (48/48 CLI-agent generators via the per-agent enumeration in
+<code>d17cee81</code>), not proven complete against every exported code
+path that could construct a generator.</strong></p></li>
+<li><p><strong>The gRPC port fan-out (<code>d2d70206</code>,
+<code>ec95a277</code>, <code>14a779fe</code>, <code>76b25796</code>,
+<code>94e2dcc8</code>) is landed in source and proven against unit/guard
+tests, but has NOT been verified against a rebuilt, redeployed
+HelixAgent artifact on a live host in this documentation pass.</strong>
+Each individual commit cites its own RED/GREEN evidence captured against
+that commit’s own build, which is real evidence of that specific change
+— but no commit in this range re-runs the full chain end-to-end (build →
+deploy → dial the published address → get a real gRPC response) after
+all five land together. This document was not the place to perform that
+verification (out of scope: documentation-only, no source/script
+changes, and <code>submodules/helix_agent/challenges/*</code> and
+<code>cmd/helixagent/*</code> were explicitly off-limits per this task’s
+own hard constraints because other agents are actively working there).
+Treat the gRPC fan-out the same way as gap 19: landed in source,
+verification on a clean rebuilt/redeployed target pending, per
+§11.4.108’s SOURCE→ARTIFACT→RUNTIME→USER-VISIBLE layering.</p></li>
+<li><p><strong>A 32-commit pre-existing documentation gap was found and
+is reported, not backfilled.</strong>
+<code>submodules/helix_agent</code>’s <code>a345c551..66a3c1c6</code>
+range — immediately preceding this revision’s 24-commit range, and
+already published on all four of the submodule’s remotes — was never
+itemized in any revision of this document. It contains real, substantive
+fixes (two dependency-advisory batches, several HXC security/reliability
+items, a CRDT ensemble-sync schema addition). It predates the “unpushed
+work” scope this task was assigned, so it is out of scope to fully
+document here; see the “Per-repo commit inventory” section above for the
+measured range and citation. Recommended as a follow-up documentation
+task, not attempted in this pass.</p></li>
+<li><p><strong><code>submodules/helix_agent</code>‘s working tree
+carries one modified-but-uncommitted file**
+(<code>releases/.version-data/helixagent.last-hash</code>) at the time
+this document was written, and other in-flight, uncommitted work was
+observed at the start of this task in <code>challenges/scripts/</code>,
+<code>k8s/base/*</code>, and
+<code>internal/ports/published_grpc_port_test.go</code> before other
+agents’ concurrent commits (<code>76b25796</code>,
+<code>94e2dcc8</code>) landed some of it. Per this task’s explicit hard
+constraints, none of
+<code>submodules/helix_agent/cmd/helixagent/*</code>,
+<code>k8s/*</code>, or <code>challenges/*</code> was touched by this
+documentation pass, and this document describes only what those other
+streams had already </strong>committed** by the time each fact below was
+measured — not their still-uncommitted state, which by definition is not
+yet part of any release artifact.</p></li>
+<li><p><strong>Ten tracker items opened or updated in this range remain
+<code>Queued</code></strong> (HXC-247, 248, 250, 251, 254, 255, 256,
+257, 258, 259) plus <strong>HXC-260 and HXC-261</strong>, filed by the
+final commit in this range (<code>84853455</code>) and also
+<code>Queued</code>. None was closed by this documentation pass —
+closing a tracker item requires its own
+<code>workable-items close</code> invocation with captured evidence,
+which is a code/tooling action outside this task’s documentation-only
+scope.</p></li>
+<li><p><strong>§11.4.185 manual QA-team confirmation is still not
+given</strong> — unchanged from gap 17, and this range adds more scope
+(the gRPC and CLI-config fan-outs) that would need it before either
+could be called fully complete.</p></li>
+</ol>
 <h2 id="independent-review">Independent review</h2>
 <p>Per constitution §11.4.142 (every change gets an independent review,
 no exception) and §11.4.194 (exhaustive all-scenario review), this
@@ -1332,6 +2220,57 @@ are individually re-derivable from the commands cited, but the §11.4.142
 independent-reviewer seam has not been crossed for this revision. Treat
 the revision 3 sections as verified-by-construction, not
 peer-reviewed.</p>
+<h3 id="revision-4-2026-08-1011">Revision 4 (2026-08-10/11)</h3>
+<p><strong>Method.</strong> This revision was authored as a dedicated
+documentation-and-version-metadata task, structurally separate from the
+agents that produced the commits it describes (a different task, not
+merely a different commit, but not the formal §11.4.142/§11.4.194
+code-review dispatch either — see the honest boundary below). Every SHA
+cited in the revision 4 tables was read from a real
+<code>git show</code>/<code>git log -1 --format=%B</code> invocation
+against <code>submodules/helix_agent</code> or this repository — none
+was copied from a prior summary or session note. Every tracker status
+cited was read from <code>docs/workable_items.db</code> via
+<code>sqlite3 -readonly</code> at documentation time, not inferred from
+any commit message’s own claim about what it fixed (which is precisely
+how revision 3’s “Fixed” table headers for HXC-229/233/235 were found,
+in this revision, to be describing source-level fixes without the
+tracker items actually being closed — see the “Tracker / workable-items”
+table above).</p>
+<p><strong>Finding 1: one call site independently verified beyond what
+<code>d17cee81</code>’s own commit message disclosed.</strong>
+<code>d17cee81</code> named the residual hardcode risk as living
+entirely in the <code>llms_verifier</code> submodule (out of this task’s
+repository scope). This revision additionally found, by reading
+<code>submodules/helix_agent/internal/services/cli_agent_config_exporter.go</code>
+directly, that the same unresolved default is also reachable from a
+function <em>inside</em> <code>submodules/helix_agent</code> itself
+(<code>NewCLIAgentConfigExporter</code> →
+<code>cliagents.DefaultGeneratorConfig()</code>), currently unwired to
+any production entry point. This is reported as Known gap 19 with the
+caveat that “unwired” was itself verified (a repo-wide <code>grep</code>
+for the type name), not assumed.</p>
+<p><strong>Finding 2: three more unpushed commits landed on live hosts
+during this task’s own execution window</strong>, confirming the
+continuous-parallel-work pattern this document has flagged since
+revision 1. The task that requested this document was briefed against 9
+main-repo / 22 submodule commits; by the time the git facts below were
+gathered, the true count was 10 / 24 (one additional main commit,
+<code>84853455</code>; two additional submodule commits,
+<code>76b25796</code> and <code>94e2dcc8</code> — precisely the two fix
+commits <code>84853455</code> itself references). All three are
+documented in full above rather than silently omitted or silently
+included without acknowledging the discrepancy.</p>
+<p><strong>Honest boundary (§11.4.6).</strong> Revision 4, like revision
+3, has <strong>not</strong> crossed a formal §11.4.142/§11.4.194
+independent-code-review seam — this task was scoped to documentation and
+version metadata only, explicitly excluding source, test, and script
+changes, so no code review of the underlying diffs (beyond the
+spot-checks and the one live-file verification described above) was
+performed or claimed. Treat the revision 4 sections as
+verified-by-construction against real git and database state, not as a
+substitute for the §11.4.125/§11.4.142/§11.4.194 review the underlying
+code changes still owe before they can be described as fully done.</p>
 <h2 id="sources-verified">Sources verified</h2>
 <p>All SHAs, commit subjects, commit bodies, tag names/dates, gitlink
 pins, container names, and the <code>go build</code> error text above
@@ -1364,5 +2303,38 @@ mentions. File sizes were taken with <code>wc -c</code>, not
 <code>stat</code>, which misreports on this host. Nothing in the
 revision 3 sections is carried over from a prior document without
 re-derivation.</p>
+<p><strong>Revision 4 (2026-08-10/11).</strong> The
+<code>5725ee06..84853455</code> main-repo range and the full
+<code>66a3c1c6..HEAD</code> (24-commit)
+<code>submodules/helix_agent</code> range were derived with
+<code>git log --format=&#39;=====%n%H%n%ci%n%B&#39; &lt;range&gt; --reverse</code>
+(captured to a scratch file and read in full, not sampled),
+<code>git show --stat --format=fuller</code> and
+<code>git log -1 --format=%B</code> on every individually-cited SHA,
+<code>git rev-list --count</code> for every range-size claim (including
+the <code>a345c551..66a3c1c6</code> 32-commit gap and the
+<code>256</code>-commits-since-tag figure),
+<code>git merge-base --is-ancestor</code> for the “already published on
+all four remotes” claim about that gap,
+<code>git ls-tree HEAD constitution submodules/helix_agent submodules/tool_schema submodules/helix_llm</code>
+and <code>git submodule status</code> for every pin (confirming the
+pin/checkout match that resolves Known gap 14),
+<code>git fetch --all --prune</code> on both repositories followed by
+per-remote <code>git rev-list --count</code> for every ahead/behind
+figure, <code>git tag -l</code> on both repositories for the §11.4.151
+compliance section (including the two main-repo legacy tags this task’s
+briefing did not mention),
+<code>sqlite3 -readonly docs/workable_items.db</code> for every tracker
+status/count cited (including the 453→455 item-count reconciliation),
+and a direct
+<code>grep -rl &quot;CLIAgentConfigExporter&quot; --include=&quot;*.go&quot; .</code> plus a
+direct read of
+<code>submodules/helix_agent/internal/services/cli_agent_config_exporter.go</code>
+for the Known-gap-19 finding. Nothing in the revision 4 sections is
+carried over from the task’s own briefing without independent
+re-derivation — the briefing’s stated commit counts (9 main / 22
+submodule) were themselves found stale by 1 and 2 commits respectively
+during this process and the document reflects the re-measured counts (10
+/ 24), not the briefed ones.</p>
 </body>
 </html>
