@@ -2383,3 +2383,25 @@ A recent change gave one part of the project a distinct name so that two differe
 
 When an item is closed, the record carries a field meant to hold the location of the captured proof, so that anyone can go and look at it and so that a machine can confirm the proof genuinely exists. For fifteen closures that field instead contains a paragraph describing what was proved. The descriptions are substantive and in every case checked the underlying evidence does exist elsewhere on disk, so nothing is actually missing and no closure is unfounded. The cost is that those fifteen cannot be verified mechanically: a check that asks whether each closure points at something real will report them as pointing at nothing, which is indistinguishable from a closure with no proof behind it at all. That ambiguity is the defect, and it matters because a sweep that cannot tell a well-documented closure from an empty one will eventually be believed about the wrong one. The work is to move the narrative into the record's description where it belongs, put the actual location in the location field, and add a check that refuses a closure whose stated location does not resolve.
 
+## HXC-249 — The script that declares the project validated reported success on tests that never ran
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc249_validation_runner_bluff_20260810T184644Z/EVIDENCE.md
+**Severity:** Critical
+**Created-By:** AI
+**Assigned-To:** Claude
+
+The script the project runs to declare itself validated was reporting success on tests that never actually ran. The script starts the agent runtime and then waits for it to answer before testing it, but it waited at the wrong address - the one a different component, the model verifier, happens to occupy. The verifier politely answers "not found" to anything it does not recognise, and the waiting check treated any answer at all as proof the agent was ready, so the script concluded the agent was up without ever having reached it. The tests that followed then looked for the agent at that same wrong address, could not identify it, and quietly excused themselves rather than failing - and because excused tests are not failures, the whole run finished with the message "Integration tests passed" having validated nothing. This matters more than any other problem found in the same session, because every other finding was a test that could mislead, while this one is the mechanism by which the team decides a release is good, and it was already producing that false all-clear on this machine with nothing special done to provoke it. Whoever relies on a green validation run before shipping is the person harmed: they were being told the system had been checked when it had not. The fix makes the readiness check confirm the identity of what answers rather than merely that something answered, points the tests at the address the server actually bound, tells them that in this specific context an unfindable agent is a real failure rather than an acceptable excuse, and makes a run that executed zero tests fail outright. The expected outcome is that a green run from this script means the tests genuinely ran against the genuine server, and a run that validates nothing can no longer report success.
+
+## HXC-253 — Three regression safety checks existed in the codebase and nothing ever executed them
+
+**Status:** Fixed (→ Fixed.md)
+**Type:** Bug
+**Evidence:** docs/qa/hxc253_standing_guards_unwired_20260810T184644Z/EVIDENCE.md
+**Severity:** Medium
+**Created-By:** AI
+**Assigned-To:** Claude
+
+Three automated safety checks had been written to catch specific problems from coming back, and nothing anywhere in the project ever ran them. Checks like these are the mechanism by which a fixed problem is prevented from silently returning: each one watches a particular behaviour and complains if it breaks again. The project's checking system has no automatic discovery, meaning a check only ever runs if some other script explicitly calls it by name, and these three were never named anywhere. They had therefore been sitting in the codebase looking like protection while providing none, and one earlier problem had been formally closed on the strength of a check that had in fact never executed a single time. This is a quietly serious failure mode because it makes the project's safety net appear larger than it is - the checks are present, discoverable by anyone browsing the code, and counted as coverage, while doing nothing. Everyone relying on the project's regression protection benefits from closing it, since the difference between a check that exists and a check that runs is the entire value of having it. The three are now called explicitly by the main verification sweep, and each was first proven able to fail before being wired in, so none of them is a check that merely always passes. The honest limit worth recording is that the sweep is started by a person rather than automatically, so these checks now run whenever someone runs the sweep, which is a real improvement but is not the same as unattended enforcement.
+

@@ -1792,8 +1792,36 @@ exactly the same. The expected outcome is a single place that decides
 port allocation for every component, no two components claiming the same
 number, the agent runtimes own settings agreeing with that allocation,
 and the tests then passing or failing for reasons that are genuinely
-about the product. ## HXC-248 — Test cleanup can shut down the live
-platform; only a coincidence prevents it today</p>
+about the product. Later evidence settles which of the two sides is the
+mistaken one, and it turns out the deployment is not misconfigured at
+all. The model verifier’s own service definition - the file that starts
+it on this machine - documents in its own header that this address is
+the agreed meeting point between the verifier and the gateway that
+consumes it, that the gateway looks there by default, and, in as many
+words, that the agent runtime actually runs on the other address here.
+The choice was therefore made deliberately and written down at
+deployment time, in the verifier’s favour. That makes the defect
+narrower and clearer than first described: the agent runtime’s internal
+address book is simply out of date, still claiming an address that a
+different, documented owner holds, and annotating it with a note that
+the old address was abandoned when in fact the old address is the one
+still in use. A contributing cause is that the verifier has no entry at
+all in that address book, so the one mechanism meant to prevent two
+components claiming the same number could not arbitrate a component it
+had never been told about. The practical consequence is unchanged - the
+tests inherit the stale claim and are answered by the wrong service -
+but the repair direction is now settled rather than open: correct the
+agent runtime’s entry to the address it genuinely serves, give the
+verifier an entry so the collision cannot silently recur, and point the
+test defaults at the real address. The honest limit is that this
+establishes which side is stale and why; it does not by itself establish
+that renumbering is safe to execute, because that entry is consumed
+across the whole component and the change still needs its impact review
+before it lands.</p>
+<h2
+id="hxc-248-test-cleanup-can-shut-down-the-live-platform-only-a-coincidence-prevents-it-today">HXC-248
+— Test cleanup can shut down the live platform; only a coincidence
+prevents it today</h2>
 <p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
 <strong>Severity:</strong> High</p>
 <p>A cleanup step in the automated test suite can shut down the running
@@ -1815,6 +1843,154 @@ suite on a machine that also hosts a live deployment, which is the
 normal case here. The expected outcome is a check that confirms the
 identity of what is answering - not merely that the port is occupied -
 so the cleanup makes its decision on the real condition rather than a
-coincidence, and so the message it logs is true.</p>
+coincidence, and so the message it logs is true. ## HXC-250 — Generated
+assistant configs send users to the wrong service, so 46 of 48
+assistants get a not-found</p>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> AI
+<strong>Assigned-To:</strong> Claude</p>
+<p>When a user asks the system to write out a ready-made configuration
+file for their command-line coding assistant, the file it produces
+points that assistant at the wrong service. The generator fills in a
+network address that belongs to the model verifier rather than to the
+agent runtime the assistant is supposed to talk to, so the assistant
+sends its requests to a component that does not understand them and
+receives a flat “not found” in reply. From the user’s point of view the
+assistant simply does not work, with nothing in the error explaining
+that the address in their brand-new config was wrong from the moment it
+was written. Of the forty-eight assistants the project documents support
+for, forty-six are affected; a fix landed earlier covers only two of
+them, so the shared generator that serves all the rest still writes the
+wrong address today. This is the most directly user-facing defect in the
+current set, because it is not an internal test that misleads a
+developer - it is a file handed to a user with an instruction to use it.
+The people harmed are exactly the newcomers the feature exists to help:
+someone setting up their assistant for the first time, following the
+documented path, and getting a broken result they have no way to
+diagnose. The expected outcome is that every generated configuration
+names the address the agent runtime genuinely serves, that all
+forty-eight documented assistants are covered rather than two, and that
+a generated config works when the user follows the documented setup
+without editing anything by hand.</p>
+<h2
+id="hxc-251-our-own-grpc-service-could-not-start-while-our-own-platform-was-running-and-its-log-still-names-the-old-address">HXC-251
+— Our own gRPC service could not start while our own platform was
+running, and its log still names the old address</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Medium <strong>Created-By:</strong> AI
+<strong>Assigned-To:</strong> Claude</p>
+<p>One of our own services could not start while our own platform was
+running, because both had been told to use the same network address. The
+address in question is the conventional default that the wider industry
+uses for this kind of service, which is precisely what makes it the
+number most likely to be already taken - and on this project’s own
+machine it was taken, by a supporting database container the platform
+itself starts. The result was that the service refused to start whenever
+the platform was up, and any client dialling that same well-known
+address reached the database container instead, which completed a
+perfectly healthy-looking connection and then rejected every request.
+Because the wrong service was alive rather than absent, the checks that
+skip tests when something is unreachable did not skip: they ran, failed,
+and reported the failures against our service, which had never been
+running at all. This was also the underlying cause of twenty test
+failures that had been attributed to the wrong component. The fix
+registers the service in the project’s central address book so its
+address is allocated deliberately and can never silently collide again,
+and it now fails immediately with an actionable message rather than
+starting somewhere unexpected. What remains open is smaller but still
+misleading: the startup message printed for the operator still announces
+the old address, so anyone reading the log is told the wrong place to
+connect. Whoever runs or debugs the platform benefits, and the expected
+outcome is that the service starts reliably alongside the rest of the
+stack and that every message it prints names the address it genuinely
+bound.</p>
+<h2
+id="hxc-252-the-tracker-consistency-check-advises-the-reverse-sync-direction-which-would-delete-live-records">HXC-252
+— The tracker consistency check advises the reverse sync direction,
+which would delete live records</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> AI
+<strong>Assigned-To:</strong> Claude</p>
+<p>The automated check that guards our workable-items records against
+drift gives the wrong repair instruction when it finds a problem, and
+following that instruction would destroy data. The system keeps the same
+information in two places: a database, which is the authoritative copy,
+and a set of human-readable documents generated from it. When the check
+notices the two disagree, it tells the maintainer to copy the documents
+into the database - which is exactly backwards, because the database is
+the side that is meant to be trusted and the documents are the side that
+is meant to be regenerated. At the moment the problem was found, obeying
+the message would have overwritten a database holding forty-six items
+with a stale document holding only thirty-six, deleting ten items
+outright and resurrecting eight that had already been closed. The trap
+is particularly dangerous because it fires precisely when someone is
+already worried about consistency and is therefore most inclined to do
+exactly what the tool tells them. Anyone maintaining the project’s issue
+records is at risk, and because the loss would look like a legitimate
+synchronisation rather than an accident, it could easily go unnoticed
+for a long time. The expected outcome is that the message names the
+correct direction - regenerate the documents from the database - so that
+following the tool’s own advice repairs the disagreement instead of
+causing data loss.</p>
+<h2
+id="hxc-254-connector-tests-share-one-network-handler-so-shutting-down-one-test-server-breaks-other-running-tests">HXC-254
+— Connector tests share one network handler, so shutting down one test
+server breaks other running tests</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Medium <strong>Created-By:</strong> AI
+<strong>Assigned-To:</strong> Claude</p>
+<p>Tests in one area of the codebase interfere with each other because
+they unintentionally share a single piece of network machinery, so a
+test can fail for reasons that have nothing to do with the code it is
+testing. When each connector to an external service is created it is
+given its own timeout setting but no connection handler of its own, and
+the underlying library quietly falls back to one shared handler
+belonging to the whole process. The tests in this area start roughly a
+hundred and forty-five miniature pretend servers and mark around five
+hundred cases to run simultaneously; each pretend server, when it shuts
+down at the end of its own test, politely tells that shared handler to
+close idle connections - and because the handler is shared, it also
+severs connections other tests are in the middle of using. The result is
+a failure that appears in a different connector on almost every run and
+vanishes when the tests are run one at a time, which is the signature of
+a problem in the test setup rather than in the product. It reproduces
+reliably enough to matter: roughly one run in ten fails this way.
+Developers are the people harmed, because a suite that fails
+unpredictably teaches everyone to re-run it rather than read it, and
+real defects hide comfortably inside that noise. The expected outcome is
+that each connector is given its own connection handler so shutting one
+pretend server down cannot disturb any other test, and the suite becomes
+trustworthy enough that a red result means something is genuinely
+wrong.</p>
+<h2
+id="hxc-255-validation-runners-show-green-on-file-existence-and-never-fail-the-run-which-needs-an-operator-decision">HXC-255
+— Validation runners show green on file existence and never fail the
+run, which needs an operator decision</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
+<strong>Severity:</strong> Medium <strong>Created-By:</strong> AI
+<strong>Assigned-To:</strong> Claude</p>
+<p>Two things are left over in the scripts that run the project’s full
+validation, and one of them needs a decision from the operator rather
+than a quiet fix from us. The first is a display problem: the end-of-run
+summary prints “Integration Tests: Completed” in green whenever the log
+file merely exists, regardless of what the log actually says, so a run
+in which tests genuinely failed still shows a reassuring green line in
+the summary a person is most likely to read. The second is deliberate
+and more consequential: both runners are written to note test failures
+as warnings and carry on, finishing with an overall success status even
+when real tests have failed, which means neither script can serve as a
+gate that blocks a release. That behaviour was chosen on purpose so that
+a single failure does not abort a long run and lose the rest of the
+information, and there is a genuine trade-off here between gathering
+everything in one pass and refusing to proceed when something is broken.
+Because it is a deliberate posture rather than an oversight, changing it
+is an operator decision about how the project wants its release gate to
+behave, and it should not be altered silently by whoever happens to
+touch the file next. Whoever depends on these runs to judge release
+readiness benefits from settling it, since today a green finish means
+only that the script reached the end. The expected outcome is that the
+summary line reflects the real result rather than the presence of a
+file, and that the operator makes an explicit, recorded choice about
+whether these runners should fail when tests fail.</p>
 </body>
 </html>
