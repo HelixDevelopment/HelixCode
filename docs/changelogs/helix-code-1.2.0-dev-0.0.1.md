@@ -1,8 +1,8 @@
 # HelixCode Release Changelog — helix-code-1.2.0-dev-0.0.1
 
-**Revision:** 4
-**Last modified:** 2026-08-10T21:21:26Z
-**Maintainer:** HelixCode release engineering (documentation draft, AI-agent authored; revisions 1–3 independently reviewed per §11.4.142/§11.4.194 — see "Independent review" section below. Revision 4 is verified-by-construction against `git log`/`git show`/`docs/workable_items.db` but has **not** itself crossed a §11.4.142 independent-reviewer seam — see the "Independent review" section's revision 4 entry for the honest boundary.)
+**Revision:** 5
+**Last modified:** 2026-08-10T21:43:44Z
+**Maintainer:** HelixCode release engineering (documentation draft, AI-agent authored; revisions 1–3 independently reviewed per §11.4.142/§11.4.194 — see "Independent review" section below. Revisions 4–5 are verified-by-construction against `git log`/`git show`/`docs/workable_items.db` but have **not** themselves crossed a §11.4.142 independent-reviewer seam — see the "Independent review" section's revision 4/5 entries for the honest boundary.)
 
 ---
 
@@ -253,6 +253,18 @@ Commit-type histogram over the 229 substantive commits: 87 `docs`, 74 `fix`,
 
 ### Fixed (revision 3 range)
 
+> **Revision 5 disambiguation.** "Fixed" in this table's heading and in the
+> per-row **HXC-NNN** bold labels below describes the *commit* — a bug-fix
+> landed in source — never a tracker-item closure claim. This distinction
+> was not explicit enough in revisions 1–4: several rows below (HXC-229,
+> HXC-233, HXC-235) describe genuine source fixes, but the corresponding
+> `docs/workable_items.db` tracker items are **not** closed (status
+> `Queued`) and this document does not close them either. See "Revision 5 —
+> HXC-229/233/235 tracker-vs-runtime-state reconciliation" for the full,
+> evidence-sourced account of what is and is not verified for each, and why
+> reading a row here as "this tracker item is Fixed" would be a §11.4
+> documentation-layer overclaim.
+
 | SHA | Repo | Summary |
 |---|---|---|
 | `15f00801` | main | **HXC-233** — completions were returning HTTP 500 "all providers exhausted" on every request. `LocalRPCPort` defaults to `50052` and the live process had the env var unset, so the gateway dialled a port no service listens on while `helixllm-coder.service` served the model on `18434`. Fixed with two `Environment=` lines placed *before* `EnvironmentFile=` so an operator `.env` can still override. Verified: `:50052` connection refused → after fix, HTTPS 200 naming the real `.gguf`. Findable only because HXC-235's deploy an hour earlier replaced a misleading TLS error with an honest one. |
@@ -455,7 +467,7 @@ perform:
 | HXC-252 | Bug / High | **Fixed** | Sync-gate data-destruction-risk message, closed this range. |
 | HXC-253 | Bug / Medium | **Fixed** | Standing guards wired (G30–G32), closed this range. |
 | HXC-199, HXC-217 | Bug | **Fixed** | Closed in `7bd80ff6` (revision 3); re-confirmed here. |
-| HXC-229, HXC-233, HXC-235 | Bug | **Queued** | Source-level fixes described in revision 3 (`724d2bb0`, `15f00801`, `f2e12570`); tracker items deliberately left open pending the standing-guard evidence chain (revision 3 Known gap 11). **Do not read revision 3's "Fixed" table headers as tracker-closure claims — the DB is the status of record.** |
+| HXC-229, HXC-233, HXC-235 | Bug | **Queued** — see the dedicated reconciliation below | Source-level fixes described in revision 3 (`724d2bb0`, `15f00801`, `f2e12570`); all three currently have genuine, tracked, captured runtime evidence, and are **not** simply "verification pending" — see "Revision 5 — HXC-229/233/235 tracker-vs-runtime-state reconciliation" for what each item's own review/diary trail actually shows. **Do not read revision 3's "Fixed" table headers as tracker-closure claims — the DB is the status of record.** |
 | HXC-247 | Bug / High | **Queued, updated in place** | Deployment intent for the port-8100 collision confirmed; not yet resolved. |
 | HXC-248, HXC-250, HXC-251, HXC-254, HXC-255, HXC-256, HXC-257, HXC-258, HXC-259, HXC-260, HXC-261 | various | **Queued** | Newly filed or updated this range; none closed by this document. |
 
@@ -493,24 +505,37 @@ Checked directly against `git tag -l` in both repositories, not assumed:
   existed — the four `helixcode-v1.0.0`/`helixcode-v1.1.0` tags across both
   repos predate the prefixed scheme (all four prefixed tags are dated after
   them: `helix-code-1.0.0-dev-0.0.1` is the earliest prefixed tag anywhere in
-  this fleet). Treat this as a **historical-artifact condition**, not an
-  active violation, **conditional on two things holding, both of which do
-  hold today**: (a) no *new* tag has been or will be created in the legacy
-  unprefixed form, and (b) the legacy tags are not being used as the current
-  release pointer anywhere (they are not — `helix-code-1.1.0-dev-0.0.3` /
-  submodule's `helix-code-1.0.0-dev-0.0.1` are the current references).
-- **Correct remediation (report only — nothing retagged or deleted by this
-  task, per its hard constraints and per §11.4.113/CONST-043's absolute
-  no-force-push-or-destructive-history-op posture, which extends to tag
-  deletion without explicit in-conversation operator authorization):**
-  1. **Do not delete or move the four legacy tags.** Deleting a published tag
-     is a destructive, history-altering operation on refs other consumers may
-     already depend on; it requires explicit operator authorization per
-     operation (§11.4.90/§9.2), which is out of scope for a
-     documentation-only task and was not sought.
+  this fleet). **This document's recommendation** — not a settled
+  disposition, since retagging/deleting a published ref is a destructive
+  operation only the operator can authorize — **is** to treat this as a
+  **historical-artifact condition**, not an active violation, conditional on
+  two things holding, both of which do hold today: (a) no *new* tag has been
+  or will be created in the legacy unprefixed form, and (b) the legacy tags
+  are not being used as the current release pointer anywhere (they are not —
+  `helix-code-1.1.0-dev-0.0.3` / submodule's `helix-code-1.0.0-dev-0.0.1` are
+  the current references). **The operator may reasonably disagree** — e.g. if
+  a policy requires every non-conforming ref removed regardless of age — and
+  that disagreement would not make this document's factual findings (the tag
+  list, their dates, and the ordering relative to the prefixed tags) wrong,
+  only the recommended disposition.
+- **Recommended remediation (report + recommendation only — nothing retagged
+  or deleted by this task, per its hard constraints and per
+  §11.4.113/CONST-043's absolute no-force-push-or-destructive-history-op
+  posture, which extends to tag deletion without explicit in-conversation
+  operator authorization; the numbered steps below are what this document
+  recommends, awaiting the operator's actual decision, not a record of
+  action already taken or endorsed):**
+  1. **Do not delete or move the four legacy tags without an explicit
+     operator decision to do so.** Deleting a published tag is a destructive,
+     history-altering operation on refs other consumers may already depend
+     on; it requires explicit operator authorization per operation
+     (§11.4.90/§9.2), which is out of scope for a documentation-only task and
+     was not sought — this document takes no position on whether that
+     authorization should be granted, only that it has not been.
   2. **Document them as superseded**, exactly as this section now does, so a
      future reader (human or gate) does not mistake `helixcode-v1.1.0` for a
-     currently-maintained release line.
+     currently-maintained release line, pending whatever disposition the
+     operator ultimately chooses.
   3. **Never create a new tag in the unprefixed form.** This is already true
      in practice — every tag created since `helix-code-1.0.0-dev-0.0.1` in
      both repositories uses the resolved prefix — and this document's own
@@ -522,7 +547,188 @@ Checked directly against `git tag -l` in both repositories, not assumed:
      history. That gate does not exist in this repository today (not
      verified further — out of this task's scope to add one).
 
+## Revision 5 — HXC-229/233/235 tracker-vs-runtime-state reconciliation (coordinator-directed, 2026-08-10/11)
 
+Revision 4 flagged, correctly, that revision 3's "Fixed" table headers for
+HXC-229/233/235 could be misread as tracker-closure claims when
+`docs/workable_items.db` shows all three `Queued`. This section resolves
+that inconsistency the way it must be resolved — from evidence, per item,
+not by assumption — after the coordinator directed a closer look rather than
+accepting the generic "verification pending" phrasing revision 4 first
+reached for.
+
+**Method.** For each item: (1) confirmed the source fix landed, via the SHA
+already cited in revision 3; (2) checked whether a registered, falsifiable
+guard exists, by reading the guard script/test file directly, not by
+trusting a commit message's claim about it (§11.4.226); (3) ran what could
+safely be run read-only against the live host to check current state; (4)
+read `docs/workable_items.db`'s `item_history` (event log) and `test_diary`
+(per-run test log, schema-enforced: `CHECK (result <> 'PASS' OR evidence_path
+IS NOT NULL)` — a PASS row cannot exist without a captured evidence path)
+tables directly via `sqlite3 -readonly`, read-only, the same access already
+used throughout this document; (5) read every `docs/qa/` evidence directory
+these tables point at and confirmed each is `git ls-files`-tracked, not
+merely present on disk. No item's DB status was changed by this process, per
+this task's explicit instruction — this section reports; the coordinator
+routes.
+
+**Finding, stated once because it applies to all three: the actual state is
+more evidenced than either of the two possibilities this investigation was
+framed around.** None of the three fits "source fix landed, runtime evidence
+never captured, so `Queued` is simply correct and the changelog should say
+'verification pending'" — genuine runtime evidence exists, is captured, and
+is tracked in git, for all three. Nor is `docs/workable_items.db` simply
+"stale and should say Fixed" — in two of the three cases, the tracker's *own*
+independent-review process explicitly examined the item and explicitly
+declined to close it, for a specific, evidenced reason; what changed since is
+that the specific reason cited has since been addressed by later,
+uncoordinated work, without anyone re-running the review or the closure step
+that would act on that. Describing these three the same way as the CLI-config
+and gRPC port fan-outs ("landed in source, verification pending") would
+**understate** real, current, git-tracked evidence — a different but equally
+real documentation-layer inaccuracy from the one flagged. The precise,
+evidenced state of each follows.
+
+### HXC-229 — gateway release-mode
+
+- **Source fix:** `724d2bb0` (main repo) — adds `Environment=GIN_MODE=release`
+  to the gateway's systemd unit.
+- **Registered guard:** `scripts/testing/guard_hxc229_gateway_release_mode.sh`
+  exists, reads `/proc/<pid>/environ` on the live gateway process (not the
+  unit file — the guard's own header explains why config-only assertion is
+  rejected as a §11.4 bluff), and is wired into the release-gate sweep as
+  **G30** (`be5d56be`, this range).
+- **Last recorded tracker verdict (`test_diary` entry 36, 2026-08-08T08:32:34Z,
+  `docs/workable_items.db`):** **PASS** — "Live runtime validation PASSES
+  with a real runtime signature; closure still blocked on the missing
+  §11.4.135 standing guard" — evidence path
+  `docs/qa/independent_review_hxc229_234_235_20260808T132900Z/hxc229_live_journal_since_restart.txt`
+  (git-tracked, confirmed). This diary row is itself the independent review's
+  verdict (commit `c8171122`, "independent review of HXC-229/234/235 — all
+  three NOT-CLOSED, three distinct layer failures" — HXC-229's stated,
+  singular reason: **"FIX VERIFIED LIVE; NO STANDING GUARD."**
+- **What has changed since that verdict:** the missing guard — the *sole*
+  cited blocker — was added and wired as G30 by `be5d56be`, later in this
+  same unpushed range.
+- **Re-verified live by this documentation pass** (read-only, `bash
+  scripts/testing/guard_hxc229_gateway_release_mode.sh`, 2026-08-10/11):
+  `PASS-with-caveat (HXC-229): pid=107268 carries GIN_MODE=release, read from
+  the live process's own /proc/107268/environ — the primary invariant is
+  ENFORCED and holds.` The same PID (`107268`) also appears in this range's
+  own `docs/qa/r4_review_remediation_20260810T191500Z/EVIDENCE.md` (already
+  cited in this document's revision 4 tables), meaning the live gateway has
+  not restarted between that evidence capture and this one — the PASS is not
+  a one-off fluke, it is the same long-running process answering
+  consistently across two independent checks.
+- **Conclusion:** the specific reason HXC-229 was blocked from closure no
+  longer holds. No new `test_diary` entry, `item_history` closure event, or
+  re-review has been recorded reflecting that. This reads as a **stale
+  blocking condition**, not a stale tracker status in the blanket sense —
+  the `Queued` status is an accurate record of "not yet formally closed," it
+  is the *reason* that has gone stale.
+
+### HXC-233 — gateway completion path
+
+- **Source fix:** `15f00801` (main repo) — routes the gateway's local
+  provider at the port `helixllm-coder.service` actually serves (`18434`),
+  not the unwired default (`50052`).
+- **Registered guard:** `scripts/testing/guard_hxc233_completion_path_live.sh`
+  exists, asserts a real assistant message and model id from a live
+  completion (not a status code), and is wired into the sweep as **G31**
+  (`be5d56be`).
+- **Captured evidence:** `docs/qa/hxc233_routing_fix_20260808T140500Z/FINDING.md`
+  (git-tracked, confirmed) — a real, live, pre/post flip: `HTTP 500
+  {"error":{"message":"...dial tcp 127.0.0.1:50052: connection refused"}}` →
+  `HTTP 200 {"choices":[{"message":{...,"content":"2 + 2 equals 4."}}],
+  "model":"/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf"}`, captured
+  against the real public HTTPS endpoint.
+- **No `test_diary` entry and no independent-review commit exist for
+  HXC-233** — `sqlite3 -readonly docs/workable_items.db "SELECT * FROM
+  test_diary WHERE atm_id='HXC-233'"` returns zero rows, and no commit
+  analogous to `c8171122` (which covered 229/234/235, not 233) was found in
+  `git log --all -i --grep="HXC-233"`. Unlike HXC-229 and HXC-235, this item
+  was never routed through a closure review of any kind, blocked or
+  otherwise — it is not that a reviewer found a reason to keep it open; no
+  reviewer appears to have looked at closure for it at all.
+- **Re-verified live by this documentation pass** (read-only, `bash
+  scripts/testing/guard_hxc233_completion_path_live.sh`, 2026-08-10/11):
+  `GREEN (HXC-233): live completion answered "4" from model
+  "/models/Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf" — real generation through
+  https://localhost:8443/v1/chat/completions, not a status code.`
+- **Conclusion:** fix, guard, and captured evidence all exist and are
+  currently live-verified, but the item has **never been reviewed for
+  closure at all** — a gap, not a resolved-but-unactioned block like the
+  other two.
+
+### HXC-235 — semantic-vs-hash embeddings signal
+
+- **Source fix:** `e68fcdc` (`submodules/helix_llm`, not `helix_agent`) —
+  reports which embedding pipeline actually served a request at the point of
+  use.
+- **Registered guard:** no standalone bash script exists (unlike 229/233),
+  but two Go test files are committed and tracked in `submodules/helix_llm`:
+  `internal/gateway/hxc235_embedding_semantic_signal_test.go` and
+  `internal/knowledge/hxc235_semantic_signal_test.go` — both part of that
+  submodule's ordinary `go test ./...` run, so "registered" in substance even
+  though the implementation differs in form from 229/233's standalone
+  scripts. The independent review below confirms these are genuinely
+  falsifiable (mutation-tested), not merely present.
+- **Last recorded tracker verdict (`test_diary` entry 35, 2026-08-08T08:32:21Z):**
+  **FAIL** — "Independent review: source correct and guard genuine, but fix
+  is NOT live on the deployed endpoint" — evidence path
+  `docs/qa/independent_review_hxc229_234_235_20260808T132900Z/hxc235_deployed_endpoint_response.json`
+  (git-tracked, confirmed). The same review commit (`c8171122`) states the
+  reason precisely: **"CORRECT AND GENUINELY GUARDED, BUT NOT LIVE"** —
+  §11.4.108 layers 3–4 (runtime-on-clean-target, user-visible) unsatisfied
+  because the deployed gateway binary predated the fix by 15 days.
+- **What has changed since that verdict:** `docs/qa/hxc235_deploy_20260808T135200Z/FINDING.md`
+  (git-tracked, confirmed) — timestamped **2026-08-08T13:52Z, 23 minutes
+  after** the FAIL verdict above (2026-08-08T08:32:21Z UTC ≈ 13:32 local at
+  this host's +05:00 offset) — records exactly the redeploy the FAIL verdict
+  was waiting on: `§9.2` backup taken, only the affected unit restarted
+  (`helixllm-coder`, a separate oneshot serving the 30B model, confirmed
+  untouched), and a real pre/post flip on the live endpoint —
+  `semantic_embeddings` key count `0` → `1`, `NRestarts=0`, `HXC-229` guard
+  re-passing on the new PID (cross-confirming that guard reads the live
+  process, not a remembered one).
+- **This documentation pass could not re-run a live guard for HXC-235**
+  (there is no standalone script to invoke, and running the submodule's
+  `go test` suite was out of scope — `submodules/helix_agent` is explicitly
+  off-limits, and this fix in any case lives in `helix_llm`, a different
+  submodule this task was never scoped to touch). The finding above rests on
+  the two committed, tracked evidence artifacts, not on a fresh re-run.
+- **Conclusion:** same shape as HXC-229 — the specific reason cited by the
+  last review (not live on the deployed artifact) was addressed shortly
+  after by a redeploy with its own captured, tracked evidence, but no new
+  `test_diary` entry or re-review followed to close the loop. Per the
+  tracker's own audit trail, the *last recorded test verdict* for HXC-235 is
+  still FAIL — technically accurate as the last recorded event, but stale
+  relative to the redeploy that came after it.
+
+### What this means for the changelog record (this document's own correction)
+
+- Revision 3's "Fixed" table entries for `724d2bb0`, `15f00801`, and
+  `f2e12570` are **left as written** — they accurately describe commits that
+  fixed real defects, and revision 5's disambiguation note (added above the
+  table) now makes explicit that "Fixed" there means "this commit fixed a
+  defect," not "this tracker item is closed."
+- Revision 4's tracker-status table row for these three items is corrected
+  (see above) to stop pointing at the generic "verification pending" framing
+  and instead point here.
+- **No blanket claim of "fixed" or "verification pending" is accurate for
+  all three at once** — HXC-229 and HXC-235 each have a *specific, resolved*
+  blocking reason with a documented before/after; HXC-233 was never blocked
+  by anything recorded, it was simply never reviewed for closure.
+- **This document does not close HXC-229, HXC-233, or HXC-235.** Per the
+  coordinator's explicit instruction, no item status was changed in
+  `docs/workable_items.db` by this task. The findings above — including the
+  specific `test_diary`/`item_history` rows, the evidence paths, and the
+  live re-verification output captured in this session — are handed back for
+  routing to whoever owns the sanctioned `workable-items close` step.
+
+## Per-repo commit inventory
+
+### main (this repo) — 18 commits in `5ab97d8c..c29e1dcc` (revisions 1–2 range)
 
 *(**Revision 3 correction.** Revision 2 changed this figure from 18 to 19 on the
 grounds that `dd3c0c3b` had been omitted. The omission was real; the count change
@@ -1023,6 +1229,65 @@ verified-by-construction against real git and database state, not as a
 substitute for the §11.4.125/§11.4.142/§11.4.194 review the underlying code
 changes still owe before they can be described as fully done.
 
+### Revision 5 (2026-08-10/11)
+
+**Why it was needed.** The coordinator reviewed revision 4 and identified
+that its treatment of HXC-229/233/235 risked a §11.4 documentation-layer
+overclaim in the opposite direction from what it was trying to avoid: having
+correctly declined to describe these three as "Fixed" (matching revision
+3's table-header ambiguity), revision 4's tracker table instead pointed
+toward describing them the same way as the CLI-agent/gRPC port fan-outs
+("landed in source, verification pending") — which would have **understated**
+real, already-captured, git-tracked runtime evidence that this revision found
+by reading `docs/workable_items.db`'s `item_history` and `test_diary` tables
+directly, and the `docs/qa/` evidence paths they cite.
+
+**Method.** Per-item: confirmed the source SHA; located and read the
+standing-guard script or test file directly (not inferred from a commit
+message, per the coordinator's explicit §11.4.226 instruction); ran the
+HXC-229 and HXC-233 guards live, read-only, against the real running host
+(`bash scripts/testing/guard_hxc229_gateway_release_mode.sh` and
+`.../guard_hxc233_completion_path_live.sh`); queried `item_history` and
+`test_diary` via `sqlite3 -readonly` for every event and evidence path
+recorded against these three IDs; located the independent-review commit
+(`c8171122`) these diary rows trace back to and read its full body for the
+per-item reasoning; located the two later evidence commits (`be5d56be`
+adding the HXC-229/233 guards, and the pre-existing `f2e12570`/FINDING.md
+redeploy for HXC-235) that each address the specific blocking reason the
+independent review recorded; and confirmed via `git ls-files` that every
+cited `docs/qa/` path is actually tracked, not merely present on disk.
+
+**Finding, restated for the record.** All three items have genuine, tracked
+runtime evidence — this is not the "verification never captured, tracker
+correctly Queued" case the investigation was framed to expect as most
+likely, nor is it a simple "tracker is stale, should say Fixed" case either.
+For HXC-229 and HXC-235, the tracker's own independent-review process
+recorded one specific, evidenced reason each stayed open, and that specific
+reason has since been resolved by later work — without a follow-up review or
+diary entry recording the resolution. For HXC-233, no closure review was
+ever attempted at all. Full per-item detail, with evidence paths and exact
+timestamps, is in "Revision 5 — HXC-229/233/235 tracker-vs-runtime-state
+reconciliation" above.
+
+**Honest boundary (§11.4.6).** This revision changed no item's status in
+`docs/workable_items.db` — per the coordinator's explicit instruction, that
+routing decision belongs to whoever owns the sanctioned `workable-items
+close` step, not to this documentation task. The live guard re-runs for
+HXC-229 and HXC-233 were performed by this task (read-only, no state
+mutation); HXC-235 has no standalone guard to re-run, so its finding rests on
+the two already-committed, tracked evidence artifacts rather than a fresh
+observation. Like revisions 3 and 4, revision 5 has not itself crossed a
+formal §11.4.142 independent-code-review seam.
+
+**A structural repair, unrelated to the reconciliation itself.** While
+locating section anchors for this revision, a prior editing defect in
+revision 4 was found and fixed: the `## Per-repo commit inventory` heading
+and its first subsection heading (`### main (this repo) — 18 commits...`)
+had been accidentally dropped when revision 4's content was spliced into the
+document, leaving the revisions 1–2 commit-list content orphaned under no
+heading at all. Restored verbatim; no content was lost, only its heading,
+and `git diff` on this commit shows the two-line addition that fixes it.
+
 ## Sources verified
 
 All SHAs, commit subjects, commit bodies, tag names/dates, gitlink pins,
@@ -1072,3 +1337,31 @@ over from the task's own briefing without independent re-derivation — the
 briefing's stated commit counts (9 main / 22 submodule) were themselves found
 stale by 1 and 2 commits respectively during this process and the
 document reflects the re-measured counts (10 / 24), not the briefed ones.
+
+**Revision 5 (2026-08-10/11).** The HXC-229/233/235 reconciliation was
+derived with: `sqlite3 -readonly docs/workable_items.db` against `items`
+(status, severity), `item_history` (event log — confirmed all three show
+only an `Opened` event, no `Fixed`/`Implemented`/`Completed` event, no
+`evidence_path`), and `test_diary` (`entry_id`, `atm_id`, `date_time`,
+`tested_by`, `result`, `result_detail`, `evidence_path`, queried directly
+against `entry_id IN (34,35,36)` and separately confirming zero rows exist
+for `atm_id='HXC-233'`); `git log --all --oneline -i --grep="HXC-229"` /
+`"HXC-233"` / `"HXC-234"` to locate the independent-review commit
+(`c8171122`) and confirm no equivalent exists for HXC-233; `git log -1
+--format=%B c8171122` read in full for the per-item reasoning; direct
+execution, read-only, of `scripts/testing/guard_hxc229_gateway_release_mode.sh`
+and `scripts/testing/guard_hxc233_completion_path_live.sh` against the live
+host (both exit 0, output quoted verbatim above); `git ls-files` against
+every `docs/qa/` directory cited (`hxc229_gin_debug_mode_20260807T000000Z`,
+`hxc233_routing_fix_20260808T140500Z`, `hxc235_deploy_20260808T135200Z`,
+`independent_review_hxc229_234_235_20260808T132900Z`) to confirm each is
+tracked, not merely present on disk; and a direct read of
+`docs/qa/hxc233_routing_fix_20260808T140500Z/FINDING.md` and
+`docs/qa/hxc235_deploy_20260808T135200Z/FINDING.md` in full. The
+`submodules/helix_llm` test-file existence check
+(`hxc235_embedding_semantic_signal_test.go`,
+`hxc235_semantic_signal_test.go`) was confirmed via that submodule's own
+`git ls-files`, read-only — no file in that submodule, or in
+`submodules/helix_agent` (explicitly off-limits per this task's scope), was
+modified. No item's status in `docs/workable_items.db` was changed by this
+revision.

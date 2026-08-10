@@ -4,10 +4,12 @@ All notable changes to HelixCode are recorded here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/). Release tags are
 **project-prefixed** per §11.4.151, resolved from `.env` `HELIX_RELEASE_PREFIX`
 (currently `helix-code`): `helix-code-X.Y.Z-dev-N.N.N`. Two legacy unprefixed
-`helixcode-vX.Y.Z` tags predate that scheme and are retained as historical
-artifacts, not as an active naming convention — see
-`docs/changelogs/helix-code-1.2.0-dev-0.0.1.md` §"§11.4.151 release-tag prefix
-compliance" for the full finding.
+`helixcode-vX.Y.Z` tags predate that scheme; this document's *recommendation*
+is to retain them as historical artifacts rather than an active naming
+convention, but that disposition is not settled and awaits an explicit
+operator decision — see `docs/changelogs/helix-code-1.2.0-dev-0.0.1.md`
+§"§11.4.151 release-tag prefix compliance" for the full finding and the
+recommendation's stated conditions.
 
 ## [helix-code-1.2.0-dev-0.0.1] — DRAFT, not yet tagged (documentation prepared 2026-08-10/11)
 
@@ -40,7 +42,12 @@ this summary highlights only the user-visible headline items.
   non-streaming — not the alias echoed back.
 - **The gateway's primary completion path, which was returning HTTP 500 on
   every request with no cloud key configured, is restored** — the local
-  provider was pointed at a port matching no running service.
+  provider was pointed at a port matching no running service. Live-reverified
+  during this documentation pass: a real completion answered through the
+  public endpoint. **The corresponding tracker item (HXC-229 for the related
+  release-mode fix, HXC-233 for this one) remains `Queued` in
+  `docs/workable_items.db`** — see the per-release changelog's dedicated
+  reconciliation section for exactly why and what would close it.
 - **The health endpoint no longer reports "healthy" without checking
   anything** — it now names four real dependencies with measured round-trip
   durations, and the fix required a redeploy of a stale-by-15-days binary,
@@ -96,6 +103,17 @@ this summary highlights only the user-visible headline items.
 
 ### Known gaps (NOT closed by this documentation pass)
 
+- **HXC-229 (gateway release mode) and HXC-235 (semantic-embeddings signal)
+  each have a specific, tracked, previously-recorded blocking reason that has
+  since been addressed by later work, without a follow-up review or tracker
+  closure; HXC-233 (this completion-path fix) has genuine tracked evidence
+  and a passing live-reverified guard but was never routed through a closure
+  review at all.** None of the three is "Fixed" in `docs/workable_items.db`
+  and this document does not change that — see the per-release changelog's
+  "HXC-229/233/235 tracker-vs-runtime-state reconciliation" section for the
+  full evidence trail (guard scripts, `docs/qa/` paths, and the exact
+  independent-review commit each item's prior `Queued` status traces back
+  to).
 - **§11.4.185 manual QA-team confirmation has not been given** for any of the
   above — automated-green is necessary but not sufficient per this project's
   own governance.
