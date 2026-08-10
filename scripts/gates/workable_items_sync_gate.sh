@@ -74,14 +74,48 @@ if ! diff -q <(norm "$FIXED") <(norm "$TMP/rt_fixed.md") >/dev/null; then
     fail "$FIXED does not round-trip md→db→md byte-identically (regenerate docs/workable_items.db)"
 fi
 
-# (3) committed DB's md projection matches the live docs (DB not stale vs md).
+# (3) the DB's md projection matches the live docs (the two have not drifted).
+#
+# THE COMPARISON IS SYMMETRIC — SO THE ADVICE MUST BE TOO  (HXC-252, §9.2)
+# ------------------------------------------------------------------------
+# `diff -q` reports THAT two sides differ. Which side is STALE is not in that
+# comparison and cannot be recovered from it — no mtime is read, no history is
+# consulted, no revision is compared. An earlier revision nonetheless asserted
+# one ("committed DB is STALE vs Issues.md") and prescribed the remedy that
+# follows from it (`sync md-to-db`).
+#
+# In the DB-newer case that diagnosis is FALSE and the prescription DESTROYS the
+# §11.4.95 single source of truth: md-to-db replaces the DB with the derived
+# document. Measured on 2026-08-09, when this branch actually fired: obeying it
+# would have pushed a 36-item stale doc over a 46-item DB — deleting 10 items
+# and resurrecting 8 already-closed ones. The trap is worst precisely because it
+# fires when a maintainer is already worried about consistency and is therefore
+# most inclined to do exactly what the tool says.
+#
+# So the message below states only what was DETECTED, and enumerates both
+# remedies with the condition under which each applies. The reader determines
+# direction from evidence (§11.4.6) — this gate never claims to know it.
+drift_remedy() { # drift_remedy <doc-path>
+    printf '%s' "$DB and $1 DISAGREE. This gate compared them SYMMETRICALLY \
+(diff -q) and therefore CANNOT tell which side is stale — it did not read \
+mtimes, history, or revisions. DO NOT run a sync until you have determined the \
+direction from evidence (git log on both paths; which one a recent commit \
+touched). THEN: (a) if the DB is the newer side — the usual case, and the one \
+§11.4.95 assumes, since the DB is the source and the docs are derived — run \
+'sync db-to-md' + export to regenerate $1 from $DB. (b) ONLY if $1 genuinely \
+carries newer hand-authored content than $DB — run 'sync md-to-db' + \
+WAL-checkpoint + recommit. WARNING: remedy (b) OVERWRITES the §11.4.95 SSoT \
+with the derived document; if you pick it while the DB is actually newer, every \
+item the DB holds and the doc lacks is DELETED and every item the doc still \
+shows as open is RESURRECTED (§9.2 — take a backup first either way)."
+}
 "$BIN" sync db-to-md --db "$TMP/committed.db" --out-issues "$TMP/committed_issues.md" --out-fixed "$TMP/committed_fixed.md" >/dev/null 2>"$TMP/cdb.err" \
     || fail "db-to-md on committed DB failed: $(tail -2 "$TMP/cdb.err" | tr '\n' ' ')"
 if ! diff -q <(norm "$ISSUES") <(norm "$TMP/committed_issues.md") >/dev/null; then
-    fail "committed $DB is STALE vs $ISSUES — regenerate it (sync md-to-db) + WAL-checkpoint + recommit"
+    fail "$(drift_remedy "$ISSUES")"
 fi
 if ! diff -q <(norm "$FIXED") <(norm "$TMP/committed_fixed.md") >/dev/null; then
-    fail "committed $DB is STALE vs $FIXED — regenerate it (sync md-to-db) + WAL-checkpoint + recommit"
+    fail "$(drift_remedy "$FIXED")"
 fi
 
 echo "CM-WORKABLE-ITEMS-MD-DB-IN-SYNC: PASS — committed DB validates + md⟷db byte-identical in sync"

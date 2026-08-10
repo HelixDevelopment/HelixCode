@@ -93,6 +93,7 @@ PORT_BASE=$(( 19000 + (RUN % 400) * 10 ))
 P_H_EMPTY=$((PORT_BASE+1)); P_H_UNNAMED=$((PORT_BASE+2))
 P_C_ERR=$((PORT_BASE+3));   P_C_NOCH=$((PORT_BASE+4))
 P_C_WRONG=$((PORT_BASE+5)); P_C_NOMODEL=$((PORT_BASE+6))
+P_WEDGE=$((PORT_BASE+7));   P_EMPTY=$((PORT_BASE+8))
 P_CLOSED=$((PORT_BASE+9))   # deliberately never bound — the absence subject
 
 cleanup() {  # §11.4.14: reap every child, always, even on early exit
@@ -259,14 +260,29 @@ unit "gfals-$RUN-debug" -p Environment=GIN_MODE=release \
     bash -c 'echo "Starting fake"; echo "[GIN-debug] GET /v1/models --> h"; sleep 120'
 unit "gfals-$RUN-vacuous" -p Environment=GIN_MODE=release \
     bash -c 'echo "no startup marker here"; sleep 120'
+# The same unprovable window, but WITH the defect present. This is the
+# fail-open probe for the PASS-with-caveat path below: if that path ever stops
+# scanning for GIN-debug before deciding, this case silently flips to a pass.
+unit "gfals-$RUN-vacuous-debug" -p Environment=GIN_MODE=release \
+    bash -c 'echo "no startup marker here"; echo "[GIN-debug] GET /v1/models --> h"; sleep 120'
+# A process with NO GIN_MODE at all AND an unprovable window: check 1 must FAIL
+# first, so the caveat path can never rescue a genuine violation.
+unit "gfals-$RUN-vacuous-nogin" bash -c 'echo "no startup marker here"; sleep 120'
 sleep 2
 assert 1 "229: live process lacks GIN_MODE=release"      env RED_MODE=0 HXC229_UNIT=gfals-$RUN-nogin   bash "$G229"
 assert 1 "229: process emits GIN-debug route dumps"      env RED_MODE=0 HXC229_UNIT=gfals-$RUN-debug   bash "$G229"
-# An unprovable (no-startup-marker) window is SKIP, not FAIL: it certifies
-# nothing either way, and journald rotation reaches this state on a healthy
-# gateway purely by age. Asserted here so the distinction cannot silently
-# regress back to a false-FAIL — or forward into a vacuous PASS.
-assert 2 "229: unprovable window (no startup marker)"    env RED_MODE=0 HXC229_UNIT=gfals-$RUN-vacuous bash "$G229"
+# RECONCILED, NOT RELAXED (§11.4.120). This asserted SKIP(2) until 2026-08-10,
+# when a review showed the SKIP was discarding a check that HAD run and passed:
+# check 1 reads GIN_MODE from the live process's /proc and is the primary
+# invariant, so "certified nothing" was false, and a long-lived gateway whose
+# journal had rotated sat in permanent SKIP. The guard now reports
+# PASS-with-caveat, and this assertion tracks the NEW mechanism rather than
+# being edited until it agreed. The two probes beneath it are what keep the
+# change from being a relaxation: the defect must still be caught on exactly
+# this window shape, from both directions.
+assert 0 "229: unprovable window -> PASS-with-caveat"    env RED_MODE=0 HXC229_UNIT=gfals-$RUN-vacuous bash "$G229"
+assert 1 "229: unprovable window + GIN-debug still FAILs" env RED_MODE=0 HXC229_UNIT=gfals-$RUN-vacuous-debug bash "$G229"
+assert 1 "229: unprovable window + no GIN_MODE still FAILs" env RED_MODE=0 HXC229_UNIT=gfals-$RUN-vacuous-nogin bash "$G229"
 
 echo "=== R2 REGRESSION — deployed AND CRASHED must FAIL, never SKIP ==="
 unit "gfals-$RUN-crashed" /bin/false
@@ -275,21 +291,107 @@ assert 1 "229: unit loaded but ActiveState=failed"       env RED_MODE=0 HXC229_U
 
 # R4 — the state the DEPLOYED unit actually presents when it crash-loops.
 # The real helixllm-gateway ships Restart=on-failure with RestartUSec=10s,
-# StartLimitBurst=5 and StartLimitIntervalUSec=10s: at most one start per limit
-# interval, so the burst is structurally unexceedable and ActiveState=failed is
-# UNREACHABLE. A gateway crashing every 10s therefore sits in
-# activating/auto-restart forever. A revision of this guard that FAILed only on
-# `failed` still SKIPped that — a continuously-crashing service filed as
-# "stopped by choice", nothing serving, and a green sweep. This case reproduces
-# the production restart policy exactly so that hole cannot reopen.
+# StartLimitBurst=5 and StartLimitIntervalUSec=10s (re-measured 2026-08-10 on
+# the live unit): at most one start per limit interval, so the burst is
+# structurally unexceedable and ActiveState=failed is UNREACHABLE. A gateway
+# crashing every 10s therefore sits in activating/auto-restart forever. A
+# revision of this guard that FAILed only on `failed` still SKIPped that — a
+# continuously-crashing service filed as "stopped by choice", nothing serving,
+# and a green sweep.
+#
+# THE TIMING IS THE TEST (review R4-b, 2026-08-10). This case used RestartSec=1
+# while claiming to reproduce production "exactly", and the difference was not
+# cosmetic — it changed WHICH detection path ran. The guard has two live
+# signals: SubState=auto-restart, and NRestarts RISING across its 2.5s sample.
+# Measured at each timing:
+#   RestartSec=1   -> restarts inside the sample window, NRestarts RISES
+#   RestartSec=10  -> ActiveState=activating SubState=auto-restart, NRestarts=0
+# So the fast fixture was carried by the rising-counter path, and the
+# auto-restart path — the ONLY one that fires under the production policy — was
+# never exercised by it. Deleting the auto-restart signal would have left this
+# battery green while every real crash-loop went undetected.
+# Both timings are asserted now: the production one because it is what deploys,
+# the fast one because the rising-counter path is real code that also needs a
+# subject. Neither is a substitute for the other.
 echo "=== R4 REGRESSION — crash-LOOPING under the production Restart policy ==="
-unit "gfals-$RUN-loop" -p Restart=on-failure -p RestartSec=1 \
+unit "gfals-$RUN-loop" -p Restart=on-failure -p RestartSec=10 \
+    -p StartLimitBurst=5 -p StartLimitIntervalSec=10 /bin/false
+unit "gfals-$RUN-loopfast" -p Restart=on-failure -p RestartSec=1 \
     -p StartLimitBurst=5 -p StartLimitIntervalSec=10 /bin/false
 sleep 3
 _st=$(systemctl --user show "gfals-$RUN-loop" -p ActiveState --value 2>/dev/null)
 _ss=$(systemctl --user show "gfals-$RUN-loop" -p SubState --value 2>/dev/null)
-echo "    (observed ActiveState=$_st SubState=$_ss — the never-'failed' crash loop)"
-assert 1 "229: crash-looping (activating/auto-restart)"  env RED_MODE=0 HXC229_UNIT=gfals-$RUN-loop bash "$G229"
+_nr=$(systemctl --user show "gfals-$RUN-loop" -p NRestarts --value 2>/dev/null)
+echo "    (production timing: ActiveState=$_st SubState=$_ss NRestarts=$_nr — never-'failed', counter static)"
+assert 1 "229: crash-loop @ production RestartSec=10 (auto-restart path)" env RED_MODE=0 HXC229_UNIT=gfals-$RUN-loop     bash "$G229"
+assert 1 "229: crash-loop @ RestartSec=1 (rising-counter path)"           env RED_MODE=0 HXC229_UNIT=gfals-$RUN-loopfast bash "$G229"
+
+# --- THE SKIP CONTRACT'S NEGATIVE SPACE (independent review, round 4) --------
+#
+# Both HTTP guards' headers assert a CLOSED set: curl rc 6 and 7 are SKIP,
+# every other rc stays FAIL — 28 (timeout), 35/60 (TLS), 52 (empty reply), 56
+# (reset). The positive half of that contract was asserted below; the negative
+# half never was. A review MEASURED the behaviour as correct today and still
+# filed it, correctly: an unasserted invariant is one edit from being untrue,
+# and this one fails OPEN. Broadening the SKIP set by a single rc — the exact
+# shape of review mutation N1 — converts a live, wedged, or TLS-broken gateway
+# into "not deployed here" and the sweep goes green over a dead service. That is
+# the §11.4.69 CM-NO-FAIL-OPEN-SKIP hole the guards' own headers argue against.
+#
+# Each subject below is a REAL listener that accepts the connection and then
+# misbehaves, so it is reachable by construction and can never legitimately
+# reach the SKIP branch (a closed port is already covered further down).
+cat > "$TMP/tcpstub.py" <<'PY'
+import socket, sys, time
+SHAPE = sys.argv[1]; PORT = int(sys.argv[2])
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.bind(("127.0.0.1", PORT)); s.listen(8)
+while True:
+    c, _ = s.accept()
+    if SHAPE == "wedge":
+        # Accept and never answer: curl gives rc 28 (operation timed out).
+        # A closed port refuses INSTANTLY on loopback, so a timeout here proves
+        # a listener took the connection and then hung — a live defect.
+        time.sleep(3600)
+    elif SHAPE == "empty":
+        # Accept then close with zero bytes: curl gives rc 52 (empty reply).
+        c.close()
+PY
+
+tcpstub() {  # tcpstub <shape> <port>
+    { exec 9>&-; exec python3 "$TMP/tcpstub.py" "$1" "$2"; } & STUB_PIDS+=("$!")
+    # Readiness is a successful CONNECT, not a successful request — these
+    # subjects deliberately never complete one. Polling with a normal curl
+    # request would time out against `wedge` and be mistaken for "never came up".
+    for _ in $(seq 1 50); do
+        python3 - "$2" <<'PY' 2>/dev/null && return 0
+import socket, sys
+s = socket.socket(); s.settimeout(0.5)
+sys.exit(0 if s.connect_ex(("127.0.0.1", int(sys.argv[1]))) == 0 else 1)
+PY
+        sleep 0.2
+    done
+    echo "SKIP(env): tcp stub '$1' never bound $2. Refusing to assert against a \
+subject that was never constructed." >&2
+    exit 2
+}
+
+echo "=== SKIP-CONTRACT NEGATIVE SPACE — reachable-but-broken must FAIL, never SKIP ==="
+tcpstub wedge "$P_WEDGE"; tcpstub empty "$P_EMPTY"
+# rc 28 — accepted then hung. The timeout is short so the assertion is quick;
+# the guards' own default (90s) would make this case dominate the battery.
+assert 1 "233: rc28 timeout (listener accepted, then wedged)" env RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_WEDGE/v1 HXC233_TIMEOUT=3 bash "$G233"
+assert 1 "244: rc28 timeout (listener accepted, then wedged)" env RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_WEDGE/h  HXC244_TIMEOUT=3 bash "$G244"
+# rc 52 — connection established, then closed with no reply.
+assert 1 "233: rc52 empty reply (connected, zero bytes)"      env RED_MODE=0 HXC233_URL=http://127.0.0.1:$P_EMPTY/v1 HXC233_TIMEOUT=5 bash "$G233"
+assert 1 "244: rc52 empty reply (connected, zero bytes)"      env RED_MODE=0 HXC244_URL=http://127.0.0.1:$P_EMPTY/h  HXC244_TIMEOUT=5 bash "$G244"
+# rc 35 — TLS handshake against a plaintext listener: a server IS present and
+# misconfigured, which is the misconfigured-gateway shape, not an absent one.
+# Note both guards pass -k, so this is a genuine handshake failure and not a
+# certificate-trust complaint that -k would have waived.
+assert 1 "233: rc35 TLS handshake vs plaintext listener"      env RED_MODE=0 HXC233_URL=https://127.0.0.1:$P_C_ERR/v1 HXC233_TIMEOUT=5 bash "$G233"
+assert 1 "244: rc35 TLS handshake vs plaintext listener"      env RED_MODE=0 HXC244_URL=https://127.0.0.1:$P_H_EMPTY/h HXC244_TIMEOUT=5 bash "$G244"
 
 echo "=== PROVABLY ABSENT (must SKIP — and must not swallow anything above) ==="
 assert 2 "229: unit never installed (not-found)"         env RED_MODE=0 HXC229_UNIT=gfals-$RUN-absent-unit bash "$G229"

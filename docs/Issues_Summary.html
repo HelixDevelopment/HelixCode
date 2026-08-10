@@ -207,12 +207,12 @@ SQLite single-source-of-truth (§11.4.12).</p>
 <tr>
 <td>Task</td>
 <td>Queued</td>
-<td>12</td>
+<td>13</td>
 </tr>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>53</strong></td>
+<td><strong>54</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1545,33 +1545,6 @@ stack and that every message it prints names the address it genuinely
 bound.</td>
 </tr>
 <tr>
-<td>HXC-252</td>
-<td>Bug</td>
-<td>Queued</td>
-<td>High</td>
-<td>The automated check that guards our workable-items records against
-drift gives the wrong repair instruction when it finds a problem, and
-following that instruction would destroy data. The system keeps the same
-information in two places: a database, which is the authoritative copy,
-and a set of human-readable documents generated from it. When the check
-notices the two disagree, it tells the maintainer to copy the documents
-into the database - which is exactly backwards, because the database is
-the side that is meant to be trusted and the documents are the side that
-is meant to be regenerated. At the moment the problem was found, obeying
-the message would have overwritten a database holding forty-six items
-with a stale document holding only thirty-six, deleting ten items
-outright and resurrecting eight that had already been closed. The trap
-is particularly dangerous because it fires precisely when someone is
-already worried about consistency and is therefore most inclined to do
-exactly what the tool tells them. Anyone maintaining the project’s issue
-records is at risk, and because the loss would look like a legitimate
-synchronisation rather than an accident, it could easily go unnoticed
-for a long time. The expected outcome is that the message names the
-correct direction - regenerate the documents from the database - so that
-following the tool’s own advice repairs the disagreement instead of
-causing data loss.</td>
-</tr>
-<tr>
 <td>HXC-254</td>
 <td>Bug</td>
 <td>Queued</td>
@@ -1703,6 +1676,59 @@ test plants a disagreement between the documents and the database, but
 nothing plants a difference between the committed copy and the working
 copy and requires the check to object - adding that case is the
 specified follow-up.</td>
+</tr>
+<tr>
+<td>HXC-258</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>Our workable-items database keeps a small bookkeeping note saying
+which way the last synchronisation ran between the database and the
+human-readable tracker documents. That note is only ever written by one
+of the two synchronisation paths - the one that copies documents into
+the database - and the value it writes is fixed text rather than the
+direction that actually ran. The path that goes the other way,
+regenerating the documents from the database, never updates the note at
+all. The practical effect is that after the documents are regenerated
+the note still describes an older run in the opposite direction, so
+anyone reading it to find out what happened most recently is told the
+reverse of the truth. This matters because deciding the direction of a
+synchronisation is exactly the judgement that can destroy records if it
+is made backwards, and this field looks like evidence for that judgement
+while being incapable of supporting it. The note currently reads as a
+document-into-database run dated the eleventh of July while the most
+recent actual run was a database-into-documents regeneration on the
+ninth of August. The correct repair is in the shared tooling that
+performs the synchronisation, which must record the direction that
+genuinely ran on both paths rather than assuming one of them; editing
+the stored value by hand would be undone by the next run and is
+therefore not a fix.</td>
+</tr>
+<tr>
+<td>HXC-259</td>
+<td>Task</td>
+<td>Queued</td>
+<td>Low</td>
+<td>Every workable item is supposed to accumulate a short audit trail
+recording the moments its status changed - opened, reopened, closed -
+together with who made the change and what evidence justified it. A
+recent repair noted in passing that two newly filed items had no such
+trail. Measurement across the whole database shows the situation is not
+confined to those two: eighty-one distinct records covering one hundred
+and forty-five rows have no history entries at all, and all but one of
+them are items that have already been closed and filed away. In other
+words the majority of our closed record has no machine-readable account
+of how it reached that state, which weakens any later attempt to audit a
+closure, to understand why something was reopened, or to reconstruct a
+timeline for a review. The cause is that items created by direct
+database writes rather than through the sanctioned creation command skip
+the step that opens the audit trail, and historical records imported
+before the trail existed never had one. This is deliberately not being
+repaired by back-filling: inventing dates and authors for events nobody
+witnessed would produce an audit trail that is worse than an absent one
+because it would look authoritative. What is needed instead is a
+decision on how to mark these records as genuinely unaudited, and a
+check that prevents any newly created item from joining them.</td>
 </tr>
 </tbody>
 </table>

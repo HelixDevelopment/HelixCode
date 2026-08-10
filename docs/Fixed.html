@@ -7840,6 +7840,36 @@ The honest limit worth recording is that the sweep is started by a
 person rather than automatically, so these checks now run whenever
 someone runs the sweep, which is a real improvement but is not the same
 as unattended enforcement.</p>
+<h2
+id="hxc-252-the-tracker-consistency-check-advises-the-reverse-sync-direction-which-would-delete-live-records">HXC-252
+— The tracker consistency check advises the reverse sync direction,
+which would delete live records</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong>
+docs/qa/r4_review_remediation_20260810T191500Z/EVIDENCE.md
+<strong>Severity:</strong> High <strong>Created-By:</strong> AI
+<strong>Assigned-To:</strong> Claude</p>
+<p>The automated check that guards our workable-items records against
+drift gives the wrong repair instruction when it finds a problem, and
+following that instruction would destroy data. The system keeps the same
+information in two places: a database, which is the authoritative copy,
+and a set of human-readable documents generated from it. When the check
+notices the two disagree, it tells the maintainer to copy the documents
+into the database - which is exactly backwards, because the database is
+the side that is meant to be trusted and the documents are the side that
+is meant to be regenerated. At the moment the problem was found, obeying
+the message would have overwritten a database holding forty-six items
+with a stale document holding only thirty-six, deleting ten items
+outright and resurrecting eight that had already been closed. The trap
+is particularly dangerous because it fires precisely when someone is
+already worried about consistency and is therefore most inclined to do
+exactly what the tool tells them. Anyone maintaining the project’s issue
+records is at risk, and because the loss would look like a legitimate
+synchronisation rather than an accident, it could easily go unnoticed
+for a long time. The expected outcome is that the message names the
+correct direction - regenerate the documents from the database - so that
+following the tool’s own advice repairs the disagreement instead of
+causing data loss.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />

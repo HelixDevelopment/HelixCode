@@ -57,11 +57,21 @@
 # The SKIP path is deliberately NARROW so it cannot fail open (§11.4.69
 # CM-NO-FAIL-OPEN-SKIP). It fires ONLY when there is provably no process to
 # read: no systemd user manager, unit never installed (LoadState=not-found),
-# unit installed but stopped-by-choice (inactive/activating), no MainPID, an
-# unreadable /proc/<pid>/environ, or a journal window carrying no startup marker
-# and therefore incapable of proving anything either way. Once a live process
-# exists, is readable, and its window contains a startup, the only outcomes are
-# PASS and FAIL.
+# unit installed but stopped-by-choice (inactive/activating), no MainPID, or an
+# unreadable /proc/<pid>/environ. Once a live process exists and is readable,
+# the only outcomes are PASS and FAIL.
+#
+# A JOURNAL WINDOW WITH NO STARTUP MARKER IS NO LONGER A SKIP (review R4,
+# 2026-08-10). It was, and that was wrong in the opposite direction: check 1 had
+# already interrogated the live process and passed, so the SKIP was discarding
+# earned evidence and calling it "certified nothing". On a gateway up long
+# enough for journald to rotate its startup line — the production case, measured
+# on the very first real sweep — that produced a PERMANENT SKIP. A release-wired
+# gate that can never go red is muted just as effectively as one nobody runs.
+# The unprovable window now yields PASS-with-caveat: it reports the check that
+# ran and passed, and names the cross-check that could not run and why. It
+# cannot fail open, because check 1 FAILs before reaching it and the GIN-debug
+# scan FAILs on any hit irrespective of provability.
 #
 # CRUCIALLY, ActiveState=failed is NOT in that set — it FAILs. An independent
 # review demonstrated the original hole: a deployed gateway that crash-looped
@@ -245,13 +255,12 @@ STARTUPS="$(printf '%s\n' "$WINDOW" | grep -cE 'Starting|Listening|listen' || tr
 # guard is not blind here; it simply declines to certify on a cross-check it
 # cannot perform. And a window that DOES contain GIN-debug lines still FAILs
 # below regardless, because that is positive evidence of the defect.
-[ "$STARTUPS" -ge 1 ] || skip_env \
-  "the journal window since '$ACTIVE_SINCE' holds $LINES line(s) but NO startup \
-marker for '$UNIT' (rotated, vacuumed, or journald unavailable). A debug-mode \
-gateway dumps its routes only at startup, so this window could not have caught \
-the defect — it certifies nothing either way, which is a SKIP, not a finding."
-
 # --- check 3: zero GIN-debug in the CURRENT process's own output -----------
+# Computed BEFORE the window-provability branch, deliberately. GIN-debug lines
+# are POSITIVE evidence of the defect and are conclusive wherever they appear —
+# an unprovable window can fail to CONTAIN them, but if it does contain them the
+# gateway is demonstrably serving in debug mode. Skipping the scan because the
+# window lacks a startup marker would discard a real finding (§11.4.201).
 DEBUG="$(printf '%s\n' "$WINDOW" | grep -c 'GIN-debug' || true)"
 
 if [ "$RED_MODE" = "1" ]; then
@@ -265,6 +274,41 @@ fi
 [ "$DEBUG" -eq 0 ] || fail \
   "$DEBUG GIN-debug line(s) from the LIVE process (pid $PID, since '$ACTIVE_SINCE'). \
 The gateway is serving in debug mode."
+
+# AN UNPROVABLE CROSS-CHECK IS A CAVEAT, NOT A VERDICT OF NOTHING (review R4).
+#
+# The previous revision SKIPped here, discarding check 1 — which HAD run, on the
+# live process's own /proc/<pid>/environ, and HAD passed. "Certified nothing" was
+# therefore false: it certified the primary invariant and then threw the result
+# away. Measured consequence on the production host 2026-08-08: the gateway has
+# been up since before its journal window rotated, so the startup marker is gone
+# and G30 SKIPped on its very first real sweep — and would keep SKIPping for as
+# long as the process stays up. A release-wired gate stuck in permanent SKIP is
+# the muted-gate dynamic approached from the other side: it never goes red, so
+# nobody looks, and the fact that it is enforcing nothing is invisible.
+#
+# THIS CANNOT FAIL OPEN, and the ordering is what guarantees it:
+#   - check 1 (GIN_MODE=release, read from the live process) runs FIRST and
+#     FAILs outright on violation; reaching this line means it passed.
+#   - check 3 (GIN-debug scan) runs ABOVE this branch and FAILs on any hit,
+#     regardless of whether the window is provable.
+# So the only thing this branch changes is the verdict when both real checks
+# passed and only the corroboration was unavailable: PASS-with-caveat instead of
+# discarding the evidence. It is a WEAKER pass than the full GREEN below, and it
+# says so rather than presenting itself as equivalent (§11.4.6).
+if [ "$STARTUPS" -lt 1 ]; then
+    echo "PASS-with-caveat (HXC-229): pid=$PID carries GIN_MODE=release, read \
+from the live process's own /proc/$PID/environ — the primary invariant is \
+ENFORCED and holds. CAVEAT: the corroborating route-dump cross-check could NOT \
+run — the journal window since '$ACTIVE_SINCE' holds $LINES line(s) but no \
+startup marker (rotated or vacuumed; expected on a long-lived process). A \
+debug-mode gateway dumps its routes only at startup, so a clean scan of this \
+window proves nothing on its own and is NOT claimed as evidence here. What is \
+claimed: the running process's environment, plus $DEBUG GIN-debug line(s) in \
+the window (a hit would have FAILed above regardless of provability). To restore \
+the full cross-check, restart the unit and re-run."
+    exit 0
+fi
 
 echo "GREEN (HXC-229): pid=$PID GIN_MODE=release; ${DEBUG} debug lines in ${LINES} \
 live lines since '${ACTIVE_SINCE}'; ${STARTUPS} startup marker(s) present (non-vacuous)."

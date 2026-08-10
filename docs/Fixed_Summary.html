@@ -192,7 +192,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td>Bug</td>
 <td>Fixed (→ Fixed.md)</td>
-<td>212</td>
+<td>213</td>
 </tr>
 <tr>
 <td>Bug</td>
@@ -217,7 +217,7 @@ the SQLite single-source-of-truth (§11.4.53).</p>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>398</strong></td>
+<td><strong>399</strong></td>
 </tr>
 </tbody>
 </table>
@@ -4878,6 +4878,34 @@ success.</td>
 </tr>
 <tr>
 <td>380</td>
+<td>High</td>
+<td>Fixed (→ Fixed.md)</td>
+<td>Bug</td>
+<td>—</td>
+<td>HXC-252 — The automated check that guards our workable-items records
+against drift gives the wrong repair instruction when it finds a
+problem, and following that instruction would destroy data. The system
+keeps the same information in two places: a database, which is the
+authoritative copy, and a set of human-readable documents generated from
+it. When the check notices the two disagree, it tells the maintainer to
+copy the documents into the database - which is exactly backwards,
+because the database is the side that is meant to be trusted and the
+documents are the side that is meant to be regenerated. At the moment
+the problem was found, obeying the message would have overwritten a
+database holding forty-six items with a stale document holding only
+thirty-six, deleting ten items outright and resurrecting eight that had
+already been closed. The trap is particularly dangerous because it fires
+precisely when someone is already worried about consistency and is
+therefore most inclined to do exactly what the tool tells them. Anyone
+maintaining the project’s issue records is at risk, and because the loss
+would look like a legitimate synchronisation rather than an accident, it
+could easily go unnoticed for a long time. The expected outcome is that
+the message names the correct direction - regenerate the documents from
+the database - so that following the tool’s own advice repairs the
+disagreement instead of causing data loss.</td>
+</tr>
+<tr>
+<td>381</td>
 <td>Medium</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4907,7 +4935,7 @@ someone runs the sweep, which is a real improvement but is not the same
 as unattended enforcement.</td>
 </tr>
 <tr>
-<td>381</td>
+<td>382</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4917,7 +4945,7 @@ as unattended enforcement.</td>
 path</td>
 </tr>
 <tr>
-<td>382</td>
+<td>383</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4926,7 +4954,7 @@ path</td>
 hardcoded path</td>
 </tr>
 <tr>
-<td>383</td>
+<td>384</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4935,7 +4963,7 @@ hardcoded path</td>
 <code>WriteTOON</code> returns 500</td>
 </tr>
 <tr>
-<td>384</td>
+<td>385</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4943,7 +4971,7 @@ hardcoded path</td>
 <td>HXL-002 — HXL-002 (ex-ISSUE-004): HelixLLM TOON WriteTOON 500</td>
 </tr>
 <tr>
-<td>385</td>
+<td>386</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4952,7 +4980,7 @@ hardcoded path</td>
 (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>386</td>
+<td>387</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4961,7 +4989,7 @@ hardcoded path</td>
 <code>TestPerformance</code> flake (host-load-sensitive)</td>
 </tr>
 <tr>
-<td>387</td>
+<td>388</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4971,7 +4999,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 <code>tests/integration</code> compile</td>
 </tr>
 <tr>
-<td>388</td>
+<td>389</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4980,7 +5008,7 @@ VisionEngine <code>remote</code> API drift blocks helix_agent
 failures (CLI-integration + verification/scoring)</td>
 </tr>
 <tr>
-<td>389</td>
+<td>390</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4989,7 +5017,7 @@ failures (CLI-integration + verification/scoring)</td>
 pre-existing test failures</td>
 </tr>
 <tr>
-<td>390</td>
+<td>391</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -4998,7 +5026,7 @@ pre-existing test failures</td>
 10 pre-existing test failures</td>
 </tr>
 <tr>
-<td>391</td>
+<td>392</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5008,7 +5036,7 @@ pre-existing test failures</td>
 production mock-bluff</td>
 </tr>
 <tr>
-<td>392</td>
+<td>393</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5017,7 +5045,7 @@ production mock-bluff</td>
 <code>CreatePromptExperiment</code> test failures</td>
 </tr>
 <tr>
-<td>393</td>
+<td>394</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5027,7 +5055,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>394</td>
+<td>395</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5037,7 +5065,7 @@ multi-byte UTF-8 runes to bytes (<code>TestResult.MarshalJSON</code>
 corrupts non-ASCII)</td>
 </tr>
 <tr>
-<td>395</td>
+<td>396</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -5046,7 +5074,7 @@ corrupts non-ASCII)</td>
 (404) — CLOSED (→ Fixed.md)</td>
 </tr>
 <tr>
-<td>396</td>
+<td>397</td>
 <td>—</td>
 <td>Completed (→ Fixed.md)</td>
 <td>Task</td>
@@ -5055,7 +5083,7 @@ corrupts non-ASCII)</td>
 <code>helix-gitlab</code> URL fix (was misconfigured, not missing)</td>
 </tr>
 <tr>
-<td>397</td>
+<td>398</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>
@@ -5065,7 +5093,7 @@ corrupts non-ASCII)</td>
 93c830a</td>
 </tr>
 <tr>
-<td>398</td>
+<td>399</td>
 <td>—</td>
 <td>Fixed (→ Fixed.md)</td>
 <td>Bug</td>

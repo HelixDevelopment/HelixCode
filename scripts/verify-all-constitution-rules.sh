@@ -52,6 +52,19 @@
 #                                    coverage report; sources_verified_gate.sh;
 #                                    --enforce blocks at 100% per HXC-030)
 #   G14 §11.4.106 docs_chain verify  — governance docs tree in-sync
+#   G30 §11.4.135 HXC-229 guard      — gateway serves in Gin RELEASE mode (live process)
+#   G31 §11.4.135 HXC-233 guard      — completion path returns a REAL generation (live e2e)
+#   G32 §11.4.135 HXC-244 guard      — health endpoint names the components it checked
+#
+# REGISTRATION DRIFT IS NOW SELF-REPORTING (review R4, 2026-08-10).
+# --explain lists the entries above; the sweep defines gates as `want_gate GN`
+# blocks. Nothing kept the two in step, so the list stalled at G14 while the
+# sweep grew to G32 — and the commit that added G30-G32 initially widened the
+# gap by three without noticing. A drifted --explain is quietly wrong in the
+# worst way: it answers confidently and omits, so a reader concludes a gate does
+# not exist. Rather than re-sync by hand and re-drift next time, --explain now
+# diffs itself against the live gate set and names what it cannot describe.
+# G15-G29 remain undescribed and are reported as such on every invocation.
 #                                    (md→html→pdf hashes checked by the
 #                                    docs_chain engine via `verify --all`);
 #                                    SKIP-with-reason if engine absent;
@@ -85,7 +98,20 @@ for arg in "$@"; do
     case "$arg" in
         --quiet)         QUIET=1 ;;
         --gate=*)        ONLY_GATE="${arg#--gate=}" ;;
-        --explain)       grep -E '^#   G[0-9]' "$0" | sed 's/^#   //'; exit 0 ;;
+        --explain)
+            grep -E '^#   G[0-9]' "$0" | sed 's/^#   //'
+            # Self-audit: every `want_gate GN` block must have a description
+            # line above, or --explain silently under-reports the sweep.
+            _described="$(grep -oE '^#   G[0-9]+' "$0" | awk '{print $2}' | sort -u)"
+            _defined="$(grep -oE '^if want_gate G[0-9]+' "$0" | awk '{print $3}' | sort -u)"
+            _missing="$(comm -13 <(printf '%s\n' "$_described") <(printf '%s\n' "$_defined") | tr '\n' ' ')"
+            if [ -n "${_missing// /}" ]; then
+                echo
+                echo "NOTE: $(printf '%s' "$_missing" | wc -w) gate(s) run in this sweep but have NO description above: ${_missing%% }"
+                echo "      They still EXECUTE and are still release-blocking — only this listing is incomplete."
+                echo "      Tracked as a documentation gap; add a '#   GN <rule> — <what it proves>' line to close each."
+            fi
+            exit 0 ;;
         *)               echo "unknown arg: $arg" >&2; exit 2 ;;
     esac
 done
