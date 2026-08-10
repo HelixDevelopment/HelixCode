@@ -340,10 +340,45 @@ systemic gap.
 > Independently re-derived (2026-08-11, round 6): searched every tracked,
 > non-documentation file for each of the 14 basenames under `scripts/tests/`,
 > then read every matched line rather than trusting the match count
-> (§11.4.201). The only hits outside each file's own definition were the four
-> lines discussed above — two genuine invocations, two non-invocation
-> references (a self-exclusion arm and a comment). The remaining ten files
-> have zero references of any kind, anywhere in the tracked non-doc tree.
+> (§11.4.201). The only hits outside each file's own definition were these five
+> lines — two genuine invocations and three non-invocation references:
+>
+> - `scripts/verify-all-constitution-rules.sh:513` — genuine invocation (G11)
+> - `scripts/verify-all-constitution-rules.sh:1076` — genuine invocation (G27)
+> - `scripts/verify-all-constitution-rules.sh:46` — comment (G11 header inventory)
+> - `scripts/gates/cross_platform_parity_gate.sh:103` — self-exclusion case-arm
+> - `scripts/gates/obsolete_details_gate.sh:29` — comment
+>
+> The remaining ten files have zero references of any kind, anywhere in the
+> tracked non-doc tree.
+
+> **ROUND-7 CORRECTION (2026-08-11).** The paragraph above originally asserted
+> "the four lines discussed above — two genuine invocations, two non-invocation
+> references (a self-exclusion arm and a comment)". That under-counted by one:
+> `scripts/verify-all-constitution-rules.sh:46`, an inert comment inside G11's
+> header inventory that names `sync_gate_direction_neutrality_meta_test.sh`, and
+> which `ca740516` itself added. Reproduce with:
+>
+> ```
+> git grep -n --fixed-strings sync_gate_direction_neutrality_meta_test.sh \
+>   -- ':!docs' ':!*.md' ':!*.html' \
+>      ':!scripts/tests/sync_gate_direction_neutrality_meta_test.sh'
+> ```
+> → returns lines 46 and 513.
+>
+> **Nothing downstream changes.** The file line 46 names was already classified
+> WIRED via its genuine invocation at line 513, so no figure, classification,
+> per-file count, or tracker entry moves: 1-of-14 wired before `ca740516`,
+> 2-of-14 after, systemic gap 12. HXC-263 remains correct as filed.
+>
+> **Why the shape changed, not just the number.** The aggregate count in this
+> paragraph has now been wrong in two consecutive review rounds (round 6: "3 of
+> 14" wired; round 7: "four lines" of references). A free-floating total is a
+> claim that can drift silently; an enumerated list is checkable line by line
+> against a single grep. The total was therefore replaced by the enumeration
+> above rather than merely corrected to five — the same reasoning §11.4.201
+> applies to counts ("a count is a lead; the lines are the finding"), applied to
+> this document's own claims.
 
 ### Disposition: THIS guard WIRED (the systemic gap is NOT closed)
 
