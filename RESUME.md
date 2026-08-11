@@ -1,8 +1,188 @@
 # RESUME — HelixCode Session Handoff
 
-**Revision:** 12
+**Revision:** 13
 **Created:** 2026-07-08
-**Last modified:** 2026-08-07T19:20Z (rev 12 — live-boot cycle done, 5 defects fixed, 4 decisions taken)
+**Last modified:** 2026-08-11T16:25Z (rev 13 — 4 items landed + published, 3 review loops mid-flight, 11 items filed today)
+
+---
+
+## ▶ START HERE (Revision 13) — paste this into a fresh session
+
+> Read `RESUME.md` (this file), then `git fetch --all --prune`. Main repo is at
+> `619355e2`, **0 unpushed**, all four remotes match. For tracker counts read the
+> table below — **they are deliberately not repeated here**, because a number
+> written twice goes stale in one place first, and this blockquote is the copy a
+> fresh session acts on. Several adversarial review loops were mid-flight at
+> handoff; **their work is UNCOMMITTED in the submodule trees — do not `git
+> checkout`/`reset` anything under `submodules/` until you have read the state
+> below.** The release tag stays blocked on §11.4.185 manual QA and two
+> credential rotations, both operator-only.
+
+### ⚠ Every number below is a SNAPSHOT — re-derive, do not quote
+
+This file was written **while work was in flight**. It therefore contains no
+durable facts about that work, only timestamped observations. Four separate
+attempts to caveat individual numbers here each went stale or were themselves
+wrong — including one that claimed a set was closed when it was still growing.
+So the rule is blanket, not per-claim:
+
+**Treat every count, list, range and dirty-state in this file as an observation
+at ~16:25Z on 2026-08-11, and re-derive it before acting.** Commit SHAs and item
+IDs are stable; anything countable is not.
+
+**And the category that cost a fifth round:** a PROSE CLAIM about what a commit
+does, or what state some code is in, is none of those things — not a count, not
+a list, not a SHA — so the rule above does not cover it, and it fails the same
+way. It is the *more* dangerous kind, because every countable claim here now has
+a one-line command that proves or disproves it, while a prose claim needs
+someone to walk commit history to catch. This file had one: it asserted a guard
+was "blind to its own defect" when a commit three days older than the file had
+already closed it. **Every narrative claim about code or defect state MUST cite
+the commit it was last checked against** — and a fresh session should re-check
+any that does not.
+
+**Per SUB-ASSERTION, not per sentence.** That rule was added and immediately
+failed once more: a bullet cited a commit for its first half ("the guard is
+fixed" — true) while its second half ("the parent pointer still pins a commit
+without the fix" — false, bumped three days earlier) rode along uncited. A
+citation vouches only for the clause it was checked against. Compound claims
+need a citation each, or they need splitting.
+
+**Honest scorecard for this file:** six verification rounds, six real errors,
+and rounds 2–6 each found a defect introduced by the previous round's fix. That
+is the strongest thing this file can tell you — not that its numbers are right,
+but that hand-written state about a live system goes wrong faster than it can be
+corrected. Re-derive. Trust the commands, not the prose.
+
+```bash
+git rev-parse --short HEAD && git log --oneline @{u}..HEAD | wc -l
+for m in helix_agent helix_qa llms_verifier; do \
+  echo "$m $(git -C submodules/$m rev-parse --short HEAD) dirty=$(git -C submodules/$m status --porcelain | wc -l)"; done
+sqlite3 docs/workable_items.db "SELECT COUNT(*) FROM items;"
+sqlite3 docs/workable_items.db "SELECT COALESCE(NULLIF(severity,''),'unset'), COUNT(*) \
+  FROM items WHERE status NOT LIKE '%Fixed.md%' GROUP BY 1;"
+sqlite3 docs/workable_items.db "SELECT atm_id,status FROM items WHERE created_at LIKE '2026-08-11%';"
+git rev-list --count 5300a4e6..HEAD   # CONTINUATION staleness
+```
+
+### Observed state at ~16:25Z (snapshot — see the rule above)
+
+| | |
+|---|---|
+| main repo | `619355e2` — 0 unpushed |
+| tracker | **472 items, 69 open** — 4 Critical, 14 High, 31 Medium, 20 Low, 0 unset; `validate: OK`. The 4 Criticals: `HXC-227` (published key, 48 days, all 4 mirrors — operator-only rotation), `HXC-243`, `HXC-261`, `HXC-271` |
+| `submodules/helix_agent` | `1f14ca48` published; **3 dirty** (an agent is mid-edit here) |
+| `submodules/helix_qa` | `4109fb6` published; **20 dirty** (all unrelated `tools/opensource/*` gitlinks) |
+| `submodules/llms_verifier` | `e021ea6e` published; **0 dirty** |
+
+### Published this session — all fast-forward, remote-verified, no force
+
+```
+HXC-239  d95d4b3 → merged 690e76e   helix_qa
+HXC-248  1f14ca48                   helix_agent
+HXC-267  65d4018                    helix_qa
+HXC-270  4109fb6                    helix_qa        CLOSED, 2 review rounds
+HXC-250  e021ea6e                   llms_verifier   CLOSED, 8 review rounds
+tracker  619355e2                   main
+```
+
+`HXC-270` and `HXC-250` are closed with captured evidence under
+`docs/qa/hxc270_20260811T180000Z/` and `docs/qa/hxc250_20260811T180500Z/`.
+Counted from those logs: `helix_qa` guards 106 PASS / 0 FAIL; `llms_verifier`
+`helixendpoint` 276 and `cliagents` 308, both 0 FAIL — leak censuses
+`0 leaks across 48` and `0 leaks across 51` reproduced independently.
+(An earlier revision said "586", which reconciles to nothing; per-package counts
+are given here instead of a sum, so the arithmetic is checkable.)
+
+**The `helix_qa` and `llms_verifier` parent pointers are NOT yet bumped** —
+verified by `git ls-tree HEAD -- submodules/<name>` against each submodule's
+HEAD. Until they are, a recursive clone gets neither fix. This is NOT the same
+situation as HXC-234, whose pointer was bumped days ago.
+
+### In flight at handoff — uncommitted work, finish rather than restart (§11.4.147)
+
+1. **HXC-261** — gRPC identity challenge. Round 3 returned NO-GO on one finding:
+   the `&&` joining test-4's status-code and server-message probes had no seam.
+   A static positional pin (`TestChallengeScript_ErrorVectorDemandsBothCodeAndMessage`
+   in `internal/challenges/protocol_grpc_oracle_test.go`) now kills that mutant
+   — verified FAIL under `&&`→`||` in both grpcurl-absent and grpcurl-present
+   conditions. **Round-4 review was running at handoff.**
+**`HXC-270` and `HXC-250` are no longer in flight — both landed and closed
+(see Published above).** For HXC-270, the seven sites carry `HXC-270 site N of 7`
+source markers: grep those, never line numbers. Six marker lines cover seven
+sites, because `http_executor.go` marks "sites 6 and 7 of 7" together.
+
+### Filed this session — `HXC-267` onward (snapshot: 12 items at 16:25Z)
+
+Do NOT treat this range as closed. An earlier revision of this file called the
+range and count "durable, because `created_at` is immutable" — each ROW's
+timestamp is immutable, but the SET matched by "filed today" keeps growing while
+the session runs, and `HXC-278` landed one minute after that claim was written.
+Re-derive per the rule above.
+
+Two worth reading first: **HXC-271 (Critical)** — the agent's facade server never
+receives the provider registry, so its whole remote-call family can never succeed
+on any host; **HXC-275** — two branches of the gRPC identity check have no runtime
+coverage at all.
+
+**Several carry a `Queued` status that does not describe their real state.**
+Named exceptions rather than a count, so this cannot drift:
+- `HXC-267` — fix **COMMITTED at `65d4018`**, item still open. Landed-but-not-
+  closed; do not re-do it.
+- `HXC-270` — fix written, **in review at handoff** (see In flight above).
+- `HXC-239` — landed and merged (`d95d4b3` → `690e76e`); status `Ready for testing`.
+- `HXC-243` — 16 banks made falsifiable (`75ed248`, `d05d825`), open on one honest
+  gap: batch 2 is fixture-proven but **not service-proven**.
+- `HXC-234` — open because **the container build still fails**: two packages fail
+  during dependency-install and compile, so the plug-in servers never start.
+  Derived from the item's own description, not from a review summary.
+  Two claims this file previously made about it were BOTH false and are recorded
+  here so they are not reconstructed: (a) "its guard is blind to its own defect"
+  — closed by `66a3c1c6` ("close the blind guard", `MUTANT guard EXIT=1`);
+  (b) "the parent pointer still pins a commit without the fix" — the pointer was
+  bumped by `f0dd7069` eleven minutes after that fix landed, and `66a3c1c6` is
+  verified an ancestor of the recorded pointer `94e2dcc8`, so a clone DOES get
+  the guard. The guard makes the failure observable; it does not fix the build.
+- `HXC-235` — PARTIAL. Checked against `f2e12570`: the degraded state is now
+  observable, but `HELIX_EMBEDDING_PROVIDER` is unset so the pipeline genuinely
+  IS still HashEmbedder-only. `bd98cec7` adds a second reason it stays open —
+  no G-gate exists yet.
+
+Everything else in the range is genuinely unstarted — re-derive rather than count.
+
+### Traps this session paid for — do not re-learn
+
+- **`go test` without `-v` discards package stdout on success.** This nearly
+  caused a valid finding to be rejected.
+- **A filed site count is a lead, never a fact.** Three items in a row were
+  corrected upward by the next reviewer: 2→9, 3→15, and (3 and 5)→7. Measure.
+- **The shared scratchpad is NOT session-isolated** — an agent had its driver
+  script overwritten mid-run. Work in a private subdirectory; re-verify hashes.
+- **`git diff` is blind on `pkg/helixendpoint/`** (untracked) — prove
+  comments-only claims by hash, not diff.
+- **`:8100` is held by `llm-verifier`, not the agent.** This is why HXC-247 is
+  deliberately unassigned: fixing it first would ARM HXC-248's teardown against
+  the live platform.
+- **mtime lies about doc freshness** (§11.4.86) — re-derive from `git log`.
+
+### Release blockers — both operator-only
+
+1. §11.4.185 manual-QA sign-off for `helix-code-1.2.0-dev-0.0.1` (cannot be
+   self-certified).
+2. Rotate the two published credentials (HXC-227, HXC-168).
+
+Plus: the §11.4.40 full-suite retest must run on a **quiescent** host. Running it
+while agents are live measures contention, not correctness (§11.4.119).
+
+### Known stale — `docs/CONTINUATION.md`
+
+Last advanced `07-28 23:06` (`5300a4e6`). Commits since, at 16:25Z: **228** —
+a snapshot that grows with every commit; re-derive with
+`git rev-list --count 5300a4e6..HEAD` rather than quoting the number above.
+That is a CONST-044 / §12.10 violation in its own right, filed as **HXC-277**.
+This file (rev 13) carries the current picture, so a fresh session is covered;
+HXC-277 is about restoring the longer-lived record and making the discipline
+mechanical rather than remembered.
 
 ---
 
