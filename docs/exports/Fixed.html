@@ -7694,6 +7694,54 @@ operator is told rather than left with a silently wrong address; and a
 standing test covers all three shapes plus the ordinary host and address
 cases, proven real by a paired mutation that removes the handling and
 makes the test fail.</p>
+<h2 id="hxc-261-hxc-261-the-grpc-protocol-challenge-recorded-success-on-every-branch-and-probed-a-port-nobody-binds-certifying-grpc-healthy-without-ever-contacting-a-grpc-server">HXC-261
+— HXC-261: the gRPC protocol challenge recorded success on every branch
+and probed a port nobody binds, certifying gRPC healthy without ever
+contacting a gRPC server</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong> docs/qa/hxc261_20260811T193000Z
+<strong>Severity:</strong> Critical <strong>Created-By:</strong>
+Claude</p>
+<p>The challenge script that is supposed to prove HelixAgent’s gRPC
+protocol works was structurally incapable of failing, and it has been
+reporting green for the entire time it has existed. Two independent
+faults compounded. First, it resolved its port from an environment
+variable named HELIXAGENT_GRPC_PORT defaulting to 7062 — a third
+spelling that no Go source reads (the server honours
+HELIXAGENT_PORT_GRPC) and a number belonging to no service in the
+project: not the old hardcoded 50051, not the registry’s 8112, not the
+HTTP port 7061. Second, and far worse, every one of its four probes
+recorded a successful assertion whether the port answered or not: the
+port-availability check recorded true when the port was listening AND
+recorded true, labelled ‘optional’, when it was not; the unary-call,
+streaming-call and error-handling checks did the same. The two faults
+together mean the challenge dialled an address no HelixAgent process has
+ever bound, found nothing there, and then certified the gRPC protocol
+healthy. This is the most damaging class of defect in the codebase
+because it is not merely an untested feature — it is an automated test
+actively producing false-green results, which is exactly what the
+anti-bluff covenant exists to prevent, and it masks any real gRPC
+breakage from everyone reading the suite. It also violated the challenge
+framework’s own documented contract: the framework already ships a
+record_skip helper whose docstring says never to use record_assertion
+with status true to mask a missing feature, and the primitive was simply
+not used. This item covers resolving the port through the registry’s own
+variable name and default, consolidating the four duplicated probe sites
+into one helper so absence is interpreted in exactly one place, making
+absence report as an honest SKIP carrying a SKIP-OK ticket rather than
+success, making a real failed call report as FAILED, and replacing the
+two-state final verdict (which reported PASSED whenever nothing had
+failed, including when nothing had been verified) with a three-state
+verdict that reports SKIPPED when no assertion could be verified.
+Reproduce with the guard at
+challenges/scripts/tests/protocol_grpc_fail_open_guard.sh run with
+RED_MODE=1 against the pre-fix script: it binds and releases a port to
+prove it is free, drives the challenge’s own probe functions against it,
+and confirms assertions are recorded PASSED anyway. Acceptance criteria:
+that same guard with RED_MODE=0 reports zero PASSED assertions against a
+proven-free port with every probe SKIPPED and SKIP-OK tagged, and the
+challenge still records a genuine PASSED assertion when a real gRPC
+server is listening on the registry port.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
