@@ -197,7 +197,12 @@ SQLite single-source-of-truth (§11.4.12).</p>
 <tr>
 <td>Bug</td>
 <td>Queued</td>
-<td>42</td>
+<td>44</td>
+</tr>
+<tr>
+<td>Bug</td>
+<td>Ready for testing</td>
+<td>1</td>
 </tr>
 <tr>
 <td>Task</td>
@@ -207,12 +212,12 @@ SQLite single-source-of-truth (§11.4.12).</p>
 <tr>
 <td>Task</td>
 <td>Queued</td>
-<td>13</td>
+<td>14</td>
 </tr>
 <tr>
 <td><strong>TOTAL</strong></td>
 <td></td>
-<td><strong>57</strong></td>
+<td><strong>61</strong></td>
 </tr>
 </tbody>
 </table>
@@ -1190,26 +1195,49 @@ to cover.</td>
 <tr>
 <td>HXC-239</td>
 <td>Bug</td>
-<td>Queued</td>
+<td>Ready for testing</td>
 <td>—</td>
-<td>When HelixQA runs a test bank that needs to sign in, it reads the
-sign-in reply and picks out the wrong piece of it. The HelixCode server
-answers a successful login with two different values: a real access pass
-(the field named ‘token’) and a separate bookkeeping reference for the
-session (the field named ‘session_token’). Only the first one is
-accepted as proof of identity on later requests. HelixQA is set up out
-of the box to grab the second one, so it hands the server a value the
-server does not accept and is turned away with ‘Invalid or expired
-token’. The effect is that every test that needs to be signed in reports
-a failure even when the feature it is testing works perfectly. This was
-measured directly: the worker-management bank scored 6 passed and 4
-failed with the built-in setting, and 9 passed and 1 failed when pointed
-at the correct field, with no change to the server. The reason nobody
-noticed is that HelixQA’s own internal tests use a pretend server that
-puts the access pass in the field HelixQA expects, so the mismatch never
-shows up until it is run against the real product. Anyone reading the
-results would wrongly conclude that large parts of the product are
-broken.</td>
+<td>When HelixQA runs a test bank that needs to sign in, it cannot find
+the access pass in the sign-in reply, so every test in that bank that
+needs to be signed in fails. CORRECTED MECHANISM (the original wording
+of this item was wrong, and the correction matters): the reply carries
+the real access pass at the top level under the name token, while the
+separate bookkeeping reference for the session sits NESTED one level
+down inside a session object. The runner looked for the bookkeeping name
+at the top level only, found nothing there, and stopped with a plain
+complaint that the field was missing. It therefore never handed the
+server a wrong value and was never turned away for using one — it failed
+before making a single signed-in request. The original text described it
+as picking the wrong value and being rejected, which is not what
+happens; the reported counts in that text were nonetheless correct. A
+SECOND PLACE FAILED SILENTLY: the API validation step had its own copy
+of the same assumption with no way to override it, and when it could not
+find the pass it simply carried on without one, so every later request
+went out unsigned and the resulting rejections were recorded as faults
+in the service being tested rather than as a failure to sign in — which
+is why this looked like a broken service. WHY THE OBVIOUS FIX WAS WRONG:
+the bookkeeping name is the CORRECT name for a different family of about
+fourteen banks that target a separate catalogue service, whose access
+pass genuinely does sit at the top level under that name. Simply
+swapping the two names would have repaired one product by breaking every
+catalogue bank. The fix keeps the existing name first and adds fallbacks
+tried only when it is absent or empty, plus support for reaching a
+nested location, and reports clearly when nothing usable is found. HOW
+TO REPRODUCE: run a bank requiring sign-in against the platform and
+observe the run stop with a missing-field complaint before any signed-in
+request is made. MEASURED OUTCOME: the bank used for measurement went
+from six passing and four failing to eight passing and two failing. The
+two that remain are unrelated to signing in and pre-date this work: one
+posts an empty body where the service expects content, and the other
+collides with a leftover record created by the very measurement run that
+produced this item’s original figures, because that bank does not clean
+up after itself. That leftover is also why the originally reported
+nine-and-one is no longer reproducible. ACCEPTANCE CRITERIA: banks
+needing sign-in authenticate against both service families without
+configuration changes; a failure to find a usable pass is reported as
+its own explicit finding rather than as service faults; no credential
+value ever appears in a message or log; and a standing test proves the
+behaviour, shown real by a paired mutation that makes it fail.</td>
 </tr>
 <tr>
 <td>HXC-240</td>
@@ -1851,6 +1879,190 @@ database entry itself. Resolving it means reconciling the three fields
 into one accurate account that records both what was originally observed
 and how it was actually resolved, without erasing the original
 report.</td>
+</tr>
+<tr>
+<td>HXC-265</td>
+<td>Task</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>HelixAgent keeps 36 Go modules nested inside its repository (37
+counting the root module). Most of them are never compiled by anything
+the test suite or any gate runs, which means a developer can rename a
+package, change a shared type, or break an import inside one and every
+build and test still reports green — the breakage surfaces much later,
+or never. That silent-failure surface is what this item tracks, and it
+matters most for the documentation samples, because the project
+anti-bluff checklist promises that a documentation example works when
+copy-pasted and an example nothing ever compiles cannot honour that
+promise. WHO IS AFFECTED: developers who trust a green build, and
+readers who copy a documentation example expecting it to compile. THE
+COUNTS, each verifiable by one command (the quotes are load-bearing —
+unquoted, the shell expands the pattern before git sees it and reports 2
+instead of 36): inside submodules/helix_agent,
+<code>git ls-files '*/go.mod' \| wc -l</code> reports 36 nested modules,
+and
+<code>git ls-files 'challenges/codebase/go_files/*/go.mod' \| wc -l</code>
+reports the 6 that the Makefile build-challenge-modules recipe walks. By
+directory the 36 are 23 under docs/, 6 under challenges/, 2 under
+plugins/, 2 under docker/, and one each under Toolkit/, pkg/, and
+cli_agents/. THE CLASSIFICATION IS PER-MODULE, NOT AN AGGREGATE — two
+earlier revisions of this item stated a single wrong total because “is
+it compiled” cannot be answered by any one command, so each class below
+carries its own evidence. (1) NO COMPILE PATH AT ALL — 25 modules: the
+23 under docs/ and the 2 under plugins/; nothing anywhere compiles them,
+the three challenge scripts touching the plugins pair only run presence
+checks (test -f, grep -q), and root-level go build cannot reach any of
+them because Go does not cross nested-module boundaries. (2) COMPILED
+ONLY INSIDE UN-GATED CONTAINER IMAGES — 2 modules: docker/acp and
+docker/protocol-discovery, declared as build contexts in
+docker-compose.protocols.yml and running a real go build in their
+Dockerfiles, but no test suite or gate exercises those image builds and
+compose rebuilds only when the image is absent, so breakage surfaces
+late and non-deterministically rather than never. (3) FULLY INSIDE THE
+GATED BUILD — 1 module, pkg/api: it is required and replaced in the root
+go.mod, imported by cmd/grpc-server/main.go with no build tags, and
+built for four platforms by ci/scripts/ci-go.sh whose failures increment
+PHASE_FAILURES and set the exit code. It is NOT part of the problem set
+and needs no work. Note for future readers:
+<code>go list ./pkg/api</code> prints “main module does not contain
+package”, which is a true output but answers package-pattern membership
+rather than whether the module is ever compiled — an earlier revision of
+this item mistook the one for the other. (4) PARTIALLY INSIDE THE GATED
+BUILD — 1 module, Toolkit: internal/verifier/startup.go imports
+Toolkit/Providers/Chutes, which transitively pulls in three more Toolkit
+packages, so at least 4 of its 21 package directories compile on every
+root build while roughly 17 remain outside. (5) DELIBERATELY EXCLUDED
+WITH A RECORDED REASON AND A GUARD — 1 module, cli_agents: its go.mod is
+the HXC-139 isolation marker whose header documents why the vendored
+tree must not be compiled, paired with the regression guard at
+tests/regression/cli_agents_isolation_test.go. It already satisfies this
+item’s second acceptance arm and is terminal. ACCEPTANCE CRITERIA: every
+module in classes (1), (2) and the un-compiled remainder of (4) is
+either wired into a build or compile-check target the test suite
+actually runs, or deliberately excluded with a recorded reason in the
+manner of class (5); and a gate fails when a new nested module appears
+that is neither built nor explicitly excluded.</td>
+</tr>
+<tr>
+<td>HXC-266</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>The function that builds the URL clients use to reach HelixAgent
+formats the address as “http://%s:%d” without ever bracketing the host,
+so any IPv6 host literal produces a malformed URL. WHY THIS IS REACHABLE
+RATHER THAN THEORETICAL: the resolver layer deliberately treats the IPv6
+loopback ::1 as a valid, dialable host and blesses it, so a
+configuration that sets the host to ::1 passes every validation and then
+reaches this formatter. HOW IT MANIFESTS: the emitted address becomes
+http://::1:7061, which is not a parseable URL — the colons of the
+address and the colon of the port are indistinguishable to any URL
+parser, so the client fails to connect with a confusing parse error
+rather than a clear configuration error. WHO IS AFFECTED: any operator
+running the platform on an IPv6-only or IPv6-preferred host, and any
+deployment that resolves the agent host to an IPv6 literal instead of a
+name. HOW TO REPRODUCE: set the agent client host to ::1, request the
+client base URL, and observe the returned string is http://::1:7061
+rather than the correct bracketed form http://[::1]:7061. ACCEPTANCE
+CRITERIA: the builder brackets IPv6 literals per RFC 3986 so ::1 yields
+http://[::1]:7061, IPv4 and hostnames are unchanged, and a regression
+test covers IPv6 literal, bracketed input that must not be
+double-bracketed, IPv4, and hostname cases.</td>
+</tr>
+<tr>
+<td>HXC-267</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>When HelixQA signs in to run an API test bank and the server answers
+with a success code but a reply the runner cannot read at all, the
+runner goes quiet: it records nothing about the sign-in, carries on
+making requests with no credentials, and files the resulting rejections
+as faults in the API being tested rather than as its own failure to log
+in. A sibling fix (HXC-239) closed this for the case where the reply is
+readable data with the credential under an unexpected name — that path
+now raises a clear finding naming what it looked for. This item covers
+the door that fix left open. HOW IT MANIFESTS: the run looks like the
+tested service is broken, when in fact the runner never authenticated;
+whoever reads the report is sent to investigate the wrong system, which
+is the same misdiagnosis the sibling fix existed to prevent. WHY IT
+HAPPENS: the code that raises the explanatory finding is nested inside
+the branch taken only when the reply parses as structured data, and that
+branch has no counterpart for when parsing fails, so an unparseable
+reply skips the reporting entirely. MEASURED BEHAVIOUR (each case run
+directly against the code): a reply of empty text fails to parse and is
+silent; a reply of HTML such as a 503 error page fails to parse and is
+silent; a reply of the literal null parses and correctly raises the
+finding; a reply of an empty data object parses and correctly raises the
+finding. So the split is precisely between replies that parse and
+replies that do not, not between replies that carry a credential and
+replies that do not. HOW TO REPRODUCE: point the pipeline at a test
+server whose sign-in route returns status 200 with a body of empty text
+or HTML, run the API validation step, and observe that no sign-in
+finding is recorded while the later unauthenticated requests are
+recorded as API faults. WHO IS AFFECTED: anyone reading a HelixQA report
+for a service whose sign-in route can return a non-data body, including
+error pages produced by a proxy or gateway in front of the real service.
+ACCEPTANCE CRITERIA: an unparseable sign-in reply raises the same class
+of explanatory finding as an unusable one, naming what was attempted and
+the fact the body could not be read; the message never contains
+credential values; and a standing test covers the empty-body and
+non-data-body cases, proven real by a paired mutation that removes the
+new reporting and makes that test fail.</td>
+</tr>
+<tr>
+<td>HXC-268</td>
+<td>Bug</td>
+<td>Queued</td>
+<td>Medium</td>
+<td>The model verifier builds web addresses by pasting a host and a port
+together with a colon, without the square brackets that IPv6 addresses
+require, so any deployment whose host is an IPv6 address produces
+addresses no client can read. WHO IS AFFECTED: operators on IPv6-first
+hosts, and any deployment where the configured host is an address rather
+than a name. WHY IT IS REACHABLE: the generator stores whatever host it
+is given with no validation, so an IPv6 value passes straight through to
+the formatting step. HOW IT MANIFESTS: the emitted address looks like
+http://::1:8100, which no address parser can read because the colons of
+the address are indistinguishable from the colon introducing the port;
+the client then fails with a confusing parsing complaint instead of a
+clear configuration message, sending whoever debugs it toward the wrong
+system. HOW MANY PLACES, AND A CORRECTION WORTH RECORDING: the
+capability-config generator contains FIFTEEN such build sites, one in
+each of fifteen per-agent generator functions, every one reachable from
+the single dispatch that selects an agent by name. An earlier revision
+of this item said three. That was wrong in a specific and instructive
+way: the fifteen sites use only three distinct format SHAPES (nine
+ending in a version segment, five plain, one ending in a messages
+segment), and three example line numbers offered by an upstream report
+were recorded as if they were the complete set. Shapes were counted as
+places. Had the earlier figure stood, the acceptance criteria would have
+certified this closed with twelve sites still broken. HOW TO REPRODUCE
+THE COUNT: inside the verifier submodule, count occurrences of the
+formatting pattern in the capability-config generator file; it reports
+fifteen, while listing the distinct pattern texts reports three.
+RECOMMENDED FIX DIRECTION: do not hand-bracket fifteen places.
+Concurrent in-flight work on the submodule is introducing a shared
+endpoint helper whose address builder brackets IPv6 correctly using the
+standard library join, including zone handling — but that helper is NOT
+YET part of any committed state of the submodule, so a fresh clone does
+not have it and nobody should expect to find it there today. Once it
+lands, route these fifteen sites through it, which fixes them uniformly
+and prevents a sixteenth from being written wrong. Coordinate with that
+work before starting. SCOPE NOTE SO A FIXER IS NOT MISLED: the
+capability-config generator is not the whole surface. The same
+unbracketed pattern appears in at least nine further files elsewhere in
+the submodule, including several per-agent config writers and two
+unrelated subsystems. Those are outside this item deliberately, but a
+fixer should know the capability generator is one region rather than the
+entire problem. ACCEPTANCE CRITERIA: all fifteen sites in the
+capability-config generator produce properly bracketed addresses for
+IPv6 literals; plain names and IPv4 addresses are unchanged; an
+already-bracketed value is not bracketed twice; a standing test covers
+the IPv6 literal, already-bracketed, IPv4 and hostname cases and is
+proven real by a paired mutation that removes the bracketing and makes
+the test fail; and the count of remaining unbracketed sites in that file
+is zero, verified by the same command that produced the fifteen.</td>
 </tr>
 </tbody>
 </table>
