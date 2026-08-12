@@ -7778,6 +7778,50 @@ naming its replacement; a test drives each of the three calls end to end
 against a real configured provider and asserts a genuine response rather
 than an absence of error; and a paired mutation that removes the
 registry wiring makes that test fail.</p>
+<h2 id="hxc-278-the-sign-in-helper-still-copies-reply-field-names-into-reports-unbounded-on-the-one-route-two-earlier-fixes-did-not-cover">HXC-278
+— The sign-in helper still copies reply field names into reports,
+unbounded, on the one route two earlier fixes did not cover</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong> docs/qa/hxc278_20260812T101500Z
+<strong>Severity:</strong> Medium <strong>Created-By:</strong>
+Claude</p>
+<p>The routine that pulls an access token out of a sign-in reply has
+three ways to fail, and two of them have now been fixed while the third
+still copies part of the reply into durable records. WHAT THIS ONE DOES:
+when the reply arrives successfully AND parses cleanly BUT contains no
+recognisable token, the routine lists every field NAME it did find and
+puts that list into the returned error, into a reported finding, and
+into the session log. WHY THAT IS A RISK: the reasoning when this was
+written was that field names are safe because they describe data rather
+than carry it, which is usually true — but the names come from whatever
+server actually answered, so a request that lands on the wrong system,
+or a service that returns diagnostic material under unusual names, puts
+that material straight into a record we keep and share. WHAT MAKES IT
+WORSE THAN IT LOOKS: the list has no limit at all, neither on how many
+names are included nor on how long any one of them may be, which sits
+oddly beside a bound the very same area applies to a different piece of
+reply data for exactly this concern. WHO IS AFFECTED: anyone reading an
+archived report, and anyone pointing the tool at an unfamiliar or
+misconfigured service, which is precisely the situation that produces a
+no-token reply in the first place. RELATIONSHIP TO OTHER WORK: this is
+the third distinct failure route out of one routine — a sibling item
+closed the case where the reply could not be parsed, another closed the
+cases where the reply was rejected or failed to decode, and each closed
+the route it was pointed at; this is the one nobody asked about, found
+by a reviewer checking whether a marker planted as a field NAME rather
+than a value could still come back out. It can. HOW TO REPRODUCE: point
+the sign-in step at a service that answers successfully with a parseable
+object containing a recognisable marker as one of its field names and no
+token, then observe the marker in the returned error, the recorded
+finding and the session log. ACCEPTANCE CRITERIA: the diagnostic keeps
+enough to be useful — a count of fields, and names only where they are
+demonstrably safe — while any name resembling sensitive material is
+masked and the whole list is bounded in both count and individual
+length, consistent with the bound already applied nearby; and a standing
+test proves both directions, that a marker planted as a field name never
+appears in any error, finding or log line, while an ordinary field list
+still does, each proven real by a paired mutation restoring the raw list
+and by one removing it entirely.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>
