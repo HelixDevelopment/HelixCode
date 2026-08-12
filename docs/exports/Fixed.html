@@ -7742,6 +7742,42 @@ that same guard with RED_MODE=0 reports zero PASSED assertions against a
 proven-free port with every probe SKIPPED and SKIP-OK tagged, and the
 challenge still records a genuine PASSED assertion when a real gRPC
 server is listening on the registry port.</p>
+<h2 id="hxc-271-the-agents-facade-family-of-remote-calls-can-never-succeed-on-any-host-because-its-server-was-never-given-the-provider-registry">HXC-271
+— The agent’s facade family of remote calls can never succeed on any
+host because its server was never given the provider registry</h2>
+<p><strong>Status:</strong> Fixed (→ Fixed.md) <strong>Type:</strong>
+Bug <strong>Evidence:</strong> docs/qa/hxc271_20260812T093000Z
+<strong>Severity:</strong> Critical <strong>Created-By:</strong> Claude
+<strong>Assigned-To:</strong> Claude</p>
+<p>One of the two families of remote calls the agent publishes cannot
+ever succeed, on any machine, however well configured. WHAT IS BROKEN:
+the facade family of calls — the ones for completing text, streaming a
+completion, and chatting — reaches an internal routine that is always
+handed an EMPTY list of providers, and that routine refuses immediately
+when the list is empty. So every call in this family returns the same
+failure regardless of how many providers are actually configured and
+discovered. WHY IT IS NOT A CONFIGURATION PROBLEM: the object serving
+this family was never given a reference to the registry that holds the
+discovered providers; it has no such field at all. Start-up wires the
+registry into the OTHER family only, and that other family’s completion
+call does consult it, which is why the two families behave differently
+despite looking equivalent from outside. HOW IT WAS CONFIRMED: captured
+at runtime on a machine where fifty-plus real models had genuinely been
+discovered from live provider APIs, so this is not a case of an
+unprovisioned host — the providers existed and the call still failed
+with a message saying no providers were configured. WHO IS AFFECTED: any
+client using the facade family, which is the family the published
+interface presents first and the one an integrator would naturally reach
+for. HOW IT MANIFESTS: a caller gets an error advising them to use the
+provider registry for credential injection, which reads as a
+configuration mistake on their side and sends them to check credentials
+that are already correct. ACCEPTANCE CRITERIA: the facade family either
+receives the registry and succeeds against configured providers, or is
+explicitly withdrawn from the published interface with a clear error
+naming its replacement; a test drives each of the three calls end to end
+against a real configured provider and asserts a genuine response rather
+than an absence of error; and a paired mutation that removes the
+registry wiring makes that test fail.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
 <hr />
 <ol>

@@ -2180,41 +2180,6 @@ the IPv6 literal, already-bracketed, IPv4 and hostname cases and is
 proven real by a paired mutation that removes the bracketing and makes
 the test fail; and the count of remaining unbracketed sites in that file
 is zero, verified by the same command that produced the fifteen.</p>
-<h2 id="hxc-271-the-agents-facade-family-of-remote-calls-can-never-succeed-on-any-host-because-its-server-was-never-given-the-provider-registry">HXC-271
-— The agent’s facade family of remote calls can never succeed on any
-host because its server was never given the provider registry</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> High <strong>Created-By:</strong> Claude
-<strong>Assigned-To:</strong> Claude</p>
-<p>One of the two families of remote calls the agent publishes cannot
-ever succeed, on any machine, however well configured. WHAT IS BROKEN:
-the facade family of calls — the ones for completing text, streaming a
-completion, and chatting — reaches an internal routine that is always
-handed an EMPTY list of providers, and that routine refuses immediately
-when the list is empty. So every call in this family returns the same
-failure regardless of how many providers are actually configured and
-discovered. WHY IT IS NOT A CONFIGURATION PROBLEM: the object serving
-this family was never given a reference to the registry that holds the
-discovered providers; it has no such field at all. Start-up wires the
-registry into the OTHER family only, and that other family’s completion
-call does consult it, which is why the two families behave differently
-despite looking equivalent from outside. HOW IT WAS CONFIRMED: captured
-at runtime on a machine where fifty-plus real models had genuinely been
-discovered from live provider APIs, so this is not a case of an
-unprovisioned host — the providers existed and the call still failed
-with a message saying no providers were configured. WHO IS AFFECTED: any
-client using the facade family, which is the family the published
-interface presents first and the one an integrator would naturally reach
-for. HOW IT MANIFESTS: a caller gets an error advising them to use the
-provider registry for credential injection, which reads as a
-configuration mistake on their side and sends them to check credentials
-that are already correct. ACCEPTANCE CRITERIA: the facade family either
-receives the registry and succeeds against configured providers, or is
-explicitly withdrawn from the published interface with a clear error
-naming its replacement; a test drives each of the three calls end to end
-against a real configured provider and asserts a genuine response rather
-than an absence of error; and a paired mutation that removes the
-registry wiring makes that test fail.</p>
 <h2 id="hxc-272-automated-checks-starting-in-the-same-second-share-a-results-folder-so-one-run-is-judged-on-another-runs-failures">HXC-272
 — Automated checks starting in the same second share a results folder,
 so one run is judged on another run’s failures</h2>
@@ -2537,5 +2502,88 @@ exchanging the branches, or killing reachability are each caught; it is
 proven real by paired mutations performing each of those three edits and
 confirming each makes the guard fail; and the existing composition guard
 keeps its own narrow scope rather than absorbing this one.</p>
+<h2 id="hxc-280-seven-addresses-for-outside-services-are-built-the-same-broken-way-but-cannot-use-the-fix-that-repaired-the-rest">HXC-280
+— Seven addresses for outside services are built the same broken way,
+but cannot use the fix that repaired the rest</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude</p>
+<p>Seven places where we build a network address for a service that is
+NOT ours carry a defect a sibling item has just repaired everywhere
+else, and they were left alone because the repair would make them worse
+rather than better. THE SHARED DEFECT: an address for a modern-style
+numeric host must wrap that host in square brackets before a port is
+appended, or every reader sees a different host and no port at all. THE
+REPAIR THAT DOES NOT FIT: the shared builder brackets correctly, but
+when the host it is given is unusable it substitutes a default host of
+our own while KEEPING the port the caller asked for. That is right for
+the many places addressing our own agent, and wrong for these seven,
+which address a search database, a log-analysis service, a stream
+processor, two database systems and a message broker: a misconfigured
+outside address would quietly become the wrong machine on the right port
+— a connection that may well succeed against something else, which is
+worse than one that fails. THE SEVENTH SITE, AND WHY IT HID: six were
+found by searching for one way of writing an address; the seventh builds
+its address by repeated appending with a small local number-to-text
+helper, so no search shaped by the other six could see it. Two further
+facts about it, both discovered while repairing the others. FIRST: it
+lives in a part of the codebase that CANNOT import the shared builder at
+all, so it must reach the underlying standard-library routine directly —
+which has the pleasant consequence that the little helper that hid it
+from every search can be deleted outright. SECOND, and more serious: the
+same routine also places a password into the address without escaping
+it, so any password containing a character with meaning in an address
+will either corrupt the address or place secret material where addresses
+are logged and displayed. That is a credential-handling concern in its
+own right, outside the bracketing question, and it must be fixed in the
+same pass rather than left for a third discovery. WHO IS AFFECTED: any
+deployment configuring these outside services with a modern-style
+numeric address, or with a password containing a reserved character.
+WHAT IS NEEDED: a variant of the shared builder that brackets and
+nothing else — no substitution, no fallback, an explicit refusal when
+the host is unusable — plus correct escaping of any credential placed in
+an address, plus the judgement about which builder each site should use.
+HOW TO REPRODUCE: configure any of the seven with a modern-style numeric
+host and observe the connection address a different host than
+configured; separately, set a password containing a reserved character
+and observe the resulting address. ACCEPTANCE CRITERIA: a defaults-free
+builder exists alongside the substituting one, with the difference
+stated where a reader will see it; credentials placed in an address are
+escaped; each of the seven is routed to whichever builder is correct,
+justified per site; an unusable host produces an explicit refusal rather
+than a silent substitution; and a standing test proves every direction
+at every site, each proven real by a paired mutation restoring the old
+concatenation, one swapping in the substituting builder, and one
+removing the escaping.</p>
+<h2 id="hxc-281-a-streaming-test-asserts-over-a-list-that-was-always-empty-so-it-has-never-checked-anything">HXC-281
+— A streaming test asserts over a list that was always empty, so it has
+never checked anything</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Low <strong>Created-By:</strong> Claude</p>
+<p>One of our streaming tests examines the pieces of a streamed reply
+and confirms none of them carries a fabricated confidence figure — but
+that list of pieces has always been empty, so the check has never
+actually examined anything. WHY IT WAS ALWAYS EMPTY: the server it
+exercises could not reach any provider at all, so it failed before
+producing a single piece; the test therefore looped over nothing and
+passed, every time, for a reason unrelated to what it claims to verify.
+WHY THIS IS WORTH FIXING NOW RATHER THAN LATER: a sibling item has just
+repaired that server, so the same test can finally be given real pieces
+to examine, and the check it was written to perform can be performed for
+the first time. WHAT IT WAS MEANT TO CATCH: a streamed reply that
+invents a confidence number the underlying provider never supplied — a
+fabrication the reader would have no way to distinguish from a genuine
+measurement. WHO IS AFFECTED: anyone trusting the streamed replies, and
+anyone reading this test as evidence that fabrication cannot occur,
+since it currently provides no such evidence. RELATIONSHIP TO OTHER
+WORK: found while repairing the server, and deliberately left alone at
+that time because widening an unrelated test inside a critical fix would
+have obscured what that fix changed. HOW TO REPRODUCE: examine the list
+the test iterates over and confirm it is empty in every run;
+alternatively, break the property the test claims to protect and observe
+the test still passes. ACCEPTANCE CRITERIA: the test drives the repaired
+server with a provider that genuinely streams more than one piece, so
+the list it examines is non-empty; the check runs against real pieces;
+and it is proven real by a paired mutation that makes a piece carry a
+fabricated confidence figure and confirms the test then fails.</p>
 </body>
 </html>
