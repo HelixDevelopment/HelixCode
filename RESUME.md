@@ -142,6 +142,30 @@ is well-formed and entirely caller-chosen.
 - A count is a LEAD, never a fact: 16→32, 46→50, 60→41, "133 passing" measured
   as rc=1.
 
+## 7b · URGENT — ~2,000 lines of reviewed work are UNTRACKED
+
+Every stream's new package is untracked, in a checkout where four agents run
+concurrently. **23 untracked files, 6.9 MB**, including:
+
+- `submodules/llms_verifier/llm-verifier/clientip/` — the whole package plus its
+  1,270-line test suite, **eight review rounds** of work
+- `submodules/helix_agent/internal/netaddr/` — the new package
+- `submodules/helix_qa/banks/.bank-id-floor.txt` + the HXC-305 guard suite
+
+Git holds **no copy**. A single `git clean -fdx`, stray checkout, or
+`git add -A` mishap destroys all of it with no recovery path. Found by the
+HXC-298 round-7 reviewer, who correctly rated it above the code findings.
+
+**Backed up out-of-tree** to
+`scratchpad/untracked-backup-<UTC>/` (path in
+`scratchpad/LAST_UNTRACKED_BACKUP`). That backup is session-local and is a
+stopgap, not the fix.
+
+**The fix is to commit each package into its own submodule the moment its
+stream returns a clean GO.** Deliberately not done mid-review: four agents were
+briefed that this work is uncommitted, and changing that under them is worse
+than the exposure. If you are resuming and any stream is idle, commit it.
+
 ## 8 · Standing hazards
 
 - **HXC-247 stays unassigned until HXC-248 closes.** `:8100` is held by
