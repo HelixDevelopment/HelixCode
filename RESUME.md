@@ -1,8 +1,8 @@
 # RESUME — session resumption record (§11.4.131)
 
-**Rev 15 · rebuilt 2026-08-13 ~01:20 +05.**
-Supersedes rev 14 (same session, ~00:25) — HEAD has moved and every live stream
-has advanced at least one review round since.
+**Rev 16 · updated 2026-08-13 ~13:35 +05.**
+Supersedes rev 15 (same session, ~01:20). Every live stream has advanced 4–7
+review rounds since; §7b's backup was refreshed and §7c is new.
 
 > **Governing rule for this document.** Every count, list, hash and stream-state
 > below is a **snapshot**. Re-derive before acting on any of it — commands are
@@ -23,8 +23,11 @@ sqlite3 docs/workable_items.db "SELECT COUNT(*) FROM items WHERE status NOT IN (
 ```
 
 Read `.remember/remember.md` and `docs/CONTINUATION.md` first if present.
-The live agent alias is **`claude1`** — derive it, never recall it (rev 14 had
-this wrong). §11.4.182 labels take the form `(T1/main - claude1)`.
+**Derive the agent alias, never recall it** — it changed mid-session from `claude1`
+to `claude4` and the PreToolUse guard blocked a dispatch carrying the stale label.
+Get it from `scripts/multitrack/track_branch_label.sh`; the §11.4.182 form is
+`(T1/main - <alias> - <model> - <effort>)`, and the guard enforces it on `Agent`
+**and** `TaskCreate` descriptions.
 
 ## 2 · State at snapshot
 
@@ -156,15 +159,53 @@ Git holds **no copy**. A single `git clean -fdx`, stray checkout, or
 `git add -A` mishap destroys all of it with no recovery path. Found by the
 HXC-298 round-7 reviewer, who correctly rated it above the code findings.
 
-**Backed up out-of-tree** to
-`scratchpad/untracked-backup-<UTC>/` (path in
-`scratchpad/LAST_UNTRACKED_BACKUP`). That backup is session-local and is a
+**Backed up out-of-tree** to `scratchpad/untracked-backup-<UTC>/` (current path in
+`scratchpad/LAST_UNTRACKED_BACKUP`; each snapshot carries a self-verifying
+`MANIFEST.sha256`, and the earlier snapshot is retained). Session-local; a
 stopgap, not the fix.
+
+> **Trap that silently halved the first refresh.** `git status --porcelain`
+> collapses an untracked *directory* into one `dir/` entry, so a copy loop
+> guarded by `[ -f "$f" ]` skips it entirely. The first refreshed snapshot
+> contained **zero** files from `internal/netaddr/` and **zero** from
+> `clientip/` — the two most-reviewed packages — while reporting 52 files
+> copied and looking complete. Use **`git status --porcelain -uall`**, which
+> expands directories into individual paths, and verify the critical packages
+> by name afterwards rather than trusting the file count.
 
 **The fix is to commit each package into its own submodule the moment its
 stream returns a clean GO.** Deliberately not done mid-review: four agents were
 briefed that this work is uncommitted, and changing that under them is worse
 than the exposure. If you are resuming and any stream is idle, commit it.
+
+**Staging hazard — verify the staged set is self-consistent before committing.**
+In `helix_qa` the index held *only* `banks/.bank-id-floor.txt` while `HEAD`'s
+`loader.go` contains **zero** occurrences of `checkBankIDFloor`/`bankIDFloorFile`
+and no `hxc305_*` test file exists at `HEAD`. Committing as-staged would have
+landed a 3,046-id data file with **neither its enforcement code nor its guards** —
+inert, and indistinguishable in the log from the fix landing. Before any commit
+here, confirm a checkout of the index *alone* would compile and run the guards,
+and exclude sibling-stream files (`cmd/helixqa/{http,main}.go`,
+`pkg/testbank/manager.go`, `loader_test.go`).
+
+## 7c · Untracked work is dissolving the verification chain
+
+A second, quieter cost of §7b. For a **tracked** file, `git show HEAD:<path>` is a
+permanent re-derivable baseline, so any later round can reproduce any earlier
+measurement. For an **untracked** one the only baseline is a content sha256 of a
+file the next round overwrites.
+
+Consequence, measured: three baseline hashes carried between rounds resolved to
+nothing. `9bb3ff06` is real — the sha256 of `netaddr.go` **in the backup**, not a
+git object — but `183c144b` and `ee5ebf07` match no git object, no live content
+and no backup content. They were transient content hashes whose artifact is gone.
+So a round's headline result (*"the exec-diff is exactly one non-comment line"*)
+became **unreproducible** — not wrong, just unanchored. The reviewer that caught
+it correctly refused to restate it and proved the durable equivalent instead
+(AST-identity to the file the prior round signed off on).
+
+When quoting a hash between rounds, **say which kind it is and where it lives**.
+Committing is what makes this stop.
 
 ## 8 · Standing hazards
 
