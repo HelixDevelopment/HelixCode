@@ -1,8 +1,8 @@
 # RESUME — session resumption record (§11.4.131)
 
-**Rev 18 · updated 2026-08-13 ~13:50 +05.**
-Supersedes rev 17 (~13:40). §6 corrected — the §11.4.150 gate is CLEAR for
-all seven items rev 15 listed as needing a pass. Live streams at rounds 12-18.
+**Rev 19 · updated 2026-08-13 ~13:55 +05.**
+Supersedes rev 18 (~13:50) — §2 and §5 refreshed so they stop contradicting
+the corrected §6. Live streams at rounds 12-18.
 
 > **Governing rule for this document.** Every count, list, hash and stream-state
 > below is a **snapshot**. Re-derive before acting on any of it — commands are
@@ -31,18 +31,20 @@ Get it from `scripts/multitrack/track_branch_label.sh`; the §11.4.182 form is
 
 ## 2 · State at snapshot
 
-| repo | HEAD | published |
+| repo | HEAD | note |
 |---|---|---|
-| main | `d2547daf` | all four mirror endpoints verified |
-| `submodules/helix_agent` | `36009d62` | unchanged this window (work uncommitted) |
-| `submodules/llms_verifier` | `9bf5457d` | unchanged this window (work uncommitted) |
-| `submodules/helix_qa` | `0634b1b` | unchanged this window (work uncommitted) |
+| main | `914bde1d` | doc-only commits since `d2547daf`, which was mirror-verified |
+| `submodules/helix_agent` | `36009d62` | unchanged — 25 dirty entries, all uncommitted stream work |
+| `submodules/llms_verifier` | `9bf5457d` | unchanged — 10 dirty entries |
+| `submodules/helix_qa` | `0634b1b` | unchanged — 29 dirty; the id-floor is STAGED, see §7b |
 
-Tracker: **516 items, 109 open** — 2 Critical, 31 High, 45 Medium, 31 Low.
+Tracker (re-derived 2026-08-13 ~13:45): **524 items, 117 open** — 2 Critical,
+34 High, 47 Medium, 34 Low. Rev 15's 516/109 is superseded; the growth is items
+filed *by* this session's reviews (HXC-321…330), which is the campaign working.
 
 **The 2 Critical:** `HXC-227` (published provider key, `Operator-blocked` —
 **only the operator can clear it**) and `HXC-243` (`Ready for testing`, fix
-landed at `0634b1b`, closure gated on §11.4.150).
+landed at `0634b1b`; its §11.4.150 pass exists — see §6).
 
 ## 3 · Live streams — uncommitted work on disk
 
@@ -94,8 +96,9 @@ comment says it scans the staged blob. Stage a marker file, `rm` it, commit →
 
 ## 5 · Path to a release build
 
-**Mine:** drive the four streams to a zero-finding GO (§11.4.134) → full-suite
-retest **on a quiescent host** → remaining §11.4.150 research passes.
+**Mine:** drive the four streams to a zero-finding GO (§11.4.134) → **commit each
+package as its stream clears** (§7b) → full-suite retest **on a quiescent host**.
+The §11.4.150 research gate is already clear (§6) — it is not on this path.
 
 **Operator only:** rotate `HXC-227` and `HXC-168` · §11.4.185 manual-QA sign-off
 · the 1.1.0 retro-tagging decision for three submodules.
