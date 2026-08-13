@@ -121,11 +121,25 @@ check "G3 reverted (sweep exits 0)" 0 "$?"
 # normally (defense in depth). To simulate an operator who force-adds
 # past .gitignore (the actual failure mode G5 needs to catch), we use
 # `git add -f` here. Revert with `git rm --cached`.
+#
+# The heredoc body carries an EXAMPLE marker on the BEGIN line (2026-08-13).
+# Reason: this SCRIPT is tracked, so scripts/secret_scan.sh scans this line as
+# ordinary file content and reported it as a "Private key header (generic)"
+# hit — the scanner cannot tell a planted fixture from a real header. The
+# marker is the remedy the scanner's own FAIL text recommends first ("add a
+# redaction marker such as REDACTED / EXAMPLE / ... to the line"), and it
+# costs ZERO detection coverage here because G5 keys off the `.pem` FILENAME
+# and never reads the body (see verify-all-constitution-rules.sh: the gate is
+# `git ls-files | grep -E '…\.pem$…'`). Do NOT instead allowlist this whole
+# script in .scan-secrets-allow: that would permanently blind BOTH scanners to
+# every future line of a live executable, where this marker blinds nothing.
+# The marker must stay ON the BEGIN line — the scanner's content allowlist is
+# per-line, so moving it to a neighbouring line restores the finding.
 echo
 echo "=== G5 mutation (force-add tracked sensitive file past .gitignore) ==="
 G5_TARGET="_mutation_test.pem"
 cat > "$G5_TARGET" <<'EOF'
------BEGIN PRIVATE KEY-----
+-----BEGIN PRIVATE KEY----- (EXAMPLE — planted G5 fixture, not a real key)
 this is a planted-fixture key for the G5 paired-mutation meta-test
 -----END PRIVATE KEY-----
 EOF

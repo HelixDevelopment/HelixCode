@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>bypass_events</title>
+  <title>Bypass Events</title>
   <style>
 
 span.smallcaps{font-variant: small-caps;}
@@ -48,7 +48,7 @@ text-decoration: line-through;
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">bypass_events</h1>
+<h1 class="title">Bypass Events</h1>
 </header>
 <ul>
 <li>2026-07-11 commit 358ddc13 –no-verify: §11.4.84 residue-check
@@ -65,6 +65,138 @@ secret-clean. ff-only (no force). Follow-up: complete scan-secrets.sh
 allowlist / consolidate the 2 scanners / scope pre-push to
 pushed-commits not full working tree.</li>
 </ul>
+<h3 id="corrections-2026-08-13-hxc-331">CORRECTIONS 2026-08-13
+(HXC-331)</h3>
+<p>Both 2026-07-11 rows are left verbatim above — this is an append-only
+audit trail, so the record of what was claimed at bypass time is not
+rewritten. What follows corrects what those claims ESTABLISHED. Every
+count below names the scanner that produced it, by blob, with its
+deriving command; a count from one scanner is never carried over to
+another.</p>
+<p><strong>Row 2 (9e4de2ba) — “Stricter content-based secret_scan.sh
+confirms 0 real secrets; git tree verified secret-clean” is
+RETRACTED.</strong> No scanner available at push time established
+it:</p>
+<ul>
+<li><code>secret_scan.sh</code> AT that revision (blob
+<code>acaf04c7</code>) had NO path-based allowlist at all — only
+<code>is_self()</code>:
+<code>git show 9e4de2ba:scripts/secret_scan.sh | grep -c is_path_allowlisted</code>
+-&gt; <code>0</code> (likewise <code>ALLOW_PATTERNS</code> -&gt;
+<code>0</code>; its only functions are <code>is_self</code>,
+<code>scan_file_content</code>, <code>scan_disk_file</code>,
+<code>scan_staged_file</code>). The single
+<code>scan-secrets-allow</code> string in that file is a COMMENT on line
+44. The <code>.scan-secrets-allow</code> wiring landed 68 minutes LATER,
+in <code>6ab4de36</code> (<code>2026-07-11T18:27:49+05:00</code> vs the
+row’s <code>17:19:19+05:00</code> push).</li>
+<li>Run today against a file byte-identical to its 9e4de2ba state
+(<code>git diff 9e4de2ba -- &lt;path&gt; | wc -l</code> -&gt;
+<code>0</code>), that historical scanner exits 1 on ONE file:
+<code>bash &lt;9e4de2ba scanner&gt; helix_code/internal/autocommit/secret_filter_test.go</code>
+-&gt; <code>rc=1</code>, <strong>4 findings</strong> — a file today’s
+allowlist suppresses (by the <code>.scan-secrets-allow</code> entry
+<code>helix_code/internal/autocommit/secret_filter_test.go</code>, under
+the “F22 autocommit secret-filter tests” heading — cited by entry, not
+by line number, because an earlier revision of this correction cited
+<code>:42</code> and the very edit that added the four
+<code>.html</code> entries above pushed it to <code>:70</code>, then a
+follow-up pushed it to <code>:88</code>, leaving the citation pointing
+at a comment; today’s scanner on the same path -&gt; <code>rc=0</code>,
+with a positive control on another path -&gt; <code>rc=1</code>, so that
+0 is a real suppression and not a dead instrument). A whole-tree run of
+THAT scanner therefore exits 1 with far more findings than today’s.
+“Verified secret-clean” was never a measured property of that
+revision.</li>
+</ul>
+<p><strong>Do not conflate that with today’s count.</strong> Today’s
+scanner (worktree blob <code>5147e88d</code>, 2026-08-13) over the whole
+tracked tree at HEAD <code>48cd8639</code> reports <strong>6</strong>
+findings, all in four rendered <code>.html</code> exports —
+<code>bash scripts/secret_scan.sh</code> -&gt; <code>rc=1</code>, 640 s
+wall-clock (11:19:20Z-&gt;11:30:00Z) — plus <strong>1</strong> more in
+<code>scripts/test-verify-all-constitution-rules.sh</code> measured
+separately in files mode (<code>rc=1</code>, at the PEM header line)
+before it was fixed in this same round, for <strong>7 total</strong>.
+That 7 is TODAY’S SCANNER APPLIED RETROACTIVELY; it is not a number any
+scanner in existence on 2026-07-11 produced, and it is not evidence
+about the state of the tree on that date. All 7 were triaged as
+fabricated or illustrative fixtures — zero real credentials — under
+HXC-331.</p>
+<p><em>Re-verification note (same day, later round).</em>
+<code>secret_scan.sh</code> is under active concurrent development and
+the worktree blob named just above has since been overwritten —
+<code>git hash-object scripts/secret_scan.sh</code> now yields
+<code>89c81b00</code> (sha256[0:16] <code>1d86d10439f98fb4</code>, 900
+lines), so <code>5147e88d</code> is no longer resolvable and its run
+cannot be re-executed. The COUNTS were therefore re-derived against
+<code>89c81b00</code>, pinned by copying the script before use: the same
+<strong>6</strong> <code>.html</code> findings reproduce — identical
+paths, lines and labels — from a files-mode run over the four exports
+with the pre-fix allowlist restored, and the 7th reproduces at
+<code>scripts/test-verify-all-constitution-rules.sh:128</code> (“Private
+key header (generic)”) from the file’s pre-fix HEAD content. A fresh
+whole-tree run of <code>89c81b00</code> over HEAD <code>48cd8639</code>
+WITH both fixes applied exits <strong><code>rc=0</code></strong> (“OK:
+no unallowlisted key-shaped secret pattern found (mode=tree)”), 641 s
+wall-clock (14:27:12Z-&gt;14:37:53Z). Pin every future count to a blob
+AND copy the script before running it: naming a worktree blob that a
+sibling stream then overwrites leaves the citation unverifiable, which
+is the same defect class this section exists to correct.</p>
+<p><strong>Row 1 (358ddc13) is not implicated by the above, but its
+basis is narrower than it reads.</strong> Stated as of ITS revision:
+<code>secret_scan.sh</code> at 358ddc13 also had no path-based allowlist
+(<code>is_path_allowlisted</code> -&gt; <code>0</code>,
+<code>ALLOW_PATTERNS</code> -&gt; <code>0</code>), so only
+<code>is_self()</code> applied — and the two files the row names are
+EXACTLY the two paths <code>is_self()</code> exempts
+(<code>scripts/secret_scan.sh</code>,
+<code>scripts/secret_scan_test.sh</code>). Their <code>exit 0</code> was
+therefore structural, not a read: at that revision those files held 1
+and 4 pattern-bearing lines respectively
+(<code>git show 358ddc13:&lt;f&gt; | grep -cE &#39;AKIA…|sk-…|-----BEGIN … PRIVATE KEY-----&#39;</code>).
+The content is benign (the scanner’s own pattern literals; its test’s
+planted fixtures), but a self-exempted path cannot be certified by the
+scanner that exempts it, and the row should not be read as if it had
+been.</p>
+<p><strong>SCOPE BOUNDARY (applies to every “secret-clean” claim in this
+file).</strong> A clean exit from either scanner is NOT a clean-tree
+proof. Measured on this tree: 130 gitlinks are never walked
+(<code>git ls-files -s | awk &#39;$1==160000&#39; | wc -l</code> -&gt; 130;
+submodule content is out of scope and must be scanned inside each
+submodule); <strong>53</strong> active <code>.scan-secrets-allow</code>
+entries suppress whole files and subtrees
+(<code>grep -vcE &#39;^[[:space:]]*(#|$)&#39; .scan-secrets-allow</code> -&gt;
+53 — an earlier revision of this paragraph said “~90”, which counted no
+measured quantity; every remaining line in that file is a comment or a
+blank, so quote the ACTIVE-entry count, which is what the scanner loads,
+and re-derive it rather than copying it: the raw line total moves every
+time a comment is added); and binary files are skipped by
+<code>secret_scan.sh</code> — but NOT by <code>scan-secrets.sh</code>,
+which has no binary probe at all. The four <code>.pdf</code> doc exports
+are unreached by both scanners, for two DIFFERENT reasons, and only one
+of them is a binary skip: <code>grep -Iq . -- &lt;pdf&gt;</code> reports
+them binary (<code>rc=1</code>) so <code>secret_scan.sh</code> never
+reads them, whereas <code>scan-secrets.sh</code> never selects them in
+the first place — its full-repo walk is restricted by a
+<code>--include=</code> extension list carrying neither
+<code>.pdf</code> nor <code>.html</code> (measured in that mode: a
+<code>.md</code> plant is flagged, <code>.html</code> and
+<code>.pdf</code> plants are not; that filter is applied ONLY when the
+scan target is <code>.</code>, so probing it with an explicit directory
+argument exercises the unfiltered else-branch and misleadingly appears
+to scan both). Independently, the strings are not present in the PDFs as
+raw bytes (<code>grep -acE -e &#39;&lt;key shapes&gt;&#39; &lt;pdf&gt;</code>
+-&gt; 0) — they sit inside compressed streams. Unreached is not clean:
+<code>pdftotext</code> shows they DO carry recoverable key-shaped
+strings (five of the six <code>.html</code> findings resurface after
+extraction; the sixth does not, because extraction mangles that file’s
+dash runs — a dash-tolerant variant matches it, and a 31,919-byte
+positive control confirms extraction itself worked). Any line containing
+<code>redacted</code> / <code>example</code> / <code>...</code> is
+skipped by content regardless of what else is on it. “Scanner exited 0”
+means “no unallowlisted key-shaped pattern in the scanned subset”, never
+“this repository contains no secrets”.</p>
 <h2 id="sources-verified-2026-07-27-internally-derived-this-file-is-the-11.4.75---no-verify-bypass-audit-trail-it-has-no-external-source-and-cites-none.-its-entries-are-derived-solely-from-this-repositorys-own-state-and-each-referenced-artefact-was-confirmed-present-on-this-host-in-this-pass-the-two-cited-commits-resolve-in-local-git-history-git-log---oneline--1-358ddc13-featsecurity-add-huggingface-hf_-token-pattern-to-secret-scan-guard-11.4.138-git-log---oneline--1-9e4de2ba-featops-11.4.111-coder-boot-script-regenerate-cdi-spec-rootless-start-and-the-two-scanners-plus-the-hook-set-the-entries-describe-exist-at-scriptssecret_scan.sh-scriptsscan-secrets.sh-and-scriptsgit_hookspre-commitpre-pushpost-commitcommit-msg.-source-of-truth-for-every-future-row-the-local-git-history-of-the-bypassing-commitpush-plus-the-scanner-output-captured-at-bypass-time-never-an-external-url.-honest-boundary-11.4.6-11.4.99b-no-external-documentation-applies-to-or-was-consulted-for-this-document-and-the-follow-up-items-recorded-above-remain-open.">Sources
 verified 2026-07-27: INTERNALLY DERIVED — this file is the §11.4.75
 <code>--no-verify</code> bypass audit trail; it has NO external source
