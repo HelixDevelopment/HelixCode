@@ -1,8 +1,8 @@
 # RESUME — session resumption record (§11.4.131)
 
-**Rev 16 · updated 2026-08-13 ~13:35 +05.**
-Supersedes rev 15 (same session, ~01:20). Every live stream has advanced 4–7
-review rounds since; §7b's backup was refreshed and §7c is new.
+**Rev 17 · updated 2026-08-13 ~13:40 +05.**
+Supersedes rev 16 (~13:35) — §7c was WRONG and is corrected. Live streams have
+advanced 4–7 review rounds since rev 15; §7b's backup was refreshed.
 
 > **Governing rule for this document.** Every count, list, hash and stream-state
 > below is a **snapshot**. Re-derive before acting on any of it — commands are
@@ -51,14 +51,21 @@ by hash before resuming any of them.
 
 | item | scope | state at snapshot |
 |---|---|---|
-| HXC-282 | meta `scripts/git_hooks/`, `scripts/lib/` | **round 9** remediating 2 findings + a false comment |
-| HXC-286 | `helix_agent`, `internal/netaddr/` + 9 files | **round 4** — code sound, prose false in 5 places |
-| HXC-298 | `llms_verifier` `clientip/` + 3 consumers | **round 3 review** in flight |
-| HXC-305 | `helix_qa/pkg/testbank/` | **round 4** remediating 2 blocking |
+| HXC-282 | meta `scripts/git_hooks/`, `scripts/lib/` | **round 18** — r17 found the credential scanner's *tree mode* still fail-open, same class r16 fixed in the same file |
+| HXC-286 | `helix_agent`, `internal/netaddr/` + 9 files | **round 16 due** — substance verified exact; r14's own +49-line edit shifted all five of its line citations |
+| HXC-298 | `llms_verifier` `clientip/` + 3 consumers | **round 12** — r11 NO-GO on 7; the decision to drop the corroboration guard is CONFIRMED, do not revisit |
+| HXC-305 | `helix_qa/pkg/testbank/` | **round 12** — r11 NO-GO *narrowly*, 2 self-description findings, **zero code defects**; closest to commit |
 
-Each has now survived 3–9 rounds and **every round has found something real.**
-Do not read "round N" as "nearly done" — read it as "this area rewards
-scrutiny."
+Each has now survived 11–18 rounds and **every round has found something real —
+not one has returned a clean GO first time.** Do not read "round N" as "nearly
+done"; read it as "this area rewards scrutiny."
+
+**The strongest recurring signal: a correction carries this defect class at the
+same rate as any other change.** Twice now a round fixed a false claim and
+introduced a fresh instance of the identical class *in the same edit* — once four
+lines from the sentence warning against it, once by adding comment lines that
+invalidated the very citations the new comment depended on. **Always re-review
+the correction.**
 
 ## 4 · The finding that most changes what a green build means
 
@@ -188,24 +195,39 @@ here, confirm a checkout of the index *alone* would compile and run the guards,
 and exclude sibling-stream files (`cmd/helixqa/{http,main}.go`,
 `pkg/testbank/manager.go`, `loader_test.go`).
 
-## 7c · Untracked work is dissolving the verification chain
+## 7c · Inter-round baselines: say which KIND of hash, and WHERE it lives
 
-A second, quieter cost of §7b. For a **tracked** file, `git show HEAD:<path>` is a
-permanent re-derivable baseline, so any later round can reproduce any earlier
-measurement. For an **untracked** one the only baseline is a content sha256 of a
-file the next round overwrites.
+**Corrected in rev 17 — rev 16's version of this section was wrong, and the way
+it was wrong is the lesson.**
 
-Consequence, measured: three baseline hashes carried between rounds resolved to
-nothing. `9bb3ff06` is real — the sha256 of `netaddr.go` **in the backup**, not a
-git object — but `183c144b` and `ee5ebf07` match no git object, no live content
-and no backup content. They were transient content hashes whose artifact is gone.
-So a round's headline result (*"the exec-diff is exactly one non-comment line"*)
-became **unreproducible** — not wrong, just unanchored. The reviewer that caught
-it correctly refused to restate it and proved the durable equivalent instead
-(AST-identity to the file the prior round signed off on).
+Hashes quoted between rounds here are **content sha256s, not git objects**.
+`internal/netaddr/` is untracked (`git ls-files` → 0 rows), so `git cat-file` will
+never resolve them and a round that tries concludes "invalid object name". That
+much rev 16 had right, and the reviewer who first flagged it was right to refuse
+to restate a claim it could not reproduce.
 
-When quoting a hash between rounds, **say which kind it is and where it lives**.
-Committing is what makes this stop.
+**What rev 16 got wrong: I then asserted the artifacts were gone. They are not.**
+Every one resolves inside `scratchpad/`, in per-round backups:
+
+| hash | file | lines |
+|---|---|---|
+| `183c144b` | `r12-backup-20260813T080906Z/netaddr_test.go` | 907 |
+| `ee5ebf07` | `r12-backup-20260813T080906Z/ports_test.go` | 377 |
+| `417a3662` | `r13-backup/netaddr_test.go` | 935 |
+| `9bb3ff06` | `untracked-backup-20260812T215041Z/…/netaddr.go` | — |
+
+So the earlier round's exec-diff result **is** reproducible. My "resolves to
+nothing" came from a `find` scoped through `LAST_UNTRACKED_BACKUP` — **one of
+seventeen** backup directories in scratchpad, and not the one holding them. A
+negative from a search that could not have found the target is a fact about the
+search. **Run a positive control first:** searching for a hash you already know
+exists would have exposed the scope error immediately.
+
+The durable point survives in a weaker, truer form: these baselines live only as
+long as the **session-local** scratchpad, and are findable only if the citation
+says where. So when quoting a hash between rounds, give **kind and location** —
+`content sha256, scratchpad/r13-backup/netaddr_test.go` — never a bare hex
+prefix. Committing the work is what replaces this with `git show HEAD:<path>`.
 
 ## 8 · Standing hazards
 
