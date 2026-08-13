@@ -1,8 +1,8 @@
 # RESUME — session resumption record (§11.4.131)
 
-**Rev 17 · updated 2026-08-13 ~13:40 +05.**
-Supersedes rev 16 (~13:35) — §7c was WRONG and is corrected. Live streams have
-advanced 4–7 review rounds since rev 15; §7b's backup was refreshed.
+**Rev 18 · updated 2026-08-13 ~13:50 +05.**
+Supersedes rev 17 (~13:40). §6 corrected — the §11.4.150 gate is CLEAR for
+all seven items rev 15 listed as needing a pass. Live streams at rounds 12-18.
 
 > **Governing rule for this document.** Every count, list, hash and stream-state
 > below is a **snapshot**. Re-derive before acting on any of it — commands are
@@ -108,15 +108,28 @@ blocks nothing.
 
 ## 6 · §11.4.150 research passes — the closure gate
 
-Three families now have one; each covers several items.
+**Five** families now have one; each covers several items.
 
 | artifact | covers | what it found |
 |---|---|---|
-| `docs/research/address_composition_family_20260812/` | HXC-286 family | — |
+| `docs/research/address_composition_family_20260812/` | HXC-268/280/283/284 | CVE precedent, same address shape |
 | `docs/research/client_ip_trust_family_20260813/` | HXC-292/298/299 | **HXC-321** |
 | `docs/research/test_validity_family_20260813/` | HXC-243/287/291 | **HXC-322** |
+| `docs/research/derived_identifier_family_20260813/` | HXC-268/272/281 | **HXC-326** |
+| `docs/research/accessor_side_effect_family_20260813/` | HXC-274 | negative, with the instrument stated |
 
-Still needing a pass before they can close: HXC-268, 272, 274, 281, 283.
+**The §11.4.150 gate is CLEAR for all of these** — verified 2026-08-13: every one
+of HXC-268/272/274/280/281/283/284 is named in a pass header with substantive
+coverage. Rev 15's "still needing a pass: HXC-268, 272, 274, 281, 283" was
+**stale**; those items are Queued/Ready-for-testing on *validation*, not research.
+
+> **Two grep traps in this directory, both of which I fell into.** (1) The
+> 2026-08-12 pass heads its list `**Scope:**` while the 2026-08-13 ones use
+> `**Covers:**` — grepping only for `Covers` makes the oldest pass look like it
+> covers nothing, and made HXC-283 look uncovered when it has a section titled
+> "HXC-283's exact code". (2) `grep -rl HXC-283 docs/research/` returns three
+> hits that read like coverage but are two "bears on" mentions plus one real one.
+> **Match on the header line and confirm substantively; never on a bare ID grep.**
 
 **HXC-321 (High), from the client-IP pass.** Gin trusts **all** proxies by
 default (`0.0.0.0/0`, `::/0`) — the unsafe posture is the default, so no code
