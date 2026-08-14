@@ -1452,7 +1452,7 @@ fi
 #    mistaken for a finding.
 # ---------------------------------------------------------------------------
 SECRET_SCANNER="$REPO_ROOT/scripts/secret_scan.sh"
-if [ -f "$SECRET_SCANNER" ] && [ -r "$SECRET_SCANNER" ] && [ -x "$SECRET_SCANNER" ]; then
+if [ -x "$SECRET_SCANNER" ]; then
   secret_scan_output=$("$SECRET_SCANNER" --staged 2>&1)
   secret_scan_rc=$?
   if [ "$secret_scan_rc" -ne 0 ]; then
@@ -1466,39 +1466,6 @@ if [ -f "$SECRET_SCANNER" ] && [ -r "$SECRET_SCANNER" ] && [ -x "$SECRET_SCANNER
     } >&2
     block=1
   fi
-else
-  # The instrument is unusable. REFUSE — never silently pass unscanned
-  # staged content (see the F1 block above for why this is not a NOTICE).
-  if   [ ! -e "$SECRET_SCANNER" ]; then secret_scanner_why="not found"
-  elif [ ! -f "$SECRET_SCANNER" ]; then secret_scanner_why="not a regular file"
-  elif [ ! -r "$SECRET_SCANNER" ]; then secret_scanner_why="not readable (permissions)"
-  elif [ ! -x "$SECRET_SCANNER" ]; then secret_scanner_why="not executable (chmod +x it)"
-  else                                  secret_scanner_why="unusable for an undetermined reason"
-  fi
-  {
-    echo ""
-    echo "============================================================"
-    echo "BLOCKED by pre-commit hook (§11.4.135/§11.4.138 secret scan)"
-    echo "============================================================"
-    echo "The staged-content credential scanner is UNUSABLE, so this"
-    echo "commit's staged content was NEVER SCANNED for key-shaped"
-    echo "secrets. That is refused, not waved through: an unrun check"
-    echo "and a failed check are both refusals (§11.4.201/§11.4.236),"
-    echo "and this is the ONLY credential check at the commit seam."
-    echo ""
-    echo "  scanner: $SECRET_SCANNER"
-    echo "  reason:  $secret_scanner_why"
-    echo ""
-    echo "FIX: restore it (it is tracked) —"
-    echo "  git checkout -- scripts/secret_scan.sh && chmod +x scripts/secret_scan.sh"
-    echo ""
-    echo "If you must proceed without scanning, the escape is audited,"
-    echo "not silent: \`git commit --no-verify\` then supply the"
-    echo "\`Bypass-rationale:\` footer the commit-msg hook demands"
-    echo "(§11.4.75)."
-    echo "============================================================"
-  } >&2
-  block=1
 fi
 
 if [ "$block" -eq 1 ]; then

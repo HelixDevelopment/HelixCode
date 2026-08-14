@@ -89,7 +89,28 @@ SCANNER="$REPO_ROOT/scripts/scan-secrets.sh"
 ZERO_SHA="0000000000000000000000000000000000000000"
 EMPTY_TREE="4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
-if [ -x "$SCANNER" ]; then
+# Round-24 review (2026-08-13): the guard was a bare `[ -x "$SCANNER" ]`, the
+# same shape the commit-side gate carried before F1. `-x` alone conflates
+# several distinct states into one message: a DIRECTORY at that path answers
+# `-x` true and would be executed as a command; a mode-0300 file answers `-x`
+# true but cannot be READ by the interpreter; and a genuinely absent file is
+# reported identically to a present-but-unreadable one. The `-f && -r && -x`
+# triple separates them, so the operator is told which condition actually
+# failed instead of a single ambiguous "not found or not executable".
+#
+# This change is POLICY-NEUTRAL: it does not alter WHEN this hook blocks, only
+# the precision of the diagnosis on the degraded path. The WARN-vs-REFUSE
+# question is deliberately NOT settled here — that is the operator's call.
+#
+# Why WARN is defensible at THIS seam today, unlike step 4 of pre-commit: the
+# commit-side gate is now a hardened sibling layer, so a scanner missing here
+# does not recreate F1's "no credential check anywhere at this seam" topology.
+# HONEST BOUNDARY (§11.4.6): that sibling layer only covers commits that
+# actually MET the commit hook. Commits arriving via a fresh clone, `git commit
+# --no-verify`, or merged work from another checkout never crossed it, and for
+# those this hook IS the only remaining check — which is the standing argument
+# for eventually flipping this WARN to a REFUSE.
+if [ -f "$SCANNER" ] && [ -r "$SCANNER" ] && [ -x "$SCANNER" ]; then
   scan_block=0
   # STDIN carries the ref-update lines for this push (git's documented
   # pre-push protocol). Read them all before invoking any subcommand that
@@ -140,8 +161,28 @@ if [ -x "$SCANNER" ]; then
     exit 1
   fi
 else
-  echo "WARN: pre-push hook: $SCANNER not found or not executable." >&2
-  echo "      Secret scan skipped (best-effort during bootstrap)." >&2
+  # Precise diagnosis: report WHICH condition of the triple failed, and the
+  # remedy for that specific state (§11.4.201 — a guard must name the real
+  # condition, not a plausible-sounding summary of several).
+  if [ ! -e "$SCANNER" ]; then
+    scanner_state="does not exist"
+    scanner_fix="restore it (git checkout -- scripts/scan-secrets.sh)"
+  elif [ -d "$SCANNER" ]; then
+    scanner_state="is a DIRECTORY, not a regular file"
+    scanner_fix="remove the directory and restore the script"
+  elif [ ! -f "$SCANNER" ]; then
+    scanner_state="exists but is not a regular file"
+    scanner_fix="replace it with the tracked script"
+  elif [ ! -r "$SCANNER" ]; then
+    scanner_state="exists but is NOT READABLE (mode $(stat -c '%a' "$SCANNER" 2>/dev/null || echo '?'))"
+    scanner_fix="chmod +r scripts/scan-secrets.sh"
+  else
+    scanner_state="exists but is NOT EXECUTABLE (mode $(stat -c '%a' "$SCANNER" 2>/dev/null || echo '?'))"
+    scanner_fix="chmod +x scripts/scan-secrets.sh"
+  fi
+  echo "WARN: pre-push hook: $SCANNER $scanner_state." >&2
+  echo "      Range secret scan SKIPPED for this push. Fix: $scanner_fix" >&2
+  echo "      (tracked mode is 100755, so this is a local-state problem)" >&2
 fi
 
 exit 0
