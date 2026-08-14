@@ -1,0 +1,81 @@
+[1/2] STEP 1/7: FROM golang:1.26-alpine AS builder
+Resolved "golang" as an alias (/etc/containers/registries.conf.d/000-shortnames.conf)
+Trying to pull docker.io/library/golang:1.26-alpine...
+Getting image source signatures
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4
+Copying blob sha256:fa55d8c7975bdc26e118c1a6e8ee122aea1e654a365c1d6f7b48658c58be2e18
+Copying blob sha256:3cb43fedab420e8564c73199ebb173d2fc8541f4bec5d4c7733583117128d033
+Copying blob sha256:fff8b9beb3e2749a901d892e973118f8cac17632473449c446aeecf7f8b367f8
+Copying config sha256:0fe40429551153949b64503e465791d4a079141c41b04e6ceed6d7cdcb2512ad
+Writing manifest to image destination
+[1/2] STEP 2/7: RUN apk add --no-cache git make
+( 1/13) Installing brotli-libs (1.2.0-r1)
+( 2/13) Installing c-ares (1.34.8-r0)
+( 3/13) Installing libunistring (1.4.2-r0)
+( 4/13) Installing libidn2 (2.3.8-r0)
+( 5/13) Installing nghttp2-libs (1.69.0-r0)
+( 6/13) Installing libpsl (0.21.5-r3)
+( 7/13) Installing zstd-libs (1.5.7-r2)
+( 8/13) Installing libcurl (8.21.0-r0)
+( 9/13) Installing libexpat (2.8.2-r0)
+(10/13) Installing pcre2 (10.47-r1)
+(11/13) Installing git (2.54.0-r0)
+(12/13) Installing git-init-template (2.54.0-r0)
+(13/13) Installing make (4.4.1-r4)
+Executing busybox-1.37.0-r31.trigger
+OK: 20.8 MiB in 30 packages
+--> 4bca70563c86
+[1/2] STEP 3/7: WORKDIR /app
+--> ef1c14ae42d0
+[1/2] STEP 4/7: COPY . .
+--> 125014a169d5
+[1/2] STEP 5/7: RUN mkdir -p /app/bin
+--> 0868c36f477a
+[1/2] STEP 6/7: RUN set -eux;     test -f go.mod;     go mod download;     built=0;     if [ -d cmd ]; then         for cmd_dir in cmd/*/; do             [ -d "$cmd_dir" ] || continue;             cmd_name=$(basename "$cmd_dir");             echo "==> building ./$cmd_dir -> /app/bin/$cmd_name";             go build -o "/app/bin/$cmd_name" "./$cmd_dir";             built=1;         done;     fi;     if [ "$built" -eq 0 ]; then         echo "==> no cmd/ targets; building module root -> /app/bin/server";         go build -o /app/bin/server .;     fi
++ test -f go.mod
++ go mod download
++ built=0
++ '[' -d cmd ]
++ '[' -d cmd/kubernetes-mcp-server/ ]
++ basename cmd/kubernetes-mcp-server/
++ cmd_name=kubernetes-mcp-server
++ echo '==> building ./cmd/kubernetes-mcp-server/ -> /app/bin/kubernetes-mcp-server'
++ go build -o /app/bin/kubernetes-mcp-server ./cmd/kubernetes-mcp-server/==> building ./cmd/kubernetes-mcp-server/ -> /app/bin/kubernetes-mcp-server
+
++ built=1
++ '[' 1 -eq 0 ]
+--> 42ccd28d6719
+[1/2] STEP 7/7: RUN set -eu;     if [ -z "$(find /app/bin -maxdepth 1 -type f -perm -u+x -print -quit)" ]; then         echo "FATAL: build produced no executable in /app/bin" >&2;         ls -la /app/bin >&2;         exit 1;     fi;     echo "OK: /app/bin contains:"; ls -la /app/bin
+OK: /app/bin contains:
+total 102352
+drwxr-xr-x    1 root     root          4096 Aug 14 08:11 .
+drwxr-xr-x    1 root     root          4096 Aug 14 08:10 ..
+-rwxr-xr-x    1 root     root     104800016 Aug 14 08:11 kubernetes-mcp-server
+--> fc3f53a56d76
+[2/2] STEP 1/8: FROM alpine:3.19
+[2/2] STEP 2/8: RUN apk add --no-cache socat netcat-openbsd ca-certificates
+--> Using cache 35141277a9d38b6bc6ed9eaf31011ca4348ea056062a5c17d5ace040c8d0e1b2
+--> 35141277a9d3
+[2/2] STEP 3/8: WORKDIR /app
+--> Using cache fe6b525853f1fbd558c9d251d866c64c50ac461dc58324f1918e8b41426daf90
+--> fe6b525853f1
+[2/2] STEP 4/8: COPY --from=builder /app/bin/ /app/bin/
+--> d60669905d65
+[2/2] STEP 5/8: RUN set -eu;     if [ -z "$(find /app/bin -maxdepth 1 -type f -perm -u+x -print -quit)" ]; then         echo "FATAL: shipped image has no executable in /app/bin" >&2;         ls -la /app/bin >&2;         exit 1;     fi;     echo "OK: shipped /app/bin contains:"; ls -la /app/bin
+OK: shipped /app/bin contains:
+total 102352
+drwxr-xr-x    2 root     root          4096 Aug 14 08:11 .
+drwxr-xr-x    3 root     root          4096 Aug 14 08:11 ..
+-rwxr-xr-x    1 root     root     104800016 Aug 14 08:11 kubernetes-mcp-server
+--> 7f6b9ff3950f
+[2/2] STEP 6/8: RUN echo '#!/bin/sh' > /entrypoint.sh &&     echo 'set -e' >> /entrypoint.sh &&     echo 'echo "Starting Go MCP server on port 9000"' >> /entrypoint.sh &&     echo 'ENTRY=""' >> /entrypoint.sh &&     echo 'for bin in /app/bin/*; do' >> /entrypoint.sh &&     echo '  if [ -x "$bin" ]; then ENTRY="$bin"; break; fi' >> /entrypoint.sh &&     echo 'done' >> /entrypoint.sh &&     echo 'if [ -z "$ENTRY" ]; then echo "ERROR: No Go binary found!"; exit 1; fi' >> /entrypoint.sh &&     echo 'echo "Entry point: $ENTRY"' >> /entrypoint.sh &&     echo 'echo "Listening on TCP port 9000..."' >> /entrypoint.sh &&     echo 'exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$ENTRY"' >> /entrypoint.sh &&     chmod +x /entrypoint.sh
+--> 392666e385c1
+[2/2] STEP 7/8: EXPOSE 9000
+--> 8e577fe61802
+[2/2] STEP 8/8: CMD ["/entrypoint.sh"]
+[2/2] COMMIT localhost/hxc333-verify/mcp-kubernetes:fixed
+--> 00893d563317
+Successfully tagged localhost/hxc333-verify/mcp-kubernetes:fixed
+00893d56331736b1023b8698c6ac1459175c320c00c831df876fe33d2bd670de
+BUILD_RC=0

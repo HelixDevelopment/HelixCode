@@ -1,0 +1,577 @@
+###################################################################
+IMAGE: localhost/mcp_mcp-airtable:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-airtable:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-atlassian:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-atlassian:latest -c 'cat /entrypoint.sh 2>&1'
+cat: can't open '/entrypoint.sh': No such file or directory
+rc=1
+
+###################################################################
+IMAGE: localhost/mcp_mcp-brave-search:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-brave-search:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-browserbase:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-browserbase:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-context7:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-context7:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting context7-mcp (stdio→TCP wrapped)"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node /app/packages/mcp/dist/index.js"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-everything:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-everything:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: everything on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_everything"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-fetch:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-fetch:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: fetch on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_fetch"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-filesystem:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-filesystem:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: filesystem on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_filesystem"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-firecrawl:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-firecrawl:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-github:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-github:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting Go MCP server on port 9000"
+ENTRY=""
+for bin in /app/bin/*; do
+  if [ -x "$bin" ]; then ENTRY="$bin"; break; fi
+done
+if [ -z "$ENTRY" ]; then echo "ERROR: No Go binary found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-git:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-git:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: git on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_git"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-heroku:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-heroku:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-kubernetes:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-kubernetes:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting Go MCP server on port 9000"
+ENTRY=""
+for bin in /app/bin/*; do
+  if [ -x "$bin" ]; then ENTRY="$bin"; break; fi
+done
+if [ -z "$ENTRY" ]; then echo "ERROR: No Go binary found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-memory:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-memory:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: memory on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_memory"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-mongodb:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-mongodb:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-notion:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-notion:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting notion-mcp-server (stdio→TCP wrapped)"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"/usr/local/bin/notion-mcp-server"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-obsidian:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-obsidian:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-omnisearch:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-omnisearch:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-perplexity:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-perplexity:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-playwright:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-playwright:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting playwright-mcp (stdio→TCP wrapped)"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node /app/cli.js --headless --browser chromium --no-sandbox"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-qdrant:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-qdrant:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting mcp-server-qdrant (stdio→TCP wrapped)"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"mcp-server-qdrant --transport stdio"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-redis:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-redis:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting Python MCP server on port 9000"
+ENTRY=""
+if [ -f "src/main.py" ]; then ENTRY="python src/main.py"
+elif [ -f "main.py" ]; then ENTRY="python main.py"
+elif [ -f "server.py" ]; then ENTRY="python server.py"
+elif [ -f "src/server.py" ]; then ENTRY="python src/server.py"
+elif [ -f "src/__main__.py" ]; then ENTRY="python -m src"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No Python entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-sentry:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-sentry:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting sentry-mcp (stdio→TCP wrapped)"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node /app/packages/mcp-server/dist/index.js"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-sequentialthinking:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-sequentialthinking:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: sequentialthinking on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_sequentialthinking"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-slack:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-slack:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting Go MCP server on port 9000"
+ENTRY=""
+for bin in /app/bin/*; do
+  if [ -x "$bin" ]; then ENTRY="$bin"; break; fi
+done
+if [ -z "$ENTRY" ]; then echo "ERROR: No Go binary found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-supabase:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-supabase:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting supabase-mcp (stdio→TCP wrapped)"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node /app/packages/mcp-server-supabase/dist/transports/stdio.js"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-telegram:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-telegram:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting Python MCP server on port 9000"
+ENTRY=""
+if [ -f "src/main.py" ]; then ENTRY="python src/main.py"
+elif [ -f "main.py" ]; then ENTRY="python main.py"
+elif [ -f "server.py" ]; then ENTRY="python server.py"
+elif [ -f "src/server.py" ]; then ENTRY="python src/server.py"
+elif [ -f "src/__main__.py" ]; then ENTRY="python -m src"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No Python entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-time:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-time:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server: time on port 9000"
+
+# Detect server type and set command
+if [ -f "dist/index.js" ]; then
+    CMD="node dist/index.js"
+    echo "Detected: TypeScript server"
+elif [ -f "pyproject.toml" ]; then
+    if [ -d ".venv" ]; then
+        . .venv/bin/activate
+    fi
+    CMD="python -m mcp_server_time"
+    echo "Detected: Python server"
+else
+    echo "ERROR: No entry point found (no dist/index.js or pyproject.toml)"
+    exit 1
+fi
+
+echo "Command: $CMD"
+echo "Listening on TCP port 9000..."
+
+# Use socat to expose stdio-based MCP server over TCP
+# CRITICAL: Use raw pipes, NOT pty - MCP uses NDJSON framing
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"$CMD"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-trello:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-trello:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/mcp_mcp-workers:latest
+CMD: podman run --rm --entrypoint sh localhost/mcp_mcp-workers:latest -c 'cat /entrypoint.sh 2>&1'
+#!/bin/sh
+set -e
+echo "Starting MCP server on port 9000"
+ENTRY=""
+if [ -f "dist/index.js" ]; then ENTRY="dist/index.js"
+elif [ -f "build/index.js" ]; then ENTRY="build/index.js"
+elif [ -f "index.js" ]; then ENTRY="index.js"
+elif [ -f "src/index.js" ]; then ENTRY="src/index.js"
+elif [ -f "src/index.ts" ]; then ENTRY="src/index.ts"
+fi
+if [ -z "$ENTRY" ]; then echo "ERROR: No entry point found!"; exit 1; fi
+echo "Entry point: $ENTRY"
+echo "Listening on TCP port 9000..."
+exec socat TCP-LISTEN:9000,reuseaddr,fork SYSTEM:"node $ENTRY"
+rc=0
+
+###################################################################
+IMAGE: localhost/helixagent-mcp-servers:test
+CMD: podman run --rm --entrypoint sh localhost/helixagent-mcp-servers:test -c 'cat /entrypoint.sh 2>&1'
+cat: can't open '/entrypoint.sh': No such file or directory
+rc=1
+
