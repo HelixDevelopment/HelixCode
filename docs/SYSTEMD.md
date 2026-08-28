@@ -25,7 +25,21 @@ journalctl --user -u helixagent -f          # follow one service's logs
 scripts/install_systemd_units.sh            # re-install after editing a unit
 scripts/install_systemd_units.sh --start    # install + enable + start
 scripts/install_systemd_units.sh --uninstall
+
+# Operator wrapper (recommended)
+scripts/helixctl.sh install                 # build + install + start
+scripts/helixctl.sh start|stop|restart
+scripts/helixctl.sh status [unit]
+scripts/helixctl.sh enable|disable
+scripts/helixctl.sh validate                # run platform readiness probe
+scripts/helixctl.sh logs <unit>
 ```
+
+The `helixctl.sh` wrapper is the single operator entry point: every action is
+implemented through `systemctl --user`, so the whole platform is controlled via
+systemd user-space. `validate` runs `scripts/validate-helix-platform.sh`, which
+probes every unit and every exposed port and writes a timestamped report under
+`qa-results/helix-platform-validation/`.
 
 Prove the platform is actually *serving*, not merely `active` (§11.4.108):
 
