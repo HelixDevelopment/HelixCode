@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc 3.10" />
+  <meta name="generator" content="pandoc 3.11" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <title>Issues</title>
   <style>
@@ -41,7 +41,6 @@
       body {
         background-color: transparent;
         color: black;
-        font-size: 12pt;
       }
       p, h2, h3 {
         orphans: 3;
@@ -172,7 +171,6 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
   </style>
 </head>
 <body>
@@ -844,13 +842,57 @@ in writing: either keep the copy and properly maintain and build it, or
 remove it and its broken startup entry, or replace it with a reference
 to the upstream hosted service. Because deleting shipped components
 requires approval, the decision must be put to the operator rather than
-taken unilaterally.</p>
+taken unilaterally. HXC-225 tracked this identical component
+(submodules/helix_agent/mcp-servers/GitMCP) under a separately-minted
+ticket id with no Duplicate-of link back to this one — a §11.4.214
+recurrence-links-not-mints violation. HXC-225 has been consolidated into
+this ticket: it is closed Obsolete (reason duplicate-of, superseding
+item HXC-171) per §11.4.90, citing the investigation evidence at
+docs/qa/hxc225_gitmcp_investigation_20260807T151320Z/ANALYSIS.md, which
+identifies both tickets as tracking the same vendored copy of
+idosal/git-mcp. The operator has approved removal of this vendored copy
+per §11.4.122 (approval granted 2026-09-02); this item is no longer
+awaiting an operator decision.</p>
 <h2
 id="hxc-172-three-security-warnings-in-a-small-plugin-service-we-wrote-and-actually-deploy-with-no-reachability-evidence-either-way">HXC-172
 — Three security warnings in a small plugin service we wrote and
 actually deploy, with no reachability evidence either way</h2>
 <p><strong>Status:</strong> Operator-blocked <strong>Type:</strong> Task
-<strong>Severity:</strong> High</p>
+<strong>Operator-Block-Details:</strong> WHAT: Both ws advisories
+(GHSA-96hv-2xvq-fx4p high, GHSA-58qx-3vcg-4xpx medium) are CLOSED - ws
+8.19.0 -&gt; 8.21.1, package.json floor raised ^8.14.0 -&gt; ^8.21.1.
+The third, <span class="citation"
+data-cites="modelcontextprotocol/sdk">@modelcontextprotocol/sdk</span>
+GHSA-w48q-cv73-mx4w (high, DNS rebinding protection off by default), is
+NOT closed and needs an owner decision. WHY: Reachability was
+established (Ground B): neither ws nor the MCP SDK is EVER imported -
+the shipped dist/ requires only ./tools and ./transport. So the SDK
+vulnerability is installed but never loaded. The advisory fix is 1.24.0
+while we pin ^0.5.0, i.e. a MAJOR jump that a trial showed grows the
+dependency tree 19 -&gt; 98 packages / 3634 files, adding ~79 packages
+of new surface to the shipped image to patch code that is never
+executed, and churning ~3600 files of TRACKED node_modules. The
+protective setting was verified explicitly rather than assumed: it does
+not exist in our code path at all, because runSSE() hand-rolls
+http.createServer instead of using the SDK transport, and sets
+Access-Control-Allow-Origin * with no Origin or Host validation.
+Upgrading the SDK would therefore close the alert while changing nothing
+about our real exposure. Option B (remove) is the technically correct
+fix but is a component removal requiring operator confirmation under
+11.4.122 and a git-history investigation under 11.4.124, which an agent
+may not do unilaterally. UNBLOCK: [A] UPGRADE the SDK to ^1.24.0+ -
+closes the alert, zero API risk (nothing imports it, tsc verified), but
+adds ~79 packages to the shipped image and a ~3600-file
+tracked-node_modules diff, for no change in real exposure. [B] REMOVE
+<span class="citation"
+data-cites="modelcontextprotocol/sdk">@modelcontextprotocol/sdk</span>
+(and arguably ws) as unused dependencies - the correct fix, eliminates
+the advisory permanently and shrinks the image, but is a 11.4.122
+component removal needing explicit operator approval plus a 11.4.124
+dead-code git-history investigation. [C] ACCEPT and suppress with a
+documented rationale - cheapest, exposure genuinely unchanged since the
+package is never loaded, but the alert stays on the board as audit
+noise. WHO: Operator <strong>Severity:</strong> High</p>
 <p>A small companion service we wrote ourselves is packaged into a
 container and started as part of the standard deployment, and it carries
 three known security warnings in its supporting packages, two of them
@@ -1273,36 +1315,6 @@ it, who currently have no accurate written description of the rule being
 enforced. Success means someone can follow the written guide and produce
 evidence that passes the gate on the first attempt.</p>
 <h2
-id="hxc-225-one-vendored-helper-server-accounts-for-two-thirds-of-all-our-reported-vulnerabilities">HXC-225
-— One vendored helper server accounts for two thirds of all our reported
-vulnerabilities</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
-<strong>Created-By:</strong> Claude <strong>Severity:</strong> Medium
-(direct sibling of HXC-171, same shape and same rating: a vendored
-component of unverified origin/usage inflates the headline vulnerability
-count — 140 of roughly 208 — burying the few that matter; not Low
-because an undiscussed component silently shipping or wired in unnoticed
-is a real provenance/supply-chain gap requiring an explicit operator
-decision; not High because HXC-166’s independent triage already found 0
-of 210 total advisories reachable-and-unmitigated in any shipped
-helix_agent artifact today)</p>
-<p>A single bundled helper component inside the agent project is
-responsible for 140 of the roughly 208 security advisories reported
-against the whole project — about two thirds of the total — and it
-entered the codebase without ever being discussed. Nobody has
-established what it does, whether we wrote it or copied it in, whether
-anything we ship actually uses it, or whether removing it would cost us
-anything. Until those questions are answered the headline advisory count
-is misleading: it reads as though the agent project carries enormous
-risk, when in reality the great bulk of it sits in one component that
-may not even be part of what we deliver. The work is to determine the
-component’s origin and purpose, whether it is reachable from anything we
-build or run, and then to make a decision about it — keep and maintain,
-upgrade its dependencies, or remove it — and record which was chosen and
-why. The decision matters more than the individual advisories, because
-upgrading dependencies inside a component we do not need would be effort
-spent on nothing.</p>
-<h2
 id="hxc-224-closure-evidence-pointers-are-unchecked-free-text-so-proof-of-completed-work-silently-becomes-unreachable">HXC-224
 — Closure-evidence pointers are unchecked free text, so proof of
 completed work silently becomes unreachable</h2>
@@ -1398,8 +1410,28 @@ name which mirror it came from.</p>
 id="hxc-227-a-working-access-key-for-an-external-service-is-published-in-a-design-document">HXC-227
 — A working access key for an external service is published in a design
 document</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Created-By:</strong> Claude</p>
+<p><strong>Status:</strong> Operator-blocked <strong>Type:</strong> Bug
+<strong>Operator-Block-Details:</strong> WHAT: A genuine external
+model-provider access key sits in a tracked design document’s API-keys
+section, published to all four mirrors for forty-eight days. The value
+must be assumed compromised: anyone with read access to any mirror, or
+holding a clone or fork made in that window, already has it. WHY: Every
+in-repository remedy has been exhausted and none withdraws the key.
+Deleting the line removes it from the current revision only; the history
+retains it; rewriting that history is forbidden under 11.4.113 with no
+exception; and rewriting would not reach copies already distributed.
+Revocation requires access to the provider account, which is outside the
+repository and cannot be performed by the System (11.4.101 —
+irreversible, high-blast-radius, external-account state the agent cannot
+inspect). UNBLOCK: [A] Revoke the key at the provider and issue a
+replacement — the only action that actually withdraws it. [B] After [A],
+the System edits the document to reference the credentials file by name
+instead of quoting its contents. [C] After [A], the System adds a
+pre-commit check refusing any commit introducing a value of this shape;
+deliberately sequenced after HXC-282 lands so two streams do not edit
+pre-commit checking concurrently (11.4.119). WHO: User
+<strong>Severity:</strong> Critical <strong>Created-By:</strong>
+Claude</p>
 <p>A design document committed forty-eight days ago contains, in its
 API-keys section, what appears to be a genuine access key for an
 external model provider rather than a placeholder. The section is headed
@@ -1666,7 +1698,7 @@ should say so rather than reporting failures.</p>
 id="hxc-243-some-of-our-own-test-suites-cannot-fail-so-their-passes-mean-nothing">HXC-243
 — Some of our own test suites cannot fail, so their passes mean
 nothing</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<p><strong>Status:</strong> Ready for testing <strong>Type:</strong> Bug
 <strong>Created-By:</strong> Claude</p>
 <p>Several of the automated test collections that check our services
 declare no expectation about what a correct answer looks like. They send
@@ -1822,39 +1854,9 @@ suite on a machine that also hosts a live deployment, which is the
 normal case here. The expected outcome is a check that confirms the
 identity of what is answering - not merely that the port is occupied -
 so the cleanup makes its decision on the real condition rather than a
-coincidence, and so the message it logs is true. ## HXC-250 — Generated
-assistant configs send users to the wrong service, so 46 of 48
-assistants get a not-found</p>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> High <strong>Created-By:</strong> AI
-<strong>Assigned-To:</strong> Claude</p>
-<p>When a user asks the system to write out a ready-made configuration
-file for their command-line coding assistant, the file it produces
-points that assistant at the wrong service. The generator fills in a
-network address that belongs to the model verifier rather than to the
-agent runtime the assistant is supposed to talk to, so the assistant
-sends its requests to a component that does not understand them and
-receives a flat “not found” in reply. From the user’s point of view the
-assistant simply does not work, with nothing in the error explaining
-that the address in their brand-new config was wrong from the moment it
-was written. Of the forty-eight assistants the project documents support
-for, forty-six are affected; a fix landed earlier covers only two of
-them, so the shared generator that serves all the rest still writes the
-wrong address today. This is the most directly user-facing defect in the
-current set, because it is not an internal test that misleads a
-developer - it is a file handed to a user with an instruction to use it.
-The people harmed are exactly the newcomers the feature exists to help:
-someone setting up their assistant for the first time, following the
-documented path, and getting a broken result they have no way to
-diagnose. The expected outcome is that every generated configuration
-names the address the agent runtime genuinely serves, that all
-forty-eight documented assistants are covered rather than two, and that
-a generated config works when the user follows the documented setup
-without editing anything by hand.</p>
-<h2
-id="hxc-251-our-own-grpc-service-could-not-start-while-our-own-platform-was-running-and-its-log-still-names-the-old-address">HXC-251
-— Our own gRPC service could not start while our own platform was
-running, and its log still names the old address</h2>
+coincidence, and so the message it logs is true. ## HXC-251 — Our own
+gRPC service could not start while our own platform was running, and its
+log still names the old address</p>
 <p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
 <strong>Severity:</strong> Medium <strong>Created-By:</strong> AI
 <strong>Assigned-To:</strong> Claude</p>
@@ -2117,54 +2119,6 @@ internal/ports/published_grpc_port_test.go passes with RED_MODE unset
 variable outside a comment) and fails on the pre-fix tree, citing
 deployment.yaml line 32.</p>
 <h2
-id="hxc-261-hxc-261-the-grpc-protocol-challenge-recorded-success-on-every-branch-and-probed-a-port-nobody-binds-certifying-grpc-healthy-without-ever-contacting-a-grpc-server">HXC-261
-— HXC-261: the gRPC protocol challenge recorded success on every branch
-and probed a port nobody binds, certifying gRPC healthy without ever
-contacting a gRPC server</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> Critical <strong>Created-By:</strong>
-Claude</p>
-<p>The challenge script that is supposed to prove HelixAgent’s gRPC
-protocol works was structurally incapable of failing, and it has been
-reporting green for the entire time it has existed. Two independent
-faults compounded. First, it resolved its port from an environment
-variable named HELIXAGENT_GRPC_PORT defaulting to 7062 — a third
-spelling that no Go source reads (the server honours
-HELIXAGENT_PORT_GRPC) and a number belonging to no service in the
-project: not the old hardcoded 50051, not the registry’s 8112, not the
-HTTP port 7061. Second, and far worse, every one of its four probes
-recorded a successful assertion whether the port answered or not: the
-port-availability check recorded true when the port was listening AND
-recorded true, labelled ‘optional’, when it was not; the unary-call,
-streaming-call and error-handling checks did the same. The two faults
-together mean the challenge dialled an address no HelixAgent process has
-ever bound, found nothing there, and then certified the gRPC protocol
-healthy. This is the most damaging class of defect in the codebase
-because it is not merely an untested feature — it is an automated test
-actively producing false-green results, which is exactly what the
-anti-bluff covenant exists to prevent, and it masks any real gRPC
-breakage from everyone reading the suite. It also violated the challenge
-framework’s own documented contract: the framework already ships a
-record_skip helper whose docstring says never to use record_assertion
-with status true to mask a missing feature, and the primitive was simply
-not used. This item covers resolving the port through the registry’s own
-variable name and default, consolidating the four duplicated probe sites
-into one helper so absence is interpreted in exactly one place, making
-absence report as an honest SKIP carrying a SKIP-OK ticket rather than
-success, making a real failed call report as FAILED, and replacing the
-two-state final verdict (which reported PASSED whenever nothing had
-failed, including when nothing had been verified) with a three-state
-verdict that reports SKIPPED when no assertion could be verified.
-Reproduce with the guard at
-challenges/scripts/tests/protocol_grpc_fail_open_guard.sh run with
-RED_MODE=1 against the pre-fix script: it binds and releases a port to
-prove it is free, drives the challenge’s own probe functions against it,
-and confirms assertions are recorded PASSED anyway. Acceptance criteria:
-that same guard with RED_MODE=0 reports zero PASSED assertions against a
-proven-free port with every probe SKIPPED and SKIP-OK tagged, and the
-challenge still records a genuine PASSED assertion when a real gRPC
-server is listening on the registry port.</p>
-<h2
 id="hxc-262-a-safety-check-in-the-live-service-test-battery-occasionally-reports-a-failure-that-is-not-real">HXC-262
 — A safety check in the live-service test battery occasionally reports a
 failure that is not real</h2>
@@ -2390,7 +2344,7 @@ correctly.</p>
 id="hxc-268-model-verifier-emits-unusable-addresses-for-ipv6-hosts-at-fifteen-capability-config-sites-that-never-bracket-the-literal">HXC-268
 — Model verifier emits unusable addresses for IPv6 hosts at fifteen
 capability-config sites that never bracket the literal</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<p><strong>Status:</strong> Ready for testing <strong>Type:</strong> Bug
 <strong>Severity:</strong> Medium <strong>Created-By:</strong> Claude
 <strong>Assigned-To:</strong> Claude</p>
 <p>The model verifier builds web addresses by pasting a host and a port
@@ -2441,122 +2395,6 @@ the IPv6 literal, already-bracketed, IPv4 and hostname cases and is
 proven real by a paired mutation that removes the bracketing and makes
 the test fail; and the count of remaining unbracketed sites in that file
 is zero, verified by the same command that produced the fifteen.</p>
-<h2
-id="hxc-269-model-verifier-silently-discards-the-configured-port-when-the-host-carries-a-query-fragment-or-path">HXC-269
-— Model verifier silently discards the configured port when the host
-carries a query, fragment, or path</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> Medium <strong>Created-By:</strong> Claude
-<strong>Assigned-To:</strong> Claude</p>
-<p>When the model verifier builds a web address from a host and a port,
-and the host value contains a question mark, a hash, or a slash, the
-port is silently swallowed and the address ends up pointing at the
-default port instead of the one configured. WHY IT HAPPENS: the address
-builder appends the port after whatever it was given, so a host carrying
-a query string produces something like a normal address with the port
-glued onto the end of the query rather than onto the host; every
-standard address parser then reads the host correctly, reads NO port at
-all, and treats the port digits as part of the query text. HOW IT
-MANIFESTS: the client connects to the wrong place with no error and no
-warning anywhere, which is the same silent-misdirection this component
-was just remediated to eliminate. WHY IT IS REACHABLE RATHER THAN
-THEORETICAL: the host-normalising step accepts these shapes without
-complaint, so the value flows end to end from the operator-facing host
-setting into generated configuration with nothing reporting a problem.
-THREE SHAPES CONFIRMED BY MEASUREMENT: a host with a query string loses
-its port into the query; a host with a fragment loses it into the
-fragment; a host with a path loses it into the path. WHO IS AFFECTED:
-any operator who pastes a full address into the host setting instead of
-the dedicated full-address setting, which the component’s own guidance
-anticipates as a likely mistake. HOW TO REPRODUCE: build an address from
-a host containing a question mark and any port, then parse the result
-and observe the port is empty while the query carries the digits.
-ACCEPTANCE CRITERIA: a host containing a query, fragment, or path either
-is rejected with a clear message naming the setting and the expected
-shape, or is handled so the port survives; whichever is chosen, the
-operator is told rather than left with a silently wrong address; and a
-standing test covers all three shapes plus the ordinary host and address
-cases, proven real by a paired mutation that removes the handling and
-makes the test fail.</p>
-<h2
-id="hxc-270-helixqa-copies-failed-reply-bodies-verbatim-into-reports-and-errors-at-five-sites-one-of-them-the-sign-in-path">HXC-270
-— HelixQA copies failed reply bodies verbatim into reports and errors at
-five sites, one of them the sign-in path</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> Medium <strong>Created-By:</strong> Claude
-<strong>Assigned-To:</strong> Claude</p>
-<p>HelixQA copies failed reply bodies straight into reports and error
-messages in several places, and one of those places is a sign-in reply,
-which is exactly where a credential is most likely to be. WHAT HAPPENS:
-when a request returns an unsuccessful status, the code records the
-entire reply body as the description of a reported finding. This occurs
-at THREE sites in the same validation routine — the sign-in path, the
-entity-statistics path, and the media-search path. A fourth and fifth
-exposure sit in the shared HTTP helper: an error message carrying a
-slice of the body, and a wrapper around the underlying decoding
-complaint, which on the current toolchain quotes a character taken from
-the body. WHY THIS MATTERS: these reports and errors are written to
-shared logs and captured by automation, so anything the server put in
-that body travels outward with them. The sign-in site is the highest
-risk by a wide margin — a sign-in endpoint that echoes a submitted
-token, returns a cookie in the body, or includes an authorization header
-in its diagnostic output would have that value copied verbatim into a
-durable record. The other two sites echo the tested service’s own error
-bodies, which is a lower but identical mechanical risk. RELATIONSHIP TO
-OTHER WORK: a sibling item hardened the SUCCESSFUL sign-in path so it
-reports only a shape label, a byte count and a decode position, never a
-body byte; a separate component now redacts values that look like they
-carry credentials. These sites predate that work and were deliberately
-left untouched while it was under review, so the discipline is now
-inconsistent inside a single function: the success path is careful and
-the failure path fifteen lines below it is not. HOW TO REPRODUCE: point
-the pipeline at a test server whose sign-in route returns an
-unsuccessful status with a body containing a recognisable marker, run
-the validation step, and observe the marker appears in the recorded
-finding and in the returned error text. ACCEPTANCE CRITERIA: none of the
-five sites emits raw body bytes; all report the same class of bounded,
-non-echoing detail the success path already uses; the decode-complaint
-wrapping is replaced with a position and a shape rather than a quoted
-character; and a standing test asserts a marker placed in a failure body
-never appears in any finding or error at any of the five sites, proven
-real by a paired mutation that restores the echo and makes the test
-fail.</p>
-<h2
-id="hxc-271-the-agents-facade-family-of-remote-calls-can-never-succeed-on-any-host-because-its-server-was-never-given-the-provider-registry">HXC-271
-— The agent’s facade family of remote calls can never succeed on any
-host because its server was never given the provider registry</h2>
-<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
-<strong>Severity:</strong> High <strong>Created-By:</strong> Claude
-<strong>Assigned-To:</strong> Claude</p>
-<p>One of the two families of remote calls the agent publishes cannot
-ever succeed, on any machine, however well configured. WHAT IS BROKEN:
-the facade family of calls — the ones for completing text, streaming a
-completion, and chatting — reaches an internal routine that is always
-handed an EMPTY list of providers, and that routine refuses immediately
-when the list is empty. So every call in this family returns the same
-failure regardless of how many providers are actually configured and
-discovered. WHY IT IS NOT A CONFIGURATION PROBLEM: the object serving
-this family was never given a reference to the registry that holds the
-discovered providers; it has no such field at all. Start-up wires the
-registry into the OTHER family only, and that other family’s completion
-call does consult it, which is why the two families behave differently
-despite looking equivalent from outside. HOW IT WAS CONFIRMED: captured
-at runtime on a machine where fifty-plus real models had genuinely been
-discovered from live provider APIs, so this is not a case of an
-unprovisioned host — the providers existed and the call still failed
-with a message saying no providers were configured. WHO IS AFFECTED: any
-client using the facade family, which is the family the published
-interface presents first and the one an integrator would naturally reach
-for. HOW IT MANIFESTS: a caller gets an error advising them to use the
-provider registry for credential injection, which reads as a
-configuration mistake on their side and sends them to check credentials
-that are already correct. ACCEPTANCE CRITERIA: the facade family either
-receives the registry and succeeds against configured providers, or is
-explicitly withdrawn from the published interface with a clear error
-naming its replacement; a test drives each of the three calls end to end
-against a real configured provider and asserts a genuine response rather
-than an absence of error; and a paired mutation that removes the
-registry wiring makes that test fail.</p>
 <h2
 id="hxc-272-automated-checks-starting-in-the-same-second-share-a-results-folder-so-one-run-is-judged-on-another-runs-failures">HXC-272
 — Automated checks starting in the same second share a results folder,
@@ -2674,5 +2512,480 @@ environment, and the server begins serving promptly after it begins
 accepting; a test starts the server with credentials present and asserts
 no outbound calls occur, proven real by a paired mutation that restores
 eager discovery and makes the test fail.</p>
+<h2
+id="hxc-275-two-branches-of-the-grpc-identity-check-are-never-exercised-so-a-future-edit-could-silently-weaken-them">HXC-275
+— Two branches of the gRPC identity check are never exercised, so a
+future edit could silently weaken them</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>The automated check that confirms our own remote-call service is
+genuinely the one answering has two decision branches that no test ever
+reaches, so an edit that weakened either one would not be noticed. WHAT
+IS NOT COVERED: first, the check’s most important test asks the service
+a deliberately invalid question and demands BOTH the expected refusal
+code AND the service’s own wording of the complaint — demanding both is
+what proves the real service answered rather than any program that
+returns an error. A static guard now pins that the two demands stay
+joined, but nothing exercises the branch at runtime, because doing so
+needs a stand-in service that reproduces our validation wording, plus a
+second path for hosts that have the query tool installed. Second, there
+is a deliberately cautious fallback branch for a peer that speaks the
+right protocol but answers in wording we do not recognise; peers built
+on other language runtimes phrase refusals differently and land exactly
+there, yet no test ever drives it. WHY IT MATTERS: these are the two
+branches that decide whether a half-broken or entirely foreign service
+is accepted as ours, which is the failure this whole check exists to
+prevent. WHO IS AFFECTED: anyone relying on the automated gate to notice
+a wrong or partially-started service before manual testing begins.
+CORRECTION TO AN EARLIER RECORD: a related concern was previously logged
+as unguarded — that the two failure messages could be swapped without
+detection. Measurement shows a full swap IS caught, because one arm
+asserts its message text; only a change to the not-speaking-the-protocol
+message alone goes unnoticed, which a single added assertion would
+close. HOW TO REPRODUCE: change the invalid-question branch so it
+accepts either demand instead of both, and observe every runtime test
+still passes; separately, point the check at a peer that speaks the
+protocol but returns unfamiliar refusal wording and observe no test
+exercises that path. ACCEPTANCE CRITERIA: a runtime test drives the
+invalid-question branch against a stand-in service that performs the
+same validation as the real one, with an honest skip and stated reason
+on hosts lacking the query tool rather than a silent pass; a second test
+drives the unrecognised-wording fallback using a peer that answers every
+request as unknown; the not-speaking-the-protocol message gains its own
+assertion; and each new test is proven real by a paired mutation that
+weakens the branch it covers and makes that test fail.</p>
+<h2
+id="hxc-276-test-bank-assertion-diagnostics-copy-reply-bodies-into-reports-which-is-intended-but-currently-unbounded-in-the-wrong-dimension">HXC-276
+— Test-bank assertion diagnostics copy reply bodies into reports, which
+is intended but currently unbounded in the wrong dimension</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Created-By:</strong> Claude</p>
+<p>The test-bank machinery copies an excerpt of a service’s reply into
+its assertion diagnostics, and unlike the sibling defect just fixed,
+this one is DELIBERATE — when a bank author writes an expectation about
+reply content and it does not match, showing part of the reply is
+precisely how the author sees why. WHAT IS AT ISSUE: the excerpt is
+bounded only by a fixed character count, with no attention to what those
+characters might be, so a bank pointed at a sign-in route or any route
+whose reply carries a token will copy that value into a durable report
+exactly as the recently-fixed sites did. WHY IT IS NOT SIMPLY THE SAME
+FIX: stripping the excerpt would silently break the workflow it exists
+for, turning a useful failure message into an unusable one, so the
+remedy here is different in kind — the excerpt should stay, but be
+filtered so that anything resembling a credential is masked while
+ordinary content survives intact. WHERE: five places — three in the bank
+request executor and one in its structured-assertion counterpart, plus a
+shared path-check helper that folds a decoder’s own complaint into a
+message, and a decoder complaint quotes the input that upset it. WHO IS
+AFFECTED: anyone reading an archived bank report, since these reports
+are kept and shared, and anyone writing banks against an authenticated
+service. RELATIONSHIP TO OTHER WORK: the sibling item fixed the same
+mechanical leak in the pipeline’s own validation paths, where no excerpt
+was ever wanted; the fixer measured these five, judged them a different
+design intent, and left them deliberately rather than silently — this
+item records that decision and the work it defers. HOW TO REPRODUCE:
+write a bank whose expectation about reply content fails against a route
+returning a recognisable marker in its body, run it, and observe the
+marker copied into the recorded result message. ACCEPTANCE CRITERIA: the
+excerpt survives for ordinary content so the diagnostic stays useful;
+values resembling credentials are masked before the excerpt is recorded;
+the decoder-complaint path reports a position and a shape rather than
+quoting input; and a standing test proves both directions at every site
+— a credential-shaped marker never appears, while an ordinary marker
+still does — each proven real by a paired mutation that restores the raw
+copy and makes the first assertion fail, and one that strips the excerpt
+entirely and makes the second fail.</p>
+<h2
+id="hxc-277-the-project-resumption-record-has-not-advanced-in-two-weeks-while-roughly-236-commits-changed-the-state-it-describes">HXC-277
+— The project resumption record has not advanced in two weeks while
+roughly 236 commits changed the state it describes</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
+<strong>Created-By:</strong> Claude</p>
+<p>The document that tells a newly-started session where the project
+actually stands has not been updated since the twenty-eighth of July,
+while about two hundred and thirty-six commits have changed the very
+state it describes. WHY THIS MATTERS: this record is the agreed
+authority on what is finished, what is in progress, and what is blocked,
+and our own governing rules class an out-of-date copy as a defect of the
+same seriousness as a test that reports success for something broken —
+because both hand a reader a confident answer that is wrong. WHAT GOES
+WRONG IN PRACTICE: anyone or anything resuming work from it plans
+against a fortnight-old picture, redoes work already finished, reports
+completion for items that moved on, or misses a blocker that has since
+appeared. HOW IT DRIFTED: the rule requires the record to advance in the
+same commit as any change that moves the project’s state, but the
+burn-down has been running through submodule work whose commits land in
+other repositories, so the habit of updating it in step was quietly
+lost. WHO IS AFFECTED: every future session, and any team member relying
+on it rather than reading the commit history themselves. RELATIONSHIP TO
+OTHER WORK: a companion handoff document at the repository root WAS
+refreshed and now carries the current picture, so the immediate risk of
+a lost session is covered; this item is about restoring the longer-lived
+record and, more importantly, the discipline that keeps it current. HOW
+TO REPRODUCE: compare the date of the newest change to the record
+against the dates of the commits made since, and observe the gap.
+ACCEPTANCE CRITERIA: the record is brought level with the current state,
+including everything closed, filed, and left in progress across the gap;
+the discipline is made mechanical rather than remembered, so that a
+state-advancing commit which leaves the record untouched is caught
+automatically rather than noticed weeks later; and the catch is proven
+real by deliberately making such a commit and confirming it is
+refused.</p>
+<h2
+id="hxc-279-the-grpc-identity-checks-verdict-can-be-inverted-or-skipped-entirely-and-nothing-would-notice">HXC-279
+— The gRPC identity check’s verdict can be inverted or skipped entirely,
+and nothing would notice</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Medium <strong>Created-By:</strong>
+Claude</p>
+<p>The check that confirms our remote-call service is genuinely the one
+answering now has a solid guard over HOW its decisive test is composed —
+it demands two separate probes both hold — but nothing guards what
+happens AFTER that composition is evaluated. Two distinct promises are
+unprotected. THE FIRST IS POLARITY: two small edits, each leaving the
+composition exactly as the guard requires, invert the meaning of the
+test. One negates the whole condition, so a pass is recorded precisely
+when both probes failed. The other leaves the condition untouched and
+simply exchanges the two recording statements beneath it, with the same
+inverting effect. THE SECOND IS REACHABILITY, found later and widening
+this item’s scope: an edit can make the whole statement dead, so no
+verdict is recorded at all — the condition remains a clean conjunction
+of both probes, satisfying the composition guard perfectly, while the
+check silently stops deciding anything. WHY THE EXISTING GUARD CANNOT
+COVER EITHER: these are different kinds of promise. One is about how the
+question is asked; these two are about whether the answer is reached and
+whether it is written down the right way round. Stretching the
+composition guard to cover them would blur what any of them certifies,
+and repeatedly widening that guard is exactly what produced four rounds
+of chasing its edges. WHY NO TEST CATCHES THEM TODAY: the four
+live-execution arms all reach their verdict before this comparison is
+exercised, and the one that would reach it deliberately removes the
+query tool from its environment, so none of them ever observes the
+recorded result. WHO IS AFFECTED: anyone relying on the automated gate
+to notice a wrong, foreign or half-started service before manual testing
+begins — an inverted check reports every healthy service as broken and,
+far worse, every broken one as healthy, while a dead check reports
+nothing at all yet still shows green. HOW THESE WERE FOUND: while
+verifying unrelated widenings, by asking whether any single edit could
+still defeat the test; the answer for composition was no, with an
+argument rather than a failed search, but asking the question one layer
+out surfaced polarity, and asking again surfaced reachability. All three
+edits were confirmed against the whole package with the query tool
+present, and nothing caught any of them. HOW TO REPRODUCE: negate the
+decisive condition as a whole, or exchange the two recording statements
+beneath it, or make the statement unreachable, then run the package and
+observe every check still passing. ACCEPTANCE CRITERIA: a guard asserts
+that the verdict statement is genuinely REACHED and that the passing
+verdict is recorded on the branch taken when the condition holds, with
+the failing verdict on the other, so that negating the condition,
+exchanging the branches, or killing reachability are each caught; it is
+proven real by paired mutations performing each of those three edits and
+confirming each makes the guard fail; and the existing composition guard
+keeps its own narrow scope rather than absorbing this one.</p>
+<h2
+id="hxc-280-seven-addresses-for-outside-services-are-built-the-same-broken-way-but-cannot-use-the-fix-that-repaired-the-rest">HXC-280
+— Seven addresses for outside services are built the same broken way,
+but cannot use the fix that repaired the rest</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude</p>
+<p>Seven places where we build a network address for a service that is
+NOT ours carry a defect a sibling item has just repaired everywhere
+else, and they were left alone because the repair would make them worse
+rather than better. THE SHARED DEFECT: an address for a modern-style
+numeric host must wrap that host in square brackets before a port is
+appended, or every reader sees a different host and no port at all. THE
+REPAIR THAT DOES NOT FIT: the shared builder brackets correctly, but
+when the host it is given is unusable it substitutes a default host of
+our own while KEEPING the port the caller asked for. That is right for
+the many places addressing our own agent, and wrong for these seven,
+which address a search database, a log-analysis service, a stream
+processor, two database systems and a message broker: a misconfigured
+outside address would quietly become the wrong machine on the right port
+— a connection that may well succeed against something else, which is
+worse than one that fails. THE SEVENTH SITE, AND WHY IT HID: six were
+found by searching for one way of writing an address; the seventh builds
+its address by repeated appending with a small local number-to-text
+helper, so no search shaped by the other six could see it. CORRECTION TO
+AN EARLIER VERSION OF THIS ENTRY: it stated that the seventh site sits
+in a part of the codebase that cannot use the shared helper at all, and
+therefore must call the underlying routine directly. That was measured
+FALSE — the two parts of the codebase are already wired together and
+three files across that boundary import each other today, and a compile
+check confirms the helper is reachable. The real reason the shared
+builder does not fit is the one that always applied: this address
+carries a user name, a password and a trailing path segment, a shape
+neither existing builder composes. Whoever takes this item should
+therefore weigh reusing and extending the shared helper on the real
+facts rather than inheriting a constraint that does not exist. THE MORE
+SERIOUS SECOND FACT about that site: it also places a password into the
+address without escaping it, so any password containing a character with
+meaning in an address will either corrupt the address or place secret
+material where addresses are logged and displayed. That is a
+credential-handling concern in its own right and must be fixed in the
+same pass. WHO IS AFFECTED: any deployment configuring these outside
+services with a modern-style numeric address, or with a password
+containing a reserved character. ACCEPTANCE CRITERIA: a defaults-free
+way of building these addresses exists — whether by extending the shared
+helper or otherwise, decided on measured facts — with the difference
+from the substituting builder stated where a reader will see it;
+credentials placed in an address are escaped; each of the seven is
+routed to whichever path is correct, justified per site; an unusable
+host produces an explicit refusal rather than a silent substitution; and
+a standing test proves every direction at every site, each proven real
+by a paired mutation restoring the old concatenation, one swapping in
+the substituting builder, and one removing the escaping.</p>
+<h2
+id="hxc-281-a-streaming-test-asserts-over-a-list-that-was-always-empty-so-it-has-never-checked-anything">HXC-281
+— A streaming test asserts over a list that was always empty, so it has
+never checked anything</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Low <strong>Created-By:</strong> Claude</p>
+<p>One of our streaming tests examines the pieces of a streamed reply
+and confirms none of them carries a fabricated confidence figure — but
+that list of pieces has always been empty, so the check has never
+actually examined anything. WHY IT WAS ALWAYS EMPTY: the server it
+exercises could not reach any provider at all, so it failed before
+producing a single piece; the test therefore looped over nothing and
+passed, every time, for a reason unrelated to what it claims to verify.
+WHY THIS IS WORTH FIXING NOW RATHER THAN LATER: a sibling item has just
+repaired that server, so the same test can finally be given real pieces
+to examine, and the check it was written to perform can be performed for
+the first time. WHAT IT WAS MEANT TO CATCH: a streamed reply that
+invents a confidence number the underlying provider never supplied — a
+fabrication the reader would have no way to distinguish from a genuine
+measurement. WHO IS AFFECTED: anyone trusting the streamed replies, and
+anyone reading this test as evidence that fabrication cannot occur,
+since it currently provides no such evidence. RELATIONSHIP TO OTHER
+WORK: found while repairing the server, and deliberately left alone at
+that time because widening an unrelated test inside a critical fix would
+have obscured what that fix changed. HOW TO REPRODUCE: examine the list
+the test iterates over and confirm it is empty in every run;
+alternatively, break the property the test claims to protect and observe
+the test still passes. ACCEPTANCE CRITERIA: the test drives the repaired
+server with a provider that genuinely streams more than one piece, so
+the list it examines is non-empty; the check runs against real pieces;
+and it is proven real by a paired mutation that makes a piece carry a
+fabricated confidence figure and confirms the test then fails.</p>
+<h2
+id="hxc-282-our-check-for-leftover-test-experiment-damage-looks-for-a-confession-so-damage-that-removes-code-is-invisible-to-it">HXC-282
+— Our check for leftover test-experiment damage looks for a confession,
+so damage that removes code is invisible to it</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude</p>
+<p>Before every commit we sweep the working files for leftovers from
+deliberate break-it-and-see experiments, and that sweep searches for a
+handful of tell-tale phrases the experiments are supposed to leave
+behind. It therefore cannot see an experiment whose whole method was to
+DELETE something, because a deletion leaves no phrase to find. WHAT
+ACTUALLY HAPPENED: an experiment that removed a protective rule from a
+live source file was left un-restored on disk. The sweep reported clean,
+every other check reported clean, and the damage was one staging command
+away from being committed and published. It was caught only because an
+independent reviewer compared the file against a preserved copy rather
+than searching it for phrases. WHY THAT MATTERS SO MUCH HERE: the rule
+that had been deleted was the one preventing a particular kind of secret
+from being written verbatim into records we keep and share, so the
+leftover damage was not a harmless experiment residue — it was the
+reinstatement of exactly the leak that file had just been repaired to
+prevent, sitting silently in a working tree that every check called
+clean. WHY IT ESCAPED EVERYTHING ELSE: the tests that would have caught
+it were reported as passing because the passing report predated the
+damage; a summary of what changed shows the file as modified but says
+nothing about whether the modification is wanted; and the phrase-search
+sweep is the only check whose specific job is spotting experiment
+leftovers. WHO IS AFFECTED: every commit of every file that an
+experiment has ever been run against, which in practice is every file we
+have been most careful about — the ones with the most guards get the
+most experiments run on them. WHAT IS NEEDED: the leftover check must
+compare the file against a recorded known-good version rather than
+searching it for phrases, so that any difference the author did not
+intend is surfaced whatever its shape — added, changed or removed.
+Experiments must record that known-good version before they begin and
+confirm the restoration afterwards, and the confirmation must be a
+comparison, not an assertion. HOW TO REPRODUCE: run any experiment that
+deletes a protective rule, do not restore it, run the leftover sweep,
+and observe it report clean. ACCEPTANCE CRITERIA: the pre-commit
+leftover check detects an un-restored deletion as reliably as it detects
+an un-restored insertion; every experiment records a known-good
+reference before it starts; restoration is verified by comparison
+against that reference and the verification is captured; and the whole
+mechanism is proven by a paired test that deletes a protective rule,
+leaves it un-restored, and confirms the check refuses the commit.</p>
+<h2
+id="hxc-283-rate-limiting-splits-a-caller-address-the-wrong-way-so-modern-numeric-callers-are-counted-inconsistently">HXC-283
+— Rate limiting splits a caller address the wrong way, so modern-numeric
+callers are counted inconsistently</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Medium <strong>Created-By:</strong>
+Claude</p>
+<p>Where we take an incoming caller’s address apart to decide who is
+making a request, we split it at the LAST colon rather than using the
+standard routine for the job. WHY THAT BREAKS: a modern-style numeric
+address is full of colons and is written wrapped in square brackets, so
+splitting at the last colon leaves the bracket punctuation attached to
+the caller’s identity for some requests and not others. The consequence
+is that the same caller can be counted as several different callers, or
+several different callers counted as one, which is precisely what a
+request limiter must never do — it either lets an abusive caller through
+by splitting their requests across identities, or throttles unrelated
+callers by merging them. WHERE: the request-limiting middleware, at the
+point it derives a caller key from the remote address. RELATIONSHIP TO
+OTHER WORK: this is the same family as a sibling item that has just
+repaired thirty-one places where we BUILD such an address, but it is the
+opposite direction — this one takes an address APART. That is why no
+part of the sibling work touched it and why searches shaped by the
+building sites could not surface it; it was found by a reviewer sweeping
+from the consuming side rather than the producing side. WHO IS AFFECTED:
+any caller reaching us over a modern-style numeric address, and anyone
+relying on request limits to hold. HOW TO REPRODUCE: send requests from
+a modern-style numeric address and observe the derived caller identity
+retains bracket punctuation inconsistently across requests. ACCEPTANCE
+CRITERIA: the caller address is taken apart with the standard routine
+that understands bracketed numeric addresses; one caller yields exactly
+one identity across every request shape; and a standing test proves it
+for old-style, modern-style, bracketed, zone-carrying and hostname
+callers, proven real by a paired mutation restoring the
+split-at-last-colon and confirming the test fails.</p>
+<h2
+id="hxc-340-readiness-probe-answers-http-200-while-the-server-is-still-starting-so-traffic-is-routed-to-a-server-that-cannot-serve">HXC-340
+— Readiness probe answers HTTP 200 while the server is still starting,
+so traffic is routed to a server that cannot serve</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude
+<strong>Assigned-To:</strong> Claude</p>
+<p>The agent service publishes three separate health addresses —
+/health, /readyz and /livez — but all three are wired to the exact same
+piece of code, so the system cannot distinguish ‘the process is alive’
+from ‘the process is ready to take work’. Those are different questions:
+a server can be running perfectly well and still be several minutes away
+from being able to answer a request. This matters because load balancers
+and container orchestrators decide where to send live user traffic based
+on the readiness answer, and they almost always read the HTTP status
+code rather than the message body. The code here always returns status
+200 (success) even while the body honestly says ‘starting’, and startup
+is documented as taking roughly seven minutes. For that whole window the
+orchestrator believes the server is ready and sends it real user
+requests, which fail. There is a second problem in the same place: once
+the server has reported itself ready one time, that answer is latched
+permanently and never revisited, so if a dependency dies later the
+server keeps advertising itself as ready forever. Who benefits from
+fixing it: every end user who would otherwise hit a failed request
+during a deployment or restart, and the operators who currently have no
+reliable signal for when a rollout is safe. Expected outcome: readiness
+returns a failure status code whenever the server genuinely cannot
+serve, liveness stays separate and always succeeds while the process is
+alive, and the ready state can go back to false when a dependency is
+lost.</p>
+<h2
+id="hxc-341-server-health-endpoint-silently-skips-every-check-when-no-database-is-configured-while-its-documentation-claims-it-checks-all-dependencies">HXC-341
+— Server health endpoint silently skips every check when no database is
+configured, while its documentation claims it checks all
+dependencies</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude
+<strong>Assigned-To:</strong> Claude</p>
+<p>The main server exposes a health endpoint that is supposed to tell
+operators whether the service and everything it depends on are working.
+It does perform genuine checks on the database and cache when those are
+configured, correctly reporting a failure when either is unreachable.
+However, when no database is wired up at all, the code takes a shortcut
+and skips the entire checking block, then reports success anyway. It
+also never checks the language-model providers, even though serving
+model requests is the product’s core purpose. The written documentation
+for this endpoint states that it checks all dependencies, which is not
+true in either respect. This is dangerous because the documentation is
+what an operator reasons from when deciding whether a green health
+signal means anything: a deployment missing its database entirely will
+report itself perfectly healthy, and so will one whose model providers
+are all unreachable. Who benefits: operators and on-call responders who
+need a health signal they can trust during an incident, and anyone
+automating deployment gates on that signal. Expected outcome: the
+endpoint reports an honest failure when a required dependency is absent
+or unreachable rather than treating absence as success, provider health
+is included in the verdict, and the documentation is corrected to
+describe exactly what is and is not covered.</p>
+<h2
+id="hxc-342-agent-basic-health-endpoint-returns-a-fixed-success-message-and-performs-no-check-of-any-kind">HXC-342
+— Agent basic health endpoint returns a fixed success message and
+performs no check of any kind</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> Medium <strong>Created-By:</strong> Claude
+<strong>Assigned-To:</strong> Claude</p>
+<p>The agent service exposes a health endpoint that always returns the
+same hardcoded success response. It performs no check whatsoever — it
+does not test any dependency, any provider, any connection, or any
+internal state, and there is no input or condition under which it could
+return anything other than success. It is published and documented as a
+health check, which means anyone reading the documentation or wiring up
+monitoring reasonably assumes a green result carries information. It
+does not. A completely broken agent returns exactly the same response as
+a perfectly working one. The practical effect is that any monitoring,
+alerting, or automated gate built on this endpoint is decorative: it
+will stay green through any outage. This is the least severe of the
+health-endpoint family because a companion endpoint on the same service
+now performs a real check, but it remains actively misleading while it
+is labelled a health check. Who benefits: operators building monitoring
+on this service, and any automated system that gates on the endpoint.
+Expected outcome: either the endpoint performs a genuine check and can
+report failure, or it is explicitly relabelled as a liveness-only signal
+in both the code and the published API documentation so that nobody
+mistakes it for a dependency check.</p>
+<h2
+id="hxc-343-fifty-six-tracked-work-items-would-be-silently-deleted-from-the-documents-if-the-trackers-were-regenerated">HXC-343
+— Fifty-six tracked work items would be silently deleted from the
+documents if the trackers were regenerated</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Bug
+<strong>Severity:</strong> High <strong>Created-By:</strong> Claude
+<strong>Assigned-To:</strong> Claude</p>
+<p>The project keeps its list of work items in a database, and the
+human-readable tracker documents are generated from that database. For
+fifty-six of the items, a required link between the database record and
+the document layout is missing. The practical effect is severe and
+silent: if anyone regenerates the tracker documents from the database
+using the normal supported command, those fifty-six items simply vanish
+from the documents with no warning, no error, and no indication that
+anything was lost. The database would still hold them, but every
+human-readable view of the work would stop showing them, and anyone
+reading the trackers would reasonably conclude the work does not exist.
+This has not happened yet only because the regeneration has not been
+run; the built-in checker does detect and report the problem, which is
+how it was found. Who benefits from fixing it: everyone who reads the
+trackers to understand outstanding work, and anyone who needs to
+regenerate the documents without first proving it is safe to do so.
+Expected outcome: the missing links are restored for all fifty-six
+items, the checker reports no such gaps, and a regeneration can be run
+and verified to produce documents containing every item the database
+holds.</p>
+<h2
+id="hxc-344-decide-whether-an-unreferenced-frozen-test-baseline-should-be-wired-in-or-retired">HXC-344
+— Decide whether an unreferenced frozen test baseline should be wired in
+or retired</h2>
+<p><strong>Status:</strong> Queued <strong>Type:</strong> Task
+<strong>Severity:</strong> Medium <strong>Created-By:</strong> Claude
+<strong>Assigned-To:</strong> Claude</p>
+<p>During the security-hook work a file was produced that appears to be
+a frozen snapshot of an earlier, deliberately-broken version of a
+script, kept so a test can prove the current version detects the old
+fault. Two sibling files of exactly this kind exist and are correctly
+set up: each carries a header marking it as an intentional test
+artifact, and each is executed by a named test. This third file has
+neither. Nothing in the project refers to it, and it carries no such
+header, so the commit safety check correctly refuses to accept it: from
+the checker’s point of view it is indistinguishable from leftover damage
+accidentally left behind after an experiment. Two outcomes are possible
+and the difference matters. Either it is a genuine baseline whose wiring
+was never finished, in which case the fix is to connect it to a test and
+add the header its siblings have; or it is genuinely leftover, in which
+case it should be retired deliberately. Guessing either way is wrong:
+marking it as intentional to quiet the checker would make the checker
+agree with a claim nobody has verified, and deleting it without proof
+risks discarding real work. The file has been copied to a safe location
+outside the project and removed from the working area so the project is
+in a clean state while the question is settled. Who benefits: anyone
+relying on the commit safety check to mean what it says, and whoever
+next needs that baseline. Expected outcome: the file’s origin is traced
+through project history, a decision is recorded with the evidence behind
+it, and the file is either restored and properly wired in with a test
+that exercises it, or retired in its own clearly-labelled change.</p>
 </body>
 </html>
