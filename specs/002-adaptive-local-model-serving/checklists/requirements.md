@@ -61,3 +61,30 @@ All five stories ship in v1.
   the streaming runtime's narrowness was verified against its own repository and is cited in Sources.
 
 Items marked incomplete require spec updates before `/speckit-plan`.
+
+## Re-validation after /speckit-clarify — 2026-09-02
+
+Still 16/16. Four defects were found and fixed BEFORE clarification, three of them introduced by the
+specify run itself:
+
+- **D1 (serious)**: Q2 was marked Resolved citing "FR-018, FR-019" for pre-shared-secret
+  authentication, but those requirements said nothing about authentication — the auth requirements
+  were never added. An earlier edit targeted an identifier that had already been renumbered, so the
+  replacement silently matched nothing. The spec asserted a settled security decision with no
+  requirement behind it. Fixed: real authentication requirements now exist and the citation resolves.
+- **D2**: a requirement still read "the trust check established by Q2" — a placeholder pointing at a
+  resolved question, and the only place the trust rule lived. Replaced with the real rule.
+- **D3**: success criteria were out of order (011 before 010). Renumbering is now derived from
+  document position rather than insertion order, so it cannot recur.
+- **D4**: the `Feature Branch` header named a branch that does not exist — no branch-creating hook is
+  registered in this project. Corrected to state reality.
+
+Five clarifications were then integrated, adding requirements for: model provenance and integrity
+verification, observability (resource, health, latency and throughput), the model naming scheme,
+serving-host loss behaviour, and model lifecycle/eviction. Operator direction on Claude Toolkit
+live-validation and release was recorded as requirements in the same pass.
+
+**One issue is recorded but NOT resolved** — it needs a decision before release, not before planning:
+the two Claude Toolkit checkouts sit at the same commit (`75d25ab3`) but point at different origin
+remotes (`claude_toolkit.git` vs `claude-toolkit.git`). Publishing a release to the wrong one would
+leave it invisible to consumers of the other. Captured as a requirement rather than silently assumed.
