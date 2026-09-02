@@ -196,7 +196,7 @@ and it produces correct output for a known input.
 
 | # | Question | Status | Resolution |
 |---|----------|--------|------------|
-| Q1 | Which modality families are in scope for the first release? | **Resolved** 2026-09-02 | **All families in v1**, each complete end-to-end: text, vision, audio generation, audio recognition, text-to-speech, speech-to-text, image generation, and design/vector graphics. Combined with FR-051..029 this makes the first release large — nothing may ship advertised-but-unserved, so every family must be finished before release. See "Release size" in Assumptions. |
+| Q1 | Which modality families are in scope for the first release? | **Resolved** 2026-09-02 | **All families in v1**, each complete end-to-end: text, vision, audio generation, audio recognition, text-to-speech, speech-to-text, image generation, **video generation**, and design/vector graphics. (Video generation added by operator decision 2026-09-02 — a video-generation service already ships and would otherwise sit outside the selection regime this feature creates.) Combined with FR-051..029 this makes the first release large — nothing may ship advertised-but-unserved, so every family must be finished before release. See "Release size" in Assumptions. |
 | Q2 | What trust model governs discovery of instances beyond the current host? | **Resolved** 2026-09-02 | **Pre-shared secret supplied via environment variables / `.env`.** Instances and clients authenticate with it; an instance that cannot present it is never trusted as a model source, and never receives request content. See FR-024, FR-025. |
 | Q3 | Does hardware-aware selection cover remote serving hosts, or only the local host? | **Resolved** 2026-09-02 | **Any host, including remote.** Selection profiles and places models across every reachable serving host, not only the machine the user is on. See FR-040..FR-043. |
 
@@ -485,8 +485,11 @@ building new ones, per the reuse-before-rewrite rule:
   prober and scheduler across multiple hosts. Selection extends these rather than replacing them.
 - HelixLLM already serves local inference through the in-memory execution path across CUDA, Metal and
   ROCm, and already exposes OpenAI- and Anthropic-compatible interfaces that consuming tools can use.
-- HelixLLM already has partial coverage of vision, image and embedding families. Audio, speech-to-text
-  and text-to-speech have no current implementation and are genuinely new.
+- HelixLLM already has partial coverage of the vision, image-generation, video-generation, embedding
+  and speech-to-text families — each has a real serving path but none is under measured selection.
+  **Corrected 2026-09-02**: speech-to-text is NOT greenfield (a faster-whisper server ships, merely
+  unwired from the catalogue), and video generation ships a real diffusion service with its own
+  captured-evidence harness. Text-to-speech and audio generation are the genuinely new families.
 - The disk-streaming execution path has no current implementation and is genuinely new.
 
 **Verified externally (2026-09-02)** — this materially shapes FR-026 through FR-028:
@@ -515,8 +518,9 @@ building new ones, per the reuse-before-rewrite rule:
 **Release size** (scope resolved 2026-09-02):
 
 - All modality families are in the first release, and FR-051..029 forbid shipping any of them
-  partially. Stated plainly: this is a large first release. Audio generation, audio recognition,
-  text-to-speech and speech-to-text have no implementation today, and design/vector graphics
+  partially. Stated plainly: this is a large first release. Audio generation and text-to-speech have
+  no implementation today; speech-to-text, vision, image generation and video generation each ship a
+  real serving path that is not yet under measured selection; and design/vector graphics
   generation is a distinct problem from raster image generation. Each family carries its own model
   research, packaging, hardware profiling and test surface, and each must be complete and reachable
   from the consuming tools before release. Planning should size these per family rather than assume
