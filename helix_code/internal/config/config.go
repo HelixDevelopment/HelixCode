@@ -165,7 +165,19 @@ type RedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Password string `mapstructure:"password"`
-	Database int    `mapstructure:"database"`
+
+	// Database is the Redis logical database number, passed straight to
+	// redis.Options.DB by internal/redis.NewClient.
+	//
+	// The key is `db`, NOT `database`. It was `database` until the strict
+	// key-check work exposed the mismatch: setDefaultsOn has always written
+	// v.SetDefault("redis.db", 0), and every shipped config file under
+	// config/ spells it `db` — so with the old tag NOTHING ever populated
+	// this field. `redis.db: 3` was silently discarded and every deployment
+	// connected to database 0 whatever the operator wrote. Zero configs in
+	// this repo used `redis.database`, so `database` was never a working
+	// spelling and is deliberately not kept as an alias.
+	Database int `mapstructure:"db"`
 }
 
 // WorkersConfig represents worker configuration
@@ -188,6 +200,29 @@ type LLMConfig struct {
 	DefaultModel    string  `mapstructure:"default_model"`
 	MaxTokens       int     `mapstructure:"max_tokens"`
 	Temperature     float64 `mapstructure:"temperature"`
+
+	// Timeout is the per-request LLM call budget in SECONDS (int, not
+	// time.Duration — the shipped configs write a bare `timeout: 30`, which
+	// a time.Duration field would decode as 30 *nanoseconds*; the sibling
+	// ServerConfig timeouts use the same int-seconds convention).
+	//
+	// MaxRetries is the retry budget for a failed LLM call.
+	//
+	// Both keys have been present in config/config.yaml since long before
+	// this struct declared them, and were therefore silently discarded by
+	// viper. They are declared here so the values survive the load and are
+	// available to the LLM layer.
+	//
+	// HONEST STATUS (§11.4.6): declaring them is only half the fix. No
+	// caller reads LLM.Timeout or LLM.MaxRetries yet — the provider
+	// construction path in internal/llm does not consume cfg.LLM beyond
+	// DefaultProvider — so setting them still does not change request
+	// behaviour. Until a consumer exists they stay listed in
+	// inertConfigKeys, which makes Load() warn at startup that the value is
+	// parsed but not applied. Delete those two entries in the same change
+	// that wires them into the LLM client, not before.
+	Timeout    int `mapstructure:"timeout"`
+	MaxRetries int `mapstructure:"max_retries"`
 }
 
 // QAConfig holds HelixQA-specific configuration injected into HelixCode.
@@ -420,6 +455,20 @@ func Load() (*Config, error) {
 	} else {
 		atomic.AddInt64(&readInConfigCount, 1)
 		fmt.Println(tr(context.Background(), "internal_config_info_using_config_file", map[string]any{"Path": v.ConfigFileUsed()}))
+
+		// Strict key check. Viper would silently discard any key the Config
+		// struct does not declare, so a typo (`llm.temperture`) or a key left
+		// behind by removed code reads as configuration while doing nothing.
+		// Reject the unknown ones outright; warn about the known-inert ones.
+		// See strict.go for why this reads the file itself rather than using
+		// mapstructure's ErrorUnused.
+		inert, err := checkConfigKeys(v.ConfigFileUsed())
+		if err != nil {
+			return nil, err
+		}
+		for _, msg := range inert {
+			fmt.Println(msg)
+		}
 	}
 
 	// Unmarshal config
@@ -550,6 +599,9 @@ func setDefaultsOn(v *viper.Viper) {
 	v.SetDefault("llm.default_model", "llama-3.2-3b")
 	v.SetDefault("llm.max_tokens", 4096)
 	v.SetDefault("llm.temperature", 0.7)
+	// Seconds. Matches the value shipped in config/config.yaml.
+	v.SetDefault("llm.timeout", 30)
+	v.SetDefault("llm.max_retries", 3)
 
 	// Logging defaults
 	v.SetDefault("logging.level", "info")
@@ -622,6 +674,12 @@ func findConfigFile() string {
 
 // validateConfig validates the configuration
 func validateConfig(cfg *Config) error {
+	// Credentials first: an unexpanded ${...} in a secret is a published
+	// constant, and it must stop startup before anything is built from it.
+	if err := checkSecretPlaceholders(cfg); err != nil {
+		return err
+	}
+
 	// Version validation
 	if cfg.Version == "" {
 		return fmt.Errorf("%s", tr(context.Background(), "internal_config_validate_version_required", nil))
