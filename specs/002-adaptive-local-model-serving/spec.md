@@ -17,6 +17,7 @@ branch was created — the git extension hook that would create one is not regis
 - Refinement (research, not a question): streaming-path eligibility is a NAMED-ROSTER check against the runtime's supported set, not an `architecture == MoE` predicate — several well-known MoE models have no support path. Storage headroom is a second, independent axis from memory headroom.
 - Refinement (research, not a question): a model's usage terms are a first-class selection constraint — several of the strongest candidate models in the speech, audio and image families carry non-commercial or revenue-capped terms, so capability and fit alone are insufficient grounds to offer one.
 - Refinement (research, not a question): the non-empty-options guarantee holds PER capability family, not across all families — image and audio *generation* have no processor-only option at an acceptable quality bar, so those families need a stated reason on such hosts rather than a silently empty or unusably-slow offer.
+- Refinement (research, not a question): the current implementation picks its model from environment variables (`VISIONGEN_MODEL_GGUF`, `VISIONGEN_MODEL_DIR`), which is precisely the static selection this feature replaces — FR-056 draws the boundary so "supports environment configuration" can never be read as "may select the model statically".
 - Q: When should a running model give up the memory it is holding? → A: Idle timeout unloads unused models; on-demand eviction of the least-recently-used idle model when a new selection needs room; the user is told what was unloaded and why
 
 ## User Scenarios & Testing *(mandatory)*
@@ -381,6 +382,15 @@ and it produces correct output for a known input.
   the reason: the host lacks the resources the option needs; no available option supports this
   host's configuration at all; or every otherwise-suitable option is excluded by its usage terms.
   These have different remedies and MUST NOT be reported as one generic unavailability.
+- **FR-056**: Which model runs MUST be decided from the measured host, never from a static
+  preconfigured value. Configuration settings MAY state where model files live, how to reach an
+  instance, what the user prefers, and what the user forbids — but a configuration setting MUST NOT
+  be the mechanism that names the model to run, and the system MUST NOT fall back to a fixed default
+  model when measurement is unavailable. If the host cannot be measured, the system reports that it
+  cannot choose and why, rather than starting an arbitrary model that may not fit. Where a user
+  pins a specific model deliberately, the system MUST still measure the host, MUST refuse the pin if
+  the host cannot run it, and MUST state which resource is insufficient — a pin is a constraint on
+  the choice, never a bypass of the measurement.
 
 ### Key Entities
 
