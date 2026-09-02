@@ -53,7 +53,10 @@ func bootRealServer(t *testing.T) (baseURL string) {
 		Host:     envOrHelix("HELIX_DATABASE_HOST", "TEST_PG_HOST", "localhost"),
 		Port:     envOrIntHelix("HELIX_DATABASE_PORT", "TEST_PG_PORT", 5432),
 		User:     envOrHelix("HELIX_DATABASE_USER", "TEST_PG_USER", "helixcode"),
-		Password: envOrHelix("HELIX_DATABASE_PASSWORD", "TEST_PG_PASSWORD", "helixcode_test_password"),
+		// HXC-168: no literal default — an unset password falls through to
+		// database.New's connect error below, which SKIPs honestly (§11.4.3)
+		// rather than silently authenticating with a (previously leaked) value.
+		Password: envOrHelix("HELIX_DATABASE_PASSWORD", "TEST_PG_PASSWORD", ""),
 		DBName:   envOrHelix("HELIX_DATABASE_NAME", "TEST_PG_DB", "helixcode_test"),
 		SSLMode:  envOrHelix("HELIX_DATABASE_SSL_MODE", "TEST_PG_SSLMODE", "disable"),
 	}

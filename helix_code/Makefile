@@ -223,13 +223,20 @@ COMPOSE := $(shell \
 	else echo "docker compose"; fi)
 
 # Start full test infrastructure with all dependencies
+# HXC-168: docker-compose.full-test.yml credential values are env-sourced
+# (`${HELIX_DATABASE_PASSWORD:?...}`) — .env.full-test MUST be exported into
+# this recipe's shell before any $(COMPOSE) invocation, or compose refuses
+# with a "variable is not set" error (Make prerequisites run in a SEPARATE
+# shell, so sourcing it once in test-full's recipe does not help this target).
 test-infra-up:
 	@echo "🚀 Starting full test infrastructure (compose runner: $(COMPOSE))..."
-	@$(COMPOSE) -f docker-compose.full-test.yml up -d
+	@set -a && . ./.env.full-test && set +a && \
+	$(COMPOSE) -f docker-compose.full-test.yml up -d
 	@echo "⏳ Waiting for services to be healthy..."
 	@sleep 30
 	@echo "📦 Pulling Ollama test model..."
-	@$(COMPOSE) -f docker-compose.full-test.yml exec -T ollama ollama pull llama2:7b 2>/dev/null || echo "⚠️ Model pull skipped"
+	@set -a && . ./.env.full-test && set +a && \
+	$(COMPOSE) -f docker-compose.full-test.yml exec -T ollama ollama pull llama2:7b 2>/dev/null || echo "⚠️ Model pull skipped"
 	@echo "✅ Test infrastructure ready!"
 	@echo ""
 	@echo "To run all tests: make test-full"
@@ -237,13 +244,15 @@ test-infra-up:
 # Stop full test infrastructure
 test-infra-down:
 	@echo "🛑 Stopping full test infrastructure (compose runner: $(COMPOSE))..."
-	@$(COMPOSE) -f docker-compose.full-test.yml down -v
+	@set -a && . ./.env.full-test && set +a && \
+	$(COMPOSE) -f docker-compose.full-test.yml down -v
 	@echo "✅ Test infrastructure stopped"
 
 # Check test infrastructure status
 test-infra-status:
 	@echo "📊 Test infrastructure status (compose runner: $(COMPOSE)):"
-	@$(COMPOSE) -f docker-compose.full-test.yml ps
+	@set -a && . ./.env.full-test && set +a && \
+	$(COMPOSE) -f docker-compose.full-test.yml ps
 
 # Run ALL tests with full infrastructure (ZERO skipped tests)
 # P5-T01: -p/-parallel tuned for faster wall-time. -count=1 is KEPT — these
