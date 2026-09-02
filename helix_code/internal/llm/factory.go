@@ -97,6 +97,8 @@ func NewProvider(config ProviderConfigEntry) (Provider, error) {
 		return NewKoboldAIProvider(koboldConfig)
 	case ProviderTypeXiaomi:
 		return NewXiaomiProvider(config)
+	case ProviderTypeReplicate:
+		return NewReplicateProvider(config)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", config.Type)
 	}
