@@ -1,0 +1,1247 @@
+# Execution state for 002-adaptive-local-model-serving
+# Updated by /speckit-superspec-execute as tasks complete.
+feature: 002-adaptive-local-model-serving
+branch: main
+started: 2026-09-02T19:24+02:00
+total_tasks: 97
+
+current_phase: 2
+phase_name: Foundational (Blocking Prerequisites)
+
+in_flight_agents: 6   # at the §11.4.58 parallel cap
+  # T006-T012 capability measurement chain
+  # T014+T019 catalogue loader + integrity
+  # T015 text.yaml · T016 vision_image.yaml · T017 video.yaml · T018 speech_audio.yaml
+
+tasks:
+  T001:
+    status: complete
+    summary: >-
+      Seven package skeletons created under internal/ with doc.go stating each
+      package's single responsibility: capability, catalogue, selection, runtime,
+      lifecycle, telemetry, failover. gofmt clean; go build ./internal/... exit 0.
+  T002:
+    status: complete
+    summary: >-
+      Six fixture hosts + HostCapabilityProfile. DeviceIdentity is a distinct type
+      so an enumeration index cannot be assigned (§11.4.111 enforced by the
+      compiler). AcceleratorState is a separate field from the slice, so
+      no-accelerator and unmeasurable both have len()==0 and cannot be confused.
+      DualAcceleratorReversed() exists for the T008 RED. Two paired mutations both
+      failed correctly, then restored.
+  T003:
+    status: complete
+    summary: >-
+      Entry type + five fixtures. StreamingEligible() reads the roster only;
+      Architecture has no path into it (research D1 enforced structurally). The
+      ineligible-but-MoE fixture shares architecture AND memory with the roster
+      member, isolating roster-vs-architecture and memory-vs-storage. Paired
+      mutation reintroducing the D1 defect failed correctly, then restored.
+  T005:
+    status: complete
+    note: satisfied by T002 (profile.go)
+  T013:
+    status: complete
+    note: satisfied by T003 (entry.go)
+  T004:
+    status: complete
+    summary: >-
+      BASELINE GREEN. 29 packages ok, 0 FAIL, 6 with no test files. Completion
+      proven rather than assumed: the run reached internal/vrambroker, and no
+      package sorts alphabetically after it, so the run was not truncated.
+
+gates:
+  baseline_build: PASS      # go build ./... exit 0, 2026-09-02
+  baseline_unit_tests: PASS   # 29 ok / 0 FAIL, run reached the last package
+
+notes:
+  - Video generation added to scope by operator decision 2026-09-02; wired into
+    spec, plan and tasks before execution began.
+  - Phase checkpoints require explicit operator approval before the next phase.
+
+# Defects found in EXISTING code/docs while executing Phase 2.
+# Recorded rather than silently fixed — each needs its own investigation
+# and its own commit (§11.4.124 investigate-before-change).
+findings:
+  - id: EX-1
+    where: submodules/helix_llm/services/videogen/.gitignore-meta/wan_ltx_gguf.yaml
+    what: >-
+      The manifest declares expected_disk_usage "~18 GiB" for the default video
+      path. Measured live from the upstream blob API on 2026-09-02: 31.85 GiB.
+      Understated by ~14 GiB because the UMT5-XXL text encoder is downloaded in
+      full and then CPU-offloaded. A host provisioned to the manifest figure
+      would run out of disk mid-fetch.
+    severity: HIGH
+    status: recorded
+
+  - id: EX-2
+    where: submodules/helix_llm/services/videogen/videogen_server.py
+    what: >-
+      The `ltx` backend is configured against the Lightricks/LTX-Video repo id,
+      which contains NO .gguf file at all. LTXPipeline.from_pretrained() on that
+      id resolves the diffusers-format subtree (a smaller transformer), not the
+      13B checkpoints the service documents. So the shipped ltx backend does not
+      serve 13B without a VIDEOGEN_MODEL override.
+    severity: HIGH
+    status: recorded
+
+  - id: EX-3
+    where: submodules/helix_llm/internal/catalogue/entry.go
+    what: >-
+      Missing CapabilityFamily constants for video-generation and
+      audio-classification; six real catalogue entries fail Validate().
+      Found independently by two data agents.
+    severity: CRITICAL
+    status: routed to the agent that owns internal/catalogue/*.go
+
+  - id: SELF-1
+    where: this session's own baseline-completion waiter
+    what: >-
+      I armed `until ! pgrep -f "make test-unit"` to detect the baseline
+      finishing. The waiter's OWN command line contains that literal string, so
+      pgrep matched the waiter itself and it would have waited forever. The
+      baseline had actually finished 17 minutes earlier. Detected by checking
+      whether the log was GROWING rather than trusting process-alive as liveness.
+      This is precisely the §11.4.201 false-positive class and the §11.4.174
+      "is that process actually ours?" discipline — a filter that matches the
+      checking command is a broken filter.
+    severity: MEDIUM
+    status: fixed (waiter killed; result verified directly from the log)
+
+  - id: SELF-2
+    where: this session's dispatch of the four catalogue-data agents
+    what: >-
+      I sent four agents to produce catalogue data and pointed each at
+      data-model.md (PROSE) for its schema, rather than at the Go type that
+      actually defines it. Four agents produced four different, individually
+      reasonable YAML shapes; none loads. 294 divergences. The loader agent was
+      correct to refuse to widen the loader to swallow all four — unknown-key
+      tolerance is precisely how a misspelled storage_requried_bytes becomes a
+      silent zero.
+      LESSON: schema-sensitive work must not be parallelised until the schema is
+      an artifact. It now is — a doc comment at the top of internal/catalogue/
+      load.go — so reconciliation goes to ONE agent, not four.
+    severity: HIGH
+    status: schema now authoritative; reconciliation pending as a single task
+
+  - id: EX-4
+    where: submodules/helix_llm/internal/catalogue/entry.go (Validate)
+    what: >-
+      Validate required a complete integrity expectation, which made the
+      catalogue unloadable in its ordinary initial state: a digest is captured AT
+      first download, so requiring one to load meant nothing could load, nothing
+      could be downloaded, and no digest could ever be captured. All four
+      independently-researched data files hit this simultaneously — the strongest
+      possible signal it was structural rather than a data defect.
+      FIXED: the requirement moved to ValidateForAcquisition, alongside Source.
+      An entry is now valid to OFFER while unfetched, and invalid to ACQUIRE.
+      SC-011 governs loading a model FILE, not reading the catalogue, so the
+      invariant is unchanged — only the gate it sits at.
+      Two pre-existing subtests asserted the old behaviour; they were RECONCILED
+      to the new gate (not deleted, not weakened) and a paired mutation confirms
+      the reconciled gate still fails when the check is removed.
+    severity: CRITICAL (was fleet-blocking)
+    status: fixed
+
+  - id: EX-5
+    where: submodules/helix_llm/internal/gateway/openai.go:33
+    what: >-
+      `hardcodedModels` is a static three-entry model list returned by
+      GET /v1/models and /v1/models/:id whenever no Brain is configured. It is
+      the BLUFF-002 anti-pattern the project's own manual names explicitly
+      (CONST-036/037: no hardcoded model lists; the verifier is the single
+      source of truth).
+      It is worse than a stale list: it advertises `gpt-4o` and
+      `claude-sonnet-4-20250514` as OwnedBy "helix". A client listing models with
+      no backend configured receives three models that do not exist and cannot
+      serve — the exact false-availability defect FR-019 forbids ("a model not
+      actually being served is never listed as available").
+      Honest fix: return an empty list plus a stated reason (no backend
+      configured), rather than fabricating three. Not deleted here — it is
+      outside this feature's task list and deserves its own investigation and
+      commit (§11.4.124).
+    severity: HIGH
+    status: recorded
+
+  - id: EX-6
+    where: submodules/helix_llm/internal/brain (routing)
+    what: >-
+      Found by the naming agent, and it nearly shipped as a silent defect:
+      changing the published `id` WITHOUT a name-resolution path would have been
+      actively dangerous. Routing matches on provider model names, so a client
+      that listed a new identifier and then requested it would miss every exact
+      match and fall through to "any available provider" — a silent MISROUTE,
+      not an error. The agent built ResolveModelName and wired it into
+      Complete/CompleteStream so both a new identifier and a raw name already in
+      a user's config resolve to the same provider.
+    severity: CRITICAL (prevented before landing)
+    status: fixed as part of T043
+
+  - id: EX-7
+    where: submodules/helix_agent/internal/catalog/defaults.go:20
+    what: >-
+      `DefaultHelixLLMModels()` returns a hardcoded []string{"helixllm-default"},
+      fed into router.go:858 as the catalogue's model source. This is the SAME
+      hardcoded-model-list anti-pattern as EX-5 in the HelixLLM gateway, now
+      found independently in a second repository — which suggests the pattern,
+      not the instance, is what needs fixing.
+      The live option source is now plumbed and tested (Options.HelixLLM) but
+      deliberately NOT wired into router.go: the adapter is constructed nowhere
+      in that repo, so wiring it is a new integration (per-request HTTP inside a
+      JSON handler, timeouts, failure policy) rather than a substitution. Left
+      as an explicit operator decision; today's /v1/catalog output is
+      byte-identical to before.
+    severity: HIGH
+    status: recorded; live source plumbed but not wired
+
+  - id: OPEN-1
+    where: submodules/helix_llm — /v1/models listing semantics
+    what: >-
+      FR-019 requires a consuming tool to distinguish available from unavailable
+      models, but /v1/models is an OpenAI-COMPATIBLE endpoint where clients
+      assume everything listed is usable. Listing withheld entries there would
+      break that assumption; omitting them loses FR-019 on the HTTP surface.
+      Resolved for now by emitting affirmative `availability: "serving"` plus
+      `host` for listed models (honest, compat-safe, and enough for HelixAgent's
+      three-valued unreported/serving/withheld decode). The withheld half needs
+      a richer endpoint or an explicit opt-in query parameter — a design choice,
+      not something to settle by quietly stuffing withheld entries into an
+      OpenAI-compatible listing.
+    severity: MEDIUM
+    status: open — needs a design decision
+
+  - id: EX-8
+    where: submodules/helix_llm/internal/catalogue/load.go (entryDoc.entry)
+    what: >-
+      `Source` was declared with a yaml tag and decoded, but entry() never
+      assigned it into the returned Entry — so EVERY loaded entry had
+      Source == "". The FR-012/SC-011 source allowlist was therefore silently
+      DISARMED: the gate still ran on every acquisition, but always against an
+      empty string.
+      This was MY defect. I added Entry.Source and tested the struct field; I did
+      not test the LOAD PATH. The struct test passed throughout. Found
+      independently by two agents (boot-migration and reconciliation).
+      FIXED, plus two permanent guards: a round-trip test asserting a source
+      survives loading, and TestShippedCatalogueLoads — because nothing in the
+      suite had ever loaded the real data/ directory, which is exactly how four
+      incompatible file shapes landed there unnoticed. Shipped catalogue now
+      proven: 30 entries, 6 families, 24 carrying a source.
+    severity: HIGH (security-adjacent — a disarmed allowlist)
+    status: fixed
+
+  - id: SELF-3
+    where: this session's paired mutation on the Source fix
+    what: >-
+      My first mutation attempt reported "ok" — tests passing under mutation,
+      which reads as a toothless guard. It was not: gofmt had re-aligned the
+      struct field, so my replacement text never matched and the mutation NEVER
+      APPLIED. A mutation that fails to apply and a guard with no teeth produce
+      byte-identical output.
+      LESSON: every mutation must assert it actually changed the file (exact-count
+      assert plus a diff check) before its result is believed. A "surviving"
+      mutation is a claim requiring evidence, not a finding.
+    severity: MEDIUM
+    status: fixed; mutation re-run correctly and the guard FAILs as it should
+
+  - id: EX-9
+    where: submodules/helix_llm/internal/selection/family.go (familyOrder)
+    what: >-
+      familyOrder listed 8 families while the catalogue records 10. The two
+      missing were exactly the two added later: video-generation (when the
+      operator brought it into scope) and audio-classification (when research
+      showed it must stay separate from audio-generation, one being
+      processor-viable and the other not).
+      The failure was SILENT: a request naming no families enumerated neither —
+      no error, no empty family with a stated reason, just an absence. Three
+      video entries load and would never have been offered. That is precisely
+      the outcome the per-family non-empty guarantee exists to prevent, defeated
+      one level above where the guarantee is enforced.
+      Found by the documentation agent while reading code to write the guide —
+      it flagged it honestly as "probable, could not run it to confirm". It was
+      real. FIXED, with a test binding familyOrder to the recorded family set so
+      the next family added cannot be forgotten the same way.
+    severity: HIGH
+    status: fixed
+
+  - id: EX-10
+    where: submodules/helix_llm/internal/catalogue/data/ (all four files)
+    what: >-
+      Measured, not estimated: all 30 shipped entries carry an integrity
+      algorithm and size but NO digest, so Integrity.Complete() is false for
+      every one and ValidateForAcquisition fails catalogue-wide. Nothing shipped
+      is acquirable today. Source is present on 24 of 30 (absent on speech/audio
+      and video).
+      This is correct behaviour, not a defect — digests are captured at first
+      download — but it means "visible but not acquirable" is currently the
+      UNIVERSAL state of the catalogue rather than an edge case, and the docs
+      now say so with the count rather than describing it hypothetically.
+    severity: INFO
+    status: recorded as a measured fact
+
+  - id: EX-11
+    where: submodules/helix_llm/services/imagegen/imagegen_server.py:86
+    what: >-
+      The imagegen BOOT BINARY was migrated onto measured selection, but the
+      service kept `MODEL_ID = _env("IMAGEGEN_MODEL", "black-forest-labs/
+      FLUX.1-schnell")` one layer down — so a boot path that correctly refused
+      to choose, or an operator running the service directly, still received a
+      model no host was measured against. Fixing the binary alone fixed the half
+      that is easy to see. PRECISION had the same shape, and it determines the
+      memory footprint admission was granted for.
+      Found by the videogen agent while migrating the sibling lane.
+      FIXED with the same `_decided()` no-default helper the videogen service
+      uses, plus an AST-based guard scoped to module-level assignments.
+    severity: HIGH
+    status: fixed
+
+  - id: EX-12
+    where: submodules/helix_llm/internal/catalogue/data/video.yaml
+    what: >-
+      No video entry recorded `source:`, so the videogen lane could choose a
+      model and then refuse to boot it (exit 24, "records no weight source").
+      The migrating agent deliberately did NOT fall back to
+      annotations.weights_repo — annotations are contractually "carried and
+      shown, never read to make a decision", so using one would hand the runtime
+      a location the allowlist gate never saw. That restraint kept the gate
+      meaningful instead of quietly routing around it.
+      FIXED for the two WAN entries against the shipped weight manifest.
+      LTX DELIBERATELY LEFT WITHOUT A SOURCE: the obvious URL
+      (huggingface.co/Lightricks/LTX-Video) contains no .gguf at all and would
+      reproduce EX-2 — a source that passes the gate and then fails at load. The
+      reason is recorded in the data file itself.
+      VERIFIED END TO END on this host: videogen-boot now measures, withholds LTX
+      on usage terms with a distinct remedy, and chooses wan2.2-ti2v-5b from
+      measurement rather than configuration.
+    severity: HIGH
+    status: fixed (2 of 3 entries; the third is correctly unservable)
+
+  - id: SELF-4
+    where: this session's imagegen guard test
+    what: >-
+      My first version flagged every repository string in the file, including
+      the module docstring explaining WHICH FLUX repositories are gated and why —
+      knowledge someone established with a dated API check. That test goes green
+      by deleting the explanation. It also flagged
+      _default_nvfp4_transformer(model_id), which DERIVES the quantised
+      transformer from the chosen model and cannot produce one when nothing was
+      chosen.
+      LESSON: the defect class was "a value standing ready when nothing chose
+      one", not "a repository string appears somewhere". Scoped to module-level
+      assignments, the guard catches the defect and costs nothing true.
+    severity: LOW
+    status: fixed before landing
+
+  - id: EX-13
+    where: submodules/helix_llm/internal/catalogue/data/speech_audio.yaml
+    what: >-
+      For a period the only LOADING text-to-speech entry was xtts-v2 under CPML —
+      non-commercial, and unlicensable at all since Coqui shut down. A commercial
+      caller asking for speech synthesis therefore received NOTHING: an empty
+      family. Nothing failed and nothing warned; the catalogue looked healthy.
+      The refusal was correct — those licences really do exclude commercial use —
+      but an empty family is the state the per-family guarantee exists to
+      surface, not to pass over quietly.
+      FIXED by promoting kokoro-82m (Apache-2.0, processor-viable, no cloning)
+      from the deferred block. It was deferred solely for want of an on-disk
+      weight size, which the audio agent measured by HTTP HEAD.
+      PROVENANCE RECORDED HONESTLY: that figure is SINGLE-SOURCED. My
+      re-verification from the build host returned a 15-byte error page
+      (restricted network), so it is one measurement, not two agreeing ones. The
+      method is named in the entry so it can be re-run elsewhere.
+      GUARDED by TestFamiliesWithACommerciallyUsableOption, which names the
+      families where a commercially-usable option is known to exist and fails
+      when one stops existing. Deliberately a list, not "every family" — some
+      families genuinely have no commercially-safe option yet, and asserting
+      otherwise would be asserting a wish.
+    severity: HIGH
+    status: fixed
+
+  - id: EX-14
+    where: submodules/helix_llm/container/Containerfile.whisper
+    what: >-
+      Carried `WHISPER_MODEL=base` — a configuration value naming the model to
+      run, which is precisely the static selection FR-056 replaces. An unmeasured
+      host silently started `base`.
+      FIXED: removed; an unmeasured host now reports WHY it cannot choose and
+      returns 503 rather than starting something nothing chose. Parakeet is
+      refused BY NAME with the reason (CTranslate2 loads Whisper weights, not
+      NeMo) instead of being silently mapped to a Whisper size.
+      Two corrections to the research record also came out of this work: Piper is
+      MIT, not GPL-3.0 (which undercuts the "avoid copyleft" framing the family
+      statement used), and YAMNet emits 521 classes, not 527 — load-bearing,
+      since the score guard checks vector length against the loaded class map.
+    severity: HIGH
+    status: fixed
+
+  - id: EX-15
+    where: submodules/helix_llm/cmd/visiongen-boot/vision_boot_test.sh:119
+    what: >-
+      A PASS-BLUFF MECHANISM in the very script whose purpose is proving the
+      vision endpoint genuinely works.
+      `base64 -w0` is a GNU coreutils extension; BSD/macOS base64 has no -w. The
+      script runs under `set -u` but NOT `set -e` and NOT `pipefail`, so on a
+      non-GNU host the encode fails silently, B64 is left empty, and the payload
+      becomes the literal "data:image/png;base64," — an empty image.
+      The downstream assertion only requires non-empty, non-bluff-keyword prose.
+      A vision model can answer "Describe this image in one short sentence" from
+      the TEXT prompt alone. Result: a PASS claiming the endpoint described an
+      image it never received — a sink-side bluff at exactly the layer this
+      script exists to close.
+      FIXED: portable `base64 | tr -d '\n'` plus an explicit emptiness guard that
+      converts a silent empty encode into a loud, named failure. Verified on
+      Linux to produce byte-identical output to the old form on real input.
+    severity: HIGH
+    status: fixed
+
+  - id: EX-16
+    where: submodules/helix_llm/internal/capability/measure_darwin_parse.go
+    what: >-
+      The Darwin honesty boundary was stated in measure_darwin.go and in the
+      parser's TEST file, but NOT in the parser itself — the one file that
+      actually encodes the shape assumption (vm_stat header format, page-class
+      names, sysctl leaf names). A reader arriving at the parser to change it had
+      no way to learn its ground truth is documentation rather than observation.
+      FIXED: the boundary is now stated where that reader will find it, including
+      why it is repeated rather than only cross-referenced.
+      Worth noting the shape of this one: not a wrong answer, and every failure
+      path already returns an error rather than a figure, so a wrong assumption
+      yields a refusal and never a fabricated measurement. The defect was that
+      the warning lived everywhere except the place it was needed.
+    severity: LOW
+    status: fixed
+
+  - id: EX-17
+    where: submodules/helix_llm/ (repo root)
+    what: >-
+      A 10 MB unstripped ELF binary `videogen-boot` sat at the repository root,
+      NOT matched by any .gitignore rule — one `git add -A` from being committed.
+      Build artefacts are not versioned. Removed.
+      This is why staging is done with explicit paths and a deletion check rather
+      than `git add -A`; the guard that would have caught it at commit time is
+      the same one that has caught contaminated staging twice in this session.
+    severity: MEDIUM
+    status: fixed
+
+  - id: PATTERN-1
+    where: three independent occurrences this session
+    what: >-
+      "NO OUTPUT" IS AMBIGUOUS BETWEEN "CLEAN" AND "BROKEN", and every instance
+      of that ambiguity this session read as success.
+        1. My baseline waiter: `until ! pgrep -f "make test-unit"` matched its OWN
+           command line, so it waited forever for itself. The baseline had
+           finished 17 minutes earlier. Caught only by checking whether the log
+           was GROWING rather than trusting process-alive.
+        2. My paired mutation on the Source fix: gofmt had re-aligned the struct
+           field, so the replacement never matched and the mutation NEVER
+           APPLIED. Tests reported "ok" — byte-identical to a guard with no
+           teeth. Caught by asserting the file actually changed.
+        3. The toolkit agent's secret-leak sweep: a crashed
+           `grep -r ... 2>/dev/null` yields the same empty result as a clean
+           sweep. Its own hygiene test flagged the assertion as vacuous. It also
+           hit (1) independently — `pkill -f run-all.sh` killed its own shell.
+      THE COMMON SHAPE: a check whose success signal is the ABSENCE of something
+      cannot distinguish "the thing is absent" from "the check did not run".
+      THE FIX, in all three: assert the check actually ran before believing what
+      it did not find — a growing log, a changed file, a positive scanned-file
+      count plus an exit status that rules out a crash.
+    severity: METHOD
+    status: recorded; all three instances fixed
+
+  - id: EX-18
+    where: claude_toolkit/scripts/claude-providers.sh (T044/T047/T048)
+    what: >-
+      Two design judgments worth preserving.
+      SECRET CONTAINMENT: the discovery secret is piped into `curl --config -` on
+      STDIN, never argv — so it never appears in /proc/<pid>/cmdline or `ps aux`,
+      where any local user could read it. The test carries a CONTROL NEEDLE: the
+      mock servers record the Authorization header they actually received, so a
+      green result cannot come from a request that never carried one. Without
+      that control, "no leak found" would also be the result of never
+      authenticating at all.
+      FR-018 RESTRAINT: the fan-out was deliberately NOT wired into the default
+      `sync`. The session hook runs a sync per interactive shell, so wiring it
+      would silently rewrite another tool's configuration on every new shell —
+      exactly what FR-018 forbids. Export writes the catalogue and prints;
+      `--apply` is a separate, explicit act. `sync` behaviour is byte-identical.
+      Zero regressions: the failure set is IDENTICAL before and after (2
+      pre-existing failures, 12 assertions, unchanged).
+    severity: INFO
+    status: landed
+
+  - id: CRITICAL-1
+    where: submodules/helix_llm/internal/testing/runner.go + challenges/banks/
+    what: >-
+      THE CHALLENGE HARNESS CANNOT FAIL. Verified directly, not inferred:
+        make test-challenges  ->  "0 passed, 0 failed, 0 skipped"  exit 0
+      Three independent mechanisms, each sufficient on its own:
+        1. runner.go:188 dispatches on `step.Action`. Every bank writes
+           `method:`/`path:`/`assertions:` and never `action:`, so Action is
+           always empty, every step hits the `default` branch and is marked
+           SKIPPED, and runChallenge then sets Status="passed" because nothing
+           FAILED. The same "3 passed" prints against an unroutable base URL
+           (192.0.2.1:9) — proven at runtime by the sweep agent.
+        2. 19 of 28 bank files use a top-level `steps:` key the Bank struct has
+           no field for. ~115 declared entries load as ZERO, silently, exit 0.
+        3. An empty bank directory is also a green result.
+      SWEEP TALLY across 14 mandated targets: 4 genuinely pass, 1 passes the
+      WRONG package (test-e2e runs ./tests/integration/ — tests/e2e never runs in
+      any target, nor do tests/benchmark or tests/security), 3 fail honestly, and
+      6 REPORT SUCCESS WITHOUT EXERCISING ANYTHING. Latency tests pass on
+      p50=0s p95=0s p99=0s (n=0).
+      WHY THIS MATTERS MOST: this repository's constitution opens with the
+      operator's verbatim mandate — "all tests do execute with success and all
+      Challenges as well, but in reality the most of the features does not work".
+      The harness written to prevent that outcome IS that outcome. Every green
+      challenge result in this repo's history means less than it appears to.
+      NOT FIXED HERE. This is a structural defect in the verification
+      infrastructure, outside this feature's task list, and it changes what every
+      past green result means — it needs an operator decision and its own commit,
+      not a quiet patch inside a feature branch.
+    severity: CRITICAL
+    status: FIXED 2026-09-02 — see CRITICAL-1-RESOLVED
+
+  - id: EX-19
+    where: submodules/helix_llm — sweep methodology note
+    what: >-
+      The sweep agent disclosed two things that make its report trustworthy
+      rather than merely favourable.
+      TREE DRIFT: another writer changed 13 source files in this checkout while
+      the sweep ran, so TestShippedCatalogueLoads read 31/6 at one point and 34/8
+      later. It confirmed drift rather than flakiness (four runs, three filters,
+      consistent), took a confirming re-run with identical tree fingerprints
+      either side, and said plainly: do not quote this sweep as "the state of
+      HEAD".
+      DISCLOSED DEVIATION: six targets first failed with exit 127 (binary
+      absent). It ran `make build` and re-ran them, because otherwise the only
+      finding would have been "binary missing" — which conceals everything above.
+      Both readings are reported separately rather than merged.
+    severity: INFO
+    status: recorded
+
+  - id: EX-20
+    where: submodules/helix_llm/services/{imagegen,videogen}/Containerfile
+    what: >-
+      MY EX-11 FIX WAS DEFEATED ONE LAYER OUT, and I recorded it as fixed.
+      Removing the Python default made _decided() refuse when nothing chose. But
+      the IMAGES set the variables anyway — 8 assignments across two
+      Containerfiles — so _decided() always read a populated value and the
+      refusal path was UNREACHABLE. Running either image directly served a model
+      no host was ever measured against.
+      Both files carried a comment two lines above claiming "no hardcoded
+      model/precision literal baked in as behaviour". The comment asserted
+      exactly what the next line contradicted, which is worse than the defect
+      alone: a false assurance where a reader would look for the truth.
+      FOUND by the T094 guard's DERIVED binding — the forbidden set is each
+      service's own _decided("X") call sites, not a name heuristic. That is why
+      it caught VIDEOGEN_BACKEND/_SIZE/_NUM_FRAMES/_FPS, which no
+      "looks-like-a-model-name" rule would flag. My own grep missed all eight
+      because they use backslash line-continuations.
+      FIXED: all 8 decided values removed; the 5 genuine operator knobs
+      (CPU_OFFLOAD, MAX_STEPS, QUANTIZE_T5) kept; the false comment replaced with
+      why the values are absent and what baking them destroys.
+    severity: HIGH
+    status: fixed
+
+  - id: EX-21
+    where: submodules/helix_llm/internal/catalogue (embedding + vector families)
+    what: >-
+      The INVERSE of EX-9. FamilyEmbedding and FamilyVector were declared in FIVE
+      places — the const block, Known(), familyOrder, the Python gate's
+      KNOWN_FAMILIES, and asserted by a test — with ZERO catalogue entries. So
+      selection took the no-candidates path and reported
+      "no catalogued model serves this capability on any host" — on EVERY host,
+      regardless of what it could actually run. Declared everywhere, offerable
+      nowhere.
+      FIXED: 3 entries added (2 embedding, 1 vector), catalogue 31 -> 34 entries
+      across 8 families, every figure labelled RECORDED / MEASURED / DERIVED.
+      A boundary the agent did NOT paper over: vtracer, the vector-graphics
+      engine that actually ships, is not a model — no weights, no licence gating
+      a purpose, no per-host memory figure. Cataloguing it would have meant
+      inventing every field the catalogue exists to check. Its absence is stated
+      in the data file so nobody reads it as a gap.
+    severity: MEDIUM
+    status: fixed
+
+  - id: OPEN-2
+    where: container/helix_model_gate.py vs internal/selection
+    what: >-
+      A REAL Go/Python divergence, reported rather than silently patched.
+      gate.select() ranks admissible entries cheapest-first
+      (helix_model_gate.py:401, sorted by memory then storage). Go's
+      selection.Select returns offers in CATALOGUE order and leaves preference to
+      the lane — videogen-boot's prefer() sorts MOST-CAPABLE-first. So the same
+      host picks q4_k_m through the Python path and f16 through the Go path.
+      The gate's own header says "Where Go and this module differ, Go is the
+      source of truth and this module is the defect", so the direction of the fix
+      is already settled; only the decision to make it is outstanding.
+    severity: MEDIUM
+    status: open — needs a decision
+
+  - id: EX-22
+    where: helix_code/config/config.yaml (llm section) vs internal/config.LLMConfig
+    what: >-
+      T096 asked me to investigate the dead helix-llm/helix-debate provider block
+      before proposing its removal (§11.4.124 investigate-before-remove). Doing
+      that properly found a LARGER defect than the one I was sent to look at.
+      FOUR keys under `llm:` are declared in config.yaml and read by NOTHING —
+      computed, not eyeballed, by diffing the YAML keys against LLMConfig's
+      mapstructure tags:
+          max_retries   timeout   providers   selection
+      LLMConfig accepts only default_provider, default_model, max_tokens,
+      temperature. Everything else decodes into nothing, silently.
+      `timeout` and `max_retries` are WORSE than the provider block. An operator
+      who sets `llm.timeout: 30` has every reason to believe they configured a
+      timeout. They did not, and nothing tells them. A dead provider block is
+      inert; an ignored timeout is an operator holding a false belief about their
+      system's behaviour under load.
+      Also established: the top-level `ProvidersConfig` that DOES exist is about
+      Mem0/Zep/Memonto/BaseAI — memory providers. The name collision with
+      `llm.providers` is coincidental and misleading to anyone grepping.
+      Also: `default_model` is a struct field the YAML never sets.
+      NOT FIXED. This is now a bigger question than "delete the block": either
+      those four keys should be honoured, or they should be removed, or the
+      loader should REFUSE unknown keys the way the catalogue loader does — which
+      is the choice that would have prevented all four. That is an operator
+      decision, and the strict-loader option has consequences beyond this file.
+    severity: HIGH
+    status: investigated — operator decision required, now well-formed
+
+  - id: SELF-5
+    where: this session's dispatch of T031 and T072
+    what: >-
+      I dispatched two agents into the SAME Go package. T031 (vrambroker lease
+      wiring) and T072 (streaming process lifecycle) both own internal/runtime/,
+      and each independently declared `Lease`, `Admitter` and `brokerAdmitter`.
+      The package stopped compiling:
+        streaming_launch.go:47: Lease redeclared in this block
+        lease.go:41: other declaration of Lease
+      Caught not by me but by a THIRD agent (placement), which hit the broken
+      build while verifying its own unrelated work and correctly reported it as
+      "not mine and pre-existing" rather than trying to fix it.
+      The agents then resolved it between themselves — streaming_launch.go kept
+      the declarations, lease.go dropped them — and the full tree builds again.
+      I verified across two consecutive attempts rather than trusting one read,
+      since any single reading of a concurrently-edited tree is a moment in time.
+      LESSON: my package-ownership rule ("you own internal/X, stay out of others")
+      only works if no two agents are given the same X. I checked scope overlap
+      for the DATA files after the schema divergence, but not for Go packages.
+      One-package-one-agent needs to be checked at dispatch, not discovered at
+      build time.
+    severity: MEDIUM
+    status: self-resolved by the agents; no code lost
+
+  - id: EX-23
+    where: submodules/helix_llm/cmd/visiongen-boot/compose.vision.yml
+    what: >-
+      THE SAME DEFECT, A THIRD LAYER OUT. The model default was baked into the
+      COMPOSE ARGV in shell-expansion form:
+        - /models/${VISIONGEN_MODEL_GGUF:-Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf}
+      visiongen-boot refuses correctly, so through the binary the default never
+      fires. Running the compose directly starts Qwen2.5-VL-3B on an unmeasured
+      host with no error — the refusal path is unreachable, exactly as it was at
+      the two layers already fixed.
+      The full progression of one defect: (1) the Python service default, (2) the
+      Containerfile ENV, (3) the compose argv. Each fix was correct and each left
+      the next layer intact.
+      NOTHING GUARDED THIS ONE: the Containerfile guard scopes itself to
+      Containerfiles by name, and no Go test read a compose file at all.
+      FIXED, with a guard that is deliberately NAME-AGNOSTIC — it forbids any
+      weight-file literal anywhere in the configuration, so moving the default to
+      a differently-named variable does not escape it.
+    severity: HIGH
+    status: fixed
+
+  - id: OPEN-3
+    where: submodules/helix_llm/cmd/agentgen-boot/
+    what: >-
+      AN ENTIRELY UN-MIGRATED LANE. agentgen-boot has NO modelchoice.go at all —
+      it never received the measured-selection migration the vision, image and
+      video lanes did. main.go:118 seeds AGENTGEN_MODEL_GGUF, and
+      compose.agent.yml:44 bakes a REAL model default:
+        ${AGENTGEN_MODEL_GGUF:-Mistral-Nemo-Instruct-2407-Q4_K_M.gguf}
+      Same severity as the visiongen defect just fixed: running that compose
+      starts a specific model on an unmeasured host, silently.
+      NOT FIXED — this is a whole lane migration, not a one-line change, and the
+      spec's capability families do not include an "agent" family, so it is
+      genuinely outside feature 002's scope rather than an oversight within it.
+      Needs an operator decision: migrate the lane, or fix only the compose
+      default (which stops the silent start without giving the lane measured
+      selection).
+    severity: HIGH
+    status: open — operator decision required
+
+  - id: EX-24
+    where: submodules/helix_llm/deploy/compose.yaml + compose.dev.yaml
+    what: >-
+      Both carry ${HELIX_LLM_LOCAL_MODEL:-model.gguf}. Recorded for completeness,
+      but LESSER in kind than the others: `model.gguf` is a placeholder, not a
+      real model, so the fallback fails loudly at load ("no such file") rather
+      than silently serving something nothing chose. A loud failure is a
+      different defect class from a silent substitution, and conflating them
+      would overstate this one.
+    severity: LOW
+    status: recorded
+
+  - id: OPEN-4
+    where: submodules/helix_llm/internal/runtime/streaming_launch.go
+    what: >-
+      `brokerAdmitter.Acquire` returns the concrete *vrambroker.Lease without a
+      typed-nil guard. On a hypothetical (nil, nil) from the broker it would
+      yield a NON-NIL Lease interface holding nothing, and the `lease == nil`
+      check in runtime.Acquire would not catch it — the classic Go typed-nil
+      trap. LATENT, not live: the broker never returns that shape today.
+      Reported by the lease agent about the streaming agent's file rather than
+      edited across scope boundaries.
+    severity: LOW
+    status: open
+
+  - id: OPEN-5
+    where: submodules/helix_llm/cmd/{visiongen,agentgen,videogen,imagegen}-boot
+    what: >-
+      All four boot lanes duplicate `needBytesFor` + `admit` + `classifyAdmit`,
+      and three of them duplicate `modelchoice.go` near-verbatim (~380 lines).
+      Two agents independently flagged the duplication; the third wrote the third
+      copy and said so rather than quietly making it worse.
+      `runtime.Acquire` + `AdmissionRefusal.Reason` is now the seam they can
+      collapse onto — the reason values map 1:1 onto the lanes' existing exit
+      codes 10-14. A follow-up, not this feature's work, but the seam exists now
+      where it did not before.
+    severity: MEDIUM
+    status: open — follow-up
+
+  - id: CRITICAL-2
+    where: internal/runtime/choose.go:265 vs internal/catalogue/data/text.yaml:369
+    what: >-
+      THE STREAMING PATH ADMITS HOSTS THAT CANNOT RUN THE MODEL. Verified
+      arithmetic, not inferred:
+        catalogue glm-5.2 : memory_required_bytes = 17179869184 (16 GiB),
+                            annotated memory_sourced: '"16 GB min"'
+        default applied   : defaultResidentMemoryFraction = 0.25
+        result            : a 4 GiB host is admitted for a model whose runtime
+                            states a 16 GB minimum.
+      For a `runtime: streaming` row, memory_required_bytes IS the runtime's
+      stated floor, not an in-memory footprint to discount. Applying a resident
+      fraction to it is subtracting from a number that was already the minimum —
+      precisely the admission defect T073 exists to prevent.
+      DEEPER, and the reason this is not a one-line fix: Choose step (a) reads
+      the SAME field as the IN-MEMORY requirement, so a 20 GiB-free host would be
+      told in-memory can serve a 744B model with a 372 GiB footprint. The data
+      already records the correct answer — text.yaml:304 documents "two distinct
+      artifact shapes per model", i.e. the GGUF row and the Colibri row should be
+      SEPARATE catalogue entries with different figures, not one row read two
+      ways.
+      NOT FIXED, deliberately. The mechanism is already correct and configurable
+      (ResidentMemoryFraction: 1 yields the full figure); only the default is
+      wrong for real streaming rows. Enforcing it breaks 12 tests including two
+      landed ones whose fixtures assume a discount. The real resolution spans
+      catalogue + selection + runtime and is a design decision, not a constant.
+      Live scope is narrow: exactly ONE active entry is served by streaming today.
+    severity: CRITICAL
+    status: open — design decision required
+
+  - id: SELF-6
+    where: my framing of the T070 decision to the operator
+    what: >-
+      I offered "Adopt it — add the dependency" as an option, implying a go.mod
+      change. plan.md:175 ALREADY recorded that this is impossible: the streaming
+      runtime is a C runtime with no Go binding, and "incorporation means a
+      launch/lifecycle integration, not a library import". I had read that plan;
+      I wrote it. The operator chose on my inaccurate framing.
+      The agent re-investigated on receiving the grant, found the plan's own text,
+      and built the only adoption that exists here — a real OS process and a real
+      HTTP health probe, with binary path, argv and health URL left as
+      configuration because the research records the repo, licence, build and
+      roster but documents NO serving invocation, port or health endpoint.
+      Inventing those would have been guessing.
+      go.mod is unchanged, and that is the correct outcome rather than a
+      shortfall. Still un-evidenced: no run against a real build, which needs an
+      external clone plus a C toolchain.
+    severity: MEDIUM
+    status: recorded; the operator should know the decision was made on a wrong premise
+
+  - id: EX-25
+    where: submodules/helix_llm — offer ordering (OPEN-2 resolved)
+    what: >-
+      Resolved per operator decision: Go now matches Python, cheapest-admissible
+      first, and the rule moved INTO internal/selection so the three lanes stop
+      sorting. The three lane copies of prefer() were byte-identical — proven by
+      extracting and diffing them — which is exactly why the divergence was
+      invisible: they agreed with each other and all three disagreed with Python.
+      THE FINDING THAT MATTERS: nothing pinned the old behaviour. No Go test
+      asserted most-capable-first anywhere. The three prefer() functions were
+      entirely unguarded, which is how a system-wide ordering rule could differ
+      between two implementations of the same product without a single test
+      failing.
+      The gate's header now carries a ONE RECORDED EXCEPTION block naming this as
+      the divergence resolved by changing Go, so nobody later "fixes" Python back.
+      The user guide, which said "most capable … largest first", was corrected.
+    severity: INFO
+    status: fixed
+
+  - id: SECURITY-1
+    where: helix_code/config/config.yaml:28 + internal/config/config.go:711
+    what: >-
+      A SERVER STARTED WITHOUT HELIX_AUTH_JWT_SECRET SIGNS TOKENS WITH A
+      PUBLICLY-KNOWN LITERAL. Confirmed by tracing the startup path, not inferred:
+        - config.yaml ships  jwt_secret: "${HELIX_AUTH_JWT_SECRET}"
+        - expandShellDefaults expands Redis host and DB host/user/dbname/server
+          address. It does NOT expand auth, so the placeholder stays literal.
+        - validateConfig (line 711) rejects only "" and
+          "default-secret-change-in-production". The 24-character literal
+          "${HELIX_AUTH_JWT_SECRET}" is neither, so it PASSES.
+        - the len(JWTSecret) >= 32 checks that WOULD catch it live in
+          ConfigurationValidator.Validate / ValidateField — and Load() never
+          calls them. NewConfigurationValidator appears only in doc.go comments
+          and its own definition. NO PRODUCTION CALLER.
+      Result: anyone who clones the repo and starts the server without setting
+      that variable — the default state — signs JWTs with a 24-byte string that
+      is committed in this repository. Tokens are forgeable by anyone who reads
+      the config file.
+      NOT FIXED. Two candidate fixes with different blast radii: expand auth in
+      expandShellDefaults (then an unset var yields "" and the existing check
+      fires), or reject any secret still containing an unexpanded ${...}. The
+      second is narrower and catches the whole class. Needs an operator decision
+      because it will refuse startup for anyone currently relying on the
+      accidental behaviour.
+      NOTE ON MY OWN VERIFICATION: my first probe reported the placeholder as
+      REJECTED. That was a false pass — I passed an empty Config{}, so
+      validateConfig failed on an unrelated missing field. The same vacuity trap
+      recorded as PATTERN-1, hit by me while checking for it.
+    severity: CRITICAL (security)
+    status: open — operator decision required
+
+  - id: CRITICAL-3
+    where: helix_code/internal/config/config.go (RedisConfig.Database)
+    what: >-
+      EVERY DEPLOYMENT HAS BEEN CONNECTING TO REDIS DATABASE 0 REGARDLESS OF
+      CONFIGURATION. The struct field was tagged mapstructure:"database" while
+      setDefaultsOn writes v.SetDefault("redis.db", 0) and all 9 shipped configs
+      spell it `db`. Zero files anywhere use `redis.database`. So neither the
+      default nor any file ever populated the field, and internal/redis/redis.go
+      passes it straight to redis.Options.DB. `redis.db: 3` was silently
+      discarded.
+      A TEST CERTIFIED THE BUG: helix_config_test.go:95 asserted
+      Redis.Database == 0 — which passed trivially because the field was always
+      its zero value. The guard confirmed the defect it existed to prevent.
+      FIXED: tag corrected to "db", with a regression guard that loads db: 7 and
+      asserts it arrives.
+    severity: CRITICAL
+    status: fixed
+
+  - id: EX-26
+    where: helix_code/config/ (whole-tree census)
+    what: >-
+      The strict-loader census found seven orphan groups across 10 config files,
+      not the four keys I sent the agent to look at. Beyond redis.db above:
+      the ENTIRE `notifications` block (~40 keys) is read by nothing — Config has
+      no Notifications field, and the channel code builds everything from
+      os.Getenv, hardcoding the channel name and username the config file
+      appears to set. Its `rules:` list, mapping events to channels with
+      priorities, is read by nothing at all.
+      Also: config/production-config.yaml IS NOT VALID YAML — from line ~569 it
+      contains a pasted AI-assistant transcript ("Now let me create the Phase 3
+      test implementation:<function_calls>..."). Pointing HELIX_CONFIG at it fails
+      today. Repair means deciding what it was meant to contain — an operator
+      call, not a safe edit.
+      The loader is now two-tier rather than all-or-nothing: unknown keys are a
+      hard startup error naming the key and section; known-orphan keys warn from
+      a hand-maintained register with a per-key reason. A pure refuse-everything
+      loader would have rejected the repo's own config — an outage, not a fix.
+    severity: HIGH
+    status: fixed (strictness); contents flagged for decisions
+
+  - id: SELF-7
+    where: my Kokoro provenance note (EX-13)
+    what: >-
+      I recorded Kokoro's storage as 353,746,785 B and wrote that
+      re-verification was INCONCLUSIVE because an HTTP HEAD returned a 15-byte
+      error page. I concluded the network was restricted. It is not — HEAD is
+      blocked, the model API is not. The video agent hit the working path and
+      corrected my brief, which is how I learned my own note was wrong.
+      Re-measured first-hand: graph 325,532,232 + 55 voice files 28,725,248 =
+      354,257,480. The recorded figure UNDERSTATED by 510,695 B — about one voice
+      file, so the earlier count likely saw 54 of 55. Understating is the
+      dangerous direction: the entry is offered, and the fetch then runs out of
+      room.
+      Corrected, with the exact re-run command in the entry.
+      LESSON: one failed probe of one shape is not "the network is restricted".
+      I generalised from a single HEAD to a whole capability and wrote that
+      generalisation into a data file as provenance, where it would have been
+      believed.
+    severity: MEDIUM
+    status: fixed
+
+  - id: CRITICAL-4
+    where: submodules/helix_llm/services/videogen/ + internal/catalogue/data/video.yaml
+    what: >-
+      A THIRD instance of the ltx defect, and the root cause of all three: THE
+      VIDEO SERVICE HAS NO GGUF LOAD PATH AT ALL — no from_single_file, no
+      GGUFQuantizationConfig anywhere in it. Yet the Go side declares gguf-q4
+      servable, and wan2.2-t2v-a14b records `quantisation: gguf-q4` with a
+      source that PASSES the allowlist gate and points at the UNQUANTISED repo.
+      That path was live. Boot could select it, and from_pretrained would have
+      served the full unquantised model — at a memory cost its 8 GiB figure was
+      never measured for, after downloading 117.53 GiB against a manifest
+      claiming 18.
+      THE SILENT SUBSTITUTION PROVEN, not inferred: real 13B GGUF-Q4 builds
+      exist, but none carries model_index.json, which from_pretrained requires.
+      Lightricks/LTX-Video DOES carry one — so from_pretrained SUCCEEDS, on a
+      28x32x64 (~2B, 7.17 GiB) transformer instead of the real 13B's 48x32x128
+      (24.29 GiB). Confirmed from the configs themselves.
+      CONTAINED: gguf-q4 refused at the precision layer (covering both gguf
+      entries without disabling the working fp8 default), ltx marked UNSUPPORTED
+      with two concrete routes to establish support. Runtime-proven: refusal
+      precedes any from_pretrained, so no weight is fetched.
+      RESIDUAL, recorded not decided: wan2.2-t2v-a14b's source still passes the
+      gate. Fully resolving it means recording a source that genuinely serves a
+      GGUF-Q4 build, or withdrawing the source so boot refuses it as ltx now is.
+    severity: CRITICAL
+    status: contained — data decision outstanding
+
+  - id: EX-27
+    where: helix_llm/internal/gateway + helix_agent/internal/router
+    what: >-
+      Both hardcoded model lists removed per operator decision.
+      GATEWAY: /v1/models now returns an explicitly empty list plus a stated
+      reason, with Data as []api.Model{} rather than nil so the wire carries
+      "data":[] (a listing that says none) instead of "data":null (which reads as
+      a malformed body). /v1/models/:id returns 404 for every id with the reason
+      in the message — that is how a client tells "this backend lacks that model"
+      from "this server has no backend", and only the second is actionable. Both
+      messages became i18n keys, closing a CONST-046 slip on that path.
+      ROUTER: wired to the live source with a 3 s timeout applied TWICE (closure
+      context AND adapter config, because the source is built on
+      context.Background() so the closure's own deadline is load-bearing), a 30 s
+      cache TTL chosen to sit inside the CONST-038 60 s status-accuracy window
+      rather than picked for convenience, and a failure policy that DISCARDS the
+      cached entry — serving a remembered list after the serving layer stopped
+      answering would assert those models are running on evidence that just
+      failed to confirm it.
+      The agent also DROPPED a test it had written after realising it asserted
+      only that context.Background() has no deadline — a tautology with no power
+      over the code under test.
+    severity: INFO
+    status: fixed
+
+  - id: CRITICAL-1-RESOLVED
+    where: submodules/helix_llm/internal/testing/ + cmd/helixllm/ + Makefile
+    what: >-
+      THE HARNESS CAN NOW FAIL. Measured, before and after:
+        BEFORE:   0 passed,  0 failed,  0 skipped   exit 0
+        AFTER:   20 passed, 83 failed, 28 skipped   exit 1   (against a live server)
+      131 declared entries, fully reconciled: 20+83+28 = 131.
+      A FOURTH MECHANISM was found that I had not listed, and it was the one
+      producing the headline 0/0/0: LoadBanksDir did not recurse, and
+      challenges/banks/ contains ONLY subdirectories (12 of them, zero YAML at
+      root). So the Makefile's own target loaded zero banks, and the three
+      mechanisms I did identify were masked behind it.
+      THE AUTHORITATIVE-SIDE DECISION, and its reasoning: the 28 BANK FILES were
+      made authoritative and the DISPATCHER was changed. Not for keystroke count
+      — the runner's action:"GET /path" + expected:<substring> shape is strictly
+      LESS EXPRESSIVE than what the banks declare. It cannot represent a POST
+      body, a header, a JSON field path, a status code, a concurrency level or a
+      repeat count. Rewriting 28 files into it would have DESTROYED declared test
+      intent: 78 request bodies, 294 assertions across 22 types, concurrent:100,
+      repeat:100, retry blocks. Zero bank files were edited.
+      A SECOND BLUFF FOUND EN ROUTE: with a server running, every challenge
+      failed on x509 (self-signed cert), which would have made the whole suite
+      transport-red and equally uninformative. Fixed by PINNING certs/cert.pem
+      via a new --ca-cert flag rather than disabling verification — a
+      non-verifying client would make every transport-level pass meaningless.
+      All 7 Makefile invocations now pass it.
+      A PRE-EXISTING TEST ASSERTED THE BUG: TestRunner_RunAll_UnsupportedAction
+      required a step to be skipped AND the challenge reported passed. Reconciled
+      to assert the load error, not deleted.
+      HONEST GAP, loudly reported: 28 challenges (16 benchmark, 12 chaos) are
+      skipped because this harness ships no load generator or fault injector.
+      Each names its reason, is counted, and makes Verify exit non-zero.
+      NOT FIXED, as instructed: the 83 real assertion failures. All are genuine
+      failures against real responses — no transport errors. Dominated by
+      http_status_ok (52), contains (11), status/one_of (14). Top failing banks:
+      developer-coding-workflows 12, known-bug-regression 10,
+      owasp-top10-security 9, llamacpp-only 8.
+    severity: CRITICAL
+    status: FIXED — 83 real failures now visible and awaiting their own work
+
+  - id: SECURITY-2
+    where: submodules/helix_llm/internal/discovery/trust.go:212 + discover.go:193,459
+    what: >-
+      PROOF RELAY — A HOST HOLDING NO SECRET AT ALL BECOMES TRUSTED AND RECEIVES
+      THE PROMPT AND CREDENTIALS. Reproduced on the wire by the security review,
+      in two variants.
+      ROOT CAUSE: the proof is HMAC(secret, nonce) with NO CHANNEL BINDING —
+      nothing ties it to the endpoint we dialed. Any host that can reach one
+      genuine instance answers our challenge by forwarding it.
+        - REDIRECT: hostile /attest answers 302 to the honest instance. New()
+          builds &http.Client{Timeout} with NO CheckRedirect, so the honest
+          instance's proof returns as the hostile endpoint's response.
+          trusted=true, then Send posted the prompt to the hostile endpoint.
+        - ACTIVE PROXY: hostile fetches the honest attest itself, rewrites `host`
+          and `models`, returns it. trusted=true, ServedOptions carried an
+          attacker-chosen model under a host label colliding with the real one,
+          and Send delivered prompt AND credentials.
+      WHY THE EXISTING TEST PASSED: its hostile server returns a GARBAGE proof
+      rather than relaying a real one. The test proves an unauthenticated host is
+      refused; it never tested a host that obtains a valid proof by other means.
+      So FR-024/FR-025 hold only against an attacker alone on the network.
+      FIX DIRECTION (from the review, not yet applied): bind the dialed endpoint
+      into the MAC input — HMAC(secret, nonce || endpoint) — and set CheckRedirect
+      to refuse on both probe and Send.
+    severity: CRITICAL (security)
+    status: open — reproduced, fix dispatched
+
+  - id: SECURITY-3
+    where: submodules/helix_llm/internal/discovery/discover.go:305
+    what: >-
+      LocalHost mode never verifies that an endpoint IS loopback, yet the mode is
+      exempt from FR-024 by construction. Reproduced: LocalHostEndpoints set to a
+      LAN address, no secret, attest with no proof field -> trusted=true, and Send
+      delivered the prompt. The "beyond the current host" boundary is enforced by
+      configuration trust rather than by code, so a hostile .env or a hostname
+      that resolves off-box exports user content unauthenticated.
+    severity: HIGH (security)
+    status: open — fix dispatched
+
+  - id: SECURITY-4
+    where: submodules/helix_llm/internal/selection/placement.go:426,633 + fit.go:112
+    what: >-
+      The fleet ledger accounts SYSTEM memory but never ACCELERATOR memory.
+      Reproduced on the SingleAccelerator fixture (23 GiB VRAM): three placements
+      of a RequiresAccelerator model each needing 90% of VRAM were ALL GRANTED,
+      and reported accelerator memory stayed 23 GiB. The same VRAM was promised
+      three times.
+      NOT a race — the locking is correct and -race is clean. The axis is simply
+      absent from the ledger, which is the same class as the over-commitment
+      defect the placement work was built to prevent, on the axis it did not cover.
+    severity: HIGH
+    status: open — fix dispatched
+
+  - id: SELF-8
+    where: my commit 064dd75
+    what: >-
+      I RAN `git add -A -- internal/ cmd/ ...` WHILE AN AGENT WAS STILL
+      VERIFYING, and absorbed its seven harness files into a 46-file commit
+      alongside ~39 unrelated ones. The operator had asked for the harness fix as
+      its OWN commit. It is now entangled with a config/gateway/video batch.
+      This is the §11.4.84 working-tree-quiescence hazard — the one I had
+      described in three separate reports and warned other agents about, then
+      caused myself. I checked quiescence by counting RUNNING AGENTS and read
+      "one left" as safe, when the correct check is whether any agent is still
+      writing to the paths I am about to stage.
+      Verified rather than assumed: no mutation residue reached the commit
+      (git grep over 064dd75 for the marker set is empty — the only hits repo-wide
+      are governance docs QUOTING the marker list as prose), and nothing was
+      pushed (HEAD 064dd75, upstream 035b134, four local-only commits).
+      Recoverable with `git reset --soft` and re-staging, but that rewrites three
+      other agents' commits, so it needs an operator decision rather than my
+      judgement.
+    severity: MEDIUM
+    status: recorded — recovery is an operator decision
+
+  - id: CRITICAL-5
+    where: internal/selection/fit.go:320,373 · internal/runtime/choose.go:334 · placement.go:426
+    what: >-
+      SELECTION NEVER READS ACCELERATOR MEMORY. Every accelerator-required model
+      is fitted against SYSTEM RAM. Verified by grep: `Accelerator.MemoryAvailable`
+      and `.MemoryTotal` are referenced ZERO times across internal/selection,
+      internal/runtime and both boot binaries; the same files reference the
+      HOST's MemoryAvailable six times. `supports()` checks only
+      len(Accelerators)==0 — presence, never capacity.
+      THE FIGURES BEING COMPARED ARE NOT THE SAME QUANTITY. The catalogue's
+      memory_required_bytes for accelerator entries is a VRAM figure —
+      vision_image.yaml records 4338987008 annotated "4138 MiB actual GPU peak
+      for the VLM alone, co-resident with a live 30B coder on one RTX 5090". That
+      VRAM number is compared against host RAM.
+      REPRODUCED: a host with 48 GiB RAM free and a card with 7 GiB free was
+      OFFERED an entry requiring 24 GiB of VRAM.
+      THE LIVE CORROBORATION IS THE WORST PART: imagegen-boot on THIS host
+      withheld qwen-image:fp8 as "memory short by 1918MiB (needs 15258MiB,
+      13339MiB available after 4646MiB held back)". 13339 MiB is RAM-minus-
+      reserve. The card has 11775 MiB. The refusal was correct BY COINCIDENCE OF
+      RAM SIZE, for the wrong axis. On a 64 GiB-RAM / 12 GiB-card host the same
+      model would print PLAN-OK and then fail at the broker, misattributed to
+      coder co-residency.
+      THREE TESTS CERTIFY THE BUG:
+        - selection_test.go TestEveryOfferedOptionFitsTheMeasuredHost re-derives
+          "fits" from host.MemoryAvailable — the oracle inherits the
+          implementation's exact blind spot.
+        - refusal_test.go:313 asserts a 24 GiB accelerator model "runs perfectly
+          well" on a fixture card with 23.2 GiB free.
+        - choose_test.go manufactures "does not fit" by shrinking RAM to 12 GiB
+          while the card still has 23 GiB — certifying that the streaming
+          fallback is decided from RAM for an accelerator-required entry.
+      FOUND INDEPENDENTLY TWICE: the US1 reviewer via the fit path, the security
+      reviewer via the fleet ledger (SECURITY-4, same VRAM promised three times).
+      Two symptoms, one root cause.
+      This is the central premise of the feature — measure the host, offer what
+      fits — failing on the axis that matters for every accelerator model.
+    severity: CRITICAL
+    status: open — fix dispatched
+
+  - id: CRITICAL-6
+    where: internal/vrambroker/budget.go:20,43 + both boot compose files
+    what: >-
+      ADMISSION BINDS THE ACCELERATOR BY ENUMERATION POSITION. nvidiaSMIArgs
+      carries no --id=<uuid>, and parseSMICSV is documented as parsing "the FIRST
+      GPU row" and returns on the first line. selection.Option carries no device
+      identity at all; needBytesFor admits a bare byte count. The compose files
+      pass nvidia.com/gpu=all with no CUDA_VISIBLE_DEVICES pin, and the service
+      calls torch.cuda.get_device_name(0).
+      REPRODUCED: two nvidia-smi rows (24576, 12288) gave budget total 24576;
+      reversed, 12288. The budget depends on enumeration order.
+      THE IRONY WORTH RECORDING: DeviceIdentity was made a distinct type
+      specifically so an index could not be assigned to it — §11.4.111 enforced
+      by the compiler. That worked. And then nothing downstream represents the
+      identity at all, so the guarantee stops at the package boundary. CUDA and
+      nvidia-smi order differ by default, so on a two-card host admission and
+      execution can target different cards.
+    severity: CRITICAL
+    status: open — fix dispatched
+
+  - id: EX-28
+    where: cmd/imagegen-boot/main.go:102
+    what: >-
+      The storage axis is measured on the WORKING DIRECTORY, not the filesystem
+      that will hold the weights: decide(ctx, family, "", ...) passes an empty
+      WeightsDir, so StoragePathForWeights falls back to os.Getwd(). Weights
+      actually land in a podman named volume under the container graphroot. The
+      vision lane passes weightsDir correctly; imagegen does not.
+      REPRODUCED: plan from /dev/shm reports storage_available=15484MiB; from the
+      repo directory, 1189382MiB. Same host, same volume, 77x different answer.
+      The named axis is right and the number is for the wrong filesystem.
+    severity: HIGH
+    status: open — fix dispatched
+
+  - id: SELF-9
+    title: my ordering change broke the videogen lane; two precision lists disagreed
+    found_by: T084 Fable review, confirmed by running the lane
+    detail: |
+      The cheapest-first reorder I dispatched (user round-2 decision "make Go
+      match Python") exposed a pre-existing disagreement. Two independent lists
+      answer the same question:
+        cmd/videogen-boot/modelchoice.go  servingPrecisions      said gguf-q4 servable
+        services/videogen/videogen_server.py _UNIMPLEMENTED_PRECISIONS refuses gguf-q4
+      Nothing noticed while most-capable-first happened to rank a servable fp8
+      build first. Cheapest-first put wan2.2-t2v-a14b:gguf-q4-480p (8 GiB) ahead
+      of the servable wan2.2-ti2v-5b:fp8-480p (10 GiB).
+      REPRODUCED: `go run ./cmd/videogen-boot plan` chose the gguf-q4 build. The
+      lane would admit the VRAM, compose up, 503 for the full health timeout,
+      exit 4 — holding the lease throughout. A correct-looking plan to a dead
+      container.
+      FIXED: removed gguf-q4 from servingPrecisions (the service is authoritative
+      — it is the thing that loads weights). Lane now chooses fp8-480p again.
+      GUARDED: internal/serviceconfig/precision_agreement_test.go parses both
+      files and fails if the sets intersect. The reviewer noted the existing
+      test_manifest_catalogue_agreement.py reads servingBackends but never
+      servingPrecisions — that is the hole this closes.
+    severity: HIGH
+    status: fixed + guarded
+    lesson: |
+      PATTERN-1 again, in a new shape. Two sources of truth for one question,
+      and the disagreement was invisible because an unrelated ordering property
+      masked it. Changing the ordering did not cause the defect; it removed the
+      accident that hid it.
+
+  - id: CRITICAL-7
+    title: the production HTTP path never resolves the published model identifier
+    found_by: T055 Fable review (US2 naming and export)
+    detail: |
+      REPORTED WITH RUNTIME PROOF by the reviewer (throwaway test, since deleted):
+      cmd/helixllm/main.go:461 wires gateway.RouterOptions{Brain: fallbackChain}.
+      ResolveModelName is called ONLY from Brain.Complete / CompleteStream
+      (internal/brain/brain.go:191,273) — neither is on the request path.
+      /v1/chat/completions, /v1/completions, /v1/messages and /ws all reach
+      fallback.Chain, which OVERWRITES req.Model with entry.ModelID — set by
+      discoverProviderModels to each provider's FIRST model.
+      Reviewer's captured runs:
+        client asked helixllm-gpu-01-qwen2-5-7b-0123456789ab -> answered by chutes,
+          cloud saw model=deepseek-chat, local saw nothing
+        local-only, client asked qwen2.5:7b (2nd served model) -> local got llama3:8b
+      So the toolkit --apply path writes a derived id that production answers with
+      whichever provider scores highest. SC-019 is unmet. The whole
+      ResolveModelName guard and its two tests exercise a path production does
+      not use; no gateway/cmd test sends an identifier over HTTP.
+    severity: CRITICAL
+    status: open — not yet fixed
+    note: |
+      NOT independently reproduced by me yet. Recorded as REPORTED with the
+      reviewer's cited file:line and captured runs, per 11.4.6 — the probe test
+      was deleted, so I owe my own reproduction before the fix.
+
+  - id: OPEN-14
+    title: four fix agents died on the session rate limit
+    detail: |
+      SECURITY-1 (JWT placeholders), SECURITY-2/3/4 (discovery hardening),
+      CRITICAL-2 (catalogue row split), CRITICAL-5/6 (accelerator memory axis)
+      and the 83-failure triage all terminated with HTTP 429 "session limit,
+      resets 10:20pm Europe/Belgrade" — not with findings.
+      Their partial last words are in the task outputs; none of them committed.
+      Working tree is clean of their work (they were dispatched, not landed).
+    severity: MEDIUM
+    status: open — redispatch after the limit resets
+
+  - id: SECURITY-1-helix_code
+    title: unexpanded ${...} in a credential was used verbatim as the credential
+    detail: |
+      REPRODUCED then FIXED in helix_code/internal/config (distinct from the
+      helix_llm instance, which is dispatched separately).
+      A dead agent had left a complete RED suite and no implementation. All 11
+      credential fields accepted an unexpanded placeholder, plus the
+      ${VAR:default}, ${VAR:-default} and embedded prefix-${VAR}-suffix forms.
+      Worst case is auth.jwt_secret: with HELIX_AUTH_JWT_SECRET unset, every JWT
+      was signed with the literal string "${HELIX_AUTH_JWT_SECRET}" — a constant
+      committed to this repository, readable by anyone — while startup, health
+      checks and tests all reported success.
+      FIXED: checkSecretPlaceholders runs first in validateConfig and refuses,
+      naming both the field and the variable to export.
+      SCOPE is deliberately narrow (an explicit credential list, not a
+      reflective walk): non-secret fields legitimately carry ${...} in normal
+      operation — config/config.yaml ships ${HELIX_LLM_ENDPOINT:...} and
+      ${HELIX_QA_HOME}/banks — so a blanket scan would refuse the project's own
+      shipped config. The test pins this via NonSecretFieldsAreNotScanned.
+      A bare $VAR is NOT refused: it is not a form this loader expands, so it is
+      a real secret, and refusing it would lock a user out of their own config.
+      EVIDENCE: 25 assertions across 5 tests; paired §1.1 mutation proven by
+      diff (regex neutered -> FAIL; restored -> PASS).
+    severity: CRITICAL
+    status: fixed + guarded
+
+  - id: SELF-10
+    title: my own fix panicked on a nil optional section; a sibling gate caught it
+    detail: |
+      Config.Verifier is a POINTER and nil whenever the optional verifier block
+      is absent. secretFields read through it unconditionally, so validateConfig
+      SEGFAULTED on any minimal config — turning a missing optional section into
+      a startup crash, a worse failure than the one I was fixing.
+      My own SECURITY-1 tests did NOT catch it: their fixture populates Verifier.
+      TestBcryptCostValidationGuard caught it, because it builds a minimal config.
+      FIXED: nil guard, with the reason recorded at the call site.
+      LESSON: 11.4.120 says investigate before touching a gate your fix broke.
+      Investigation said the gate was right and my fix was wrong. Had I assumed
+      "stale gate" and reconciled it, I would have shipped a segfault.
+    severity: HIGH
+    status: fixed
+
+  - id: OPEN-15
+    title: shipped config carries unexpanded ${...} in NON-secret fields at runtime
+    detail: |
+      Noticed while scoping SECURITY-1, NOT fixed — out of scope and pre-existing.
+      config/config.yaml sets llm provider endpoint to
+      "${HELIX_LLM_ENDPOINT:http://localhost:8081}", and replica-8081.yaml:178
+      records that expansion covers EXACTLY five fields, which do not include
+      provider endpoints. So that value is used as a literal URL — a URL that is
+      not a URL. It does not reach my check by design (see the scope note above).
+      Worth its own decision: either expand those fields too, or stop writing a
+      shell-expansion form into a field nothing expands.
+    severity: MEDIUM
+    status: open — reported, not fixed
+
+  - id: OPEN-16
+    title: helix_code desktop GUI cannot build in this environment
+    detail: |
+      `go build ./...` fails only on github.com/go-gl/glfw: X11/Xlib.h missing.
+      Pre-existing, environmental (absent X11 dev headers), unrelated to any
+      change in this feature. Every non-GUI package builds. Recorded so a later
+      run does not mistake it for a regression.
+    severity: LOW
+    status: open — environmental
