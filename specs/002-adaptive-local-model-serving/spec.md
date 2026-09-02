@@ -444,9 +444,6 @@ and it produces correct output for a known input.
   requirement it does not meet — never an unexplained empty list, and never an option below the
   family's usable threshold. Neither host is offered an option the other's hardware would be
   required to run.
-- **SC-012**: No model whose licence forbids the user's declared usage is ever offered for that
-  usage — verifiable by declaring commercial use and confirming that every non-commercial model is
-  withheld, with its licence named as the reason.
 - **SC-011**: No model file is loaded whose integrity was not verified against its recorded expected
   value, and no model is obtained from a source outside the allowlist — verifiable by attempting both
   and observing refusal.
@@ -475,6 +472,9 @@ and it produces correct output for a known input.
 - **SC-019**: Provider aliases are synchronised and a request sent through a Claude Toolkit alias is
   answered by HelixLLM via HelixAgent on a live system, evidenced by the response — not by a
   configuration file's existence.
+- **SC-020**: No model whose licence forbids the user's declared usage is ever offered for that
+  usage — verifiable by declaring commercial use and confirming that every non-commercial model is
+  withheld, with its licence named as the reason.
 
 ## Assumptions
 

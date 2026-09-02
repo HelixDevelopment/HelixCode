@@ -104,6 +104,9 @@ submodules/helix_llm/               # module github.com/HelixDevelopment/HelixLL
 │   ├── catalogue/          # NEW — model roster + usage terms + resource requirements
 │   ├── selection/          # NEW — measured host + catalogue -> offered option set
 │   ├── runtime/            # NEW — llama.cpp vs streaming-runtime decision + launch
+│   ├── lifecycle/          # NEW — idle unload, eviction policy, never-evict-while-serving
+│   ├── telemetry/          # NEW — per-model memory/latency/throughput; feeds current-measurement refusals
+│   ├── failover/           # NEW — host lost mid-request; retry policy; user notification
 │   ├── vrambroker/         # EXISTING — lease arbitration; selection feeds it
 │   └── brain/              # EXISTING — Models() is the naming emission point (FR-014)
 ├── cmd/
@@ -168,6 +171,7 @@ on the Fable substrate at xhigh effort (§11.4.209). Specific things this review
 | **Accelerator binding identity** (§11.4.111) | The obvious implementation binds `device 0`. A second card, a boot-order change, or a hot-plug silently re-points it — the exact failure §11.4.111 exists to forbid. | Bind by stable device identity (UUID/PCI address as the platform exposes); make the binding's runtime signature assert the bound identity, and test with the device order reversed. |
 | **Dead `helix-llm` provider config** (§11.4.122) | `config.yaml:155-166` declares provider types nothing loads. It looks live and misleads. Deleting it silently is forbidden; so is leaving a decoy. | Investigate via git history how it became dead (§11.4.124), then ask the operator whether to wire or remove. Not bundled with other work. |
 | **Video generation absent from spec** | `cmd/videogen-boot/` and `services/videogen/` exist, and the original request said "and all others". The spec enumerates text, vision, image, STT, TTS, audio, vector, embedding — but never video. Silently absorbing it widens scope; silently ignoring it leaves an existing service outside the selection regime the feature exists to create. | Operator decision: in scope for this feature, or a tracked follow-up. Flagged, not assumed either way. |
+| **Operational packages added post-analysis** | The initial decomposition was derived from US1's needs, so eviction, telemetry and failover — specified in FR-030..033 and FR-044..050 — had no home in the structure. The task list then inherited the hole while looking complete: tasks that faithfully implement a plan cannot reveal what the plan omitted. | `lifecycle/`, `telemetry/` and `failover/` added above. FR-033 (refusals from *current* measurements) moves to Phase 2, because selection's correctness depends on it rather than on a start-up reading. |
 | **Colibri has no Go binding today** | It is a C runtime with a closed 8-family model roster. Incorporation means a launch/lifecycle integration, not a library import. | Treat as a runtime process under the same lease + health discipline as the existing llama.cpp path; roster membership is catalogue data, not code. |
 
 ## Constitution Re-Check (post-design)
