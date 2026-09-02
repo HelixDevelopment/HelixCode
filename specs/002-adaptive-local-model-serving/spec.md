@@ -14,6 +14,9 @@ branch was created — the git extension hook that would create one is not regis
 - Q: What must the system record and expose about a running model's resource use and performance? → A: Continuous resource + host-health tracking, plus per-request latency and throughput, exposed to users and readable by automated checks
 - Q: How should a HelixLLM-served model be named where users see it? → A: `helixllm/<host>/<model>[:<variant>]` — provenance prefix, serving host, model, optional size/quantisation variant
 - Q: What happens to an in-flight request when its serving host becomes unreachable? → A: Fail clearly naming the host; auto-retry elsewhere ONLY if no output was delivered yet — never silently continue a partial answer on a different model
+- Refinement (research, not a question): streaming-path eligibility is a NAMED-ROSTER check against the runtime's supported set, not an `architecture == MoE` predicate — several well-known MoE models have no support path. Storage headroom is a second, independent axis from memory headroom.
+- Refinement (research, not a question): a model's usage terms are a first-class selection constraint — several of the strongest candidate models in the speech, audio and image families carry non-commercial or revenue-capped terms, so capability and fit alone are insufficient grounds to offer one.
+- Refinement (research, not a question): the non-empty-options guarantee holds PER capability family, not across all families — image and audio *generation* have no processor-only option at an acceptable quality bar, so those families need a stated reason on such hosts rather than a silently empty or unusably-slow offer.
 - Q: When should a running model give up the memory it is holding? → A: Idle timeout unloads unused models; on-demand eviction of the least-recently-used idle model when a new selection needs room; the user is told what was unloaded and why
 
 ## User Scenarios & Testing *(mandatory)*
@@ -46,8 +49,13 @@ model offered that the machine cannot actually hold.
    model options, **Then** only options that fit within that machine's measured headroom are offered,
    and each states its resource cost in terms the user can compare.
 2. **Given** a machine with NO accelerator but ample system memory, **When** the user asks for
-   options, **Then** a real, non-empty set of CPU-served options is offered — the absence of a GPU
-   reduces what is offered but never reduces it to nothing.
+   options, **Then** every capability family that CAN be served acceptably on processor alone offers
+   a real, non-empty set — the absence of a GPU reduces what is offered but never reduces those
+   families to nothing. For a family that genuinely cannot be served acceptably without an
+   accelerator, the system states that plainly, names what the host would need, and offers any
+   remote or deferred alternative it has — it never presents an empty list without explanation, and
+   never offers an option that would technically start but perform so far below the family's usable
+   threshold that no user would accept it.
 3. **Given** a machine with a large discrete GPU, **When** the user asks for the same thing, **Then**
    materially more capable options appear, sized to that accelerator's usable memory.
 4. **Given** a user selects an offered option, **When** the model starts, **Then** it serves requests
@@ -207,7 +215,10 @@ and it produces correct output for a known input.
   CPU capability and still offer every option that genuinely runs there. A host with no accelerator
   but sufficient system memory MUST receive real options, never an empty set.
 - **FR-004**: System MUST offer only model options that the measured host can run within its
-  available headroom, and MUST NOT offer options it cannot support.
+  available headroom, and MUST NOT offer options it cannot support. Headroom MUST be evaluated on
+  BOTH axes independently — memory (system and accelerator) AND free storage — because a model's
+  storage footprint is not implied by its memory footprint. A model whose weights do not fit the
+  host's free disk MUST NOT be offered even when its memory requirement is satisfied.
 - **FR-005**: System MUST express each option's resource cost and expected capability in terms a
   non-expert can compare, without requiring knowledge of model internals.
 - **FR-006**: System MUST re-evaluate available headroom at selection time, so that offers reflect
@@ -271,8 +282,11 @@ and it produces correct output for a known input.
 
 - **FR-026**: System MUST select the execution path per model based on the measured host and the
   model's requirements, preferring the in-memory path whenever the model fits.
-- **FR-027**: System MUST offer the disk-streaming path only for models it can actually serve that
-  way, and MUST label the speed trade-off when doing so.
+- **FR-027**: System MUST offer the disk-streaming path only for models that the streaming runtime
+  actually supports, determined by checking the model against that runtime's declared supported set —
+  NOT by inferring eligibility from the model's architecture. A model may be architecturally suited
+  to streaming and still be unsupported; offering it on that basis would produce an option that
+  cannot run. System MUST label the speed trade-off whenever it offers this path.
 - **FR-028**: System MUST state plainly when a requested model cannot be served by any available path
   on that host, rather than offering an option that will fail.
 - **FR-029**: System MUST continue to serve existing local inference unchanged for users who do not
@@ -358,6 +372,15 @@ and it produces correct output for a known input.
 - **FR-053**: Where a capability is deliberately not in the first release, the system MUST omit it
   entirely rather than expose it in a partial or non-functional state. Absence is acceptable;
   advertised-but-broken is not.
+- **FR-054**: System MUST record, for every offered model, the terms under which it may be used,
+  and MUST NOT offer a model for a usage its terms forbid. Where the user has declared how the
+  output will be used, options whose terms exclude that usage MUST be withheld from selection and,
+  if shown at all, shown as unavailable with the restricting term named — never silently offered and
+  left for the user to discover the restriction later.
+- **FR-055**: When no option can be offered for a requested capability, System MUST distinguish
+  the reason: the host lacks the resources the option needs; no available option supports this
+  host's configuration at all; or every otherwise-suitable option is excluded by its usage terms.
+  These have different remedies and MUST NOT be reported as one generic unavailability.
 
 ### Key Entities
 
@@ -395,9 +418,15 @@ and it produces correct output for a known input.
   what the user can do, rather than a silent failure or a generic error.
 - **SC-009**: Users who do not adopt the new flow see no change in existing local inference behaviour.
 - **SC-010**: On a host with a usable accelerator, offered options reflect its usable memory; on an
-  otherwise-identical host with the accelerator removed, options are offered against system memory
-  and the set is non-empty wherever memory genuinely permits. Neither host is offered an option the
-  other's hardware would be required to run.
+  otherwise-identical host with the accelerator removed, options are offered against system memory,
+  and for every family that is processor-servable the set is non-empty wherever memory genuinely
+  permits. For a family that is not processor-servable, that host receives a stated reason and the
+  requirement it does not meet — never an unexplained empty list, and never an option below the
+  family's usable threshold. Neither host is offered an option the other's hardware would be
+  required to run.
+- **SC-012**: No model whose licence forbids the user's declared usage is ever offered for that
+  usage — verifiable by declaring commercial use and confirming that every non-commercial model is
+  withheld, with its licence named as the reason.
 - **SC-011**: No model file is loaded whose integrity was not verified against its recorded expected
   value, and no model is obtained from a source outside the allowlist — verifiable by attempting both
   and observing refusal.
@@ -445,7 +474,11 @@ building new ones, per the reuse-before-rewrite rule:
 - The disk-streaming runtime under consideration is **not** a general-purpose replacement for the
   existing in-memory runtime. It is specialised: it streams mixture-of-experts weights from disk to
   run models that would not otherwise fit in memory, trading speed for feasibility, and it does not
-  serve arbitrary models. The choice between paths is therefore **not** a symmetric preference
+  serve arbitrary models. **Refined by research 2026-09-02**: its supported set is a NAMED, CLOSED
+  LIST of model families — not a generic "any mixture-of-experts model" capability. Several widely
+  known MoE models have no support path in it despite being architecturally MoE. Eligibility for the
+  streaming path MUST therefore be an allowlist check against the runtime's actual supported roster;
+  an `architecture == MoE` test would offer models that cannot run. The choice between paths is therefore **not** a symmetric preference
   between interchangeable engines — it is "in-memory when the model fits, streaming when it otherwise
   could not run at all." Any plan that treats the two as interchangeable is proceeding on a false
   premise. See Sources below.
