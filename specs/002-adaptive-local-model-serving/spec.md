@@ -18,6 +18,7 @@ branch was created — the git extension hook that would create one is not regis
 - Refinement (research, not a question): a model's usage terms are a first-class selection constraint — several of the strongest candidate models in the speech, audio and image families carry non-commercial or revenue-capped terms, so capability and fit alone are insufficient grounds to offer one.
 - Refinement (research, not a question): the non-empty-options guarantee holds PER capability family, not across all families — image and audio *generation* have no processor-only option at an acceptable quality bar, so those families need a stated reason on such hosts rather than a silently empty or unusably-slow offer.
 - Refinement (research, not a question): the current implementation picks its model from environment variables (`VISIONGEN_MODEL_GGUF`, `VISIONGEN_MODEL_DIR`), which is precisely the static selection this feature replaces — FR-056 draws the boundary so "supports environment configuration" can never be read as "may select the model statically".
+- Refinement (research, not a question): the mandated human-readable name is rejected by BOTH of the target consumer's validators (its alias-name rule and its provider-id rule), the latter being an injection guard because the id is interpolated into a shell alias body and re-parsed on invocation. The name is therefore a value, not an identifier, and a separate charset-safe identifier is derived from it — the guard is never widened to fit the name.
 - Q: When should a running model give up the memory it is holding? → A: Idle timeout unloads unused models; on-demand eviction of the least-recently-used idle model when a new selection needs room; the user is told what was unloaded and why
 
 ## User Scenarios & Testing *(mandatory)*
@@ -242,11 +243,20 @@ and it produces correct output for a known input.
   value, so that verification is possible without contacting the source again.
 - **FR-013**: System MUST allow users to select among offered combinations, including running more
   than one model where the host has headroom for all of them.
-- **FR-014**: System MUST name every offered option in the form
+- **FR-014**: System MUST give every offered option a human-readable identity of the form
   `helixllm/<host>/<model>[:<variant>]` — a fixed provenance prefix, the serving host, the model, and
-  an optional variant segment carrying size or quantisation. The name alone MUST therefore identify
-  the option as HelixLLM-served, name its serving host, and distinguish it from remote provider
-  models, without the user consulting anything else.
+  an optional variant segment carrying size or quantisation. This identity MUST alone identify the
+  option as HelixLLM-served, name its serving host, and distinguish it from remote provider models,
+  without the user consulting anything else. This identity is carried as a VALUE (a model field, a
+  catalogue entry, a displayed label) — it MUST NOT be required to serve as a consumer's internal
+  identifier, because consumer tools legitimately restrict identifier character sets. Where a
+  consumer needs an identifier, System MUST derive a separate one that satisfies that consumer's
+  rules and MUST record which human-readable identity it maps to, so the two never drift apart.
+- **FR-014a**: System MUST NOT satisfy the naming requirement by relaxing, widening, or bypassing any
+  input validation in a consumer tool. At least one consumer restricts identifiers specifically to
+  prevent command injection when the value is later interpolated and re-evaluated; loosening such a
+  check to admit a richer name would trade a naming convenience for a security defect and is
+  forbidden. The derived identifier MUST satisfy the consumer's existing rules as they stand.
 - **FR-015**: System MUST keep this naming scheme stable across releases, because these names are
   written into users' tool configurations; a change to the scheme breaks existing configurations and
   MUST be treated as a breaking change with a migration path, not a cosmetic adjustment.
