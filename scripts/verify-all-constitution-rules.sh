@@ -1279,6 +1279,39 @@ if want_gate G32; then
 fi
 
 # ---------------------------------------------------------------------------
+# G33 — CONST-059 / §11.4.35 canonical-root inheritance clarity
+#       (CM-CANONICAL-ROOT-CLARITY) + the T-P1.06.4 `.specify/memory/` extension
+#
+# CONST-059 names this gate; until now NOTHING implemented it — the anchor was
+# restated across six governance carriers while the check itself did not exist
+# (§11.4.227: a named gate must be implemented or a registered deferral).
+#
+# Clause (d) is the reason it was finally built. `.specify/memory/constitution.md`
+# is a deliberate CONST-059 POINTER (task T-P1.06, done 2026-07-29) that SpecKit
+# reads at every /speckit-plan Constitution Check. Running /speckit-constitution
+# against it would overwrite the pointer with generated principles, creating a
+# THIRD constitution in this repository and re-opening risk R-23. Clause (d)
+# makes that mechanically detectable instead of relying on the file's own prose
+# asking future agents not to do it.
+#
+# Fenced code blocks are stripped before matching: constitution/CLAUDE.md:91 and
+# GEMINI.md:33 carry `## INHERITED FROM ...` inside ```markdown fences as
+# EXAMPLES for consumers, and refusing a correct tree is a FAIL-bluff (§11.4.201).
+# Paired mutation: scripts/tests/canonical_root_clarity_meta_test.sh (8 mutations,
+# incl. M6 which asserts the fenced example does NOT trip the gate).
+# ---------------------------------------------------------------------------
+if want_gate G33; then
+    GATES_RUN=$((GATES_RUN + 1))
+    gate_header "G33 — CONST-059 canonical-root inheritance clarity (CM-CANONICAL-ROOT-CLARITY)"
+    if bash "$ROOT/scripts/gates/canonical_root_clarity_gate.sh" >/tmp/g33-crc.out 2>&1; then
+        gate_pass G33 "$(grep -oE 'checked [0-9]+ item\(s\).*' /tmp/g33-crc.out | tail -1)"
+    else
+        gate_fail G33 "canonical-root inheritance clarity is broken — a consumer stopped inheriting, a canonical carrier started inheriting, or .specify/memory/constitution.md stopped being a pointer (see /tmp/g33-crc.out)" \
+            "$(tail -6 /tmp/g33-crc.out)"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 echo
