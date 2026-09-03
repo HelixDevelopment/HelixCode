@@ -2321,3 +2321,54 @@ findings:
       not there. Plausible is not measured.
     severity: LOW
     status: open — settle on a quiet host
+
+  - id: HXA-testharness-1
+    title: five integration tests need a gitignored BUILD ARTIFACT, and fail because nobody built it
+    detail: |
+      The re-review described helix_agent's 22 failures as "environment-bound
+      and out of scope". I checked rather than inheriting that, because the same
+      description was wrong for helix_llm's integration tests earlier today
+      (OPEN-19 — they needed one line in the test framework, not a service).
+      ESTABLISHED BY READING: bin/helixagent is gitignored (.gitignore:29), i.e.
+      it is a BUILD ARTIFACT, and five integration tests require it:
+        tests/integration/cli_schema_validation_test.go
+        tests/integration/opencode_config_regression_test.go
+        tests/integration/opencode_test.go
+        tests/integration/mcp_sse_endpoint_test.go
+        tests/integration/ensemble_handler_integration_test.go
+      A test that fails because nobody ran `make build` first is a HARNESS gap,
+      not an environment gap. The distinction matters: an environment gap is
+      something the machine cannot provide, and this is something the test could
+      provide for itself, or name in a SKIP, or the harness could build.
+      NOT YET VERIFIED by building — a baseline run was in flight and building
+      mid-run would have invalidated it, which is the stale-baseline trap the
+      laneboot agent hit and diagnosed. Verify by building and re-running.
+    severity: MEDIUM
+    status: open — established by reading; build-and-rerun verification owed
+
+  - id: HXA-testharness-2
+    title: a test reads the operator's personal config and asserts a fact about their machine
+    detail: |
+      tests/integration/cli_schema_validation_test.go:166,
+      TestOpenCodeSchemaValidation, does:
+        configPath := filepath.Join(os.Getenv("HOME"), ".config", "opencode", "opencode.json")
+        data, err := os.ReadFile(configPath)
+        if err != nil { t.Fatalf(...) }
+      It reads the DEVELOPER'S REAL PERSONAL CONFIG and fails hard when absent.
+      Three things are wrong with that, in increasing order of importance:
+        * it fails on any machine where the operator has not installed and
+          configured OpenCode — which is not a defect in this project;
+        * a PASS asserts "this machine's OpenCode config is schema-valid", a
+          fact about the operator's machine rather than about this codebase.
+          The test's subject is wrong, so neither outcome says anything about
+          the code under test;
+        * it reads whatever the operator has in that file.
+      The surrounding table (agentConfigs()) builds ConfigPath under homeDir for
+      several third-party CLI agents, so the file's intent looks like "validate
+      the installed agents' configs". If that is the intent, the absence of an
+      optional third-party tool must be a SKIP naming what is missing, never a
+      Fatalf. If instead it is meant to validate a config THIS project
+      generates, it should generate one into a temp dir and validate that.
+      Either reading makes the current form wrong.
+    severity: MEDIUM
+    status: open — needs a decision on which of the two it is meant to be
