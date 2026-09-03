@@ -2168,3 +2168,46 @@ findings:
       failures. Nothing weakened, nothing skipped.
     severity: HIGH
     status: fixed + guarded
+
+  - id: SECURITY-5
+    title: the security manual documented JWT authentication that does not exist
+    detail: |
+      Found by running the 11.4.124 investigate-before-remove work on OPEN-22
+      (Auth.JWTSecret declared and read by nothing). The field itself is minor.
+      What the investigation surfaced is not.
+      docs/manual/security.md had a "JWT Authentication" section telling
+      operators to set HELIX_AUTH_JWT_SECRET, stating "when set, the system can
+      issue and validate JWT tokens for session-based access", rating the
+      variable "High — token signing key" in its severity table, and listing
+      "Set a strong HELIX_AUTH_JWT_SECRET" on the PRODUCTION HARDENING
+      CHECKLIST. docs/manual/modules.md made the same claim in its module table.
+      There is no JWT anywhere in the server.
+      THE COMBINATION IS THE DEFECT. An operator could set that secret, tick the
+      checklist item, and believe the server was protected — while
+      HELIX_AUTH_API_KEYS sat empty and the server was in open-access mode,
+      answering anyone who could reach it. The document written to prevent that
+      outcome was the thing producing it.
+      VERIFIED, with the instrument sanity-checked against a module that IS
+      imported (digital.vasic.containers, 12 real import sites):
+        * `git log -G 'jwt\.(Parse|NewWithClaims|SigningMethod)' --all` -> 0.
+          No commit in the entire history ever added a JWT library call.
+        * golang-jwt does not appear in go.mod at all.
+        * digital.vasic.auth is a `replace` directive at go.mod:110 with NO
+          matching `require`, imported by no Go file. A replace without a
+          require does nothing.
+        * the only auth enforced is APIKeyAuth — a string comparison, open
+          access when the key list is empty.
+      FIXED at the documentation layer: the section says NOT IMPLEMENTED and
+      states what authentication actually exists; the severity row now reads
+      "None today"; the checklist item is STRUCK THROUGH rather than deleted, so
+      an operator who followed the old list can see it was withdrawn and go
+      re-check that HELIX_AUTH_API_KEYS is genuinely set.
+      The config field is KEPT — removing it would break .env files that set it,
+      and it is where an implementation would land.
+      §11.4.124 VERDICT on OPEN-22: this is not wiring that rotted. It was never
+      built. The field arrived in 48a6479 ("feat: add HelixConfig with env
+      loading and validation") in a commit containing only config.go and its
+      test, and no implementation ever followed. Whether to build JWT auth or
+      drop the field is now an INFORMED decision rather than a blocked one.
+    severity: HIGH
+    status: documentation fixed; whether to implement JWT auth is an operator decision
