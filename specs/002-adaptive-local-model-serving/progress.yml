@@ -1691,3 +1691,75 @@ findings:
       covers the field.
     severity: MEDIUM
     status: open — investigate before removing or wiring
+
+  - id: OPEN-15-CORRECTED
+    title: my OPEN-15 finding was wrong; the endpoint is discarded, not mis-resolved
+    detail: |
+      I recorded that config/config.yaml's provider endpoint
+      "${HELIX_LLM_ENDPOINT:http://localhost:8081}" was "used as a literal URL —
+      a URL that is not a URL", and framed the operator's decision on it.
+      That was WRONG, and the agent established it with a captured probe:
+        REPRO-D  Config declares llm.providers: false
+                 -> the value never reaches any Config field at all
+      LLMConfig has no `providers` field, which is why `llm.providers` sits in
+      inertConfigKeys. The block is DISCARDED, not mis-resolved. Expansion
+      cannot reach a field that does not exist, so there was nothing there to
+      fix; declaring that block is a separate change.
+      The genuine expansion set turned out to be the NOTIFICATION CHANNEL
+      credentials, which the notifications wiring made reachable in the same
+      change — the two tasks interlocked.
+      SECOND premise of mine an agent has corrected today (see SELF-12). Both
+      times the agent verified rather than implementing what I asserted, which
+      is the only reason neither shipped.
+    severity: INFO
+    status: corrected — the original finding was mine and it was wrong
+
+  - id: HXC-notif-wired
+    title: the notifications block now works, and os.Expand was eating dollar signs
+    detail: |
+      The block was reachable by nothing: no field on Config, so viper discarded
+      it whole, and only HELIX_* environment variables ever produced a channel.
+      Reproduced against a config valid in every other respect.
+      NOW WIRED, with environment variables still winning and existing env-only
+      deployments unchanged (verified, not assumed).
+      FOUND EN ROUTE: the expander used os.Expand, which eats `$$`. Harmless
+      while the five expanded fields were hostname-ish; not harmless the moment
+      credentials came into scope — an SMTP password `pa$$word` came out as
+      `pa`. Moved to a ${...}-only regex, which also makes the code match
+      secret_placeholder.go's existing claim that a bare $VAR is never expanded.
+      10 paired mutations, all diff-verified.
+      Mutation M10 is worth recording: deleting a consumed field left the
+      completeness guard GREEN, because the inert register downgrades that key
+      regardless of the struct. That is the register working as designed, not a
+      hole — but it was recorded in the test so nobody later assumes coverage
+      that is not there.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: HXC-prodconfig
+    title: production-config.yaml had an AI transcript pasted into it and 210 lines YAML was already discarding
+    detail: |
+      The file was not valid YAML at all: a stray closing fence at line 569 with
+      no opening fence, then "Now let me create the Phase 3 test
+      implementation:" and a truncated `<function_calls>invoke<invoke name=`
+      fragment. An agent's own narration, including the start of a tool call,
+      written into a shipped config.
+      Beneath that, six duplicate top-level blocks (workers, tasks, llm,
+      logging, notifications twice). YAML keeps only the LAST occurrence, so
+      210 lines were already being discarded — and they are superseded drafts,
+      not stale pastes: the surviving copies carry extra keys.
+      REPAIRED to exactly the extent that needed no judgement. Removal proven
+      safe by the parsed configuration being BYTE-IDENTICAL before and after:
+      213 lines removed, zero change to what the file configures.
+      WHAT IS LEFT IS AN OPERATOR CALL AND IS NOT MADE: 22 keys — including the
+      whole `environments`, `features`, `performance` and `security` sections —
+      are configured at length and read by NOTHING (no Config field at any
+      depth, zero direct viper reads in non-test code). Registered as inert with
+      per-key reasons rather than deleted (which would discard intent nobody
+      authorised discarding) or declared (which would claim the build reads
+      settings it does not). Startup now says so out loud.
+      Worth singling out: `logging.file` is inert while `logging.output` IS
+      read, so the two can disagree and an operator editing the wrong one sees
+      no effect and no explanation.
+    severity: HIGH
+    status: fixed to the unambiguous extent; 22 keys await an operator decision
