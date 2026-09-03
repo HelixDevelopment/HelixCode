@@ -346,17 +346,20 @@ Regression check, same catalogue: `go test ./internal/catalogue/...` ok;
 
 ---
 
-## Appendix A — the entry, ready to apply
+## Appendix A — the entry, as applied
 
-NOT APPLIED. `internal/catalogue/data/text.yaml` was fenced to a concurrent agent
-for this round of work, so this entry is handed over rather than committed. It is
-validated: it was inserted into a copy of the catalogue at the current committed
-content of every data file, and produced the runs above.
+**APPLIED** in helix_llm `b83babf`, on top of `7dd5835` (which includes
+CRITICAL-2's `ce116c5`). It was fenced to a concurrent agent while this
+measurement was taken; the fence was released once that agent landed, and the
+insertion point was re-read against current HEAD before pasting.
 
-Insert into `internal/catalogue/data/text.yaml` at the end of the `entries:` list,
-immediately before the `# DEFERRED` header. Then delete the now-superseded
-deferred record 18 (`mistral-nemo-12b`, ~line 1165), whose `NEEDS: a sourced
-Q4_K_M weight-file size` this measurement answers.
+It sits at the end of the `entries:` list, immediately before the `# DEFERRED`
+header. Deferred record 18 was NOT deleted — it was replaced by a pointer saying
+the entry was promoted and why the researched figure was not carried forward,
+so the trail survives. Three header claims the entry invalidated were corrected
+in the same commit: the file no longer says every figure comes from the research
+pass, no longer says no digest exists anywhere in it, and its deferred count
+goes 24 → 23.
 
 ```yaml
 
@@ -434,32 +437,50 @@ an entry may never assert its own listedness), and `integrity.digest_key`
 `storage_required_bytes: null`, which decodes silently to 0 and is then refused
 by `Entry.Validate`. The entry above is written in the live shape.
 
-## Appendix B — the admission test, ready to apply
+## Appendix B — the admission test, as applied
 
-NOT APPLIED, because it fails until Appendix A lands. Add as
-`internal/selection/open24_agent_lane_admission_test.go`; in RED_MODE it reads a
-pre-change copy of the catalogue, so point `dir` at wherever that is kept.
+**APPLIED** in the same commit as
+`internal/selection/open24_agent_lane_admission_test.go`.
+
+One change from the version used during measurement: RED_MODE no longer reads a
+pre-change copy of the catalogue from a scratch directory. It removes the entry
+from the loaded set instead — reproducing at the DATA seam, since the defect WAS
+the absence of that data. The guard now needs no path outside the repository and
+keeps working wherever the suite runs.
 
 ```go
 package selection_test
 
 // OPEN-24: the agent lane's configured candidates were absent from the
 // catalogue, so an operator holding working weights was REFUSED rather than
-// served — a real narrowing (§11.4.122), not a tidy-up.
+// served. That is a narrowing of what the product can do, not a tidy-up, and
+// the refusal it produced said so in the worst possible way: "this host
+// provides no catalogue-entry … more memory does not help;
+// remedy=different-approach". The operator's host was fine. The catalogue was
+// empty.
+//
+// mistral-nemo-12b is now a live entry, carrying a footprint that was MEASURED
+// by running the weights rather than read off a vendor page — see
+// specs/002-adaptive-local-model-serving/research/06-agent-lane-footprint-measurements.md.
+// This is the guard that it stays offerable.
 //
 // POLARITY SWITCH (§11.4.115) — one source, two roles:
 //
-//	RED_MODE=1     — reproduction against the PRE-CHANGE catalogue: the model
-//	                 is withheld for RequirementCatalogueEntry ("more memory
-//	                 does not help"). This is the defect, present.
-//	RED_MODE unset/0 (DEFAULT) — standing guard against the catalogue carrying
-//	                 the MEASURED entry: the same model on the same fixture
-//	                 host is OFFERED.
+//	RED_MODE unset / RED_MODE=0 (DEFAULT, post-change) — standing regression
+//	                 guard: the entry is OFFERED to an accelerator-bound agent
+//	                 lane on a host that can run it.
+//	RED_MODE=1     — reproduction of the pre-change catalogue, by removing the
+//	                 entry from the loaded set: the model is absent, and the
+//	                 lane can only refuse it for the reason OPEN-24 recorded.
 //
-// The host is a fixture, and deliberately so: this asserts the ADMISSION
-// decision, which is a property of the catalogue and the selection rules. The
-// footprint the rules are fed is not a fixture — it was measured by running
-// the weights (research/06-agent-lane-footprint-measurements.md).
+// Honest boundary (§11.4.6). RED_MODE reproduces at the DATA seam — it drops
+// the entry from a loaded catalogue rather than checking out the pre-change
+// file — because the defect WAS the absence of that data. It needs no external
+// fixture and no path outside the repository, so it keeps working wherever the
+// suite runs.
+//
+// The host is a fixture, and only the host is. The figures the selection rules
+// are fed are the measured ones, read from the shipped catalogue.
 
 import (
 	"os"
@@ -474,10 +495,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// open24Model is the entry this guard is about.
+const open24Model = "mistral-nemo-12b"
+
+// These are the MEASURED figures. They are asserted, not merely read, because
+// the whole point of OPEN-24 is that the number an operator is admitted on has
+// to be one somebody produced by running the thing. A later edit that quietly
+// restores the researched 7623566950 B — a published VRAM figure, 2.3 GiB
+// BELOW the measured CPU footprint — would offer this model to hosts that then
+// cannot run it, and would fail here.
+const (
+	open24MeasuredMemoryBytes  = uint64(9956106240)
+	open24MeasuredStorageBytes = uint64(7477208192)
+)
+
 func open24RedMode() bool { return os.Getenv("RED_MODE") == "1" }
 
-// hostThatCanActuallyRunIt: RAM and card both comfortably above the MEASURED
-// 9496 MiB. The agent lane is AcceleratorBound, so the card matters too.
+// open24Host has RAM and a card both comfortably above the measured figure.
+// The card matters: every *-boot lane is AcceleratorBound, so the memory
+// figure is checked against the device as well as against host RAM.
 func open24Host() capability.HostCapabilityProfile {
 	p := fixtures.SingleAccelerator()
 	p.HostIdentity = "fixture-open24-can-run-nemo"
@@ -495,17 +531,35 @@ func open24Host() capability.HostCapabilityProfile {
 }
 
 func TestAgentLaneAdmitsTheMeasuredMistralNemo(t *testing.T) {
-	dir := "../catalogue/data" // carries the measured entry
-	if open24RedMode() {
-		dir = "/tmp/openrun24/pristine" // the catalogue as it shipped, without it
-	}
-	loaded, err := catalogue.Load(dir)
+	loaded, err := catalogue.Load(shippedCatalogueDir)
 	require.NoError(t, err)
 
-	host := open24Host()
+	entries := loaded.Entries()
+	var entry *catalogue.Entry
+	for i := range entries {
+		if entries[i].ModelID == open24Model {
+			entry = &entries[i]
+		}
+	}
+
+	if open24RedMode() {
+		// The pre-change catalogue exactly: the entry is not in it.
+		kept := entries[:0:0]
+		for _, e := range entries {
+			if e.ModelID != open24Model {
+				kept = append(kept, e)
+			}
+		}
+		entries, entry = kept, nil
+	} else {
+		require.NotNil(t, entry,
+			"the measured entry has been removed from the shipped catalogue; "+
+				"OPEN-24's narrowing is back and operators holding this GGUF are refused again")
+	}
+
 	res, err := selection.Select(selection.Request{
-		Profile:          host,
-		Entries:          loaded.Entries(),
+		Profile:          open24Host(),
+		Entries:          entries,
 		Families:         []catalogue.CapabilityFamily{catalogue.FamilyText},
 		DeclaredUsage:    catalogue.UsageCommercial,
 		Now:              time.Now().UTC(),
@@ -519,40 +573,33 @@ func TestAgentLaneAdmitsTheMeasuredMistralNemo(t *testing.T) {
 
 	var offered *selection.Option
 	for i := range fr.Offered {
-		if fr.Offered[i].ModelID == "mistral-nemo-12b" {
+		if fr.Offered[i].ModelID == open24Model {
 			offered = &fr.Offered[i]
-		}
-	}
-	// The Entry itself, for the validation claims below.
-	var entry *catalogue.Entry
-	for _, e := range loaded.Entries() {
-		if e.ModelID == "mistral-nemo-12b" {
-			ee := e
-			entry = &ee
 		}
 	}
 
 	if open24RedMode() {
-		require.Nil(t, offered, "RED: pre-change catalogue must not offer it")
-		for _, w := range fr.Withheld {
-			if w.ModelID == "mistral-nemo-12b" {
-				t.Logf("RED reproduced: withheld reason=%v unsupported=%+v", w.Reason, w.Unsupported)
-			}
-		}
-		t.Logf("RED: mistral-nemo-12b is absent from the catalogue entirely; %d text options offered", len(fr.Offered))
+		require.Nil(t, offered,
+			"RED: with the entry removed the lane must not be able to offer it")
+		t.Logf("RED reproduced: %s is absent from the catalogue; the lane can only "+
+			"refuse it as an unknown model, which is OPEN-24. %d other text options offered.",
+			open24Model, len(fr.Offered))
 		return
 	}
 
 	require.NotNil(t, offered,
-		"GREEN: the measured entry must be OFFERED to the agent lane on a host that can run it")
+		"GREEN: a host with 40 GiB free and a 22 GiB card can run a 9496 MiB model; "+
+			"if it is not offered, admission has regressed")
 	require.Equal(t, "q4_k_m", offered.Variant)
-	require.Equal(t, uint64(9956106240), offered.Cost.MemoryRequiredBytes,
-		"the offered figure must be the MEASURED one")
-	require.Equal(t, uint64(7477208192), offered.Cost.StorageRequiredBytes)
-	require.NotNil(t, entry)
+	require.Equal(t, open24MeasuredMemoryBytes, offered.Cost.MemoryRequiredBytes,
+		"the figure the lane admits on must be the MEASURED one")
+	require.Equal(t, open24MeasuredStorageBytes, offered.Cost.StorageRequiredBytes)
+
 	require.NoError(t, entry.Validate())
 	require.NoError(t, entry.ValidateForAcquisition(),
-		"digest was verified on this host, so the acquisition gate must pass too")
+		"this entry's digest was verified against the bytes on disk, so unlike every "+
+			"other entry here it must also pass the gate that precedes touching a weight file")
+
 	t.Logf("GREEN: OFFERED %s memory=%dMiB storage=%dMiB source=%s",
 		offered.Identity,
 		offered.Cost.MemoryRequiredBytes/(1024*1024),
@@ -560,3 +607,27 @@ func TestAgentLaneAdmitsTheMeasuredMistralNemo(t *testing.T) {
 		entry.Source)
 }
 ```
+
+---
+
+## Follow-up, flagged and NOT started
+
+The GPU situation changed while this measurement was running. `/usr/bin/llama-server`
+is still the CPU-only Debian build, so **every figure above stands exactly as
+taken** — but the RTX 3060 is now usable through a Vulkan llama.cpp build at
+`~/opt/llamacpp_gpu/current`, reported at 37/37 layers offloaded and ~67-108 tok/s
+against the 0.87-1.64 tok/s measured here on CPU.
+
+Two questions that opens, neither of which is in scope for OPEN-24:
+
+1. **Do GLM-4.7-Flash and DeepSeek-Coder-V2-Lite become measurable on 12 GiB of
+   VRAM?** DeepSeek at 9.65 GiB plausibly fits; GLM at 17.06 GiB plausibly does
+   not. Neither is answerable without trying, and DeepSeek would still be blocked
+   on its unenumerated `license: other` regardless of the outcome.
+2. **Does mistral-nemo-12b need a second, device-path figure?** The 9956106240 B
+   recorded here is a host-RAM, CPU-backend measurement, and 4886 MiB of it is a
+   `CPU_REPACK` buffer that has no meaning on a GPU. The agent lane is
+   `AcceleratorBound` and spends this figure on the card, so a GPU-path
+   measurement would very likely be materially different — and lower. That is the
+   OPEN-25 shape, and it wants fixing as its own change rather than as a second
+   number bolted onto this entry.
