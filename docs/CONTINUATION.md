@@ -373,8 +373,17 @@ programme state. Out-of-sync continuation is a CRITICAL DEFECT — see
 
 ## TL;DR — Resume in 30 seconds
 
+> ⚠️ **CORRECTED 2026-09-03 (RESUME rev 21).** Two things below were wrong and
+> a fresh session acting on them would have been misled immediately:
+> step 1's path **does not exist on this host** (nor does the one RESUME rev 20
+> named — three docs, three different wrong paths), and step 11's "No active
+> programme" is **false**: feature 002 `adaptive-local-model-serving` is
+> mid-execution at 89/97 tasks with ~20 open findings. Read `RESUME.md` FIRST;
+> it is the §11.4.131 standing file and is current. The numbered list below is
+> preserved for provenance, with step 1 corrected in place.
+
 If you are a fresh CLI agent picking this up:
-1. `cd /run/media/milosvasic/DATA4TB/Projects/HelixCode`
+1. `cd /home/milosvasic/Projects/helix_code`
 2. Read this file end to end.
 3. Read `docs/improvements/PROGRESS.md` ("Current focus" + active task list).
 4. The CLI-Agent Fusion programme (P0-P5) is COMPLETE.
@@ -384,7 +393,12 @@ If you are a fresh CLI agent picking this up:
 8. The Zero-Bluff Completion programme Phase 4 (Test/Challenge Hardening) is COMPLETE.
 9. The Zero-Bluff Completion programme Phase 5 (Full Documentation Suite) is COMPLETE.
 10. **The Zero-Bluff Completion programme is COMPLETE (all 5 phases shipped).**
-11. No active programme. Backlog / parking-lot items listed under "Next" at the bottom of this file.
+11. ~~No active programme.~~ **Superseded — see the correction above.** Feature
+    002 `adaptive-local-model-serving` is the active programme
+    (`specs/002-adaptive-local-model-serving/`). Its findings ledger,
+    `progress.yml`, is the authoritative record of what is broken and what has
+    been proven about it. Backlog / parking-lot items remain under "Next" at the
+    bottom of this file.
 
 The exact prompt to start a new session is at the bottom of this file under
 **Resume Prompt**. Copy-paste it verbatim into a new Claude Code (or any other
