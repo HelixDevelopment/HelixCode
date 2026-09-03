@@ -3570,3 +3570,47 @@ findings:
       genuinely completes a request.
     severity: HIGH
     status: root cause established; fix + local backend + systemd dispatched in parallel
+  - id: ROOT-2
+    title: helixagent discovers zero providers because 33 of 34 matching key vars are absent from its environment
+    detail: |
+      The second half of why nothing is usable. helixagent returns
+        503 {"type":"no_provider_available",
+             "message":"All providers failed: no provider in the chain was able
+                        to handle the request"}
+      and its startup pipeline logs "Discovered providers count=0 / Verified
+      providers verified=0" after checking 44 candidates.
+      I first recorded this (BOOT-7) as "the operator's keys live somewhere
+      helixagent does not look", implying a NAME mismatch. That was wrong, and
+      the correction matters because it changes the fix from "teach it new
+      names" to "give it the file".
+      MEASURED deterministically (LC_ALL=C; the default locale's collation
+      silently mis-sorted the first attempt and comm warned about it — worth
+      remembering, an unsorted comm quietly produces a wrong intersection):
+        helixagent scans      137 candidate provider env-var names
+                              (impl: internal/verifier/startup.go)
+        operator keys file has 46 key vars
+        INTERSECTION          34
+        present in the running helixagent process env:  1
+        ABSENT:                                        33
+      So the names ALREADY AGREE. helixagent looks for exactly what the
+      operator has. The 33 absent ones include DEEPSEEK_API_KEY, GROQ_API_KEY,
+      MISTRAL_API_KEY, OPENROUTER_API_KEY, NVIDIA_API_KEY, HUGGINGFACE_API_KEY,
+      GEMINI_API_KEY, CHUTES_API_KEY, CEREBRAS_API_KEY, FIREWORKS_API_KEY,
+      KIMI_API_KEY, ZAI_API_KEY — and the Claude Toolkit independently verifies
+      providers backed by those same keys as working, so they are live.
+      CAUSE IS MINE: I started helixagent by hand with only the .env I had just
+      created for it (JWT_SECRET). The provider keys live in the keys file the
+      toolkit reads ($HOME/api_keys.sh by default, CMA_KEYS_FILE overridable),
+      and helixagent never saw it.
+      FIX: the helixagent unit needs BOTH env sources. Routed to the systemd
+      stream, with the caution that systemd EnvironmentFile parses KEY=value
+      only and does NOT execute shell — if the keys file uses `export` or any
+      interpolation, it must be sourced via an ExecStart wrapper or converted,
+      not pointed at naively.
+      WHY IT MATTERS BEYOND helixagent: the toolkit can only mark a provider
+      `verified` once something genuinely completes a request. ROOT-1 fixes
+      "cannot connect"; this fixes "connected but nothing upstream to serve".
+      Both are needed before the operator's `claude-providers list` shows a
+      Helix entry.
+    severity: HIGH
+    status: root cause established; routed to the systemd stream for EnvironmentFile wiring
