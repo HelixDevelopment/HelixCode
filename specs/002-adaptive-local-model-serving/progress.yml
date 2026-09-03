@@ -1557,3 +1557,137 @@ findings:
       it". The actual result was one failing package.
     severity: LOW
     status: recorded — lesson
+
+  - id: OPEN-17-18-resolved
+    title: selection and the broker now agree on headroom; commitments charge the card they were weighed against
+    detail: |
+      Both reproduced with captured output before fixing.
+      GAP 1: card free=11776 MiB, model needs=10240 MiB, broker headroom=2048.
+        SELECTION offers: true.  BROKER admits: false.
+        A user was shown a model, chose it, and met the refusal afterwards.
+      GAP 2: two 16 GiB models onto one 24 GiB card — after placement 1 the
+        fleet still reported 24576 MiB free, and placement 2 succeeded.
+        32 GiB committed to a 24 GiB card.
+      WHERE THE HEADROOM IS STATED: internal/runtime, in SelectionReserve(),
+      which READS vrambroker.HeadroomBytes rather than copying it. Pure
+      selection keeps no runtime import. internal/runtime/lease.go was already
+      the right seam — its own doc comment describes this exact defect ("a lane
+      could offer a model the broker would then refuse, and the user met that
+      refusal after choosing") and it already imports both packages.
+      The composition roots are PLURAL (videogen/imagegen/visiongen-boot), so
+      stating it in one would leave the others disagreeing with the gate; they
+      state it by calling, not by repeating.
+      THE ANTI-DRIFT TEST IS NOT A HARDCODED 2 GiB — which was the trap. It
+      drives BOTH real deciders (the broker's own arithmetic, and selection
+      under the reserve the binaries pass) across a sweep whose points are all
+      derived from HeadroomBytes, requiring agreement at every one. Change the
+      constant and the fixtures move with it; leave selection uninformed and the
+      answers diverge inside the band.
+      DEVICE IDENTITY: fits() records the stable DeviceIdentity the offer was
+      weighed against; commit() reads it off the offer rather than re-deriving,
+      so the card judged able to hold the model is the card charged, and Release
+      credits the same one. Per-device rather than host-wide also buys the
+      honest positive: a two-card host still takes a second model the first card
+      could no longer hold.
+      4 paired mutations, each diff-verified — including one that charges
+      Accelerators[0] instead of the recorded identity, which fails the
+      order-invariance test. That is the 11.4.111 defect reintroduced and caught.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: NOTE-3
+    title: how a flake was ruled out properly, worth copying
+    detail: |
+      internal/lifecycle/TestEvict_NeverUnloadsUnderAnInFlightRequest_Concurrent
+      failed once in ~6 full-suite runs during the headroom work.
+      The agent did NOT assume it was unrelated — it noted that lifecycle DOES
+      import vrambroker, which is exactly the dependency edge that would make it
+      its own fault. It then: reproduced the failure deterministically under
+      GOMAXPROCS=1; read the failing assertion (the test's own LIVENESS
+      precondition, serving-refusals=0 — "the contention window never opened" —
+      while the actual FR-047 correctness invariant held at 0 violations); and
+      ran the same test under the same conditions in an isolated worktree at the
+      commit BEFORE its own, getting an identical failure with identical
+      counters. Its whole diff was 23 insertions inside a function lifecycle
+      never calls.
+      That is the standard: a dependency edge exists, so prove it rather than
+      asserting it. The assertion is genuinely flaky under CPU starvation and
+      deserves a ticket in its owning area.
+    severity: INFO
+    status: recorded — and lifecycle's flaky liveness assertion is worth a ticket
+
+  - id: OPEN-21
+    title: Fleet has no production caller, so the device ledger is correct but unexercised
+    detail: |
+      Left open by the headroom agent. Fleet is exercised only by tests today,
+      so the per-device commitment accounting it now does correctly is not yet
+      reached by a shipping binary. If a production caller appears it must pass
+      runtime.SelectionReserve() for the same reason the boot roots do, or it
+      will reintroduce Gap 1 for its own path.
+      Also noted: agentgen-boot does not use selection at all — it acquires
+      against a config-derived figure — so there was nothing to wire there.
+    severity: MEDIUM
+    status: open
+
+  - id: SELF-12
+    title: I gave an agent a false premise and it correctly refused to act on it
+    detail: |
+      I framed the empty-secret decision to the operator as "an empty JWT
+      signing key is as dangerous as a placeholder one, arguably worse — it
+      looks intentional." The operator decided on that framing. The framing was
+      WRONG for helix_llm, and the agent established it rather than implementing
+      what I asked.
+      What it found, with citations: every credential in that codebase is
+      SELF-GATING — presence IS the enable-switch and absence is a documented
+      off-state (9 provider keys gated `!= ""`; empty APIKeys means open access
+      by design; RedisPassword gated by RedisHost). And Auth.JWTSecret has ZERO
+      consumers: no JWT import outside tests, golang-jwt not a direct dependency,
+      the auth submodule replace-only and never imported. Its own configuration
+      doc says "Leave empty to disable JWT auth."
+      So "must be supplied" would have refused EVERY current deployment,
+      including this repo's own .env.example, which ships both auth vars blank.
+      That is the outage I warned it about, and my own premise was the thing
+      pointing at it.
+      IT IMPLEMENTED THE CORRECT RULE INSTEAD: must be non-blank ONCE SUPPLIED.
+      Not vacuous — it catches a live defect. Measured: APIKeys="" -> 200,
+      APIKeys="   " -> 401 on EVERY request including the correct key,
+      APIKeys="real-key" -> 200. Neither open nor protected: silent total
+      lockout, from a config that validated cleanly.
+      It stated prominently, not buried, that HELIX_AUTH_JWT_SECRET="" still
+      loads — so the operator can see their decision was narrowed and why.
+      LESSON FOR ME: I wrote a brief asserting a danger I had not verified in
+      that codebase, and asked the operator to decide on it. The brief should
+      have said "verify this holds here first" — which, fortunately, its
+      discipline section did.
+    severity: MEDIUM
+    status: recorded — decision was narrowed on evidence, operator should know
+
+  - id: HXLLM-blank-credential
+    title: a whitespace-only credential locked out every request while validating cleanly
+    detail: |
+      Found by the empty-secrets agent while deriving required-vs-optional.
+      APIKeys set to "   " passes validation, then rejects every request
+      including the correct key — neither open access nor protected access, and
+      nothing anywhere says why.
+      FIXED: a credential must be non-blank once supplied.
+      Mutation D is worth recording: echoing the OFFENDING value initially
+      PASSED the whole suite, because the no-leak test only checked NEIGHBOURING
+      secrets. Caught by an independent review round, fixed, re-run.
+      The agent also reported hitting a U+00A0 non-breaking space that made an
+      earlier assertion check for a string that never appears — the same
+      false-pass class, from an invisible character.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: OPEN-22
+    title: Auth.JWTSecret is declared, configured, documented — and read by nothing
+    detail: |
+      Established while deriving the required-secret set. Declared since it was
+      introduced, never read; the auth submodule is present in go.mod as a
+      replace-only entry and never imported.
+      NOT acted on, correctly — 11.4.124 requires investigating how a thing
+      became unwired before removing it, and that investigation has not been
+      done. If JWT auth is wired later, the blank-credential guard already
+      covers the field.
+    severity: MEDIUM
+    status: open — investigate before removing or wiring
