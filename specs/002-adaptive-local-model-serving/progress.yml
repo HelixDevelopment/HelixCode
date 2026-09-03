@@ -2765,3 +2765,69 @@ findings:
       correct as written.
     severity: MEDIUM
     status: fixed + guarded
+
+  - id: T055-ROUND3-NOGO
+    title: round 3 is NO-GO — two new findings, and one refutes a premise I endorsed
+    detail: |
+      All five round-2 items HOLD, verified. Both new findings sit exactly in
+      the seams the brief asked the reviewer to attack, which is the argument
+      for asking specifically rather than asking generally.
+      F-1 (MEDIUM) — THE RETIRED 404 FIRES FOR IDENTIFIERS A DEPLOYMENT IS
+      PUBLISHING RIGHT NOW, and the premise it rests on is false twice over:
+        * llamacpp.go:84-87 returns the LOOPBACK LITERAL VERBATIM when
+          thisMachineName() is "" — which happens whenever os.Hostname() is
+          `localhost` or `localhost.localdomain`, the DEFAULT ON MANY VMs AND
+          LIVE IMAGES. With the embedded server forcing 127.0.0.1, such a
+          machine publishes helixllm-127-0-0-1-… live. That also re-opens the
+          two-hosts-collide defect f63b96f fixed, on that class of machine.
+        * namesNoMachine accepts localhost.lan, localhost-2 and
+          localhost.<anything>, which sanitise into the retired prefix.
+      Reproduced across five hosts for the SAME event (model unlisted, provider
+      up, host unchanged): 127.0.0.1 / localhost / localhost.lan /
+      localhost.localdomain all give 404 with the message "the serving host was
+      renamed" — FALSE — while gpu-01 gives 503. The same event maps to a
+      permanent or a temporary answer depending only on the machine's hostname.
+      The route test's only near-miss case was `localhosting`, which is why it
+      survived.
+      MY PART IN THIS: I recommended the bounded-set approach to the operator on
+      the argument that the retired renderings are "an exactly identifiable set
+      the server knows it used to publish and no longer does". The second half
+      of that is what is false. I took derive.go's stated premise as established
+      rather than checking whether ServingHost could still emit those hosts —
+      the same class of error as SELF-12 and OPEN-15, and the third time this
+      programme has been bitten by a premise asserted in a comment.
+      THE REAL REPAIR is the reviewer's first step: make ServingHost never
+      return a loopback literal, so the premise is true BY CONSTRUCTION rather
+      than by assertion. The registry-aware check is the belt to that braces.
+      F-2 (MEDIUM) — THE TOOLKIT GUARD CAN BE DELETED AND ITS OWN REPO NOTICES
+      NOTHING. _CMA_HELIXLLM_SERVING_JQ does two jobs (what gets exported, and
+      which hosts count as serving for the retirement gate), and NO test in that
+      repo exercises it against a withheld entry. The reviewer removed the
+      availability clause on a throwaway copy and the suite returned 71 passed,
+      0 failed. With it gone, withheld entries — which now carry
+      model_identity — are exported as usable AND count as serving evidence, so
+      the data-loss gate reopens through the front door.
+      The only assertion on that filter is a COPIED LITERAL in the other repo
+      (withheld_models_route_test.go:170). A copy in another repository is not a
+      test of the script; it is a second statement of the same fact that drifts
+      silently. Third time this programme has met that shape — after the two
+      precision lists and the two withheld vocabularies.
+      Both dispatched.
+    severity: HIGH
+    status: NO-GO — both fixes dispatched
+
+  - id: NOTE-6
+    title: what round 3 confirms about iterating to GO
+    detail: |
+      Round 1 found 7. Round 2 found 4, THREE OF THEM CREATED BY ROUND 1'S
+      FIXES. Round 3 found 2, both new, neither a regression of round 2.
+      The count is falling and the character is changing — round 2's were
+      consequences of fixes, round 3's are premises that were never checked.
+      That is what §11.4.134's iterate-to-a-clean-GO is for, and it would have
+      been easy to stop after round 2 with "all findings addressed", which was
+      true and would have shipped a 404 that fires for live identifiers.
+      Also worth recording: the reviewer verified all five round-2 items rather
+      than assuming its own prior findings were fixed, and it separated [run]
+      from [read] for every claim.
+    severity: INFO
+    status: recorded
