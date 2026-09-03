@@ -1,6 +1,8 @@
 # RESUME — session resumption record (§11.4.131)
 
-**Rev 21 · 2026-09-03 ~07:30 CEST.** Supersedes rev 20 (2026-08-14).
+**Rev 22 · 2026-09-03 ~08:20 CEST.** Supersedes rev 21 (same morning) and
+rev 20 (2026-08-14). Rev 21 fixed the broken paths; this revision brings the
+work state current after a long fix round.
 
 Rev 20 was three weeks stale and **its first command did not work**: it said to
 `cd /home/milos/Factory/projects/tools_and_research/helix_code`, which does not
@@ -54,9 +56,10 @@ Feature **002 `adaptive-local-model-serving`** is mid-execution:
 `specs/002-adaptive-local-model-serving/`.
 
 - **89 of 97 tasks** complete (`/usr/bin/grep -c '^- \[x\]' .../tasks.md`).
-- **69 findings** recorded in `progress.yml`, ~20 still open.
-- Nothing is pushed. The meta-repo was 4 commits ahead of its upstream and
-  `helix_llm` 11 ahead when this was written.
+- **93 findings** recorded in `progress.yml`. Roughly 20 open, and the open ones
+  are now mostly decisions rather than unfinished work — see §5.
+- Nothing is pushed. When this was written: meta-repo 13 ahead of upstream,
+  `helix_llm` 20 ahead, `helix_agent` 3 ahead.
 
 The 8 open tasks are NOT stalled work. Four (`T037`, `T055`, `T068`, `T084`)
 are `[REVIEW]` tasks that **already ran and returned findings**; §11.4.134
@@ -83,15 +86,42 @@ paired mutation that was `diff`-verified as actually applied.
 | `redis.db` was mis-tagged `database`, so **every deployment used Redis DB 0** whatever the operator configured. | meta `ba7f6133` |
 | The videogen lane could plan a build the service refuses to load (two precision lists disagreed). | `helix_llm` `2167525` |
 
+Landed later the same morning:
+
+| What was wrong | Where |
+|---|---|
+| The HelixCode and OpenCode exporters had NO CALLER — those artifacts were unobtainable by any user. Git history showed never-completed wiring, not rot, so completing was right. | `helix_llm` `f63b96f` |
+| The published identity named `127.0.0.1` on every machine, so it named no machine AND collided across machines; the toolkit's `group_by` then silently dropped the second host. | `helix_llm` `f63b96f` |
+| Selection and the broker disagreed about headroom: a 10 GiB model on an 11.5 GiB card was offered and then refused. Two placements could also each be told the same card was free. | `helix_llm` `087947d` |
+| `agentgen-boot` took its model from configuration and its VRAM figure from a SECOND env var a human had to keep in step. Naming a 19.5 GiB model with the figure untouched gave ADMIT-OK and exit 0. | `helix_llm` `0c43b11` |
+| A listing of nothing returned `"data": null` with no reason — a body that reads as malformed, from the branch next to the one documenting that exact rule. | `helix_llm` `ab34fa8` |
+| A request cancelled BEFORE it started could still complete: `select` raced an already-ready `ctx.Done()` against an already-ready response, and Go picks at random. 39/40 before, 40/40 after. | `helix_llm` `6fba621` |
+| An unpaired bracket in a configured host silently discarded a NAMED PRODUCTION HOST and connected to loopback (`db.prod.internal[::1` → `::1`). | `helix_agent` `be54764d` |
+| `production-config.yaml` was not valid YAML — an AI assistant's transcript had been pasted into it — and beneath that, 210 lines YAML was already discarding. | meta `4e2d742c` |
+| The `notifications:` block reached nothing; and the expander used `os.Expand`, which eats `$$`, so an SMTP password `pa$$word` became `pa`. | meta `721f6c6e` |
+| A whitespace-only credential validated cleanly and then rejected every request including the correct one. | `helix_llm` `ad813ef` |
+
 **Two lessons worth carrying forward**, both recorded in `progress.yml`:
 
 - *A fix that breaks a sibling gate is not automatically a stale gate.* The
   placeholder fix segfaulted on a nil optional section; its own tests missed it
   because their fixture populated that section, and a bcrypt guard caught it.
   Reconciling the gate instead of investigating would have shipped a crash.
-- *"No output" is ambiguous between "clean" and "broken".* This bit three
-  times: a `pgrep` waiter that matched itself, a mutation `gofmt` silently
-  prevented from applying, and a crashed `grep`. Always assert the check ran.
+- *"No output" is ambiguous between "clean" and "broken".* This bit FIVE times,
+  including twice against me: a `pgrep` waiter that matched itself, a mutation
+  `gofmt` silently prevented from applying, a crashed `grep`, a test log I had
+  filtered myself and then counted, and a rejection message my own filter cut
+  off. Always assert the check ran.
+- *A flaky test and a real race look identical from the failure rate.*
+  `TestLSPClient_ContextCancellation` was written off as flaky by two separate
+  agents. The question that settled it was not how often it failed or whether it
+  passed in isolation — both were true — but whether the scenario contained any
+  LEGITIMATE timing. A context cancelled before the call contains none, so a
+  random outcome could only be a defect.
+- *A review finding is a place to look, not a thing to implement.* Three
+  severity claims from one review did not survive verification, and in each case
+  the fix that shipped differs from the fix the report implied. Two premises of
+  MY OWN also turned out false and were caught by the agents I gave them to.
 
 ---
 
@@ -127,6 +157,21 @@ Not defects — deliberate, and worth knowing before someone reports them as bug
 - **13 credentials remain exposed and unrotated.** The operator's standing
   decision is "just keep the record" — do not add rotation tooling; keep the
   documented list current.
+- **The agent lane's three former candidates are not in the catalogue**, so an
+  operator serving Mistral-Nemo-2407, GLM-4.7-Flash or DeepSeek-Coder-V2-Lite
+  through it will now be REFUSED. That is the flip side of the FR-056 fix: those
+  three never had a measured footprint, which is exactly what the fixed 9 GiB
+  placeholder stood in for. Resolve by measuring them on a host that HAS the
+  GGUFs and adding catalogue entries with recorded provenance — or by accepting
+  the narrower set. Do not estimate the figures. `OPEN-24`.
+- **Five of six text catalogue entries carry `requires_accelerator: false`**, so
+  selection skips the device axis and a host-RAM figure reaches a VRAM broker.
+  The CRITICAL-5 shape in a narrower form; the vision lane has it too. `OPEN-25`.
+- **`internal/lifecycle`'s concurrent-evict test fails under CPU contention**,
+  on its own LIVENESS precondition rather than the invariant it guards. Unlike
+  the LSP case this scenario does contain legitimate timing, so it is a genuine
+  flake — but it should retry or SKIP with a reason rather than FAIL and imply
+  the invariant broke. It has already cost two agents time. `OPEN-23`.
 
 ---
 
