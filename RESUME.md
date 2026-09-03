@@ -177,9 +177,23 @@ Not defects — deliberate, and worth knowing before someone reports them as bug
 
 ## 6 · House rules that bit someone this session
 
-- **Stage by path, never `git add -A`.** Multiple agents share this checkout.
-  One broad `git add` earlier swept another agent's in-flight file into an
-  unrelated 46-file commit.
+- **Staging by path is NOT enough. Use `git commit -- <paths>`.** Multiple
+  agents share this checkout, and `git add <path>` adds to the index while
+  `git commit` commits the WHOLE index — including whatever another agent
+  staged before you got there. A broad `git add -A` swept an in-flight file
+  into a 46-file commit early in the session; later, staging exactly one file
+  by path swept 1424 lines of another agent's gateway work into a commit
+  titled "docs(faq)". The second happened AFTER the first lesson was written
+  into this file. Either use the pathspec form, or read
+  `git diff --cached --stat` immediately before committing and confirm it
+  lists only your files.
+- **A git lock here is usually contention, not deadlock.** Something in this
+  environment runs `git status --porcelain` periodically and it takes
+  `.git/index.lock` (status refreshes the index). It is a live holder, so do
+  NOT remove the lock — retry with a short backoff; it clears in about a
+  second. Verify liveness before ever considering removal, and note that a
+  `stat` on an absent lock returns 0, which turns an "age" calculation into
+  epoch-seconds that look like data.
 - **Prove a mutation applied before believing its result** (`diff` it). A
   mutation that `gofmt` had realigned past reported "ok" and proved nothing.
 - **Force-push is forbidden, no exception** (§11.4.113). Integrate by merging
