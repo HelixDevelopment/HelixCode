@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
@@ -61,6 +63,92 @@ import (
 
 const wireFacadeE2ETestAPIKey = "test-only-fullhttp-e2e-wire-facade-key-not-a-real-secret"
 
+// --- per-request time budget -------------------------------------------------
+//
+// wireFacadeE2ECurlBudgetEnv / wireFacadeE2ECurlBudgetDefault replace what was
+// a hardcoded `--max-time 60` inside curlCapture. That literal was not merely
+// "a bit tight" — on a CPU-only coder it is STRUCTURALLY unreachable, so the
+// test could only ever fail, never pass:
+//
+//	Measured on this host 2026-09-03 (llama-server /v1/chat/completions
+//	`timings`, model qwen2.5-coder-3b-instruct-q4_k_m, `--n-gpu-layers 0`):
+//	    predicted_per_second =  0.43 tok/s
+//	    prompt_per_second    =  2.56 tok/s
+//	A 32-token completion therefore needs ~74 s of generation ALONE, before
+//	prompt processing — i.e. the 60 s ceiling expired mid-generation on every
+//	run. The request SHOULD be that slow: this is a 3B GGUF doing CPU-only
+//	inference, not a stalled request, so the correct fix is a budget sized to
+//	the deployed hardware, NOT a retry and NOT a smaller assertion.
+//
+// The budget is env-overridable so a GPU-backed coder can tighten it (a fast
+// coder SHOULD fail fast rather than wait two minutes) and a slower host can
+// widen it, without editing this file (§11.4.28 decoupling posture applied to
+// a test fixture, matching toolCallingCoderEndpointEnv's contract).
+const (
+	wireFacadeE2ECurlBudgetEnv     = "HELIX_E2E_CURL_MAX_SECONDS"
+	wireFacadeE2ECurlBudgetDefault = 180
+)
+
+// wireFacadeE2ECurlBudgetSeconds resolves the per-request curl budget: env
+// override first, measured-and-documented default second.
+func wireFacadeE2ECurlBudgetSeconds(t *testing.T) int {
+	t.Helper()
+	if v := strings.TrimSpace(os.Getenv(wireFacadeE2ECurlBudgetEnv)); v != "" {
+		n, err := strconv.Atoi(v)
+		require.NoErrorf(t, err, "%s must be an integer number of seconds, got %q",
+			wireFacadeE2ECurlBudgetEnv, v)
+		require.Positivef(t, n, "%s must be positive, got %d", wireFacadeE2ECurlBudgetEnv, n)
+		return n
+	}
+	return wireFacadeE2ECurlBudgetDefault
+}
+
+// wireFacadeE2EServedModelID asks the LIVE coder which model it is actually
+// serving, via GET /v1/models.
+//
+// This replaces a hardcoded `require.Contains(model, "qwen3-coder")`
+// assertion. That literal was brittle in exactly the way §11.4.111 forbids:
+// it bound the assertion to one model NAME rather than to the identity the
+// endpoint reports, so it broke the moment the deployment changed model —
+// measured on this host 2026-09-03 the coder serves
+// "qwen2.5-coder-3b-instruct-q4_k_m", which does NOT contain "qwen3-coder",
+// and the test failed for a reason that had nothing to do with the wire
+// facade it exists to guard.
+//
+// Asserting response.model == the id /v1/models reports keeps the REAL
+// invariant this subtest cares about — that the completion came from the coder
+// the route resolved to, and that the handler propagates that id faithfully
+// rather than echoing back the caller's string or inventing one — while
+// surviving any model swap.
+func wireFacadeE2EServedModelID(t *testing.T) string {
+	t.Helper()
+
+	req, err := http.NewRequest(http.MethodGet, envHelixLLMLocalEndpoint()+"/v1/models", nil)
+	require.NoError(t, err)
+
+	client := &http.Client{Timeout: time.Duration(wireFacadeE2ECurlBudgetSeconds(t)) * time.Second}
+	resp, err := client.Do(req)
+	require.NoErrorf(t, err, "GET /v1/models against the live coder failed")
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	require.Equalf(t, http.StatusOK, resp.StatusCode,
+		"GET /v1/models must return 200, got %d body=%s", resp.StatusCode, string(body))
+
+	var parsed struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	require.NoErrorf(t, json.Unmarshal(body, &parsed),
+		"/v1/models must return OpenAI-shaped JSON: %s", string(body))
+	require.NotEmptyf(t, parsed.Data, "/v1/models reported no models: %s", string(body))
+	require.NotEmptyf(t, parsed.Data[0].ID, "/v1/models reported an empty model id: %s", string(body))
+
+	return parsed.Data[0].ID
+}
+
 // wireFacadeE2ENonce returns a fresh per-run nonce token (same technique as
 // llm_generate_helixllm_live_test.go's providerLiveNonce / nonceBuf): a
 // cached/mocked/hardcoded response cannot possibly contain a token that did
@@ -104,7 +192,7 @@ func curlCapture(t *testing.T, url string, headers []string, body string) (statu
 		"-X", "POST",
 		"-o", bodyFile.Name(),
 		"-w", "%{http_code}",
-		"--max-time", "60",
+		"--max-time", strconv.Itoa(wireFacadeE2ECurlBudgetSeconds(t)),
 		"-H", "Content-Type: application/json",
 	}
 	for _, h := range headers {
@@ -183,6 +271,13 @@ func TestWireFacade_FullHTTP_E2E_LiveRoundTrip(t *testing.T) {
 	ts := wireFacadeE2EFixture(t)
 	evidenceDir := wireFacadeE2EEvidenceDir(t)
 
+	// Discovered ONCE from the live coder, then asserted against below, so the
+	// model-identity assertion tracks whatever this deployment actually serves
+	// instead of a name baked into the source (§11.4.111).
+	servedModel := wireFacadeE2EServedModelID(t)
+	t.Logf("live coder at %s reports served model id = %q (per-request curl budget %ds via %s)",
+		envHelixLLMLocalEndpoint(), servedModel, wireFacadeE2ECurlBudgetSeconds(t), wireFacadeE2ECurlBudgetEnv)
+
 	t.Run("no_auth_chat_completions_401", func(t *testing.T) {
 		body := `{"messages":[{"role":"user","content":"hi"}]}`
 		status, respBody, transcript := curlCapture(t, ts.URL+"/v1/chat/completions", nil, body)
@@ -234,8 +329,10 @@ func TestWireFacade_FullHTTP_E2E_LiveRoundTrip(t *testing.T) {
 		require.Equal(t, "assistant", parsed.Choices[0].Message.Role)
 		require.Containsf(t, parsed.Choices[0].Message.Content, nonce,
 			"real coder completion must echo the fresh nonce (proves a live, non-cached answer): got %q", parsed.Choices[0].Message.Content)
-		require.Containsf(t, strings.ToLower(parsed.Model), "qwen3-coder",
-			"resolved model must be the real coder model id, got %q", parsed.Model)
+		require.Equalf(t, strings.ToLower(servedModel), strings.ToLower(parsed.Model),
+			"resolved model must be the id the live coder reports at /v1/models (%q), got %q — "+
+				"the handler must propagate the coder's own model identity, not echo the caller's "+
+				"string or invent one", servedModel, parsed.Model)
 		require.Greater(t, parsed.Usage.PromptTokens, 0, "usage.prompt_tokens must be a real positive count")
 		require.Greater(t, parsed.Usage.CompletionTokens, 0, "usage.completion_tokens must be a real positive count")
 
@@ -282,8 +379,10 @@ func TestWireFacade_FullHTTP_E2E_LiveRoundTrip(t *testing.T) {
 		}
 		require.Containsf(t, fullText.String(), nonce,
 			"real coder completion must echo the fresh nonce (proves a live, non-cached answer): got %q", fullText.String())
-		require.Containsf(t, strings.ToLower(parsed.Model), "qwen3-coder",
-			"resolved model must be the real coder model id, got %q", parsed.Model)
+		require.Equalf(t, strings.ToLower(servedModel), strings.ToLower(parsed.Model),
+			"resolved model must be the id the live coder reports at /v1/models (%q), got %q — "+
+				"the handler must propagate the coder's own model identity, not echo the caller's "+
+				"string or invent one", servedModel, parsed.Model)
 		require.Greater(t, parsed.Usage.InputTokens, 0, "usage.input_tokens must be a real positive count")
 		require.Greater(t, parsed.Usage.OutputTokens, 0, "usage.output_tokens must be a real positive count")
 
