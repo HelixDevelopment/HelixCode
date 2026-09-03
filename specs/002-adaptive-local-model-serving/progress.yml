@@ -1933,3 +1933,55 @@ findings:
       copies of one fact disagreeing (SELF-9, the precision lists).
     severity: MEDIUM
     status: open — deliberate deferral, not an oversight
+
+  - id: TOOLKIT-1-2-3
+    title: all three toolkit findings confirmed; two of their severity claims refuted
+    detail: |
+      FINDING 1 — CONFIRMED, severity reasoning REFUTED. jq's @tsv escapes only
+      backslash, tab, newline and CR — NOT "/" or ":". Verified: both
+      "helixllm/h/org/llama3:8b" and "hf.co/TheBloke/x:q4" pass through
+      BYTE-IDENTICAL. So the reviewer's claim that this "breaks the common case"
+      of org/model and hf.co names was wrong; it bit backslash- and
+      control-character-bearing names only. Real, narrower.
+      FINDING 2 — CONFIRMED, sub-claim REFUTED, and the practical impact is
+      different from the report. The discovery secret is read by NO HTTP
+      middleware — but neither is it "consumed by placement logic": placement
+      consumes a pre-computed Trusted boolean, and the secret signs OUTBOUND
+      attestation on a different path with its own nonce/proof headers.
+      The important correction: the server's DEFAULT is open access, so the
+      common case was never the reported 401. It was the request SUCCEEDING
+      while the secret was disclosed to every configured host for nothing.
+      FINDING 3 — CONFIRMED exactly as reported. A withdrawn model's .env and
+      alias survived and stayed invocable.
+      DELETION SAFETY is the part worth keeping. A record is retired only when
+      three things hold: it carries a marker written by exactly ONE line in
+      --apply (so hand-authored records and sync-written facade providers are
+      structurally invisible), its host ANSWERED THIS RUN, and that answering
+      host no longer lists it.
+      The middle gate is the one that matters, and the reasoning is PATTERN-1
+      applied to deletion: an unreachable host and a host that stopped serving
+      everything produce IDENTICAL empty results, so silence is never treated
+      as evidence. The mutation proves the danger — disabling that gate lets an
+      unreachable host wipe the user's config. Removal reuses cmd_remove, which
+      moves the directory aside rather than deleting.
+    severity: HIGH
+    status: fixed + guarded (commit pending final suite)
+
+  - id: NOTE-4
+    title: reviews produce leads, not facts — three severity claims have now failed verification
+    detail: |
+      Worth stating as a pattern, because it has held every time and it changed
+      what got built.
+        * T055 claimed OpenAI-compat local backends are "silently dropped" —
+          REFUTED: deliberate design, and fixing it would have stamped
+          identities on proxied vendor models, which the design forbids.
+        * T055 claimed the @tsv escaping "breaks the common case" of org/model
+          and hf.co names — REFUTED: @tsv does not escape "/" or ":" at all.
+        * T055's Bearer-secret finding predicted 401s — REFUTED in practice:
+          the default is open access, so requests SUCCEEDED while leaking the
+          secret. Worse than reported, in a different way.
+      In every case the agent verified before acting, and in every case the fix
+      that shipped differs from the fix the report implied. A review finding is
+      a place to look, not a thing to implement.
+    severity: INFO
+    status: recorded
