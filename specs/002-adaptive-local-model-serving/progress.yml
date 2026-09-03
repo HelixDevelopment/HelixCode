@@ -3427,8 +3427,15 @@ findings:
       unavailable for an extended window, and a JWT secret must come from
       `openssl rand -hex 32`, never from a hand-authored string. Deliberately
       left undone rather than weakened.
+      VERIFIED 2026-09-03 — the blocker is gone. helixagent is serving on
+      :7061 (pid 315821, `active running`), a JWT secret is configured in
+      BOTH `.env` files the unit reads (`helixagent.service:85-86`
+      EnvironmentFile lines; key names only — HELIX_AUTH_JWT_SECRET and
+      JWT_SECRET, both non-empty), and a grep of the whole 9814-line journal
+      for `JWT|auth middleware` returns ZERO hits. `GET /v1/models` answers
+      200 with 5 model ids. The "one command away" was run.
     severity: MEDIUM
-    status: open — one command away; see RESUME 2b-2 for the exact steps
+    status: closed - the JWT secret is configured and helixagent serves on 7061; zero JWT errors in the journal, ledger corrected
   - id: BOOT-7
     title: helixagent discovers zero providers because the operator keys live where it does not look
     detail: |
@@ -3443,8 +3450,15 @@ findings:
       nothing from the HelixAgent side, independently of BOOT-6.
       DECISION NEEDED, not a defect: either feed helixagent the same key source
       the toolkit uses, or accept that its model surface is HelixLLM-only.
+      VERIFIED 2026-09-03 — the decision was taken and implemented; the
+      finding is stale. The live boot logs
+      `[exec-with-api-keys] sourced /home/milosvasic/api_keys.sh (+83
+      exported vars)`, then `Discovered providers count=32` and
+      `Verified providers verified=32` (was count=0 / verified=0), and there
+      is no `Failed to select complete debate team` in the current boot.
+      The key source WAS fed to helixagent — see ROOT-2 for the mechanism.
     severity: LOW
-    status: open — operator decision on the key source
+    status: closed - helixagent was given the operator key file and now discovers 32 / verifies 32 providers, ledger corrected
   - id: TOOLKIT-3
     title: helixllm-export reports a healthy host as unreachable when the cert is self-signed
     detail: |
@@ -3486,8 +3500,21 @@ findings:
       installed; ollama is NOT), then re-run the export.
       NOT DONE UNILATERALLY - which model to download is the operator's call and
       it is a multi-GB fetch.
+      NARROWED 2026-09-03 — the operator decision was taken and this row is
+      now stale in every part EXCEPT its original point. Stale: GGUFs exist
+      (`~/models/qwen2.5-coder-{1.5b,3b}-instruct-q4_k_m.gguf`), llama-server
+      IS running on :18434 serving the 3B (pid 3662629, `--ctx-size 4096
+      --n-gpu-layers 0`), helixllm now reports `availability: serving` (was
+      `withheld / provider_unavailable`), and `.env:89` sets
+      HELIX_LLM_LOCAL_MODEL=qwen2.5-coder-3b-instruct-q4_k_m.
+      STILL TRUE, and the whole of what remains open: the hardcoded default
+      at `submodules/helix_llm/internal/shared/config/config.go:47` is still
+      `default:"Llama-3.1-70B-Instruct-Q4_K_M"` — ~40 GB on a 30 GB / 12 GB
+      VRAM host. It bites only a fresh checkout with no `.env`, which is
+      exactly the offer-what-cannot-start mismatch feature 002 exists to
+      prevent, sitting in a default value.
     severity: MEDIUM
-    status: open — needs an operator decision on which model to serve
+    status: open — narrowed to the hardcoded 70B default in config.go 47; the host now serves a model it can run
   - id: BOOT-9
     title: all three services agree — the plumbing works and there is no local inference backend
     detail: |
@@ -3519,8 +3546,26 @@ findings:
       Q4_K_M at ~4.9 GB fits), start llama-server, point HELIX_LLM_LOCAL_MODEL
       at it, and re-run the toolkit export. That is an operator decision (a
       multi-GB fetch and a model preference), deliberately not taken here.
+      NARROWED 2026-09-03 — the PREMISE is refuted and two of the three
+      symptoms are gone. There IS a local inference backend now: llama-server
+      on :18434 serving qwen2.5-coder-3b (pid 3662629) with real GGUFs on
+      disk. helixllm reports `availability: serving`, not withheld. helixagent
+      returns a REAL completion — POST /v1/chat/completions with model
+      `helix-llm` answered `{"content":"OK"}`, usage 8+2 tokens, journal
+      `[Provider Chain] Fallback provider succeeded provider=codestral`,
+      `200 | 12.8s` — not the 503 this row recorded.
+      AMBIGUOUS, the one part not settled: the helix_code 502 naming
+      `provider: ollama` could not be re-probed, because
+      POST /api/v1/llm/generate answers 401 `Authorization header required`
+      and getting a token means registering a user (a mutation, deliberately
+      not performed). What IS fact: 127.0.0.1:11434 still refuses (ollama is
+      still absent), `helix_code/config/config.yaml` now has
+      `ollama: enabled: false` but `local:` still points at
+      `http://localhost:11434` with `enabled: true`, and
+      /api/v1/llm/providers still lists ollama as `status: available` — a
+      config-derived status, not a probed one, since the port refuses.
     severity: MEDIUM
-    status: open — operator decision; the services themselves are correct
+    status: open — narrowed to one unprobed symptom; the backend now exists and 2 of 3 symptoms are refuted
   - id: ROOT-1
     title: the toolkit points all three Helix providers at ports nothing listens on
     detail: |
@@ -3568,8 +3613,25 @@ findings:
       turn "cannot connect" into "connected, cannot serve", which is progress
       and is honest, but a provider only flips to `verified` once something
       genuinely completes a request.
+      NARROWED 2026-09-03 — the tracked values are UNCHANGED (all three files
+      clean in git), so the core finding stands: `helixagent.json` 18434/v1,
+      `helixagent-native.json` 18435, `helixllm-gateway.json` 18435/v1,
+      `claude-providers.sh:400,428`, `lib.sh:2189`. But "ports nothing
+      listens on" is no longer accurate for :18434 — it now answers 200, and
+      that makes the finding WORSE not better: what answers there is
+      llama-server (`owned_by: llamacpp`, model qwen2.5-coder-3b), NOT
+      helixagent, so `helixagent.json` now points at a LIVE BUT WRONG
+      service and will connect and mis-serve rather than fail loudly.
+      :18435 remains genuinely dead (curl 000 on both paths). The real
+      listeners this row names — 7061, 8111, 8443 — are all confirmed
+      present.
+      ONE SUB-CLAIM NOT REPRODUCIBLE: the corroboration "no *_verified.json
+      for any of the three while 20+ other providers each have one" cannot be
+      re-checked — `ls scripts/providers/*_verified.json | wc -l` is 0 for
+      EVERY provider, so the contrast no longer exists. The absence for the
+      three Helix entries holds; the "20+ others have one" half does not.
     severity: HIGH
-    status: root cause established; fix + local backend + systemd dispatched in parallel
+    status: open — narrowed; the three tracked base_urls are unchanged and 18434 now resolves to the wrong live service
   - id: ROOT-2
     title: helixagent discovers zero providers because 33 of 34 matching key vars are absent from its environment
     detail: |
@@ -3612,8 +3674,19 @@ findings:
       "cannot connect"; this fixes "connected but nothing upstream to serve".
       Both are needed before the operator's `claude-providers list` shows a
       Helix entry.
+      VERIFIED 2026-09-03 — the routed fix landed, and it landed the careful
+      way this row asked for. `helixagent.service:118` runs
+      `ExecStart=@HELIX_ROOT@/scripts/systemd/exec-with-api-keys.sh
+      .../bin/helixagent` — a SOURCING WRAPPER, not a naive EnvironmentFile,
+      exactly the caution recorded above (`exec-with-api-keys.sh:53`:
+      `readonly KEYS_FILE="${CMA_KEYS_FILE:-${HOME}/api_keys.sh}"`). All 12
+      key names this row listed as ABSENT are now present in the running
+      process environment read from `/proc/315821/environ` (48 distinct
+      *_KEY/*_TOKEN names in total; names only, never values). The counters
+      moved with it: `Discovered providers count=32`,
+      `Verified providers verified=32`.
     severity: HIGH
-    status: root cause established; routed to the systemd stream for EnvironmentFile wiring
+    status: closed - the sourcing-wrapper unit landed and all 12 named-absent keys are in the running env, ledger corrected
 
   - id: OPEN-3-resolved
     title: the agent lane was migrated after OPEN-3 was written; the finding was stale, not the code
