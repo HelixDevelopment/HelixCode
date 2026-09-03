@@ -34,6 +34,7 @@ UNITS=(
   helixcode-infra.service
   llmsverifier.service
   helixllm-coder.service
+  helixllm-coder-native.service
   helixllm-gateway.service
   helixagent.service
   helixcode-server.service
@@ -49,7 +50,11 @@ UNITS=(
 #                              pair that DUPLICATES the `helixcode-autoboot-*`
 #                              pair helixcode-server already owns, plus Ollama,
 #                              Weaviate and Selenium (§12.6 memory).
-#   helixllm-coder.service   — loads Qwen3-Coder-30B onto the GPU.
+#   helixllm-coder.service   — loads Qwen3-Coder-30B onto the GPU. It serves the
+#                              SAME :18434 as helixllm-coder-native.service and
+#                              the two Conflicts= each other, so exactly one may
+#                              be enabled. The native unit is the one enabled
+#                              here because 30B does not fit this host's 12 GB.
 #   llmsverifier.service     — not currently running; :8100 is unbound.
 #
 # None is removed, disabled or deleted — each stays one `systemctl --user enable
@@ -61,6 +66,7 @@ if [ -n "${HELIX_ENABLE_UNITS:-}" ]; then
 else
   ENABLE_UNITS=(
     helix.target
+    helixllm-coder-native.service
     helixllm-gateway.service
     helixagent.service
     helixcode-server.service
@@ -105,6 +111,42 @@ if [ -z "${HELIXLLM_BIN}" ]; then
   die "no executable helixllm found (looked in submodules/helix_llm/bin, PATH, ~/.local/bin) — build it first: (cd submodules/helix_llm && make build)"
 fi
 
+# Resolve the llama-server binary for helixllm-coder-native.service, and with it
+# the --n-gpu-layers the installed unit will actually claim.
+#
+# Resolution is by PROBE, not by path existence: each candidate is asked
+# `--list-devices` and only a candidate that enumerates a real device is treated
+# as GPU-capable (§11.4.201 — a path check is a proxy that can be true while the
+# condition is false; this host's /usr/bin/llama-server exists and is executable
+# yet reports NO devices because the Debian build is CPU-only and the archive
+# ships no CUDA ggml backend at all).
+#
+# The GPU-capable install is preferred; the distro CPU build is the fallback and
+# is never removed (§11.4.122). If the fallback is what resolves, LLAMA_NGL is
+# pinned to 0 so the unit states the truth about the offload it can perform
+# rather than requesting layers no backend can accept.
+LLAMA_SERVER_BIN=""
+LLAMA_NGL="0"
+for candidate in \
+    "${HOME}/opt/llamacpp_gpu/current/llama-server" \
+    "$(command -v llama-server 2>/dev/null || true)" \
+    "/usr/bin/llama-server"
+do
+  [ -n "${candidate}" ] && [ -x "${candidate}" ] || continue
+  # "Available devices:" is always printed; a GPU-capable build follows it with
+  # at least one indented device line. Match a device line, not the header.
+  if "${candidate}" --list-devices 2>/dev/null | grep -qE '^[[:space:]]+[A-Za-z]+[0-9]+:'; then
+    LLAMA_SERVER_BIN="${candidate}"
+    LLAMA_NGL="99"
+    break
+  fi
+  # Remember the first working CPU-only candidate as the fallback.
+  [ -z "${LLAMA_SERVER_BIN}" ] && LLAMA_SERVER_BIN="${candidate}"
+done
+if [ -z "${LLAMA_SERVER_BIN}" ]; then
+  die "no executable llama-server found (looked in ~/opt/llamacpp_gpu/current, PATH, /usr/bin) — install one, e.g. the upstream ubuntu-vulkan-x64 tarball into ~/opt/llamacpp_gpu/"
+fi
+
 # --- uninstall ---------------------------------------------------------------
 if [ "${1:-}" = "--uninstall" ]; then
   echo "Uninstalling Helix systemd units..."
@@ -122,6 +164,11 @@ echo "Installing Helix systemd user units"
 log "repo   : ${REPO_ROOT}"
 log "target : ${UNIT_DST}"
 log "helixllm: ${HELIXLLM_BIN}"
+if [ "${LLAMA_NGL}" = "0" ]; then
+  log "llama-server: ${LLAMA_SERVER_BIN} (CPU-only — probe found no device, -ngl 0)"
+else
+  log "llama-server: ${LLAMA_SERVER_BIN} (GPU-capable — probe found a device, -ngl ${LLAMA_NGL})"
+fi
 echo
 
 mkdir -p "${UNIT_DST}"
@@ -133,6 +180,8 @@ for u in "${UNITS[@]}"; do
   # Expand placeholders. '|' delimiter so paths containing '/' are safe.
   sed -e "s|@HELIX_ROOT@|${REPO_ROOT}|g" \
       -e "s|@HELIXLLM_BIN@|${HELIXLLM_BIN}|g" \
+      -e "s|@LLAMA_SERVER_BIN@|${LLAMA_SERVER_BIN}|g" \
+      -e "s|@LLAMA_NGL@|${LLAMA_NGL}|g" \
       "$src" > "${UNIT_DST}/${u}"
   # Fail loudly rather than installing a unit with an unexpanded placeholder,
   # which would produce a baffling runtime error instead of an install error.
