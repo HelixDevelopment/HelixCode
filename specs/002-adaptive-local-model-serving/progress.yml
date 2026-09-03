@@ -3345,9 +3345,19 @@ findings:
         poe       present, uses cma_run_provider   PASS
         deepseek  present, uses cma_run_provider   PASS
         xiaomi    ABSENT from the live alias file  FAIL
-      So "✗ 1 failed, 10 passed" means only that this operator has not
-      configured a xiaomi provider. That is not a product defect and the gate
-      cannot distinguish it from one.
+      So "✗ 1 failed, 10 passed" reflects the operator's machine, not the code.
+      REFINED after watching a live `claude-providers sync` (the first reading
+      was close but not right): xiaomi is NOT unconfigured — a xiaomi key var
+      EXISTS and resolves to a provider, but the sync reports
+        provider 'xiaomi' FAILED verification — alias NOT activated
+      so no alias is written and the test cannot find one. `poe` FAILED
+      verification in the same run yet the test found `poe` present, because
+      aliases from earlier syncs persist in the file until pruned. The assertion
+      is therefore reading a mixture of current and historical state.
+      That makes it worse than "operator-specific", not better: the test can
+      fail for a transient upstream outage, and can PASS on a stale alias for a
+      provider that no longer verifies. Neither outcome says anything about the
+      code under test.
       SAME CLASS as helix_agent 913d1f02 "validate the OpenCode config this repo
       ships, not the operator's" — the pattern recurs across repos.
       Fix direction: drive the assertions from a sandbox alias file generated
