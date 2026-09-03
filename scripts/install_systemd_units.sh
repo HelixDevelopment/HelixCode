@@ -23,7 +23,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UNIT_SRC="${REPO_ROOT}/scripts/systemd"
 UNIT_DST="${XDG_CONFIG_HOME:-${HOME}/.config}/systemd/user"
 
-# Ordered: infra first, server last. Enable order does not imply start order
+# INSTALLED: every unit file is written to ~/.config/systemd/user/, so the whole
+# platform stays addressable (`systemctl --user start llmsverifier`) and nothing
+# is removed from the operator's reach.
+#
+# Ordered: infra first, server last. Install order does not imply start order
 # (that is the units' After=/Requires=), but a stable list keeps output readable.
 UNITS=(
   helix.target
@@ -34,6 +38,34 @@ UNITS=(
   helixagent.service
   helixcode-server.service
 )
+
+# ENABLED (start at boot): a deliberate SUBSET of the above.
+#
+# Installing a unit makes it available; ENABLING it makes it start at boot. The
+# two are separated because three installed units are not part of the deployed
+# topology and enabling them would start real workloads unasked:
+#
+#   helixcode-infra.service  — boots ~10 containers including a Postgres+Redis
+#                              pair that DUPLICATES the `helixcode-autoboot-*`
+#                              pair helixcode-server already owns, plus Ollama,
+#                              Weaviate and Selenium (§12.6 memory).
+#   helixllm-coder.service   — loads Qwen3-Coder-30B onto the GPU.
+#   llmsverifier.service     — not currently running; :8100 is unbound.
+#
+# None is removed, disabled or deleted — each stays one `systemctl --user enable
+# <unit>` away (§11.4.122: no silent removal of an existing component). Override
+# for a session with:  HELIX_ENABLE_UNITS="unit-a unit-b" scripts/install_systemd_units.sh
+if [ -n "${HELIX_ENABLE_UNITS:-}" ]; then
+  # shellcheck disable=SC2206  # deliberate word-split of an operator-supplied list
+  ENABLE_UNITS=(${HELIX_ENABLE_UNITS})
+else
+  ENABLE_UNITS=(
+    helix.target
+    helixllm-gateway.service
+    helixagent.service
+    helixcode-server.service
+  )
+fi
 
 log()  { printf '  %s\n' "$*"; }
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$*"; }
@@ -47,8 +79,31 @@ systemctl --user show-environment >/dev/null 2>&1 \
 
 # Resolve the helixllm binary rather than hardcoding a path (§11.4.111:
 # resolve by name, not by a baked-in location).
-HELIXLLM_BIN="$(command -v helixllm 2>/dev/null || true)"
-[ -n "${HELIXLLM_BIN}" ] || HELIXLLM_BIN="${HOME}/.local/bin/helixllm"
+#
+# THIS CHECKOUT'S OWN BUILD IS PREFERRED over whatever happens to be on PATH.
+# Rationale: this installer wires units for THIS repo — silently binding the
+# service to some other checkout's binary found earlier on PATH is the class of
+# mistake §11.4.111 exists to prevent.
+#
+# The previous order (PATH, then ~/.local/bin/helixllm) was also outright broken
+# here: measured 2026-09-03, `helixllm` was NOT on PATH and
+# ~/.local/bin/helixllm did NOT exist, so it resolved to a nonexistent path and
+# installed a unit whose ExecStart could never run — failing at first start with
+# a confusing 203/EXEC instead of at install time.
+HELIXLLM_BIN=""
+for candidate in \
+    "${REPO_ROOT}/submodules/helix_llm/bin/helixllm" \
+    "$(command -v helixllm 2>/dev/null || true)" \
+    "${HOME}/.local/bin/helixllm"
+do
+  if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
+    HELIXLLM_BIN="${candidate}"
+    break
+  fi
+done
+if [ -z "${HELIXLLM_BIN}" ]; then
+  die "no executable helixllm found (looked in submodules/helix_llm/bin, PATH, ~/.local/bin) — build it first: (cd submodules/helix_llm && make build)"
+fi
 
 # --- uninstall ---------------------------------------------------------------
 if [ "${1:-}" = "--uninstall" ]; then
@@ -101,10 +156,16 @@ else
 fi
 
 # --- enable ------------------------------------------------------------------
-for u in "${UNITS[@]}"; do
-  systemctl --user enable "$u" >/dev/null 2>&1 && log "enabled $u" || warn "could not enable $u"
+for u in "${ENABLE_UNITS[@]}"; do
+  systemctl --user enable "$u" >/dev/null 2>&1 && log "enabled $u (starts at boot)" || warn "could not enable $u"
 done
-ok "all units enabled"
+for u in "${UNITS[@]}"; do
+  case " ${ENABLE_UNITS[*]} " in
+    *" $u "*) ;;
+    *) log "installed but NOT enabled: $u  (enable with: systemctl --user enable $u)" ;;
+  esac
+done
+ok "enable set applied"
 
 # --- optional start ----------------------------------------------------------
 if [ "${1:-}" = "--start" ]; then
