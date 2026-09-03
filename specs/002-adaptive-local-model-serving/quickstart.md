@@ -53,7 +53,12 @@ options whose weights cannot be stored, and the withheld reason is `insufficient
 
 ## Scenario 3 — Configuration cannot name the model
 
-**Proves**: FR-056, D3 — the loophole that the current implementation falls through.
+**Proves**: FR-056, D3 — the loophole the implementation used to fall through.
+
+> Fixed 2026-09-02: `cmd/visiongen-boot` and `cmd/imagegen-boot` now treat their model
+> variables as OUTPUTS and print `IGNORED-CONFIG:` when a value is present;
+> `*_NEED_BYTES` is no longer honoured. This scenario is now a regression guard
+> rather than a reproduction.
 
 **Expected**:
 
