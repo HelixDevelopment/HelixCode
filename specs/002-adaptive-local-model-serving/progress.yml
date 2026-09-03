@@ -3488,3 +3488,36 @@ findings:
       it is a multi-GB fetch.
     severity: MEDIUM
     status: open — needs an operator decision on which model to serve
+  - id: BOOT-9
+    title: all three services agree — the plumbing works and there is no local inference backend
+    detail: |
+      Probed end to end on 2026-09-03 with all three services up. Each reports
+      the SAME underlying gap in its own honest way, which is the useful part:
+        helix_code   8 providers listed, but POST /api/v1/llm/generate returns
+                     502 with
+                       dial tcp 127.0.0.1:11434: connect: connection refused
+                       provider: ollama
+                     (the full auth round trip works first — register 201,
+                     login 200, 269-char JWT, and the 401 without a token)
+        helixllm     1 catalogued model, availability withheld,
+                     withheld_reason provider_unavailable
+        helixagent   5 model names exposed on /v1/models, but
+                     POST /v1/chat/completions returns 503
+                       "All providers failed: no provider in the chain was able
+                        to handle the request"
+      NOT THREE DEFECTS — one condition seen from three angles. Nothing is
+      wrong with the request paths; there is no local inference backend running.
+      ollama is NOT installed on this host (127.0.0.1:11434 refused), and while
+      /usr/bin/llama-server and /usr/bin/llama-cli ARE installed, no llama-server
+      process is running and no GGUF weights exist anywhere on the box.
+      WORTH SAYING PLAINLY: every one of those three responses is CORRECT
+      behaviour. None of them pretends to serve. A system that answered a
+      generate request with something plausible here would be the bluff; three
+      honest refusals naming their own cause is what the anti-bluff work was
+      for.
+      TO CLOSE IT: place a GGUF this host can run (RTX 3060 / 12 GB — an 8B
+      Q4_K_M at ~4.9 GB fits), start llama-server, point HELIX_LLM_LOCAL_MODEL
+      at it, and re-run the toolkit export. That is an operator decision (a
+      multi-GB fetch and a model preference), deliberately not taken here.
+    severity: MEDIUM
+    status: open — operator decision; the services themselves are correct
