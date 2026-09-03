@@ -668,7 +668,7 @@ findings:
       default (which stops the silent start without giving the lane measured
       selection).
     severity: HIGH
-    status: open — operator decision required
+    status: "closed - see OPEN-3-resolved (previously - open — operator decision required)"
 
   - id: EX-24
     where: submodules/helix_llm/deploy/compose.yaml + compose.dev.yaml
@@ -3614,3 +3614,83 @@ findings:
       Helix entry.
     severity: HIGH
     status: root cause established; routed to the systemd stream for EnvironmentFile wiring
+
+  - id: OPEN-3-resolved
+    title: the agent lane was migrated after OPEN-3 was written; the finding was stale, not the code
+    detail: |
+      OPEN-3 asked for an operator decision between two options — migrate the
+      lane, or fix only the compose default. The decision is MOOT: the fuller
+      option was already taken. Commits 0c43b11 ("stop making an operator keep
+      the model and its VRAM claim in step by hand") and abbc0d2 ("one shared
+      model-selection decision, not four copies") migrated the lane, and the
+      ledger was never updated. Every specific claim in OPEN-3 is now false,
+      checked one at a time against the current source rather than inferred:
+        "NO modelchoice.go at all"
+            -> cmd/agentgen-boot/modelchoice.go exists and is tracked.
+        "main.go:118 seeds AGENTGEN_MODEL_GGUF"
+            -> main.go:102 declares it as `weightsKey`, a compose
+               interpolation OUTPUT; main.go:234 applyChoice() OVERWRITES any
+               inherited value and prints IGNORED-CONFIG naming it. The
+               decision itself is main.go:181, laneboot.Decide().
+        "compose.agent.yml:44 bakes Mistral-Nemo-Instruct-2407-Q4_K_M.gguf"
+            -> compose.agent.yml:46 is now
+               `- /models/${AGENTGEN_MODEL_GGUF}   # DECIDED — no default`.
+               The only surviving occurrence of that filename in the lane is
+               compose_model_default_test.go:18, where the removed default is
+               QUOTED as the defect the test guards against.
+      SO THE LANE IS NOT A FOURTH COPY EITHER: the decision moved into
+      internal/laneboot, which all four boot lanes now call (agentgen,
+      visiongen, imagegen, videogen modelchoice.go + main.go). The lane keeps
+      only the half that is genuinely its own — locating a chosen build's GGUF
+      (model id AND variant, so a q8 file is never admitted for a q4 decision,
+      and an mmproj is never mistaken for text weights) and its own
+      weights-not-present refusal, exit 24.
+      EVIDENCE THAT IT SELECTS, RATHER THAN THAT A FILE EXISTS.
+      `go test ./cmd/agentgen-boot/... -count=1` passes, and the run prints the
+      refusals rather than merely returning ok:
+        TestStaticallyNamedFileIsNeverBooted   — measured host=anton, 5 options
+          WITHHELD on memory with per-option shortfalls, 1 servable, its
+          weights absent -> CANNOT-CHOOSE, nothing started.
+        TestDecisionOverwritesConfiguredNames  — AGENTGEN_MODEL_GGUF=
+          "statically-named-model.gguf" and AGENTGEN_NEED_BYTES=99999999999
+          both reported IGNORED-CONFIG and replaced by the measured choice.
+        TestPinIsAConstraintNotABypass         — the pin is measured first and
+          REFUSED (unsupported_configuration, remedy=different-approach).
+        TestMeasurementFailureIsReportedAndRefused — unmeasured host exit 20,
+          30s-old reading exit 21. No fixed default in either path.
+        TestProjectorIsNeverMistakenForWeights, TestWithheldReasonsStayDistinct,
+        TestEnvironmentDoesNotChangeTheDecision, TestNoFixedDefaultWhenThe
+        HostCannotBeChosenFor — all PASS.
+      THE GUARD IS FALSIFIABLE, PROVEN BY §1.1 PAIRED MUTATION rather than
+      asserted. Re-introducing the EXACT pre-fix default from OPEN-3 into
+      compose.agent.yml:46 makes all three compose-layer guards FAIL:
+        TestComposeSuppliesNoModelDefault        FAIL (":-" default)
+        TestComposeNamesNoModelArtefact          FAIL (names the .gguf)
+        TestComposeDefaultsNothingThatSelectsAModel FAIL
+      Mutation restored the same turn, tree verified clean and residue-scanned
+      before any commit (§11.4.84); guards re-run GREEN on the restored file.
+      WHY NO RED TEST WAS AUTHORED. §11.4.115 requires a RED that reproduces
+      the defect on the CURRENT artifact. This defect is already fixed, so a
+      RED cannot reproduce it — and per §11.4.115's own honest boundary, a RED
+      that does not fail is a finding, which is exactly this entry. The
+      standing guards landed with the fix ARE the polarity pair: their doc
+      comments record the pre-fix defect, and the mutation above is the proof
+      they still catch it.
+      THE REAL DEFECT THIS ENTRY FIXES is the stale ledger row, and it was not
+      harmless: a finding asserting "NOT FIXED / operator decision required"
+      about migrated code dispatched an agent to redo completed work — the
+      §11.4.60 redundant-work and false-confidence failure mode, at the ledger
+      layer rather than the git layer.
+      STILL GENUINELY OPEN, and NOT closed by this entry: OPEN-24 (the lane's
+      three former candidates — Mistral-Nemo-Instruct-2407, GLM-4.7-Flash,
+      DeepSeek-Coder-V2-Lite — are not in the catalogue, so an operator holding
+      a working Mistral-Nemo GGUF is now REFUSED rather than served; that is a
+      real §11.4.122 capability narrowing and needs the operator, not an
+      agent), and OPEN-25 (five of six text entries carry
+      requires_accelerator: false, so a host-RAM figure reaches a VRAM broker).
+      OPEN-25 is visible in this lane's own test output — the host measures
+      accelerators=1 while options are withheld on MEMORY — but it is a
+      catalogue/selection-semantics change owned elsewhere and deliberately
+      untouched here.
+    severity: HIGH
+    status: "closed - the lane was already migrated (0c43b11, abbc0d2); verified by test run + paired mutation, ledger corrected"
