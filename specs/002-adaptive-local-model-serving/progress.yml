@@ -2520,3 +2520,42 @@ findings:
       covers it nor needs to. Still open on the server.
     severity: MEDIUM
     status: open — server-side
+
+  - id: G8-resolved
+    title: the one undetermined challenge failure was a gap between two correct things
+    detail: |
+      G8 was the single failure of 83 that the triage left explicitly
+      UNDETERMINED rather than guessing at — the right call, and it turned out
+      to be the most interesting one.
+      rag-ingestion/ingest-document failed with "field body.chunks is not
+      countable". Neither side was wrong:
+        * knowledge.IngestResult reports Chunks as an INT, so the response is
+          {"chunks": 3} and not {"chunks": [...]} — a perfectly reasonable API;
+        * min_count asks for a LENGTH, and an integer has none.
+      The assertion vocabulary had NO WAY to express a numeric minimum at all.
+      So the challenge could not state its own assertion. Not a defect in the
+      server, not a defect in the challenge — a gap between them, which is
+      exactly the kind of thing "undetermined" should be reserved for.
+      FIXED by adding min_value. Its refusal for a collection NAMES the other
+      assertion, so the next person who reaches for the wrong one is told which
+      is right.
+      PROVED AGAINST THE PRODUCTION TYPE, not a JSON literal:
+      TestMinValueMatchesTheRealIngestResult marshals knowledge.IngestResult and
+      runs the shipped challenge's exact assertion over those bytes. If Chunks
+      ever becomes a slice that test starts failing with "use min_count" — the
+      CORRECT failure, since the challenge would then need the other assertion.
+      A hand-written fixture would have gone on passing while the real response
+      changed underneath it.
+      Negative controls both directions: min_count must still refuse an integer
+      (or min_value is redundant), and min_value must refuse a collection, a
+      non-numeric scalar, and an absent field.
+      The mutation was better than expected: unregistering min_value fails the
+      HARNESS INTEGRITY tests, because a shipped bank would then declare an
+      unknown assertion type. That guard already existed and the change is
+      caught by it.
+      HONEST BOUNDARY: the live challenge run is not done — it needs a running
+      server. The chain is closed at the type level instead, which for this
+      particular question is stronger than a live run would be: it pins the
+      assertion to the production struct rather than to one observed response.
+    severity: MEDIUM
+    status: fixed + guarded
