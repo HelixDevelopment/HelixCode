@@ -1245,3 +1245,136 @@ findings:
       run does not mistake it for a regression.
     severity: LOW
     status: open — environmental
+
+  - id: NOTE-2
+    title: the two SECURITY-1 fixes chose OPPOSITE scopes, and both are correct
+    detail: |
+      Recorded because a future reader will otherwise read this as an
+      inconsistency and "fix" one of them.
+      helix_llm  — scans EVERY string field reflectively.
+      helix_code — scans an explicit list of credential fields ONLY.
+      The difference is a property of each codebase, not a disagreement:
+        * In helix_llm NOTHING expands anything. digital.vasic.config/pkg/env is
+          a plain os.Getenv and loadFromFile is a plain json.Unmarshal, so a
+          value arrives substituted or it does not. Any surviving ${...} is
+          therefore a bug in any field, and a broad scan has no false positives
+          to speak of.
+        * In helix_code expandShellDefaults DOES expand, but for EXACTLY five
+          fields, and the shipped config deliberately carries ${...} in
+          non-secret fields it never expands (see OPEN-15). A broad scan there
+          would refuse the project's own config on startup.
+      Each codebase got the scan its expansion semantics support.
+    severity: INFO
+    status: recorded
+
+  - id: SECURITY-1-helix_llm
+    title: hot-reload path never validated at all, so a reload could install a placeholder secret
+    detail: |
+      Fixed by subagent (helix_llm 5b68ffa). Beyond the reported defect it found
+      that loadFromFile in the ConfigWatcher hot-reload path never called
+      Validate() — so even with a correct startup check, a live config reload
+      could install "${HELIXLLM_JWT_SECRET}" as the signing key.
+      Reproduced on BOTH entry points with captured output, both configs valid
+      in every other respect so nothing could short-circuit the check.
+      Three paired mutations, each diff-verified as applied, including one that
+      makes the guard reject unconditionally — which fails every acceptance
+      test, proving the suite cannot be satisfied by refusing everything.
+      Pre-existing unrelated failures were PROVED unrelated via
+      `go list -deps -test` showing zero dependency edges, not merely asserted.
+      LEFT OPEN by the agent, correctly: a rejected placeholder is not the same
+      as a MISSING secret. HELIX_AUTH_JWT_SECRET="" still loads. That is an
+      adjacent policy nobody has decided, so it invented nothing.
+    severity: CRITICAL
+    status: fixed + guarded
+
+  - id: CRITICAL-7-resolved
+    title: CONFIRMED then fixed — published identifiers were decorative
+    detail: |
+      The T055 review's report held in every particular, including both captured
+      runs. Independently reproduced at the HTTP layer against the real wiring
+      main.go builds, with fake providers recording what they were asked for:
+        client asked helixllm-gpu-01-qwen2-5-7b-60ef9191efd0
+          -> answered by "chutes", which was asked for [deepseek-chat]
+          -> the serving provider received []
+        client asked qwen2.5:7b -> provider received [llama3:8b]
+      Cause: ResolveModelName was reachable only from Brain.Complete/CompleteStream;
+      main.go wired the Completer to fallback.Chain, which overwrites req.Model
+      with each provider's FIRST model.
+      FIXED: Brain.PinModel resolves an identifier (or raw served name) to the
+      provider that serves it, honouring the identity's HOST so one machine's
+      identifier cannot land on another machine's copy of the same model name.
+      fallback.Chain consults the pinner BEFORE the entry loop — resolving after
+      would resolve something already discarded.
+      Unavailable named host: explicit error, never substitution. The
+      fall-through fires exactly when the named thing is gone, which is the worst
+      moment to silently answer with something else.
+      3 mutations, each diff-verified. One is notable: dropping the pin from
+      Complete only left STREAMING passing — proving the two call sites are
+      independently guarded rather than sharing one accidental path.
+      BEHAVIOUR CHANGE worth knowing: a request naming a model a registered
+      provider serves is now pinned, so `gpt-4o` no longer cross-falls-back to
+      another provider on failure. Intended (a named model is a choice, not a
+      hint) but it affects named-model requests generally, not only identifiers.
+    severity: CRITICAL
+    status: fixed + guarded
+
+  - id: CRITICAL-5-6-resolved
+    title: CONFIRMED then fixed — selection never read VRAM; the broker bound to GPU row 0
+    detail: |
+      CRITICAL-5: supports() checked only len(p.Accelerators)==0 — EXISTENCE, not
+      capacity — and memoryAxis compared the requirement against host RAM.
+      Strongest evidence: ResourceAccelerator was DECLARED in option.go and
+      matched nowhere else in the repo. The axis was designed and never wired.
+      This matters because video.yaml records its memory figure as "the value
+      actually passed to vrambroker.Acquire" — for accelerator-required entries
+      that number IS the VRAM requirement, and it was being checked against RAM.
+      CRITICAL-6: budget.go parsed "the FIRST GPU row" — its own words.
+      Reproduced on a two-GPU fixture with the small card first: reported
+      free=1192 MiB and refused a 6 GiB request while the host's other card had
+      12689 MiB free. A test asserted `// Multi-GPU output: first row is used` —
+      a test blessing the defect (11.4.120).
+      FIXED: device axis picks the card with most free memory, ties broken by
+      stable Identity and never by position; the broker now queries
+      uuid,pci.bus_id, parses every row, and resolves by stable identity with
+      explicit ErrDeviceAmbiguous / ErrDeviceNotFound.
+      HONEST MEASUREMENT: on the dev host (RTX 3060, 11781 MiB free) NOTHING
+      changes today — every entry clearing RAM also clears this card. Stated
+      rather than overclaimed. On the common 6 GiB laptop shape, 14 of 15
+      accelerator-required entries are now correctly withheld naming the device.
+    severity: CRITICAL
+    status: fixed + guarded
+
+  - id: OPEN-17
+    title: selection uses zero accelerator headroom; the broker keeps 2 GiB
+    detail: |
+      Left open deliberately by the CRITICAL-5/6 agent, and correctly so.
+      Selection asks "does it fit as measured"; vrambroker reserves 2 GiB. So a
+      10 GiB model on an 11.5 GiB card is OFFERED by selection and then REFUSED
+      by the broker — the user is shown something that cannot start.
+      A seam exists (Reserve.AcceleratorHeadroomBytes) but nothing sets it.
+      Importing the broker's constant into pure selection is a design decision
+      the agent declined to make unilaterally. Needs a decision.
+    severity: HIGH
+    status: open — needs a decision
+
+  - id: OPEN-18
+    title: Fleet.Available draws down host RAM only, never device memory
+    detail: |
+      placement.go: Commitment has no accelerator dimension, so concurrent
+      placements do not reduce available VRAM. Two placements can each be told
+      the same card is free. Found while fixing CRITICAL-5/6; out of its scope.
+    severity: MEDIUM
+    status: open
+
+  - id: OPEN-19
+    title: two integration model-listing tests fail at baseline
+    detail: |
+      TestIntegration_OpenAI_ListModels and TestLlamaCppOnly_ModelsEndpoint fail
+      with "0 is not greater than 0: should return at least one model".
+      THREE independent agents each proved these pre-date their work — one by
+      path-limited stashing and re-running at baseline, one via `go list -deps
+      -test` showing zero dependency edges. Believed to need live services, but
+      that is the assumption, not a finding: they sit in the same feature area as
+      the identifier fix and nobody has actually diagnosed them.
+    severity: MEDIUM
+    status: open — needs diagnosis, not assumption
