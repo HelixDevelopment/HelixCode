@@ -3521,3 +3521,52 @@ findings:
       multi-GB fetch and a model preference), deliberately not taken here.
     severity: MEDIUM
     status: open — operator decision; the services themselves are correct
+  - id: ROOT-1
+    title: the toolkit points all three Helix providers at ports nothing listens on
+    detail: |
+      OPERATOR REPORT: `claude-providers list` shows 21 verified providers and
+      NOT ONE HelixAgent or HelixLLM entry.
+      Root-caused via superpowers:systematic-debugging Phase 1 rather than
+      guessed. Two facts compose into the symptom.
+      (1) `list` is verified-only BY DESIGN —
+            scripts/claude-providers.sh:2084  cmd_list() { _list_rows verified; }
+          so anything not `verified` is simply invisible there. `list-all` does
+          show all three, as `unverified` / layer `existence`.
+      (2) They can never BECOME verified, because their configured endpoints are
+          dead. Measured, configured-vs-reality:
+            helixagent         http://127.0.0.1:18434/v1   curl -> 000
+            helixagent-native  http://127.0.0.1:18435      curl -> 000
+            helixllm-gateway   http://127.0.0.1:18435/v1   curl -> 000
+          while `ss -ltnp` shows what actually listens:
+            helixagent  *:7061  (OpenAI-compatible, /v1/models 200, 5 models)
+            helixagent  *:8111  (liveness probe only)
+            helixllm    *:8443  (HTTPS, self-signed)
+          helixllm-gateway is doubly wrong — wrong port AND wrong scheme; plain
+          http against :8443 returns "400 Client sent an HTTP request to an
+          HTTPS server".
+          Corroboration: there is no `*_verified.json` for any of the three in
+          the providers dir, while 20+ other providers each have one. The
+          verification step never produced a result at all.
+      The values are hardcoded in TRACKED config:
+        scripts/providers/helixagent.json
+        scripts/providers/helixagent-native.json
+        scripts/providers/helixllm-gateway.json
+        scripts/claude-providers.sh ~427, ~455, ~556 (fallback defaults)
+        scripts/lib.sh:2189 (operator-facing message naming 18434)
+      DRIFT, not ignorance: the rest of the tree already knows the real ports —
+        submodules/challenges/.../agentic_subagents_challenge.sh:48
+          HELIXAGENT_ENDPOINT:-http://localhost:7061/v1/chat/completions
+        constitution/scripts/helix_code/helix_code_services.sh:145
+          "HelixLLM gateway (:8443)"
+      so the toolkit's own provider definitions are the only place carrying the
+      wrong numbers. Same class as §11.4.111 — a hardcoded value where the
+      endpoint should be resolved or configured.
+      HONEST BOUNDARY, and it matters: fixing the ports is necessary but NOT
+      sufficient for the operator's actual goal. Even reachable, neither backend
+      can complete — helixagent 503s with 0 upstream providers and helixllm
+      withholds its one model for want of weights (BOOT-9). Correct endpoints
+      turn "cannot connect" into "connected, cannot serve", which is progress
+      and is honest, but a provider only flips to `verified` once something
+      genuinely completes a request.
+    severity: HIGH
+    status: root cause established; fix + local backend + systemd dispatched in parallel
