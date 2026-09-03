@@ -250,6 +250,68 @@ var inertConfigKeys = map[string]string{
 		"LLM retry behaviour is not governed by this value",
 
 	// --- not declared at all -----------------------------------------------
+
+	// The four blocks below are whole top-level sections that config/
+	// production-config.yaml configures at length and that Config does not
+	// declare at any depth. Verified unconsumed: no field on Config, and zero
+	// direct viper reads (`Get*("security.` etc.) anywhere in non-test code.
+	//
+	// They are registered rather than deleted. Deleting them would throw away
+	// a statement of intent nobody authorised discarding, and declaring them
+	// would claim a build reads settings it does not. Registering them says
+	// the true thing out loud at startup: this is configured, and it does
+	// nothing here yet. Each entry comes out in the same change that wires it.
+	"environments": "no field on Config; the per-environment override blocks " +
+		"(production/staging/development) are discarded whole. Environment is " +
+		"selected by which config file is loaded, not by this block",
+	"features": "no field on Config; every feature flag in this block is " +
+		"discarded. No feature is gated on it",
+	"performance": "no field on Config; the connection-pool, cache and " +
+		"concurrency tuning in this block is discarded",
+	"security": "no field on Config; the TLS, CORS, rate-limit and audit " +
+		"settings in this block are discarded. Security posture is not " +
+		"governed by this file",
+
+	// Leaves that production-config.yaml sets on sections that DO exist, but
+	// which the section's struct does not declare. Same verification, same
+	// reasoning as the blocks above.
+	"auth.refresh_token_expiry": "no field on AuthConfig; refresh-token " +
+		"lifetime is not governed by this value",
+	"database.max_connections": "no field on database.Config; the pool " +
+		"maximum is not governed by this value",
+	"database.min_connections": "no field on database.Config; the pool " +
+		"minimum is not governed by this value",
+	"redis.pool_size": "no field on RedisConfig; the Redis pool size is not " +
+		"governed by this value",
+	"redis.max_retries": "no field on RedisConfig; Redis retry behaviour is " +
+		"not governed by this value",
+	"redis.read_timeout": "no field on RedisConfig; Redis read timeouts are " +
+		"not governed by this value",
+	"redis.write_timeout": "no field on RedisConfig; Redis write timeouts " +
+		"are not governed by this value",
+	"llm.batch_size": "no field on LLMConfig; request batching is not " +
+		"governed by this value",
+	"llm.rate_limit_per_minute": "no field on LLMConfig; LLM rate limiting " +
+		"is not governed by this value",
+	"logging.file": "no field on LoggingConfig; the log destination is " +
+		"governed by logging.output, which IS read. Setting this changes " +
+		"nothing and can disagree with the field that works",
+	"logging.fields": "no field on LoggingConfig; these static fields are " +
+		"not attached to any log line",
+	"tasks.timeout": "no field on TasksConfig; task timeouts are not " +
+		"governed by this value",
+	"tasks.max_concurrent_per_worker": "no field on TasksConfig; per-worker " +
+		"concurrency is not governed by this value",
+	"tasks.priority_levels": "no field on TasksConfig; the priority " +
+		"vocabulary is not read from configuration",
+	"tasks.resource_limits": "no field on TasksConfig; the per-task cpu/" +
+		"memory limits in this block are discarded",
+	"workers.connection_timeout": "no field on WorkersConfig; worker " +
+		"connection timeouts are not governed by this value",
+	"workers.retry_interval": "no field on WorkersConfig; worker retry " +
+		"spacing is not governed by this value",
+	"workers.max_retries": "no field on WorkersConfig; worker retry counts " +
+		"are not governed by this value",
 	"llm.providers": "no field on LLMConfig; the whole provider block " +
 		"(endpoints, enabled flags, api keys, parameters) is discarded. " +
 		"Providers are configured elsewhere",

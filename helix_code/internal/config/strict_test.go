@@ -19,12 +19,19 @@ const shippedConfig = "../../config/config.yaml"
 // Deliberately NOT listed:
 //   - model-aliases.example.yaml — a different schema entirely (top-level
 //     `aliases` / `fuzzy_threshold`), loaded by its own reader, not by Load().
-//   - production-config.yaml — not currently valid YAML. It has an AI-assistant
-//     transcript pasted into it from line ~569 ("Now let me create the Phase 3
-//     test implementation:<function_calls>..."), so no parser can read it. That
-//     is a real defect, but repairing it means deciding what the file was
-//     supposed to contain, which is an operator call, not a rename-safe edit.
+//
+// production-config.yaml WAS excluded here for not being valid YAML at all: an
+// AI-assistant transcript had been pasted into it from line 569 ("Now let me
+// create the Phase 3 test implementation:<function_calls>..."), so no parser
+// could read it. It is now repaired and in scope. The repair was deliberately
+// the part that needed no judgement: the transcript tail was deleted, and six
+// duplicate top-level blocks that YAML was ALREADY discarding (only the last
+// occurrence of a repeated key survives) were removed, proven by the parsed
+// configuration being byte-identical before and after. What the file's 22
+// unread keys should BECOME is still an operator call; they are registered in
+// inertConfigKeys so startup states plainly that they do nothing.
 var configShapedFiles = []string{
+	"production-config.yaml",
 	"config.yaml",
 	"fixed-config.yaml",
 	"minimal-config.yaml",
