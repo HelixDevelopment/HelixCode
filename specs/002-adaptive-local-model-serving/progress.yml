@@ -1985,3 +1985,46 @@ findings:
       a place to look, not a thing to implement.
     severity: INFO
     status: recorded
+
+  - id: OPEN-19-resolved
+    title: the integration tests never needed live services; the endpoint was never wired to the mock
+    detail: |
+      Both failures came from ONE missing line in the test framework, and no
+      service of any kind was required.
+      /v1/models is served from RouterOptions.ModelBrain, a SEPARATE option from
+      Brain — the listing handlers need the concrete *brain.Brain for Models(),
+      while Brain is an interface that may be a fallback.Chain. The framework
+      set Brain and left ModelBrain nil, so the handler took its no-backend
+      branch and listed nothing. The tests predate that split and the framework
+      was never updated when /v1/models moved off Brain.
+      Meanwhile the framework registers a mock provider reporting FOUR models
+      and answering Available() true. It was simply never connected.
+      FIXED with `ModelBrain: b`. Both pass; removing it fails both with the
+      original message. helix_llm now has no failing package.
+      WHY THIS LASTED, and it is the useful part: THREE separate agents hit
+      these tests in this session. Every one did the right thing — proved the
+      failures pre-dated its own work, one via `go list -deps -test` showing
+      zero dependency edges, another by re-running at pristine HEAD in an
+      isolated worktree. Then each stopped, because "needs live services" is a
+      plausible story for a red integration test and nobody had cause to doubt
+      it. I recorded that assumption myself in OPEN-19, flagging it as an
+      assumption — and still did not check it for hours.
+      PROVING A FAILURE IS NOT YOURS IS NOT THE SAME AS FINDING OUT WHAT IT IS.
+      The first is a defensive check and the whole fleet did it correctly. The
+      second is the actual question, and nobody asked it.
+    severity: MEDIUM
+    status: fixed + guarded
+
+  - id: OPEN-27
+    title: the RouterOptions doc comment describes a hardcoded model list that no longer exists
+    detail: |
+      RouterOptions.ModelBrain's comment says "When nil the endpoints return the
+      built-in hardcoded model list."
+      That list is gone — it was removed as a fabricated three-entry list
+      advertising models the server could never serve (the i18n keys that
+      replaced it say so). The endpoints now return an empty list with a reason.
+      Not fixed here only because another agent is live in that package right
+      now. Small, and worth doing: a stale comment describing removed behaviour
+      is how the ModelBrain wiring gap stayed invisible.
+    severity: LOW
+    status: open
