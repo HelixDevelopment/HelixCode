@@ -2211,3 +2211,89 @@ findings:
       drop the field is now an INFORMED decision rather than a blocked one.
     severity: HIGH
     status: documentation fixed; whether to implement JWT auth is an operator decision
+
+  - id: T055-REREVIEW-NOGO
+    title: the re-review is NO-GO — three of four findings were created by the fixes
+    detail: |
+      This is the most important result of the session, and it corrects reports
+      I already gave the operator as successes.
+      Every finding was CONFIRMED BY RUNNING CODE, not by reading.
+      F1 (HIGH) — the identity re-mint means a user holding an OLD identifier is
+        SILENTLY ANSWERED BY THE WRONG MODEL. Captured:
+          stale "helixllm-127-0-0-1-qwen2-5-7b-ba85a3230a59" -> HTTP 200
+            model="deepseek-chat" ... answered by chutes
+            cloud received [deepseek-chat] ; local received []
+        That is the original CRITICAL, reproduced exactly, for the population of
+        identifiers the batch ITSELF created. PinModel misses, and the chain
+        falls through to the score-ordered loop. The fix's rationale ("a caller
+        who wants any available model names no model") does not describe a
+        string carrying our own helixllm- prefix.
+      F2 (HIGH) — --apply retirement FAILS OPEN and deletes a user's whole
+        config for a host that is merely restarting. Gateway up + backend
+        loading gives /health 503 -> unavailable options dropped -> /v1/models
+        answers 200 with an empty data array -> the toolkit reads "answered"
+        -> gate 3 retires EVERY record -> cmd_remove rm -f's the .env and alias.
+        ~30 seconds after a restart is enough.
+        The toolkit's own test LOCKS IT IN at line 474: "a host that answers
+        with an EMPTY list still converges … its last provider is retired too".
+        Note the shape: the agent that wrote that sweep articulated exactly the
+        right principle — "silence is never evidence" — and then drew the line
+        one state too far, reasoning an empty answer is a real answer. It is
+        not, when the backend is still loading.
+      F3 (MEDIUM) — the pin fix put a SYNCHRONOUS /health probe on every
+        request's hot path, including cloud requests that never touch the local
+        backend. Measured: a hung /health adds 2.008s to a deepseek-chat request
+        that completes in 423us when healthy. The route test could not see it
+        because its stub's Available() is a bool.
+      F4 (MEDIUM) — a raw name served by two providers pins to the
+        alphabetically-first EVEN WHEN IT IS DOWN, refusing while a serving copy
+        is up. Before the batch that request was served.
+      W1 (LOW) — pinned-unavailable returns 500 where the chain returns 503.
+      WHAT THIS MEANS FOR ME: I reported F1's fix, F3's fix and F4's fix to the
+      operator as successes. They were real fixes and they each created a new
+      defect. §11.4.134's iterate-to-GO exists precisely because a first pass
+      that "addressed the findings" is not the same as a batch that works, and
+      this is the clearest demonstration of it in the session.
+    severity: CRITICAL
+    status: NO-GO — fixes dispatched for all five
+
+  - id: LANEBOOT-extracted
+    title: 1008 duplicated lines removed, and the extraction proved itself by interleaved binary diff
+    detail: |
+      The four-way byte-identical span confirmed independently before any edit
+      (the agent's first digest differed only by a trailing newline, which it
+      diagnosed rather than shrugged at). It also measured the duplication I had
+      flagged as unmeasured: the 28-line helper block and defaultCatalogueDir
+      are identical in all four; sortedKeys in two, normalise in three.
+      ~1008 duplicate lines gone; the four modelchoice.go files 1977 -> 586.
+      LEFT PER-LANE ON EVIDENCE, not taste: exit code 24 keeps its lane-specific
+      NAME — exitNotServable and exitWeightsNotPresent mean different things —
+      and the agent verified the shared span never reaches it.
+      THE PROOF METHOD IS THE PART WORTH KEEPING. Package tests passing is not
+      proof a lane still DECIDES the same way, so it built the pre-extraction
+      binaries from a pristine worktree and diffed 12 flows per lane, 48
+      comparisons, all byte-identical — with 11 of 12 flows producing DISTINCT
+      output so the comparison could not be vacuous.
+      Two methodology traps it hit and fixed rather than waved through:
+        * the first worktree ran from /tmp (12 GiB free vs 1.19 TiB), which
+          flipped a storage-bound videogen model — environmental, not
+          behavioural;
+        * a later comparison showed a difference after a COMMENT-ONLY edit,
+          because host memory had dropped mid-session and flipped the binding
+          constraint from accelerator to memory. Re-running both binaries
+          INTERLEAVED under one host state gave identical output.
+          For a binary that measures the live host, a stale baseline is invalid.
+      THE ANTI-DRIFT GUARD FAILED AS DESIGNED: extraction moved the only
+      selection.Select out of cmd/, its floor-of-4 hit zero, and it refused to
+      pass vacuously. Reconciled and made STRONGER — one call site permits a
+      check four copies could not state: no cmd/ file may call selection.Select
+      directly, and laneboot must hold EXACTLY ONE.
+      And a finding about the old guard itself: its precise-looking first
+      pattern "Reserve:       runtime.SelectionReserve()," NEVER MATCHED
+      ANYTHING, because gofmt writes a single space. Only its loose fallback
+      ever did any work.
+      Its own review found two false-negatives in its new gate, one of which its
+      comment had already claimed was closed — which the agent called "a bluff
+      in my own words until fixed". Both reproduced and fixed.
+    severity: INFO
+    status: landed
