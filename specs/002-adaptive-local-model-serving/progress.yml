@@ -1378,3 +1378,60 @@ findings:
       the identifier fix and nobody has actually diagnosed them.
     severity: MEDIUM
     status: open — needs diagnosis, not assumption
+
+  - id: SECURITY-2-3-4-resolved
+    title: attestation proof was not bound to who answered; now channel-bound and address-pinned
+    detail: |
+      Two rounds, both reproduced before fixing.
+      ROUND 1 (3efc367). Proof was HMAC(secret, nonce) — it answered "do you hold
+      the secret" and said NOTHING about who answered. Any host able to reach a
+      genuine instance could obtain a real answer to OUR OWN nonce and present it
+      as its own, by redirecting us to one or by proxying our challenge to one.
+      Both reproduced with the user's prompt, an opened file's contents, and the
+      upstream credential arriving at a hostile host.
+      FIX: HMAC(secret, nonce || 0x00 || audience) where the audience is the
+      SOCKET ADDRESS and is NEVER TRANSMITTED — the responder signs its own
+      accepted-connection LocalAddr, the client checks its own RemoteAddr. Two
+      ends of one socket, so an honest direct instance agrees by construction.
+      That is what defeats the proxy specifically: it may forward every byte we
+      send and still cannot make an honest instance sign an address that is not
+      its own. A Host-header-derived audience would NOT have covered a
+      transparent byte-forwarding TCP relay; this does.
+      Redirects are refused outright during attestation — the party answering the
+      challenge must be the party we send content to.
+      ROUND 2 (6e278e8). The binding was established on the PROBE's connection;
+      Send opened a new one and re-resolved the name, so a name pointing at the
+      attested instance during the probe and elsewhere at send time was not
+      caught. Reproduced: all three canaries at a host that never held the secret.
+      FIX: Instance.VerifiedAddr carries the verified peer forward (following
+      PeerLoopback's precedent) and Send dials it through a client copy with a
+      fixed DialContext, so the URL keeps its scheme/host/path and the Host
+      header and TLS SNI still use the configured name.
+      Two silent bypasses of a fixed dialler are REFUSED rather than ignored: a
+      transport with DialTLSContext (never calls DialContext, so https would
+      re-resolve) and a proxy that actually applies (the proxy picks the peer).
+      An Instance with no verified address is refused BEFORE the body is
+      marshalled — a silent fallback to re-resolution IS the hole, and it would
+      look like it worked.
+      ALSO FIXED en route: the local-host attestation exemption was granted on
+      which CONFIG LIST an endpoint appeared in, not on whether the address was
+      really loopback. A LAN address in LocalHostEndpoints turned the requirement
+      off for that host. Now decided from the actually-connected peer, with a
+      pre-dial filter so a host we could never authenticate does not even learn
+      we are looking.
+    severity: CRITICAL
+    status: fixed + guarded
+
+  - id: OPEN-20
+    title: pinning is per-Instance, so a re-addressed instance needs a fresh Discover
+    detail: |
+      Behaviour change from the Send pinning fix, flagged by the agent rather
+      than buried: an instance that legitimately changes address (DHCP lease,
+      container restart) will not be reached by Send until it is discovered
+      again. That is the correct trade — the alternative is re-resolution, which
+      is the hole — but operators should know.
+      Also noted: Send has no redirect policy of its own the way attestation
+      does. Not a hole (the body already reached the pinned peer, and the
+      redirect is dialled through the same pinned transport), but asymmetric.
+    severity: LOW
+    status: recorded — behaviour change, not a defect
