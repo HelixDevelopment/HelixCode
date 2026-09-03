@@ -91,6 +91,11 @@ var redPolaritySwitches = []redPolaritySwitch{
 		ViaHelper: true,
 	},
 	{
+		Env:       "RED_LLAMACPP_LOCAL",
+		Files:     []string{"llm_generate_llamacpp_local_test.go"},
+		ViaHelper: true,
+	},
+	{
 		Env:       "RED_WS_AUTH",
 		Files:     []string{"ws_auth_test.go"},
 		ViaHelper: true,

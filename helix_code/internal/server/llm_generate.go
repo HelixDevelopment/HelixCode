@@ -203,6 +203,19 @@ func resolveLLMProvider(providerName, model string) (llm.Provider, error) {
 		return resolveHelixLLMLocalProvider(model)
 	}
 
+	// Local llama.cpp route. Checked BEFORE llm.Select/llm.NewCloudProvider
+	// for the same reason the helixllm check above is: that path DOES resolve
+	// these names (parseCloudProviderType maps llamacpp/llama-cpp/llama.cpp →
+	// ProviderTypeLlamaCpp) but constructs an *llm.LlamaCPPProvider that
+	// cannot serve a request from THESE handlers — see
+	// resolveLlamaCppLocalProvider's doc-comment for the two measured
+	// reasons. Routing here instead gives the caller the llama.cpp backend
+	// they asked for, over the endpoint llama.cpp actually serves.
+	switch strings.ToLower(requested) {
+	case "llamacpp", "llama-cpp", "llama.cpp":
+		return resolveLlamaCppLocalProvider(model)
+	}
+
 	ptype, selErr := llm.Select(sel)
 	switch {
 	case selErr == nil:
@@ -241,8 +254,10 @@ func resolveLLMProvider(providerName, model string) (llm.Provider, error) {
 		defaultModel = "llama3.2"
 	}
 	provider, err := llm.NewOllamaProvider(llm.OllamaConfig{
-		DefaultModel:  defaultModel,
-		BaseURL:       "http://localhost:11434",
+		DefaultModel: defaultModel,
+		// HELIX_OLLAMA_HOST when set, else the standard port — the default
+		// this route has always used, unchanged. See envOllamaHost.
+		BaseURL:       envOllamaHost(),
 		StreamEnabled: true,
 	})
 	if err != nil {
@@ -548,6 +563,129 @@ func resolveHelixLLMLocalProvider(model string) (llm.Provider, error) {
 	}
 	if provider == nil {
 		return nil, fmt.Errorf("helixllm local provider constructed nil without an error")
+	}
+	return provider, nil
+}
+
+// llamaCppHostEnv is the env var this repository ALREADY documents for the
+// local llama.cpp server: `.env.example:55` ships
+// `HELIX_LLAMA_CPP_HOST=http://localhost:8080` and the LLMsVerifier
+// integration plan tabulates it as llamacpp's host binding. Until this change
+// it was a DEAD key — a repo-wide grep found ZERO Go readers, so an operator
+// who set it got silence rather than a redirected endpoint. Reusing the
+// established name rather than minting a new one is CONST-036 / §11.4.74.
+//
+// Base URL only, with NO trailing "/v1": llama-server answers under "/v1/..."
+// and OpenAICompatibleConfig's ChatEndpoint / ModelEndpoint defaults already
+// carry that prefix.
+const llamaCppHostEnv = "HELIX_LLAMA_CPP_HOST"
+
+// ollamaHostEnv is the sibling dead key from the same `.env.example` block
+// (`HELIX_OLLAMA_HOST=http://localhost:11434`, line 54) — documented,
+// tabulated, and likewise read by no Go code until this change. Honouring it
+// is the same one-line defect class as llamaCppHostEnv; the default when it is
+// unset is byte-identical to what this route always used, so no existing
+// deployment's behaviour changes.
+const ollamaHostEnv = "HELIX_OLLAMA_HOST"
+
+// ollamaDefaultHost is Ollama's standard local endpoint — the value this
+// route hardcoded before ollamaHostEnv was honoured, preserved exactly so the
+// zero-config default is unchanged.
+const ollamaDefaultHost = "http://localhost:11434"
+
+// envOllamaHost reads HELIX_OLLAMA_HOST, falling back to ollamaDefaultHost.
+func envOllamaHost() string {
+	if v := strings.TrimSpace(os.Getenv(ollamaHostEnv)); v != "" {
+		return v
+	}
+	return ollamaDefaultHost
+}
+
+// envLlamaCppHost resolves the local llama.cpp base URL, in precedence order:
+//
+//  1. HELIX_LLAMA_CPP_HOST — the llama.cpp-specific key `.env.example`
+//     documents, so an operator who wants llama.cpp on its own host/port sets
+//     exactly one obvious variable.
+//  2. HELIX_LLM_LOCAL_OPENAI_ENDPOINT — the project-wide local-OpenAI endpoint
+//     convention the sibling helixllm route and submodules/helix_agent already
+//     read. Falling through to it means a deployment that already points
+//     HelixCode at its local OpenAI-compatible server does not have to
+//     configure the same address twice.
+//  3. helixLLMLocalDefaultEndpoint (http://localhost:18434) — the project's
+//     LIVE local llama.cpp port, per config/llmsverifier/config.yaml's
+//     `llamacpp` row (`http://localhost:18434/v1`, served by
+//     helixllm-coder.service).
+//
+// Note on the default (§11.4.6 — this is a deliberate divergence from
+// `.env.example`'s literal, recorded rather than silent): `.env.example` and
+// configs/verifier.yaml both show `http://localhost:8080`, which is
+// llama-server's UPSTREAM default — but 8080 is also the port HelixCode's OWN
+// API server listens on, so that value makes the server POST completions to
+// itself. Measured pre-fix against a live server: the request came back
+// `502 {"error":"generation failed: llama.cpp returned status 404",
+// "provider":"llama-cpp"}` — a 404 from HelixCode's own router, which has no
+// /v1/completions route. 18434 both avoids that collision and agrees with the
+// sibling helixllm route's default, so the two local routes cannot disagree
+// about where "the local server" is. An operator wanting the upstream 8080
+// still gets it by setting HELIX_LLAMA_CPP_HOST explicitly.
+func envLlamaCppHost() string {
+	if v := strings.TrimSpace(os.Getenv(llamaCppHostEnv)); v != "" {
+		return v
+	}
+	return envHelixLLMLocalEndpoint()
+}
+
+// resolveLlamaCppLocalProvider constructs the local llama.cpp route as a REAL
+// *llm.OpenAICompatibleProvider (internal/llm/openai_compatible_provider.go)
+// — the same generic OpenAI-compatible HTTP client HelixCode already ships and
+// already uses for VLLM / LMStudio / LocalAI (reused, not rewritten, per
+// CONST-036 / §11.4.74) — pointed at envLlamaCppHost().
+//
+// WHY NOT llm.NewLlamaCPPProvider. That adapter still exists, is still
+// registered in the provider factory (newLlamaCPPFromEntry), and is NOT
+// removed or disabled by this change (§11.4.122) — it remains the right
+// client for llama.cpp's legacy `/completion` surface and keeps its own
+// callers and tests. It is simply not usable from THESE handlers, for two
+// independently-measured reasons:
+//
+//	(a) WRONG ENDPOINT SHAPE. LlamaCPPProvider.Generate always POSTs to
+//	    `/v1/completions`, and when request.Messages is non-empty it sends a
+//	    `messages` key there. A real llama-server rejects that with
+//	    `400 key 'prompt' not found` — already recorded verbatim in
+//	    resolveHelixLLMLocalProvider's doc-comment from a live verification.
+//	    buildLLMRequest builds a message list unconditionally, so EVERY
+//	    request from this surface takes that failing shape.
+//	    OpenAICompatibleProvider POSTs messages to `/v1/chat/completions`,
+//	    which is what llama.cpp's OpenAI-compatible server serves.
+//
+//	(b) UNCONFIGURABLE HOST. resolveLLMProvider builds its
+//	    ProviderConfigEntry without an Endpoint, so newLlamaCPPFromEntry gets
+//	    ServerHost == "" and Generate falls back to its hardcoded
+//	    `http://localhost:8080`. There was no way to point it elsewhere from
+//	    this surface, and that literal collides with our own listener (see
+//	    envLlamaCppHost).
+//
+// This is NOT a fallback: a caller who names llamacpp gets llama.cpp, never a
+// different backend silently substituted. When the configured endpoint is
+// unreachable the provider surfaces the real dial error and the handler
+// answers 502 with `"provider":"llamacpp"` — an honest failure naming the
+// backend the caller actually chose (CONST-035 / §11.4.6).
+//
+// No API key: a local llama-server is an unauthenticated loopback/LAN
+// service, so nothing is read, logged or leaked (CONST-042 / §12.1).
+func resolveLlamaCppLocalProvider(model string) (llm.Provider, error) {
+	cfg := llm.OpenAICompatibleConfig{
+		BaseURL:          envLlamaCppHost(),
+		DefaultModel:     strings.TrimSpace(model),
+		Timeout:          120 * time.Second,
+		StreamingSupport: true,
+	}
+	provider, err := llm.NewOpenAICompatibleProvider("llamacpp", cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to construct llamacpp local provider: %w", err)
+	}
+	if provider == nil {
+		return nil, fmt.Errorf("llamacpp local provider constructed nil without an error")
 	}
 	return provider, nil
 }
