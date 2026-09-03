@@ -2559,3 +2559,116 @@ findings:
       assertion to the production struct rather than to one observed response.
     severity: MEDIUM
     status: fixed + guarded
+
+  - id: OPEN-28-resolved
+    title: the toolkit's third failure was host load — settled, baseline unchanged at 2
+    detail: |
+      test_alias_file_concurrency.sh run three times in isolation on a quiet
+      host (load average 2.17): 3 PASS, 0 FAIL.
+      So the 61/58/3 the re-review measured was contention, not a regression,
+      and the baseline stands at 61 files / 59 passed / 2 failed
+      (test_claude.sh, test_providers.sh).
+      The reviewer's posture was right on both counts: it declined to attribute
+      the failure AND it said what would settle it. Deliberately not run while
+      an agent was working in that repo — re-running a contention-sensitive test
+      under the contention that probably caused it settles nothing.
+      Today's discriminator applied cleanly: this scenario DOES contain
+      legitimate timing (a lock/storm suite), unlike the LSP cancellation case,
+      so load-sensitivity was plausible here. Plausible then measured.
+    severity: LOW
+    status: resolved — host load
+
+  - id: F1-F4-W1-resolved
+    title: the four pin-path regressions and the status mismatch are fixed
+    detail: |
+      All four reproduced first with output matching the reviewer's.
+      F1 — a retired identifier now returns 404, not 503.
+        STATUS CHOSEN WITH A REASON: 404 rather than 410, because this gateway
+        already answers 404 for every other "the name you gave identifies
+        nothing here" condition — unknown consumer, unknown host, model id
+        absent from the listing. A second spelling would make a client's
+        handling depend on which endpoint replied.
+        The retired set is DERIVED, not hardcoded: each retired host is rendered
+        through the same sanitise() the derivation uses and terminated by the
+        ruleset separator.
+        NON-GENERALISATION PROVEN, including the substring hazard I would have
+        worried about: a live identifier on host "localhosting" stays 503 both
+        when serving and when down. Dropping the trailing separator makes that
+        case wrongly 404 — which is mutation 3.
+      F3 — resolution is registry-only; no Available() and no network on the
+        request path. A hung local backend no longer adds 2s to a cloud request.
+      F4 — a host-less raw name now prefers an available provider among those
+        serving the exact name, still never a different model.
+      W1 — typed sentinel so the pinned path maps to 503 like its sibling, with
+        ErrRetiredIdentifier deliberately NOT wrapped in it so the new 404 stays
+        distinct.
+      Five mutations, each diff-verified. The agent also flagged a gap IT
+      introduced: registry-only resolution plus the new strictness means an
+      unregistered valid identifier would be REFUSED. Every existing test
+      fetched its identifier via Brain.ModelOptions(), which populates the
+      registry as a SIDE EFFECT — so all of them would have passed with startup
+      registration deleted. Its new test derives the identifier independently
+      via naming.Derive, never touching the Brain.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: WITHHELD-on-wire
+    title: withheld models now reach the wire, and the vocabulary was extended rather than mapped
+    detail: |
+      THE AGENT DISAGREED WITH THE MAPPING OPTION, correctly and with a reason
+      worth keeping: mapping `provider-unavailable` onto
+      `unsupported_configuration` ("more memory does not help") would state the
+      OPPOSITE of the truth about a loading backend, and destroy the exact
+      signal the toolkit needs to tell loading from withdrawn.
+      So the wire set grew by exactly two — provider_unavailable,
+      identifier_conflict — with helix_agent's Known() admitting them IN THE
+      SAME CHANGE. The hyphen/underscore trap I flagged is real and proven:
+      mutation M3 shows the raw hyphenated token arriving at helix_agent as
+      withheld_reason="" and being silently discarded.
+      It declined to add unnameable_model, because such an option keeps its RAW
+      REJECTED NAME as its id and safeToPublish drops it — "adding a key nothing
+      writes would repeat the defect being fixed". The gap is stated in the
+      code rather than papered over.
+      NON-CONSUMABILITY PROVEN AGAINST REAL CONSUMERS, not stand-ins:
+        * the toolkit's serving filter reproduced verbatim and run by REAL jq
+          against the real body — selects nothing, while the same filter selects
+          two served models (the vacuity guard);
+        * helix_agent decoding the ACTUAL EMITTED BYTES: enabled=false,
+          availability="withheld", withheld_reason="provider_unavailable",
+          usable=false, alongside a served model usable=true.
+      Five mutations including one that labels a withheld model "serving" and
+      fails ALL THREE consumer checks.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: SELF-15
+    title: my commit blocked another agent's amend, leaving a wrong cross-repo SHA in its message
+    detail: |
+      helix_llm 29d8c87's body cites the consumer half as "commit be54764
+      there". That SHA is helix_agent's PREVIOUS HEAD, not the commit. The real
+      one is 8cb9b93a.
+      The agent wrote the message before committing the helix_agent side,
+      intended to amend, and by then I had committed 15a87d9 on top — so
+      amending was unsafe and it correctly left it and reported it instead.
+      Recorded here because the ledger is the durable record and a wrong
+      cross-repo pointer is a navigation problem for whoever follows the trail.
+      CORRECT READING: helix_llm 29d8c87 <-> helix_agent 8cb9b93a.
+      This is the cost of a shared checkout with concurrent commits, and it is a
+      smaller cost than the alternative — the agent was right not to rewrite
+      history under another commit.
+    severity: LOW
+    status: recorded — correct pairing stated here
+
+  - id: OPEN-30
+    title: the retired-host set is exactly two, deliberately
+    detail: |
+      naming.RetiredHosts = {"localhost", "127.0.0.1"} — the two the documented
+      setup actually produced.
+      0.0.0.0 and ::1 are DELIBERATELY ABSENT. Widening the set turns more
+      identifiers permanently dead, which is the one direction this change
+      cannot be walked back from cheaply, so it is a decision to make with
+      evidence that those forms were ever published. The comment on RetiredHosts
+      says so.
+      Worth revisiting only if someone finds a deployment that published them.
+    severity: LOW
+    status: open — deliberate, revisit only on evidence
