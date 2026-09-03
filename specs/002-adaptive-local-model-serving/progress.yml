@@ -2028,3 +2028,43 @@ findings:
       is how the ModelBrain wiring gap stayed invisible.
     severity: LOW
     status: open
+
+  - id: TOOLKIT-uncommitted
+    title: the whole helixllm-export feature was uncommitted, so none of its defects ever shipped
+    detail: |
+      MATERIAL CORRECTION to how these three findings were framed, including by
+      me. The agent checked before assuming: `git log -S` shows the feature
+      appears in NO commit, and `git show HEAD:scripts/claude-providers.sh |
+      grep -c helixllm-export` returns 0.
+      So the corrupted identities, the misdirected credential and the add-only
+      --apply were defects in work-in-progress, never in anything a user ran.
+      That changes the severity, not the fixes — and the commit necessarily
+      lands the feature together with the fixes, because the fixed lines were
+      themselves uncommitted.
+      Committed to a BRANCH (fix/helixllm-export-review-findings), main left
+      untouched at 75d25ab. Merging it lands the whole feature, not just the
+      fixes, which is a decision rather than a formality.
+      Also worth recording: the agent caught its own bad assertion. It had
+      written "no request went out unauthenticated", which counted the test's
+      OWN plain-curl evidence probes and would have passed for the wrong
+      reason. Replaced with a scoped window comparing total-vs-keyed counts.
+      And it reconciled rather than weakened the credential assertions: the old
+      control needle asserted the secret WAS sent — it certified the defect —
+      and now asserts the gateway key arrives while the secret reaches no server
+      and no file.
+    severity: MEDIUM
+    status: fixed on a branch; merging is an operator decision
+
+  - id: MILESTONE-green
+    title: helix_llm is fully green — 53 packages, 0 failures
+    detail: |
+      First time this session. The two integration failures that three agents
+      had written off as needing live services were the last red thing, and they
+      needed one line in the test framework.
+      Measured on a quiet tree: `go test -count=1 ./...` -> 53 ok, 0 FAIL.
+      Not a claim that the feature is finished — 8 tasks remain open, four of
+      them reviews that must iterate to a zero-finding GO, and roughly 20
+      findings are still open. It is a claim that nothing in the module is
+      currently failing, which was not true at any earlier point today.
+    severity: INFO
+    status: recorded
