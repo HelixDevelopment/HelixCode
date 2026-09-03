@@ -2831,3 +2831,64 @@ findings:
       from [read] for every claim.
     severity: INFO
     status: recorded
+
+  - id: F-1-resolved
+    title: the retired-404 premise is now true by construction, not by assertion
+    detail: |
+      Reproduced the five-host table independently before fixing, and confirmed
+      both halves of the false premise directly.
+      THE PRIMARY REPAIR: ServingHost's `return host` became `return ""`. The
+      provider then publishes un-prefixed, exactly as it already does for an
+      unparseable base URL and as every remote provider does. That makes
+      derive.go's premise true BY CONSTRUCTION. The agent also rewrote that
+      comment to say so AND to record that it had previously been an assertion —
+      which is the right thing to leave behind, since an asserted premise is how
+      this happened.
+      WHY IT SURVIVED, and this is worth keeping: the pre-existing
+      loopback_serving_host_test.go SKIPS precisely on machines called
+      `localhost`. The test skipped exactly the case it existed to check. Add it
+      to the PATTERN-1 family — a skip that lands on the interesting case is
+      indistinguishable from a pass until someone asks what it skipped.
+      The agent added a `machineName` seam because the branch is otherwise
+      unreachable without renaming the host (`unshare -Uru` is denied here), and
+      captured the RED baseline against unchanged behaviour first.
+      IT DECLINED TO WIDEN namesNoMachine, correctly: localhost.lan and
+      localhost-2 name real, distinct machines, and blanking them would lose a
+      genuine host. Their collision is a retired-PREFIX ambiguity, which is the
+      registry step's job.
+      IT IMPROVED ON THE REVIEWER'S PLAN, which I had passed through unchanged.
+      The reviewer said "no live identity has a sanitised host BEGINNING WITH
+      the retired rendering". On a box now called localhost.lan that predicate
+      would make a pre-rename helixllm-localhost-… NON-retired too, losing the
+      round-2 404. Matching the live host's FULL prefix keeps
+      helixllm-localhost-lan-… live AND helixllm-localhost-… retired. Both
+      asserted.
+      AND IT MEASURED THE OPEN QUESTION RATHER THAN REASONING ABOUT IT. Asked
+      whether the chained-older-instance case was covered, it probed: cached
+      list -> 503 (covered), but EMPTY list -> still 404. The registry-aware fix
+      covered it only partly, because the live-host set was built from
+      registered IDENTITIES (one per model) while the question is about the
+      HOST. It fixed that rather than justifying it (Registry.NoteLiveHost), and
+      noted the same residual hits any local runtime between start-up and first
+      model load.
+      Six mutations, each diff-verified. RED polarity re-confirmed after
+      `go clean -testcache`. 53 packages ok, zero FAIL.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: NOTE-7
+    title: a skip that lands on the interesting case
+    detail: |
+      loopback_serving_host_test.go SKIPS when the machine running it is called
+      `localhost` — which is the exact condition under which the defect it was
+      written to catch occurs.
+      It is not a fail-open skip in the usual sense: it names its reason and it
+      is honest about not running. But its reason and the defect's precondition
+      are the same fact, so the test could never see the bug, and a green suite
+      never showed a gap.
+      Worth carrying as a check on future skips: when you write one, ask whether
+      its condition is correlated with the failure you are guarding against. If
+      it is, the skip is not a neutral absence of information — it is a blind
+      spot aimed at the target.
+    severity: INFO
+    status: recorded
