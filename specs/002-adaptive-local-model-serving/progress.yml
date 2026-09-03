@@ -2068,3 +2068,41 @@ findings:
       currently failing, which was not true at any earlier point today.
     severity: INFO
     status: recorded
+
+  - id: T055-LOW-verdict
+    title: the "withheld vocabularies disagree" finding is a false alarm; the real defect is adjacent
+    detail: |
+      REPORTED (T055, LOW): helix_llm publishes provider-unavailable /
+      unnameable-model / identifier-conflict / instance-unreachable /
+      model-unavailable, while helix_agent's WithheldReason.Known() accepts only
+      insufficient_resources / unsupported_configuration /
+      excluded_by_usage_terms — "vocabularies disagree across the wire".
+      REFUTED. They are not two vocabularies for one field. They are two
+      vocabularies for two DIFFERENT fields, and they never meet:
+        * the five hyphenated reasons are assigned to opt.Reason on
+          naming.Offer/Instance (internal/brain/naming.go, internal/naming/
+          export.go) and appear in the export artifacts' comment lines.
+        * api.Model.WithheldReason — the WIRE field — is NEVER ASSIGNED
+          anywhere in non-test code. Zero writers.
+      That is the FOURTH severity claim from this one review that did not
+      survive verification.
+      THE REAL FINDING, which the report pointed near but did not state:
+      helix_agent READS withheld_reason off the wire (adapters/helixllm/
+      types.go:167) and VALIDATES it (catalog/helixllm_source.go:71 calls
+      Known()). helix_llm never writes it. The consumer is fully prepared for a
+      field the producer never sends, so that validation path cannot fire and
+      the withheld branch is dead code awaiting a producer.
+      This is the same shape as the exporters-with-no-caller finding: declared,
+      documented at length, and unreachable.
+      A LANDMINE WORTH RECORDING for whoever wires it: the wire doc says
+      withheld_reason is "one of the three recorded machine keys" — helix_agent's
+      three. A helix_llm developer wiring this would naturally reach for the
+      FIVE naming reasons already defined in that codebase, which are the wrong
+      vocabulary for this field and would fail Known() on arrival. The two sets
+      even use different separators (hyphen vs underscore), so a mistake here
+      would look deliberate.
+      NOT changed: populating or removing a documented wire field is a contract
+      decision, and 11.4.124 requires investigating how it came to be unwired
+      first. Recorded rather than guessed.
+    severity: LOW
+    status: reported finding refuted; adjacent real finding recorded, open
