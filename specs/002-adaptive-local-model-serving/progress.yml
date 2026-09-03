@@ -2106,3 +2106,65 @@ findings:
       first. Recorded rather than guessed.
     severity: LOW
     status: reported finding refuted; adjacent real finding recorded, open
+
+  - id: SELF-13
+    title: staging by path does not scope a commit — I swept 1424 lines of another agent's work
+    detail: |
+      My commit 52c827f is titled "docs(faq): the agent lane refuses models it
+      used to run" and contains NINE files: my 32-line FAQ addition, and 1424
+      lines of the request-validation agent's in-flight gateway work
+      (requestvalidate.go, requestvalidate_test.go, upstream_error.go,
+      anthropic.go, openai.go, websocket.go, i18n.go, and its design doc).
+      I did NOT use `git add -A`. I staged exactly one file, by path. That was
+      not enough, and this is the part worth learning:
+        `git add <path>` adds to the index. `git commit` commits the ENTIRE
+        index — including whatever another agent staged in the same checkout
+        before I got there.
+      This is SELF-8 recurring in a subtler form. After SELF-8 I adopted "stage
+      explicitly by path", wrote it into the resumption file as a house rule,
+      and put it in every agent brief. It is a necessary rule and I proved it is
+      not a sufficient one.
+      THE CORRECTED DISCIPLINE, in a shared checkout:
+        * `git commit -- <paths>` (pathspec-limited) commits ONLY those paths
+          regardless of what else sits in the index; or
+        * inspect `git diff --cached --stat` IMMEDIATELY BEFORE committing and
+          confirm it lists only your files.
+      I did run that check before several other commits today. I skipped it on
+      this one, and that is the whole difference.
+      NOT REWRITTEN. Nothing is lost, nothing is pushed, and the agent handled
+      it correctly: it declined to rewrite history and made 834971c the
+      properly-titled record that says what happened. Rebasing now, with agents
+      live in this checkout, would risk far more than a misleading commit title
+      costs. The title is wrong; the record is complete.
+    severity: MEDIUM
+    status: recorded — not rewritten, deliberately
+
+  - id: G2A-resolved
+    title: malformed requests were told the server broke, and the error named the backend's address
+    detail: |
+      CONFIRMED and fixed. Reproduced live first: messages:[], max_tokens:-1,
+      max_tokens:0+stream, role:null, and unicode/long/traversal model names all
+      returned 503 with a body carrying "dial tcp 127.0.0.1:50052: connect:
+      connection refused".
+      ONE CORRECTION TO THE TRIAGE'S FRAMING, and it matters: 503 is WORSE than
+      500 here. It tells a client to retry with backoff, and a retry of
+      messages:[] can never succeed — so a correct client retries forever.
+      SCOPE was larger than triaged: not two handlers and five error sites but
+      THREE body-taking handlers and EIGHT error sites. /v1/agents/chat and
+      /v1/agents/coordinate were found by its own review — mounted on the same
+      engine, wrapping brain.Complete with %w and returning it raw. The
+      WebSocket had neither redaction nor translation.
+      The policy is recorded per-endpoint with citations, and the
+      deliberately-NOT-validated list is as carefully argued as the validated
+      one (message content, because assistant tool_calls have empty content;
+      the role enum; model EXISTENCE, because that is a 404; and auth, because
+      the validator never reads the Authorization header and therefore cannot
+      collapse a 401 into a 400 — which keeps G2b genuinely untouched).
+      Nine mutations. M9's first form left an unused import, so the package did
+      not build and the test printed no failure line — the agent caught that a
+      BUILD FAILURE IS NOT A PASSING GUARD and re-ran it properly. That is
+      PATTERN-1 again, in yet another shape.
+      MEASURED: 25/78/28 -> 34/69/28, with an exact set diff showing ZERO new
+      failures. Nothing weakened, nothing skipped.
+    severity: HIGH
+    status: fixed + guarded
