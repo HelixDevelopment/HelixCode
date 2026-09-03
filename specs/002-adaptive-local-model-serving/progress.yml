@@ -575,7 +575,7 @@ findings:
       source of truth and this module is the defect", so the direction of the fix
       is already settled; only the decision to make it is outstanding.
     severity: MEDIUM
-    status: open — needs a decision
+    status: "closed - see OPEN-2-resolved (previously - open — needs a decision)"
 
   - id: EX-22
     where: helix_code/config/config.yaml (llm section) vs internal/config.LLMConfig
@@ -3767,3 +3767,116 @@ findings:
       untouched here.
     severity: HIGH
     status: "closed - the lane was already migrated (0c43b11, abbc0d2); verified by test run + paired mutation, ledger corrected"
+
+  - id: OPEN-2-resolved
+    title: the ranking divergence was already fixed 43 minutes before OPEN-2 was written; the two paths are now bound by a test
+    detail: >-
+      OPEN-2 asked for a decision it framed as outstanding. The decision is
+      MOOT: the fix had already landed. Every specific claim is now false,
+      checked against current source and then PROVEN BY RUNNING BOTH
+      IMPLEMENTATIONS rather than inferred from reading.
+      "Go's selection.Select returns offers in CATALOGUE order"
+        -> internal/selection/family.go:114 sortOffered() sorts
+           memory, then storage, then the catalogue identity. It landed in
+           064dd75 at 2026-09-02 22:02:46; OPEN-2 was recorded in 44ff9b10 at
+           22:45:09 — 43 minutes LATER. The finding was written against a
+           stale reading of the code, not against the code.
+      "leaves preference to the lane — videogen-boot's prefer() sorts
+      MOST-CAPABLE-first"
+        -> no prefer() exists anywhere under cmd/. The per-lane ordering was
+           removed when the ordering moved into selection.
+      "the same host picks q4_k_m through the Python path and f16 through the
+      Go path"
+        -> REPRODUCTION ATTEMPTED AND FAILED, which is the finding. Both
+           implementations were run over the SAME catalogue YAML
+           (internal/catalogue/data/*.yaml, which both read) and the same
+           processor-only host (44 GiB free RAM, 1024 GiB disk, personal
+           usage): Go via catalogue.Load + selection.Select, Python via
+           load_catalogue + evaluate + select. All EIGHT families came back
+           in BYTE-IDENTICAL order. The distinguishing input the finding
+           names does exist — the embedding family carries the same model in
+           two variants, nomic-embed-text-v1.5:q4_k_m (cheap) and
+           nomic-embed-text-v1.5:f16 (dear) — and BOTH paths choose q4_k_m.
+      THE DIRECTION WAS SETTLED THE OTHER WAY, and this matters because
+      OPEN-2 quotes the gate's header ("Go is the source of truth") as
+      settling it toward Go's ranking. Go's ranking was the defect. The gate's
+      docstring records the resolution: GO WAS CHANGED TO MATCH THIS MODULE,
+      because the cheapest option that genuinely runs is the one that leaves
+      headroom for CO-RESIDENT models — a host serves a coder model beside a
+      vision or video one on the same accelerator (internal/vrambroker), and
+      taking the largest thing that fits is how it ends up unable to load the
+      second. The docstring explicitly warns against "fixing" the ranking
+      back to a most-capable-first lane. Go remains authoritative in general
+      AND now carries the correct policy, so there is no conflict and nothing
+      on the Python side needed to change.
+      WHAT WAS GENUINELY MISSING was a mechanical binding. THREE places
+      asserted the two agree IN PROSE — sortOffered's doc comment,
+      offer_order_test.go's header ("It mirrors select() in
+      container/helix_model_gate.py"), and the gate's module docstring — and
+      prose does not fail a build when someone edits one side. That is the
+      same drift seam internal/serviceconfig/precision_agreement_test.go
+      closes for precisions, and this entry closes it for the ranking.
+      FIXED with internal/selection/python_gate_agreement_test.go
+      (TestGoOfferOrderingAgreesWithThePythonGate), following that
+      precedent's mechanism: parse the other language's source for the
+      authoritative facts, compare, fail loudly. It extracts the ordered
+      comparison AXES and, on each axis, the DIRECTION, from both
+      family.go's sortOffered chain and the gate's sort key. It prints the
+      comparison it made:
+        go sortOffered=[memory:asc then storage:asc then identity:asc]
+        python gate select()=[memory:asc then storage:asc then identity:asc]
+        (agree)
+      DIRECTION IS THE LOAD-BEARING HALF. Most-capable-first is not a
+      different set of axes, it is the same axes with the inequality flipped,
+      so a test comparing only memory-then-storage-then-identity would have
+      passed throughout the original defect. The test reads Go's < vs > and
+      Python's reverse=True / field negation.
+      FALSIFIABLE, PROVEN BY THREE §1.1 PAIRED MUTATIONS, each restored
+      byte-identical with git diff --exit-code and a go clean -testcache
+      before the restored re-run:
+        1. gate reverse=True (the historical most-capable-first defect)
+           -> FAIL: py [memory:desc ...] vs go [memory:asc ...]. And the
+              mutated gate REALLY DOES change what is served: re-running the
+              differential under mutation, the gate chose
+              nomic-embed-text-v1.5:f16 where Go chooses q4_k_m — the exact
+              divergence OPEN-2 described. So the test guards behaviour, not
+              a string.
+        2. gate memory/storage axes swapped -> FAIL: py [storage:asc first].
+        3. Go memory '<' changed to '>' -> FAIL: go [memory:desc]. The
+           binding is SYMMETRIC — it catches drift on either side, not only
+           in the Python.
+      A parser that stops recognising either side's shape calls t.Fatal
+      naming what it could not read, rather than parsing nothing and
+      reporting agreement.
+      WHY NO RED TEST WAS AUTHORED. §11.4.115 requires a RED that reproduces
+      the defect on the CURRENT artifact; this defect is already fixed, so a
+      RED cannot reproduce it, and per §11.4.115's own honest boundary a RED
+      that does not fail is a finding — which is this entry. Mutation 1 is
+      the polarity pair: it restores the historical defect and the guard
+      fails on it.
+      EVIDENCE. go build ./... exit 0. internal/selection 87 PASS,
+      internal/catalogue + internal/serviceconfig ok.
+      container/test_helix_model_gate.py 25 tests OK. All re-run on the
+      MERGED main (c45b7a1) from a sibling path where go.mod's relative
+      replace directives resolve, not only on the pre-merge base.
+      TWO ADJACENT FACTS FOR WHOEVER READS THIS NEXT, neither mine to fix.
+      (a) `go test ./...` in helix_llm currently refuses with "updates to
+      go.mod needed"; localised to a missing require for
+      github.com/golang-jwt/jwt/v5 v5.3.1, i.e. the in-flight JWT work, NOT
+      this change — confirmed by removing this file and seeing the refusal
+      persist. go.mod was restored byte-identical after the diagnosis.
+      (b) WHY TWO IMPLEMENTATIONS EXIST AT ALL, since OPEN-2 implies
+      duplication: they are not duplicates of the same deployment. The Go
+      internal/selection is the in-process decision every *-boot lane makes
+      before it starts a container. container/helix_model_gate.py is the
+      SHARED VOCABULARY for the three audio services (stt_catalogue_wiring,
+      services/tts, services/audio) that run INSIDE those containers, where
+      the Go packages are not present — its own docstring records that it
+      exists because a previous attempt split those three across separate
+      efforts and produced four mutually incompatible schemas. So it is a
+      legitimate second implementation for a second deployment context, and
+      the right response is a binding test, not a deletion (§11.4.124 would
+      require a git-history investigation before removing either, and the
+      history says the gate was built on purpose).
+    severity: MEDIUM
+    status: "closed - the divergence does not reproduce (fixed by 064dd75, 43 min before the finding was written); ranking now bound by TestGoOfferOrderingAgreesWithThePythonGate, proven by 3 paired mutations; ledger corrected"
