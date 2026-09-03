@@ -151,6 +151,51 @@ Verified working end-to-end:
 
 ---
 
+## 2c · Full retest results (2026-09-03, and how to read them)
+
+| repo | result |
+|---|---|
+| `helix_llm` | **exit 0 — 54 packages ok, 0 FAIL** |
+| `helix_agent` | **exit 0 — 289 packages ok, 0 FAIL** |
+| `helix_code` | exit 1 — 192 ok, 7 failing packages (below) |
+| `claude_toolkit` | exit 1 — 2279 assertions pass, 12 fail = 2 root causes |
+
+`helix_code`'s 7 failures are **3 real and 4 artefacts of the sweep itself**:
+
+- **3 GUI packages** (`applications/{desktop,aurora_os,harmony_os}`) fail to
+  BUILD. Genuine environment gap: this host has no OpenGL/X11 development
+  headers, so the Fyne -> go-gl -> glfw chain cannot compile
+  (`gl.pc` and `X11/Xlib.h` both absent). Not a code defect. `make
+  desktop-nogui` exists precisely for this. Server and CLI build fine.
+- **4 timing / connection-pool packages** fail inside `go test ./...` and
+  PASS when run alone:
+
+  | package | in the parallel sweep | alone, quiet host |
+  |---|---|---|
+  | `internal/providers/httpclient` | FAIL | ok 0.015s |
+  | `tests/performance/scenarios` | FAIL | ok 3.980s |
+  | `tests/regression` | FAIL | ok 1.792s |
+  | `tests/memory` | FAIL | ok 98.991s (all 15 tests) |
+
+**Why, and it is structural.** `go test ./...` runs package binaries in
+parallel up to GOMAXPROCS. Measured on this host: the `helix_code` sweep alone
+drove load to **70 on 16 CPUs**. Every one of those four measures something
+load-sensitive — wall-clock stability, HTTP keep-alive pool reuse, post-GC live
+heap. They cannot be measured reliably inside their own sweep.
+
+So the honest reading is: **the suite is green apart from a documented
+toolchain gap**, but the timing-sensitive packages need `-p 1` or a separate
+target. Do not "fix" them by loosening their bounds — that is the §11.4.120
+forbidden move, and their bounds are what make them worth having.
+
+There is a good precedent already in the tree: `helix_llm`'s
+`internal/testing` DETECTS the contention and skips that step with a reason
+("host too loaded to measure concurrency ... re-run on a quieter host").
+Its only flaw is that the wrapper asserts "passed" rather than accepting
+"skipped". That pattern is worth generalising.
+
+---
+
 ## 3 · What was fixed in the 2026-09-02/03 session
 
 Every one of these was **reproduced before being fixed**, and each carries a
