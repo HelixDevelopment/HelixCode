@@ -2435,3 +2435,88 @@ findings:
       that feels like an answer.
     severity: INFO
     status: recorded
+
+  - id: F2-resolved
+    title: --apply no longer deletes a config for a host whose backend is still loading
+    detail: |
+      Reproduced with captured output before the fix, and BOTH runs committed as
+      evidence (scripts/tests/proof/97b-...):
+        pre-fix  -> "env file ... -> GONE ; alias 0 entries remain ; VERDICT: LOST"
+        post-fix -> KEPT
+      POSITIVE SERVING EVIDENCE chosen: at least one listing entry carrying a
+      non-empty model_identity whose availability is "serving" or absent —
+      factored into ONE shared jq predicate used BOTH to build records and to
+      judge the host, "so the two can never disagree about the same listing".
+      That is the SELF-9 lesson (two copies of one fact drifting apart) applied
+      preventively rather than after the fact.
+      A SIDE DOOR I HAD NOT CONSIDERED, found by the agent: vendor passthroughs
+      deliberately omit model_identity and stay reachable while the local
+      backend is down — so a vendor-only listing is ANOTHER FACE of the loading
+      host, and counting it as evidence would have reintroduced the bug through
+      a different route. Now its own test.
+      IT READ THE `reason` FIELD AND REJECTED IT AS EVIDENCE, correctly:
+      HandleListModels attaches the same string for ANY empty listing with a
+      backend present, so it reads identically whether the backend is mid-load
+      or has genuinely stopped serving everything. It distinguishes neither.
+      Echoed to the user in the warning, and trusted for nothing.
+      CONSERVATIVE COST STATED: a host that genuinely empties itself never
+      converges until it serves something again.
+      Test line 474 RECONCILED, not deleted — rewritten to assert the opposite,
+      with a comment recording that the old assertion WAS THE DEFECT, PINNED.
+      Two mutations: reverting gate 2 fails 5 assertions and the repro prints
+      LOST; making gate 2 reject everything fails 6, proving the survival
+      assertions cannot be satisfied by quietly disabling retirement.
+      It also caught its own suite regression (test_sandbox_hygiene) and
+      diagnosed it as its own: a grep nested in a command substitution reads
+      statically like a call. Suite back to the 61/59/2 baseline.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: SELF-14
+    title: an agent verified in the wrong repository, and I caught it because it contradicted me
+    detail: |
+      The F2 agent reported: "Neither WithheldReason nor withheld_reason occurs
+      anywhere in helix_agent's Go sources, so if such a branch exists it keys
+      on something else and I did not find it." It recorded the reviewer's claim
+      as unconfirmed rather than fact — the right instinct, wrong result.
+      RE-VERIFIED, and it is not close: 56 occurrences in helix_agent, including
+        internal/adapters/helixllm/types.go:167  the wire field
+        internal/catalog/catalog.go:90           the catalog field
+        internal/catalog/helixllm_source.go:71   rejects unless Known()
+        internal/router/helixllm_catalog_source_test.go:277
+              "withheld_reason":"insufficient_resources"
+        internal/router/helixllm_catalog_source_test.go:311
+              if withheld.WithheldReason != catalog.ReasonInsufficientResources
+      There is already a TEST feeding the consumer the exact wire shape and
+      vocabulary the producer change is being asked to emit.
+      THE CAUSE IS VISIBLE IN ITS OWN WORDS: it described what it found as "the
+      unrelated selection.WithheldReason type" — and `selection` is a HELIX_LLM
+      package. It searched the wrong tree. Not carelessness; a scope slip, and
+      an easy one, because BOTH repos define a type of that name and only one of
+      them is the wire type.
+      WHY IT WAS CAUGHT: it contradicted something I had verified myself and
+      then written into a live agent's brief. Had I not held that fact, the
+      running agent would have been told its premise was unconfirmed and might
+      have narrowed its work. I sent it the correction with the citations.
+      This is the third premise-error in this programme caught by someone
+      holding independent evidence — two of mine caught by agents, one of an
+      agent's caught by me.
+    severity: MEDIUM
+    status: corrected; running agent informed
+
+  - id: OPEN-29
+    title: the second reported instance is server-side only, not a toolkit exposure
+    detail: |
+      The re-review reported that GET /v1/config/opencode returning "models":{}
+      during loading, with MergeOpenCode replacing the user's entry wholesale,
+      was a smaller instance of the same data-loss root.
+      CORRECTED by the F2 agent, with evidence: the toolkit has NO consumer of
+      /v1/config/* at all (zero hits across the whole repo), and MergeOpenCode
+      is called only server-side at internal/gateway/consumer_config.go:204,
+      where the SERVER writes the user's opencode.json. The toolkit's own
+      claude-opencode-sync.sh builds that file from the toolkit's provider
+      records, not from HelixLLM's export.
+      So the exposure is real but SERVER-SIDE ONLY, and the toolkit fix neither
+      covers it nor needs to. Still open on the server.
+    severity: MEDIUM
+    status: open — server-side
