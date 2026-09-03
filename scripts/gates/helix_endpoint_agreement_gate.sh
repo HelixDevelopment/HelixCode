@@ -338,6 +338,15 @@ for key, s in services.items():
         rm = READY_RE.match(line.strip())
         if not rm:
             continue
+        # The unit's own readiness BUDGET: wait-http-ready.sh <url> <retries>
+        # <interval>. systemd waits this long for the service to answer, so
+        # the gate must not call the endpoint drifted any sooner.
+        bits = line.strip().split()
+        try:
+            s["ready_budget"] = max(s.get("ready_budget", 0),
+                                    int(bits[-2]) * int(bits[-1]))
+        except (ValueError, IndexError):
+            pass
         for scheme, host, port, upath in URL_RE.findall(rm.group(1)):
             add(key, scheme, host, port, upath, s["unit"], line_no, "unit-declaration")
     sources_seen.append(s["unit"])
@@ -556,6 +565,73 @@ def probe_path(role, recorded):
         return "/v1/models"
     return recorded or "/"
 
+# A service's ports do not all appear at once. helixagent binds its liveness
+# probe BEFORE its API port, so during startup the API role looks exactly like
+# drift: configured port dead, service alive on another port. Measured live —
+# the gate reported :7061 as drifted while the service's OWN health endpoint
+# said status='starting' and :7061 came up moments later.
+#
+# So consult that declared readiness signal before calling drift. The unit
+# itself treats this endpoint as the readiness gate (ExecStartPost waits on
+# it), which is what makes it authoritative rather than a guess (§11.4.6).
+# The transient set is CLOSED and deliberately narrow: 'unhealthy' or
+# 'degraded' is NOT a startup excuse — a running service that lost its API
+# port is a real finding and must stay red.
+STARTING = {"starting", "initializing", "init", "pending", "booting",
+            "warmup", "warming_up", "not_ready", "notready", "unavailable"}
+
+try:
+    CLK = os.sysconf("SC_CLK_TCK") or 100
+except (ValueError, OSError):
+    CLK = 100
+
+def proc_age(pid):
+    """Seconds since this process started, from /proc. Measured, not guessed."""
+    try:
+        with open("/proc/uptime") as f:
+            up = float(f.read().split()[0])
+        with open("/proc/%s/stat" % pid) as f:
+            # Field 22 (1-based) is starttime; the comm field may contain
+            # spaces/parens, so split after the closing paren.
+            rest = f.read().rsplit(")", 1)[1].split()
+        return up - (float(rest[19]) / CLK)
+    except (OSError, ValueError, IndexError):
+        return None
+
+def within_ready_budget(svc):
+    """Is the owner younger than the readiness budget its OWN unit declares?
+    helixagent's unit waits 300x3s=900s for its API port, so calling that port
+    drifted at second 30 would contradict the project's own definition of how
+    long startup may take. Returns (age, budget) when inside the budget."""
+    budget = services[svc].get("ready_budget", 0)
+    if budget <= 0:
+        return None
+    ages = [a for a in (proc_age(p) for p in service_owner_pids(svc)) if a is not None]
+    if not ages:
+        return None
+    age = min(ages)
+    return (age, budget) if age < budget else None
+
+def starting_up(svc):
+    """Is this service's own readiness endpoint telling us it is still coming
+    up? Returns the reported status when yes, else None."""
+    for r in by_role.get((svc, "health"), []):
+        if r["port"] not in owned_ports:
+            continue
+        status, body, _url, err = probe(r["scheme"] or "http", r["host"],
+                                        r["port"], r["upath"] or "/")
+        if status is None:
+            continue
+        try:
+            doc = json.loads(body)
+        except Exception:
+            continue
+        if isinstance(doc, dict):
+            st = str(doc.get("status", "")).strip().lower()
+            if st in STARTING:
+                return st
+    return None
+
 green, skips = [], []
 for (svc, role), rs in sorted(agreed.items()):
     sname = services[svc]["name"]
@@ -587,9 +663,29 @@ for (svc, role), rs in sorted(agreed.items()):
         else:
             findings.append("'%s' (%s): the configured endpoint %s answered (HTTP %s) but %s."
                             % (sname, role, url, status, why))
+    elif live and within_ready_budget(svc):
+        age, budget = within_ready_budget(svc)
+        skips.append("%s [%s] (:%d) — owner %s (pid %s) has been up %.0fs, inside the %ds "
+                     "readiness budget its own unit declares (wait-http-ready retries x "
+                     "interval), and has not bound this port yet; a service still inside its "
+                     "declared startup window has not drifted"
+                     % (sname, role, port, owner, ",".join(service_owner_pids(svc)),
+                        age, budget))
+    elif live and starting_up(svc):
+        # Alive and serving something, but its own readiness endpoint says it
+        # is still coming up, so this port is expected to appear shortly. Not
+        # drift — and calling it drift would red-line every restart window,
+        # which with several agents restarting services means a permanently
+        # red gate that gets muted (§11.4.201).
+        skips.append("%s [%s] (:%d) — owner %s (pid %s) is still STARTING "
+                     "(its own readiness endpoint reports status=%r) and has not bound this "
+                     "port yet; a service mid-startup has not drifted"
+                     % (sname, role, port, owner, ",".join(service_owner_pids(svc)),
+                        starting_up(svc)))
     elif live:
-        # (c) THE DEFECT. The service is alive and serving, just not where the
-        # records say. Both values are named so the fix is unambiguous.
+        # (c) THE DEFECT. The service is alive, serving, and reports itself
+        # READY — it is simply not where the records say. Both values are named
+        # so the fix is unambiguous.
         findings.append("'%s' (%s): the configured endpoint is :%d, which NOTHING is listening on, "
                         "while this service's own process (%s, pid %s) is alive and serving :%s. "
                         "The configured value does not reach the running service. Recorded at: %s"
