@@ -2297,3 +2297,27 @@ findings:
       in my own words until fixed". Both reproduced and fixed.
     severity: INFO
     status: landed
+
+  - id: OPEN-28
+    title: the toolkit baseline may have moved from 2 failures to 3 — unsettled on purpose
+    detail: |
+      The re-review's final suite pass measured claude_toolkit at 61 files /
+      58 passed / 3 FAILED, one worse than the 59/2 baseline every prior agent
+      recorded.
+      The third is test_alias_file_concurrency.sh, a lock/storm timing suite.
+      The reviewer did NOT attribute it, and gave its reasons: the branch's diff
+      against main does not touch scripts/lib.sh at all, that test file was last
+      changed in v1.24.0, and it ran while two Go suites and another agent's
+      build shared the host. Marked SUSPECT host-load, explicitly UNCONFIRMED.
+      That is the right posture, and it is also actionable: re-run it in
+      isolation.
+      NOT DONE YET, DELIBERATELY. An agent is live in that repo right now, and
+      re-running a contention-sensitive test under the very contention that
+      probably caused it would settle nothing — the §11.4.119 single-owner point.
+      Settle it once that agent lands and the host is quiet.
+      Apply today's discriminator when it is settled: does the scenario contain
+      LEGITIMATE timing? A lock/storm concurrency suite does, unlike the LSP
+      cancellation case, so load-sensitivity is plausible here in a way it was
+      not there. Plausible is not measured.
+    severity: LOW
+    status: open — settle on a quiet host

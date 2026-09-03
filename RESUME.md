@@ -55,6 +55,16 @@ there is not. That is the single most misleading thing in the older docs.
 Feature **002 `adaptive-local-model-serving`** is mid-execution:
 `specs/002-adaptive-local-model-serving/`.
 
+> **READ THIS FIRST: the naming/export batch is NO-GO.** An independent
+> re-review confirmed four findings BY RUNNING CODE, and THREE OF THEM WERE
+> CREATED BY THE FIXES. Two are user-facing and serious: a user holding a
+> pre-fix `helixllm-127-0-0-1-…` identifier is now silently answered by the
+> WRONG MODEL (the original CRITICAL, reproduced for the population the batch
+> itself created), and `--apply` DELETES a user's entire configuration for a
+> host that is merely restarting. Fixes are in flight. Do not treat this batch
+> as done, and do not trust an earlier summary that says the fixes landed
+> cleanly — they landed, and they each created something new.
+
 - **89 of 97 tasks** complete (`/usr/bin/grep -c '^- \[x\]' .../tasks.md`).
 - **93 findings** recorded in `progress.yml`. Roughly 20 open, and the open ones
   are now mostly decisions rather than unfinished work — see §5.
