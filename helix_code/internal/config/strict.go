@@ -261,10 +261,34 @@ var inertConfigKeys = map[string]string{
 	"workers.ssh_timeout": "no field on WorkersConfig; set only in " +
 		"config/minimal-test-config.yaml, which nothing references. No SSH " +
 		"timeout is driven by it",
-	"notifications": "no field on Config; the entire block is discarded. " +
-		"Notification channels are built from HELIX_* environment variables " +
-		"in cmd/other_commands.go, never from this file, and the rules list " +
-		"is read by nothing at all",
+	// `notifications` used to sit in the "not declared at all" group: no field
+	// on Config, so the whole block was discarded and only HELIX_* environment
+	// variables ever produced a channel. It is now declared
+	// (config.NotificationsConfig) and consumed
+	// (notification.NewEngineFromConfig), so the block-level entry is gone and
+	// the startup warning with it. What remains inert is a handful of LEAVES
+	// the channel constructors take no argument for — each named individually
+	// so the residue stays visible instead of hiding behind a struct field
+	// nobody reads.
+	"notifications.channels.slack.timeout": "declared on " +
+		"SlackNotificationConfig but NewSlackChannel takes no timeout; the " +
+		"value parses and is then ignored",
+	"notifications.channels.telegram.timeout": "declared on " +
+		"TelegramNotificationConfig but NewTelegramChannel takes no timeout; " +
+		"the value parses and is then ignored",
+	"notifications.channels.email.timeout": "declared on " +
+		"EmailNotificationConfig but NewEmailChannel takes no timeout; the " +
+		"value parses and is then ignored",
+	"notifications.channels.discord.timeout": "declared on " +
+		"DiscordNotificationConfig but NewDiscordChannel takes no timeout; " +
+		"the value parses and is then ignored",
+	"notifications.channels.email.smtp.tls": "declared on " +
+		"EmailSMTPNotificationConfig but EmailChannel negotiates its own " +
+		"transport security and reads no flag; the value changes nothing",
+	"notifications.channels.email.recipients": "declared on " +
+		"EmailNotificationConfig but NewEmailChannel takes no recipient " +
+		"list — mail is addressed from the SMTP account — so the whole " +
+		"recipients subtree parses and is then ignored",
 }
 
 // checkConfigKeys inspects a config file for keys that do not reach the

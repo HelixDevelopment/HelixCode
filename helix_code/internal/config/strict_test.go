@@ -193,7 +193,19 @@ func TestInertKeysWarnRatherThanFail(t *testing.T) {
 		"llm.selection",
 		"llm.timeout",
 		"llm.max_retries",
-		"notifications",
+		// `notifications` used to appear here as a whole-block entry: the
+		// struct had no field for it, so every key under it was discarded.
+		// The block is now declared and consumed, and what remains inert is
+		// the handful of leaves no channel constructor takes an argument for.
+		// Naming them individually keeps this assertion honest — the bare
+		// string "notifications" would still match by substring while
+		// asserting something that is no longer true.
+		"notifications.channels.slack.timeout",
+		"notifications.channels.telegram.timeout",
+		"notifications.channels.email.timeout",
+		"notifications.channels.discord.timeout",
+		"notifications.channels.email.smtp.tls",
+		"notifications.channels.email.recipients",
 	} {
 		require.Contains(t, joined, key,
 			"the shipped config sets %q, which has no effect — it must be warned about", key)
@@ -225,6 +237,21 @@ func TestEveryInertKeyIsGenuinelyInert(t *testing.T) {
 	declaredButUnconsumed := map[string]bool{
 		"llm.timeout":     true,
 		"llm.max_retries": true,
+
+		// The notifications leaves below arrived when the block-level
+		// `notifications` entry was retired. That entry was category (a) —
+		// unknown to the struct, whole block discarded — and wiring the block
+		// up moved its residue into category (b). The list is longer by six
+		// names but what is inert is strictly smaller: an entire block of
+		// channels and rules that did nothing became six settings that do
+		// nothing. Each shrinks further only by giving the channel
+		// constructors an argument to receive it.
+		"notifications.channels.slack.timeout":    true,
+		"notifications.channels.telegram.timeout": true,
+		"notifications.channels.email.timeout":    true,
+		"notifications.channels.discord.timeout":  true,
+		"notifications.channels.email.smtp.tls":   true,
+		"notifications.channels.email.recipients": true,
 	}
 
 	spec := knownConfigKeys()

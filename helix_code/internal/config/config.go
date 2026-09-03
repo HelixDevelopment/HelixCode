@@ -260,6 +260,11 @@ type Config struct {
 	Cognee      *CogneeConfig     `mapstructure:"cognee"`
 	Verifier    *VerifierConfig   `mapstructure:"verifier"`
 	QA          QAConfig          `mapstructure:"qa"`
+
+	// Notifications carries the `notifications:` block. Declared so viper stops
+	// discarding it; consumed by internal/notification.NewEngineFromConfig.
+	// See notifications_config.go.
+	Notifications NotificationsConfig `mapstructure:"notifications"`
 }
 
 // HelixConfig is an alias for Config
@@ -491,6 +496,22 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
+// shellPlaceholder matches exactly the three placeholder shapes this loader
+// documents: ${VAR}, ${VAR:default} and ${VAR:-default}. Group 1 is the
+// variable name, group 2 the separator (":" or ":-") when present, group 3 the
+// default token.
+//
+// It deliberately does NOT match a bare $VAR. os.Expand — which this function
+// used to be built on — expands that form too, and also eats a literal "$$",
+// so a value that merely CONTAINS a dollar sign was silently mangled: an SMTP
+// password of "pa$$word" came out as "pa". That was tolerable while the
+// expanded set was five hostname-ish fields where a literal '$' is
+// implausible, and is not tolerable now that the set includes credentials.
+// Matching only the braced form also makes this agree with
+// secret_placeholder.go, which already states that a bare $VAR "is not a
+// placeholder this loader ever expands".
+var shellPlaceholder = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)(?:(:-|:)([^}]*))?\}`)
+
 // expandShellDefaults expands ${VAR:default} and ${VAR:-default} shell-style
 // placeholders in config string fields.  Viper does NOT perform this expansion
 // itself: when HELIX_REDIS_HOST is unset, BindEnv falls through to the YAML
@@ -503,31 +524,88 @@ func Load() (*Config, error) {
 //
 // Only fields that may legitimately contain ${…} placeholders are expanded;
 // all other string config fields are left untouched.
+//
+// WHICH FIELDS, AND WHY THOSE
+// ---------------------------
+// The set was DERIVED, not guessed: every Config-shaped file under config/ was
+// read for values containing the ${…} form, and each such value mapped to the
+// dotted key it sets. That enumeration divides into four groups.
+//
+//  1. ALREADY EXPANDED — redis.host, database.user, database.dbname. These are
+//     the shipped uses of the form that this function has always covered, and
+//     they behave exactly as before. database.host and server.address carry no
+//     ${…} in any shipped file but are kept: removing coverage is not this
+//     change's business.
+//
+//  2. CREDENTIALS THAT MUST *NOT* BE EXPANDED — auth.jwt_secret,
+//     database.password, redis.password. checkSecretPlaceholders REFUSES an
+//     unexpanded placeholder in these, and that refusal is the whole point:
+//     they fail OPEN. Expanding ${HELIX_AUTH_JWT_SECRET} to "" when the
+//     variable is unset would sign every JWT with an empty secret while
+//     startup reported success. A hard refusal is correct; silent expansion
+//     would defeat it. They stay out.
+//
+//  3. UNREACHABLE — llm.providers.*.endpoint and llm.providers.*.api_key.
+//     config/config.yaml writes "${HELIX_LLM_ENDPOINT:http://localhost:8081}"
+//     there, but LLMConfig declares no `providers` field, so viper discards the
+//     whole block before expansion could ever see it (strict.go lists
+//     llm.providers as inert for exactly this reason). Expanding a field that
+//     does not exist is not possible; declaring the block is a separate change.
+//
+//  4. NEWLY EXPANDED — the notifications block. Its channel settings are the
+//     one group that both uses the form and now reaches a Config field:
+//     config/production-config.yaml writes ${HELIX_SLACK_WEBHOOK_URL},
+//     ${HELIX_TELEGRAM_BOT_TOKEN}, ${HELIX_EMAIL_*} and friends, and every
+//     comment beside the empty-string equivalents in config/config.yaml tells
+//     the operator to "Set via HELIX_…". The whole block is covered rather
+//     than a per-field allowlist because every value in it is documented as
+//     environment-sourced.
+//
+// Expanding the notification CREDENTIALS is safe in a way group 2 is not:
+// they fail CLOSED. NewSlackChannel/NewTelegramChannel/NewEmailChannel/
+// NewDiscordChannel each mark the channel disabled when its credential is
+// empty, so an unset variable means "that channel is off", never "authenticate
+// with a value published in a git-tracked file". It is also strictly better
+// than the status quo, in which the literal "${HELIX_EMAIL_PASSWORD}" would be
+// handed to the SMTP server as the password.
 func expandShellDefaults(cfg *Config) {
-	expand := func(s string) string {
-		return os.Expand(s, func(key string) string {
-			// Strip the optional ":-" or ":" separator and default token.
-			// Find the first ':' that is the separator (not part of the var name).
-			sep := strings.Index(key, ":")
-			if sep == -1 {
-				// Plain ${VAR}
-				return os.Getenv(key)
-			}
-			varName := key[:sep]
-			// Support both ${VAR:-default} and ${VAR:default}.
-			defaultVal := strings.TrimPrefix(key[sep+1:], "-")
-			if val := os.Getenv(varName); val != "" {
-				return val
-			}
-			return defaultVal
-		})
-	}
+	cfg.Redis.Host = expandShellString(cfg.Redis.Host)
+	cfg.Database.Host = expandShellString(cfg.Database.Host)
+	cfg.Database.User = expandShellString(cfg.Database.User)
+	cfg.Database.DBName = expandShellString(cfg.Database.DBName)
+	cfg.Server.Address = expandShellString(cfg.Server.Address)
 
-	cfg.Redis.Host = expand(cfg.Redis.Host)
-	cfg.Database.Host = expand(cfg.Database.Host)
-	cfg.Database.User = expand(cfg.Database.User)
-	cfg.Database.DBName = expand(cfg.Database.DBName)
-	cfg.Server.Address = expand(cfg.Server.Address)
+	ch := &cfg.Notifications.Channels
+	ch.Slack.WebhookURL = expandShellString(ch.Slack.WebhookURL)
+	ch.Slack.Channel = expandShellString(ch.Slack.Channel)
+	ch.Slack.Username = expandShellString(ch.Slack.Username)
+	ch.Telegram.BotToken = expandShellString(ch.Telegram.BotToken)
+	ch.Telegram.ChatID = expandShellString(ch.Telegram.ChatID)
+	ch.Email.SMTP.Server = expandShellString(ch.Email.SMTP.Server)
+	ch.Email.SMTP.Username = expandShellString(ch.Email.SMTP.Username)
+	ch.Email.SMTP.Password = expandShellString(ch.Email.SMTP.Password)
+	ch.Email.SMTP.From = expandShellString(ch.Email.SMTP.From)
+	ch.Discord.WebhookURL = expandShellString(ch.Discord.WebhookURL)
+	for i, r := range ch.Email.Recipients.Default {
+		ch.Email.Recipients.Default[i] = expandShellString(r)
+	}
+}
+
+// expandShellString resolves every ${…} placeholder in s, leaving every other
+// character — including a lone or doubled '$' — exactly as written.
+func expandShellString(s string) string {
+	return shellPlaceholder.ReplaceAllStringFunc(s, func(match string) string {
+		m := shellPlaceholder.FindStringSubmatch(match)
+		varName, sep, defaultVal := m[1], m[2], m[3]
+		if val := os.Getenv(varName); val != "" {
+			return val
+		}
+		if sep == "" {
+			// Plain ${VAR} with no default: an unset variable yields "".
+			return ""
+		}
+		return defaultVal
+	})
 }
 
 // setDefaultsOn sets default configuration values on the given viper

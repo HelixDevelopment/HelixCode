@@ -216,30 +216,23 @@ var notifyCmd = &cobra.Command{
 		}
 		message := args[0]
 
-		engine := notification.NewNotificationEngine()
-
-		slackWebhook := os.Getenv("HELIX_SLACK_WEBHOOK_URL")
-		if slackWebhook != "" {
-			engine.RegisterChannel(notification.NewSlackChannel(slackWebhook, "helixcode", "HelixCode"))
+		// Channels and rules come from the `notifications:` config block AND
+		// the HELIX_* environment variables, with the environment winning —
+		// see notification.NewEngineFromConfig for the precedence contract.
+		// Before this, the block was discarded by viper and only the
+		// environment produced a channel.
+		//
+		// A config that fails to load is not fatal here: notify's job is to
+		// deliver a message, and the environment-only path it used before
+		// still works without any config at all, so fall back to it rather
+		// than refusing to send.
+		cfg, cfgErr := config.Get()
+		if cfgErr != nil {
+			fmt.Fprintln(os.Stderr, tr(context.Background(), "cmd_notify_config_unavailable",
+				map[string]any{"Error": cfgErr.Error()}))
+			cfg = nil
 		}
-
-		discordWebhook := os.Getenv("HELIX_DISCORD_WEBHOOK_URL")
-		if discordWebhook != "" {
-			engine.RegisterChannel(notification.NewDiscordChannel(discordWebhook))
-		}
-
-		tgBotToken := os.Getenv("HELIX_TELEGRAM_BOT_TOKEN")
-		tgChatID := os.Getenv("HELIX_TELEGRAM_CHAT_ID")
-		if tgBotToken != "" && tgChatID != "" {
-			engine.RegisterChannel(notification.NewTelegramChannel(tgBotToken, tgChatID))
-		}
-
-		emailServer := os.Getenv("HELIX_EMAIL_SMTP_SERVER")
-		emailUser := os.Getenv("HELIX_EMAIL_USERNAME")
-		emailPass := os.Getenv("HELIX_EMAIL_PASSWORD")
-		if emailServer != "" && emailUser != "" && emailPass != "" {
-			engine.RegisterChannel(notification.NewEmailChannel(emailServer, 587, emailUser, emailPass, emailUser))
-		}
+		engine := notification.NewEngineFromConfig(cfg)
 
 		notif := &notification.Notification{
 			Title:    tr(context.Background(), "cmd_notify_title", nil),

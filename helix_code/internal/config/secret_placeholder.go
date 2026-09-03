@@ -22,12 +22,28 @@ var unexpandedPlaceholder = regexp.MustCompile(`\$\{([A-Za-z_][A-Za-z0-9_]*)[^}]
 //
 // The list is explicit rather than a reflective walk over every string in the
 // Config, and that is a deliberate narrowing. Non-secret fields legitimately
-// hold unexpanded placeholders in normal operation: config/config.yaml ships
-// `${HELIX_LLM_ENDPOINT:http://localhost:8081}` and `${HELIX_QA_HOME}/banks`,
-// and expandShellDefaults substitutes only a small fixed set of fields. A
-// blanket scan would refuse this project's own shipped configuration on
-// startup. The danger being fixed here is specific to credentials, so the check
-// is too.
+// hold unexpanded placeholders in normal operation — `qa.banks_dir` set to
+// `${HELIX_QA_HOME}/banks`, `logging.output` to `${HELIX_LOG_DIR}/helix.log`,
+// `verifier.endpoint` to `${HELIX_VERIFIER_ENDPOINT}` — because
+// expandShellDefaults substitutes only a named set of fields and none of those
+// are in it. A blanket scan would refuse configurations that load fine today.
+// The danger being fixed here is specific to credentials, so the check is too.
+// TestValidateConfig_NonSecretFieldsAreNotScanned pins that scope.
+//
+// RE-EXAMINED when expandShellDefaults grew to cover the notifications block.
+// That change makes the notification credentials — the Slack and Discord
+// webhooks, the Telegram bot token, the SMTP password — expanded fields, so
+// they can no longer be holding a `${…}` literal by the time validateConfig
+// runs. Adding them here would therefore be a check that cannot fire. They are
+// also the opposite failure mode from the fields listed below: an unset
+// variable leaves them empty, and every channel constructor treats an empty
+// credential as "this channel is off". The fields below fail OPEN — an empty
+// JWT secret still signs tokens — which is exactly why they must be refused
+// rather than quietly expanded. The narrow scope stands; only its worked
+// examples needed correcting. (The previous example,
+// `${HELIX_LLM_ENDPOINT:http://localhost:8081}`, was doubly inapt: LLMConfig
+// declares no `providers` field, so that value is discarded by viper and never
+// reaches a Config string at all.)
 //
 // The cost of the narrowing is that a newly added credential field must be
 // added here as well. That is the maintained surface, and it is why the guard
