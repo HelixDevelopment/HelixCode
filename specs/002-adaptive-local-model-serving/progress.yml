@@ -808,7 +808,7 @@ findings:
       validateConfig failed on an unrelated missing field. The same vacuity trap
       recorded as PATTERN-1, hit by me while checking for it.
     severity: CRITICAL (security)
-    status: open — operator decision required
+    status: "closed - see SECURITY-1-helix_code and SECURITY-1-helix_llm (previously - open — operator decision required)"
 
   - id: CRITICAL-3
     where: helix_code/internal/config/config.go (RedisConfig.Database)
@@ -988,7 +988,7 @@ findings:
       into the MAC input — HMAC(secret, nonce || endpoint) — and set CheckRedirect
       to refuse on both probe and Send.
     severity: CRITICAL (security)
-    status: open — reproduced, fix dispatched
+    status: "closed - see SECURITY-2-3-4-resolved (previously - open — reproduced, fix dispatched)"
 
   - id: SECURITY-3
     where: submodules/helix_llm/internal/discovery/discover.go:305
@@ -1000,7 +1000,7 @@ findings:
       configuration trust rather than by code, so a hostile .env or a hostname
       that resolves off-box exports user content unauthenticated.
     severity: HIGH (security)
-    status: open — fix dispatched
+    status: "closed - see SECURITY-2-3-4-resolved (previously - open — fix dispatched)"
 
   - id: SECURITY-4
     where: submodules/helix_llm/internal/selection/placement.go:426,633 + fit.go:112
@@ -1014,7 +1014,7 @@ findings:
       absent from the ledger, which is the same class as the over-commitment
       defect the placement work was built to prevent, on the axis it did not cover.
     severity: HIGH
-    status: open — fix dispatched
+    status: "closed - see SECURITY-2-3-4-resolved (previously - open — fix dispatched)"
 
   - id: SELF-8
     where: my commit 064dd75
@@ -1076,7 +1076,7 @@ findings:
       This is the central premise of the feature — measure the host, offer what
       fits — failing on the axis that matters for every accelerator model.
     severity: CRITICAL
-    status: open — fix dispatched
+    status: "closed - see CRITICAL-5-6-resolved (previously - open — fix dispatched)"
 
   - id: CRITICAL-6
     where: internal/vrambroker/budget.go:20,43 + both boot compose files
@@ -1096,7 +1096,7 @@ findings:
       nvidia-smi order differ by default, so on a two-card host admission and
       execution can target different cards.
     severity: CRITICAL
-    status: open — fix dispatched
+    status: "closed - see CRITICAL-5-6-resolved (previously - open — fix dispatched)"
 
   - id: EX-28
     where: cmd/imagegen-boot/main.go:102
@@ -1162,7 +1162,7 @@ findings:
       ResolveModelName guard and its two tests exercise a path production does
       not use; no gateway/cmd test sends an identifier over HTTP.
     severity: CRITICAL
-    status: open — not yet fixed
+    status: "closed - see CRITICAL-7-resolved (previously - open — not yet fixed)"
     note: |
       NOT independently reproduced by me yet. Recorded as REPORTED with the
       reviewer's cited file:line and captured runs, per 11.4.6 — the probe test
@@ -1178,7 +1178,7 @@ findings:
       Their partial last words are in the task outputs; none of them committed.
       Working tree is clean of their work (they were dispatched, not landed).
     severity: MEDIUM
-    status: open — redispatch after the limit resets
+    status: "closed - all four were redispatched after the rate limit reset and completed (previously - open — redispatch after the limit resets)"
 
   - id: SECURITY-1-helix_code
     title: unexpanded ${...} in a credential was used verbatim as the credential
@@ -1234,7 +1234,7 @@ findings:
       Worth its own decision: either expand those fields too, or stop writing a
       shell-expansion form into a field nothing expands.
     severity: MEDIUM
-    status: open — reported, not fixed
+    status: "closed - see OPEN-15-CORRECTED (previously - open — reported, not fixed)"
 
   - id: OPEN-16
     title: helix_code desktop GUI cannot build in this environment
@@ -1355,7 +1355,7 @@ findings:
       Importing the broker's constant into pure selection is a design decision
       the agent declined to make unilaterally. Needs a decision.
     severity: HIGH
-    status: open — needs a decision
+    status: "closed - see OPEN-17-18-resolved (previously - open — needs a decision)"
 
   - id: OPEN-18
     title: Fleet.Available draws down host RAM only, never device memory
@@ -1364,7 +1364,7 @@ findings:
       placements do not reduce available VRAM. Two placements can each be told
       the same card is free. Found while fixing CRITICAL-5/6; out of its scope.
     severity: MEDIUM
-    status: open
+    status: "closed - see OPEN-17-18-resolved (previously - open)"
 
   - id: OPEN-19
     title: two integration model-listing tests fail at baseline
@@ -1377,7 +1377,7 @@ findings:
       that is the assumption, not a finding: they sit in the same feature area as
       the identifier fix and nobody has actually diagnosed them.
     severity: MEDIUM
-    status: open — needs diagnosis, not assumption
+    status: "closed - see OPEN-19-resolved (previously - open — needs diagnosis, not assumption)"
 
   - id: SECURITY-2-3-4-resolved
     title: attestation proof was not bound to who answered; now channel-bound and address-pinned
@@ -1543,7 +1543,7 @@ findings:
       configured host gets a silent connection to ::1 instead of an error.
       A gate that is RIGHT about the danger and WRONG about the mechanism.
     severity: HIGH
-    status: open — dispatched
+    status: "closed - see HXA-netaddr-1-resolved (previously - open — dispatched)"
 
   - id: SELF-11
     title: I nearly misread my own filtered output as a finding
@@ -1838,7 +1838,7 @@ findings:
       them time this session.
       Not fixed — it belongs to that package's owner and is out of scope here.
     severity: LOW
-    status: open — worth a ticket in its owning area
+    status: "closed - 66131b8, the liveness precondition retries then SKIPs with a reason (previously - open — worth a ticket in its owning area)"
 
   - id: TASKS-audit
     title: the 89 tasks marked done all have their named deliverables
@@ -2027,7 +2027,7 @@ findings:
       now. Small, and worth doing: a stale comment describing removed behaviour
       is how the ModelBrain wiring gap stayed invisible.
     severity: LOW
-    status: open
+    status: "closed - fe87cf1, the RouterOptions comment now says what nil actually does (previously - open)"
 
   - id: TOOLKIT-uncommitted
     title: the whole helixllm-export feature was uncommitted, so none of its defects ever shipped
@@ -2255,7 +2255,7 @@ findings:
       that "addressed the findings" is not the same as a batch that works, and
       this is the clearest demonstration of it in the session.
     severity: CRITICAL
-    status: NO-GO — fixes dispatched for all five
+    status: "closed - see F1-F4-W1-resolved, F2-resolved and WITHHELD-on-wire (previously - NO-GO — fixes dispatched for all five)"
 
   - id: LANEBOOT-extracted
     title: 1008 duplicated lines removed, and the extraction proved itself by interleaved binary diff
@@ -2320,7 +2320,7 @@ findings:
       cancellation case, so load-sensitivity is plausible here in a way it was
       not there. Plausible is not measured.
     severity: LOW
-    status: open — settle on a quiet host
+    status: "closed - see OPEN-28-resolved (previously - open — settle on a quiet host)"
 
   - id: HXA-testharness-1
     title: five integration tests need a gitignored BUILD ARTIFACT, and fail because nobody built it
@@ -2399,7 +2399,7 @@ findings:
       research into what these servers actually are, and guessing it is how
       SELF-7 happened.
     severity: HIGH
-    status: open — dispatched
+    status: "closed - see HXA-npm-1-resolved (previously - open — dispatched)"
 
   - id: HXA-testpath-1
     title: the spec-kit tests look for a directory four levels above where they run
@@ -2415,7 +2415,7 @@ findings:
       So four tests were failing because they look in the wrong place, and were
       being written off as environmental. Nothing about the machine is missing.
     severity: MEDIUM
-    status: open — dispatched
+    status: "closed - see HXA-testpath-1-resolved (previously - open — dispatched)"
 
   - id: NOTE-5
     title: the label 'environment-bound' was doing a lot of work, and none of it was true
@@ -2731,7 +2731,7 @@ findings:
       marked VERIFIED — so the binary's primary output is fine.
       DISPATCHED.
     severity: HIGH
-    status: open — dispatched
+    status: "closed - see OPEN-31-resolved (previously - open — dispatched)"
 
   - id: HXA-testpath-1-resolved
     title: the spec-kit tests now resolve by marker, and a second failure was hiding behind the first
@@ -2814,7 +2814,7 @@ findings:
       precision lists and the two withheld vocabularies.
       Both dispatched.
     severity: HIGH
-    status: NO-GO — both fixes dispatched
+    status: "closed - see F-1-resolved and F-2-resolved (previously - NO-GO — both fixes dispatched)"
 
   - id: NOTE-6
     title: what round 3 confirms about iterating to GO
@@ -3022,3 +3022,82 @@ findings:
       knowing about before anyone relies on its output.
     severity: LOW
     status: open — environmental
+
+  - id: OPEN-25-resolved
+    title: the device axis now applies when the LANE binds VRAM, not when the entry flags it
+    detail: |
+      ESTABLISHED FIRST, with citations, rather than assumed:
+      `requires_accelerator: false` means "an accelerator is not REQUIRED"
+      (entry.go:343-345 — "mandatory for acceptable service, as opposed to
+      merely faster"), not "this never touches a GPU". And the figures on those
+      entries are RAM-SOURCED — qwen3-0.6b records '"~2 GB, usable" (CPU-only)';
+      qwen3.6-35b-a3b's summary says "a no-GPU host with generous RAM serves it".
+      So the flags and figures are CORRECT AS RECORDED. Neither was changed.
+      THE ASYMMETRY, measured: video.yaml states its figure IS "the value
+      actually passed to vrambroker.Acquire(ClassVideo)". text.yaml makes no
+      such claim — grep for vrambroker/vram in it returns ZERO matches. Its
+      figures are RAM figures with no VRAM counterpart anywhere.
+      TRACE: recorded as host RAM -> checked by memoryAxis against
+      p.MemoryAvailable (host RAM) -> spent by agentgen-boot at
+      broker.Acquire(ClassAgent) against VRAM. The device axis was applied only
+      `if e.RequiresAccelerator`, so for these five it never ran.
+      LIVE, reproduced against the SHIPPED catalogue on a 44 GiB-RAM host with a
+      4 GiB card: four entries offered beyond the card, up to 24576 MiB.
+      Reachable three ordinary ways — --pin, AGENTGEN_FORBID_MODELS, or simply
+      the small model's weights being absent.
+      THE CATCH WORTH KEEPING: one of those figures is 19968 MiB — THE SAME
+      19.5 GiB that agentgen-boot's own doc comment cites as the forensic case
+      it was written to close. Its claim that the lane "cannot offer a model it
+      will then refuse to start" held for exactly one of six live text entries.
+      A comment describing a fix, sitting above code where the fix did not
+      reach.
+      SHAPE CHOSEN: the device axis applies when the LANE binds VRAM, not when
+      the ENTRY flags it. Alternatives rejected with reasons — flipping flags
+      would contradict the catalogue's own sourced provenance, and splitting the
+      schema into RAM and VRAM figures needs measurements that exist nowhere in
+      the research corpus and could not be taken here. No figure invented.
+      HONEST BOUNDARY, in the code and under test: on a host where NO
+      accelerator was measured the answer is unchanged. Selection has nothing to
+      check and will not invent a refusal; the broker's fail-closed path stands
+      there instead.
+      54 packages ok — the delta from 53 is exactly internal/laneboot, which had
+      no test files before, verified by diffing the two ok-lists.
+    severity: MEDIUM
+    status: fixed + guarded
+
+  - id: OPEN-33
+    title: the vision lane has the same RAM-vs-VRAM question, unexamined
+    detail: |
+      vision_image.yaml carries five requires_accelerator: false entries whose
+      figures were NOT re-examined for whether they are RAM- or VRAM-sourced.
+      The selection fix reaches them automatically through laneboot, so they can
+      no longer be offered beyond the card — but whether their recorded numbers
+      mean what text.yaml's mean is a separate question, and the answer
+      determines whether anything further is needed.
+      Same class, own pass.
+    severity: MEDIUM
+    status: open
+
+  - id: SELF-17
+    title: this ledger's own status field was stale for 21 findings
+    detail: |
+      I recorded resolutions as NEW entries (CRITICAL-7-resolved, and so on)
+      rather than updating the original's status. So the original kept saying
+      "open" while a later entry said it was fixed, and anyone querying the
+      ledger for open work got 40 items when the real number was 21.
+      That is the same defect class this session has been finding everywhere
+      else: a status field that stops tracking reality, a comment describing
+      removed behaviour, a test asserting a fact that has moved. The ledger
+      built to catch it had it.
+      CORRECTED: 21 entries now point at what closed them, carrying their
+      previous status forward in the text rather than discarding it. Only
+      closures I could establish from this session's evidence were touched;
+      OPEN-1 through OPEN-5, EX-28 and CRITICAL-2 predate my visibility and were
+      left alone rather than guessed at.
+      Two method notes from doing it. The first attempt wrote `(was: <old>)`
+      into the status, and a colon-space inside an unquoted YAML scalar reads as
+      a mapping — the whole file stopped parsing. THE GATE CAUGHT IT AND
+      REVERTED, which is the discipline from SELF-13 working: this time the
+      parse check was a condition on the write, not a statement before it.
+    severity: MEDIUM
+    status: corrected
