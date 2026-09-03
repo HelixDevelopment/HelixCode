@@ -151,6 +151,78 @@ Verified working end-to-end:
 
 ---
 
+## 2b-2 · HelixLLM, HelixAgent, and the Claude Toolkit sync (verified 2026-09-03)
+
+### HelixLLM — port 8443, **HTTPS**, self-signed
+
+```bash
+cd submodules/helix_llm
+go build -o bin/helixllm ./cmd/helixllm
+HELIX_MODE=full ./bin/helixllm            # listens on :8443
+curl -sk https://127.0.0.1:8443/v1/models # -k, or use the CA bundle below
+```
+
+Plain HTTP is refused with `400 Client sent an HTTP request to an HTTPS server`
+— that 400 is the TLS mismatch, not a broken endpoint.
+
+> **CHECK THE RUNNING BINARY'S AGE BEFORE TRUSTING ANY PROBE.** A `helixllm`
+> that had been up for 16 hours was still serving `{"object":"list","data":null}`
+> — the defect `ab34fa8` had ALREADY fixed in source. Source-green said nothing
+> about what was serving (§11.4.108 SOURCE→RUNTIME). Compare
+> `ps -o lstart= -p <pid>` against `git log -1`, and rebuild before believing a
+> live result.
+
+### The Claude Toolkit sync — two gotchas that will cost you an hour
+
+```bash
+export CURL_CA_BUNDLE=$PWD/submodules/helix_llm/certs/cert.pem
+claude-providers helixllm-export --host https://localhost:8443/v1
+```
+
+1. **The base URL must already contain `/v1`.** `_cma_helixllm_fetch_models`
+   appends `/models`, so `--host https://…:8443` requests `/models` and misses.
+2. **The self-signed cert needs a trust anchor.** The fetcher uses a bare
+   `curl -sf` with no `--cacert`, so it fails with **curl exit 60** and the tool
+   reports only *"host … did not answer with a model listing"* — which reads like
+   the host is down when it is answering perfectly. `CURL_CA_BUNDLE` fixes it
+   with no code change; the cert covers `localhost`, `127.0.0.1`, `192.168.0.241`.
+
+**What it exports today: nothing, correctly.** HelixLLM catalogues exactly one
+model, `helixllm/anton/Llama-3.1-70B-Instruct-Q4_K_M`, as
+`availability: withheld / provider_unavailable`, and the toolkit refuses to
+advertise a model that is not actually being served. `anton` IS this host, there
+are no GGUF weights on it, and no llama.cpp server is running. Note also that
+`HELIX_LLM_LOCAL_MODEL` defaults to that 70B Q4_K_M (~40 GB) on a box with
+**30 GB RAM and 12 GB VRAM** — it could not run it even with the weights.
+
+**To actually get a usable model into Claude Code** you need a served model:
+place a GGUF this host can run (RTX 3060 / 12 GB — an 8B Q4_K_M at ~4.9 GB fits
+comfortably), point `HELIX_LLM_LOCAL_MODEL` at it, run `llama-server`
+(`/usr/bin/llama-server` is installed; ollama is NOT), then re-run the export.
+
+### HelixAgent — boots its whole stack on podman, needs one secret
+
+```bash
+cd submodules/helix_agent
+go build -o bin/helixagent ./cmd/helixagent
+printf 'JWT_SECRET=%s\n' "$(openssl rand -hex 32)" >> .env && chmod 600 .env
+set -a; . ./.env; set +a && ./bin/helixagent
+```
+
+Observed on a real run: `Container adapter initialized via Containers module
+runtime=podman`, postgres+redis+chromadb started via `podman-compose` with all
+three health checks PASSED, 1163 skills across 16 categories, 32 MCP servers,
+liveness probe on `:8111` — then it stops with
+`Failed to initialize auth middleware: JWT secret key is required`. That is the
+only blocker; `.env` is gitignored there (`.gitignore` lines 3/38/51).
+
+Its LLMsVerifier pipeline also completes with **0 providers discovered** out of
+44 candidate env vars — HelixAgent exposes no models because no provider keys
+are in ITS environment. The operator's keys live in `~/api_keys.sh`, which the
+toolkit reads and `helixagent` does not.
+
+---
+
 ## 2c · Full retest results (2026-09-03, and how to read them)
 
 | repo | result |

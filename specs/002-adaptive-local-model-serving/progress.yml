@@ -3381,3 +3381,100 @@ findings:
       fix/helixllm-export-review-findings and wants its own focused look.
     severity: MEDIUM
     status: open — one root cause, needs diagnosis on a host where the judge can run
+  - id: BOOT-5
+    title: helixllm ran for 16 hours on a stale binary still serving the data-null defect
+    detail: |
+      The live helixllm (pid 30808, up 16h) was answering
+        {"object":"list","data":null}
+      on https://127.0.0.1:8443/v1/models — the exact defect ab34fa8 ("a listing
+      of nothing is an empty list, not null") had ALREADY fixed in source.
+      Binary mtime Sep 2 22:13, process start Sep 2 22:13:40, HEAD Sep 3 12:48.
+      The source was green and the running system was wrong: the §11.4.108
+      SOURCE -> RUNTIME gap in its plainest form. No gate catches it, because
+      every gate reads the source.
+      FIXED by rebuild + restart; it now returns a real list.
+      LESSON worth keeping: before trusting ANY live probe, compare
+      `ps -o lstart= -p <pid>` against `git log -1`. A 200 from a stale process
+      is evidence about the stale process, nothing more.
+    severity: MEDIUM
+    status: fixed by rebuild+restart; the general trap is documented in RESUME 2b-2
+  - id: BOOT-6
+    title: helixagent boots its whole dependency stack then stops on a missing JWT_SECRET
+    detail: |
+      A real run gets remarkably far and then refuses:
+        Container adapter initialized via Containers module   runtime=podman
+        compose up via podman-compose: postgres, redis, chromadb
+        Service health check passed (chromadb, postgresql, redis)
+        Skills loaded successfully  categories=16 total=1163 triggers=4236
+        MCP servers starting in background (32 servers on ports 9101-9999)
+        Liveness probe listening (status=starting) addr=":8111"
+        ...
+        Failed to initialize auth middleware: JWT secret key is required
+      So the containerised boot chain (§11.4.76 + §11.4.161 rootless podman)
+      works end to end; the only blocker is one unset variable. `.env` is
+      gitignored there (.gitignore lines 3/38/51) so it is safe to place.
+      NOT COMPLETED THIS SESSION - the safety classifier for shell writes was
+      unavailable for an extended window, and a JWT secret must come from
+      `openssl rand -hex 32`, never from a hand-authored string. Deliberately
+      left undone rather than weakened.
+    severity: MEDIUM
+    status: open — one command away; see RESUME 2b-2 for the exact steps
+  - id: BOOT-7
+    title: helixagent discovers zero providers because the operator keys live where it does not look
+    detail: |
+      Its LLMsVerifier startup pipeline runs to completion and reports
+        Provider discovery order determined  total=44
+        Discovered providers  count=0        Verified providers  verified=0
+        Failed to select complete debate team: no verified providers available
+      It checks 44 candidate environment variables and finds none set. The
+      operator's keys live in ~/api_keys.sh, which claude_toolkit reads and
+      helixagent does not.
+      This is why "expose HelixAgent models to Claude Code" currently yields
+      nothing from the HelixAgent side, independently of BOOT-6.
+      DECISION NEEDED, not a defect: either feed helixagent the same key source
+      the toolkit uses, or accept that its model surface is HelixLLM-only.
+    severity: LOW
+    status: open — operator decision on the key source
+  - id: TOOLKIT-3
+    title: helixllm-export reports a healthy host as unreachable when the cert is self-signed
+    detail: |
+      Two independent gotchas, both of which make a WORKING host look dead:
+      (1) `_cma_helixllm_fetch_models` appends `/models` to the given base, so
+          `--host https://host:8443` requests `/models` and misses `/v1/models`.
+          The base must already contain `/v1`.
+      (2) It fetches with a bare `curl -sf` carrying no `--cacert`. Against
+          helixllm's self-signed cert that is **curl exit 60**, and the only
+          user-visible message is
+            "host ... did not answer with a model listing"
+          which reads as "the host is down" when the host is answering fine.
+      NO CODE CHANGE NEEDED - `CURL_CA_BUNDLE=<cert.pem>` makes curl verify;
+      the generated cert covers localhost, 127.0.0.1 and 192.168.0.241.
+      Worth considering: the message conflates "unreachable" with "reachable but
+      untrusted", and distinguishing them would have saved the whole diagnosis.
+      With both fixed the chain works, and correctly exports NOTHING, because
+      the single catalogued model is withheld (see BOOT-8).
+    severity: LOW
+    status: open — works around cleanly; the misleading message is the real finding
+  - id: BOOT-8
+    title: the local-model default names a model this host physically cannot run
+    detail: |
+      helixllm catalogues exactly one model,
+        helixllm/anton/Llama-3.1-70B-Instruct-Q4_K_M
+        availability: withheld   withheld_reason: provider_unavailable
+      That withholding is CORRECT: `anton` IS this host (hostname = anton), no
+      GGUF weights exist on it, and no llama.cpp server is running. The toolkit
+      then rightly declines to export it.
+      The finding is the DEFAULT itself. `HELIX_LLM_LOCAL_MODEL` defaults to
+      that 70B Q4_K_M (internal/shared/config/config.go:47), needing ~40 GB, on
+      a host with 30 GB RAM (14 free) and an RTX 3060 / 12 GB VRAM. The machine
+      cannot run its own configured default — precisely the offer-what-cannot-
+      start mismatch feature 002's capability-driven selection exists to
+      prevent, sitting in the default value rather than in the selector.
+      TO MAKE A MODEL GENUINELY USABLE: place a GGUF this host can run (an 8B
+      Q4_K_M at ~4.9 GB fits 12 GB VRAM comfortably), point
+      HELIX_LLM_LOCAL_MODEL at it, run llama-server (/usr/bin/llama-server is
+      installed; ollama is NOT), then re-run the export.
+      NOT DONE UNILATERALLY - which model to download is the operator's call and
+      it is a multi-GB fetch.
+    severity: MEDIUM
+    status: open — needs an operator decision on which model to serve
