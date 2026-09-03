@@ -21,6 +21,7 @@
 > |---|---|
 > | [`RESUME.md`](RESUME.md) | Session-resumption record (CONST §11.4.131). §2b is the **verified** way to run the system; §2c is the current full-suite retest with its failure analysis. |
 > | [`specs/002-adaptive-local-model-serving/`](specs/002-adaptive-local-model-serving/) | The in-flight feature — host-capability-driven local model serving. `progress.yml` is its findings ledger. |
+> | [`docs/operator_decisions_20260903.md`](docs/operator_decisions_20260903.md) | Twelve operator decisions taken 2026-09-03, each with the options it **rejected** — read before re-opening any of them. Also records what was deliberately NOT decided. |
 >
 > The Phase 1-5 feature list below describes the shipped v1.1.0 platform and is
 > not a claim about feature 002, which is mid-execution.
