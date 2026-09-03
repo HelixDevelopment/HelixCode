@@ -1854,3 +1854,82 @@ findings:
       exists to prevent.
     severity: INFO
     status: verified
+
+  - id: FR-056-agentgen-resolved
+    title: agentgen-boot took its model from configuration and its VRAM figure from a second env var
+    detail: |
+      The lane decided what to run from AGENTGEN_MODEL_GGUF (configuration NAMING
+      the model, which FR-056 forbids) and AGENTGEN_NEED_BYTES (a hand-maintained
+      duplicate of a fact about that model). Its own doc comment was candid:
+      "the two env vars MUST be changed together... never assume a bigger model
+      fits the smaller default."
+      REPRODUCED on the real host (RTX 3060, 11781 MiB free), pre-fix binary:
+        19.5 GiB model named, NEED_BYTES untouched -> need=9216MiB, ADMIT-OK, exit 0
+        same binary, same card, told its real figure -> ErrBudgetExceeded, exit 10
+      The only difference was whether a human kept the second variable in step.
+      Post-fix the 27B is withheld "short by 7289MiB" and nothing starts.
+      The catalogue DID already cover the family (6 FamilyText entries), so the
+      agent selected from them and added no entries and invented no figures.
+      ENV VARS NOT SILENTLY DROPPED: AGENTGEN_MODEL_GGUF became an OUTPUT
+      (reported as IGNORED-CONFIG), NEED_BYTES is reported and ignored,
+      MODEL_DIR stays an input, and deliberate naming moved to --pin, validated
+      against the catalogue and refused with the short resource named.
+      A new guard walks the boot roots ON DISK and requires each selecting one
+      to state the broker's margin, with a floor of 4 so a broken glob cannot
+      pass vacuously. It found all four. The previous test asserted this only of
+      the function, which would not have caught a lane that never called it.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: OPEN-24
+    title: the lane's three former candidates are not in the catalogue, so they can no longer run
+    detail: |
+      NEEDS AN OPERATOR DECISION — this is a real narrowing of what the lane can
+      serve, and it is the flip side of the FR-056 fix.
+      Mistral-Nemo-Instruct-2407, GLM-4.7-Flash and DeepSeek-Coder-V2-Lite were
+      the lane's configured candidates. None is in the catalogue. The agent's
+      framing is right: that IS the finding rather than an obstacle — they had
+      no measured footprint anyone could check, which is precisely what the
+      static 9 GiB placeholder stood in for.
+      CONSEQUENCE: an operator who has a working Mistral-Nemo GGUF today will
+      now be REFUSED rather than served. The commit says so plainly.
+      The agent could not add them honestly: this host has no ~/models directory
+      and therefore no GGUF to size, and it declined to guess (correctly — see
+      SELF-7, where a guessed measurement was written into a data file).
+      RESOLUTION NEEDS ONE OF: measure those GGUFs on a host that has them and
+      add catalogue entries with recorded provenance; or accept the narrowed
+      candidate set.
+    severity: HIGH
+    status: open — operator decision
+
+  - id: OPEN-25
+    title: five of six text entries skip the device axis, then hand a host-RAM figure to a VRAM broker
+    detail: |
+      Flagged by the agentgen agent rather than changed, correctly — altering
+      selection semantics inside a change about one lane would have been the
+      wrong place for it.
+      Those entries carry requires_accelerator: false, so selection skips the
+      accelerator axis entirely and the figure that reaches vrambroker.Acquire
+      is a host-RAM measurement. That is the CRITICAL-5 shape again in a
+      narrower form: a number checked against one kind of memory being spent
+      against another.
+      The vision lane already has the same shape, so this is not new and not
+      isolated — which is the argument for fixing it as its own change.
+    severity: MEDIUM
+    status: open
+
+  - id: OPEN-26
+    title: modelchoice.go is now the fourth near-identical copy of one decision
+    detail: |
+      catalogueDir through refusalError is BYTE-IDENTICAL across the videogen,
+      imagegen, visiongen and agentgen lanes.
+      The agent declined to extract it, and gave the right reason: doing so
+      would rewrite three currently-correct lanes inside a change about a
+      fourth, with other agents live in the same checkout. It recorded the count
+      in the file instead, so the case keeps growing visibly rather than
+      silently.
+      Worth doing when the checkout is quiet. Four copies is where a divergence
+      becomes likely — and this feature has already been bitten once by two
+      copies of one fact disagreeing (SELF-9, the precision lists).
+    severity: MEDIUM
+    status: open — deliberate deferral, not an oversight
