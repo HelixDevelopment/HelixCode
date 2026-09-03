@@ -2892,3 +2892,57 @@ findings:
       spot aimed at the target.
     severity: INFO
     status: recorded
+
+  - id: F-2-resolved
+    title: the toolkit guard is now testable at home, and the drift is stated rather than hidden
+    detail: |
+      The agent VERIFIED the reviewer's claim rather than assuming it: on a
+      throwaway copy, baseline 71 passed / 0 failed, then removed the
+      availability clause (diff-verified) and got 71 passed / 0 failed —
+      byte-identical. Every pre-existing case exercised only the model_identity
+      clause, so nothing in that repo could tell the two versions apart.
+      FIXED with a fixture carrying availability:"withheld" and three assertion
+      groups, including the one that matters most: a SERVING SIBLING on the same
+      host is still exported and can still license retirement — so "it passed
+      because the filter rejects everything" cannot satisfy the suite. Two
+      mutations: deleting the clause fails 12, rejecting everything fails 34
+      including the selectivity control.
+      THE TEST NOW READS THE FILTER OUT OF THE SCRIPT AT RUN TIME rather than
+      restating it, so the local assertion cannot drift from the local
+      definition, and renaming the variable fails loudly instead of vacuously.
+      IT DECLINED TO REACH INTO THE SIBLING CHECKOUT, with the right reason: a
+      cross-repo assertion would hardcode another project's path AND would
+      SKIP wherever that checkout is absent — "a guard that vanishes when absent
+      is the same class of problem as the one being fixed". That is the same
+      lesson as NOTE-7, arrived at independently an hour later.
+      I CLOSED THE REMAINING THREAD ON THE HELIX_LLM SIDE by changing what that
+      test asserts. Its copied filter is now explicitly a SNAPSHOT that states
+      what it cannot prove, and the load-bearing assertion became the invariant
+      the PRODUCER controls: a withheld entry must carry an EXPLICIT
+      availability, never an absent one. Every consumer filter defaults absent
+      to serving, so omitting the marker is not a weaker signal — it is the
+      OPPOSITE signal. Mutation: stamping "" fails the new invariant AND makes
+      the toolkit filter SELECT the withheld model. Three assertions fall
+      together.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: SELF-16
+    title: a restore that applied, followed by a test that reported the mutated result
+    detail: |
+      During the mutation above: I restored brain.go, `diff` confirmed it
+      byte-identical, and the immediately-following `go test -count=1` reported
+      FAIL. Re-running after `go clean -testcache` gave ok.
+      So the restore HAD applied and the test still reported the pre-restore
+      outcome. This is the INVERSE of the hazard already recorded as SELF-3 (a
+      mutation that silently fails to apply and reports "ok"), and it is just as
+      misleading in the other direction: it would send someone hunting a fix
+      that was never broken.
+      `-count=1` disables the result cache but does not settle this; the F-1
+      agent independently hit it and used `go clean -testcache` before trusting
+      its RED-polarity check.
+      PRACTICAL RULE for the paired-mutation discipline everyone here is using:
+      `diff` proves the FILE changed. It does not prove the TEST BINARY did. On
+      restore, clean the test cache before believing a PASS or a FAIL.
+    severity: MEDIUM
+    status: recorded — method note
