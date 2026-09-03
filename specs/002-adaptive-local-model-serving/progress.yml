@@ -3101,3 +3101,74 @@ findings:
       parse check was a condition on the write, not a statement before it.
     severity: MEDIUM
     status: corrected
+
+  - id: OPEN-29-resolved
+    title: the config endpoint no longer hands back an empty document that erases a user's models
+    detail: |
+      REPRODUCED, captured: a backend up but loading answers /health with 503, so
+      it reports itself unavailable while still listing its configured models.
+      The user's file went in holding two working models under our key and came
+      back with `models: {}` — under a 200, with nothing in the returned
+      document saying why. Their theme and their own providers survived; their
+      two selectable models did not.
+      AND THE REASONS WERE ALREADY THERE: `provider-unavailable`, in a sibling
+      `withheld` field the merge never consulted.
+      THE REVIEWER'S FRAMING WAS CORRECTED, and the correction narrowed the fix:
+      "wholesale" overstates it. MergeOpenCode is ADDITIVE BY KEY at both levels
+      — the operator's own providers and every other top-level field are copied
+      through byte-for-byte. What it replaces totally is the entry under OUR
+      key, which is enough to cause the loss but means the whole document was
+      never at risk.
+      CHOSE THE THIRD BEHAVIOUR: the endpoint now tells three states apart
+      instead of collapsing two — serving (200, unchanged), offering models but
+      able to serve none (503 naming host, count and the distinct withheld
+      reasons), offering nothing at all (404, as before).
+      The replacement rule had assumed withheld meant WITHDRAWN. Since withheld
+      options now carry reasons, that assumption is unnecessary: an empty roster
+      backed by reasons is the export declining to describe the instance, not a
+      description of an instance with no models.
+      REFUSED AT TWO INDEPENDENT SEAMS, because either alone leaves a way
+      through — MergeOpenCode returns ErrNothingServable so no in-process caller
+      can erase an entry, and both endpoints refuse before producing anything so
+      a caller doing GET + jq never receives the dangerous document. M2 and M3
+      prove neither seam masks the other.
+      THE TOOLKIT'S PRICE IS NOT PAID HERE, and this is asserted rather than
+      assumed (M4): the toolkit fix accepted permanent non-convergence as the
+      cost of safety. Here the refusal fires on "has offers, can serve none" and
+      never on "has nothing", so a genuinely-empty instance still merges through
+      and clears whatever was stale. The withheld reasons are what make the two
+      emptinesses distinguishable.
+      DELIBERATELY NOT FIXED, and stated: the partial case (some servable, some
+      withheld) still replaces, so a user can temporarily lose options that have
+      not come back — a degraded entry, not an unusable one. Separating
+      transient from permanent withholding needs a reason taxonomy that does not
+      exist, since withheldReason passes an instance's own string through and
+      the set is open.
+      Vacuity guards included, so "it refuses" is not true of something that
+      refuses everything.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: OPEN-34
+    title: a cmd/helixllm test fails intermittently in parallel runs — reported, isolated, mechanism unconfirmed
+    detail: |
+      TestChatCompletions_HostWithNoListedModelsIsStillLive/host_127.0.0.1
+      fails intermittently under parallel full-suite runs.
+      ISOLATED PROPERLY by the reporting agent rather than assumed: it
+      reproduces with that agent's change entirely removed from the tree, passes
+      3/3 alone and 3/3 for its own package, and does not appear under `-p 1`.
+      Mechanism marked UNCONFIRMED — the provider's /health probe has a 2s
+      timeout and the verdict depends on the host being seen live, which would
+      make it load-sensitive.
+      WORTH A SECOND LOOK RATHER THAN THE LABEL, for a specific reason: the F-1
+      fix made identifier resolution registry-only with NO network on the
+      request path. If this test's verdict still depends on a /health probe
+      being observed, that is either a path that still probes or a test asserting
+      through one — and today's LSP case is the standing reminder that "flaky"
+      and "real race" are indistinguishable from the failure rate alone.
+      Apply the discriminator: does the scenario contain LEGITIMATE timing? A
+      live-host probe does, unlike a context cancelled before the call. So a
+      genuine flake is plausible here in a way it was not there — but plausible
+      is not measured.
+    severity: LOW
+    status: open — worth measuring before labelling
