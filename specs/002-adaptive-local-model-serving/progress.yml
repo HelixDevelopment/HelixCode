@@ -91,8 +91,24 @@ findings:
       Missing CapabilityFamily constants for video-generation and
       audio-classification; six real catalogue entries fail Validate().
       Found independently by two data agents.
+      NARROWED 2026-09-03 — the constant gap is CLOSED and the blocker
+      changed identity. Both constants exist AND are in Known():
+      `entry.go:19` FamilyVideoGeneration, `entry.go:30`
+      FamilyAudioClassification, both listed at `entry.go:38-40`. The three
+      video-generation entries are live and validating
+      (`TestShippedCatalogueLoads` PASS, 34 entries / 8 families;
+      TestFamiliesWithACommerciallyUsableOption/video-generation PASS), and
+      `data/video.yaml:130` records its own closure.
+      WHAT REMAINS, for a DIFFERENT reason: the three audio-classification
+      entries are still commented out in `data/speech_audio.yaml` (from line
+      1128), so they are not live and cannot fail Validate(). Their blocker
+      is now unsourced figures — `speech_audio.yaml:1241` "NEEDS: a measured
+      runtime memory figure AND an on-disk weight size" — not the constant.
+      ALSO: a stale in-file comment at `speech_audio.yaml:1131` still claims
+      "entry.go has no audio-classification family constant yet", contradicted
+      by entry.go:30 and by line 42 of its own file.
     severity: CRITICAL
-    status: routed to the agent that owns internal/catalogue/*.go
+    status: open — narrowed; the constants exist and video-generation validates, the audio-classification entries are blocked on unsourced figures not the constant
 
   - id: SELF-1
     where: this session's own baseline-completion waiter
@@ -121,8 +137,17 @@ findings:
       LESSON: schema-sensitive work must not be parallelised until the schema is
       an artifact. It now is — a doc comment at the top of internal/catalogue/
       load.go — so reconciliation goes to ONE agent, not four.
+      VERIFIED 2026-09-03 — both halves discharged. The schema doc comment is
+      present at `load.go:16-70` and is ENFORCED not merely documented:
+      `load.go:214 decoder.KnownFields(true)` — the exact
+      `storage_requried_bytes`-decodes-as-zero trap this entry names. And the
+      reconciliation HAPPENED: all six data files load and every entry
+      validates — `TestShippedCatalogueLoads` PASSES with "34 entries across
+      8 families, 30 carrying a source", package green (0.272s). That test's
+      own >1-family assertion passes at 8, so no file is silently dropping
+      out. The 294 divergences are gone.
     severity: HIGH
-    status: schema now authoritative; reconciliation pending as a single task
+    status: closed - the schema is authoritative and enforced by KnownFields, and the reconciliation landed at 34 entries / 8 families, ledger corrected
 
   - id: EX-4
     where: submodules/helix_llm/internal/catalogue/entry.go (Validate)
@@ -191,8 +216,18 @@ findings:
       JSON handler, timeouts, failure policy) rather than a substitution. Left
       as an explicit operator decision; today's /v1/catalog output is
       byte-identical to before.
+      VERIFIED 2026-09-03 — stale on BOTH halves. The hardcoded function is
+      GONE: `grep -rn DefaultHelixLLMModels --include=*.go` finds only
+      `internal/catalog/defaults.go:17` "// NOTE: there is deliberately no
+      DefaultHelixLLMModels() here." And it IS wired — `router.go:1687-1688`
+      passes `HelixLLM: newHelixLLMCatalogSource(helixLLMEnabled, logger)`
+      into `catalog.Options`, building a real helixllmadapter with a 3s
+      per-listing timeout and a 30s TTL (inside the CONST-038 60s window),
+      returning nil for "nothing reported" when it cannot. Committed, not
+      in-flight: `git show HEAD:internal/router/router.go` carries both lines
+      and `defaults.go` is clean. `go test ./internal/catalog/` ok.
     severity: HIGH
-    status: recorded; live source plumbed but not wired
+    status: closed - the hardcoded list is gone and the live source is wired at router.go 1687; verified committed, ledger corrected
 
   - id: OPEN-1
     where: submodules/helix_llm — /v1/models listing semantics
@@ -692,8 +727,13 @@ findings:
       trap. LATENT, not live: the broker never returns that shape today.
       Reported by the lease agent about the streaming agent's file rather than
       edited across scope boundaries.
+      VERIFIED 2026-09-03 — the defect is gone. `streaming_launch.go:81`
+      returns the INTERFACE `Lease`, not the concrete type, and carries BOTH
+      guards: a bare `return nil, err` with a comment naming the typed-nil
+      trap verbatim, plus an explicit `if lease == nil { return nil,
+      fmt.Errorf("%w: ...", ErrNoReservation, ...) }` at `:93`.
     severity: LOW
-    status: open
+    status: closed - the typed-nil trap is closed by an interface return plus an explicit nil guard, ledger corrected
 
   - id: OPEN-5
     where: submodules/helix_llm/cmd/{visiongen,agentgen,videogen,imagegen}-boot
@@ -706,8 +746,13 @@ findings:
       collapse onto — the reason values map 1:1 onto the lanes' existing exit
       codes 10-14. A follow-up, not this feature's work, but the seam exists now
       where it did not before.
+      RE-VERIFIED + WIDENED 2026-09-03 — STILL TRUE and one copy worse than
+      recorded. All four lanes still carry their own needBytesFor + admit +
+      classifyAdmit, and `modelchoice.go` now exists in ALL FOUR
+      (visiongen / agentgen / videogen / imagegen) — this row says three.
+      Matches OPEN-26's "fourth copy" note.
     severity: MEDIUM
-    status: open — follow-up
+    status: open — re-verified and widened; the duplication is in all four lanes, not three
 
   - id: CRITICAL-2
     where: internal/runtime/choose.go:265 vs internal/catalogue/data/text.yaml:369
@@ -1109,8 +1154,20 @@ findings:
       REPRODUCED: plan from /dev/shm reports storage_available=15484MiB; from the
       repo directory, 1189382MiB. Same host, same volume, 77x different answer.
       The named axis is right and the number is for the wrong filesystem.
+      RE-VERIFIED + WIDENED 2026-09-03 — STILL TRUE, and this row
+      UNDER-STATES it in two ways. The empty string is still there (now
+      `cmd/imagegen-boot/main.go:103`, line drift only) and the mechanism is
+      unchanged end to end: laneboot.Decide -> measure(ctx, weightsDir) ->
+      capability.Measure{WeightsDir} -> `measure.go:90` ->
+      `measure_storage.go:49` "if dir == \"\" { os.Getwd() }". Committed, not
+      in-flight (all five paths clean in git). The 77x figure still holds on
+      this host: /dev/shm 15325 MiB vs / 1120821 MiB = 73x today.
+      WIDER THAN RECORDED: (a) `cmd/videogen-boot/main.go:119` has the SAME
+      empty-string defect — this row names only imagegen, so a fix scoped to
+      imagegen leaves videogen broken; (b) NOTHING tests this axis in either
+      lane, so no guard would catch a regression.
     severity: HIGH
-    status: open — fix dispatched
+    status: open — re-verified and widened to videogen-boot 119 as well; no test covers the storage axis in either lane
 
   - id: SELF-9
     title: my ordering change broke the videogen lane; two precision lists disagreed
@@ -1520,8 +1577,16 @@ findings:
       One apparent NEW failure (500_concurrent_model_list) was TESTED rather
       than assumed: across three runs the UNFIXED binary fails it more often and
       more severely. A host-load-sensitive flake that was passing by luck.
+      NARROWED 2026-09-03 — the `next:` step is DONE.
+      `internal/gateway/openai.go:552` now emits `Data: []api.Model{}` and is
+      guarded by a dedicated test `internal/gateway/listmodels_null_data_test.go`
+      ("A listing that says \"data\": null is not a listing") asserting the
+      body does not contain "\"data\":null" and that data is present-and-empty.
+      `go test -run 'NullData|ListModels' ./internal/gateway/` ok.
+      The rest of this row is a point-in-time triage measurement (83 failures
+      in 8 groups), not a tree assertion — re-measuring needs a suite run.
     severity: HIGH
-    status: triaged; 1 of 3 real-defect groups fixed
+    status: open — narrowed; the G4 null-data listing is fixed and guarded, the remaining group counts need a re-run to re-measure
     next: G4 (smallest), then decide the G2a validation policy once for both handlers
 
   - id: HXA-netaddr-1
@@ -1626,8 +1691,15 @@ findings:
       will reintroduce Gap 1 for its own path.
       Also noted: agentgen-boot does not use selection at all — it acquires
       against a config-derived figure — so there was nothing to wire there.
+      NARROWED 2026-09-03 — main claim STILL TRUE, one sub-claim FALSE.
+      Still true: `grep -rn "NewFleet(" --include=*.go` outside tests is
+      EMPTY, and Fleet appears only in `internal/selection/placement.go` plus
+      a doc reference. Now false, and it should be struck from this row:
+      "agentgen-boot does not use selection at all" —
+      `cmd/agentgen-boot/main.go:181` calls `laneboot.Decide`, which runs
+      `selection.Select`.
     severity: MEDIUM
-    status: open
+    status: open — narrowed to the unwired NewFleet; the agentgen-does-not-use-selection sub-claim is refuted
 
   - id: SELF-12
     title: I gave an agent a false premise and it correctly refused to act on it
@@ -2104,8 +2176,20 @@ findings:
       NOT changed: populating or removing a documented wire field is a contract
       decision, and 11.4.124 requires investigating how it came to be unwired
       first. Recorded rather than guessed.
+      VERIFIED 2026-09-03 — stale on BOTH halves, including my own
+      refutation. The claim "api.Model.WithheldReason is NEVER ASSIGNED
+      anywhere in non-test code, zero writers" is FALSE:
+      `internal/brain/brain.go:442` does
+      `m.WithheldReason = withheldReasonForWire(opt.Reason)`. And the
+      landmine is closed — the two vocabularies now AGREE on five keys:
+      helix_llm `pkg/api/openai.go:185,188,191,196,201` defines
+      insufficient_resources / unsupported_configuration /
+      excluded_by_usage_terms / provider_unavailable / identifier_conflict,
+      and helix_agent `internal/catalog/option.go:98-105 Known()` accepts all
+      five. The consumer's validation path can fire; the withheld branch is
+      no longer dead.
     severity: LOW
-    status: reported finding refuted; adjacent real finding recorded, open
+    status: closed - the wire field does have a writer at brain.go 442 and the two vocabularies now agree on five keys, ledger corrected
 
   - id: SELF-13
     title: staging by path does not scope a commit — I swept 1424 lines of another agent's work
@@ -2343,8 +2427,17 @@ findings:
       NOT YET VERIFIED by building — a baseline run was in flight and building
       mid-run would have invalidated it, which is the stale-baseline trap the
       laneboot agent hit and diagnosed. Verify by building and re-running.
+      NARROWED 2026-09-03 — the premise "nobody built it" no longer holds.
+      The artifact EXISTS: `submodules/helix_agent/bin/helixagent`,
+      97679552 bytes, mtime Sep 3 18:30, gitignored (`.gitignore:24
+      /helixagent`), and all five named integration tests still reference it.
+      The owed build-and-rerun verification STILL CANNOT COMPLETE: the module
+      does not compile in the current tree because of another agent's
+      in-flight edit
+      (`internal/handlers/openai_compatible.go:1367` assignment mismatch,
+      file uncommitted) — an external blocker, not a finding.
     severity: MEDIUM
-    status: open — established by reading; build-and-rerun verification owed
+    status: open — narrowed; the binary now exists, the build-and-rerun is blocked only by another agent's in-flight compile error
 
   - id: HXA-testharness-2
     title: a test reads the operator's personal config and asserts a fact about their machine
@@ -3004,8 +3097,24 @@ findings:
       The new registry guard CANNOT see these — it checks existence, and they
       exist. A version-shape check (reject 0.0.1-security) would catch them.
       NOT FIXED — out of the dispatched scope, and recorded rather than absorbed.
+      NARROWED 2026-09-03 — HALF-CLOSED, and the surviving half is the one
+      that still launches. Fixed on the Go side, dated 2026-09-03, each with
+      a real replacement and a written rationale:
+      mcp-server-figma -> figma-developer-mcp
+      (`internal/mcp/extended_packages.go:113,123`), mcp-server-postgres ->
+      @modelcontextprotocol/server-postgres (`:168`), mcp-server-redis ->
+      @modelcontextprotocol/server-redis (`:195`), plus guards in
+      `internal/mcp/config/generator.go:182`, `generator_full.go:218,518`,
+      `internal/mcp/validation/validator.go:257`,
+      `internal/config/agent_configs.go:378`.
+      STILL LIVE: `docker/mcp/docker-compose.mcp-full.yml` (tracked, clean,
+      last touched 43a784cf 2026-04-25) still invokes
+      `MCP_COMMAND=npx -y mcp-server-redis` (:208), mcp-server-supabase
+      (:247) and mcp-server-figma (:1057) — three of the four
+      security-holding names survive there, in the file that actually starts
+      the containers.
     severity: HIGH
-    status: open
+    status: open — narrowed; the Go catalogues are fixed but docker-compose.mcp-full.yml still launches three of the security-holding npm names
 
   - id: OPEN-32
     title: the hawkscan post-commit hook reported a commit from a different repository
@@ -3331,8 +3440,18 @@ findings:
       opens /api/v1/tasks, /api/v1/workers and /api/v1/system/stats which are 401
       without it). But GET /api/v1/auth/me returns 404 with a valid bearer token.
       Not investigated. Recorded so it is not mistaken for an auth failure.
+      INVESTIGATED 2026-09-03 — the cause is established and this row's
+      premise is half wrong. The 404 is correct behaviour: the route is NOT
+      REGISTERED in the live router at all. `internal/server/server.go:235-240`
+      registers only POST /auth/{register,login,logout,refresh};
+      `getCurrentUser` is mounted at `users.GET("/me")` -> `/api/v1/users/me`
+      (`:247`, behind authMiddleware). The ONLY registration of
+      `/api/v1/auth/me` anywhere is in `handlers_test.go:743,808` — a
+      test-only router, which is almost certainly what the scraped
+      registration list picked up. So it was never "registered but 404";
+      it was never registered.
     severity: LOW
-    status: open — not investigated
+    status: open — narrowed; auth/me was never registered (the endpoint is users/me at server.go 247), so the remaining question is only which path to publish
   - id: TOOLKIT-1
     title: a Claude Toolkit test asserts against the operator's live HOME instead of a sandbox
     detail: |
