@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|-------|
-| Revision | 1 |
+| Revision | 2 |
 | Created | 2026-09-03 |
 | Last modified | 2026-09-03 |
 | Status | current |
@@ -131,6 +131,49 @@ whoever reads this next — **what the choice rejected**, so the reasoning survi
 | **Rejected** | Replacing the copy with a reference to the real submodule; leaving it as known-stale. |
 | **The layout problem being flagged rather than fixed** | The copy exists because claude-toolkit carries a COPY of the constitution instead of referencing it, which is what let one defect become two. CONST-051(C) forbids nested own-org submodule chains. Restructuring submodule wiring is a coordinated change and claude-toolkit is mid-merge, so it is recorded for a future round. |
 | **Paired with** | A sweep of the 153-row findings ledger for rows closed in code but still open in the ledger — prompted by OPEN-3, where a stale row dispatched an agent to redo completed work. The sweep's rule is deliberately conservative: ambiguity means LEAVE IT, because a false "closed" hides real work and is worse than a stale "open". |
+
+---
+
+## 13 · The video GGUF load path (CRITICAL-4, second round)
+
+| | |
+|---|---|
+| **Question** | The video service genuinely has no GGUF path — `videogen_server.py` builds its pipeline with one call shape, `from_pretrained` at lines 314/324, which resolves a diffusers repo via `model_index.json` and cannot read a single-file `.gguf` (asserted from the AST, not the file text). The bad catalogue data is fixed, so both `gguf-q4` entries are recorded-and-refused. Separately, video generation is impossible on this host regardless: `videogen-boot plan` withholds all three entries on MEMORY at exit 22 — 5.3 GiB usable after the responsiveness reserve against 8-10 GiB required — and the service docstring targets an RTX 5090. |
+| **Decision** | **Implement the GGUF path.** |
+| **Rejected** | Leaving it as-is with one servable option and honest refusals; re-recording `ltx-video-13b` against a diffusers repo; marking both entries Obsolete per §11.4.90. |
+| **Recorded disagreement, and why it is proceeding anyway** | The agent that root-caused this DECLINED to implement it, and its reasoning was sound: it cannot be executed even once on this host, so it would ship unverified, and "implementing what cannot be executed once would have been a third bluff rather than a fix". The operator has chosen implementation with that fully stated. Per the standing rule that a reaffirmed decision is the operator's to make, it proceeds — but the constraint travels with it: **the §11.4.108 layer-3 runtime signature is NOT obtainable here.** Layer-1 (source) and layer-2 (the shipped loader reading the shipped file) are. Whatever lands must say plainly that it is unexecuted on this hardware, and must not carry a PASS that implies otherwise. |
+| **Scope when it runs** | `from_single_file` + `GGUFQuantizationConfig`, with encoder/VAE/tokenizer/scheduler sourced separately and the pipeline assembled from components; then re-measure both memory figures. Recording a real GGUF `source:` is only permissible once measured — the data defect just closed was precisely a `source:` URL pointing at a repo containing zero `.gguf` files. |
+
+## 14 · The 22 production-config keys (HXC-prodconfig)
+
+| | |
+|---|---|
+| **Question** | `production-config.yaml` had an AI transcript pasted into it plus 210 lines YAML was silently discarding. The invalid-YAML damage is fixed and the parsed config was proven byte-identical before and after — but 22 keys remain whose intent nobody has confirmed. |
+| **Decision** | **Audit the 22 keys against what the code actually reads.** |
+| **Rejected** | Deleting the keys nothing reads; leaving them and moving on. |
+| **Method** | Per key, determine from source whether anything consumes it, then either keep it with a comment saying what reads it, or mark it dead. There is precedent and a mechanism already: the server WARNs at startup about no-effect keys (`config key llm.providers has no effect in this build — no field on LLMConfig; the whole provider block is discarded`), so honest reporting of dead config is an established pattern here rather than a new one. |
+| **Explicitly not chosen** | Deletion. §11.4.124 would require a git-history investigation per key first — why it exists, whether a reader was deleted by mistake — and each removal wants its own commit. The audit may recommend deletions afterwards; it may not perform them as a side effect. |
+
+---
+
+## Execution status of decisions 13 and 14
+
+Both were recorded but **deliberately not dispatched** at the time of the decision, on host-safety grounds (§12.6, which yields unconditionally):
+
+```
+load average 96.33 on 16 CPUs   (~6x oversubscribed)
+RAM           3 GB available of 30 GB
+swap          8191/8191 MB — fully consumed
+in-flight     12 subagents
+```
+
+Dispatching further work into that state risked OOM, would have contaminated the
+timing-sensitive measurements several in-flight streams were taking, and could
+have destabilised unrelated operator workloads on this shared host (§11.4.174).
+The same discipline being applied to test measurements all session applies to
+dispatch decisions.
+
+They are queued, not dropped.
 
 ---
 
