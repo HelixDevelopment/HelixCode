@@ -2946,3 +2946,79 @@ findings:
       restore, clean the test cache before believing a PASS or a FAIL.
     severity: MEDIUM
     status: recorded — method note
+
+  - id: OPEN-31-resolved
+    title: 113 broken package sites in Go source, not the ~55 reported
+    detail: |
+      The sibling's report gave ~55 sites in six files. A go/ast scan found 113
+      in SEVEN, and the two it missed are instructive:
+        * five more in internal/config/agent_configs.go, hidden behind a shape a
+          `"npx","-y","<pkg>"` text scan cannot see — Command: "npx" and
+          Args: []string{...} are SEPARATE STRUCT FIELDS. That shape is exactly
+          why the new guard parses the AST rather than grepping.
+        * one in challenges/codebase/go_files/kilocode_generator/, not in the
+          report at all.
+      47 of 123 distinct names 404'd, control-probed (npm and
+      @modelcontextprotocol/server-filesystem resolved 200, so the 404s are
+      answers). 3 were deliberate test fixtures; 44 production.
+      EACH REPLACEMENT VERIFIED AGAINST THE REGISTRY *AND* ITS CLAIMED UPSTREAM
+      REPO, on the principle that name similarity is not provenance. Linear
+      looked salvageable — linear-mcp-server claims repo
+      modelcontextprotocol/linear-server — but that repo is 404, so the claim is
+      unverifiable and the entry was removed rather than trusted.
+      35 NAMES REMOVED RATHER THAN GUESSED. Community packages exist for many,
+      and the agent declined to use them: "making a stranger's package a shipped
+      default is a supply-chain decision, not a name fix". Flagged, not made.
+      GENERATORS AND CONFIGS DID DISAGREE, and nothing compared them: the JSON
+      said `mcp-server-sqlite-npx <path>` while the generator said
+      `@modelcontextprotocol/server-sqlite --db-path <path>` — which config a
+      user got depended on HOW THEY GENERATED IT. The new test compares FULL
+      ARGV, so a right name with a wrong flag still fails, and it refuses to
+      pass if zero servers overlapped.
+      GATE RECONCILIATION WITH THE BEST OBSERVATION OF THE DAY: an assertion
+      `len >= 30` was replaced with distinctness and well-formedness checks,
+      because A SIZE FLOOR IS SATISFIABLE BY ADDING FICTIONAL ENTRIES — which is
+      exactly how these got in. The guard was rewarding the defect.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: SECURITY-6
+    title: four config entries point at npm security-holding packages
+    detail: |
+      Found by the agent and VERIFIED INDEPENDENTLY by me against the live
+      registry:
+        mcp-server-figma      0.0.1-security  "security holding package"
+        mcp-server-postgres   0.0.1-security  "security holding package"
+        mcp-server-redis      0.0.1-security  "security holding package"
+        mcp-server-supabase   0.0.1-security  "security holding package"
+      Control: @modelcontextprotocol/server-everything is 2026.8.31, so the
+      lookups work and these versions are real answers.
+      A security-holding package is what npm publishes after SEIZING A NAME —
+      typically because it was used maliciously or squatted. These names EXIST,
+      so every existence check passes, and they install nothing.
+      Two consequences worth separating:
+        * functionally, `npx -y mcp-server-figma` gets a dead stub, so the
+          integration silently does nothing;
+        * historically, these are names npm had to quarantine, which is a
+          different and more uncomfortable fact than "the package is missing".
+      The new registry guard CANNOT see these — it checks existence, and they
+      exist. A version-shape check (reject 0.0.1-security) would catch them.
+      NOT FIXED — out of the dispatched scope, and recorded rather than absorbed.
+    severity: HIGH
+    status: open
+
+  - id: OPEN-32
+    title: the hawkscan post-commit hook reported a commit from a different repository
+    detail: |
+      Reported by the agent: the hook announced SHA 1f97cf1 in its session,
+      including once when it had committed nothing, and that SHA does not match
+      its actual commit (ce9c4eb9).
+      1f97cf1 is MY commit, in helix_llm. The agent was working in helix_agent.
+      So the hook attributed a commit from one repository to a session working
+      in another. If its scans are keyed on that SHA, they are being associated
+      with the wrong change.
+      Environmental rather than a defect in this feature, and not investigated
+      further — recorded because a tool that mis-attributes evidence is worth
+      knowing about before anyone relies on its output.
+    severity: LOW
+    status: open — environmental
