@@ -2372,3 +2372,66 @@ findings:
       Either reading makes the current form wrong.
     severity: MEDIUM
     status: open — needs a decision on which of the two it is meant to be
+
+  - id: HXA-npm-1
+    title: generated user configs reference two npm packages that do not exist
+    detail: |
+      Found by running down TestMCPPackageExistence, one of the helix_agent
+      failures described as "environment-bound and out of scope".
+      This project writes THREE DIFFERENT sqlite MCP package names into configs
+      across four files. Verified against the live npm registry, with the
+      instrument sanity-checked (the third lookup RESOLVED, so the two 404s are
+      real answers and not a network failure):
+        @modelcontextprotocol/server-sqlite   DOES NOT EXIST
+          scripts/cli-agents/configs/generated/opencode/opencode.json:45
+          scripts/cli-agents/configs/opencode.template.json:66   <-- the TEMPLATE
+        @anthropic-ai/mcp-server-sqlite       DOES NOT EXIST
+          scripts/cli-agents/configs/generated/crush/crush.json:40
+        mcp-server-sqlite-npx                 exists, 0.8.0
+          configs/cli-agents/crush.json:128
+      A user who takes the generated opencode or crush config gets an MCP server
+      that fails to start on an npm 404. And because the TEMPLATE carries a
+      non-existent name, every future generation is wrong too.
+      NOT FIXED BY ME, deliberately. The substitution is not a rename: the
+      working package takes different arguments (`["-y",
+      "mcp-server-sqlite-npx"]` with no --db-path, versus `["-y", "<pkg>",
+      "--db-path", "..."]`). Choosing the package and its invocation needs
+      research into what these servers actually are, and guessing it is how
+      SELF-7 happened.
+    severity: HIGH
+    status: open — dispatched
+
+  - id: HXA-testpath-1
+    title: the spec-kit tests look for a directory four levels above where they run
+    detail: |
+      TestGitHubSpecKitSubmoduleVerification and its three siblings fail with
+        stat cli_agents/spec-kit: no such file or directory
+      github_speckit_integration_test.go:29 uses the BARE RELATIVE PATH
+      "cli_agents/spec-kit". Go runs a test from its own package directory, so
+      that resolves to
+        submodules/helix_agent/tests/integration/cli_agents/spec-kit
+      The directory genuinely exists — at the META-REPO ROOT,
+      /home/milosvasic/Projects/helix_code/cli_agents/spec-kit, four levels up.
+      So four tests were failing because they look in the wrong place, and were
+      being written off as environmental. Nothing about the machine is missing.
+    severity: MEDIUM
+    status: open — dispatched
+
+  - id: NOTE-5
+    title: "environment-bound" was doing a lot of work, and none of it was true
+    detail: |
+      Three separate labels of this kind have now been checked and none held:
+        * helix_llm's two integration failures — "needs live services". They
+          needed one line in the test framework (OPEN-19).
+        * helix_agent's spec-kit failures — "environment-bound". A bare relative
+          path resolving four levels below the directory it wants.
+        * helix_agent's TestMCPPackageExistence — "environment-bound". The
+          registry lookup was CORRECT and the project's own generated configs
+          name packages that do not exist.
+      In every case the label was plausible, nobody had reason to doubt it, and
+      it was wrong. The pattern is not that the agents were careless — each
+      correctly proved the failure was not its own work. It is that proving a
+      failure is not yours ends the inquiry, and the label supplies a reason
+      that feels like an answer.
+    severity: INFO
+    status: recorded
