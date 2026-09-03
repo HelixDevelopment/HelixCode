@@ -33,6 +33,23 @@ func TestRunner_StableAcrossThreeRuns(t *testing.T) {
 	opts := RunOptions{Manifest: m, FixtureRoot: fixtureRoot}
 	ctx := context.Background()
 
+	// Discarded warmup pass. GenerateFixture has just written the fixture, so
+	// the first walk over it pays one-time filesystem cache population (dentry,
+	// inode and page cache) that no later run repeats. Measured on this tree,
+	// run 0 was the outlier in 3 of 3 trials — 2079/2114/1989 ms against a
+	// steady state of 38-44 ms, a ~50x cold/warm ratio — while runs 1 and 2
+	// agreed to a CV of 7.6%, 1.0% and 5.5%. Sampling that cold run made a
+	// precise harness report CV=163% and fail its own 35% bound.
+	//
+	// This test asks whether the harness can DISCRIMINATE a 1.3x change, which
+	// is a steady-state question, so steady state is the regime to sample. The
+	// warmup is a real RunAll whose results are dropped, never a sleep. Note
+	// this deliberately stops the test from noticing a cold-start regression —
+	// that is a different question and belongs in its own test.
+	if _, warmErr := RunAll(ctx, opts); warmErr != nil {
+		t.Fatalf("RunAll warmup: %v", warmErr)
+	}
+
 	// Collect 3 runs per scenario.
 	samples := map[string][]float64{}
 	for i := 0; i < 3; i++ {
