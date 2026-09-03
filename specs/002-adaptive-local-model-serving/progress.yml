@@ -1435,3 +1435,125 @@ findings:
       redirect is dialled through the same pinned transport), but asymmetric.
     severity: LOW
     status: recorded — behaviour change, not a defect
+
+  - id: FR-017-018-resolved
+    title: the HelixCode and OpenCode exporters had no caller at all
+    detail: |
+      CONFIRMED. ExportHelixCode, ExportOpenCode and the Merge* functions were
+      defined, unit-tested, and referenced by NOTHING outside internal/naming.
+      The only non-Go references were two snippets in docs/guides that tell a
+      user to import internal/naming — not importable from outside the module.
+      So the artifacts were genuinely unobtainable by any user, and the
+      requirement that users can obtain their configuration on demand was met
+      only for the Claude Toolkit.
+      GIT HISTORY CHECKED FIRST per 11.4.124: `git log -S` across all history
+      shows they arrived in 1b66afb WITH their unit tests and no caller was ever
+      added. Never-completed wiring, not wiring that rotted — so completing it
+      was right, and removing it would have been wrong.
+      FIXED: served from the same gateway the toolkit already reads models from
+      — GET /v1/config/{helixcode,opencode} and POST /v1/config/{consumer}/merge
+      (body in, merged content back, never writes to disk). The base URL handed
+      out is the address the request arrived on, upgraded on X-Forwarded-Proto
+      and never downgraded. Multiple serving hosts produce a 400 naming them
+      rather than a silent pick.
+      The test drives the real gin router end to end — testing the exporter
+      function in isolation is what proved nothing about reachability.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: SC-015-resolved
+    title: the published identity named 127.0.0.1, so it named no machine and collided across machines
+    detail: |
+      CONFIRMED, with one sub-claim REFUTED.
+      ServingHost() returned the base URL's hostname, and the embedded
+      llama-server path forces 127.0.0.1 — the normal case. So the identity was
+      helixllm/127.0.0.1/<model>: it names no machine, and it is IDENTICAL on
+      every machine. The collapse is real and was verified in the toolkit
+      source: claude-providers.sh does `group_by(.provider_id) | map(.[0])`
+      over MULTIPLE enumerated hosts, so the second host is silently dropped.
+      Captured RED on the pre-fix tree:
+        ServingHost() for http://127.0.0.1:8080 = "127.0.0.1", want "anton"
+        127.0.0.1 derives helixllm-127-0-0-1-llama3-41cc1e4fdbc7
+        localhost derives helixllm-localhost-llama3-9235d4f540fa
+      REFUTED sub-claim: "OpenAI-compatible local backends get no identity and
+      are silently dropped." The filter is real but DELIBERATE — in this codebase
+      the OpenAI-compat path serves only remote vendors, and stamping identities
+      on proxied vendor models is what the design explicitly forbids. Left alone.
+      FIXED: loopback and wildcard hosts resolve to os.Hostname(); a base URL
+      already naming a real machine is untouched; a machine that cannot say what
+      it is called yields the URL host rather than a fabricated name.
+      COST STATED PLAINLY: every identifier for a locally served model changes
+      ONCE. Judged worth paying because those names were wrong (they pointed at
+      no machine and collided), it is the LAST re-mint of this class (both
+      loopback spellings now converge, where flipping the env var used to re-mint
+      silently and repeatedly), and the naming SCHEME is untouched — the golden
+      file pinning it needed no change.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: CHALLENGES-triage
+    title: all 83 challenge failures classified; 5 fixed; none converted to skips
+    detail: |
+      Measured 20 passed / 83 failed / 28 skipped — the remembered 83 is right.
+      The 28 skips are honest (benchmark/chaos steps with no executor, already
+      surfaced as a non-zero exit).
+      ALL 83 accounted for in 8 root-cause groups, none left unclassified:
+        G1  51  no LLM backend reachable          environmental
+        G2a 11  no semantic request validation    REAL DEFECT
+        G2b  3  auth expects 401, server open     config
+        G3   5  provider outage reported 500      REAL DEFECT — FIXED
+        G4   4  /v1/models returns data: null     REAL DEFECT
+        G5   6  /health 503, no provider          environmental
+        G6   1  p99 latency budget                environmental / test
+        G7   1  models/:id 404 (downstream of G4) environmental
+        G8   1  RAG ingest shape                  UNDETERMINED, honestly
+      The environmental class was PROVEN, not assumed: nothing listening on
+      :50052, llama-server present but zero .gguf files anywhere under $HOME.
+      NONE were converted to skips — that would have rebuilt the always-passing
+      harness defect this session just removed.
+      The previous agent's dying lead ("every malformed and unauthenticated
+      request reaches provider dispatch") was CONFIRMED for malformed and
+      REFUTED for auth: open-access is documented as by-design, so those 3
+      challenges assume a keyed deployment they never declare.
+      FIXED G3 only — the highest-impact real defect with a spec the project's
+      own banks already declare ([404,503]). Suite 83 -> 79.
+      One apparent NEW failure (500_concurrent_model_list) was TESTED rather
+      than assumed: across three runs the UNFIXED binary fails it more often and
+      more severely. A host-load-sensitive flake that was passing by luck.
+    severity: HIGH
+    status: triaged; 1 of 3 real-defect groups fixed
+    next: G4 (smallest), then decide the G2a validation policy once for both handlers
+
+  - id: HXA-netaddr-1
+    title: an unpaired bracket in a configured host silently becomes a connection to ::1
+    detail: |
+      Found while accounting for uncommitted work in helix_agent. The failure is
+      on COMMITTED code — proven not to be anyone's in-flight work: netaddr is
+      unmodified in the tree, and `go list -deps -test` shows zero dependency
+      edges to the packages that do have uncommitted changes.
+      The test asserts url.Parse REFUSES the URL built from host "[[::1]".
+      Probed the stdlib directly on go1.26.0:
+        "http://[[::1]:6379"  PARSED  hostname="::1" port="6379"
+        "http://[[::1]]:6379" REFUSED
+      So Go SILENTLY DISCARDS the stray leading bracket and yields a real,
+      connectable destination.
+      The test's stated danger — "a mutant that makes it parse invents a
+      destination" — is exactly right. Its assumption that url.Parse would catch
+      it is wrong. Nothing catches it: an operator who mistypes a bracket in a
+      configured host gets a silent connection to ::1 instead of an error.
+      A gate that is RIGHT about the danger and WRONG about the mechanism.
+    severity: HIGH
+    status: open — dispatched
+
+  - id: SELF-11
+    title: I nearly misread my own filtered output as a finding
+    detail: |
+      I backgrounded `go test ./internal/... | grep -E '^(FAIL|--- FAIL)'` and
+      later counted '^ok' in the log. It reported "0 packages ok", which reads
+      like a catastrophe. There were no ok lines because MY OWN FILTER had
+      removed them.
+      PATTERN-1 a fourth time, and this time against me rather than a tool:
+      absence of output is ambiguous between "clean" and "you did not capture
+      it". The actual result was one failing package.
+    severity: LOW
+    status: recorded — lesson
