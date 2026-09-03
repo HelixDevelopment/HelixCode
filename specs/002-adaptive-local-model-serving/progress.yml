@@ -3172,3 +3172,212 @@ findings:
       is not measured.
     severity: LOW
     status: open — worth measuring before labelling
+  - id: BOOT-1
+    title: the ./helix facade refused to run on podman, the runtime this project mandates
+    detail: |
+      check_docker() required the literal `docker` binary and check_docker_compose
+      required docker-compose. This host has podman + podman-compose and no docker
+      at all, which is what CONST 11.4.161 and CLAUDE.md require. Every facade
+      command exited 1 with "Docker is not installed or not in PATH", so the
+      sanctioned boot path was dead on the sanctioned runtime.
+      The script bound to a tool NAME rather than resolving the capability, and
+      repeated that binding at seven call sites.
+      FIXED d5158bd3 by resolving once into CONTAINER_CLI (podman preferred,
+      docker still a fallback) and routing ps/exec/info through it, plus a
+      matching compose resolver. ./helix status now exits 0.
+    severity: HIGH
+    status: fixed
+  - id: BOOT-2
+    title: three Dockerfiles pinned Go 1.24 while the module they build requires 1.26
+    detail: |
+      Dockerfile, Dockerfile.worker and Dockerfile.test copy helix_code/go.mod
+      (which declares go 1.26) into a golang:1.24-alpine builder under
+      GOTOOLCHAIN=local, so `go mod download` failed with
+        go: go.mod requires go >= 1.26 (running go 1.24.13; GOTOOLCHAIN=local)
+      docker/Dockerfile.helixqa was already on 1.26 — these three were stragglers,
+      which is why the mismatch survived.
+      FIXED d5158bd3.
+    severity: HIGH
+    status: fixed
+  - id: BOOT-3
+    title: a hardcoded grantee in test/init.sql aborted postgres startup in the deployment stack
+    detail: |
+      helix_code/test/init.sql ended with GRANT ... TO helixcode. That file is
+      mounted into /docker-entrypoint-initdb.d by TWO compose files that create
+      DIFFERENT roles — docker-compose.test.yml uses POSTGRES_USER helixcode,
+      docker-compose.helix.yml uses helix. In the deployment stack the role does
+      not exist, so init aborted and postgres exited 3 before accepting any
+      connection.
+      The block's own comment already said "Grant permissions to the configured
+      user" — the code contradicted the comment. Same class as BOOT-1, a
+      hardcoded name where the capability should be resolved.
+      FIXED d5158bd3 via current_user in a DO block with %I quoting. Verified on
+      a clean volume in BOTH real configurations - deployment (helix + both
+      scripts) and test (helixcode + test script only) each reach Up with 0 init
+      ERRORs and 15 tables. Before the fix the deployment case was Exited (3).
+      NOTE postgres-init.sql hardcodes `helix` symmetrically, but it is only ever
+      mounted alongside POSTGRES_USER=helix, so it is latent, not live. Left
+      alone deliberately rather than widening the change.
+    severity: HIGH
+    status: fixed
+  - id: BOOT-4
+    title: the container build still cannot resolve the 43 replace directives in helix_code go.mod
+    detail: |
+      With BOOT-2 fixed the build gets further and then fails on
+        go: dev.helix.agent (replaced by ../submodules/helix_agent) reading
+            /submodules/helix_agent/go.mod - no such file or directory
+      helix_code/go.mod carries 43 `replace` directives pointing at
+      ../submodules/*, i.e. OUTSIDE the helix_code/ directory the Dockerfile
+      copies. All 43 targets exist locally and total 4.2 GB, dominated by
+      helix_qa (2.5 GB) and helix_agent (2.0 GB), most of which is vendored
+      third-party trees such as signoz and chroma.
+      Fixing it needs the image to mirror the repo layout plus a carefully
+      scoped .dockerignore so the build context is not multi-GB. That is its own
+      piece of work and was NOT attempted here.
+      WORKAROUND IN USE - the native path, which Rule 4 names first
+      (make build -> ./bin/<app>). The server auto-boots its own postgres and
+      redis per CONST 11.4.76, so the native path needs no compose at all.
+    severity: MEDIUM
+    status: open — needs a scoped .dockerignore and a layout change
+  - id: TEST-1
+    title: the perf-scenario stability test measured one cold-cache run and called the harness noisy
+    detail: |
+      TestRunner_StableAcrossThreeRuns failed every full-suite run with
+      CV=159% against its own 35% bound. The verdict was wrong. The test
+      generates a 600-file fixture into a fresh t.TempDir() then measures
+      immediately, so run 0 pays one-time filesystem cache population.
+      REPRODUCED DETERMINISTICALLY - run 0 is the outlier in 3 of 3 trials,
+      never runs 1 or 2, which is what distinguishes a cold cache from load
+      jitter: [2079.6, 38.6, 43.0] [2114.6, 40.0, 40.6] [1989.6, 43.9, 40.6].
+      Runs 1 and 2 alone give CV of 7.6%, 1.0% and 5.5% — single digits, exactly
+      what the test's own comment predicts.
+      FIXED 00b28c8e by discarding one real warmup RunAll. The 35% threshold was
+      NOT loosened; weakening the assertion would have been the CONST 11.4.120
+      forbidden fix.
+      KNOWN REMAINING - the test is genuinely load-sensitive. It passed 3/3 on a
+      quiet host and measured CV=37.2% while a container build had the host at
+      load 28 on 16 CPUs. It wants an uncontended host, which is a property of
+      timing measurement, not something to paper over.
+    severity: MEDIUM
+    status: fixed
+  - id: TEST-2
+    title: the whole tests/memory suite silently skips unless a server is already running
+    detail: |
+      getTestBaseURL() defaults to http://localhost:8080 and every test in
+      tests/memory begins with a /health probe followed by
+        t.Skip("Server not available, skipping memory leak test")
+      marked SKIP-OK #legacy-untriaged. With no server up the package reports
+      "ok ... 0.077s" — a green result that exercised nothing.
+      MEASURED THIS SESSION - with a server running the same package took 23s
+      and TestMemory_LeakDetection_ConcurrentRequests produced a rising live-heap
+      signal (signed-R2 0.6565, slope 36187 B/sample, rise 51.57% of mean).
+      That signal is NOT yet called a defect. It was taken on a host at load 44
+      with four suites running, the absolute heap is under 1 MB, and the shape is
+      flat for 7 waves then a late jump (539504 548112 555008 555936 568304
+      566512 568704 653600 852112 907656), which is as consistent with HTTP
+      transport idle-pool growth or GC lag under scheduling pressure as with a
+      leak. It needs a clean uncontended re-run before anyone labels it.
+      THE COVERAGE GAP IS THE REAL FINDING - a suite that reports ok while
+      testing nothing is the CONST 11.4.238 failure mode, and it is why nobody
+      had seen this signal before.
+      RESOLVED ON A QUIET HOST 2026-09-03 14:00. Re-run at load ~7 with the
+      server up: the test RAN and PASSED in 0.08s.
+        quiet   [747112 722320 722120 739784 750480 786376 833392 872328
+                 815680 801504]  signed-R2 0.6332  rise 15.48% of mean  PASS
+        loaded  [539504 ... 653600 852112 907656]
+                                 signed-R2 0.6565  rise 51.57% of mean  FAIL
+      The verdict needs BOTH R2 >= 0.50 AND rise >= 25% of mean. On a quiet host
+      the trend SHAPE survives (R2 0.63) but the MAGNITUDE collapses to 15.5%
+      and the tail actually falls (872328 -> 815680 -> 801504) instead of
+      climbing. So the leak signal does NOT reproduce and the 51.57% rise was a
+      load artifact — GC lag and scheduling pressure at load 44, not retained
+      memory. The two-part guard did exactly its job, separating trend-shaped
+      noise from material growth.
+      WHAT REMAINS OPEN is only the coverage gap: the suite still reports
+      "ok ... 0.077s" having exercised nothing whenever no server is up, which
+      is how this went unseen. The leak half is closed.
+    severity: MEDIUM
+    status: leak signal refuted on a quiet host; the skip-when-absent coverage gap stays open
+  - id: METHOD-1
+    title: running four test suites concurrently manufactured false failures in three of them
+    detail: |
+      Recorded as a lesson, not a product defect. Dispatching helix_llm,
+      helix_code, helix_agent and claude_toolkit suites at once took the host to
+      load 60 on 16 CPUs and produced three distinct false-failure modes:
+        - timing: perf scenarios failed again despite the TEST-1 fix, and
+          helix_llm's TestBaselineDiscardsConnectionWarmup failed because its
+          inner step self-skipped on load detection ("host too loaded to measure
+          concurrency ... re-run on a quieter host") while the wrapper expected
+          "passed"
+        - port exhaustion: helix_agent's TestAdapter_HealthCheckTCP_Success got
+          "listen tcp 127.0.0.1:0 bind address already in use" — binding to port
+          ZERO, i.e. ephemeral exhaustion
+        - live-server interference: a running server on 8080 changed outcomes in
+          BOTH directions — it woke the vacuous tests/memory suite (TEST-2) and
+          it broke a challenge asserting that a CLOSED port must report SKIPPED,
+          because the port was no longer closed
+      This is CONST 11.4.119 (single resource owner) applied to CPU, ephemeral
+      ports and localhost port space. Timing and port-binding suites need
+      exclusive host ownership; a pass/fail verdict taken under self-inflicted
+      contention is not evidence either way.
+    severity: LOW
+    status: recorded — method note
+  - id: OBS-1
+    title: GET /api/v1/auth/me is registered but answers 404
+    detail: |
+      The route appears in the router registrations scraped from
+      internal/server, and register/login/refresh all work end-to-end (register
+      201 with a persisted UUID, login 200 with a 287-char JWT, and that token
+      opens /api/v1/tasks, /api/v1/workers and /api/v1/system/stats which are 401
+      without it). But GET /api/v1/auth/me returns 404 with a valid bearer token.
+      Not investigated. Recorded so it is not mistaken for an auth failure.
+    severity: LOW
+    status: open — not investigated
+  - id: TOOLKIT-1
+    title: a Claude Toolkit test asserts against the operator's live HOME instead of a sandbox
+    detail: |
+      scripts/tests/test_claude.sh line 7 hardcodes
+        ALIAS_FILE="$HOME/.local/share/claude-multi-account/aliases.sh"
+      and the file sources only lib/assert.sh, never lib/sandbox.sh — even
+      though lib/sandbox.sh exists and exports a sandboxed ALIAS_FILE for
+      exactly this purpose.
+      It therefore asserts on the OPERATOR'S live machine state. Measured:
+        poe       present, uses cma_run_provider   PASS
+        deepseek  present, uses cma_run_provider   PASS
+        xiaomi    ABSENT from the live alias file  FAIL
+      So "✗ 1 failed, 10 passed" means only that this operator has not
+      configured a xiaomi provider. That is not a product defect and the gate
+      cannot distinguish it from one.
+      SAME CLASS as helix_agent 913d1f02 "validate the OpenCode config this repo
+      ships, not the operator's" — the pattern recurs across repos.
+      Fix direction: drive the assertions from a sandbox alias file generated
+      from a known provider set, per lib/sandbox.sh. NOT fixed here — it is a
+      test-harness change on an unmerged branch and deserves its own work.
+    severity: LOW
+    status: open — test reads operator state; needs sandboxing
+  - id: TOOLKIT-2
+    title: eleven providers-semantic assertions fail together, one root cause not eleven defects
+    detail: |
+      scripts/tests/test_providers.sh, the providers-semantic block. Every
+      failure has the SAME shape — the judge returns skip / exit 2 where a real
+      verdict was expected:
+        pass -> verified     want=verified   got=skip   (exit want=0 got=2)
+        fail -> unverified   want=unverified got=skip   (exit want=1 got=2)
+        same-endpoint judge independence WARNING   want=0 got=1
+      and every assertion that EXPECTS skip passes:
+        no key -> skip  PASS      Go exit 3 (infra) -> skip  PASS
+        skip -> adapter exit 2  PASS
+      Two more look for evidence at the REAL repo path while the run was
+      sandboxed:
+        missing /home/milosvasic/Projects/claude_toolkit/.local-cache/semantic-last.json
+        missing /tmp/cma-test.NchYzI/scv-argv.txt
+      Note the driver binary DID build and cache in the sandbox (that assertion
+      passes), so this is not a build failure.
+      READ AS ONE CAUSE - the semantic judge cannot actually run in this
+      environment, so it skips, and every downstream assertion that needed a
+      real verdict or an emitted artefact fails behind it. Counting it as 11
+      defects would overstate it.
+      NOT diagnosed further and NOT fixed - it is on the unmerged branch
+      fix/helixllm-export-review-findings and wants its own focused look.
+    severity: MEDIUM
+    status: open — one root cause, needs diagnosis on a host where the judge can run

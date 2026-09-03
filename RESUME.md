@@ -1,8 +1,12 @@
 # RESUME — session resumption record (§11.4.131)
 
-**Rev 22 · 2026-09-03 ~08:20 CEST.** Supersedes rev 21 (same morning) and
-rev 20 (2026-08-14). Rev 21 fixed the broken paths; this revision brings the
-work state current after a long fix round.
+**Rev 23 · 2026-09-03 ~14:00 CEST.** Supersedes rev 22 (same morning),
+rev 21 and rev 20 (2026-08-14).
+
+**What changed since rev 22, and it is the headline: EVERYTHING IS NOW PUSHED,
+and the system BOOTS AND SERVES.** Rev 22 said "Nothing is pushed"; that is no
+longer true and §2 below is corrected. Three defects that each independently
+stopped the stack from starting were found by actually running it, and fixed.
 
 Rev 20 was three weeks stale and **its first command did not work**: it said to
 `cd /home/milos/Factory/projects/tools_and_research/helix_code`, which does not
@@ -68,8 +72,21 @@ Feature **002 `adaptive-local-model-serving`** is mid-execution:
 - **89 of 97 tasks** complete (`/usr/bin/grep -c '^- \[x\]' .../tasks.md`).
 - **93 findings** recorded in `progress.yml`. Roughly 20 open, and the open ones
   are now mostly decisions rather than unfinished work — see §5.
-- Nothing is pushed. When this was written: meta-repo 13 ahead of upstream,
-  `helix_llm` 20 ahead, `helix_agent` 3 ahead.
+- **Everything is pushed** (2026-09-03 ~13:45 CEST), fast-forward, no force.
+  Every remote was `behind=0` beforehand, so no merge was needed:
+
+  | repo | HEAD | upstreams |
+  |---|---|---|
+  | meta | `b752a807` | GitHub `Helix-CLI`, GitLab `HelixCode` |
+  | `helix_llm` | `1efda3b5` | GitHub, GitLab |
+  | `helix_agent` | `64cf8921` | `HelixDevelopment/HelixAgent`, `vasic-digital/HelixAgent` |
+  | `claude_toolkit` | `328cf27b` | GitFlic, GitHub, GitLab, GitVerse (branch `fix/helixllm-export-review-findings`, NOT merged to main) |
+
+  Two upstreams reported a **move**: `HelixLLM` -> `HelixDevelopment/llm.git`
+  and `Helix-CLI` -> `HelixDevelopment/code.git`. Pushes still succeed via the
+  redirect; the configured URLs are stale and worth updating.
+  GitHub also reports **81 Dependabot vulnerabilities** on
+  `vasic-digital/HelixAgent` (1 critical, 56 high, 21 moderate, 3 low).
 
 The 8 open tasks are NOT stalled work. Four (`T037`, `T055`, `T068`, `T084`)
 are `[REVIEW]` tasks that **already ran and returned findings**; §11.4.134
@@ -77,6 +94,60 @@ requires iterating to a zero-finding GO, so they stay open until the fixes land
 and a re-review comes back clean. `T052`/`T053` need a running system.
 `T054` is an outward-facing publish and is explicitly an operator checkpoint.
 `T097` is the final review.
+
+---
+
+## 2b · How to actually run the system (verified 2026-09-03)
+
+The containerised route (`./helix start`) does NOT work yet — see `BOOT-4`. Use
+the native route, which is the one Rule 4 names first (`make build` ->
+`./bin/<app>`). The server auto-boots its own Postgres and Redis in podman per
+§11.4.76, so no compose file is needed at all.
+
+```bash
+cd /home/milosvasic/Projects/helix_code
+
+# .env is gitignored; generate the three REQUIRED secrets if absent
+cp .env.example .env && chmod 600 .env
+for k in HELIX_DATABASE_PASSWORD HELIX_REDIS_PASSWORD HELIX_AUTH_JWT_SECRET; do
+  sed -i "s|^$k=.*|$k=$(openssl rand -hex 32)|" .env
+done
+
+cd helix_code && go build -o bin/helixcode ./cmd/server
+set -a; . ../.env; set +a
+HELIX_REDIS_HOST=localhost ./bin/helixcode
+```
+
+The server REFUSES to start if a secret is missing, naming the variable — that
+is deliberate, and it is the placeholder guard added earlier in this programme:
+
+    config validation failed: auth.jwt_secret is still the unexpanded
+    placeholder for ${HELIX_AUTH_JWT_SECRET} ... Export it and start again.
+
+On success it prints `Infra auto-boot: podman booted postgres:<p> redis:<p>`
+and listens on **:8080**. Two containers appear, `helixcode-autoboot-postgres`
+and `helixcode-autoboot-redis`. Opt out with `HELIX_AUTOBOOT_INFRA=false` to
+use external infra instead.
+
+**Do not run the test suites while the server is up.** Verified this session:
+a live server on 8080 silently changes outcomes in BOTH directions — it wakes
+the otherwise-vacuous `tests/memory` suite (`TEST-2`) and breaks a challenge
+asserting a CLOSED port reports SKIPPED. See `METHOD-1`.
+
+Verified working end-to-end:
+
+| probe | result |
+|---|---|
+| `GET /health` | 200 `{"status":"healthy","version":"1.0.0"}` |
+| `GET /api/v1/server/info` | 200, `database.connected=true` |
+| `GET /api/v1/llm/providers` | 200, 8 providers |
+| `GET /api/v1/llm/models` | 200, 8 models |
+| `GET /api/v1/memory/systems` | 200, 6 systems |
+| `GET /api/v1/metrics` | 200, live pool 6 active / 6 idle / 20 max |
+| `POST /api/v1/auth/register` | 201, user persisted with a real UUID |
+| `POST /api/v1/auth/login` | 200, 287-char JWT |
+| `/tasks` `/workers` `/system/stats` | 401 without a token, 200 with one |
+| `GET /api/v1/auth/me` | 404 despite being registered — `OBS-1` |
 
 ---
 
@@ -177,6 +248,28 @@ Not defects — deliberate, and worth knowing before someone reports them as bug
 - **Five of six text catalogue entries carry `requires_accelerator: false`**, so
   selection skips the device axis and a host-RAM figure reaches a VRAM broker.
   The CRITICAL-5 shape in a narrower form; the vision lane has it too. `OPEN-25`.
+- **The containerised boot is still broken.** `helix_code/go.mod` has 43
+  `replace` directives pointing at `../submodules/*`, outside the directory the
+  Dockerfile copies, so `go mod download` fails inside the image. The targets
+  total 4.2 GB (helix_qa 2.5 GB, helix_agent 2.0 GB, mostly vendored trees), so
+  the fix needs a layout change plus a scoped `.dockerignore`. The native route
+  works and needs no compose — see §2b. `BOOT-4`.
+- **The whole `tests/memory` suite has been silently vacuous.** Every test in it
+  probes `/health` first and `t.Skip`s when nothing answers, so with no server
+  up the package reports `ok ... 0.077s` having exercised nothing. With a server
+  up it runs for 23s and the concurrent-request test produced a rising live-heap
+  signal (signed-R2 0.6565, rise 51.57% of mean). That signal is NOT yet a
+  defect — it was taken at load 44, the heap is under 1 MB, and the shape is flat
+  for 7 waves then a late jump, as consistent with transport idle-pool growth as
+  with a leak. Needs a quiet-host re-run. The coverage gap is the real finding.
+  `TEST-2`.
+- **A Claude Toolkit test asserts against the operator's live `$HOME`.**
+  `scripts/tests/test_claude.sh:7` hardcodes
+  `ALIAS_FILE="$HOME/.local/share/claude-multi-account/aliases.sh"` and sources
+  only `lib/assert.sh`, never `lib/sandbox.sh`. It FAILs `xiaomi uses
+  cma_run_provider` purely because the operator has no `xiaomi` provider
+  configured. Same class as helix_agent's `913d1f02` ("validate the config this
+  repo ships, not the operator's").
 - **`internal/lifecycle`'s concurrent-evict test fails under CPU contention**,
   on its own LIVENESS precondition rather than the invariant it guards. Unlike
   the LSP case this scenario does contain legitimate timing, so it is a genuine
@@ -219,10 +312,22 @@ Not defects — deliberate, and worth knowing before someone reports them as bug
 
 ```
 Read RESUME.md then specs/002-adaptive-local-model-serving/progress.yml, run
-`git fetch --all --prune --tags`, and continue feature 002. Use
-subagent-driven development (§11.4.70) by default and fan out on disjoint file
-scopes. Reproduce every reported finding before fixing it — several turned out
-to be real and one turned out to be my own regression. Every fix needs a paired
-mutation, diff-verified as actually applied. Stage by path, never `git add -A`;
-other agents share this checkout. Force-push is forbidden (§11.4.113).
+`git fetch --all --prune --tags`, and continue feature 002. Everything is
+pushed as of rev 23 (meta b752a807, helix_llm 1efda3b5, helix_agent 64cf8921,
+toolkit 328cf27b on a branch) and the system BOOTS — start it with §2b, not
+`./helix start`, which is still broken (BOOT-4).
+
+Use subagent-driven development (§11.4.70) by default and fan out on disjoint
+file scopes. Reproduce every reported finding before fixing it — several turned
+out to be real and one turned out to be my own regression. Every fix needs a
+paired mutation, diff-verified as actually applied. Stage by path, and use
+`git commit -- <paths>`; staging alone does NOT scope a commit, and other
+agents share this checkout. Force-push is forbidden (§11.4.113).
+
+NEVER run the test suites while the server is up, and never run several suites
+at once. Both were measured this session to manufacture false failures —
+timing, ephemeral-port exhaustion and live-server interference (METHOD-1). Note
+this host carries a persistent ~50% background load from OTHER projects
+(`kfl`, a `MainThread`, qbittorrent); verify process ownership by cwd before
+attributing or acting on anything (§11.4.174).
 ```
