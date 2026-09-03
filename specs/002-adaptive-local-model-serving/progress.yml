@@ -1763,3 +1763,94 @@ findings:
       no effect and no explanation.
     severity: HIGH
     status: fixed to the unambiguous extent; 22 keys await an operator decision
+
+  - id: HXA-netaddr-1-resolved
+    title: a named production host was silently discarded and the connection went to loopback
+    detail: |
+      Far worse than the failing test row suggested, and the agent found the
+      severe shape that was NOT in the test table:
+        jobmanager_host="db.prod.internal[::1"
+          -> "http://[db.prod.internal[::1]:8082"  -> hostname "::1"
+      An operator names a production host, and the connection lands on loopback
+      with no error anywhere. Proven reachable end to end from real config
+      through flink.Config.GetRESTURL; JobManagerHost is a plain yaml/json
+      field validated only for != "".
+      MECHANISM, read from stdlib source rather than inferred: net/url's
+      parseHost locates the IP-literal with strings.LastIndex(host, "[") and
+      DISCARDS everything before it. And the reason a stray "[" is quiet at all
+      is the other half — net.JoinHostPort brackets any colon-bearing host,
+      MANUFACTURING the "]" whose absence was the only thing making "[" loud.
+      Both halves are needed; neither alone bites.
+      Same shape reached BaseURL from qdrant, chroma, the vectordb client,
+      internal/ports and HELIX_LLM_HOST. Dial-side callers were never affected —
+      SplitHostPort already rejects it — so the fix is URL-side only.
+      The source carried the false claim itself: encodeGenDelims' comment listed
+      "[" among bytes "already loud and deliberately left alone". That audit had
+      been run on the raw host, never on the composed authority.
+      FIXED by adding [ and ] to encodeGenDelims — the package's own documented
+      mechanism, NOT the balanced-pair trick I had flagged as available.
+      The test was reconciled, not weakened: its load-bearing assertion is now
+      the invariant itself ("a malformed host must never become a WORKING
+      DESTINATION — refuse, or hand back the operator's own host; never a third
+      state"), with no reference to stdlib behaviour. The old url.Parse
+      expectation survives demoted to a recorded go1.26 measurement.
+      The third mutation is the one that matters: reverting the fix AND every
+      wantURL so the other four assertions agree, leaving the new invariant to
+      catch the defect alone. It does.
+      281 packages ok, 0 FAIL.
+    severity: HIGH
+    status: fixed + guarded
+
+  - id: HXLLM-lsp-cancel
+    title: a request cancelled before it started could still complete, and was written off as flaky twice
+    detail: |
+      TestLSPClient_ContextCancellation was dismissed as a flake by TWO separate
+      agents this session. It was not flaky. It was reporting a real coin flip.
+      The test cancels the context BEFORE calling References, so an error is the
+      only correct answer — there is no timing in the scenario at all. But
+      `call` consulted ctx only in the select at the bottom, racing ctx.Done()
+      against the response channel. With the context ALREADY cancelled and a
+      response ALREADY waiting, both cases are ready and Go picks at random.
+      MEASURED before: 39 PASS / 1 FAIL over 40 runs. After: 40/40 and 30/30.
+      Mutation (remove the pre-check): back to 59/60. Both diff-verified.
+      So an abandoned request was still written to the server, still registered
+      a pending entry, and still returned its result as a success.
+      THE DISTINGUISHING QUESTION, worth carrying: not how OFTEN a test fails,
+      and not whether it passes in isolation — both were true here — but
+      whether the scenario contains any LEGITIMATE timing. A context cancelled
+      before the call contains none, so a random outcome could only be a defect.
+    severity: MEDIUM
+    status: fixed + guarded
+
+  - id: OPEN-23
+    title: the lifecycle flake is a different shape and needs its own fix
+    detail: |
+      internal/lifecycle/TestEvict_NeverUnloadsUnderAnInFlightRequest_Concurrent
+      fails occasionally under CPU contention. Applying the distinction above:
+      unlike the LSP case, this scenario DOES contain legitimate timing — the
+      failing assertion is the test's own LIVENESS precondition
+      (serving-refusals=0, "the contention window never opened"), while the
+      actual FR-047 correctness invariant held at 0 violations throughout.
+      So it is a genuine flake, but a badly-written one: a precondition that
+      did not hold should retry until it does or SKIP with an explicit reason,
+      not FAIL and imply the invariant broke. As written it generates false
+      signal for every agent that runs the suite, and it already cost two of
+      them time this session.
+      Not fixed — it belongs to that package's owner and is out of scope here.
+    severity: LOW
+    status: open — worth a ticket in its owning area
+
+  - id: TASKS-audit
+    title: the 89 tasks marked done all have their named deliverables
+    detail: |
+      Mechanically audited our own tracking rather than trusting it: extracted
+      every backticked file path from the 89 tasks marked [x] — 73 references —
+      and resolved each against the meta-repo, the two submodules, the spec
+      directory and the sibling claude_toolkit checkout.
+      ZERO genuine misses. The first pass reported 8, all of which were my
+      resolver's blind spots (a sibling repo and the spec-relative research
+      directory), not absent files. Recorded because reporting those 8 as
+      findings would have been a false alarm of exactly the kind this ledger
+      exists to prevent.
+    severity: INFO
+    status: verified
